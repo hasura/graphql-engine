@@ -132,7 +132,10 @@ impl<S: SchemaContext> Builder<S> {
         data: C,
         namespaced_node_info: S::NamespacedNodeInfo,
     ) -> Namespaced<S, C> {
-        Namespaced::new_allow_all(data, namespaced_node_info)
+        Namespaced {
+            namespaced: NamespacedData::AllowAll(namespaced_node_info),
+            data,
+        }
     }
 
     pub fn conditional_namespaced<C>(
@@ -141,7 +144,10 @@ impl<S: SchemaContext> Builder<S> {
         map: HashMap<S::Namespace, S::NamespacedNodeInfo>,
     ) -> Namespaced<S, C> {
         self.registered_namespaces.extend(map.keys().cloned());
-        Namespaced::new_conditional(data, map)
+        Namespaced {
+            namespaced: NamespacedData::Conditional(map),
+            data,
+        }
     }
 }
 
@@ -153,43 +159,24 @@ pub struct NodeInfo<'s, S: SchemaContext> {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Namespaced<S: SchemaContext, C> {
-    namespaced: NamespacedData<S>,
-    data: C,
+    pub namespaced: NamespacedData<S>,
+    pub data: C,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-enum NamespacedData<S: SchemaContext> {
+pub enum NamespacedData<S: SchemaContext> {
     AllowAll(S::NamespacedNodeInfo),
     Conditional(HashMap<S::Namespace, S::NamespacedNodeInfo>),
 }
 
-impl<S: SchemaContext, C> Namespaced<S, C> {
-    // Not exposed, only accessible to Builder::allow_all_namespaced
-    fn new_allow_all(data: C, namespaced_node_info: S::NamespacedNodeInfo) -> Self {
-        Namespaced {
-            namespaced: NamespacedData::AllowAll(namespaced_node_info),
-            data,
-        }
-    }
-
-    // Not exposed, only accessible to Builder::conditional_namespaced
-    fn new_conditional(data: C, map: HashMap<S::Namespace, S::NamespacedNodeInfo>) -> Self {
-        Namespaced {
-            namespaced: NamespacedData::Conditional(map),
-            data,
-        }
-    }
-
-    pub fn get(&self, namespace: &S::Namespace) -> Option<(&C, &S::NamespacedNodeInfo)> {
-        match &self.namespaced {
-            NamespacedData::AllowAll(namespaced_node_info) => {
-                Some((&self.data, namespaced_node_info))
-            }
-            NamespacedData::Conditional(map) => map
-                .get(namespace)
-                .map(|namespaced_node_info| (&self.data, namespaced_node_info)),
-        }
-    }
+/// A 'NamespacedGetter' is a function that interprets what it means to extract a
+/// `NamespacedNodeInfo` from a `Namespaced` value.
+pub trait NamespacedGetter<S: SchemaContext> {
+    fn get<'s, C>(
+        &self,
+        namespaced: &'s Namespaced<S, C>,
+        namespace: &S::Namespace,
+    ) -> Option<(&'s C, &'s S::NamespacedNodeInfo)>;
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]

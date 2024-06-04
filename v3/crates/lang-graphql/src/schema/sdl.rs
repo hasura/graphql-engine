@@ -141,6 +141,18 @@ impl Display for Namespace {
     }
 }
 
+pub struct SDLNamespacedGetter();
+
+impl NamespacedGetter<SDL> for SDLNamespacedGetter {
+    fn get<'s, C>(
+        &self,
+        namespaced: &'s Namespaced<SDL, C>,
+        _namespace: &<SDL as SchemaContext>::Namespace,
+    ) -> Option<(&'s C, &'s <SDL as SchemaContext>::NamespacedNodeInfo)> {
+        Some((&namespaced.data, &()))
+    }
+}
+
 impl SchemaContext for SDL {
     type Namespace = Namespace;
     type GenericNodeInfo = ();

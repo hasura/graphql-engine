@@ -16,7 +16,8 @@ pub use error::*;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
 
-pub fn normalize_request<'s, S: schema::SchemaContext>(
+pub fn normalize_request<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
+    namespaced_getter: &NSGet,
     namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     request: &http::Request,
@@ -66,13 +67,21 @@ pub fn normalize_request<'s, S: schema::SchemaContext>(
     // TODO, lots of validation cases to be handled here
     let operation_name = request.operation_name.as_ref();
     if let Some(&operation) = operations.get(&operation_name) {
-        normalize_operation(namespace, schema, &fragments, operation, &request.variables)
+        normalize_operation(
+            namespaced_getter,
+            namespace,
+            schema,
+            &fragments,
+            operation,
+            &request.variables,
+        )
     } else if let Some(operation_name) = operation_name {
         Err(Error::OperationNotFound {
             operation_name: operation_name.clone(),
         })
     } else if operations.len() == 1 {
         normalize_operation(
+            namespaced_getter,
             namespace,
             schema,
             &fragments,
@@ -133,7 +142,8 @@ pub fn check_fragment_cycles<'q>(
     Ok(())
 }
 
-pub fn normalize_operation<'q, 's, S: schema::SchemaContext>(
+pub fn normalize_operation<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
+    namespaced_getter: &NSGet,
     namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
@@ -190,6 +200,7 @@ pub fn normalize_operation<'q, 's, S: schema::SchemaContext>(
         .ok_or(Error::InternalSelectionRootIsNotObject)?;
 
     let normalized_selection_set = selection_set::normalize_selection_set(
+        namespaced_getter,
         namespace,
         schema,
         fragments,

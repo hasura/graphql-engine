@@ -22,9 +22,10 @@ fn json_kind(value: &json::Value) -> &'static str {
 impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
     type Context = ();
 
-    fn as_json(
+    fn as_json<NSGet: schema::NamespacedGetter<S>>(
         &self,
         _schema: &'s schema::Schema<S>,
+        _namespaced_getter: &NSGet,
         _namespace: &<S as schema::SchemaContext>::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
@@ -32,9 +33,10 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         Ok(self.clone())
     }
 
-    fn fold_enum<F>(
+    fn fold_enum<F, NSGet: schema::NamespacedGetter<S>>(
         &self,
         _schema: &'s schema::Schema<S>,
+        _namespaced_getter: &NSGet,
         _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
@@ -53,9 +55,10 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         f(&name)
     }
 
-    fn get_integer(
+    fn get_integer<NSGet: schema::NamespacedGetter<S>>(
         &self,
         _schema: &'s schema::Schema<S>,
+        _namespaced_getter: &NSGet,
         _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
@@ -68,9 +71,10 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
             .map(|v| normalized::Value::SimpleValue(normalized::SimpleValue::Integer(v)))
     }
 
-    fn get_float(
+    fn get_float<NSGet: schema::NamespacedGetter<S>>(
         &self,
         _schema: &'s schema::Schema<S>,
+        _namespaced_getter: &NSGet,
         _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
@@ -83,9 +87,10 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
             .map(|v| normalized::Value::SimpleValue(normalized::SimpleValue::Float(v)))
     }
 
-    fn get_boolean(
+    fn get_boolean<NSGet: schema::NamespacedGetter<S>>(
         &self,
         _schema: &'s schema::Schema<S>,
+        _namespaced_getter: &NSGet,
         _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
@@ -98,9 +103,10 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
             .map(|v| normalized::Value::SimpleValue(normalized::SimpleValue::Boolean(v)))
     }
 
-    fn get_string(
+    fn get_string<NSGet: schema::NamespacedGetter<S>>(
         &self,
         _schema: &'s schema::Schema<S>,
+        _namespaced_getter: &NSGet,
         _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
@@ -113,9 +119,10 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
             .map(|v| normalized::Value::SimpleValue(normalized::SimpleValue::String(v.to_owned())))
     }
 
-    fn get_id(
+    fn get_id<NSGet: schema::NamespacedGetter<S>>(
         &self,
         _schema: &'s schema::Schema<S>,
+        _namespaced_getter: &NSGet,
         _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
@@ -128,9 +135,10 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
             .map(|v| normalized::Value::SimpleValue(normalized::SimpleValue::Id(v.to_owned())))
     }
 
-    fn fold_list<F>(
+    fn fold_list<F, NSGet: schema::NamespacedGetter<S>>(
         &self,
         _schema: &'s schema::Schema<S>,
+        _namespaced_getter: &NSGet,
         _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
@@ -156,9 +164,10 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         Ok(normalized::Value::List(accum))
     }
 
-    fn fold_key_values<F>(
+    fn fold_key_values<F, NSGet: schema::NamespacedGetter<S>>(
         &self,
         _schema: &'s schema::Schema<S>,
+        _namespaced_getter: &NSGet,
         _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,

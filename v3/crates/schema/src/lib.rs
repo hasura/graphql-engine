@@ -1,4 +1,4 @@
-use lang_graphql::schema as gql_schema;
+use lang_graphql::schema::{self as gql_schema, SchemaContext};
 use lang_graphql::{ast::common as ast, mk_name};
 use open_dds::types::FieldName;
 use open_dds::{
@@ -42,6 +42,44 @@ pub use types::{
     NamespaceAnnotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
     RootFieldKind, TypeKind,
 };
+
+/// This 'NamespacedGetter' looks up 'NamespacedNodeInfo's according to actual roles.
+/// It is that instance of 'NamespacedGetter' that is used during normal request-processing
+/// operations.
+pub struct GDSRoleNamespaceGetter;
+
+impl lang_graphql::schema::NamespacedGetter<GDS> for GDSRoleNamespaceGetter {
+    fn get<'s, C>(
+        &self,
+        namespaced: &'s gql_schema::Namespaced<GDS, C>,
+        namespace: &Role,
+    ) -> Option<(&'s C, &'s <GDS as SchemaContext>::NamespacedNodeInfo)> {
+        match &namespaced.namespaced {
+            lang_graphql::schema::NamespacedData::AllowAll(namespaced_node_info) => {
+                Some((&namespaced.data, namespaced_node_info))
+            }
+            lang_graphql::schema::NamespacedData::Conditional(map) => map
+                .get(namespace)
+                .map(|namespaced_node_info| (&namespaced.data, namespaced_node_info)),
+        }
+    }
+}
+
+/// This 'NamespacedGetter' always returns empty 'NamespacedNodeInfo's without regard to the roles
+/// that are asked for.
+///
+/// This produces a schema without any input presets defined and with access to all fields.
+pub struct GDSNamespaceGetterAgnostic;
+
+impl lang_graphql::schema::NamespacedGetter<GDS> for GDSNamespaceGetterAgnostic {
+    fn get<'s, C>(
+        &self,
+        namespaced: &'s gql_schema::Namespaced<GDS, C>,
+        _namespace: &Role,
+    ) -> Option<(&'s C, &'s <GDS as SchemaContext>::NamespacedNodeInfo)> {
+        Some((&namespaced.data, &None))
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct GDS {
@@ -362,5 +400,79 @@ pub(crate) fn mk_deprecation_status(
             ),
         },
         None => gql_schema::DeprecationStatus::NotDeprecated,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{fs, path::Path, path::PathBuf};
+
+    use hasura_authn_core::Role;
+
+    use crate::{GDSNamespaceGetterAgnostic, GDSRoleNamespaceGetter};
+
+    fn make_sdl_from_metadata_file_for_role(path: &Path, role: &Role) -> String {
+        println!("{:#?}", path);
+        let metadata_string = fs::read_to_string(path).unwrap();
+        let metadata =
+            open_dds::traits::OpenDd::deserialize(serde_json::from_str(&metadata_string).unwrap())
+                .unwrap();
+        let gds = crate::GDS::new_with_default_flags(metadata).unwrap();
+        let sch = gds.build_schema().unwrap();
+
+        sch.generate_sdl(&GDSRoleNamespaceGetter, role)
+    }
+
+    fn make_role_agnostic_sdl_from_metadata_file(path: &Path) -> String {
+        println!("{:#?}", path);
+        let metadata_string = fs::read_to_string(path).unwrap();
+        let metadata =
+            open_dds::traits::OpenDd::deserialize(serde_json::from_str(&metadata_string).unwrap())
+                .unwrap();
+        let gds = crate::GDS::new_with_default_flags(metadata).unwrap();
+        let sch = gds.build_schema().unwrap();
+
+        sch.generate_sdl(
+            &GDSNamespaceGetterAgnostic,
+            &Role("this value is irrelevant".to_string()),
+        )
+    }
+
+    #[test]
+    fn test_roled_schemas_have_some_presets() {
+        insta::with_settings!({snapshot_path => "../tests/snapshots"}, {
+            insta::assert_snapshot!(make_sdl_from_metadata_file_for_role(
+                PathBuf::from("tests/metadata_with_presets.json").as_ref(),
+                &Role("role_with_presets".to_string())
+            ));
+        })
+    }
+
+    #[test]
+    fn test_role_agnostic_schemas_have_no_presets() {
+        insta::with_settings!({snapshot_path => "../tests/snapshots"}, {
+            insta::assert_snapshot!(make_role_agnostic_sdl_from_metadata_file(
+                PathBuf::from("tests/metadata_with_presets.json").as_ref()
+            ));
+        })
+    }
+
+    #[test]
+    fn test_roled_schemas_have_some_permissions() {
+        insta::with_settings!({snapshot_path => "../tests/snapshots"}, {
+            insta::assert_snapshot!(make_sdl_from_metadata_file_for_role(
+                PathBuf::from("tests/metadata_with_select_permissions.json").as_ref(),
+                &Role("role_with_some_permissions".to_string())
+            ));
+        })
+    }
+
+    #[test]
+    fn test_role_agnostic_schemas_have_all_permissions() {
+        insta::with_settings!({snapshot_path => "../tests/snapshots"}, {
+            insta::assert_snapshot!(make_role_agnostic_sdl_from_metadata_file(
+                PathBuf::from("tests/metadata_with_select_permissions.json").as_ref()
+            ));
+        })
     }
 }

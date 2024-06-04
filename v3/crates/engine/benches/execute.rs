@@ -103,13 +103,24 @@ pub fn bench_execute(
         &(&runtime, &schema, &request),
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
-                gql::validation::normalize_request(&session.role, schema, request).unwrap();
+                gql::validation::normalize_request(
+                    &schema::GDSRoleNamespaceGetter,
+                    &session.role,
+                    schema,
+                    request,
+                )
+                .unwrap();
             })
         },
     );
 
-    let normalized_request =
-        gql::validation::normalize_request(&session.role, &schema, &request).unwrap();
+    let normalized_request = gql::validation::normalize_request(
+        &schema::GDSRoleNamespaceGetter,
+        &session.role,
+        &schema,
+        &request,
+    )
+    .unwrap();
 
     // Generate IR
     group.bench_with_input(

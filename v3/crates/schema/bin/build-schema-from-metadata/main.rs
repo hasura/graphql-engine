@@ -1,6 +1,7 @@
 /// This is a small command-line utility that prints out the GraphQL schemas that result from an
 /// engine-metadata value.
 ///
+/// For examples of metadata files, see the 'tests/' folder in this crate.
 use std::{
     collections::BTreeSet,
     io::{stdin, Read},
@@ -8,7 +9,7 @@ use std::{
 };
 
 use hasura_authn_core::Role;
-use lang_graphql::generate_graphql_schema::build_namespace_schemas;
+use schema::{GDSNamespaceGetterAgnostic, GDSRoleNamespaceGetter};
 
 pub fn main() {
     let mut metadata_string = String::new();
@@ -27,8 +28,6 @@ pub fn main() {
     let gds = schema::GDS::new_with_default_flags(metadata).unwrap();
     let sch = gds.build_schema().unwrap();
 
-    let namespace_schemas = build_namespace_schemas(&sch).unwrap();
-
     let dedup_roles: BTreeSet<Role> = gds.metadata.roles.into_iter().collect();
 
     for role in dedup_roles {
@@ -36,29 +35,23 @@ pub fn main() {
         println!("Now comes the SDL schema for {role}:");
         println!("-------------------------------:");
         println!();
-        println!("{}", sch.generate_sdl(&role));
-        println!();
-        println!();
-        println!();
-
-        print!("-------------------------------:");
-        print!("Now comes the query-based? schema for {role}:");
-        print!("-------------------------------:");
-        println!();
-        print!(
-            "{}",
-            serde_json::ser::to_string_pretty(namespace_schemas.get(&role).unwrap()).unwrap()
-        );
+        println!("{}", sch.generate_sdl(&GDSRoleNamespaceGetter, &role));
         println!();
         println!();
         println!();
     }
 
-    println!("-------------------------------:");
-    println!(" Debug print of schema         :");
-    println!("-------------------------------:");
+    println!("---------------------------------------:");
+    println!("Now comes the role-agnostic SDL schema :");
+    println!("---------------------------------------:");
     println!();
-    println!("{:#?}", sch);
+    println!(
+        "{}",
+        sch.generate_sdl(
+            &GDSNamespaceGetterAgnostic,
+            &Role("this value is irrelevant".to_string())
+        )
+    );
     println!();
     println!();
     println!();

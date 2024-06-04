@@ -13,7 +13,13 @@ use crate::ast::spanning::Spanning;
 use crate::normalized_ast as normalized;
 use crate::schema;
 
-pub fn normalize_selection_set<'q, 's, S: schema::SchemaContext>(
+pub fn normalize_selection_set<
+    'q,
+    's,
+    S: schema::SchemaContext,
+    NSGet: schema::NamespacedGetter<S>,
+>(
+    namespaced_getter: &NSGet,
     namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
@@ -27,6 +33,7 @@ where
 {
     let reachability = Vec::new();
     normalize_selection_sets(
+        namespaced_getter,
         namespace,
         schema,
         fragments,
@@ -37,7 +44,8 @@ where
 }
 
 #[allow(clippy::type_complexity)]
-fn normalize_selection_sets<'q, 's, S: schema::SchemaContext>(
+fn normalize_selection_sets<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
+    namespaced_getter: &NSGet,
     namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
@@ -58,6 +66,7 @@ where
     for (path, selection_sets) in selection_set_groups {
         for selection_set in selection_sets {
             collect::collect_fields(
+                namespaced_getter,
                 namespace,
                 schema,
                 fragments,
@@ -94,6 +103,7 @@ where
     for (alias, (alias_type, typed_fields)) in field_map {
         let alias = ast::Alias(alias.clone());
         let (field_calls, selection_set) = merge_fields(
+            namespaced_getter,
             namespace,
             schema,
             fragments,
@@ -137,7 +147,8 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
-fn merge_fields<'q, 's, S: schema::SchemaContext>(
+fn merge_fields<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
+    namespaced_getter: &NSGet,
     namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
@@ -166,6 +177,7 @@ where
         let cannonical_field = fields.head;
 
         let arguments = normalize_arguments(
+            namespaced_getter,
             namespace,
             schema,
             variables,
@@ -200,6 +212,7 @@ where
             // TODO deal with directives
             // let this_directives = normalize_directives(namespace, schema, &field.field.directives)?;
             let this_arguments = normalize_arguments(
+                namespaced_getter,
                 namespace,
                 schema,
                 variables,
@@ -238,6 +251,7 @@ where
     // maybe processing of alias_selection_sets can be cleaned up
     let normalized_selection_set = match alias_selectable_type {
         Some(selection_type) => normalize_selection_sets(
+            namespaced_getter,
             namespace,
             schema,
             fragments,
@@ -257,7 +271,8 @@ where
     ))
 }
 
-fn normalize_arguments<'q, 's, S: schema::SchemaContext>(
+fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
+    namespaced_getter: &NSGet,
     namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     variables: &input::value::Variables<'q, 's, S>,
@@ -288,7 +303,7 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext>(
         let argument_value = arguments_map.remove(name);
 
         // if the argument is allowed for the given namespace
-        if let Some((argument_info, namespaced)) = info.get(namespace) {
+        if let Some((argument_info, namespaced)) = namespaced_getter.get(info, namespace) {
             let argument_type = &argument_info.field_type;
             // get the information of the type in the base_type
             let argument_type_info = {
@@ -324,6 +339,7 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext>(
                 (Some(argument_value), _) => {
                     Some(input::normalize::normalize(
                         schema,
+                        namespaced_getter,
                         namespace,
                         variables,
                         argument_value,
@@ -342,6 +358,7 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext>(
                 (None, Some(default_value)) => {
                     Some(input::normalize::normalize(
                         schema,
+                        namespaced_getter,
                         namespace,
                         &(),
                         default_value,

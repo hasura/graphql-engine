@@ -49,7 +49,13 @@ pub fn bench_generate_ir(c: &mut Criterion) {
             variables: HashMap::new(),
         };
 
-        let normalized_request = normalize_request(&session.role, &schema, &request).unwrap();
+        let normalized_request = normalize_request(
+            &schema::GDSRoleNamespaceGetter,
+            &session.role,
+            &schema,
+            &request,
+        )
+        .unwrap();
 
         group.bench_with_input(
             BenchmarkId::new("generate_ir", test_name),

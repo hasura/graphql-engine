@@ -32,8 +32,9 @@ pub struct SelectableType<'s, S: schema::SchemaContext> {
 }
 
 impl<'s, S: schema::SchemaContext> SelectableType<'s, S> {
-    fn lookup_field(
+    fn lookup_field<NSGet: schema::NamespacedGetter<S>>(
         &self,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         field_name: &ast::Name,
     ) -> Result<FieldInfo<'s, S>> {
@@ -45,8 +46,8 @@ impl<'s, S: schema::SchemaContext> SelectableType<'s, S> {
                     field_name: field_name.clone(),
                 })?;
         let (generic, namespaced) =
-            field_value
-                .get(namespace)
+            namespaced_getter
+                .get(field_value, namespace)
                 .ok_or_else(|| Error::FieldNotAccessible {
                     namespace: namespace.to_string(),
                     type_name: self.type_name.clone(),
@@ -126,7 +127,13 @@ pub(super) struct CollectedField<'q, 's, S: schema::SchemaContext> {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn collect_fields_from_fragment<'q, 's, S: schema::SchemaContext>(
+fn collect_fields_from_fragment<
+    'q,
+    's,
+    S: schema::SchemaContext,
+    NSGet: schema::NamespacedGetter<S>,
+>(
+    namespaced_getter: &NSGet,
     namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
@@ -193,6 +200,7 @@ fn collect_fields_from_fragment<'q, 's, S: schema::SchemaContext>(
         None
     };
     collect_fields_internal(
+        namespaced_getter,
         namespace,
         schema,
         fragments,
@@ -207,7 +215,13 @@ fn collect_fields_from_fragment<'q, 's, S: schema::SchemaContext>(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(super) fn collect_fields<'q, 's, S: schema::SchemaContext>(
+pub(super) fn collect_fields<
+    'q,
+    's,
+    S: schema::SchemaContext,
+    NSGet: schema::NamespacedGetter<S>,
+>(
+    namespaced_getter: &NSGet,
     namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
@@ -221,6 +235,7 @@ pub(super) fn collect_fields<'q, 's, S: schema::SchemaContext>(
     //     reachable_types: selection_type.possible_types.clone(),
     // };
     collect_fields_internal(
+        namespaced_getter,
         namespace,
         schema,
         fragments,
@@ -234,7 +249,8 @@ pub(super) fn collect_fields<'q, 's, S: schema::SchemaContext>(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn collect_fields_internal<'q, 's, S: schema::SchemaContext>(
+fn collect_fields_internal<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
+    namespaced_getter: &NSGet,
     namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
@@ -248,7 +264,8 @@ fn collect_fields_internal<'q, 's, S: schema::SchemaContext>(
     for selection in selection_set {
         match &selection.item {
             executable::Selection::Field(field) => {
-                let field_info = selection_type.lookup_field(namespace, &field.name.item)?;
+                let field_info =
+                    selection_type.lookup_field(namespaced_getter, namespace, &field.name.item)?;
                 let alias = &field
                     .alias
                     .as_ref()
@@ -257,7 +274,7 @@ fn collect_fields_internal<'q, 's, S: schema::SchemaContext>(
                 // refine the field info by sub_type if needed
                 let refined_field_info = if let Some(sub_type) = selection_sub_type {
                     sub_type
-                        .lookup_field(namespace, &field.name.item)
+                        .lookup_field(namespaced_getter, namespace, &field.name.item)
                         // this is an internal error because the subtype should
                         // definitely have the field
                         .map_err(|_| Error::InternalNoFieldOnSubtype {
@@ -292,6 +309,7 @@ fn collect_fields_internal<'q, 's, S: schema::SchemaContext>(
                         }
                     })?;
                 collect_fields_from_fragment(
+                    namespaced_getter,
                     namespace,
                     schema,
                     fragments,
@@ -319,6 +337,7 @@ fn collect_fields_internal<'q, 's, S: schema::SchemaContext>(
                     None => Ok(None),
                 }?;
                 collect_fields_from_fragment(
+                    namespaced_getter,
                     namespace,
                     schema,
                     fragments,

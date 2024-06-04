@@ -57,14 +57,16 @@ impl<'q, 's, S: schema::SchemaContext> VariableValue<'q, 's, S> {
         }
     }
 
-    pub fn normalize(
+    pub fn normalize<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
             VariableValue::Json(value, type_, type_info) => normalize(
                 schema,
+                namespaced_getter,
                 namespace,
                 &(),
                 *value,
@@ -74,6 +76,7 @@ impl<'q, 's, S: schema::SchemaContext> VariableValue<'q, 's, S> {
             VariableValue::Const(value, type_, type_info)
             | VariableValue::Normalized(value, type_, type_info) => normalize(
                 schema,
+                namespaced_getter,
                 namespace,
                 &(),
                 *value,
@@ -155,10 +158,12 @@ where
 {
     type Context = Variables<'q, 's, S>;
 
-    fn as_json(
+    fn as_json<NSGet: schema::NamespacedGetter<S>>(
         &self,
-        _schema: &'s schema::Schema<S>,
-        _namespace: &S::Namespace,
+        schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
+        namespace: &S::Namespace,
+
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<serde_json::Value> {
@@ -171,7 +176,10 @@ where
             Self::List(l) => {
                 let list = l
                     .iter()
-                    .map(|i| i.item.as_json(_schema, _namespace, context, location_type))
+                    .map(|i| {
+                        i.item
+                            .as_json(schema, namespaced_getter, namespace, context, location_type)
+                    })
                     .collect::<Result<Vec<serde_json::Value>>>()?;
                 Ok(serde_json::Value::Array(list))
             }
@@ -182,9 +190,13 @@ where
                         let gql::KeyValue { key, value } = &i.item;
                         Ok((
                             key.item.to_string(),
-                            value
-                                .item
-                                .as_json(_schema, _namespace, context, location_type)?,
+                            value.item.as_json(
+                                schema,
+                                namespaced_getter,
+                                namespace,
+                                context,
+                                location_type,
+                            )?,
                         ))
                     })
                     .collect::<Result<serde_json::Map<String, serde_json::Value>>>()?;
@@ -193,9 +205,10 @@ where
         }
     }
 
-    fn fold_enum<F>(
+    fn fold_enum<F, NSGet>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
@@ -203,11 +216,14 @@ where
     ) -> Result<normalized::Value<'s, S>>
     where
         F: Fn(&ast::Name) -> Result<normalized::Value<'s, S>>,
+        NSGet: schema::NamespacedGetter<S>,
     {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespace),
+            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
+                schema,
+                namespaced_getter,
+                namespace,
+            ),
             gql::Value::SimpleValue(gql::SimpleValue::Enum(e)) => f(e),
             _ => Err(Error::IncorrectFormat {
                 expected_type: "ENUM",
@@ -216,17 +232,20 @@ where
         }
     }
 
-    fn get_integer(
+    fn get_integer<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespace),
+            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
+                schema,
+                namespaced_getter,
+                namespace,
+            ),
             gql::Value::SimpleValue(gql::SimpleValue::Integer(i)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Integer(*i)),
             ),
@@ -237,17 +256,20 @@ where
         }
     }
 
-    fn get_float(
+    fn get_float<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespace),
+            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
+                schema,
+                namespaced_getter,
+                namespace,
+            ),
             // Both integer and float input values are accepted for Float type.
             // Ref: https://spec.graphql.org/October2021/#sec-Float.Input-Coercion
             gql::Value::SimpleValue(simple_value) => simple_value
@@ -264,17 +286,20 @@ where
         }
     }
 
-    fn get_boolean(
+    fn get_boolean<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespace),
+            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
+                schema,
+                namespaced_getter,
+                namespace,
+            ),
             gql::Value::SimpleValue(gql::SimpleValue::Boolean(b)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Boolean(*b)),
             ),
@@ -285,17 +310,20 @@ where
         }
     }
 
-    fn get_string(
+    fn get_string<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespace),
+            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
+                schema,
+                namespaced_getter,
+                namespace,
+            ),
             gql::Value::SimpleValue(gql::SimpleValue::String(s)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::String(s.clone())),
             ),
@@ -306,17 +334,20 @@ where
         }
     }
 
-    fn get_id(
+    fn get_id<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespace),
+            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
+                schema,
+                namespaced_getter,
+                namespace,
+            ),
             gql::Value::SimpleValue(gql::SimpleValue::String(id)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Id(id.clone())),
             ),
@@ -327,9 +358,10 @@ where
         }
     }
 
-    fn fold_list<F>(
+    fn fold_list<F, NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
@@ -340,9 +372,11 @@ where
     {
         // TODO single element array coercion
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespace),
+            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
+                schema,
+                namespaced_getter,
+                namespace,
+            ),
 
             gql::Value::List(array) => {
                 let mut accum = Vec::new();
@@ -358,9 +392,10 @@ where
         }
     }
 
-    fn fold_key_values<F>(
+    fn fold_key_values<F, NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
@@ -370,9 +405,11 @@ where
         F: Fn(normalized::Object<'s, S>, &ast::Name, &Self) -> Result<normalized::Object<'s, S>>,
     {
         match self {
-            gql::Value::Variable(variable) => context
-                .get(location_type, variable)?
-                .normalize(schema, namespace),
+            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
+                schema,
+                namespaced_getter,
+                namespace,
+            ),
             gql::Value::Object(object) => {
                 let mut accum = IndexMap::new();
                 for key_value in object {

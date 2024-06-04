@@ -57,56 +57,64 @@ where
 {
     type Context;
 
-    fn get_integer(
+    fn get_integer<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>>;
-    fn get_float(
+    fn get_float<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>>;
-    fn get_boolean(
+    fn get_boolean<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>>;
-    fn get_string(
+    fn get_string<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>>;
-    fn get_id(
+    fn get_id<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>>;
 
-    fn fold_enum<F>(
+    fn fold_enum<F, NSGet>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
         f: F,
     ) -> Result<normalized::Value<'s, S>>
     where
-        F: Fn(&ast::Name) -> Result<normalized::Value<'s, S>>;
+        F: Fn(&ast::Name) -> Result<normalized::Value<'s, S>>,
+        NSGet: schema::NamespacedGetter<S>;
 
-    fn fold_list<F>(
+    fn fold_list<F, NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
@@ -115,9 +123,10 @@ where
     where
         F: FnMut(Vec<normalized::Value<'s, S>>, &Self) -> Result<Vec<normalized::Value<'s, S>>>;
 
-    fn fold_key_values<F>(
+    fn fold_key_values<F, NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
@@ -126,22 +135,24 @@ where
     where
         F: Fn(normalized::Object<'s, S>, &ast::Name, &Self) -> Result<normalized::Object<'s, S>>;
 
-    fn as_json(
+    fn as_json<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<serde_json::Value>;
 
-    fn as_json_normalized(
+    fn as_json_normalized<NSGet: schema::NamespacedGetter<S>>(
         &self,
         schema: &'s schema::Schema<S>,
+        namespaced_getter: &NSGet,
         namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
-        self.as_json(schema, namespace, context, location_type)
+        self.as_json(schema, namespaced_getter, namespace, context, location_type)
             .map(|v| normalized::Value::Json(v))
     }
 

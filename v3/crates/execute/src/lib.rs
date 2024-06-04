@@ -19,7 +19,7 @@ use lang_graphql::{
     http::{RawRequest, Response},
     schema::Schema,
 };
-use schema::GDS;
+use schema::{GDSRoleNamespaceGetter, GDS};
 use tracing_util::{
     set_attribute_on_active_span, AttributeVisibility, ErrorVisibility, SpanVisibility, Traceable,
     TraceableError,
@@ -324,8 +324,13 @@ pub(crate) fn normalize_request<'s>(
                     query,
                     variables: raw_request.variables.unwrap_or_default(),
                 };
-                gql::validation::normalize_request(&session.role, schema, &request)
-                    .map_err(GraphQlValidationError)
+                gql::validation::normalize_request(
+                    &GDSRoleNamespaceGetter,
+                    &session.role,
+                    schema,
+                    &request,
+                )
+                .map_err(GraphQlValidationError)
             },
         )
         .map_err(|e| e.0)?;
@@ -432,7 +437,12 @@ mod tests {
                 variables: HashMap::new(),
             };
 
-            let normalized_request = normalize_request(&session.role, &schema, &request)?;
+            let normalized_request = normalize_request(
+                &schema::GDSRoleNamespaceGetter,
+                &session.role,
+                &schema,
+                &request,
+            )?;
 
             let ir = generate_ir(&schema, &session, &normalized_request)?;
             let mut expected = mint.new_goldenfile_with_differ(

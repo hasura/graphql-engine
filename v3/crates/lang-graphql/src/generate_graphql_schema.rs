@@ -22,9 +22,14 @@ pub enum Error {
 }
 
 /// Generate GraphQL schema for each namespace from given schema.
-pub fn build_namespace_schemas<S: crate::schema::SchemaContext>(
-    schema: &crate::schema::Schema<S>,
-) -> Result<HashMap<&S::Namespace, serde_json::Value>, Error> {
+pub fn build_namespace_schemas<
+    's,
+    S: crate::schema::SchemaContext,
+    NSGet: crate::schema::NamespacedGetter<S>,
+>(
+    schema: &'s crate::schema::Schema<S>,
+    namespaced_getter: &NSGet,
+) -> Result<HashMap<&'s S::Namespace, serde_json::Value>, Error> {
     let mut response = HashMap::new();
     let request = crate::http::Request {
         operation_name: None,
@@ -37,18 +42,26 @@ pub fn build_namespace_schemas<S: crate::schema::SchemaContext>(
         variables: HashMap::new(),
     };
     for ns in &schema.namespaces {
-        response.insert(ns, build_namespace_schema(ns, schema, &request)?);
+        response.insert(
+            ns,
+            build_namespace_schema(namespaced_getter, ns, schema, &request)?,
+        );
     }
     Ok(response)
 }
 
 /// Generate GraphQL schema for a given namespace
-fn build_namespace_schema<'s, S: crate::schema::SchemaContext>(
+fn build_namespace_schema<
+    's,
+    S: crate::schema::SchemaContext,
+    NSGet: crate::schema::NamespacedGetter<S>,
+>(
+    namespaced_getter: &NSGet,
     ns: &'s S::Namespace,
     schema: &'s crate::schema::Schema<S>,
     request: &crate::http::Request,
 ) -> Result<serde_json::Value, Error> {
-    let nr = crate::validation::normalize_request(ns, schema, request)
+    let nr = crate::validation::normalize_request(namespaced_getter, ns, schema, request)
         .map_err(|e| Error::NormalizeIntrospectionQuery(e.to_string()))?;
     let mut result = HashMap::new();
     for (_alias, field) in &nr.selection_set.fields {
@@ -59,6 +72,7 @@ fn build_namespace_schema<'s, S: crate::schema::SchemaContext>(
                     &field_call.name,
                     serde_json::to_value(crate::introspection::schema_type(
                         schema,
+                        namespaced_getter,
                         ns,
                         &field.selection_set,
                     )?)?,

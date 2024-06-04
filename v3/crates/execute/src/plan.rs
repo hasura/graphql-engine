@@ -5,6 +5,7 @@ mod relationships;
 pub(crate) mod selection_set;
 
 use gql::normalized_ast;
+use gql::schema::NamespacedGetter;
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use lang_graphql as gql;
@@ -22,6 +23,7 @@ use super::remote_joins::types::{
 };
 use super::{HttpContext, ProjectId};
 use crate::error::FieldError;
+use schema::GDSRoleNamespaceGetter;
 use schema::GDS;
 
 pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir>>;
@@ -350,7 +352,7 @@ fn plan_query<'n, 's, 'ir>(
                 role,
             },
         ) => {
-            let sdl = schema.generate_sdl(role);
+            let sdl = schema.generate_sdl(&GDSRoleNamespaceGetter, role);
             NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::ServiceField {
                 sdl,
                 selection_set,
@@ -588,7 +590,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                             );
                             RootFieldResult::new(
                                 true, // __type(name: String!): __Type ; the type field is nullable
-                                resolve_type_field(selection_set, schema, &type_name, &namespace),
+                                resolve_type_field(selection_set, schema, &type_name, &GDSRoleNamespaceGetter, &namespace),
                             )
                         }
                         NodeQueryPlan::SchemaField {
@@ -603,7 +605,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                             );
                             RootFieldResult::new(
                                 false, // __schema: __Schema! ; the schema field is not nullable
-                                resolve_schema_field(selection_set, schema, &namespace),
+                                resolve_schema_field(selection_set, schema, &GDSRoleNamespaceGetter, &namespace),
                             )
                         }
                         NodeQueryPlan::NDCQueryExecution(ndc_query) => RootFieldResult::new(
@@ -793,15 +795,17 @@ fn resolve_type_name(type_name: ast::TypeName) -> Result<json::Value, FieldError
     Ok(json::to_value(type_name)?)
 }
 
-fn resolve_type_field(
+fn resolve_type_field<NSGet: NamespacedGetter<GDS>>(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     schema: &gql::schema::Schema<GDS>,
     type_name: &ast::TypeName,
+    namespaced_getter: &NSGet,
     namespace: &Role,
 ) -> Result<json::Value, FieldError> {
     match schema.get_type(type_name) {
         Some(type_info) => Ok(json::to_value(gql::introspection::named_type(
             schema,
+            namespaced_getter,
             namespace,
             type_info,
             selection_set,
@@ -810,13 +814,15 @@ fn resolve_type_field(
     }
 }
 
-fn resolve_schema_field(
+fn resolve_schema_field<NSGet: NamespacedGetter<GDS>>(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     schema: &gql::schema::Schema<GDS>,
+    namespaced_getter: &NSGet,
     namespace: &Role,
 ) -> Result<json::Value, FieldError> {
     Ok(json::to_value(gql::introspection::schema_type(
         schema,
+        namespaced_getter,
         namespace,
         selection_set,
     )?)?)
