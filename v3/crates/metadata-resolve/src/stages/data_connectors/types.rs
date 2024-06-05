@@ -14,6 +14,41 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+/// Map of resolved data connectors information that are used in the later
+/// stages of metadata resolving. This structure is not kept in the finally
+/// resolved metadata.
+pub struct DataConnectors<'a>(pub BTreeMap<Qualified<DataConnectorName>, DataConnectorContext<'a>>);
+
+/// information about a data connector
+/// currently this contains partial ScalarTypeInfo, which we add to later
+pub struct DataConnectorContext<'a> {
+    pub inner: DataConnectorCoreInfo<'a>,
+    // resolved scalar types
+    pub scalars: BTreeMap<DataConnectorScalarType, ScalarTypeInfo<'a>>,
+}
+
+impl<'a> DataConnectorContext<'a> {
+    pub fn new(data_connector: &'a data_connector::DataConnectorLinkV1) -> Result<Self, Error> {
+        let VersionedSchemaAndCapabilities::V01(schema_and_capabilities) = &data_connector.schema;
+        let resolved_schema = DataConnectorSchema::new(&schema_and_capabilities.schema);
+
+        Ok(DataConnectorContext {
+            inner: DataConnectorCoreInfo {
+                url: &data_connector.url,
+                headers: &data_connector.headers,
+                schema: resolved_schema,
+                capabilities: &schema_and_capabilities.capabilities,
+            },
+            scalars: schema_and_capabilities
+                .schema
+                .scalar_types
+                .iter()
+                .map(|(k, v)| (DataConnectorScalarType(k.clone()), ScalarTypeInfo::new(v)))
+                .collect(),
+        })
+    }
+}
+
 /// information that does not change between resolver stages
 #[derive(Clone)]
 pub struct DataConnectorCoreInfo<'a> {
@@ -40,64 +75,37 @@ pub struct DataConnectorSchema {
     pub procedures: BTreeMap<ProcedureName, ndc_models::ProcedureInfo>,
 }
 
-/// information about a data connector
-/// currently this contains partial ScalarTypeInfo, which we add to later
-pub struct DataConnectorContext<'a> {
-    pub inner: DataConnectorCoreInfo<'a>,
-    pub scalars: BTreeMap<DataConnectorScalarType, ScalarTypeInfo<'a>>,
-}
-
-fn create_data_connector_schema(schema: &ndc_models::SchemaResponse) -> DataConnectorSchema {
-    DataConnectorSchema {
-        scalar_types: schema.scalar_types.clone(),
-        object_types: schema.object_types.clone(),
-        collections: schema
-            .collections
-            .iter()
-            .map(|collection_info| (collection_info.name.clone(), collection_info.clone()))
-            .collect(),
-        functions: schema
-            .functions
-            .iter()
-            .map(|function_info| {
-                (
-                    FunctionName(function_info.name.clone()),
-                    function_info.clone(),
-                )
-            })
-            .collect(),
-        procedures: schema
-            .procedures
-            .iter()
-            .map(|procedure_info| {
-                (
-                    ProcedureName(procedure_info.name.clone()),
-                    procedure_info.clone(),
-                )
-            })
-            .collect(),
-    }
-}
-
-impl<'a> DataConnectorContext<'a> {
-    pub fn new(data_connector: &'a data_connector::DataConnectorLinkV1) -> Result<Self, Error> {
-        let VersionedSchemaAndCapabilities::V01(schema_and_capabilities) = &data_connector.schema;
-        let resolved_schema = create_data_connector_schema(&schema_and_capabilities.schema);
-
-        Ok(DataConnectorContext {
-            inner: DataConnectorCoreInfo {
-                url: &data_connector.url,
-                headers: &data_connector.headers,
-                schema: resolved_schema,
-                capabilities: &schema_and_capabilities.capabilities,
-            },
-            scalars: schema_and_capabilities
-                .schema
-                .scalar_types
+impl DataConnectorSchema {
+    fn new(schema: &ndc_models::SchemaResponse) -> Self {
+        Self {
+            scalar_types: schema.scalar_types.clone(),
+            object_types: schema.object_types.clone(),
+            collections: schema
+                .collections
                 .iter()
-                .map(|(k, v)| (DataConnectorScalarType(k.clone()), ScalarTypeInfo::new(v)))
+                .map(|collection_info| (collection_info.name.clone(), collection_info.clone()))
                 .collect(),
-        })
+            functions: schema
+                .functions
+                .iter()
+                .map(|function_info| {
+                    (
+                        FunctionName(function_info.name.clone()),
+                        function_info.clone(),
+                    )
+                })
+                .collect(),
+            procedures: schema
+                .procedures
+                .iter()
+                .map(|procedure_info| {
+                    (
+                        ProcedureName(procedure_info.name.clone()),
+                        procedure_info.clone(),
+                    )
+                })
+                .collect(),
+        }
     }
 }
 
@@ -139,8 +147,9 @@ impl<'a> ScalarTypeInfo<'a> {
     }
 }
 
-pub struct DataConnectors<'a>(pub BTreeMap<Qualified<DataConnectorName>, DataConnectorContext<'a>>);
-
+/// This represents part of resolved data connector info that is eventually kept
+/// in the resolved metadata. This is used inside model/command sources, and
+/// this info is required only during execution.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct DataConnectorLink {
     pub name: Qualified<DataConnectorName>,
