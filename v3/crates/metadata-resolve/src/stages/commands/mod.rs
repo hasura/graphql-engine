@@ -359,7 +359,8 @@ pub fn resolve_command_source(
 
     ndc_validation::validate_ndc_command(
         &command.name,
-        command,
+        &command_source,
+        &command.output_type,
         &data_connector_context.inner.schema,
     )?;
 

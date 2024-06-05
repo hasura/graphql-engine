@@ -232,14 +232,10 @@ pub fn validate_ndc(
 // Validate the mappings b/w dds object and ndc objects present in command source.
 pub fn validate_ndc_command(
     command_name: &Qualified<CommandName>,
-    command: &commands::Command,
+    command_source: &commands::CommandSource,
+    command_output_type: &QualifiedTypeReference,
     schema: &data_connectors::DataConnectorSchema,
 ) -> std::result::Result<(), NDCValidationError> {
-    // Check if the command source exists for the command
-    let Some(command_source) = &command.source else {
-        return Ok(());
-    };
-
     let db = &command_source.data_connector;
 
     let (
@@ -308,7 +304,7 @@ pub fn validate_ndc_command(
 
     // Check if the result_type of function/procedure actually has a scalar type or an object type.
     // If it is an object type, then validate the type mapping.
-    match get_underlying_type_name(&command.output_type) {
+    match get_underlying_type_name(command_output_type) {
         QualifiedTypeName::Inbuilt(_command_output_type) => {
             // TODO: Validate that the type of command.output_type is
             // same as the &command_source_ndc.result_type
