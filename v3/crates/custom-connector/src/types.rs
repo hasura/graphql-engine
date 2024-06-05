@@ -73,6 +73,7 @@ pub(crate) fn object_types() -> BTreeMap<String, ndc_models::ObjectType> {
                 ndc_models::ObjectField {
                     description: Some("The movie's primary key".into()),
                     r#type: ndc_models::Type::Named { name: "Int".into() },
+                    arguments: BTreeMap::new(),
                 },
             ),
             (
@@ -82,6 +83,7 @@ pub(crate) fn object_types() -> BTreeMap<String, ndc_models::ObjectType> {
                     r#type: ndc_models::Type::Named {
                         name: "String".into(),
                     },
+                    arguments: BTreeMap::new(),
                 },
             ),
             (
@@ -89,6 +91,7 @@ pub(crate) fn object_types() -> BTreeMap<String, ndc_models::ObjectType> {
                 ndc_models::ObjectField {
                     description: Some("The movie's rating".into()),
                     r#type: ndc_models::Type::Named { name: "Int".into() },
+                    arguments: BTreeMap::new(),
                 },
             ),
         ]),

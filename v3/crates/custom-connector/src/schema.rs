@@ -14,7 +14,7 @@ pub fn get_schema() -> ndc_models::SchemaResponse {
 
 pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
     ndc_models::CapabilitiesResponse {
-        version: "0.1.2".into(),
+        version: "0.1.3".into(),
         capabilities: ndc_models::Capabilities {
             mutation: ndc_models::MutationCapabilities {
                 transactional: None,
@@ -24,6 +24,10 @@ pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
                 explain: None,
                 aggregates: Some(ndc_models::LeafCapability {}),
                 variables: Some(ndc_models::LeafCapability {}),
+                nested_fields: ndc_models::NestedFieldCapabilities {
+                    filter_by: None,
+                    order_by: None,
+                },
             },
             relationships: Some(ndc_models::RelationshipCapabilities {
                 relation_comparisons: Some(ndc_models::LeafCapability {}),

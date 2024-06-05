@@ -11,6 +11,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                 ndc_models::ObjectField {
                     description: Some("The institution's primary key".into()),
                     r#type: ndc_models::Type::Named { name: "Int".into() },
+                    arguments: BTreeMap::new(),
                 },
             ),
             (
@@ -20,6 +21,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     r#type: ndc_models::Type::Named {
                         name: "String".into(),
                     },
+                    arguments: BTreeMap::new(),
                 },
             ),
             (
@@ -29,6 +31,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     r#type: ndc_models::Type::Named {
                         name: "location".into(),
                     },
+                    arguments: BTreeMap::new(),
                 },
             ),
             (
@@ -40,6 +43,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                             name: "staff_member".into(),
                         }),
                     },
+                    arguments: BTreeMap::new(),
                 },
             ),
             (
@@ -51,6 +55,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                             name: "String".into(),
                         }),
                     },
+                    arguments: BTreeMap::new(),
                 },
             ),
         ]),

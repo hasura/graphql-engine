@@ -13,6 +13,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     r#type: ndc_models::Type::Named {
                         name: "String".into(),
                     },
+                    arguments: BTreeMap::new(),
                 },
             ),
             (
@@ -22,6 +23,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     r#type: ndc_models::Type::Named {
                         name: "String".into(),
                     },
+                    arguments: BTreeMap::new(),
                 },
             ),
             (
@@ -33,6 +35,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                             name: "String".into(),
                         }),
                     },
+                    arguments: BTreeMap::new(),
                 },
             ),
         ]),

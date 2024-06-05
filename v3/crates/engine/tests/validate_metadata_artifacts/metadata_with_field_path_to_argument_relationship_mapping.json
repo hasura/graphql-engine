@@ -146,7 +146,11 @@
             "query": {
               "aggregates": {},
               "variables": {},
-              "explain": {}
+              "explain": {},
+              "nested_fields": {
+                "filter_by": {},
+                "order_by": {}
+              }
             },
             "relationships": {
               "relation_comparisons": {},
@@ -154,7 +158,7 @@
             },
             "mutation": {}
           },
-          "version": "0.1.0"
+          "version": "0.1.3"
         }
       }
     }

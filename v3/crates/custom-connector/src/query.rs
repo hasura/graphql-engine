@@ -421,9 +421,11 @@ fn eval_order_by_element(
     item: &Row,
 ) -> Result<serde_json::Value> {
     match &element.target {
-        ndc_models::OrderByTarget::Column { name, path } => {
-            eval_order_by_column(collection_relationships, variables, state, item, path, name)
-        }
+        ndc_models::OrderByTarget::Column {
+            name,
+            path,
+            field_path: _,
+        } => eval_order_by_column(collection_relationships, variables, state, item, path, name),
         ndc_models::OrderByTarget::SingleColumnAggregate {
             column,
             function,
@@ -917,7 +919,11 @@ fn eval_comparison_target(
     item: &Row,
 ) -> Result<Vec<serde_json::Value>> {
     match target {
-        ndc_models::ComparisonTarget::Column { name, path } => {
+        ndc_models::ComparisonTarget::Column {
+            name,
+            path,
+            field_path: _,
+        } => {
             let rows = eval_path(collection_relationships, variables, state, path, item)?;
             let mut values = vec![];
             for row in &rows {
@@ -926,7 +932,10 @@ fn eval_comparison_target(
             }
             Ok(values)
         }
-        ndc_models::ComparisonTarget::RootCollectionColumn { name } => {
+        ndc_models::ComparisonTarget::RootCollectionColumn {
+            name,
+            field_path: _,
+        } => {
             let value = eval_column(root, name.as_str())?;
             Ok(vec![value])
         }
@@ -1056,7 +1065,11 @@ fn eval_field(
     item: &Row,
 ) -> Result<ndc_models::RowFieldValue> {
     match field {
-        ndc_models::Field::Column { column, fields } => {
+        ndc_models::Field::Column {
+            column,
+            fields,
+            arguments: _,
+        } => {
             let col_val = eval_column(item, column.as_str())?;
             match fields {
                 None => Ok(ndc_models::RowFieldValue(col_val)),

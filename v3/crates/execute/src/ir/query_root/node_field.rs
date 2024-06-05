@@ -129,6 +129,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
                         column: ndc_models::ComparisonTarget::Column {
                             name: field_mapping.column.0.clone(),
                             path: vec![],
+                            field_path: None,
                         },
                         operator: field_mapping.equal_operator.clone(),
                         value: ndc_models::ComparisonValue::Scalar { value: val.clone() },

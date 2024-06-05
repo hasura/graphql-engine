@@ -279,6 +279,7 @@ fn build_binary_comparison_expression(
         column: ndc_models::ComparisonTarget::Column {
             name: column.0,
             path: Vec::new(),
+            field_path: None,
         },
         operator: operator.to_string(),
         value: ndc_models::ComparisonValue::Scalar {
@@ -297,6 +298,7 @@ fn build_is_null_expression(
         column: ndc_models::ComparisonTarget::Column {
             name: column.0,
             path: Vec::new(),
+            field_path: None,
         },
         operator: ndc_models::UnaryComparisonOperator::IsNull,
     };

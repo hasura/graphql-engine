@@ -182,6 +182,7 @@ fn make_permission_binary_boolean_expression(
         column: ndc_models::ComparisonTarget::Column {
             name: ndc_column.0,
             path: Vec::new(),
+            field_path: None,
         },
         operator: operator.to_owned(),
         value: ndc_models::ComparisonValue::Scalar {
@@ -198,6 +199,7 @@ fn make_permission_unary_boolean_expression(
         column: ndc_models::ComparisonTarget::Column {
             name: ndc_column.0,
             path: Vec::new(),
+            field_path: None,
         },
         operator,
     })

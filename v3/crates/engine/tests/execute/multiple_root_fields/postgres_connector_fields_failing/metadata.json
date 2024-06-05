@@ -281,18 +281,22 @@
               }
             },
             "capabilities": {
-              "versions": "*",
               "capabilities": {
                 "query": {
                   "aggregates": {},
-                  "variables": {}
+                  "variables": {},
+                  "nested_fields": {
+                    "filter_by": {},
+                    "order_by": {}
+                  }
                 },
                 "explain": {},
                 "relationships": {
                   "relation_comparisons": {},
                   "order_by_aggregate": {}
                 }
-              }
+              },
+              "version": "0.1.3"
             }
           }
         },
@@ -938,18 +942,22 @@
                 ]
               },
               "capabilities": {
-                "versions": "*",
                 "capabilities": {
                   "query": {
                     "aggregates": {},
-                    "variables": {}
+                    "variables": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {}
+                    }
                   },
                   "explain": {},
                   "relationships": {
                     "relation_comparisons": {},
                     "order_by_aggregate": {}
                   }
-                }
+                },
+                "version": "0.1.3"
               }
             }
           }

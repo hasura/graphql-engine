@@ -149,6 +149,7 @@ pub(crate) fn entities_ir<'n, 's>(
                         column: ndc_models::ComparisonTarget::Column {
                             name: field_mapping.column.0.clone(),
                             path: vec![], // We don't support nested fields in the key fields, so the path is empty
+                            field_path: None,
                         },
                         operator: field_mapping.equal_operator.clone(),
                         value: ndc_models::ComparisonValue::Scalar { value: val.clone() },

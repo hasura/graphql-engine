@@ -15,7 +15,7 @@ open-dds = { path = "../open-dds" }
 derive_more = "0.99.17"
 indexmap = { version = "2", features = ["serde"] }
 lazy_static = "1.4.0"
-ndc-models = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.2" }
+ndc-models = { git = "https://github.com/hasura/ndc-spec.git", rev = "622c643b4f0b6bbe4601c0f065d6d93a4bd3e9db" }
 nonempty = "0.10"
 ref-cast = "1.0"
 reqwest = { version = "0.11", features = ["json", "multipart"] }

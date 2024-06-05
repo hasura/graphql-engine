@@ -29,6 +29,7 @@ pub(crate) fn ndc_query<'s, 'ir>(
             ndc_models::Field::Column {
                 column: FUNCTION_IR_VALUE_COLUMN_NAME.to_string(),
                 fields: ndc_nested_field,
+                arguments: BTreeMap::new(),
             },
         )])),
         limit: None,

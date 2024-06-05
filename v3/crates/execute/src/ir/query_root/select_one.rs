@@ -66,6 +66,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
                         column: ndc_models::ComparisonTarget::Column {
                             name: ndc_column.column.0.clone(),
                             path: vec![],
+                            field_path: None,
                         },
                         operator: ndc_column.equal_operator.clone(),
                         value: ndc_models::ComparisonValue::Scalar {

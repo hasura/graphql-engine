@@ -828,7 +828,11 @@
                   "query": {
                     "explain": {},
                     "aggregates": {},
-                    "variables": {}
+                    "variables": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {}
+                    }
                   },
                   "mutation": {},
                   "relationships": {
@@ -836,7 +840,7 @@
                     "order_by_aggregate": {}
                   }
                 },
-                "version": "0.1.0"
+                "version": "0.1.3"
               }
             }
           },

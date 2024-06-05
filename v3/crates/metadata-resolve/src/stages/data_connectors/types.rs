@@ -281,7 +281,7 @@ mod tests {
                     "url": { "singleUrl": { "value": "http://test.com" } },
                     "schema": {
                         "version": "v0.1",
-                        "capabilities": { "version": "1", "capabilities": { "query": {}, "mutation": {} }},
+                        "capabilities": { "version": "0.1.3", "capabilities": { "query": { "nested_fields": {} }, "mutation": {} }},
                         "schema": {
                             "scalar_types": {},
                             "object_types": {},
@@ -294,10 +294,9 @@ mod tests {
             ))
             .unwrap();
 
-        let explicit_capabilities: ndc_models::CapabilitiesResponse = serde_json::from_str(
-            r#" { "version": "1", "capabilities": { "query": {}, "mutation": {} } }"#,
-        )
-        .unwrap();
+        let explicit_capabilities: ndc_models::CapabilitiesResponse = serde_json::from_value(serde_json::json!(
+            { "version": "0.1.3", "capabilities": { "query": { "nested_fields": {} }, "mutation": {} } }
+        )).unwrap();
 
         // With explicit capabilities specified, we should use them
         assert_eq!(

@@ -401,6 +401,7 @@ pub(crate) fn build_remote_relationship<'n, 's>(
             column: ndc_models::ComparisonTarget::Column {
                 name: target_column.column.0.clone(),
                 path: vec![],
+                field_path: None,
             },
             operator: target_column.equal_operator.clone(),
             value: ndc_models::ComparisonValue::Variable {

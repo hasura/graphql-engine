@@ -21,6 +21,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                         }
                         .into(),
                     },
+                    arguments: BTreeMap::new(),
                 },
             ),
             (
@@ -33,6 +34,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                         }
                         .into(),
                     },
+                    arguments: BTreeMap::new(),
                 },
             ),
         ]),

@@ -171,6 +171,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
                 target: ndc_models::OrderByTarget::Column {
                     name: ndc_column.0.clone(),
                     path: order_by_element_path,
+                    field_path: None,
                 },
             };
 
