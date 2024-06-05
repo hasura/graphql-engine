@@ -58,7 +58,7 @@ pub fn resolve(
     {
         let qualified_type_name = Qualified::new(
             subgraph.to_string(),
-            output_type_permission.type_name.to_owned(),
+            output_type_permission.type_name.clone(),
         );
         match object_types_with_permissions.get_mut(&qualified_type_name) {
             None => {

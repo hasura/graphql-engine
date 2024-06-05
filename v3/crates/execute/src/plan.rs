@@ -446,7 +446,7 @@ fn assign_join_ids<'s, 'ir>(
                 }
             };
             let new_location = Location {
-                join_node: new_node.to_owned(),
+                join_node: new_node.clone(),
                 rest: assign_join_ids(&location.rest, state),
             };
             (key.to_string(), new_location)

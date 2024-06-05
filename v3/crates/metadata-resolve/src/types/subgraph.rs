@@ -100,7 +100,7 @@ where
     let map: BTreeMap<String, V> = Deserialize::deserialize(deserializer)?;
     let mut result = BTreeMap::new();
     for (key, value) in map {
-        let qualified = serde_json::from_str(&key.to_owned()).map_err(serde::de::Error::custom)?;
+        let qualified = serde_json::from_str(&key).map_err(serde::de::Error::custom)?;
         result.insert(qualified, value);
     }
     Ok(result)
@@ -135,7 +135,7 @@ where
     let map: BTreeMap<String, V> = Deserialize::deserialize(deserializer)?;
     let mut result = BTreeMap::new();
     for (key, value) in map {
-        let qualified = serde_json::from_str(&key.to_owned()).map_err(serde::de::Error::custom)?;
+        let qualified = serde_json::from_str(&key).map_err(serde::de::Error::custom)?;
         result.insert(qualified, value);
     }
     Ok(result)

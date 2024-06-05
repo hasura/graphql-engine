@@ -80,14 +80,12 @@ pub(crate) fn resolve_object_boolean_expression_type(
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionType, Error> {
     // name of the boolean expression
-    let qualified_name = Qualified::new(
-        subgraph.to_string(),
-        object_boolean_expression.name.to_owned(),
-    );
+    let qualified_name =
+        Qualified::new(subgraph.to_string(), object_boolean_expression.name.clone());
     // name of the object type backing the boolean expression
     let qualified_object_type_name = Qualified::new(
         subgraph.to_string(),
-        object_boolean_expression.object_type.to_owned(),
+        object_boolean_expression.object_type.clone(),
     );
     let object_type_representation =
         object_types
@@ -102,7 +100,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
     let qualified_data_connector_name = Qualified::new(
         subgraph.to_string(),
-        object_boolean_expression.data_connector_name.to_owned(),
+        object_boolean_expression.data_connector_name.clone(),
     );
 
     // validate data connector name

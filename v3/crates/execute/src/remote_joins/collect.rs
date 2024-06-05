@@ -305,7 +305,7 @@ fn resolve_command_response_row(
             // the array and use that as the value for the relationship otherwise
             // we return the array of objects.
             let array_values: Vec<IndexMap<String, ndc_models::RowFieldValue>> =
-                    json::from_value(json::Value::Array(values.to_vec()))?;
+                    json::from_value(json::Value::Array(values.clone()))?;
 
             if type_container.is_list(){
                 Ok(array_values)

@@ -35,7 +35,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
 ) -> Result<ResolvedObjectBooleanExpressionType, Error> {
     let qualified_object_type_name = Qualified::new(
         subgraph.to_string(),
-        object_boolean_expression_operand.r#type.to_owned(),
+        object_boolean_expression_operand.r#type.clone(),
     );
 
     let object_type_representation =

@@ -454,7 +454,7 @@ pub fn output_type_schema(
                 global_id_fields: object_type_representation
                     .object_type
                     .global_id_fields
-                    .to_vec(),
+                    .clone(),
             }),
             get_output_type(gds, builder, &ID_TYPE_REFERENCE)?,
             BTreeMap::new(),

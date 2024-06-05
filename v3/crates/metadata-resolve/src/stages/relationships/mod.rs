@@ -1,30 +1,28 @@
 mod types;
-pub use types::{
-    ObjectTypeWithRelationships, Relationship, RelationshipCapabilities,
-    RelationshipCommandMapping, RelationshipExecutionCategory, RelationshipModelMapping,
-    RelationshipTarget, RelationshipTargetName,
-};
 
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 
 use indexmap::IndexMap;
 
+use open_dds::relationships::{self, FieldAccess, RelationshipName, RelationshipV1};
 use open_dds::{
     commands::CommandName, data_connector::DataConnectorName, models::ModelName,
     types::CustomTypeName,
 };
 
-use crate::types::error::{Error, RelationshipError};
-use crate::types::subgraph::Qualified;
-
 use crate::helpers::types::mk_name;
 use crate::stages::{
     commands, data_connector_scalar_types, data_connectors, models, object_types, type_permissions,
 };
+use crate::types::error::{Error, RelationshipError};
+use crate::types::subgraph::Qualified;
 
-use open_dds::relationships::{self, FieldAccess, RelationshipName, RelationshipV1};
-
-use std::collections::BTreeSet;
+pub use types::{
+    ObjectTypeWithRelationships, Relationship, RelationshipCapabilities,
+    RelationshipCommandMapping, RelationshipExecutionCategory, RelationshipModelMapping,
+    RelationshipTarget, RelationshipTargetName,
+};
 
 /// resolve relationships
 /// returns updated `types` value
@@ -70,7 +68,7 @@ pub fn resolve(
     } in &metadata_accessor.relationships
     {
         let qualified_relationship_source_type_name =
-            Qualified::new(subgraph.to_string(), relationship.source_type.to_owned());
+            Qualified::new(subgraph.to_string(), relationship.source_type.clone());
         let object_representation = object_types_with_relationships
             .get_mut(&qualified_relationship_source_type_name)
             .ok_or_else(|| Error::RelationshipDefinedOnUnknownType {
@@ -352,11 +350,11 @@ fn resolve_relationship_mappings_command(
 fn get_relationship_capabilities(
     type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,
-    source_data_connector: &Option<data_connectors::DataConnectorLink>,
+    source_data_connector: Option<&data_connectors::DataConnectorLink>,
     target_name: &RelationshipTargetName,
     data_connectors: &data_connectors::DataConnectors,
 ) -> Result<Option<RelationshipCapabilities>, Error> {
-    let Some(data_connector) = &source_data_connector else {
+    let Some(data_connector) = source_data_connector else {
         return Ok(None);
     };
 
@@ -413,12 +411,8 @@ pub fn resolve_relationship(
     let (relationship_target, source_data_connector, target_name) = match &relationship.target {
         relationships::RelationshipTarget::Model(target_model) => {
             let qualified_target_model_name = Qualified::new(
-                target_model
-                    .subgraph()
-                    .to_owned()
-                    .unwrap_or(subgraph)
-                    .to_string(),
-                target_model.name.to_owned(),
+                target_model.subgraph().unwrap_or(subgraph).to_string(),
+                target_model.name.clone(),
             );
             let resolved_target_model =
                 models.get(&qualified_target_model_name).ok_or_else(|| {
@@ -431,7 +425,7 @@ pub fn resolve_relationship(
             let source_data_connector = resolved_target_model
                 .source
                 .as_ref()
-                .map(|source| source.data_connector.clone());
+                .map(|source| &source.data_connector);
             (
                 RelationshipTarget::Model {
                     model_name: qualified_target_model_name,
@@ -456,7 +450,7 @@ pub fn resolve_relationship(
                     .as_deref()
                     .unwrap_or(subgraph)
                     .to_string(),
-                target_command.name.to_owned(),
+                target_command.name.clone(),
             );
             let resolved_target_command =
                 commands
@@ -470,7 +464,7 @@ pub fn resolve_relationship(
             let source_data_connector = resolved_target_command
                 .source
                 .as_ref()
-                .map(|source| source.data_connector.clone());
+                .map(|source| &source.data_connector);
             (
                 RelationshipTarget::Command {
                     command_name: qualified_target_command_name,
@@ -491,7 +485,7 @@ pub fn resolve_relationship(
     let target_capabilities = get_relationship_capabilities(
         &source_type_name,
         &relationship.name,
-        &source_data_connector,
+        source_data_connector,
         &target_name,
         data_connectors,
     )?;

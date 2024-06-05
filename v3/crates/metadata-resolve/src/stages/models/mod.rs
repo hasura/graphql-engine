@@ -231,7 +231,7 @@ fn resolve_model(
     >,
 ) -> Result<Model, Error> {
     let qualified_object_type_name =
-        Qualified::new(subgraph.to_string(), model.object_type.to_owned());
+        Qualified::new(subgraph.to_string(), model.object_type.clone());
     let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
     let object_type_representation = get_model_object_type_representation(
         object_types,

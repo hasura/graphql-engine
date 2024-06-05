@@ -29,9 +29,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
         // scope the data connector to the current subgraph
         let qualified_data_connector_name = Qualified::new(
             subgraph.to_string(),
-            data_connector_operator_mapping
-                .data_connector_name
-                .to_owned(),
+            data_connector_operator_mapping.data_connector_name.clone(),
         );
 
         // lookup the data connector we are referring to

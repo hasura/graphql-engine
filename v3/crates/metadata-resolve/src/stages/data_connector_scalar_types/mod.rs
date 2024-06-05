@@ -44,7 +44,7 @@ pub fn resolve<'a>(
 
         let qualified_data_connector_name = Qualified::new(
             subgraph.to_string(),
-            scalar_type_representation.data_connector_name.to_owned(),
+            scalar_type_representation.data_connector_name.clone(),
         );
 
         let scalars = data_connector_scalars
