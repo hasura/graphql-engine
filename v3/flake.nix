@@ -23,6 +23,8 @@
     flake-utils.lib.eachDefaultSystem
       (localSystem:
         let
+          version = pkgs.lib.strings.fileContents ./nix/version;
+
           pkgs = import nixpkgs {
             system = localSystem;
             overlays = [ rust-overlay.overlays.default ];
@@ -50,19 +52,19 @@
 
             # engine binary for whichever is the local machine
             engine = rust.callPackage ./nix/app.nix {
-              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              inherit version;
               pname = "engine";
             };
 
             # engine binary for x86_64-linux
             engine-x86_64-linux = rust-x86_64-linux.callPackage ./nix/app.nix {
-              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              inherit version;
               pname = "engine";
             };
 
             # engine binary for aarch64-linux
             engine-aarch64-linux = rust-aarch64-linux.callPackage ./nix/app.nix {
-              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              inherit version;
               pname = "engine";
             };
 
@@ -96,19 +98,19 @@
 
             # custom-connector binary for whichever is the local machine
             custom-connector = rust.callPackage ./nix/app.nix {
-              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              inherit version;
               pname = "custom-connector";
             };
 
             # custom-connector binary for x86_64-linux
             custom-connector-x86_64-linux = rust-x86_64-linux.callPackage ./nix/app.nix {
-              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              inherit version;
               pname = "custom-connector";
             };
 
             # custom-connector binary for aarch64-linux
             custom-connector-aarch64-linux = rust-aarch64-linux.callPackage ./nix/app.nix {
-              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              inherit version;
               pname = "custom-connector";
             };
 
@@ -140,19 +142,19 @@
 
             # dev-auth-webhook binary for whichever is the local machine
             dev-auth-webhook = rust.callPackage ./nix/app.nix {
-              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              inherit version;
               pname = "dev-auth-webhook";
             };
 
             # dev-auth-webhook binary for x86_64-linux
             dev-auth-webhook-x86_64-linux = rust-x86_64-linux.callPackage ./nix/app.nix {
-              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              inherit version;
               pname = "dev-auth-webhook";
             };
 
             # dev-auth-webhook binary for aarch64-linux
             dev-auth-webhook-aarch64-linux = rust-aarch64-linux.callPackage ./nix/app.nix {
-              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              inherit version;
               pname = "dev-auth-webhook";
             };
 
