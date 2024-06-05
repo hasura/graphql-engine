@@ -1,7 +1,5 @@
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
-use open_dds::types::{
-    CustomTypeName, FieldName, GraphQlTypeName, OperatorName, TypeName, TypeReference,
-};
+use open_dds::types::{CustomTypeName, FieldName, GraphQlTypeName, OperatorName, TypeReference};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -28,11 +26,8 @@ pub struct ResolvedObjectBooleanExpressionType {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-
 pub struct ResolvedScalarBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
-
-    pub r#type: TypeName,
 
     /// The list of comparison operators that can used on this scalar type
     pub comparison_operators: BTreeMap<OperatorName, TypeReference>,

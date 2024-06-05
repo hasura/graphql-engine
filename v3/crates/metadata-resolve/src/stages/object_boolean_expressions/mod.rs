@@ -1,6 +1,7 @@
 pub mod types;
 use crate::stages::{
-    data_connector_scalar_types, data_connectors, graphql_config, object_types, type_permissions,
+    boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
+    object_types, type_permissions,
 };
 use crate::types::error::{BooleanExpressionError, Error, GraphqlConfigError};
 
@@ -15,7 +16,6 @@ use open_dds::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
-    BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
     ObjectBooleanExpressionsOutput,
 };
@@ -259,7 +259,7 @@ pub fn resolve_boolean_expression_graphql_config(
     scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<BooleanExpressionGraphqlConfig, Error> {
+) -> Result<boolean_expressions::BooleanExpressionGraphqlConfig, Error> {
     let mut scalar_fields = BTreeMap::new();
 
     let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
@@ -296,7 +296,7 @@ pub fn resolve_boolean_expression_graphql_config(
                 if !operators.is_empty() {
                     scalar_fields.insert(
                         field_name.clone(),
-                        ComparisonExpressionInfo {
+                        boolean_expressions::ComparisonExpressionInfo {
                             type_name: graphql_type_name.clone(),
                             operators,
                             is_null_operator_name: filter_graphql_config
@@ -310,10 +310,10 @@ pub fn resolve_boolean_expression_graphql_config(
         }
     }
 
-    Ok(BooleanExpressionGraphqlConfig {
+    Ok(boolean_expressions::BooleanExpressionGraphqlConfig {
         type_name: where_type_name,
         scalar_fields,
-        graphql_config: (BooleanExpressionGraphqlFieldConfig {
+        graphql_config: (boolean_expressions::BooleanExpressionGraphqlFieldConfig {
             where_field_name: filter_graphql_config.where_field_name.clone(),
             and_operator_name: filter_graphql_config.operator_names.and.clone(),
             or_operator_name: filter_graphql_config.operator_names.or.clone(),

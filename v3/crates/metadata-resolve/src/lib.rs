@@ -16,6 +16,9 @@ pub use helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
     NdcColumnForComparison, TypeRepresentation,
 };
+pub use stages::boolean_expressions::{
+    BooleanExpressionGraphqlConfig, ComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
+};
 pub use stages::command_permissions::CommandWithPermissions;
 pub use stages::commands::Command;
 pub use stages::data_connectors::DataConnectorLink;
@@ -23,12 +26,11 @@ pub use stages::model_permissions::{
     FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
 };
 pub use stages::models::{
-    ConnectorArgumentName, Model, ModelOrderByExpression, ModelSource, SelectManyGraphQlDefinition,
-    SelectUniqueGraphQlDefinition,
+    ConnectorArgumentName, Model, ModelExpressionType, ModelOrderByExpression, ModelSource,
+    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
 };
 pub use stages::object_boolean_expressions::{
-    BooleanExpressionGraphqlConfig, ComparisonExpressionInfo, ObjectBooleanExpressionDataConnector,
-    ObjectBooleanExpressionType,
+    ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
 };
 pub use stages::object_types::{
     FieldMapping, ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,

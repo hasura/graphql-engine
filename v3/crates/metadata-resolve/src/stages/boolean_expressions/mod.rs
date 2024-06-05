@@ -1,4 +1,4 @@
-use crate::stages::{data_connectors, graphql_config, scalar_types, type_permissions};
+use crate::stages::{data_connectors, graphql_config, type_permissions};
 use crate::types::error::{BooleanExpressionError, Error};
 use crate::types::internal_flags::MetadataResolveFlagsInternal;
 use crate::Qualified;
@@ -19,7 +19,6 @@ pub fn resolve(
     graphql_config: &graphql_config::GraphqlConfig,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<BooleanExpressionsOutput, Error> {
     if !flags.enable_boolean_expression_types
         && !metadata_accessor.boolean_expression_types.is_empty()
@@ -87,7 +86,6 @@ pub fn resolve(
                 &boolean_expression_type.graphql,
                 object_types,
                 &boolean_expression_scalar_types,
-                scalar_types,
                 &all_boolean_expression_names,
                 graphql_config,
             )?;

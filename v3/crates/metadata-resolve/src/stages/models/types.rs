@@ -1,5 +1,7 @@
 use crate::helpers::types::NdcColumnForComparison;
-use crate::stages::{data_connectors, object_boolean_expressions, object_types};
+use crate::stages::{
+    boolean_expressions, data_connectors, object_boolean_expressions, object_types,
+};
 use crate::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
     QualifiedTypeReference,
@@ -126,8 +128,14 @@ pub struct Model {
     pub source: Option<ModelSource>,
     pub global_id_source: Option<NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
-    pub filter_expression_type: Option<object_boolean_expressions::ObjectBooleanExpressionType>,
+    pub filter_expression_type: Option<ModelExpressionType>,
     pub orderable_fields: Vec<OrderableField>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum ModelExpressionType {
+    ObjectBooleanExpressionType(object_boolean_expressions::ObjectBooleanExpressionType),
+    BooleanExpressionType(boolean_expressions::ResolvedObjectBooleanExpressionType),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

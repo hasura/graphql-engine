@@ -1,5 +1,5 @@
 mod apollo;
-mod boolean_expressions;
+pub mod boolean_expressions;
 pub mod command_permissions;
 pub mod commands;
 pub mod data_connector_scalar_types;
@@ -82,7 +82,6 @@ pub fn resolve(
         &graphql_config,
         &data_connectors,
         &object_types_with_permissions,
-        &scalar_types,
     )?;
 
     let models::ModelsOutput {
@@ -100,6 +99,7 @@ pub fn resolve(
         &object_types_with_permissions,
         &scalar_types,
         &object_boolean_expression_types,
+        &boolean_expression_types,
         &graphql_config,
     )?;
 

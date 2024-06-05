@@ -1,0 +1,60 @@
+query {
+  AuthorManyNot: AuthorMany(
+    where: { _not: { first_name: { _is_null: true } } }
+  ) {
+    author_id
+    first_name
+  }
+  AuthorManyOr: AuthorMany(
+    where: { _or: [{ first_name: { _like: "Pet%" } }] }
+  ) {
+    author_id
+    first_name
+  }
+  AuthorManyAnd: AuthorMany(
+    where: { _and: [{ first_name: { _like: "Pet%" } }] }
+  ) {
+    author_id
+    first_name
+  }
+  AuthorManyNestedBool: AuthorMany(
+    where: {
+      _or: [
+        { _and: [{ author_id: { _eq: 1 } }, { first_name: { _eq: "Peter" } }] }
+        { _and: [{ author_id: { _eq: 2 } }, { first_name: { _eq: "John" } }] }
+      ]
+    }
+  ) {
+    author_id
+    first_name
+  }
+  AuthorTwoManyNot: AuthorTwoMany(
+    where: { _not: { first_name: { _is_null: true } } }
+  ) {
+    author_id
+    first_name
+  }
+  AuthorTwoManyOr: AuthorTwoMany(
+    where: { _or: [{ first_name: { _like: "Pet%" } }] }
+  ) {
+    author_id
+    first_name
+  }
+  AuthorTwoManyAnd: AuthorTwoMany(
+    where: { _and: [{ first_name: { _like: "Pet%" } }] }
+  ) {
+    author_id
+    first_name
+  }
+  AuthorTwoManyNestedBool: AuthorTwoMany(
+    where: {
+      _or: [
+        { _and: [{ author_id: { _eq: 1 } }, { first_name: { _eq: "Peter" } }] }
+        { _and: [{ author_id: { _eq: 2 } }, { first_name: { _eq: "John" } }] }
+      ]
+    }
+  ) {
+    author_id
+    first_name
+  }
+}

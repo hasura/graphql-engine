@@ -73,19 +73,49 @@ pub(crate) fn generate_select_many_arguments(
     }
 
     // generate and insert where argument
-    if let Some(object_boolean_expression_type) = &model.model.filter_expression_type {
-        if let Some(boolean_expression) = &object_boolean_expression_type.graphql {
-            let where_argument = get_where_expression_input_field(
-                builder,
-                object_boolean_expression_type.name.clone(),
-                boolean_expression,
-            );
+    let boolean_expression_filter_type =
+        &model
+            .model
+            .filter_expression_type
+            .as_ref()
+            .and_then(|bool_exp| match bool_exp {
+                metadata_resolve::ModelExpressionType::ObjectBooleanExpressionType(
+                    object_boolean_expression_type,
+                ) => object_boolean_expression_type
+                    .graphql
+                    .as_ref()
+                    .map(|graphql_config| {
+                        (
+                            object_boolean_expression_type.name.clone(),
+                            graphql_config.clone(),
+                        )
+                    }),
+                metadata_resolve::ModelExpressionType::BooleanExpressionType(
+                    boolean_expression_object_type,
+                ) => boolean_expression_object_type
+                    .graphql
+                    .as_ref()
+                    .map(|graphql_config| {
+                        (
+                            boolean_expression_object_type.name.clone(),
+                            graphql_config.clone(),
+                        )
+                    }),
+            });
 
-            arguments.insert(
-                where_argument.name.clone(),
-                builder.allow_all_namespaced(where_argument, None),
-            );
-        }
+    if let Some((boolean_expression_type_name, boolean_expression_graphql_config)) =
+        boolean_expression_filter_type
+    {
+        let where_argument = get_where_expression_input_field(
+            builder,
+            boolean_expression_type_name.clone(),
+            boolean_expression_graphql_config,
+        );
+
+        arguments.insert(
+            where_argument.name.clone(),
+            builder.allow_all_namespaced(where_argument, None),
+        );
     }
 
     Ok(arguments)

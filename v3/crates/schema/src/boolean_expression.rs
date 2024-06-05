@@ -8,8 +8,9 @@ use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::FilterRelationshipAnnotation;
 use super::types::{BooleanExpressionAnnotation, InputAnnotation, TypeId};
 use metadata_resolve::{
-    mk_name, BooleanExpressionGraphqlConfig, ObjectBooleanExpressionDataConnector,
-    ObjectTypeWithRelationships, Qualified,
+    mk_name, BooleanExpressionGraphqlConfig, ModelExpressionType,
+    ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType, ObjectTypeWithRelationships,
+    Qualified, ResolvedObjectBooleanExpressionType,
 };
 
 use crate::permissions;
@@ -193,7 +194,12 @@ fn build_comparable_relationships_schema(
                     if target_source.data_connector.name == local_data_connector.name {
                         match &target_model.model.filter_expression_type {
                             None => {}
-                            Some(target_model_filter_expression) => {
+                            Some(ModelExpressionType::BooleanExpressionType(_)) => {
+                                todo!("relationships with BooleanExpressionType")
+                            }
+                            Some(ModelExpressionType::ObjectBooleanExpressionType(
+                                target_model_filter_expression,
+                            )) => {
                                 // If the relationship target model does not have filterExpressionType do not include
                                 // it in the source model filter expression input type.
                                 if let Some(ref target_model_filter_expression_graphql) =
@@ -259,20 +265,55 @@ fn build_comparable_relationships_schema(
     Ok(input_fields)
 }
 
+/// There are two types of BooleanExpressionType now, we try to build with both
 pub fn build_boolean_expression_input_schema(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &ast::TypeName,
     gds_type_name: &Qualified<CustomTypeName>,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
-    let object_boolean_expression_type = gds
+    match gds
         .metadata
         .object_boolean_expression_types
         .get(gds_type_name)
-        .ok_or_else(|| Error::InternalTypeNotFound {
-            type_name: gds_type_name.clone(),
-        })?;
+    {
+        Some(object_boolean_expression_type) => build_schema_with_object_boolean_expression_type(
+            object_boolean_expression_type,
+            gds,
+            builder,
+            type_name,
+            gds_type_name,
+        ),
+        None => {
+            match gds
+                .metadata
+                .boolean_expression_types
+                .objects
+                .get(gds_type_name)
+            {
+                Some(boolean_expression_object_type) => build_schema_with_boolean_expression_type(
+                    boolean_expression_object_type,
+                    gds,
+                    builder,
+                    type_name,
+                    gds_type_name,
+                ),
+                None => Err(Error::InternalTypeNotFound {
+                    type_name: gds_type_name.clone(),
+                }),
+            }
+        }
+    }
+}
 
+// build the schema using the old `ObjectBooleanExpressionType` metadata kind
+fn build_schema_with_object_boolean_expression_type(
+    object_boolean_expression_type: &ObjectBooleanExpressionType,
+    gds: &GDS,
+    builder: &mut gql_schema::Builder<GDS>,
+    type_name: &ast::TypeName,
+    gds_type_name: &Qualified<CustomTypeName>,
+) -> Result<gql_schema::TypeInfo<GDS>, Error> {
     if let Some(boolean_expression_info) = &object_boolean_expression_type.graphql {
         let mut input_fields = BTreeMap::new();
 
@@ -301,6 +342,55 @@ pub fn build_boolean_expression_input_schema(
             &object_boolean_expression_type.data_connector,
             builder,
         )?);
+
+        Ok(gql_schema::TypeInfo::InputObject(
+            gql_schema::InputObject::new(type_name.clone(), None, input_fields, Vec::new()),
+        ))
+    } else {
+        Err(Error::InternalBooleanExpressionNotFound {
+            type_name: gds_type_name.clone(),
+        })
+    }
+}
+
+// build the schema using the new `BooleanExpressionType` metadata kind
+fn build_schema_with_boolean_expression_type(
+    boolean_expression_object_type: &ResolvedObjectBooleanExpressionType,
+    gds: &GDS,
+    builder: &mut gql_schema::Builder<GDS>,
+    type_name: &ast::TypeName,
+    gds_type_name: &Qualified<CustomTypeName>,
+) -> Result<gql_schema::TypeInfo<GDS>, Error> {
+    if let Some(boolean_expression_info) = &boolean_expression_object_type.graphql {
+        let mut input_fields = BTreeMap::new();
+
+        // add `_and`, `_not` etc
+        input_fields.extend(build_builtin_operator_schema(
+            boolean_expression_info,
+            type_name,
+            builder,
+        ));
+
+        let object_type_representation =
+            get_object_type_representation(gds, &boolean_expression_object_type.object_type)?;
+
+        // add in all fields that are directly comparable
+        input_fields.extend(build_comparable_fields_schema(
+            &boolean_expression_object_type.object_type,
+            object_type_representation,
+            boolean_expression_info,
+            builder,
+        )?);
+
+        // TODO: add in relationship fields
+        /*
+            input_fields.extend(build_comparable_relationships_schema(
+                gds,
+                object_type_representation,
+                &object_boolean_expression_type.data_connector,
+                builder,
+            )?);
+        */
 
         Ok(gql_schema::TypeInfo::InputObject(
             gql_schema::InputObject::new(type_name.clone(), None, input_fields, Vec::new()),

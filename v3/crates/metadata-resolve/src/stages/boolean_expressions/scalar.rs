@@ -69,7 +69,6 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
 
     Ok(ResolvedScalarBooleanExpressionType {
         name: boolean_expression_type_name.clone(),
-        r#type: scalar_boolean_expression_operand.r#type.clone(),
         comparison_operators: resolved_comparison_operators,
         data_connector_operator_mappings,
         graphql_name,

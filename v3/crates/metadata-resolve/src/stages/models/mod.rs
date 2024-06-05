@@ -1,6 +1,6 @@
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 pub use types::{
-    ConnectorArgumentName, LimitFieldGraphqlConfig, Model, ModelGraphQlApi,
+    ConnectorArgumentName, LimitFieldGraphqlConfig, Model, ModelExpressionType, ModelGraphQlApi,
     ModelGraphqlApiArgumentsConfig, ModelOrderByExpression, ModelSource, ModelsOutput,
     NDCFieldSourceMapping, OffsetFieldGraphqlConfig, OrderByExpressionInfo,
     SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, UniqueIdentifierField,
@@ -15,8 +15,8 @@ use crate::helpers::type_mappings;
 use crate::helpers::types::NdcColumnForComparison;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::stages::{
-    data_connector_scalar_types, data_connectors, graphql_config, object_boolean_expressions,
-    object_types, scalar_types, type_permissions,
+    boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
+    object_boolean_expressions, object_types, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 
@@ -55,6 +55,7 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ModelsOutput, Error> {
     // resolve models
@@ -77,6 +78,7 @@ pub fn resolve(
             &mut global_id_enabled_types,
             &mut apollo_federation_entity_enabled_types,
             object_boolean_expression_types,
+            boolean_expression_types,
         )?;
         if resolved_model.global_id_source.is_some() {
             match global_id_models.insert(
@@ -142,35 +144,12 @@ fn resolve_filter_expression_type(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
-) -> Result<Option<object_boolean_expressions::ObjectBooleanExpressionType>, Error> {
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+) -> Result<Option<ModelExpressionType>, Error> {
     model
         .filter_expression_type
         .as_ref()
         .map(|filter_expression_type| {
-            let object_boolean_expression_type_name =
-                Qualified::new(subgraph.to_string(), filter_expression_type.clone());
-            let object_boolean_expression_type = object_boolean_expression_types
-                .get(&object_boolean_expression_type_name)
-                .ok_or_else(|| {
-                    Error::from(
-                        BooleanExpressionError::UnknownBooleanExpressionTypeInModel {
-                            name: object_boolean_expression_type_name.clone(),
-                            model: Qualified::new(subgraph.to_string(), model.name.clone()),
-                        },
-                    )
-                })?;
-            if object_boolean_expression_type.object_type != *model_data_type {
-                return Err(Error::from(
-                    BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel {
-                        name: object_boolean_expression_type_name.clone(),
-                        boolean_expression_object_type: object_boolean_expression_type
-                            .object_type
-                            .clone(),
-                        model: Qualified::new(subgraph.to_string(), model.name.clone()),
-                        model_object_type: model_data_type.clone(),
-                    },
-                ));
-            }
             // This is also checked in resolve_model_graphql_api, but we want to disallow this even
             // if the model is not used in the graphql layer.
             if model.source.is_none() {
@@ -180,7 +159,56 @@ fn resolve_filter_expression_type(
                 // TODO: Compatibility of model source and the boolean expression type is checked in
                 // resolve_model_source. Figure out a way to make this logic not scattered.
             }
-            Ok(object_boolean_expression_type.clone())
+
+            let boolean_expression_type_name =
+                Qualified::new(subgraph.to_string(), filter_expression_type.clone());
+
+            match object_boolean_expression_types.get(&boolean_expression_type_name) {
+                Some(object_boolean_expression_type) => {
+                    // we're using an old ObjectBooleanExpressionType kind
+
+                    // check that the model object type and boolean expression object type agree
+                    if object_boolean_expression_type.object_type != *model_data_type {
+                        return Err(Error::from(
+                    BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel {
+                        name: boolean_expression_type_name.clone(),
+                        boolean_expression_object_type: object_boolean_expression_type
+                            .object_type
+                            .clone(),
+                        model: Qualified::new(subgraph.to_string(), model.name.clone()),
+                        model_object_type: model_data_type.clone(),
+                    },
+                ));
+                    }
+
+                    Ok(ModelExpressionType::ObjectBooleanExpressionType(
+                        object_boolean_expression_type.clone(),
+                    ))
+                }
+                None => {
+                    // now we should also check in `BooleanExpressionTypes`, the new kind
+                    match boolean_expression_types
+                        .objects
+                        .get(&boolean_expression_type_name)
+                    {
+                        Some(boolean_expression_object_type) => {
+                            // we're using the new style of BooleanExpressionType
+
+                            // TODO: what checks do we need here?
+
+                            Ok(ModelExpressionType::BooleanExpressionType(
+                                boolean_expression_object_type.clone(),
+                            ))
+                        }
+                        None => Err(Error::from(
+                            BooleanExpressionError::UnknownBooleanExpressionTypeInModel {
+                                name: boolean_expression_type_name.clone(),
+                                model: Qualified::new(subgraph.to_string(), model.name.clone()),
+                            },
+                        )),
+                    }
+                }
+            }
         })
         .transpose()
 }
@@ -229,6 +257,7 @@ fn resolve_model(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> Result<Model, Error> {
     let qualified_object_type_name =
         Qualified::new(subgraph.to_string(), model.object_type.clone());
@@ -349,6 +378,7 @@ fn resolve_model(
         &qualified_object_type_name,
         subgraph,
         object_boolean_expression_types,
+        boolean_expression_types,
     )?;
 
     Ok(Model {
@@ -666,11 +696,12 @@ fn resolve_model_source(
     }
 
     // The `ObjectBooleanExpressionType` allows specifying Data Connector related information
-    // however this is something we are decoupling. For now, if it is included, we should
-    // still check it againt the type specified in the models source.
-    // In future, we'll use `BooleanExpressionType` which will defer to the model's choice of object by default, and
-    // we can delete this check
-    if let Some(filter_expression) = &model.filter_expression_type {
+    // however this is something we are decoupling. We still check it againt the type specified in the models source.
+    // The newer `BooleanExpressionType` defers to the model's choice of object by default, so we
+    // do not need this check there
+    if let Some(ModelExpressionType::ObjectBooleanExpressionType(filter_expression)) =
+        &model.filter_expression_type
+    {
         if let Some(data_connector) = &filter_expression.data_connector {
             if data_connector.name != qualified_data_connector_name {
                 return Err(Error::DifferentDataConnectorInFilterExpression {

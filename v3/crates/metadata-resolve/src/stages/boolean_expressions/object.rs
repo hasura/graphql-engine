@@ -3,7 +3,7 @@ pub use super::{
     ResolvedObjectBooleanExpressionType, ResolvedScalarBooleanExpressionType,
 };
 use crate::helpers::types::mk_name;
-use crate::stages::{graphql_config, object_types, scalar_types, type_permissions};
+use crate::stages::{graphql_config, object_types, type_permissions};
 use crate::types::error::{BooleanExpressionError, Error, GraphqlConfigError};
 use crate::types::subgraph::mk_qualified_type_reference;
 use crate::Qualified;
@@ -14,7 +14,7 @@ use open_dds::{
         BooleanExpressionTypeGraphQlConfiguration,
     },
     data_connector::DataConnectorName,
-    types::{CustomTypeName, FieldName, TypeName},
+    types::{CustomTypeName, FieldName},
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -29,7 +29,6 @@ pub(crate) fn resolve_object_boolean_expression_type(
         Qualified<CustomTypeName>,
         ResolvedScalarBooleanExpressionType,
     >,
-    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     all_boolean_expression_names: &BTreeSet<Qualified<CustomTypeName>>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ResolvedObjectBooleanExpressionType, Error> {
@@ -71,7 +70,6 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 object_boolean_graphql_config,
                 &comparable_fields,
                 scalar_boolean_expression_types,
-                scalar_types,
                 subgraph,
                 graphql_config,
             )
@@ -154,7 +152,6 @@ fn resolve_object_boolean_graphql(
         Qualified<CustomTypeName>,
         ResolvedScalarBooleanExpressionType,
     >,
-    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     subgraph: &str,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<BooleanExpressionGraphqlConfig, Error> {
@@ -176,50 +173,31 @@ fn resolve_object_boolean_graphql(
         if let Some(scalar_boolean_expression_type) =
             scalar_boolean_expression_types.get(comparable_field_type_name)
         {
-            // get the underlying scalar_type, if applicable
-            match &scalar_boolean_expression_type.r#type {
-                TypeName::Inbuilt(_) => None,
-                TypeName::Custom(type_name) => {
-                    let qualified_type_name =
-                        Qualified::new(subgraph.to_string(), type_name.to_owned());
-                    scalar_types.get(&qualified_type_name)
+            if let Some(graphql_name) = &scalar_boolean_expression_type.graphql_name {
+                let mut operators = BTreeMap::new();
+                for (op_name, op_definition) in &scalar_boolean_expression_type.comparison_operators
+                {
+                    operators.insert(
+                        op_name.clone(),
+                        mk_qualified_type_reference(op_definition, subgraph),
+                    );
                 }
-            };
+                let graphql_type_name = mk_name(&graphql_name.0).map(ast::TypeName)?;
 
-            if let Some(scalar_type) = match &scalar_boolean_expression_type.r#type {
-                TypeName::Inbuilt(_) => None,
-                TypeName::Custom(type_name) => {
-                    let qualified_type_name =
-                        Qualified::new(subgraph.to_string(), type_name.to_owned());
-                    scalar_types.get(&qualified_type_name)
-                }
-            } {
-                if let Some(graphql_type_name) = &scalar_type.graphql_type_name {
-                    let mut operators = BTreeMap::new();
-                    for (op_name, op_definition) in
-                        &scalar_boolean_expression_type.comparison_operators
-                    {
-                        operators.insert(
-                            op_name.clone(),
-                            mk_qualified_type_reference(op_definition, subgraph),
-                        );
-                    }
-
-                    // Register scalar comparison field only if it contains non-zero operators.
-                    if !operators.is_empty() {
-                        scalar_fields.insert(
-                            comparable_field_name.clone(),
-                            ComparisonExpressionInfo {
-                                type_name: graphql_type_name.clone(),
-                                operators,
-                                is_null_operator_name: filter_graphql_config
-                                    .operator_names
-                                    .is_null
-                                    .clone(),
-                            },
-                        );
-                    };
-                }
+                // Register scalar comparison field only if it contains non-zero operators.
+                if !operators.is_empty() {
+                    scalar_fields.insert(
+                        comparable_field_name.clone(),
+                        ComparisonExpressionInfo {
+                            type_name: graphql_type_name.clone(),
+                            operators: operators.clone(),
+                            is_null_operator_name: filter_graphql_config
+                                .operator_names
+                                .is_null
+                                .clone(),
+                        },
+                    );
+                };
             }
         }
     }
