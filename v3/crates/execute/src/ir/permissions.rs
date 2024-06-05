@@ -4,7 +4,10 @@ use hasura_authn_core::{SessionVariableValue, SessionVariables};
 use lang_graphql::normalized_ast;
 use ndc_models;
 
-use open_dds::{data_connector::DataConnectorColumnName, types::InbuiltType};
+use open_dds::{
+    data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
+    types::InbuiltType,
+};
 
 use crate::ir::error;
 use crate::model_tracking::{count_model, UsagesCounts};
@@ -167,7 +170,7 @@ pub(crate) fn process_model_predicate<'s>(
 fn make_permission_binary_boolean_expression(
     ndc_column: DataConnectorColumnName,
     argument_type: &QualifiedTypeReference,
-    operator: &str,
+    operator: &DataConnectorOperatorName,
     value_expression: &metadata_resolve::ValueExpression,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -184,7 +187,7 @@ fn make_permission_binary_boolean_expression(
             path: Vec::new(),
             field_path: None,
         },
-        operator: operator.to_owned(),
+        operator: operator.0.clone(),
         value: ndc_models::ComparisonValue::Scalar {
             value: ndc_expression_value,
         },

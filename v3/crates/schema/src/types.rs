@@ -12,7 +12,7 @@ use std::{
 use open_dds::{
     arguments::ArgumentName,
     commands,
-    data_connector::DataConnectorColumnName,
+    data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     models,
     types::{self},
 };
@@ -197,7 +197,7 @@ pub enum ModelInputAnnotation {
         ndc_table_argument: Option<ConnectorArgumentName>,
     },
     ComparisonOperation {
-        operator: String,
+        operator: DataConnectorOperatorName,
     },
     IsNullOperation,
     ModelOrderByExpression,

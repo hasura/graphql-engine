@@ -1,6 +1,6 @@
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema::{self as gql_schema, InputField, Namespaced};
-use open_dds::types::CustomTypeName;
+use open_dds::{data_connector::DataConnectorOperatorName, types::CustomTypeName};
 use std::collections::BTreeMap;
 
 use super::types::input_type;
@@ -79,6 +79,10 @@ pub fn build_scalar_comparison_input(
             nullable: true,
         };
 
+        // this feels a bit loose, we're depending on the fact the ast::Name and
+        // DataConnectorOperatorName should be the same
+        let ndc_operator_name = DataConnectorOperatorName(op_name.to_string());
+
         input_fields.insert(
             op_name.clone(),
             builder.allow_all_namespaced(
@@ -87,7 +91,7 @@ pub fn build_scalar_comparison_input(
                     None,
                     types::Annotation::Input(types::InputAnnotation::Model(
                         types::ModelInputAnnotation::ComparisonOperation {
-                            operator: op_name.to_string(),
+                            operator: ndc_operator_name,
                         },
                     )),
                     nullable_input_type,

@@ -3,7 +3,7 @@ use crate::types::error::{Error, RelationshipError};
 use crate::types::permission::ValueExpression;
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
 use open_dds::{
-    data_connector::DataConnectorColumnName,
+    data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     models::ModelName,
     relationships::{RelationshipName, RelationshipType},
     types::CustomTypeName,
@@ -47,7 +47,7 @@ pub enum ModelPredicate {
     BinaryFieldComparison {
         field: FieldName,
         ndc_column: DataConnectorColumnName,
-        operator: String,
+        operator: DataConnectorOperatorName,
         argument_type: QualifiedTypeReference,
         value: ValueExpression,
     },

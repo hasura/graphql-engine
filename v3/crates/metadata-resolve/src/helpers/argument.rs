@@ -18,8 +18,9 @@ use crate::types::subgraph::{ArgumentInfo, Qualified, QualifiedBaseType, Qualifi
 use indexmap::IndexMap;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
-use open_dds::data_connector::DataConnectorName;
-use open_dds::data_connector::DataConnectorObjectType;
+use open_dds::data_connector::{
+    DataConnectorName, DataConnectorObjectType, DataConnectorOperatorName,
+};
 use open_dds::models::ModelName;
 use open_dds::permissions;
 use open_dds::types::{CustomTypeName, FieldName, OperatorName};
@@ -672,7 +673,7 @@ fn resolve_binary_operator_for_type(
     scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     ndc_scalar_type: &ndc_models::ScalarType,
     subgraph: &str,
-) -> Result<(String, QualifiedTypeReference), Error> {
+) -> Result<(DataConnectorOperatorName, QualifiedTypeReference), Error> {
     let field_definition = fields
         .get(field_name)
         .ok_or_else(|| Error::TypePredicateError {
@@ -681,6 +682,7 @@ fn resolve_binary_operator_for_type(
                 type_name: type_name.clone(),
             },
         })?;
+
     let comparison_operator_definition = &ndc_scalar_type
         .comparison_operators
         .get(&operator.0)
@@ -690,12 +692,14 @@ fn resolve_binary_operator_for_type(
                 operator_name: operator.clone(),
             },
         })?;
+
     match comparison_operator_definition {
-        ndc_models::ComparisonOperatorDefinition::Equal => {
-            Ok((operator.0.clone(), field_definition.field_type.clone()))
-        }
+        ndc_models::ComparisonOperatorDefinition::Equal => Ok((
+            DataConnectorOperatorName(operator.to_string()),
+            field_definition.field_type.clone(),
+        )),
         ndc_models::ComparisonOperatorDefinition::In => Ok((
-            operator.0.clone(),
+            DataConnectorOperatorName(operator.to_string()),
             QualifiedTypeReference {
                 underlying_type: QualifiedBaseType::List(Box::new(
                     field_definition.field_type.clone(),
@@ -704,7 +708,7 @@ fn resolve_binary_operator_for_type(
             },
         )),
         ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => Ok((
-            operator.0.clone(),
+            DataConnectorOperatorName(operator.to_string()),
             resolve_ndc_type(data_connector, argument_type, scalars, subgraph)?,
         )),
     }

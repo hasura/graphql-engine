@@ -10,7 +10,7 @@ use serde::Serialize;
 use crate::ir::error;
 use crate::model_tracking::{count_model, UsagesCounts};
 use open_dds::{
-    data_connector::DataConnectorColumnName,
+    data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     types::{CustomTypeName, FieldName},
 };
 use schema::FilterRelationshipAnnotation;
@@ -133,7 +133,9 @@ fn build_filter_expression<'s>(
         )) => {
             let FieldMapping { column, .. } =
                 get_field_mapping_of_field_name(type_mappings, object_type, field_name)?;
+
             let mut expressions = Vec::new();
+
             for (_op_name, op_value) in field.value.as_object()? {
                 match op_value.info.generic {
                     schema::Annotation::Input(InputAnnotation::Model(
@@ -271,7 +273,7 @@ fn resolve_filter_object<'s>(
 
 /// Generate a binary comparison operator
 fn build_binary_comparison_expression(
-    operator: &str,
+    operator: &DataConnectorOperatorName,
     column: DataConnectorColumnName,
     value: &normalized_ast::Value<'_, GDS>,
 ) -> ndc_models::Expression {
@@ -281,7 +283,7 @@ fn build_binary_comparison_expression(
             path: Vec::new(),
             field_path: None,
         },
-        operator: operator.to_string(),
+        operator: operator.0.clone(),
         value: ndc_models::ComparisonValue::Scalar {
             value: value.as_json(),
         },
