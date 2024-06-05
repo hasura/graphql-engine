@@ -57,17 +57,13 @@ pub fn typecheck_qualified_type_reference(
         }
         // check each item in an array
         (subgraph::QualifiedBaseType::List(inner_type), serde_json::Value::Array(array_values)) => {
-            for array_value in array_values {
-                match typecheck_qualified_type_reference(inner_type, array_value) {
-                    Ok(_) => {}
-                    Err(inner_error) => {
-                        return Err(TypecheckError::ArrayItemMismatch {
-                            inner_error: Box::new(inner_error),
-                        })
+            array_values.iter().try_for_each(|array_value| {
+                typecheck_qualified_type_reference(inner_type, array_value).map_err(|inner_error| {
+                    TypecheckError::ArrayItemMismatch {
+                        inner_error: Box::new(inner_error),
                     }
-                }
-            }
-            Ok(())
+                })
+            })
         }
         // array expected, non-array value
         (subgraph::QualifiedBaseType::List(_), value) => Err(TypecheckError::NonArrayValue {
@@ -85,10 +81,14 @@ fn typecheck_inbuilt_type(
     value: &serde_json::Value,
 ) -> Result<(), TypecheckError> {
     match (inbuilt, value) {
-        (open_dds::types::InbuiltType::Int, serde_json::Value::Number(_))
-        | (open_dds::types::InbuiltType::Float, serde_json::Value::Number(_))
-        | (open_dds::types::InbuiltType::String, serde_json::Value::String(_))
-        | (open_dds::types::InbuiltType::ID, serde_json::Value::String(_))
+        (
+            open_dds::types::InbuiltType::Int | open_dds::types::InbuiltType::Float,
+            serde_json::Value::Number(_),
+        )
+        | (
+            open_dds::types::InbuiltType::String | open_dds::types::InbuiltType::ID,
+            serde_json::Value::String(_),
+        )
         | (open_dds::types::InbuiltType::Boolean, serde_json::Value::Bool(_)) => Ok(()),
         _ => Err(TypecheckError::ScalarTypeMismatch {
             expected: inbuilt.clone(),

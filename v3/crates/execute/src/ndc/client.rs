@@ -187,7 +187,7 @@ pub async fn query_post(
 fn append_path(url: &reqwest::Url, path: &[&str]) -> Result<reqwest::Url, Error> {
     let mut url = url.clone();
     url.path_segments_mut()
-        .map_err(|_| Error::InvalidBaseURL)?
+        .map_err(|()| Error::InvalidBaseURL)?
         .pop_if_empty()
         .extend(path);
     Ok(url)

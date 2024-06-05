@@ -120,7 +120,7 @@ pub(crate) fn function_command_field(
             };
             let function_name = match &command_source.source {
                 DataConnectorCommand::Function(function_name) => function_name.clone(),
-                _ => {
+                DataConnectorCommand::Procedure(_) => {
                     return Err(crate::Error::IncorrectCommandBacking {
                         command_name: command.command.name.clone(),
                     })
@@ -173,7 +173,7 @@ pub(crate) fn procedure_command_field(
             };
             let procedure_name = match &command_source.source {
                 DataConnectorCommand::Procedure(procedure_name) => procedure_name.clone(),
-                _ => {
+                DataConnectorCommand::Function(_) => {
                     return Err(crate::Error::IncorrectCommandBacking {
                         command_name: command.command.name.clone(),
                     })

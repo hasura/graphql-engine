@@ -88,7 +88,7 @@ impl FieldError {
                 Some(connector_error.error_response.details.clone())
             }
             Self::InternalError(internal) => internal.get_details(),
-            _ => None,
+            Self::FieldNotFoundInService { .. } => None,
         }
     }
 

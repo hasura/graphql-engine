@@ -253,8 +253,7 @@ pub fn resolve_graphql_config(
             let enable_apollo_federation_fields = graphql_config_metadata
                 .apollo_federation
                 .as_ref()
-                .map(|federation_config| federation_config.enable_root_fields)
-                .unwrap_or_default();
+                .is_some_and(|federation_config| federation_config.enable_root_fields);
 
             Ok(GraphqlConfig {
                 query: QueryGraphqlConfig {

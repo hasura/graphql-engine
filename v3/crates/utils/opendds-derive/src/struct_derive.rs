@@ -137,15 +137,14 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
         let ty = field.field_type.clone();
 
         let default_prop = if field.is_default {
-            let default_exp = field
-                .default_exp
-                .as_ref()
-                .map(quote::ToTokens::to_token_stream)
-                .unwrap_or_else(|| {
+            let default_exp = field.default_exp.as_ref().map_or_else(
+                || {
                     quote! {
                         serde_json::json!(<#ty as Default>::default())
                     }
-                });
+                },
+                quote::ToTokens::to_token_stream,
+            );
             quote! {
                 metadata.default = Some(#default_exp);
             }

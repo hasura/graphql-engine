@@ -150,7 +150,7 @@ fn parse_block_string(bytes: &[u8]) -> Result<(String, Consumed, usize), (Error,
                 i += 2;
                 cur_line = Line::new(i);
             }
-            [b'\n', ..] | [b'\r', ..] => {
+            [b'\n' | b'\r', ..] => {
                 cur_line.end = i;
                 lines.push(cur_line);
                 consumed.count_line_break();

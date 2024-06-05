@@ -165,7 +165,7 @@ fn convert_directives(const_directives: &[Spanning<ConstDirective>]) -> Vec<Dire
                 .item
                 .arguments
                 .as_ref()
-                .map(|arguments| {
+                .map_or(BTreeMap::new(), |arguments| {
                     arguments
                         .item
                         .iter()
@@ -176,8 +176,7 @@ fn convert_directives(const_directives: &[Spanning<ConstDirective>]) -> Vec<Dire
                             )
                         })
                         .collect()
-                })
-                .unwrap_or(BTreeMap::new()),
+                }),
         });
     }
     directives
