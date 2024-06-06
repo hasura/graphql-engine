@@ -2275,7 +2275,9 @@ definition:
     - name: Discounts
       type: [Discount!]!
       # New: Aggregations over nested arrays
-      aggregateExpression: Discount_aggregate_exp
+      aggregate:
+        aggregateExpression: Discount_aggregate_exp
+        description: Aggregate over this invoice's discounts
       graphql:
         aggregateFieldName: Discounts_aggregate # This is effectively computed field added to the object type
     - name: BillingAddress
@@ -2327,8 +2329,12 @@ definition:
       # New - only applies to `relationshipType: Array`
       # TODO: This sucks living in here, but relationshipType is not a top level discriminator
       # and these fields only apply to models and that's where the type variant is applied
-      aggregateExpression: Invoice_aggregate_exp
-      groupsExpression: Invoice_groups_exp
+      aggregate:
+        aggregateExpression: Invoice_aggregate_exp
+        description: Aggregate over the customer's invoices
+      groups:
+        groupsExpression: Invoice_groups_exp
+        description: Group over the customer's invoices
 
   mapping:
     - source:
@@ -2374,17 +2380,21 @@ definition:
       aggregatedType: Invoice
       aggregatableFields:
         - fieldName: InvoiceId
+          description: Aggregates over the InvoiceId field
           aggregateExpression: Int_aggregate_exp
         # Only nested objects are supported for now. Object relationships are not.
         - fieldName: BillingAddress
+          description: Aggregates over the BillingAddress field
           aggregateExpression: Address_aggregate_exp
   # count and countDistinct are special cased because "count" doesn't evaluate to a scalar/object type
   # but rather the "nullability" of a type
   count:
     enable: true
+    description: Count of all invoices
     booleanExpression: Int_comparison_exp
   countDistinct: # Only enable-able if the AggregateExpression is not used on a Model
     enable: true
+    description: Distinct count of all invoices
     booleanExpression: Int_comparison_exp
   graphql:
     selectTypeName: Invoice_aggregate_fields
@@ -2423,11 +2433,13 @@ definition:
       aggregationFunctions:
         - name: _min # Name you want to give the function in OpenDD and GraphQL
           returnType: String! # This is an OpenDD type
+          description: Returns the lexicographically least string
           # The boolean expression to use to compare against the aggregated return value
           # Omit to remove from aggregation predicates
           booleanExpression: String_comparison_exp
         - name: _max
           returnType: String!
+          description: Returns the lexicographically most string
           booleanExpression: String_comparison_exp
         - name: _concat
           arguments:
@@ -2438,10 +2450,12 @@ definition:
             orderByArgsInputTypeName: String_concat_aggregate_order_by # `{ args: { separator: ", " }, ordering: Asc }`
             aggregatePredicateArgsInputTypeName: String_concat_aggregate_predicate_args # `{ args: { separator: ", " }, comparison: { _eq: "test" } }`
           returnType: String!
+          description: Concatenates all string together with a separator
           booleanExpression: String_comparison_exp
         - name: _concat_comma
           # This doesn't need arguments, since all the arguments are preset in the
           returnType: String!
+          description: Concatenates all strings together with a comma
           booleanExpression: String_comparison_exp
       dataConnectorAggregationFunctionMapping:
         - dataConnectorName: pg_1
@@ -2466,9 +2480,11 @@ definition:
   # but rather the "nullability" of a type
   count:
     enable: true
+    description: Counts all non-null Ints
     booleanExpression: Int_comparison_exp
   countDistinct:
     enable: true
+    description: Counts all distinct non-null Ints
     booleanExpression: Int_comparison_exp
   graphql:
     selectTypeName: String_aggregate_fields
