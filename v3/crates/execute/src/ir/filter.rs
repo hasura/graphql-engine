@@ -10,7 +10,7 @@ use serde::Serialize;
 use crate::ir::error;
 use crate::model_tracking::{count_model, UsagesCounts};
 use open_dds::{
-    data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
+    data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorOperatorName},
     types::{CustomTypeName, FieldName},
 };
 use schema::FilterRelationshipAnnotation;
@@ -32,14 +32,20 @@ pub(crate) struct ResolvedFilterExpression<'s> {
 /// Generates the IR for GraphQL 'where' boolean expression
 pub(crate) fn resolve_filter_expression<'s>(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
+    data_connector_name: &Qualified<DataConnectorName>,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ResolvedFilterExpression<'s>, error::Error> {
     let mut expressions = Vec::new();
     let mut relationships = BTreeMap::new();
     for field in fields.values() {
-        let field_filter_expression =
-            build_filter_expression(field, &mut relationships, type_mappings, usage_counts)?;
+        let field_filter_expression = build_filter_expression(
+            field,
+            &mut relationships,
+            data_connector_name,
+            type_mappings,
+            usage_counts,
+        )?;
         expressions.push(field_filter_expression);
     }
     let expression = ndc_models::Expression::And { expressions };
@@ -54,6 +60,7 @@ pub(crate) fn resolve_filter_expression<'s>(
 fn build_filter_expression<'s>(
     field: &normalized_ast::InputField<'s, GDS>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+    data_connector_name: &Qualified<DataConnectorName>,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ndc_models::Expression, error::Error> {
@@ -74,6 +81,7 @@ fn build_filter_expression<'s>(
                 and_expressions.push(resolve_filter_object(
                     value_object,
                     relationships,
+                    data_connector_name,
                     type_mappings,
                     usage_counts,
                 )?);
@@ -97,6 +105,7 @@ fn build_filter_expression<'s>(
                 or_expressions.push(resolve_filter_object(
                     value_object,
                     relationships,
+                    data_connector_name,
                     type_mappings,
                     usage_counts,
                 )?);
@@ -115,8 +124,13 @@ fn build_filter_expression<'s>(
             // The "_not" field value should be an object
             let not_value = field.value.as_object()?;
 
-            let not_filter_expression =
-                resolve_filter_object(not_value, relationships, type_mappings, usage_counts)?;
+            let not_filter_expression = resolve_filter_object(
+                not_value,
+                relationships,
+                data_connector_name,
+                type_mappings,
+                usage_counts,
+            )?;
             Ok(ndc_models::Expression::Not {
                 expression: Box::new(not_filter_expression),
             })
@@ -145,8 +159,18 @@ fn build_filter_expression<'s>(
                         expressions.push(expression);
                     }
                     schema::Annotation::Input(InputAnnotation::Model(
-                        ModelInputAnnotation::ComparisonOperation { operator },
+                        ModelInputAnnotation::ComparisonOperation { operator_mapping },
                     )) => {
+                        let operator =
+                            operator_mapping.get(data_connector_name).ok_or_else(|| {
+                                error::InternalEngineError::OperatorMappingError(
+                                    error::OperatorMappingError::MissingEntryForDataConnector {
+                                        column_name: column.clone(),
+                                        data_connector_name: data_connector_name.clone(),
+                                    },
+                                )
+                            })?;
+
                         let expression = build_binary_comparison_expression(
                             operator,
                             column.clone(),
@@ -206,6 +230,7 @@ fn build_filter_expression<'s>(
                 let field_filter_expression = build_filter_expression(
                     field,
                     relationships,
+                    &target_source.model.data_connector.name,
                     &target_source.model.type_mappings,
                     usage_counts,
                 )?;
@@ -255,6 +280,7 @@ fn get_field_mapping_of_field_name(
 fn resolve_filter_object<'s>(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+    data_connector_name: &Qualified<DataConnectorName>,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ndc_models::Expression, error::Error> {
@@ -264,6 +290,7 @@ fn resolve_filter_object<'s>(
         expressions.push(build_filter_expression(
             field,
             relationships,
+            data_connector_name,
             type_mappings,
             usage_counts,
         )?)

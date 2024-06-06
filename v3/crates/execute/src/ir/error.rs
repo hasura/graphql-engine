@@ -2,6 +2,7 @@ use gql::ast::common as ast;
 use lang_graphql as gql;
 use open_dds::{
     arguments::ArgumentName,
+    data_connector::{DataConnectorColumnName, DataConnectorName},
     relationships::RelationshipName,
     session_variables::SessionVariable,
     types::{CustomTypeName, FieldName},
@@ -163,6 +164,9 @@ pub enum InternalEngineError {
     #[error("error from normalized AST: {0}")]
     IRConversionError(#[from] gql::normalized_ast::Error),
 
+    #[error("internal error: {0}")]
+    OperatorMappingError(#[from] OperatorMappingError),
+
     #[error("unexpected annotation: {annotation}")]
     UnexpectedAnnotation { annotation: Annotation },
 
@@ -185,4 +189,13 @@ pub enum InternalEngineError {
 
     #[error("internal error: {description}")]
     InternalGeneric { description: String },
+}
+
+#[derive(Error, Debug)]
+pub enum OperatorMappingError {
+    #[error("could not find operator mapping for column {column_name:} in data connector {data_connector_name}")]
+    MissingEntryForDataConnector {
+        column_name: DataConnectorColumnName,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
 }

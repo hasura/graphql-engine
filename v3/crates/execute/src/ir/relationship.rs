@@ -125,6 +125,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                         if let Some(model_source) = &relationship_annotation.target_source {
                             filter_clause = resolve_filter_expression(
                                 argument.value.as_object()?,
+                                &model_source.model.data_connector.name,
                                 &model_source.model.type_mappings,
                                 usage_counts,
                             )?

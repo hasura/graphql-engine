@@ -1,6 +1,9 @@
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema::{self as gql_schema, InputField, Namespaced};
-use open_dds::{data_connector::DataConnectorOperatorName, types::CustomTypeName};
+use open_dds::{
+    data_connector::{DataConnectorName, DataConnectorOperatorName},
+    types::{CustomTypeName, OperatorName},
+};
 use std::collections::BTreeMap;
 
 use super::types::input_type;
@@ -42,6 +45,10 @@ pub fn build_scalar_comparison_input(
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &ast::TypeName,
     operators: &Vec<(ast::Name, QualifiedTypeReference)>,
+    operator_mapping: &BTreeMap<
+        Qualified<DataConnectorName>,
+        BTreeMap<OperatorName, DataConnectorOperatorName>,
+    >,
     is_null_operator_name: &ast::Name,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
     let mut input_fields: BTreeMap<ast::Name, Namespaced<GDS, InputField<GDS>>> = BTreeMap::new();
@@ -80,8 +87,26 @@ pub fn build_scalar_comparison_input(
         };
 
         // this feels a bit loose, we're depending on the fact the ast::Name and
-        // DataConnectorOperatorName should be the same
-        let ndc_operator_name = DataConnectorOperatorName(op_name.to_string());
+        // OperatorName should be the same
+        let operator_name = OperatorName(op_name.to_string());
+
+        // for each set of mappings, only return the mapping we actually need
+        // default to existing mapping where one is missing
+        let this_operator_mapping = operator_mapping
+            .iter()
+            .map(
+                |(data_connector_name, mappings)| match mappings.get(&operator_name) {
+                    Some(data_connector_operator_name) => (
+                        data_connector_name.clone(),
+                        data_connector_operator_name.clone(),
+                    ),
+                    None => (
+                        data_connector_name.clone(),
+                        DataConnectorOperatorName(operator_name.0.clone()),
+                    ),
+                },
+            )
+            .collect();
 
         input_fields.insert(
             op_name.clone(),
@@ -91,7 +116,7 @@ pub fn build_scalar_comparison_input(
                     None,
                     types::Annotation::Input(types::InputAnnotation::Model(
                         types::ModelInputAnnotation::ComparisonOperation {
-                            operator: ndc_operator_name,
+                            operator_mapping: this_operator_mapping,
                         },
                     )),
                     nullable_input_type,

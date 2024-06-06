@@ -188,12 +188,14 @@ impl gql_schema::SchemaContext for GDS {
             types::TypeId::ScalarTypeComparisonExpression {
                 graphql_type_name,
                 operators,
+                operator_mapping,
                 is_null_operator_name,
             } => model_filter::build_scalar_comparison_input(
                 self,
                 builder,
                 graphql_type_name,
                 operators,
+                operator_mapping,
                 is_null_operator_name,
             ),
             types::TypeId::ModelOrderByExpression {

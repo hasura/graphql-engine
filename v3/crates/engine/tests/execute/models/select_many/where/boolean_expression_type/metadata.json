@@ -50,7 +50,7 @@
                 "type": "Int",
                 "comparisonOperators": [
                   {
-                    "name": "_eq",
+                    "name": "equals",
                     "argumentType": "Int!"
                   },
                   {
@@ -63,7 +63,7 @@
                     "dataConnectorName": "db",
                     "dataConnectorScalarType": "int8",
                     "operatorMapping": {
-                      "_eq": "_eq"
+                      "equals": "_eq"
                     }
                   }
                 ]
@@ -90,7 +90,7 @@
                 "type": "String",
                 "comparisonOperators": [
                   {
-                    "name": "_eq",
+                    "name": "equals",
                     "argumentType": "String!"
                   },
                   {
@@ -107,7 +107,7 @@
                     "dataConnectorName": "db",
                     "dataConnectorScalarType": "String",
                     "operatorMapping": {
-                      "_eq": "_eq"
+                      "equals": "_eq"
                     }
                   }
                 ]

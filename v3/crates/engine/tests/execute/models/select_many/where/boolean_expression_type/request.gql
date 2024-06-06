@@ -20,8 +20,18 @@ query {
   AuthorManyNestedBool: AuthorMany(
     where: {
       _or: [
-        { _and: [{ author_id: { _eq: 1 } }, { first_name: { _eq: "Peter" } }] }
-        { _and: [{ author_id: { _eq: 2 } }, { first_name: { _eq: "John" } }] }
+        {
+          _and: [
+            { author_id: { equals: 1 } }
+            { first_name: { equals: "Peter" } }
+          ]
+        }
+        {
+          _and: [
+            { author_id: { equals: 2 } }
+            { first_name: { equals: "John" } }
+          ]
+        }
       ]
     }
   ) {
@@ -49,8 +59,18 @@ query {
   AuthorTwoManyNestedBool: AuthorTwoMany(
     where: {
       _or: [
-        { _and: [{ author_id: { _eq: 1 } }, { first_name: { _eq: "Peter" } }] }
-        { _and: [{ author_id: { _eq: 2 } }, { first_name: { _eq: "John" } }] }
+        {
+          _and: [
+            { author_id: { equals: 1 } }
+            { first_name: { equals: "Peter" } }
+          ]
+        }
+        {
+          _and: [
+            { author_id: { equals: 2 } }
+            { first_name: { equals: "John" } }
+          ]
+        }
       ]
     }
   ) {

@@ -12,7 +12,7 @@ use std::{
 use open_dds::{
     arguments::ArgumentName,
     commands,
-    data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
+    data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorOperatorName},
     models,
     types::{self},
 };
@@ -197,7 +197,11 @@ pub enum ModelInputAnnotation {
         ndc_table_argument: Option<ConnectorArgumentName>,
     },
     ComparisonOperation {
-        operator: DataConnectorOperatorName,
+        #[serde(
+            serialize_with = "serialize_non_string_key_btreemap",
+            deserialize_with = "deserialize_non_string_key_btreemap"
+        )]
+        operator_mapping: BTreeMap<Qualified<DataConnectorName>, DataConnectorOperatorName>,
     },
     IsNullOperation,
     ModelOrderByExpression,
@@ -357,6 +361,10 @@ pub enum TypeId {
     ScalarTypeComparisonExpression {
         graphql_type_name: ast::TypeName,
         operators: Vec<(ast::Name, QualifiedTypeReference)>,
+        operator_mapping: BTreeMap<
+            Qualified<DataConnectorName>,
+            BTreeMap<types::OperatorName, DataConnectorOperatorName>,
+        >,
         is_null_operator_name: ast::Name,
     },
     OrderByEnumType {

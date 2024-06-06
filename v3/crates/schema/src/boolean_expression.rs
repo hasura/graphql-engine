@@ -416,6 +416,7 @@ fn get_scalar_comparison_input_type(
         builder.register_type(TypeId::ScalarTypeComparisonExpression {
             graphql_type_name,
             operators,
+            operator_mapping: comparison_expression.operator_mapping.clone(),
             is_null_operator_name: comparison_expression.is_null_operator_name.clone(),
         }),
     )

@@ -1,5 +1,8 @@
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
-use open_dds::types::{CustomTypeName, FieldName, GraphQlTypeName, OperatorName, TypeReference};
+use open_dds::{
+    data_connector::{DataConnectorName, DataConnectorOperatorName},
+    types::{CustomTypeName, FieldName, GraphQlTypeName, OperatorName, TypeReference},
+};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -47,6 +50,8 @@ pub struct ResolvedScalarBooleanExpressionType {
 pub struct ComparisonExpressionInfo {
     pub type_name: ast::TypeName,
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
+    pub operator_mapping:
+        BTreeMap<Qualified<DataConnectorName>, BTreeMap<OperatorName, DataConnectorOperatorName>>,
     pub is_null_operator_name: ast::Name,
 }
 

@@ -11,10 +11,10 @@ use lang_graphql::ast::common::{self as ast};
 use open_dds::{
     boolean_expression::{
         BooleanExpressionComparableField, BooleanExpressionObjectOperand,
-        BooleanExpressionTypeGraphQlConfiguration,
+        BooleanExpressionTypeGraphQlConfiguration, DataConnectorOperatorMapping,
     },
-    data_connector::DataConnectorName,
-    types::{CustomTypeName, FieldName},
+    data_connector::{DataConnectorName, DataConnectorOperatorName},
+    types::{CustomTypeName, FieldName, OperatorName},
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -184,6 +184,10 @@ fn resolve_object_boolean_graphql(
                 }
                 let graphql_type_name = mk_name(&graphql_name.0).map(ast::TypeName)?;
 
+                let operator_mapping = resolve_operator_mapping_for_scalar_type(
+                    &scalar_boolean_expression_type.data_connector_operator_mappings,
+                );
+
                 // Register scalar comparison field only if it contains non-zero operators.
                 if !operators.is_empty() {
                     scalar_fields.insert(
@@ -191,6 +195,7 @@ fn resolve_object_boolean_graphql(
                         ComparisonExpressionInfo {
                             type_name: graphql_type_name.clone(),
                             operators: operators.clone(),
+                            operator_mapping,
                             is_null_operator_name: filter_graphql_config
                                 .operator_names
                                 .is_null
@@ -212,6 +217,24 @@ fn resolve_object_boolean_graphql(
             not_operator_name: filter_graphql_config.operator_names.not.clone(),
         }),
     })
+}
+
+fn resolve_operator_mapping_for_scalar_type(
+    data_connector_operator_mappings: &BTreeMap<
+        Qualified<DataConnectorName>,
+        DataConnectorOperatorMapping,
+    >,
+) -> BTreeMap<Qualified<DataConnectorName>, BTreeMap<OperatorName, DataConnectorOperatorName>> {
+    let mut operator_mapping = BTreeMap::new();
+
+    for (data_connector_name, data_connector_operator_mapping) in data_connector_operator_mappings {
+        operator_mapping.insert(
+            data_connector_name.clone(),
+            data_connector_operator_mapping.operator_mapping.clone(),
+        );
+    }
+
+    operator_mapping
 }
 
 // comparable_fields don't do much, all we can do is ensure that the other BooleanExpressionTypes

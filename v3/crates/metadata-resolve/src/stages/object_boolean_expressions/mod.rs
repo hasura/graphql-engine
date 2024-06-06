@@ -281,8 +281,9 @@ pub fn resolve_boolean_expression_graphql_config(
             if let Some(graphql_type_name) = &scalar_type_info.comparison_expression_name.clone() {
                 let mut operators = BTreeMap::new();
                 for (op_name, op_definition) in &scalar_type_info.scalar_type.comparison_operators {
+                    let operator_name = OperatorName(op_name.clone());
                     operators.insert(
-                        OperatorName(op_name.clone()),
+                        operator_name,
                         resolve_ndc_type(
                             data_connector_name,
                             &get_argument_type(op_definition, &field_mapping.column_type),
@@ -292,12 +293,16 @@ pub fn resolve_boolean_expression_graphql_config(
                     );
                 }
 
+                let mut operator_mapping = BTreeMap::new();
+                operator_mapping.insert(data_connector_name.clone(), BTreeMap::new());
+
                 // Register scalar comparison field only if it contains non-zero operators.
                 if !operators.is_empty() {
                     scalar_fields.insert(
                         field_name.clone(),
                         boolean_expressions::ComparisonExpressionInfo {
                             type_name: graphql_type_name.clone(),
+                            operator_mapping,
                             operators,
                             is_null_operator_name: filter_graphql_config
                                 .operator_names
