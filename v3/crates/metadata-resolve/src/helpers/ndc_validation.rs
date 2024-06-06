@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use crate::stages::{commands, data_connectors, models, object_types};
 use ndc_models;
 use open_dds::{
@@ -118,6 +120,24 @@ pub enum NDCValidationError {
     QueryCapabilityUnsupported,
     #[error("data connector does not support mutations")]
     MutationCapabilityUnsupported,
+
+    // for `DataConnectorLink.argumentPresets` not all type representations are supported.
+    #[error("Unsupported type representation {representation:} in scalar type {scalar_type:}, for argument preset name {argument_name:}. Only 'json' representation is supported.")]
+    UnsupportedTypeInDataConnectorLinkArgumentPreset {
+        representation: String,
+        scalar_type: String,
+        argument_name: open_dds::arguments::ArgumentName,
+    },
+
+    #[error("Cannot use argument '{argument_name:}' in command '{command_name:}', as it already used as argument preset in data connector '{data_connector_name:}'.")]
+    CannotUseDataConnectorLinkArgumentPresetInCommand {
+        argument_name: open_dds::arguments::ArgumentName,
+        command_name: Qualified<CommandName>,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+
+    #[error("Internal error while serializing error message. Error: {err:}")]
+    InternalSerializationError { err: serde_json::Error },
 }
 
 // Get the underlying type name by resolving Array and Nullable container types
@@ -235,7 +255,7 @@ pub fn validate_ndc_command(
     command_source: &commands::CommandSource,
     command_output_type: &QualifiedTypeReference,
     schema: &data_connectors::DataConnectorSchema,
-) -> std::result::Result<(), NDCValidationError> {
+) -> Result<(), NDCValidationError> {
     let db = &command_source.data_connector;
 
     let (
@@ -276,13 +296,30 @@ pub fn validate_ndc_command(
         }
     };
 
+    let dc_link_argument_presets = db
+        .argument_presets
+        .iter()
+        .map(|preset| &preset.name)
+        .collect::<Vec<_>>();
+
     // Check if the arguments are correctly mapped
-    for mapped_argument_name in command_source.argument_mappings.values() {
-        if !command_source_ndc_arguments.contains_key(&mapped_argument_name.0) {
+    for (open_dd_argument_name, ndc_argument_name) in &command_source.argument_mappings {
+        // OpenDD command argument should not be also used in DataConnectorLink.argumentPresets
+        if dc_link_argument_presets.contains(&open_dd_argument_name) {
+            return Err(
+                NDCValidationError::CannotUseDataConnectorLinkArgumentPresetInCommand {
+                    argument_name: open_dd_argument_name.clone(),
+                    command_name: command_name.clone(),
+                    data_connector_name: db.name.clone(),
+                },
+            );
+        }
+
+        if !command_source_ndc_arguments.contains_key(&ndc_argument_name.0) {
             return Err(NDCValidationError::NoSuchArgumentForCommand {
                 db_name: db.name.clone(),
                 func_proc_name: command_source_func_proc_name.clone(),
-                argument_name: mapped_argument_name.clone(),
+                argument_name: ndc_argument_name.clone(),
             });
         }
     }
@@ -344,6 +381,69 @@ pub fn validate_ndc_command(
                     ))?,
                 },
             };
+        }
+    }
+    Ok(())
+}
+
+/// Validate argument presets of a 'DataConnectorLink' with NDC schema
+pub(crate) fn validate_ndc_argument_presets(
+    argument_presets: &Vec<data_connectors::ArgumentPreset>,
+    schema: &data_connectors::DataConnectorSchema,
+) -> Result<(), NDCValidationError> {
+    for argument_preset in argument_presets {
+        for function_info in schema.functions.values() {
+            validate_argument_preset_type(&argument_preset.name, &function_info.arguments, schema)?;
+        }
+
+        for procedure_info in schema.procedures.values() {
+            validate_argument_preset_type(
+                &argument_preset.name,
+                &procedure_info.arguments,
+                schema,
+            )?;
+        }
+    }
+    Ok(())
+}
+
+// The type of an argument preset (in argument presets of the data connector), cannot be
+// completely arbitrary. As engine would have to map the request headers (and other additional
+// headers) to this type. Ideally we would introduce a "map" representation in NDC. So, in JSON
+// transport the "map" can be represented as a JSON key-value object and in, say protobuf, it
+// can represented as a protobuf map type. But, for now if this scalar type has a representation
+// other than "json", we error out. Later if we added a "map" type then we would support both
+// "map" and "json".
+fn validate_argument_preset_type(
+    preset_argument_name: &open_dds::arguments::ArgumentName,
+    arguments: &BTreeMap<String, ndc_models::ArgumentInfo>,
+    schema: &data_connectors::DataConnectorSchema,
+) -> Result<(), NDCValidationError> {
+    for (arg_name, arg_info) in arguments {
+        if **arg_name == preset_argument_name.0 .0 {
+            let type_name = get_underlying_named_type(&arg_info.argument_type)?;
+            let scalar_type = schema
+                .scalar_types
+                .get(type_name)
+                .ok_or_else(|| NDCValidationError::NoSuchType(type_name.clone()))?;
+
+            // if there is no representation default is assumed to be JSON
+            // (https://github.com/hasura/ndc-spec/blob/main/ndc-models/src/lib.rs#L130),
+            // so that's fine
+            if let Some(scalar_type_representation) = &scalar_type.representation {
+                if *scalar_type_representation != ndc_models::TypeRepresentation::JSON {
+                    return Err(
+                        NDCValidationError::UnsupportedTypeInDataConnectorLinkArgumentPreset {
+                            representation: serde_json::to_string(&scalar_type_representation)
+                                .map_err(|e| NDCValidationError::InternalSerializationError {
+                                    err: e,
+                                })?,
+                            scalar_type: type_name.clone(),
+                            argument_name: preset_argument_name.clone(),
+                        },
+                    );
+                }
+            }
         }
     }
     Ok(())

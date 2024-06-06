@@ -735,7 +735,7 @@
           ]
         },
         "headers": {
-          "description": "Key value map of HTTP headers to be sent with each request to the data connector.",
+          "description": "Key value map of HTTP headers to be sent with each request to the data connector. This is meant for protocol level use between engine and the data connector.",
           "default": {},
           "allOf": [
             {
@@ -748,6 +748,25 @@
           "allOf": [
             {
               "$ref": "#/definitions/VersionedSchemaAndCapabilities"
+            }
+          ]
+        },
+        "argumentPresets": {
+          "description": "Argument presets that applies to all functions and procedures of this data connector. Defaults to no argument presets.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArgumentPreset"
+          }
+        },
+        "responseHeaders": {
+          "description": "HTTP response headers configuration that is forwarded from a data connector to the client.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ResponseHeaders"
+            },
+            {
+              "type": "null"
             }
           ]
         }
@@ -879,6 +898,417 @@
         }
       ]
     },
+    "ArgumentPreset": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentPreset",
+      "title": "ArgumentPreset",
+      "description": "An argument preset that can be applied to all functions/procedures of a connector",
+      "type": "object",
+      "required": [
+        "argument",
+        "value"
+      ],
+      "properties": {
+        "argument": {
+          "$ref": "#/definitions/ArgumentName"
+        },
+        "value": {
+          "$ref": "#/definitions/ArgumentPresetValue"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ArgumentName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentName",
+      "title": "ArgumentName",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "ArgumentPresetValue": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentPresetValue",
+      "title": "ArgumentPresetValue",
+      "type": "object",
+      "required": [
+        "httpHeaders"
+      ],
+      "properties": {
+        "httpHeaders": {
+          "description": "HTTP headers that can be preset from request",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HttpHeadersPreset"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "HttpHeadersPreset": {
+      "$id": "https://hasura.io/jsonschemas/metadata/HttpHeadersPreset",
+      "title": "HttpHeadersPreset",
+      "description": "Configuration of what HTTP request headers should be forwarded to a data connector.",
+      "type": "object",
+      "required": [
+        "additional",
+        "forward"
+      ],
+      "properties": {
+        "forward": {
+          "description": "List of HTTP headers that should be forwarded from HTTP requests",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "additional": {
+          "description": "Additional headers that should be forwarded, from other contexts",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AdditionalHttpHeaders"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "AdditionalHttpHeaders": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AdditionalHttpHeaders",
+      "title": "AdditionalHttpHeaders",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ValueExpression"
+      }
+    },
+    "ValueExpression": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ValueExpression",
+      "title": "ValueExpression",
+      "description": "An expression which evaluates to a value that can be used in permissions and various presets.",
+      "oneOf": [
+        {
+          "title": "Literal",
+          "type": "object",
+          "required": [
+            "literal"
+          ],
+          "properties": {
+            "literal": true
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "SessionVariable",
+          "type": "object",
+          "required": [
+            "sessionVariable"
+          ],
+          "properties": {
+            "sessionVariable": {
+              "$ref": "#/definitions/OpenDdSessionVariable"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "BooleanExpression",
+          "type": "object",
+          "required": [
+            "booleanExpression"
+          ],
+          "properties": {
+            "booleanExpression": {
+              "$ref": "#/definitions/ModelPredicate"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "OpenDdSessionVariable": {
+      "description": "Used to represent the name of a session variable, like \"x-hasura-role\".",
+      "type": "string"
+    },
+    "ModelPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ModelPredicate",
+      "title": "ModelPredicate",
+      "description": "A predicate that can be used to restrict the objects returned when querying a model.",
+      "examples": [
+        {
+          "fieldComparison": {
+            "field": "author_id",
+            "operator": "_eq",
+            "value": {
+              "sessionVariable": "x-hasura-user-id"
+            }
+          }
+        }
+      ],
+      "oneOf": [
+        {
+          "description": "Filters objects based on a field value.",
+          "type": "object",
+          "required": [
+            "fieldComparison"
+          ],
+          "properties": {
+            "fieldComparison": {
+              "$ref": "#/definitions/FieldComparisonPredicate"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "fieldIsNull"
+          ],
+          "properties": {
+            "fieldIsNull": {
+              "$ref": "#/definitions/FieldIsNullPredicate"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Filters objects based on the relationship of a model.",
+          "type": "object",
+          "required": [
+            "relationship"
+          ],
+          "properties": {
+            "relationship": {
+              "$ref": "#/definitions/RelationshipPredicate"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "And",
+          "description": "Evaluates to true if all sub-predicates evaluate to true.",
+          "type": "object",
+          "required": [
+            "and"
+          ],
+          "properties": {
+            "and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ModelPredicate"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "Or",
+          "description": "Evaluates to true if any of the sub-predicates evaluate to true.",
+          "type": "object",
+          "required": [
+            "or"
+          ],
+          "properties": {
+            "or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ModelPredicate"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "Not",
+          "description": "Evaluates to true if the sub-predicate evaluates to false.",
+          "type": "object",
+          "required": [
+            "not"
+          ],
+          "properties": {
+            "not": {
+              "$ref": "#/definitions/ModelPredicate"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "FieldComparisonPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldComparisonPredicate",
+      "title": "FieldComparisonPredicate",
+      "description": "Field comparison predicate filters objects based on a field value.",
+      "type": "object",
+      "required": [
+        "field",
+        "operator",
+        "value"
+      ],
+      "properties": {
+        "field": {
+          "description": "The field name of the object type of the model to compare.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldName"
+            }
+          ]
+        },
+        "operator": {
+          "description": "The name of the operator to use for comparison.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OperatorName"
+            }
+          ]
+        },
+        "value": {
+          "description": "The value expression to compare against.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ValueExpression2"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "FieldName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldName",
+      "title": "FieldName",
+      "description": "The name of a field in a user-defined object type.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "OperatorName": {
+      "type": "string"
+    },
+    "ValueExpression2": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ValueExpression2",
+      "title": "ValueExpression",
+      "description": "An expression which evaluates to a value that can be used in permissions and various presets.",
+      "oneOf": [
+        {
+          "title": "Literal",
+          "type": "object",
+          "required": [
+            "literal"
+          ],
+          "properties": {
+            "literal": true
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "SessionVariable",
+          "type": "object",
+          "required": [
+            "sessionVariable"
+          ],
+          "properties": {
+            "sessionVariable": {
+              "$ref": "#/definitions/OpenDdSessionVariable"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "BooleanExpression",
+          "type": "object",
+          "required": [
+            "booleanExpression"
+          ],
+          "properties": {
+            "booleanExpression": {
+              "$ref": "#/definitions/ModelPredicate"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "FieldIsNullPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldIsNullPredicate",
+      "title": "FieldIsNullPredicate",
+      "description": "Predicate to check if the given field is null.",
+      "type": "object",
+      "required": [
+        "field"
+      ],
+      "properties": {
+        "field": {
+          "description": "The name of the field that should be checked for a null value.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldName"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "RelationshipPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationshipPredicate",
+      "title": "RelationshipPredicate",
+      "description": "Relationship predicate filters objects of a source model based on a predicate on the related model.",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name of the relationship of the object type of the model to follow.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RelationshipName"
+            }
+          ]
+        },
+        "predicate": {
+          "description": "The predicate to apply on the related objects. If this is null, then the predicate evaluates to true as long as there is at least one related object present.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ModelPredicate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "RelationshipName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationshipName",
+      "title": "RelationshipName",
+      "description": "The name of the GraphQL relationship field.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "ResponseHeaders": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ResponseHeaders",
+      "title": "ResponseHeaders",
+      "description": "Configuration of what HTTP response headers should be forwarded from a data connector to the client in HTTP response.",
+      "type": "object",
+      "required": [
+        "forwardHeaders",
+        "headersField",
+        "resultField"
+      ],
+      "properties": {
+        "headersField": {
+          "description": "Name of the field in the NDC function/procedure's result which contains the response headers",
+          "type": "string"
+        },
+        "resultField": {
+          "description": "Name of the field in the NDC function/procedure's result which contains the result",
+          "type": "string"
+        },
+        "forwardHeaders": {
+          "description": "List of actual HTTP response headers from the data conector to be set as response headers",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "ObjectTypeV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ObjectTypeV1",
       "title": "ObjectTypeV1",
@@ -996,13 +1426,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "FieldName": {
-      "$id": "https://hasura.io/jsonschemas/metadata/FieldName",
-      "title": "FieldName",
-      "description": "The name of a field in a user-defined object type.",
-      "type": "string",
-      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "TypeReference": {
       "$id": "https://hasura.io/jsonschemas/metadata/TypeReference",
@@ -1367,9 +1790,6 @@
         }
       ]
     },
-    "OperatorName": {
-      "type": "string"
-    },
     "ObjectBooleanExpressionTypeGraphQlConfiguration": {
       "$id": "https://hasura.io/jsonschemas/metadata/ObjectBooleanExpressionTypeGraphQlConfiguration",
       "title": "ObjectBooleanExpressionTypeGraphQlConfiguration",
@@ -1620,12 +2040,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "ArgumentName": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentName",
-      "title": "ArgumentName",
-      "type": "string",
-      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "ModelSource": {
       "$id": "https://hasura.io/jsonschemas/metadata/ModelSource",
@@ -2201,13 +2615,6 @@
       },
       "additionalProperties": false
     },
-    "RelationshipName": {
-      "$id": "https://hasura.io/jsonschemas/metadata/RelationshipName",
-      "title": "RelationshipName",
-      "description": "The name of the GraphQL relationship field.",
-      "type": "string",
-      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
-    },
     "RelationshipTarget": {
       "$id": "https://hasura.io/jsonschemas/metadata/RelationshipTarget",
       "title": "RelationshipTarget",
@@ -2392,7 +2799,7 @@
           ],
           "properties": {
             "value": {
-              "$ref": "#/definitions/ValueExpression"
+              "$ref": "#/definitions/ValueExpression2"
             }
           },
           "additionalProperties": false
@@ -2414,247 +2821,6 @@
           "additionalProperties": false
         }
       ]
-    },
-    "ValueExpression": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ValueExpression",
-      "title": "ValueExpression",
-      "description": "An expression which evaluates to a value that can be used in permissions.",
-      "oneOf": [
-        {
-          "title": "Literal",
-          "type": "object",
-          "required": [
-            "literal"
-          ],
-          "properties": {
-            "literal": true
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "SessionVariable",
-          "type": "object",
-          "required": [
-            "sessionVariable"
-          ],
-          "properties": {
-            "sessionVariable": {
-              "$ref": "#/definitions/OpenDdSessionVariable"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "BooleanExpression",
-          "type": "object",
-          "required": [
-            "booleanExpression"
-          ],
-          "properties": {
-            "booleanExpression": {
-              "$ref": "#/definitions/ModelPredicate"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
-    "OpenDdSessionVariable": {
-      "description": "Used to represent the name of a session variable, like \"x-hasura-role\".",
-      "type": "string"
-    },
-    "ModelPredicate": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ModelPredicate",
-      "title": "ModelPredicate",
-      "description": "A predicate that can be used to restrict the objects returned when querying a model.",
-      "examples": [
-        {
-          "fieldComparison": {
-            "field": "author_id",
-            "operator": "_eq",
-            "value": {
-              "sessionVariable": "x-hasura-user-id"
-            }
-          }
-        }
-      ],
-      "oneOf": [
-        {
-          "description": "Filters objects based on a field value.",
-          "type": "object",
-          "required": [
-            "fieldComparison"
-          ],
-          "properties": {
-            "fieldComparison": {
-              "$ref": "#/definitions/FieldComparisonPredicate"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "fieldIsNull"
-          ],
-          "properties": {
-            "fieldIsNull": {
-              "$ref": "#/definitions/FieldIsNullPredicate"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "description": "Filters objects based on the relationship of a model.",
-          "type": "object",
-          "required": [
-            "relationship"
-          ],
-          "properties": {
-            "relationship": {
-              "$ref": "#/definitions/RelationshipPredicate"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "And",
-          "description": "Evaluates to true if all sub-predicates evaluate to true.",
-          "type": "object",
-          "required": [
-            "and"
-          ],
-          "properties": {
-            "and": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ModelPredicate"
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "Or",
-          "description": "Evaluates to true if any of the sub-predicates evaluate to true.",
-          "type": "object",
-          "required": [
-            "or"
-          ],
-          "properties": {
-            "or": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ModelPredicate"
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "Not",
-          "description": "Evaluates to true if the sub-predicate evaluates to false.",
-          "type": "object",
-          "required": [
-            "not"
-          ],
-          "properties": {
-            "not": {
-              "$ref": "#/definitions/ModelPredicate"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
-    "FieldComparisonPredicate": {
-      "$id": "https://hasura.io/jsonschemas/metadata/FieldComparisonPredicate",
-      "title": "FieldComparisonPredicate",
-      "description": "Field comparison predicate filters objects based on a field value.",
-      "type": "object",
-      "required": [
-        "field",
-        "operator",
-        "value"
-      ],
-      "properties": {
-        "field": {
-          "description": "The field name of the object type of the model to compare.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/FieldName"
-            }
-          ]
-        },
-        "operator": {
-          "description": "The name of the operator to use for comparison.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/OperatorName"
-            }
-          ]
-        },
-        "value": {
-          "description": "The value expression to compare against.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/ValueExpression"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "FieldIsNullPredicate": {
-      "$id": "https://hasura.io/jsonschemas/metadata/FieldIsNullPredicate",
-      "title": "FieldIsNullPredicate",
-      "description": "Predicate to check if the given field is null.",
-      "type": "object",
-      "required": [
-        "field"
-      ],
-      "properties": {
-        "field": {
-          "description": "The name of the field that should be checked for a null value.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/FieldName"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "RelationshipPredicate": {
-      "$id": "https://hasura.io/jsonschemas/metadata/RelationshipPredicate",
-      "title": "RelationshipPredicate",
-      "description": "Relationship predicate filters objects of a source model based on a predicate on the related model.",
-      "type": "object",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "description": "The name of the relationship of the object type of the model to follow.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/RelationshipName"
-            }
-          ]
-        },
-        "predicate": {
-          "description": "The predicate to apply on the related objects. If this is null, then the predicate evaluates to true as long as there is at least one related object present.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/ModelPredicate"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
     },
     "FieldAccess": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldAccess",
@@ -2875,56 +3041,12 @@
           "description": "Value for preset",
           "allOf": [
             {
-              "$ref": "#/definitions/ValueExpression2"
+              "$ref": "#/definitions/ValueExpression"
             }
           ]
         }
       },
       "additionalProperties": false
-    },
-    "ValueExpression2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ValueExpression2",
-      "title": "ValueExpression",
-      "description": "An expression which evaluates to a value that can be used in permissions.",
-      "oneOf": [
-        {
-          "title": "Literal",
-          "type": "object",
-          "required": [
-            "literal"
-          ],
-          "properties": {
-            "literal": true
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "SessionVariable",
-          "type": "object",
-          "required": [
-            "sessionVariable"
-          ],
-          "properties": {
-            "sessionVariable": {
-              "$ref": "#/definitions/OpenDdSessionVariable"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "BooleanExpression",
-          "type": "object",
-          "required": [
-            "booleanExpression"
-          ],
-          "properties": {
-            "booleanExpression": {
-              "$ref": "#/definitions/ModelPredicate"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
     },
     "ModelPermissionsV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ModelPermissionsV1",
@@ -3046,35 +3168,6 @@
           "$ref": "#/definitions/ModelPredicate"
         }
       ]
-    },
-    "ArgumentPreset": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentPreset",
-      "title": "ArgumentPreset",
-      "description": "Preset value for an argument",
-      "type": "object",
-      "required": [
-        "argument",
-        "value"
-      ],
-      "properties": {
-        "argument": {
-          "description": "Argument name for preset",
-          "allOf": [
-            {
-              "$ref": "#/definitions/ArgumentName"
-            }
-          ]
-        },
-        "value": {
-          "description": "Value for preset",
-          "allOf": [
-            {
-              "$ref": "#/definitions/ValueExpression2"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
     },
     "CommandPermissionsV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/CommandPermissionsV1",

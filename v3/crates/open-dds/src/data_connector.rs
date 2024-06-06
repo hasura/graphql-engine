@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 
 mod v1;
 
-pub use v1::{DataConnectorLinkV1, DataConnectorUrlV1 as DataConnectorUrl, ReadWriteUrls};
+pub use v1::{
+    ArgumentPreset, ArgumentPresetValue, DataConnectorLinkV1,
+    DataConnectorUrlV1 as DataConnectorUrl, HttpHeadersPreset, ReadWriteUrls, ResponseHeaders,
+};
 
 use crate::{identifier::Identifier, impl_OpenDd_default_for};
 

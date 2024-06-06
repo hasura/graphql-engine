@@ -1,9 +1,15 @@
-use crate::helpers::http::{HeaderError, SerializableHeaderMap, SerializableUrl};
+use crate::helpers::http::{
+    HeaderError, SerializableHeaderMap, SerializableHeaderName, SerializableUrl,
+};
+use crate::helpers::ndc_validation::validate_ndc_argument_presets;
 use crate::types::error::Error;
+use crate::types::permission::ValueExpression;
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::OperationType;
 use ndc_models;
+use open_dds::arguments::ArgumentName;
+use open_dds::data_connector::SchemaAndCapabilitiesV01;
 use open_dds::{
     commands::{FunctionName, ProcedureName},
     data_connector::{
@@ -28,17 +34,18 @@ pub struct DataConnectorContext<'a> {
 }
 
 impl<'a> DataConnectorContext<'a> {
-    pub fn new(data_connector: &'a data_connector::DataConnectorLinkV1) -> Result<Self, Error> {
+    pub fn new(
+        data_connector: &'a data_connector::DataConnectorLinkV1,
+        data_connector_name: &Qualified<DataConnectorName>,
+    ) -> Result<Self, Error> {
         let VersionedSchemaAndCapabilities::V01(schema_and_capabilities) = &data_connector.schema;
-        let resolved_schema = DataConnectorSchema::new(&schema_and_capabilities.schema);
-
+        let data_connector_core_info = DataConnectorCoreInfo::new(
+            data_connector,
+            schema_and_capabilities,
+            data_connector_name,
+        )?;
         Ok(DataConnectorContext {
-            inner: DataConnectorCoreInfo {
-                url: &data_connector.url,
-                headers: &data_connector.headers,
-                schema: resolved_schema,
-                capabilities: &schema_and_capabilities.capabilities,
-            },
+            inner: data_connector_core_info,
             scalars: schema_and_capabilities
                 .schema
                 .scalar_types
@@ -56,6 +63,53 @@ pub struct DataConnectorCoreInfo<'a> {
     pub headers: &'a IndexMap<String, open_dds::EnvironmentValue>,
     pub schema: DataConnectorSchema,
     pub capabilities: &'a ndc_models::CapabilitiesResponse,
+    pub argument_presets: Vec<ArgumentPreset>,
+    pub response_headers: Option<ResponseHeaders>,
+}
+
+impl<'a> DataConnectorCoreInfo<'a> {
+    pub fn new(
+        data_connector: &'a data_connector::DataConnectorLinkV1,
+        schema_and_capabilities: &'a SchemaAndCapabilitiesV01,
+        data_connector_name: &Qualified<DataConnectorName>,
+    ) -> Result<Self, Error> {
+        let resolved_schema = DataConnectorSchema::new(&schema_and_capabilities.schema);
+
+        let argument_presets = data_connector
+            .argument_presets
+            .iter()
+            .map(|argument_preset| -> Result<_, Error> {
+                let header_presets = HttpHeadersPreset::new(
+                    &argument_preset.value.http_headers,
+                    data_connector_name,
+                )?;
+                Ok(ArgumentPreset {
+                    name: argument_preset.argument.clone(),
+                    value: ArgumentPresetValue {
+                        http_headers: header_presets,
+                    },
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        // validate the argument presets with NDC schema
+        validate_ndc_argument_presets(&argument_presets, &resolved_schema)?;
+
+        let response_headers = if let Some(headers) = &data_connector.response_headers {
+            Some(ResponseHeaders::new(headers, data_connector_name)?)
+        } else {
+            None
+        };
+
+        Ok(DataConnectorCoreInfo {
+            url: &data_connector.url,
+            headers: &data_connector.headers,
+            schema: resolved_schema,
+            capabilities: &schema_and_capabilities.capabilities,
+            argument_presets,
+            response_headers,
+        })
+    }
 }
 
 /// information provided in the `ndc_models::SchemaResponse`, processed to make it easier to work
@@ -109,12 +163,6 @@ impl DataConnectorSchema {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
-pub struct ComparisonOperators {
-    pub equal_operators: Vec<String>,
-    pub in_operators: Vec<String>,
-}
-
 // basic scalar type info
 #[derive(Debug)]
 pub struct ScalarTypeInfo<'a> {
@@ -147,6 +195,12 @@ impl<'a> ScalarTypeInfo<'a> {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
+pub struct ComparisonOperators {
+    pub equal_operators: Vec<String>,
+    pub in_operators: Vec<String>,
+}
+
 /// This represents part of resolved data connector info that is eventually kept
 /// in the resolved metadata. This is used inside model/command sources, and
 /// this info is required only during execution.
@@ -154,7 +208,16 @@ impl<'a> ScalarTypeInfo<'a> {
 pub struct DataConnectorLink {
     pub name: Qualified<DataConnectorName>,
     pub url: ResolvedDataConnectorUrl,
+    /// These are headers used in the protocol level
     pub headers: SerializableHeaderMap,
+    /// Presets for arguments that applies to all functions/procedures of the
+    /// data connector
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub argument_presets: Vec<ArgumentPreset>,
+    /// HTTP response headers configuration that is forwarded from a NDC
+    /// function/procedure to the client.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub response_headers: Option<ResponseHeaders>,
     pub capabilities: DataConnectorCapabilities,
 }
 
@@ -220,6 +283,8 @@ impl DataConnectorLink {
             url,
             headers,
             capabilities,
+            argument_presets: info.argument_presets.clone(),
+            response_headers: info.response_headers.clone(),
         })
     }
 }
@@ -244,11 +309,120 @@ impl ResolvedDataConnectorUrl {
             ResolvedDataConnectorUrl::SingleUrl(url) => &url.0,
             ResolvedDataConnectorUrl::ReadWriteUrls(ResolvedReadWriteUrls { read, write }) => {
                 match operation {
-                    OperationType::Query => &read.0,
-                    OperationType::Mutation | OperationType::Subscription => &write.0,
+                    OperationType::Query | OperationType::Subscription => &read.0,
+                    OperationType::Mutation => &write.0,
                 }
             }
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ArgumentPreset {
+    pub name: ArgumentName,
+    pub value: ArgumentPresetValue,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ArgumentPresetValue {
+    /// HTTP headers that can be preset from request
+    pub http_headers: HttpHeadersPreset,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct HttpHeadersPreset {
+    /// List of HTTP headers that should be forwarded from HTTP requests
+    pub forward: Vec<SerializableHeaderName>,
+    /// Additional (header, value) pairs that should be forwarded
+    pub additional: IndexMap<SerializableHeaderName, ValueExpression>,
+}
+
+impl HttpHeadersPreset {
+    fn new(
+        headers_preset: &open_dds::data_connector::HttpHeadersPreset,
+        data_connector_name: &Qualified<DataConnectorName>,
+    ) -> Result<Self, Error> {
+        let forward = headers_preset
+            .forward
+            .iter()
+            .map(|header| {
+                SerializableHeaderName::new(header.to_string())
+                    .map_err(|err| to_error(err, data_connector_name))
+            })
+            .collect::<Result<Vec<_>, Error>>()?;
+
+        let additional = headers_preset
+            .additional
+            .iter()
+            .map(|(header_name, header_val)| {
+                let key = SerializableHeaderName::new(header_name.to_string())
+                    .map_err(|err| to_error(err, data_connector_name))?;
+                let val = resolve_value_expression(header_val.clone())?;
+                Ok((key, val))
+            })
+            .collect::<Result<IndexMap<_, _>, Error>>()?;
+
+        Ok(Self {
+            forward,
+            additional,
+        })
+    }
+}
+
+fn resolve_value_expression(
+    value_expression_input: open_dds::permissions::ValueExpression,
+) -> Result<ValueExpression, Error> {
+    match value_expression_input {
+        open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
+            Ok::<ValueExpression, Error>(ValueExpression::SessionVariable(session_variable.clone()))
+        }
+        open_dds::permissions::ValueExpression::Literal(json_value) => {
+            Ok(ValueExpression::Literal(json_value.clone()))
+        }
+        open_dds::permissions::ValueExpression::BooleanExpression(_) => {
+            Err(Error::BooleanExpressionInValueExpressionForHeaderPresetsNotSupported)
+        }
+    }
+}
+
+fn to_error(err: HeaderError, data_connector_name: &Qualified<DataConnectorName>) -> Error {
+    match err {
+        HeaderError::InvalidHeaderName { header_name } => Error::InvalidHeaderName {
+            data_connector: data_connector_name.clone(),
+            header_name,
+        },
+        HeaderError::InvalidHeaderValue { header_name } => Error::InvalidHeaderValue {
+            data_connector: data_connector_name.clone(),
+            header_name,
+        },
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ResponseHeaders {
+    pub headers_field: String,
+    pub result_field: String,
+    pub forward_headers: Vec<SerializableHeaderName>,
+}
+
+impl ResponseHeaders {
+    fn new(
+        response_headers: &open_dds::data_connector::ResponseHeaders,
+        data_connector_name: &Qualified<DataConnectorName>,
+    ) -> Result<Self, Error> {
+        let forward_headers = response_headers
+            .forward_headers
+            .iter()
+            .map(|header| {
+                SerializableHeaderName::new(header.to_string())
+                    .map_err(|err| to_error(err, data_connector_name))
+            })
+            .collect::<Result<Vec<_>, Error>>()?;
+        Ok(Self {
+            headers_field: response_headers.headers_field.clone(),
+            result_field: response_headers.result_field.clone(),
+            forward_headers,
+        })
     }
 }
 
@@ -263,7 +437,7 @@ mod tests {
     use ndc_models;
     use open_dds::data_connector::DataConnectorLinkV1;
 
-    use crate::stages::data_connectors::types::DataConnectorContext;
+    use crate::{stages::data_connectors::types::DataConnectorContext, Qualified};
 
     #[test]
     fn test_url_serialization_deserialization() {
@@ -308,8 +482,12 @@ mod tests {
         )).unwrap();
 
         // With explicit capabilities specified, we should use them
+        let dc_name = Qualified::new(
+            "foo".to_string(),
+            data_connector_with_capabilities.name.clone(),
+        );
         assert_eq!(
-            DataConnectorContext::new(&data_connector_with_capabilities)
+            DataConnectorContext::new(&data_connector_with_capabilities, &dc_name)
                 .unwrap()
                 .inner
                 .capabilities,

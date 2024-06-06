@@ -522,7 +522,8 @@ impl ModelPredicate {
 )]
 #[serde(rename_all = "camelCase")]
 #[schemars(title = "ValueExpression")]
-/// An expression which evaluates to a value that can be used in permissions.
+/// An expression which evaluates to a value that can be used in permissions and
+/// various presets.
 pub enum ValueExpression {
     #[schemars(title = "Literal")]
     Literal(JsonValue),

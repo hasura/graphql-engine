@@ -4,8 +4,8 @@ use crate::types::subgraph::Qualified;
 mod types;
 use std::collections::BTreeMap;
 pub use types::{
-    ComparisonOperators, DataConnectorContext, DataConnectorLink, DataConnectorSchema,
-    DataConnectors,
+    ArgumentPreset, ComparisonOperators, DataConnectorContext, DataConnectorLink,
+    DataConnectorSchema, DataConnectors,
 };
 
 /// Resolve data connectors.
@@ -24,7 +24,7 @@ pub fn resolve(
         if data_connectors
             .insert(
                 qualified_data_connector_name.clone(),
-                types::DataConnectorContext::new(data_connector)?,
+                types::DataConnectorContext::new(data_connector, &qualified_data_connector_name)?,
             )
             .is_some()
         {

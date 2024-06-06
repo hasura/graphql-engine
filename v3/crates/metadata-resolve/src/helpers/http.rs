@@ -60,7 +60,7 @@ impl<'de> Deserialize<'de> for SerializableUrl {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SerializableHeaderName(pub HeaderName);
 
 #[allow(dead_code)]

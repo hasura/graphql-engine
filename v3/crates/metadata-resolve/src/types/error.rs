@@ -579,6 +579,12 @@ pub enum Error {
     },
     #[error("{type_error:}")]
     TypeError { type_error: TypeError },
+
+    // TODO: (anon) refactor the data connector error types
+    #[error(
+        "Boolean Expression in ValueExpression for Data Connector headers preset is not supported."
+    )]
+    BooleanExpressionInValueExpressionForHeaderPresetsNotSupported,
 }
 
 impl From<BooleanExpressionError> for Error {
