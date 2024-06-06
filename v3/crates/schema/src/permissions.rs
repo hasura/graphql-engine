@@ -66,6 +66,8 @@ pub(crate) fn get_select_permissions_namespace_annotations(
             // get the NDC argument name of this command source
             let ndc_argument_name = model_source.argument_mappings.get(arg_name).cloned();
 
+            // A list to keep track of the input types we have already processed
+            let mut processed_input_types = Vec::new();
             let mut field_path = Vec::new();
 
             build_annotations_from_input_object_type_permissions(
@@ -75,6 +77,7 @@ pub(crate) fn get_select_permissions_namespace_annotations(
                 object_types,
                 &model_source.type_mappings,
                 &mut role_presets_map,
+                &mut processed_input_types,
             )?;
         }
 
@@ -203,6 +206,8 @@ pub(crate) fn get_command_namespace_annotations(
             // get the NDC argument name of this command source
             let ndc_argument_name = command_source.argument_mappings.get(arg_name).cloned();
 
+            // A list to keep track of the input types we have already processed
+            let mut processed_input_types = Vec::new();
             let mut field_path = Vec::new();
             build_annotations_from_input_object_type_permissions(
                 &mut field_path,
@@ -211,6 +216,7 @@ pub(crate) fn get_command_namespace_annotations(
                 object_types,
                 &command_source.type_mappings,
                 &mut role_presets_map,
+                &mut processed_input_types,
             )?;
         }
         // go through the role presets map and extend them into the permissions map
@@ -226,19 +232,23 @@ pub(crate) fn get_command_namespace_annotations(
     Ok(permissions)
 }
 
-fn build_annotations_from_input_object_type_permissions(
+fn build_annotations_from_input_object_type_permissions<'a>(
     field_path: &mut [DataConnectorColumnName],
-    type_reference: &QualifiedTypeReference,
+    type_reference: &'a QualifiedTypeReference,
     ndc_argument_name: &Option<ConnectorArgumentName>,
-    object_types: &BTreeMap<
+    object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     role_presets_map: &mut HashMap<Role, types::ArgumentPresets>,
+    processed_input_types: &mut Vec<&'a Qualified<CustomTypeName>>,
 ) -> Result<(), crate::Error> {
     if let Some(object_type) = unwrap_custom_type_name(type_reference) {
-        if object_type_exists(object_type, object_types).is_ok() {
+        // If the object type exists and it is not already processed (to avoid infinite recursion)
+        if object_type_exists(object_type, object_types).is_ok()
+            && !processed_input_types.contains(&object_type)
+        {
             if let Some(object_type_repr) = object_types.get(object_type) {
                 let field_mappings =
                     type_mappings
@@ -268,7 +278,11 @@ fn build_annotations_from_input_object_type_permissions(
                     );
                 }
 
+                // Push the input type to the list of processed input types
+                processed_input_types.push(object_type);
+
                 // recursively process all the fields of this input object type
+                // the processed_input_types_ list is passed to avoid infinite recursion
                 for (field_name, field_definition) in &object_type_repr.object_type.fields {
                     let mut field_path_ = field_path.to_owned();
                     let ndc_field = field_mappings
@@ -290,6 +304,7 @@ fn build_annotations_from_input_object_type_permissions(
                         object_types,
                         type_mappings,
                         role_presets_map,
+                        processed_input_types,
                     )?;
                 }
             }

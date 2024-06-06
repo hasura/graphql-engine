@@ -828,10 +828,6 @@ pub enum TypeMappingValidationError {
     UnknownSourceType {
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("the mapping for type {type_name:} is incompatible with the type representation")]
-    IncompatibleTypeMappingDefinition {
-        type_name: Qualified<CustomTypeName>,
-    },
     #[error(
         "the following fields in field mappings of type {type_name:} are unknown: {}",
         field_names.join(", ")
