@@ -712,7 +712,7 @@
       "dataConnectorScalarType": "String",
       "representation": "String",
       "graphql": {
-        "comparisonExpressionTypeName": "String_Comparison_Exp"
+        "comparisonExpressionTypeName": "String_Comparison_Exp_DB1"
       }
     }
   },
@@ -724,7 +724,7 @@
       "dataConnectorScalarType": "String",
       "representation": "String",
       "graphql": {
-        "comparisonExpressionTypeName": "String_Comparison_Exp"
+        "comparisonExpressionTypeName": "String_Comparison_Exp_DB2"
       }
     }
   },
