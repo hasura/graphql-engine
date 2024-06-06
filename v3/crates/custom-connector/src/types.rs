@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 pub mod actor;
 pub mod institution;
 pub mod location;
+pub mod login;
 pub mod name_query;
 pub mod staff_member;
 
@@ -54,9 +55,32 @@ pub(crate) fn scalar_types() -> BTreeMap<String, ndc_models::ScalarType> {
             },
         ),
         (
+            "Bool".into(),
+            ndc_models::ScalarType {
+                representation: Some(ndc_models::TypeRepresentation::Boolean),
+                aggregate_functions: BTreeMap::new(),
+                comparison_operators: BTreeMap::from_iter([(
+                    "eq".into(),
+                    ndc_models::ComparisonOperatorDefinition::Custom {
+                        argument_type: ndc_models::Type::Named {
+                            name: "Bool".into(),
+                        },
+                    },
+                )]),
+            },
+        ),
+        (
             "Actor_Name".into(),
             ndc_models::ScalarType {
                 representation: Some(ndc_models::TypeRepresentation::String),
+                aggregate_functions: BTreeMap::new(),
+                comparison_operators: BTreeMap::new(),
+            },
+        ),
+        (
+            "HeaderMap".into(),
+            ndc_models::ScalarType {
+                representation: Some(ndc_models::TypeRepresentation::JSON),
                 aggregate_functions: BTreeMap::new(),
                 comparison_operators: BTreeMap::new(),
             },
@@ -104,5 +128,6 @@ pub(crate) fn object_types() -> BTreeMap<String, ndc_models::ObjectType> {
         ("institution".into(), institution::definition()),
         ("location".into(), location::definition()),
         ("staff_member".into(), staff_member::definition()),
+        ("login_response".into(), login::definition()),
     ])
 }

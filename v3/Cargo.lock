@@ -725,6 +725,7 @@ dependencies = [
  "indexmap 2.2.6",
  "ndc-models",
  "regex",
+ "serde",
  "serde_json",
  "tokio",
 ]

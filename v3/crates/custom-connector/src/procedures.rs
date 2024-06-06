@@ -5,6 +5,7 @@ use ndc_models;
 
 use crate::{query::Result, state::AppState};
 
+pub mod login;
 pub mod noop_procedure;
 pub mod update_actor_name_by_id;
 pub mod uppercase_actor_name_by_id;
@@ -16,6 +17,7 @@ pub(crate) fn get_procedures() -> Vec<ndc_models::ProcedureInfo> {
     vec![
         upsert_actor::procedure_info(),
         update_actor_name_by_id::procedure_info(),
+        login::procedure_info(),
         noop_procedure::procedure_info(),
         // TODO: Looks like the other procedures where never added to the schema?
     ]
@@ -42,6 +44,7 @@ pub(crate) fn execute_procedure(
         "uppercase_all_actor_names_return_names_list" => {
             uppercase_all_actor_names_return_names_list::execute(state)
         }
+        "login" => login::execute(arguments),
         "noop_procedure" => noop_procedure::execute(),
         _ => Err((
             StatusCode::BAD_REQUEST,

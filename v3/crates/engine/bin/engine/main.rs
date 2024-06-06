@@ -475,6 +475,7 @@ async fn graphiql() -> Html<&'static str> {
 }
 
 async fn handle_request(
+    headers: axum::http::header::HeaderMap,
     State(state): State<Arc<EngineState>>,
     Extension(session): Extension<Session>,
     Json(request): Json<gql::http::RawRequest>,
@@ -490,6 +491,7 @@ async fn handle_request(
                     &state.http_context,
                     &state.schema,
                     &session,
+                    &headers,
                     request,
                     None,
                 ))
@@ -508,6 +510,7 @@ async fn handle_request(
 }
 
 async fn handle_explain_request(
+    headers: axum::http::header::HeaderMap,
     State(state): State<Arc<EngineState>>,
     Extension(session): Extension<Session>,
     Json(request): Json<gql::http::RawRequest>,
@@ -523,6 +526,7 @@ async fn handle_explain_request(
                     &state.http_context,
                     &state.schema,
                     &session,
+                    &headers,
                     request,
                 ))
             },

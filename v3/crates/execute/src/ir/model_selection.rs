@@ -58,6 +58,7 @@ pub(crate) fn model_selection_ir<'s>(
     offset: Option<u32>,
     order_by: Option<ResolvedOrderBy<'s>>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
     match permissions_predicate {
@@ -98,6 +99,7 @@ pub(crate) fn model_selection_ir<'s>(
         &model_source.type_mappings,
         field_mappings,
         session_variables,
+        request_headers,
         usage_counts,
     )?;
 

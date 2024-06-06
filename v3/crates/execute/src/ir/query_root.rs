@@ -30,6 +30,7 @@ pub mod select_one;
 pub fn generate_ir<'n, 's>(
     schema: &'s gql::schema::Schema<GDS>,
     session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
     selection_set: &'s gql::normalized_ast::SelectionSet<'s, GDS>,
 ) -> Result<IndexMap<ast::Alias, root_field::RootField<'n, 's>>, error::Error> {
     let type_name = selection_set
@@ -62,7 +63,14 @@ pub fn generate_ir<'n, 's>(
                             name: model_name,
                         } => {
                             let ir = generate_model_rootfield_ir(
-                                &type_name, source, data_type, kind, field, field_call, session,
+                                &type_name,
+                                source,
+                                data_type,
+                                kind,
+                                field,
+                                field_call,
+                                session,
+                                request_headers,
                                 model_name,
                             )?;
                             Ok(ir)
@@ -84,6 +92,7 @@ pub fn generate_ir<'n, 's>(
                                 field,
                                 field_call,
                                 &session.variables,
+                                request_headers,
                             )?;
                             Ok(ir)
                         }
@@ -93,6 +102,7 @@ pub fn generate_ir<'n, 's>(
                                 field_call,
                                 typename_mappings,
                                 session,
+                                request_headers,
                             )?;
                             Ok(ir)
                         }
@@ -104,6 +114,7 @@ pub fn generate_ir<'n, 's>(
                                 field_call,
                                 typename_mappings,
                                 session,
+                                request_headers,
                             )?;
                             Ok(ir)
                         }
@@ -173,6 +184,7 @@ fn generate_model_rootfield_ir<'n, 's>(
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'s gql::normalized_ast::FieldCall<'s, GDS>,
     session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
     model_name: &'s metadata_resolve::Qualified<models::ModelName>,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let source =
@@ -191,6 +203,7 @@ fn generate_model_rootfield_ir<'n, 's>(
                 data_type,
                 source,
                 &session.variables,
+                request_headers,
                 model_name,
             )?,
         },
@@ -202,6 +215,7 @@ fn generate_model_rootfield_ir<'n, 's>(
                 data_type,
                 source,
                 &session.variables,
+                request_headers,
                 model_name,
             )?,
         },
@@ -219,6 +233,7 @@ fn generate_command_rootfield_ir<'n, 's>(
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'s gql::normalized_ast::FieldCall<'s, GDS>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let mut usage_counts = UsagesCounts::new();
     let source =
@@ -247,6 +262,7 @@ fn generate_command_rootfield_ir<'n, 's>(
             *result_base_type_kind,
             source,
             session_variables,
+            request_headers,
             &mut usage_counts,
         )?,
     };
@@ -258,12 +274,14 @@ fn generate_nodefield_ir<'n, 's>(
     field_call: &'n gql::normalized_ast::FieldCall<'s, GDS>,
     typename_mappings: &'s HashMap<ast::TypeName, NodeFieldTypeNameMapping>,
     session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let ir = root_field::QueryRootField::NodeSelect(node_field::relay_node_ir(
         field,
         field_call,
         typename_mappings,
         &session.variables,
+        request_headers,
     )?);
     Ok(ir)
 }
@@ -273,6 +291,7 @@ fn generate_entities_ir<'n, 's>(
     field_call: &'n gql::normalized_ast::FieldCall<'s, GDS>,
     typename_mappings: &'s HashMap<ast::TypeName, EntityFieldTypeNameMapping>,
     session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let ir = root_field::QueryRootField::ApolloFederation(
         root_field::ApolloFederationRootFields::EntitiesSelect(apollo_federation::entities_ir(
@@ -280,6 +299,7 @@ fn generate_entities_ir<'n, 's>(
             field_call,
             typename_mappings,
             &session.variables,
+            request_headers,
         )?),
     );
     Ok(ir)

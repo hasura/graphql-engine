@@ -11,6 +11,7 @@ mod helpers;
 mod stages;
 mod types;
 
+pub use helpers::http;
 pub use helpers::ndc_validation::NDCValidationError;
 pub use helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,

@@ -80,6 +80,7 @@ pub(crate) fn entities_ir<'n, 's>(
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     typename_mappings: &'s HashMap<ast::TypeName, EntityFieldTypeNameMapping>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
 ) -> Result<Vec<EntitySelect<'n, 's>>, error::Error> {
     let representations = field_call
         .expected_argument(&lang_graphql::mk_name!("representations"))?
@@ -178,6 +179,7 @@ pub(crate) fn entities_ir<'n, 's>(
                 None, // offset
                 None, // order_by
                 session_variables,
+                request_headers,
                 // Get all the models/commands that were used as relationships
                 &mut usage_counts,
             )?;

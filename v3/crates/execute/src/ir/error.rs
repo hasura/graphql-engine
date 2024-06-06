@@ -150,6 +150,9 @@ pub enum InternalDeveloperError {
         argument_name: ArgumentName,
     },
 
+    #[error("The value expression could not be converted to header value. Error: ")]
+    UnableToConvertValueExpressionToHeaderValue,
+
     // we'll be adding them shortly, and not advertising the feature until they are complete
     // however temporarily emitting the error allows merging the work in chunks
     #[error("boolean expressions not implemented")]

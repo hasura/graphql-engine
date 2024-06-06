@@ -21,9 +21,10 @@ pub async fn execute_explain(
     http_context: &HttpContext,
     schema: &Schema<GDS>,
     session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
     request: RawRequest,
 ) -> types::ExplainResponse {
-    super::explain_query_internal(http_context, schema, session, request)
+    super::explain_query_internal(http_context, schema, session, request_headers, request)
         .await
         .unwrap_or_else(|e| types::ExplainResponse::error(e.to_graphql_error()))
 }

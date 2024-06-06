@@ -89,6 +89,7 @@ pub fn test_execution_expectation_legacy(
 
         let query = fs::read_to_string(request_path)?;
 
+        let request_headers = reqwest::header::HeaderMap::new();
         let session = {
             let session_vars_path = &test_path.join("session_variables.json");
             let session_variables: HashMap<SessionVariable, SessionVariableValue> =
@@ -104,8 +105,15 @@ pub fn test_execution_expectation_legacy(
 
         // Execute the test
 
-        let response =
-            execute_query(&test_ctx.http_context, &schema, &session, raw_request, None).await;
+        let response = execute_query(
+            &test_ctx.http_context,
+            &schema,
+            &session,
+            &request_headers,
+            raw_request,
+            None,
+        )
+        .await;
 
         let mut expected = test_ctx.mint.new_goldenfile_with_differ(
             response_path,
@@ -174,6 +182,7 @@ pub(crate) fn test_introspection_expectation(
 
         let query = fs::read_to_string(request_path)?;
 
+        let request_headers = reqwest::header::HeaderMap::new();
         let session_vars_path = &test_path.join("session_variables.json");
         let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
             json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
@@ -200,6 +209,7 @@ pub(crate) fn test_introspection_expectation(
                 &test_ctx.http_context,
                 &schema,
                 session,
+                &request_headers,
                 raw_request.clone(),
                 None,
             )
@@ -289,6 +299,7 @@ pub fn test_execution_expectation(
                 Err(_) => None,
             };
 
+        let request_headers = reqwest::header::HeaderMap::new();
         let session_vars_path = &test_path.join("session_variables.json");
         let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
             json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
@@ -317,6 +328,7 @@ pub fn test_execution_expectation(
                         &test_ctx.http_context,
                         &schema,
                         session,
+                        &request_headers,
                         raw_request.clone(),
                         None,
                     )
@@ -335,6 +347,7 @@ pub fn test_execution_expectation(
                         &test_ctx.http_context,
                         &schema,
                         session,
+                        &request_headers,
                         raw_request.clone(),
                         None,
                     )
@@ -403,6 +416,7 @@ pub fn test_execute_explain(
         let gds = GDS::new_with_default_flags(open_dds::traits::OpenDd::deserialize(metadata)?)?;
 
         let schema = GDS::build_schema(&gds)?;
+        let request_headers = reqwest::header::HeaderMap::new();
         let session = {
             let session_variables_raw = r#"{
                 "x-hasura-role": "admin"
@@ -417,8 +431,14 @@ pub fn test_execute_explain(
             query,
             variables: None,
         };
-        let raw_response =
-            execute::execute_explain(&test_ctx.http_context, &schema, &session, raw_request).await;
+        let raw_response = execute::execute_explain(
+            &test_ctx.http_context,
+            &schema,
+            &session,
+            &request_headers,
+            raw_request,
+        )
+        .await;
 
         let response = execute::redact_ndc_explain(raw_response);
 

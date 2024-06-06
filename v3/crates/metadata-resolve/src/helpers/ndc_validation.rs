@@ -304,7 +304,8 @@ pub fn validate_ndc_command(
 
     // Check if the arguments are correctly mapped
     for (open_dd_argument_name, ndc_argument_name) in &command_source.argument_mappings {
-        // OpenDD command argument should not be also used in DataConnectorLink.argumentPresets
+        // Arguments already used in DataConnectorLink.argumentPresets can't be
+        // used as command arguments
         if dc_link_argument_presets.contains(&open_dd_argument_name) {
             return Err(
                 NDCValidationError::CannotUseDataConnectorLinkArgumentPresetInCommand {

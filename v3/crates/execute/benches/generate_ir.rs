@@ -24,6 +24,7 @@ pub fn bench_generate_ir(c: &mut Criterion) {
     group.sample_size(20);
     group.sampling_mode(SamplingMode::Flat);
 
+    let request_headers = reqwest::header::HeaderMap::new();
     let session = Identity::admin(Role::new("admin"))
         .get_role_authorization(None)
         .unwrap()
@@ -61,7 +62,10 @@ pub fn bench_generate_ir(c: &mut Criterion) {
             BenchmarkId::new("generate_ir", test_name),
             &(&schema, &normalized_request),
             |b, (schema, normalized_request)| {
-                b.iter(|| execute::generate_ir(schema, &session, normalized_request).unwrap())
+                b.iter(|| {
+                    execute::generate_ir(schema, &session, &request_headers, normalized_request)
+                        .unwrap()
+                })
             },
         );
     }

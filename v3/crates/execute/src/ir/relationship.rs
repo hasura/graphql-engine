@@ -79,6 +79,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
     source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     // Add the target model being used in the usage counts
@@ -177,6 +178,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
             offset,
             order_by,
             session_variables,
+            request_headers,
             usage_counts,
         ),
         metadata_resolve::RelationshipExecutionCategory::RemoteForEach => {
@@ -191,6 +193,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                 offset,
                 order_by,
                 session_variables,
+                request_headers,
                 usage_counts,
             )
         }
@@ -203,6 +206,7 @@ pub(crate) fn generate_command_relationship_ir<'s>(
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     count_command(&annotation.command_name, usage_counts);
@@ -235,6 +239,7 @@ pub(crate) fn generate_command_relationship_ir<'s>(
             type_mappings,
             target_source,
             session_variables,
+            request_headers,
             usage_counts,
         ),
         metadata_resolve::RelationshipExecutionCategory::RemoteForEach => {
@@ -245,6 +250,7 @@ pub(crate) fn generate_command_relationship_ir<'s>(
                 type_mappings,
                 target_source,
                 session_variables,
+                request_headers,
                 usage_counts,
             )
         }
@@ -264,6 +270,7 @@ pub(crate) fn build_local_model_relationship<'s>(
     offset: Option<u32>,
     order_by: Option<ResolvedOrderBy<'s>>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let relationships_ir = model_selection_ir(
@@ -277,6 +284,7 @@ pub(crate) fn build_local_model_relationship<'s>(
         offset,
         order_by,
         session_variables,
+        request_headers,
         usage_counts,
     )?;
     let rel_info = LocalModelRelationshipInfo {
@@ -306,6 +314,7 @@ pub(crate) fn build_local_command_relationship<'s>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     target_source: &'s CommandTargetSource,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let relationships_ir = generate_function_based_command(
@@ -317,6 +326,7 @@ pub(crate) fn build_local_command_relationship<'s>(
         annotation.target_base_type_kind,
         &target_source.details,
         session_variables,
+        request_headers,
         usage_counts,
     )?;
 
@@ -353,6 +363,7 @@ pub(crate) fn build_remote_relationship<'n, 's>(
     offset: Option<u32>,
     order_by: Option<ResolvedOrderBy<'s>>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let mut join_mapping: Vec<(SourceField, TargetField)> = vec![];
@@ -392,6 +403,7 @@ pub(crate) fn build_remote_relationship<'n, 's>(
         offset,
         order_by,
         session_variables,
+        request_headers,
         usage_counts,
     )?;
 
@@ -435,6 +447,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     target_source: &'s CommandTargetSource,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let mut join_mapping: Vec<(SourceField, ArgumentName)> = vec![];
@@ -462,6 +475,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
         annotation.target_base_type_kind,
         &target_source.details,
         session_variables,
+        request_headers,
         usage_counts,
     )?;
 

@@ -64,6 +64,28 @@
                         "type": "custom"
                       }
                     }
+                  },
+                  "Bool": {
+                    "representation": {
+                      "type": "boolean"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "eq": {
+                        "type": "custom",
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Bool"
+                        }
+                      }
+                    }
+                  },
+                  "HeaderMap": {
+                    "representation": {
+                      "type": "json"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
                   }
                 },
                 "object_types": {
@@ -251,6 +273,25 @@
                         "type": {
                           "type": "named",
                           "name": "Int"
+                        }
+                      }
+                    }
+                  },
+                  "login_response": {
+                    "description": "Response to a login action",
+                    "fields": {
+                      "headers": {
+                        "description": "Response headers to be forwarded",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "response": {
+                        "description": "Authentication successful or not",
+                        "type": {
+                          "type": "named",
+                          "name": "Bool"
                         }
                       }
                     }
@@ -665,6 +706,37 @@
                           "name": "String"
                         }
                       }
+                    }
+                  },
+                  {
+                    "name": "login",
+                    "description": "Perform a user login",
+                    "arguments": {
+                      "headers": {
+                        "description": "headers required for authentication",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "password": {
+                        "description": "password of the user",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "username": {
+                        "description": "username of the user",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "login_response"
                     }
                   }
                 ]

@@ -153,6 +153,7 @@ pub(crate) fn generate_nested_selection<'s>(
         metadata_resolve::TypeMapping,
     >,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<NestedSelection<'s>>, error::Error> {
     match &qualified_type_reference.underlying_type {
@@ -164,6 +165,7 @@ pub(crate) fn generate_nested_selection<'s>(
                 data_connector,
                 type_mappings,
                 session_variables,
+                request_headers,
                 usage_counts,
             )?;
             Ok(array_selection.map(|a| NestedSelection::Array(Box::new(a))))
@@ -189,6 +191,7 @@ pub(crate) fn generate_nested_selection<'s>(
                                 type_mappings,
                                 field_mappings,
                                 session_variables,
+                                request_headers,
                                 usage_counts,
                             )?;
                             Ok(Some(NestedSelection::Object(nested_selection)))
@@ -213,6 +216,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
     >,
     field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ResultSelectionSet<'s>, error::Error> {
     let mut fields = IndexMap::new();
@@ -237,6 +241,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                         data_connector,
                         type_mappings,
                         session_variables,
+                        request_headers,
                         usage_counts,
                     )?;
                     fields.insert(
@@ -293,6 +298,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                             data_connector,
                             type_mappings,
                             session_variables,
+                            request_headers,
                             usage_counts,
                         )?,
                     );
@@ -306,6 +312,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                             data_connector,
                             type_mappings,
                             session_variables,
+                            request_headers,
                             usage_counts,
                         )?,
                     );

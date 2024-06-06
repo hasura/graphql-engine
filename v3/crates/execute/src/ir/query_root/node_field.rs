@@ -77,6 +77,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     typename_mappings: &'s HashMap<ast::TypeName, NodeFieldTypeNameMapping>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
 ) -> Result<Option<NodeSelect<'n, 's>>, error::Error> {
     let id_arg_value = field_call
         .expected_argument(&lang_graphql::mk_name!("id"))?
@@ -161,6 +162,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
                 None, // offset
                 None, // order_by
                 session_variables,
+                request_headers,
                 // Get all the models/commands that were used as relationships
                 &mut usage_counts,
             )?;

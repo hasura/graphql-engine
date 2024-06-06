@@ -80,12 +80,20 @@ pub async fn execute_query(
     http_context: &HttpContext,
     schema: &Schema<GDS>,
     session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
     request: RawRequest,
     project_id: Option<&ProjectId>,
 ) -> GraphQLResponse {
-    execute_query_internal(http_context, schema, session, request, project_id)
-        .await
-        .unwrap_or_else(|e| GraphQLResponse(Response::error(e.to_graphql_error())))
+    execute_query_internal(
+        http_context,
+        schema,
+        session,
+        request_headers,
+        request,
+        project_id,
+    )
+    .await
+    .unwrap_or_else(|e| GraphQLResponse(Response::error(e.to_graphql_error())))
 }
 
 #[derive(Error, Debug)]
@@ -112,6 +120,7 @@ pub async fn execute_query_internal(
     http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
     raw_request: gql::http::RawRequest,
     project_id: Option<&ProjectId>,
 ) -> Result<GraphQLResponse, error::RequestError> {
@@ -141,7 +150,7 @@ pub async fn execute_query_internal(
                         normalize_request(schema, session, query, raw_request)?;
 
                     // generate IR
-                    let ir = build_ir(schema, session, &normalized_request)?;
+                    let ir = build_ir(schema, session, request_headers, &normalized_request)?;
 
                     // construct a plan to execute the request
                     let request_plan = build_request_plan(&ir)?;
@@ -198,6 +207,7 @@ pub async fn explain_query_internal(
     http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
     raw_request: gql::http::RawRequest,
 ) -> Result<explain::types::ExplainResponse, error::RequestError> {
     let tracer = tracing_util::global_tracer();
@@ -226,7 +236,7 @@ pub async fn explain_query_internal(
                         normalize_request(schema, session, query, raw_request)?;
 
                     // generate IR
-                    let ir = build_ir(schema, session, &normalized_request)?;
+                    let ir = build_ir(schema, session, request_headers, &normalized_request)?;
 
                     // construct a plan to execute the request
                     let request_plan = build_request_plan(&ir)?;
@@ -341,6 +351,7 @@ pub(crate) fn normalize_request<'s>(
 pub(crate) fn build_ir<'n, 's>(
     schema: &'s gql::schema::Schema<GDS>,
     session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
     normalized_request: &'s Operation<'s, GDS>,
 ) -> Result<IndexMap<ast::Alias, ir::root_field::RootField<'n, 's>>, ir::error::Error> {
     let tracer = tracing_util::global_tracer();
@@ -348,7 +359,7 @@ pub(crate) fn build_ir<'n, 's>(
         "generate_ir",
         "Generate IR for the request",
         SpanVisibility::Internal,
-        || generate_ir(schema, session, normalized_request),
+        || generate_ir(schema, session, request_headers, normalized_request),
     )?;
     Ok(ir)
 }
@@ -370,15 +381,21 @@ pub(crate) fn build_request_plan<'n, 's, 'ir>(
 pub fn generate_ir<'n, 's>(
     schema: &'s gql::schema::Schema<GDS>,
     session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
     normalized_request: &'s Operation<'s, GDS>,
 ) -> Result<IndexMap<ast::Alias, ir::root_field::RootField<'n, 's>>, ir::error::Error> {
     let ir = match &normalized_request.ty {
-        ast::OperationType::Query => {
-            ir::query_root::generate_ir(schema, session, &normalized_request.selection_set)?
-        }
-        ast::OperationType::Mutation => {
-            ir::mutation_root::generate_ir(&normalized_request.selection_set, &session.variables)?
-        }
+        ast::OperationType::Query => ir::query_root::generate_ir(
+            schema,
+            session,
+            request_headers,
+            &normalized_request.selection_set,
+        )?,
+        ast::OperationType::Mutation => ir::mutation_root::generate_ir(
+            &normalized_request.selection_set,
+            &session.variables,
+            request_headers,
+        )?,
         ast::OperationType::Subscription => {
             Err(ir::error::InternalEngineError::SubscriptionsNotSupported)?
         }
@@ -418,6 +435,7 @@ mod tests {
             let path = input_file?.path();
             assert!(path.is_dir());
 
+            let request_headers = reqwest::header::HeaderMap::new();
             let test_name = path
                 .file_name()
                 .ok_or_else(|| format!("{path:?} is not a normal file or directory"))?;
@@ -444,7 +462,7 @@ mod tests {
                 &request,
             )?;
 
-            let ir = generate_ir(&schema, &session, &normalized_request)?;
+            let ir = generate_ir(&schema, &session, &request_headers, &normalized_request)?;
             let mut expected = mint.new_goldenfile_with_differ(
                 expected_path,
                 Box::new(|file1, file2| {
