@@ -1697,6 +1697,7 @@ dependencies = [
  "http",
  "human_bytes",
  "indexmap 2.2.6",
+ "lazy_static",
  "lexical-core",
  "nonempty",
  "postcard",

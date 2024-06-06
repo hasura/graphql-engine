@@ -31,27 +31,32 @@ pub fn build_namespace_schemas<
     namespaced_getter: &NSGet,
 ) -> Result<HashMap<&'s S::Namespace, serde_json::Value>, Error> {
     let mut response = HashMap::new();
-    let request = crate::http::Request {
-        operation_name: None,
-        query: {
-            let query_str = include_str!("introspection_query.graphql");
-            crate::parser::Parser::new(query_str)
-                .parse_executable_document()
-                .map_err(|e| Error::ParseIntrospectionQuery(e.to_string()))?
-        },
-        variables: HashMap::new(),
-    };
     for ns in &schema.namespaces {
-        response.insert(
-            ns,
-            build_namespace_schema(namespaced_getter, ns, schema, &request)?,
-        );
+        response.insert(ns, build_namespace_schema(namespaced_getter, ns, schema)?);
     }
     Ok(response)
 }
 
+lazy_static::lazy_static! {
+
+    static ref INTROSPECTION_REQUEST: Result<crate::http::Request, String>  = {
+        Ok(
+            crate::http::Request {
+                operation_name: None,
+                query: {
+                    let query_str = include_str!("introspection_query.graphql");
+                    crate::parser::Parser::new(query_str)
+                        .parse_executable_document()
+                        .map_err(|e| e.to_string())?
+                },
+                variables: HashMap::new(),
+            }
+        )
+    };
+}
+
 /// Generate GraphQL schema for a given namespace
-fn build_namespace_schema<
+pub fn build_namespace_schema<
     's,
     S: crate::schema::SchemaContext,
     NSGet: crate::schema::NamespacedGetter<S>,
@@ -59,8 +64,11 @@ fn build_namespace_schema<
     namespaced_getter: &NSGet,
     ns: &'s S::Namespace,
     schema: &'s crate::schema::Schema<S>,
-    request: &crate::http::Request,
 ) -> Result<serde_json::Value, Error> {
+    let request = match &(*INTROSPECTION_REQUEST) {
+        Ok(req) => req,
+        Err(e) => Err(Error::ParseIntrospectionQuery((*e).clone()))?,
+    };
     let nr = crate::validation::normalize_request(namespaced_getter, ns, schema, request)
         .map_err(|e| Error::NormalizeIntrospectionQuery(e.to_string()))?;
     let mut result = HashMap::new();
