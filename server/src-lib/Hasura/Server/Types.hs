@@ -33,6 +33,7 @@ module Hasura.Server.Types
     MonadGetPolicies (..),
     RemoteSchemaResponsePriority (..),
     HeaderPrecedence (..),
+    TraceQueryStatus (..),
   )
 where
 
@@ -398,3 +399,18 @@ instance ToJSON HeaderPrecedence where
   toJSON = \case
     ConfiguredHeadersFirst -> Bool True
     ClientHeadersFirst -> Bool False
+
+data TraceQueryStatus
+  = TraceQueryEnabled
+  | TraceQueryDisabled
+  deriving (Eq, Show, Generic)
+
+instance FromJSON TraceQueryStatus where
+  parseJSON = withBool "TraceQueryStatus" $ \case
+    False -> pure TraceQueryDisabled
+    True -> pure TraceQueryEnabled
+
+instance ToJSON TraceQueryStatus where
+  toJSON = \case
+    TraceQueryDisabled -> Bool False
+    TraceQueryEnabled -> Bool True
