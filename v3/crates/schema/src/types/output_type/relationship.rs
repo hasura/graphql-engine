@@ -32,7 +32,6 @@ pub struct FilterRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub source_data_connector: metadata_resolve::DataConnectorLink,
     pub target_source: metadata_resolve::ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,

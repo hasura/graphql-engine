@@ -113,7 +113,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
             )) => {
                 filter_clause = filter::resolve_filter_expression(
                     argument.value.as_object()?,
-                    &model_source.data_connector.name,
+                    &model_source.data_connector,
                     &model_source.type_mappings,
                     &mut usage_counts,
                 )?;

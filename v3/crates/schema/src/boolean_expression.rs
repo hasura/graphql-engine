@@ -216,7 +216,6 @@ fn build_comparable_relationships_schema(
                                         target_model_name: target_model.model.name.clone(),
                                         relationship_type: relationship_type.clone(),
                                         mappings: mappings.clone(),
-                                        source_data_connector: local_data_connector.link.clone(),
                                     };
 
                                     let namespace_annotations =
