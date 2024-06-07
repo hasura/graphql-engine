@@ -99,7 +99,8 @@ emptyServeOptionsRaw =
       rsoTriggersErrorLogLevelStatus = Nothing,
       rsoAsyncActionsFetchBatchSize = Nothing,
       rsoPersistedQueries = Nothing,
-      rsoPersistedQueriesTtl = Nothing
+      rsoPersistedQueriesTtl = Nothing,
+      rsoTraceQueryStatus = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec

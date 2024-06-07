@@ -171,7 +171,8 @@ data AppContext = AppContext
     acAsyncActionsFetchInterval :: OptionalInterval,
     acApolloFederationStatus :: ApolloFederationStatus,
     acCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus,
-    acSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags
+    acSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags,
+    acTraceQueryStatus :: TraceQueryStatus
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -292,7 +293,8 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys, checkFeatureFlag) -> 
           acAsyncActionsFetchInterval = soAsyncActionsFetchInterval,
           acApolloFederationStatus = soApolloFederationStatus,
           acCloseWebsocketsOnMetadataChangeStatus = soCloseWebsocketsOnMetadataChangeStatus,
-          acSchemaSampledFeatureFlags = schemaSampledFeatureFlags
+          acSchemaSampledFeatureFlags = schemaSampledFeatureFlags,
+          acTraceQueryStatus = soTraceQueryStatus
         }
   where
     buildEventEngineCtx = Inc.cache proc (httpPoolSize, fetchInterval, fetchBatchSize) -> do

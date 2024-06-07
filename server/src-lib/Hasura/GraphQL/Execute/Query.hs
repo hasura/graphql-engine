@@ -38,7 +38,7 @@ import Hasura.RQL.Types.Schema.Options as Options
 import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
-import Hasura.Server.Types (MonadGetPolicies, RequestId (..))
+import Hasura.Server.Types (MonadGetPolicies, RequestId (..), TraceQueryStatus)
 import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
@@ -91,6 +91,7 @@ convertQuerySelSet ::
   RequestId ->
   -- | Graphql Operation Name
   Maybe G.Name ->
+  TraceQueryStatus ->
   m (ExecutionPlan, [QueryRootField UnpreparedValue], DirectiveMap, ParameterizedQueryHash, [ModelInfoPart])
 convertQuerySelSet
   env
@@ -107,7 +108,8 @@ convertQuerySelSet
   gqlUnparsed
   introspectionDisabledRoles
   reqId
-  maybeOperationName = do
+  maybeOperationName
+  traceQueryStatus = do
     -- 1. Parse the GraphQL query into the 'RootFieldMap' and a 'SelectionSet'
     (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
       Tracing.newSpan "Parse query IR" $ parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
@@ -137,7 +139,7 @@ convertQuerySelSet
                       queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
-                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
+                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName traceQueryStatus
                   pure $ (ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins, dbModelInfoList)
             RFRemote (RemoteSchemaName rName) rf -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
