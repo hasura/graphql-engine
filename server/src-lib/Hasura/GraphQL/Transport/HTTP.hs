@@ -90,7 +90,7 @@ import Hasura.Server.Prometheus
     PrometheusMetrics (..),
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (ModelInfoLogState (..), MonadGetPolicies (..), ReadOnlyMode (..), RequestId (..))
+import Hasura.Server.Types (ModelInfoLogState (..), MonadGetPolicies (..), ReadOnlyMode (..), RequestId (..), TraceQueryStatus)
 import Hasura.Services
 import Hasura.Session (SessionVariable, SessionVariableValue, SessionVariables, UserInfo (..), filterSessionVariables)
 import Hasura.Tracing (MonadTrace, attachMetadata)
@@ -313,6 +313,7 @@ runGQ ::
   SchemaCache ->
   Init.AllowListStatus ->
   ReadOnlyMode ->
+  TraceQueryStatus ->
   PrometheusMetrics ->
   L.Logger L.Hasura ->
   Maybe (CredentialCache AgentLicenseKey) ->
@@ -323,7 +324,7 @@ runGQ ::
   E.GraphQLQueryType ->
   GQLReqUnparsed ->
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
-runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
+runGQ env sqlGenCtx sc enableAL readOnlyMode traceQueryStatus prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   getModelInfoLogStatus' <- runGetModelInfoLogStatus
   modelInfoLogStatus <- liftIO getModelInfoLogStatus'
   let gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
@@ -364,6 +365,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
           queryParts
           maybeOperationName
           reqId
+          traceQueryStatus
 
       -- 4. Execute the execution plan producing a 'AnnotatedResponse'.
       (response, queryCachedStatus, modelInfoFromExecution) <- executePlan reqParsed runLimits execPlan
@@ -500,7 +502,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
             \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
               runDBQuery @b reqId reqUnparsed fieldName userInfo logger agentLicenseKey sourceConfig (fmap (statsToAnyBackend @b) tx) genSql resolvedConnectionTemplate
         (finalResponse, modelInfo) <-
-          RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator
+          RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator traceQueryStatus
         pure $ (AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse [], modelInfo)
       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
@@ -510,7 +512,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
         (time, resp, modelInfo) <- doQErr $ do
           (time, (resp, _)) <- EA.runActionExecution userInfo aep
           (finalResponse, modelInfo) <-
-            RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator
+            RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator traceQueryStatus
           pure (time, finalResponse, modelInfo)
         pure $ (AnnotatedResponsePart time Telem.Empty resp [], modelInfo)
       E.ExecStepRaw json -> do
@@ -534,7 +536,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
             \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
               runDBMutation @b reqId reqUnparsed fieldName userInfo logger agentLicenseKey sourceConfig (fmap EB.arResult tx) genSql resolvedConnectionTemplate
         (finalResponse, modelInfo) <-
-          RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator
+          RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator traceQueryStatus
         pure $ (AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse responseHeaders, modelInfo)
       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
@@ -544,7 +546,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
         (time, (resp, hdrs), modelInfo) <- doQErr $ do
           (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
           (finalResponse, modelInfo) <-
-            RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator
+            RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator traceQueryStatus
           pure (time, (finalResponse, hdrs), modelInfo)
         pure $ (AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs, modelInfo)
       E.ExecStepRaw json -> do
@@ -574,6 +576,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
             remoteJoins
             reqUnparsed
             tracesPropagator
+            traceQueryStatus
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ (AnnotatedResponsePart telemTimeIO_DT Telem.Remote finalResponse filteredHeaders, modelInfo)
 
@@ -749,6 +752,7 @@ runGQBatched ::
   Maybe (CredentialCache AgentLicenseKey) ->
   RequestId ->
   ResponseInternalErrorsConfig ->
+  TraceQueryStatus ->
   UserInfo ->
   Wai.IpAddress ->
   [HTTP.Header] ->
@@ -756,10 +760,10 @@ runGQBatched ::
   -- | the batched request with unparsed GraphQL query
   GQLBatchedReqs (GQLReq GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
-runGQBatched env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
+runGQBatched env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId responseErrorsConfig traceQueryStatus userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
-      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
+      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx sc enableAL readOnlyMode traceQueryStatus prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
       let httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog))), (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)))
       pure (httpLoggingGQInfo, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
@@ -772,7 +776,7 @@ runGQBatched env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger age
             flip HttpResponse []
               . encJFromList
               . map (either (encJFromJEncoding . encodeGQErr includeInternal) _hrBody)
-      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
+      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc enableAL readOnlyMode traceQueryStatus prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
       let requestsOperationLogs = map fst $ rights $ map snd responses
           batchOperationLogs =
             map

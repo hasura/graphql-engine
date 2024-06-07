@@ -223,6 +223,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soAsyncActionsFetchBatchSize <- withOptionDefault rsoAsyncActionsFetchBatchSize asyncActionsFetchBatchSizeOption
   soPersistedQueries <- withOptionDefault rsoPersistedQueries persistedQueriesOption
   soPersistedQueriesTtl <- withOptionDefault rsoPersistedQueriesTtl persistedQueriesTtlOption
+  soTraceQueryStatus <- withOptionDefault rsoTraceQueryStatus traceQueryStatusOption
   pure ServeOptions {..}
 
 -- | Fetch Postgres 'Query.ConnParams' components from the environment
