@@ -82,6 +82,7 @@ class
     QueryDB b Void (UnpreparedValue b) ->
     [HTTP.Header] ->
     Maybe G.Name ->
+    TraceQueryStatus ->
     m ((DBStepInfo b), [ModelInfoPart])
   mkDBMutationPlan ::
     forall m.
@@ -102,6 +103,7 @@ class
     [HTTP.Header] ->
     Maybe G.Name ->
     Maybe (HashMap G.Name (G.Value G.Variable)) ->
+    TraceQueryStatus ->
     m (DBStepInfo b, [ModelInfoPart])
   mkLiveQuerySubscriptionPlan ::
     forall m.
@@ -177,6 +179,7 @@ class
     [HTTP.Header] ->
     Maybe G.Name ->
     Options.StringifyNumbers ->
+    TraceQueryStatus ->
     m (DBStepInfo b, [ModelInfoPart])
 
 -- | This is a helper function to convert a remote source's relationship to a

@@ -68,6 +68,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     asyncActionsFetchBatchSizeOption,
     persistedQueriesOption,
     persistedQueriesTtlOption,
+    traceQueryStatusOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -162,6 +163,7 @@ serveCommandParser =
     <*> parseAsyncActionsFetchBatchSize
     <*> parsePersistedQueries
     <*> parsePersistedQueriesTtl
+    <*> parseTraceQueryStatus
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1310,6 +1312,23 @@ parsePersistedQueriesTtl =
       ( Opt.long "persisted-queries-ttl"
           <> Opt.help (Config._helpMessage persistedQueriesTtlOption)
       )
+
+parseTraceQueryStatus :: Opt.Parser (Maybe Types.TraceQueryStatus)
+parseTraceQueryStatus =
+  (bool Nothing (Just Types.TraceQueryEnabled))
+    <$> Opt.switch
+      ( Opt.long "trace-sql-query"
+          <> Opt.help (Config._helpMessage traceQueryStatusOption)
+      )
+
+traceQueryStatusOption :: Config.Option Types.TraceQueryStatus
+traceQueryStatusOption =
+  Config.Option
+    { Config._default = Types.TraceQueryDisabled,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_QUERY_TRACING",
+      Config._helpMessage =
+        "Enable query tracing for all queries. (default: false)"
+    }
 
 --------------------------------------------------------------------------------
 -- Pretty Printer
