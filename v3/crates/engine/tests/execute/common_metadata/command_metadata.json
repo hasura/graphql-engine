@@ -89,10 +89,15 @@
               {
                 "name": "rating",
                 "type": "Int!"
+              },
+              {
+                "name": "genres",
+                "type": "[commandGenre!]!"
               }
             ],
             "graphql": {
-              "typeName": "CommandMovie"
+              "typeName": "CommandMovie",
+              "inputTypeName": "CommandMovieInput"
             },
             "dataConnectorTypeMapping": [
               {
@@ -112,6 +117,59 @@
                   "rating": {
                     "column": {
                       "name": "rating"
+                    }
+                  },
+                  "genres": {
+                    "column": {
+                      "name": "genres"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "commandGenre",
+            "fields": [
+              {
+                "name": "genre_id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "movies",
+                "type": "[commandMovie!]"
+              }
+            ],
+            "graphql": {
+              "typeName": "CommandGenre",
+              "inputTypeName": "CommandGenreInput"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "genre",
+                "fieldMapping": {
+                  "genre_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movies": {
+                    "column": {
+                      "name": "movies"
                     }
                   }
                 }

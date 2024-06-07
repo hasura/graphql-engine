@@ -115,9 +115,48 @@
                       }
                     }
                   },
+                  "genre": {
+                    "description": "A movie genre",
+                    "fields": {
+                      "id": {
+                        "description": "The genre's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "movies": {
+                        "description": "Notable movies of this genre",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "movie"
+                          }
+                        }
+                      },
+                      "name": {
+                        "description": "The genre's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
                   "movie": {
                     "description": "A movie",
                     "fields": {
+                      "genres": {
+                        "description": "The movie's genres",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "genre"
+                          }
+                        }
+                      },
                       "id": {
                         "description": "The movie's primary key",
                         "type": {
@@ -656,6 +695,23 @@
                         "type": "named",
                         "name": "String"
                       }
+                    }
+                  },
+                  {
+                    "name": "add_movie_with_genres",
+                    "description": "Add a movie with genres",
+                    "arguments": {
+                      "movie": {
+                        "description": "The movie to add",
+                        "type": {
+                          "type": "named",
+                          "name": "movie"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "movie"
                     }
                   },
                   {

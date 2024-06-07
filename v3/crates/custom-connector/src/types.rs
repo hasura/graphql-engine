@@ -2,9 +2,11 @@ use ndc_models;
 use std::collections::BTreeMap;
 
 pub mod actor;
+pub mod genre;
 pub mod institution;
 pub mod location;
 pub mod login;
+pub mod movie;
 pub mod name_query;
 pub mod staff_member;
 
@@ -89,41 +91,10 @@ pub(crate) fn scalar_types() -> BTreeMap<String, ndc_models::ScalarType> {
 }
 
 pub(crate) fn object_types() -> BTreeMap<String, ndc_models::ObjectType> {
-    let movie_type = ndc_models::ObjectType {
-        description: Some("A movie".into()),
-        fields: BTreeMap::from_iter([
-            (
-                "id".into(),
-                ndc_models::ObjectField {
-                    description: Some("The movie's primary key".into()),
-                    r#type: ndc_models::Type::Named { name: "Int".into() },
-                    arguments: BTreeMap::new(),
-                },
-            ),
-            (
-                "title".into(),
-                ndc_models::ObjectField {
-                    description: Some("The movie's title".into()),
-                    r#type: ndc_models::Type::Named {
-                        name: "String".into(),
-                    },
-                    arguments: BTreeMap::new(),
-                },
-            ),
-            (
-                "rating".into(),
-                ndc_models::ObjectField {
-                    description: Some("The movie's rating".into()),
-                    r#type: ndc_models::Type::Named { name: "Int".into() },
-                    arguments: BTreeMap::new(),
-                },
-            ),
-        ]),
-    };
-
     BTreeMap::from_iter([
         ("actor".into(), actor::definition()),
-        ("movie".into(), movie_type),
+        ("movie".into(), movie::definition()),
+        ("genre".into(), genre::definition()),
         ("name_query".into(), name_query::definition()),
         ("institution".into(), institution::definition()),
         ("location".into(), location::definition()),

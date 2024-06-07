@@ -762,6 +762,21 @@ fn test_command_procedures_object_array_output_type_output_permissions() -> anyh
     )
 }
 
+// Test a mutation command with an input object type as an argument
+#[test]
+fn test_command_procedures_input_object_type() -> anyhow::Result<()> {
+    let test_path_string = "execute/commands/procedures/object_input_type";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
 // Tests a mutation command with multiple arguments:
 // arguments: 2 arguments (taken as id and new name for an actor and returns the updated commandActor row )
 // output: object (commandActor) output type
