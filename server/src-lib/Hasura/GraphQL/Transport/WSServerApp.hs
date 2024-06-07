@@ -96,9 +96,10 @@ createWSServerApp enabledLogTypes serverEnv connInitTimeout licenseKeyCache = \ 
       liftIO $ incWebsocketConnections $ pmConnections prometheusMetrics
       flip runReaderT serverEnv $ onConn rid rh ip (wsActions sp)
 
-    onMessageHandler conn bs sp =
+    onMessageHandler conn bs sp = do
+      traceQueryStatus <- liftIO $ acTraceQueryStatus <$> getAppContext (_wseAppStateRef serverEnv)
       mask_
-        $ onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp) licenseKeyCache
+        $ onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp) licenseKeyCache traceQueryStatus
 
     onCloseHandler conn = mask_ do
       granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
