@@ -38,6 +38,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Types (TraceQueryStatus)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client as HTTP
@@ -77,8 +78,9 @@ bqDBQueryPlan ::
   QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  TraceQueryStatus ->
   m (DBStepInfo 'BigQuery, [ModelInfoPart])
-bqDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
+bqDBQueryPlan userInfo sourceName sourceConfig qrf _ _ _ = do
   -- TODO (naveen): Append query tags to the query
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   let action = OnBaseMonad do
@@ -145,8 +147,9 @@ bqDBMutationPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  TraceQueryStatus ->
   m (DBStepInfo 'BigQuery, [ModelInfoPart])
-bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs =
+bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs _traceQueryStatus =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 -- explain
@@ -228,9 +231,10 @@ bqDBRemoteRelationshipPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Options.StringifyNumbers ->
+  TraceQueryStatus ->
   m (DBStepInfo 'BigQuery, [ModelInfoPart])
-bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
-  (dbStepInfo, modelInfo) <- flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection reqHeaders operationName
+bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers traceQueryStatus = do
+  (dbStepInfo, modelInfo) <- flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection reqHeaders operationName traceQueryStatus
   pure (dbStepInfo, modelInfo)
   where
     coerceToColumn = BigQuery.ColumnName . getFieldNameTxt

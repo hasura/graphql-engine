@@ -31,6 +31,7 @@ module Hasura.Server.Types
     ExtPersistedQueryRequest (..),
     ExtQueryReqs (..),
     MonadGetPolicies (..),
+    TraceQueryStatus (..),
   )
 where
 
@@ -360,3 +361,18 @@ instance (MonadGetPolicies m) => MonadGetPolicies (StateT w m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
   runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
+
+data TraceQueryStatus
+  = TraceQueryEnabled
+  | TraceQueryDisabled
+  deriving (Eq, Show, Generic)
+
+instance FromJSON TraceQueryStatus where
+  parseJSON = withBool "TraceQueryStatus" $ \case
+    False -> pure TraceQueryDisabled
+    True -> pure TraceQueryEnabled
+
+instance ToJSON TraceQueryStatus where
+  toJSON = \case
+    TraceQueryDisabled -> Bool False
+    TraceQueryEnabled -> Bool True

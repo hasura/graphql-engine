@@ -316,7 +316,8 @@ serveOptions =
       soTriggersErrorLogLevelStatus = Init._default Init.triggersErrorLogLevelStatusOption,
       soAsyncActionsFetchBatchSize = Init._default Init.asyncActionsFetchBatchSizeOption,
       soPersistedQueries = Init._default Init.persistedQueriesOption,
-      soPersistedQueriesTtl = Init._default Init.persistedQueriesTtlOption
+      soPersistedQueriesTtl = Init._default Init.persistedQueriesTtlOption,
+      soTraceQueryStatus = Init._default Init.traceQueryStatusOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

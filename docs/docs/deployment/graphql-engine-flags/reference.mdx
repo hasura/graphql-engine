@@ -1102,6 +1102,19 @@ This sets transaction isolation.
 | **Default**         | `read-committed`                                    |
 | **Supported in**    | Deprecated in versions > `v2.0.0`                   |
 
+### Trace SQL Queries
+
+Add SQL queries to the OTLP traces.
+
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Flag**            | `--trace-sql-query`                      |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_QUERY_TRACING`    |
+| **Accepted values** | Boolean                                  |
+| **Options**         | `true` or `false`                        |
+| **Default**         | `false`                                  |
+| **Supported in**    | CE, Enterprise Edition                   |
+
 ### Unauthorized Role
 
 This identifies an [unauthorized role](/auth/authentication/unauthenticated-access.mdx), used when the
