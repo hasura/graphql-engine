@@ -1,0 +1,68 @@
+---
+sidebar_label: Data Connectors
+description: Traces via OpenTelemetry for Hasura GraphQL Engine Data Connectors in Enterprise Edition
+title: 'Data Connector Traces via OpenTelemetry'
+sidebar_class_name: beta-icon
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - opentelemetry
+  - open telemetry
+  - traces
+sidebar_position: 3
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Export Traces to OpenTelemetry Compliant Receiver from Hasura Data Connectors
+
+<div className="badge-container">
+  <ProductBadge free pro ee self />
+  <div className="badge badge-gray heading-badge">Beta</div>
+</div>
+
+## Introduction
+
+Hasura Data Connectors can export and link internal OpenTelemetry data with GraphQL Engine to visualize the full
+timeline of a GraphQL request.
+
+:::info Note
+
+At present, data connectors only support traces via OpenTelemetry.
+
+:::
+
+## Configuration
+
+You can easily configure OpenTelemetry for your data connectors using environment variables.
+
+### GraphQL Data Connector
+
+The GraphQL Data Connector — which power sources like Athena, MariaDB, MySQL, Oracle, Redshift, and Snowflake — is built
+on top of [Quarkus](https://quarkus.io/) with an OpenTelemetry extension. Therefore, the configuration properties of the
+connector also follow that of the extension:
+
+| Environment Variable                   | Type                           | Default | Description                                                                                     |
+| -------------------------------------- | ------------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
+| `QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT ` | string                         |         | The endpoint of the OpenTelemetry receiver                                                      |
+| `QUARKUS_OTEL_EXPORTER_OTLP_PROTOCOL ` | enum (`grpc`, `http/protobuf`) | `grpc`  | The protocol used to exchange data between the client and the server                            |
+| `QUARKUS_OTEL_EXPORTER_OTLP_HEADERS  ` | string                         |         | Key-value pairs to be used as headers associated with requests. i.e.: `key1=value1,key2=value2` |
+| `QUARKUS_OTEL_RESOURCE_ATTRIBUTES    ` | string                         |         | Specify resource attributes in the following format: `key1=val1,key2=val2`                      |
+
+See the complete list of configuration reference
+[here](https://quarkus.io/version/main/guides/opentelemetry#configuration-reference).
+
+### Mongo Data Connector
+
+The Mongo Data Connector powers MongoDB connections and, thus, has a different configuration:
+
+| Environment Variable                     | Type                                                      | Default               | Description                                                          |
+| ---------------------------------------- | --------------------------------------------------------- | --------------------- | -------------------------------------------------------------------- |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT `    | string                                                    | http://localhost:4318 | The endpoint of the OpenTelemetry receiver                           |
+| `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL    ` | enum (`grpc`, `http/protobuf`)                            | `http/protobuf`       | The protocol used to exchange data between the client and the server |
+| `OTEL_SERVICE_NAME                     ` | string                                                    |                       | Name of the service                                                  |
+| `OTEL_PROPAGATORS                      ` | enum (`b3`, `b3multi`, `tracecontext`, `baggage`, `none`) | `tracecontext`        | Comma-separate list of propagator schemes to use                     |

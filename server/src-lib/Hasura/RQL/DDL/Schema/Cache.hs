@@ -1403,7 +1403,14 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       _otiBatchSpanProcessorInfo <-
         withRecordAndDefaultM OtelSubobjectBatchSpanProcessor _ocBatchSpanProcessor defaultOtelBatchSpanProcessorInfo
           $ parseOtelBatchSpanProcessorConfig _ocBatchSpanProcessor
-      case _ocStatus of
+
+      otelStatus <-
+        fmap (fromMaybe OtelDisabled)
+          $ withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectAll) (toJSON _ocStatus))
+          $ liftEither
+          $ mapLeft (err400 BadRequest . T.pack) (mkOtelStatusFromEnv _ocStatus env)
+
+      case otelStatus of
         OtelDisabled ->
           pure
             $

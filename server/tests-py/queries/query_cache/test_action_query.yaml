@@ -1,0 +1,41 @@
+- description: Run get_user_by_email query action with valid email, the response should be an object and response should be cached
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query ($email: String!) @cached(ttl: 300) {
+        get_user_by_email(email: $email) {
+          id
+        }
+      }
+    variables:
+      email: clarke1@gmail.com
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: 4fb893e9b9461d847d64c819a6fb4154e2dfc8bb
+    X-Hasura-Query-Family-Cache-Key: b40fe01152dc4b016428610fc5e4b3fe4f50c3b4
+  response:
+    data:
+      get_user_by_email:
+        id: 1
+
+- description: Run get_user_by_email_with_client_header_forwarding query action with valid email, the response should be an object and response should be cached
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query ($email: String!) @cached(ttl: 300) {
+        get_user_by_email_with_client_header_forwarding(email: $email) {
+          id
+        }
+      }
+    variables:
+      email: clarke2@gmail.com
+  resp_headers:
+    Cache-Control: max-age=300
+    # X-Hasura-Query-Cache-Key: <changes>
+    X-Hasura-Query-Family-Cache-Key: 2396a8ab178dd2240cbda4ef056c3a55c48c7232
+  response:
+    data:
+      get_user_by_email_with_client_header_forwarding:
+        id: 2

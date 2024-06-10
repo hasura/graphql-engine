@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 -- | Postgres Execute Types
 --
 -- Execution context and source configuration for Postgres databases.
@@ -18,6 +16,8 @@ module Hasura.Backends.Postgres.Execute.Types
 
     -- * Execution in a Postgres Source
     PGSourceConfig (..),
+    getConnInfo,
+    mkConnInfoWithFinalizer,
     ConnectionTemplateConfig (..),
     connectionTemplateConfigResolver,
     ConnectionTemplateResolver (..),
@@ -38,6 +38,8 @@ import Data.Aeson.Extended qualified as J
 import Data.CaseInsensitive qualified as CI
 import Data.Has
 import Data.HashMap.Internal.Strict qualified as Map
+import Data.IORef (IORef)
+import Data.IORef qualified as IORef
 import Data.List.NonEmpty qualified as List.NonEmpty
 import Data.Text.Extended (toTxt)
 import Database.PG.Query qualified as PG
@@ -223,8 +225,8 @@ newtype ConnectionTemplateResolver = ConnectionTemplateResolver
 
 data PGSourceConfig = PGSourceConfig
   { _pscExecCtx :: PGExecCtx,
-    _pscConnInfo :: PG.ConnInfo,
-    _pscReadReplicaConnInfos :: Maybe (NonEmpty PG.ConnInfo),
+    _pscConnInfo :: ConnInfoWithFinalizer,
+    _pscReadReplicaConnInfos :: Maybe (NonEmpty ConnInfoWithFinalizer),
     _pscPostDropHook :: IO (),
     _pscExtensionsSchema :: ExtensionsSchema,
     _pscConnectionSet :: HashMap PostgresConnectionSetMemberName PG.ConnInfo,
@@ -241,10 +243,43 @@ instance Eq PGSourceConfig where
       == (_pscConnInfo rconf, _pscReadReplicaConnInfos rconf, _pscExtensionsSchema rconf, _pscConnectionSet rconf)
 
 instance J.ToJSON PGSourceConfig where
-  toJSON = J.toJSON . show . _pscConnInfo
+  toJSON = J.toJSON . _pscConnInfo
 
 instance Has () PGSourceConfig where
   hasLens = united
+
+-- | Get the primary 'PG.ConnInfo' from 'PGSourceConfig'
+getConnInfo :: PGSourceConfig -> PG.ConnInfo
+getConnInfo = _ciwfConnInfo . _pscConnInfo
+
+-- | Wraps a 'PG.ConnInfo' in a weak IORef with a finalizer action. This is used
+-- to perform any finalizer action (like de-registering metrics), when this
+-- connection info is dropped.
+data ConnInfoWithFinalizer = ConnInfoWithFinalizer
+  { -- | Empty value used to attach a finalizer to (internal)
+    _ciwfWeakIORef :: IORef (),
+    -- | The actual Postgres connection info
+    _ciwfConnInfo :: PG.ConnInfo
+  }
+  deriving (Generic)
+
+instance Show ConnInfoWithFinalizer where
+  show _ = "(ConnInfoWithFinalizer <details>)"
+
+instance Eq ConnInfoWithFinalizer where
+  lconf == rconf = _ciwfConnInfo lconf == _ciwfConnInfo rconf
+
+instance J.ToJSON ConnInfoWithFinalizer where
+  toJSON = J.toJSON . show . _ciwfConnInfo
+
+instance Has () ConnInfoWithFinalizer where
+  hasLens = united
+
+mkConnInfoWithFinalizer :: PG.ConnInfo -> IO () -> IO ConnInfoWithFinalizer
+mkConnInfoWithFinalizer connInfo finalizer = do
+  ioref <- IORef.newIORef ()
+  void $ IORef.mkWeakIORef ioref finalizer
+  pure $ ConnInfoWithFinalizer ioref connInfo
 
 runPgSourceReadTx ::
   (MonadIO m, MonadBaseControl IO m) =>

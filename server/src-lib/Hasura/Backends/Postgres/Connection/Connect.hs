@@ -22,7 +22,8 @@ withPostgresDB env sourceName PG.PostgresConnConfiguration {..} tx = do
     Left err ->
       -- Cannot able to intialise a pool due to a bad connection config.
       pure $ Left err
-    Right pool -> runExceptT (PG.runTx' pool tx)
+    Right pool ->
+      runExceptT (PG.runTx' pool tx) <* PG.destroyPGPool pool
   where
     context :: Value
     context = object ["source" .= sourceName]

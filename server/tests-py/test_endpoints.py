@@ -1,18 +1,10 @@
 import pytest
-import os
-from validate import check_query_f, check_query, get_conf_f
-from context import PytestConf
 
-import redis
+from validate import check_query_f
 
 @pytest.mark.parametrize("transport", ['http'])
 @pytest.mark.usefixtures('postgis', 'per_class_tests_db_state')
 class TestCustomEndpoints:
-    def flushRedis(self):
-        # TODO: Move this into setup/teardown
-        r = redis.from_url(PytestConf.config.getoption('--redis-url'))
-        r.flushall()
-
     @classmethod
     def dir(cls):
         return 'queries/endpoints'
@@ -28,11 +20,6 @@ class TestCustomEndpoints:
 
     def test_simple_endpoint_wrong_method(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_simple_wrong_method.yaml', transport)
-
-    @pytest.mark.skipif(not PytestConf.config.getoption('--redis-url'), reason="Must enable redis")
-    def test_simple_cached_endpoint(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/endpoint_simple_cached.yaml', transport)
-        self.flushRedis()
 
     def test_endpoint_with_query_arg(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_with_query_arg.yaml', transport)
@@ -90,3 +77,15 @@ class TestCustomEndpoints:
 
     def test_endpoint_with_pg_date_url_variable(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_pg_date_url_variable.yaml', transport)
+
+@pytest.mark.admin_secret
+@pytest.mark.parametrize("transport", ['http'])
+@pytest.mark.usefixtures('postgis', 'pro_tests_fixtures', 'enterprise_edition', 'per_class_tests_db_state')
+class TestCustomEndpointsPro:
+    @classmethod
+    def dir(cls):
+        return 'queries/endpoints'
+
+    @pytest.mark.usefixtures('flush_redis')
+    def test_simple_cached_endpoint(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/endpoint_simple_cached.yaml', transport)

@@ -1,0 +1,30 @@
+{
+    "sources": [
+        {
+            "kind": "postgres",
+            "name": "test-pg-client-certs-and-replica",
+            "tables": [
+            ],
+            "configuration": {
+                "connection_info": {
+                    "database_url": "postgresql://postgres@localhost:32838",
+                    "isolation_level": "read-committed",
+                    "ssl_configuration": {
+                        "sslkey": {
+                            "from_env": "HGE_PGSSLKEY"
+                        },
+                        "sslcert": {
+                            "from_env": "HGE_PGSSLCERT"
+                        },
+                        "sslmode": "verify-ca",
+                        "sslrootcert": {
+                            "from_env": "HGE_PGSSLROOTCERT"
+                        }
+                    },
+                    "use_prepared_statements": false
+                }
+            }
+        }
+    ],
+    "version": 3
+}

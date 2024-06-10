@@ -386,7 +386,7 @@ fetchJwk ::
   m (Jose.JWKSet, ResponseHeaders)
 fetchJwk (Logger logger) manager url = do
   let urlT = tshow url
-      infoMsg = "refreshing JWK from endpoint: " <> urlT
+      infoMsg = "Refreshing JWK from endpoint: " <> urlT
   liftIO $ logger $ JwkRefreshLog LevelInfo (Just infoMsg) Nothing
   res <- try $ do
     req <- liftIO $ HTTP.mkRequestThrow $ tshow url

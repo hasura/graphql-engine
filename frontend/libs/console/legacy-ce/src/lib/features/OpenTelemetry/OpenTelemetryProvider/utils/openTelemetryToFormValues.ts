@@ -24,7 +24,7 @@ export function openTelemetryToFormValues(
   if (!openTelemetry) return defaultValues;
 
   return {
-    enabled: openTelemetry.status === 'enabled',
+    ...openTelemetryStatusToFormValue(openTelemetry.status),
     tracesEndpoint: openTelemetry.exporter_otlp.otlp_traces_endpoint ?? '',
     metricsEndpoint: openTelemetry.exporter_otlp.otlp_metrics_endpoint ?? '',
     logsEndpoint: openTelemetry.exporter_otlp.otlp_logs_endpoint ?? '',
@@ -59,7 +59,10 @@ export function formValuesToOpenTelemetry(
   const resource_attributes = formAttributesToMetadataAttributes(
     formValues.attributes
   );
-  const status = formValues.enabled ? 'enabled' : 'disabled';
+  const status =
+    formValues.status === 'env'
+      ? `{{${formValues.statusVariable}}}`
+      : formValues.status;
   const data_types = formValues.dataType;
 
   const ot: OpenTelemetry = {
@@ -88,4 +91,32 @@ export function formValuesToOpenTelemetry(
     ot.exporter_otlp.otlp_logs_endpoint = otlp_logs_endpoint;
   }
   return ot;
+}
+
+/**
+ * Convert the OpenTelemetry status to form value.
+ */
+export function openTelemetryStatusToFormValue(
+  value: string
+): Pick<FormValues, 'status' | 'statusVariable'> {
+  if (value === 'enabled' || value === 'disabled') {
+    return {
+      status: value,
+      statusVariable: '',
+    };
+  }
+
+  const regexp = new RegExp('{{(\\w+)}}', 'g');
+  const matches = regexp.exec(value);
+  if (matches?.length && matches.length > 1) {
+    return {
+      status: 'env',
+      statusVariable: matches[1],
+    };
+  }
+
+  return {
+    status: 'disabled',
+    statusVariable: '',
+  };
 }

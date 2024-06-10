@@ -1,6 +1,6 @@
 {
-  "cabal-install": "3.10.2.1",
-  "ghc": "9.6.4",
+  "cabal-install": "3.10.3.0",
+  "ghc": "9.6.5",
   "hlint": "3.6.1",
   "ormolu": "0.7.2.0"
 }

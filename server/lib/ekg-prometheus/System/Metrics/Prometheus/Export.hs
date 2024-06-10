@@ -245,7 +245,12 @@ exportGauge metricName help labelsAndValues =
         )
         labelsAndValues
 
--- Prometheus histogram samples
+-- | Prometheus histogram samples
+--
+-- Note that prometheus buckets contain CUMULATIVE counts (the count of
+-- everything less than or equal to the bound). Thus e.g. the count for the
+-- implicit last overflow (upper bound of infinity) bucket is simply
+-- 'histCount'.
 exportHistogram ::
   Name -> Help -> [(Labels, HistogramSample)] -> B.Builder
 exportHistogram metricName help labelsAndValues =

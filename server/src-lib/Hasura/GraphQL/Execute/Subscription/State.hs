@@ -21,8 +21,6 @@ module Hasura.GraphQL.Execute.Subscription.State
     AsyncActionSubscriptionState,
     addAsyncActionLiveQuery,
     removeAsyncActionLiveQuery,
-    LiveQuerySubscriberDetails,
-    StreamingSubscriberDetails,
   )
 where
 
@@ -32,6 +30,7 @@ import Control.Exception (mask_)
 import Control.Immortal qualified as Immortal
 import Data.Aeson.Extended qualified as J
 import Data.Aeson.Ordered qualified as JO
+import Data.HashMap.Strict qualified as HashMap
 import Data.Monoid (Endo)
 import Data.String
 import Data.Text.Extended
@@ -108,21 +107,12 @@ dumpSubscriptionsState extended liveQOpts streamQOpts (SubscriptionsState lqMap 
 
 -- | SubscriberDetails contains the data required to locate a subscriber
 --   in the correct cohort within the correct poller in the operation map.
-data SubscriberDetails a = SubscriberDetails
+data SubscriberDetails = SubscriberDetails
   { _sdPoller :: BackendPollerKey,
-    _sdCohort :: a,
+    _sdCohort :: CohortKey, -- We only keep this for live queries - we don't rely on it for streaming subscriptions
     _sdSubscriber :: SubscriberId
   }
   deriving (Show)
-
-type LiveQuerySubscriberDetails = SubscriberDetails CohortKey
-
--- | The `CohortKey` contains the variables with which the subscription was started
---   and which will remain unchanged. The second type contains the mutable reference
---   through which we can get the latest value of the cursor and using both the `CohortKey`
---   and the latest cursor value, we locate the subscriber in the operation map to find its
---   details and then stop it.
-type StreamingSubscriberDetails = SubscriberDetails (CohortKey, STM.TVar CursorVariableValues)
 
 -- | `findPollerForSubscriber` places a subscriber in the correct poller.
 --   If the poller doesn't exist then we create one otherwise we return the
@@ -136,13 +126,13 @@ findPollerForSubscriber ::
   (Subscriber -> Poller streamCursorVars -> STM.STM streamCursorVars) ->
   ParameterizedQueryHash ->
   Maybe OperationName ->
-  STM.STM ((Maybe (Poller streamCursorVars)), streamCursorVars)
+  STM.STM (Maybe (Poller streamCursorVars))
 findPollerForSubscriber subscriber pollerMap pollerKey cohortKey addToCohort addToPoller parameterizedQueryHash maybeOperationName =
   -- a handler is returned only when it is newly created
   STMMap.lookup pollerKey pollerMap >>= \case
     Just poller -> do
       -- Found a poller, now check if a cohort also exists
-      cursorVars <-
+      _ <-
         TMap.lookup cohortKey (_pCohorts poller) >>= \case
           -- cohort found too! Simply add the subscriber to the cohort
           Just cohort -> addToCohort subscriber cohort
@@ -154,16 +144,16 @@ findPollerForSubscriber subscriber pollerMap pollerKey cohortKey addToCohort add
       TMap.lookup maybeOperationName (_pOperationNamesMap poller) >>= \case
         Nothing -> TMap.insert 1 maybeOperationName (_pOperationNamesMap poller)
         Just _ -> TMap.adjust (+ 1) maybeOperationName (_pOperationNamesMap poller)
-      return (Nothing, cursorVars)
+      return Nothing
     Nothing -> do
       -- no poller found, so create one with the cohort
       -- and the subscriber within it.
       operationNamesMap <- TMap.new
       TMap.insert 1 maybeOperationName operationNamesMap
       !poller <- Poller <$> TMap.new <*> STM.newTVar PRSSuccess <*> STM.newEmptyTMVar <*> pure parameterizedQueryHash <*> pure operationNamesMap
-      cursorVars <- addToPoller subscriber poller
+      _ <- addToPoller subscriber poller
       STMMap.insert poller pollerKey pollerMap
-      return $ (Just poller, cursorVars)
+      return (Just poller)
 
 -- | Fork a thread handling a regular (live query) subscription
 addLiveQuery ::
@@ -187,7 +177,7 @@ addLiveQuery ::
   (Maybe (Endo JO.Value)) ->
   [ModelInfoPart] ->
   IO ModelInfoLogState ->
-  IO LiveQuerySubscriberDetails
+  IO SubscriberDetails
 addLiveQuery
   logger
   serverMetrics
@@ -212,7 +202,7 @@ addLiveQuery
     let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
 
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
-    (pollerMaybe, ()) <-
+    pollerMaybe <-
       STM.atomically
         $ findPollerForSubscriber
           subscriber
@@ -275,8 +265,7 @@ addLiveQuery
 
       handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate parameterizedQueryHash
 
-      addToCohort subscriber handlerC =
-        TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
+      addToCohort subscriber = TMap.insert subscriber (_sId subscriber) . _cNewSubscribers
 
       addToPoller subscriber handler = do
         !newCohort <-
@@ -313,7 +302,7 @@ addStreamSubscriptionQuery ::
   (Maybe (Endo JO.Value)) ->
   [ModelInfoPart] ->
   IO ModelInfoLogState ->
-  IO StreamingSubscriberDetails
+  IO SubscriberDetails
 addStreamSubscriptionQuery
   logger
   serverMetrics
@@ -339,7 +328,7 @@ addStreamSubscriptionQuery
     let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
 
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
-    (handlerM, cohortCursorTVar) <-
+    handlerM <-
       STM.atomically
         $ findPollerForSubscriber
           subscriber
@@ -399,16 +388,16 @@ addStreamSubscriptionQuery
       (GaugeVector.inc numSubscriptionMetric promMetricGranularLabel)
       (GaugeVector.inc numSubscriptionMetric promMetricLabel)
 
-    pure $ SubscriberDetails handlerId (cohortKey, cohortCursorTVar) subscriberId
+    pure $ SubscriberDetails handlerId cohortKey subscriberId
     where
       SubscriptionsState _ streamQueryMap postPollHook _ = subscriptionState
       SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 
       handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate parameterizedQueryHash
 
-      addToCohort subscriber handlerC = do
-        TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
-        pure $ _cStreamCursorVariables handlerC
+      addToCohort subscriber cohort = do
+        TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers cohort
+        pure $ _cStreamCursorVariables cohort
 
       addToPoller subscriber handler = do
         latestCursorValues <-
@@ -424,7 +413,7 @@ removeLiveQuery ::
   PrometheusMetrics ->
   SubscriptionsState ->
   -- the query and the associated operation
-  LiveQuerySubscriberDetails ->
+  SubscriberDetails ->
   IO GranularPrometheusMetricsState ->
   Maybe OperationName ->
   IO ()
@@ -459,9 +448,9 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
           cohortM <- TMap.lookup cohortId (_pCohorts poller)
           return $ (poller,) <$> cohortM
 
-    cleanHandlerC cohortMap pollerState ioState handlerC parameterizedQueryHash = do
-      let curOps = _cExistingSubscribers handlerC
-          newOps = _cNewSubscribers handlerC
+    cleanHandlerC cohortMap pollerState ioState cohort parameterizedQueryHash = do
+      let curOps = _cExistingSubscribers cohort
+          newOps = _cNewSubscribers cohort
       TMap.delete sinkId curOps
       TMap.delete sinkId newOps
       cohortIsEmpty <-
@@ -520,54 +509,78 @@ removeStreamingQuery ::
   PrometheusMetrics ->
   SubscriptionsState ->
   -- the query and the associated operation
-  StreamingSubscriberDetails ->
+  SubscriberDetails ->
   IO GranularPrometheusMetricsState ->
   Maybe OperationName ->
   IO ()
-removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (SubscriberDetails handlerId (cohortId, cursorVariableTV) sinkId) granularPrometheusMetricsState maybeOperationName = mask_ $ do
+removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (SubscriberDetails handlerId _ sinkId) granularPrometheusMetricsState maybeOperationName = mask_ $ do
+  -- We disregard the cohort key in the subscriber details because it is not
+  -- updated atomically, and on certain race conditions may be incorrect.
+  -- Instead, we recalculate it in this function.
   join
     $ STM.atomically
     $ do
       detM <- getQueryDet streamQMap
       case detM of
         Nothing -> return (pure ())
-        Just (Poller cohorts pollerState ioState parameterizedQueryHash operationNamesMap, currentCohortId, cohort) -> do
-          TMap.lookup maybeOperationName operationNamesMap >>= \case
-            -- If only one operation name is present in the map, delete it
-            Just 1 -> TMap.delete maybeOperationName operationNamesMap
-            -- If the count of a operation name is more than 1, then it means there
-            -- are more subscriptions with the same name and we should keep emitting
-            -- the metrics until the all the subscription with the operaion name are
-            -- removed
-            Just _ -> TMap.adjust (\v -> v - 1) maybeOperationName operationNamesMap
-            Nothing -> return ()
-          cleanHandlerC cohorts pollerState ioState (cohort, currentCohortId) parameterizedQueryHash
+        Just (Poller cohorts pollerState ioState parameterizedQueryHash operationNamesMap, allCohorts) -> do
+          actions <- for allCohorts \cohort -> do
+            TMap.lookup maybeOperationName operationNamesMap >>= \case
+              -- If only one operation name is present in the map, delete it
+              Just 1 -> TMap.delete maybeOperationName operationNamesMap
+              -- If the count of a operation name is more than 1, then it means there
+              -- are more subscriptions with the same name and we should keep emitting
+              -- the metrics until the all the subscription with the operaion name are
+              -- removed
+              Just _ -> TMap.adjust (\v -> v - 1) maybeOperationName operationNamesMap
+              Nothing -> return ()
+
+            cleanHandlerC cohorts pollerState ioState cohort parameterizedQueryHash
+          pure (mconcat actions)
   liftIO $ do
     EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
     EKG.Gauge.dec $ smActiveStreamingSubscriptions serverMetrics
   where
     streamQMap = _ssStreamQueryMap subscriptionState
 
-    getQueryDet subMap = do
-      pollerM <- STMMap.lookup handlerId subMap
-      (CursorVariableValues currentCohortCursorVal) <- STM.readTVar cursorVariableTV
-      let updatedCohortId = modifyCursorCohortVariables (mkUnsafeValidateVariables currentCohortCursorVal) cohortId
-      fmap join
-        $ forM pollerM
-        $ \poller -> do
-          cohortM <- TMap.lookup updatedCohortId (_pCohorts poller)
-          return $ (poller,updatedCohortId,) <$> cohortM
+    getQueryDet :: STMMap.Map BackendPollerKey (Poller streamCursor) -> STM.STM (Maybe (Poller streamCursor, [Cohort streamCursor]))
+    getQueryDet subMap =
+      STMMap.lookup handlerId subMap >>= traverse \poller -> do
+        cohortsMap <- TMap.getMap (_pCohorts poller)
+        pure (poller, toList cohortsMap)
 
-    cleanHandlerC cohortMap pollerState ioState (handlerC, currentCohortId) parameterizedQueryHash = do
-      let curOps = _cExistingSubscribers handlerC
-          newOps = _cNewSubscribers handlerC
-      TMap.delete sinkId curOps
-      TMap.delete sinkId newOps
-      cohortIsEmpty <-
-        (&&)
-          <$> TMap.null curOps
-          <*> TMap.null newOps
-      when cohortIsEmpty $ TMap.delete currentCohortId cohortMap
+    cleanHandlerC ::
+      CohortMap (STM.TVar CursorVariableValues) ->
+      STM.TVar PollerResponseState ->
+      STM.TMVar PollerIOState ->
+      Cohort (STM.TVar CursorVariableValues) ->
+      ParameterizedQueryHash ->
+      STM.STM (IO ())
+    cleanHandlerC cohortMap pollerState ioState cohort parameterizedQueryHash = do
+      TMap.delete sinkId (_cExistingSubscribers cohort)
+      TMap.delete sinkId (_cNewSubscribers cohort)
+
+      cohortIsEmpty <- do
+        existingIsEmpty <- TMap.null (_cExistingSubscribers cohort)
+        newIsEmpty <- TMap.null (_cNewSubscribers cohort)
+
+        pure (existingIsEmpty && newIsEmpty)
+
+      let currentCohort :: Cohort (STM.TVar CursorVariableValues) -> Bool
+          currentCohort candidate = _cCohortId cohort == _cCohortId candidate
+
+      cohortMapEntries <- TMap.getMap cohortMap
+
+      -- If this cohort is empty, we do a reverse lookup in the cohort map to find it,
+      -- and delete it.
+      -- We have to do this because the cohort key and cohort map are not updated
+      -- atomically, and this has cause race conditions in certain scenarios,
+      -- so we are being careful.
+      when cohortIsEmpty do
+        case find (currentCohort . snd) (HashMap.toList cohortMapEntries) of
+          Just (key, _) -> TMap.delete key cohortMap
+          Nothing -> pure ()
+
       handlerIsEmpty <- TMap.null cohortMap
       let promMetricGranularLabel = SubscriptionLabel streamingSubscriptionLabel (Just $ DynamicGraphqlOperationLabel (Just parameterizedQueryHash) maybeOperationName)
           promMetricLabel = SubscriptionLabel streamingSubscriptionLabel Nothing
@@ -605,8 +618,6 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
                   $ "In removeStreamingQuery no worker thread installed. Please report this as a bug: "
                   <> " poller_id: "
                   <> show handlerId
-                  <> ", cohort_id: "
-                  <> show cohortId
                   <> ", subscriber_id:"
                   <> show sinkId
         else do
@@ -623,12 +634,12 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
 -- in the source database so as to fetch response joined with relationship rows.
 -- For more details see Note [Resolving async action query]
 data LiveAsyncActionQueryOnSource = LiveAsyncActionQueryOnSource
-  { _laaqpCurrentLqId :: !LiveQuerySubscriberDetails,
+  { _laaqpCurrentLqId :: !SubscriberDetails,
     _laaqpPrevActionLogMap :: !ActionLogResponseMap,
     -- | An IO action to restart the live query poller with updated action log responses fetched from metadata storage
     -- Restarting a live query re-generates the SQL statement with new action log responses to send latest action
     -- response to the client.
-    _laaqpRestartLq :: !(LiveQuerySubscriberDetails -> ActionLogResponseMap -> IO (Maybe LiveQuerySubscriberDetails))
+    _laaqpRestartLq :: !(SubscriberDetails -> ActionLogResponseMap -> IO (Maybe SubscriberDetails))
   }
 
 data LiveAsyncActionQueryWithNoRelationships = LiveAsyncActionQueryWithNoRelationships

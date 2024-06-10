@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Types and classes related to configuration when the server is initialised
@@ -126,6 +127,7 @@ data HGEOptionsRaw impl = HGEOptionsRaw
     _horMetadataDbUrl :: Maybe String,
     _horCommand :: HGECommand impl
   }
+  deriving stock (Show)
 
 horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 horDatabaseUrl = Lens.lens _horDatabaseUrl $ \hdu a -> hdu {_horDatabaseUrl = a}
@@ -330,8 +332,11 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoPersistedQueries :: Maybe Server.Types.PersistedQueriesState,
     rsoPersistedQueriesTtl :: Maybe Int,
     rsoRemoteSchemaResponsePriority :: Maybe Server.Types.RemoteSchemaResponsePriority,
-    rsoHeaderPrecedence :: Maybe Server.Types.HeaderPrecedence
+    rsoHeaderPrecedence :: Maybe Server.Types.HeaderPrecedence,
+    rsoTraceQueryStatus :: Maybe Server.Types.TraceQueryStatus
   }
+
+deriving stock instance (Show (Logging.EngineLogType impl)) => Show (ServeOptionsRaw impl)
 
 -- | Whether or not to serve Console assets.
 data ConsoleStatus = ConsoleEnabled | ConsoleDisabled
@@ -512,6 +517,7 @@ data AuthHookRaw = AuthHookRaw
     ahrType :: Maybe Auth.AuthHookType,
     ahrSendRequestBody :: Maybe Bool
   }
+  deriving stock (Show)
 
 -- | Sleep time interval for recurring activities such as (@'asyncActionsProcessor')
 --   Presently 'msToOptionalInterval' interprets `0` as Skip.
@@ -638,7 +644,8 @@ data ServeOptions impl = ServeOptions
     soPersistedQueries :: Server.Types.PersistedQueriesState,
     soPersistedQueriesTtl :: Int,
     soRemoteSchemaResponsePriority :: Server.Types.RemoteSchemaResponsePriority,
-    soHeaderPrecedence :: Server.Types.HeaderPrecedence
+    soHeaderPrecedence :: Server.Types.HeaderPrecedence,
+    soTraceQueryStatus :: Server.Types.TraceQueryStatus
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

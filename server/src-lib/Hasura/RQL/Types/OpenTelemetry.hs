@@ -12,6 +12,7 @@ module Hasura.RQL.Types.OpenTelemetry
     emptyOpenTelemetryConfig,
     OpenTelemetryConfigSubobject (..),
     OtelStatus (..),
+    OtelStatusConfig (..),
     OtelDataType (..),
     OtelExporterConfig (..),
     defaultOtelExporterConfig,
@@ -34,6 +35,8 @@ module Hasura.RQL.Types.OpenTelemetry
     defaultOtelExporterTracesPropagators,
     mkOtelTracesPropagator,
     getOtelTracesPropagator,
+    defaultOtelStatusConfig,
+    mkOtelStatusFromEnv,
   )
 where
 
@@ -43,9 +46,12 @@ import Autodocodec.Extended (boundedEnumCodec)
 import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
+import Data.Environment qualified as Env
 import Data.Map.Strict (Map)
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Data.Text qualified as T
+import Data.URL.Template (Template (unTemplate), TemplateItem (..), Variable (unVariable), parseTemplate, printVariable)
 import GHC.Generics
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Headers (HeaderConf)
@@ -60,7 +66,7 @@ import Network.HTTP.Types (RequestHeaders, ResponseHeaders)
 
 -- | Metadata configuration for all OpenTelemetry-related features
 data OpenTelemetryConfig = OpenTelemetryConfig
-  { _ocStatus :: OtelStatus,
+  { _ocStatus :: OtelStatusConfig,
     _ocEnabledDataTypes :: Set OtelDataType,
     _ocExporterOtlp :: OtelExporterConfig,
     _ocBatchSpanProcessor :: OtelBatchSpanProcessorConfig
@@ -71,7 +77,7 @@ instance HasCodec OpenTelemetryConfig where
   codec =
     AC.object "OpenTelemetryConfig"
       $ OpenTelemetryConfig
-      <$> optionalFieldWithDefault' "status" defaultOtelStatus
+      <$> optionalFieldWithDefault' "status" defaultOtelStatusConfig
       AC..= _ocStatus
         <*> optionalFieldWithDefault' "data_types" defaultOtelEnabledDataTypes
       AC..= _ocEnabledDataTypes
@@ -85,7 +91,7 @@ instance FromJSON OpenTelemetryConfig where
     OpenTelemetryConfig
       <$> o
       .:? "status"
-      .!= defaultOtelStatus
+      .!= defaultOtelStatusConfig
       <*> o
       .:? "data_types"
       .!= defaultOtelEnabledDataTypes
@@ -102,7 +108,7 @@ instance FromJSON OpenTelemetryConfig where
 emptyOpenTelemetryConfig :: OpenTelemetryConfig
 emptyOpenTelemetryConfig =
   OpenTelemetryConfig
-    { _ocStatus = defaultOtelStatus,
+    { _ocStatus = defaultOtelStatusConfig,
       _ocEnabledDataTypes = defaultOtelEnabledDataTypes,
       _ocExporterOtlp = defaultOtelExporterConfig,
       _ocBatchSpanProcessor = defaultOtelBatchSpanProcessorConfig
@@ -120,29 +126,80 @@ data OpenTelemetryConfigSubobject
 
 -- | Should the OpenTelemetry exporter be enabled?
 data OtelStatus = OtelEnabled | OtelDisabled
-  deriving stock (Eq, Show, Bounded, Enum)
+  deriving stock (Eq, Bounded, Enum)
 
 defaultOtelStatus :: OtelStatus
 defaultOtelStatus = OtelDisabled
 
+instance Show OtelStatus where
+  show OtelEnabled = "enabled"
+  show OtelDisabled = "disabled"
+
 instance HasCodec OtelStatus where
-  codec = boundedEnumCodec \case
-    OtelEnabled -> "enabled"
-    OtelDisabled -> "disabled"
+  codec = boundedEnumCodec show
 
 instance FromJSON OtelStatus where
   parseJSON = \case
-    J.String s
-      | s == "enabled" -> pure OtelEnabled
-      | s == "disabled" -> pure OtelDisabled
-    _ -> fail "OpenTelemetry status must be either \"enabled\" or \"disabled\""
+    J.String s -> onLeft (parseOtelStatus s) (\_ -> fail $ invalidOtelStatusMessage (show s))
+    v -> fail $ invalidOtelStatusMessage (show v)
 
 instance ToJSON OtelStatus where
+  toJSON status = J.String $ tshow status
+
+-- Wrap OtelStatus config with env template
+data OtelStatusConfig
+  = OtelStatusValue !OtelStatus
+  | OtelStatusVariable !Variable
+  deriving stock (Eq)
+
+instance Show OtelStatusConfig where
+  show (OtelStatusValue value) = show value
+  show (OtelStatusVariable var) = T.unpack (printVariable var)
+
+instance HasCodec OtelStatusConfig where
+  codec = AC.bimapCodec dec enc AC.textCodec
+    where
+      dec = parseOtelStatusConfig
+      enc = tshow
+
+instance FromJSON OtelStatusConfig where
+  parseJSON = J.withText "OtelStatusConfig" \s ->
+    onLeft (parseOtelStatusConfig s) fail
+
+instance ToJSON OtelStatusConfig where
   toJSON status =
     J.String
       $ case status of
-        OtelEnabled -> "enabled"
-        OtelDisabled -> "disabled"
+        OtelStatusValue s -> tshow s
+        OtelStatusVariable var -> printVariable var
+
+defaultOtelStatusConfig :: OtelStatusConfig
+defaultOtelStatusConfig = OtelStatusValue defaultOtelStatus
+
+parseOtelStatus :: Text -> Either String OtelStatus
+parseOtelStatus s
+  | s == "enabled" = pure OtelEnabled
+  | s == "disabled" = pure OtelDisabled
+  | otherwise = Left $ invalidOtelStatusMessage (T.unpack s)
+
+mkOtelStatusFromEnv :: OtelStatusConfig -> Env.Environment -> Either String OtelStatus
+mkOtelStatusFromEnv (OtelStatusValue status) _ = Right status
+mkOtelStatusFromEnv (OtelStatusVariable var) env = case Env.lookupEnv env strVar of
+  Nothing -> Left $ "environment variable " <> strVar <> " does not exist"
+  Just value -> parseOtelStatus (T.pack value)
+  where
+    strVar = T.unpack $ unVariable var
+
+parseOtelStatusConfig :: Text -> Either String OtelStatusConfig
+parseOtelStatusConfig s = case parseTemplate s of
+  Left _ -> Left $ invalidOtelStatusMessage (T.unpack s)
+  Right t -> case filter ((TIText "") /=) (unTemplate t) of
+    [TIText txt] -> OtelStatusValue <$> parseOtelStatus txt
+    [TIVariable var] -> Right $ OtelStatusVariable var
+    _ -> Left $ invalidOtelStatusMessage (show t)
+
+invalidOtelStatusMessage :: String -> String
+invalidOtelStatusMessage = (<>) "OpenTelemetry status must be either \"enabled\" or \"disabled\", got "
 
 -- We currently only support traces and metrics
 data OtelDataType

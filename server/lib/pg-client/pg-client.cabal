@@ -128,4 +128,5 @@ benchmark pg-client-bench
     , hasql-transaction
     , pg-client
     , tasty-bench
+    , text
     , transformers

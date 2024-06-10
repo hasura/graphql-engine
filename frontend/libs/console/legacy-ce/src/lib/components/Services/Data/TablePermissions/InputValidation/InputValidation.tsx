@@ -6,7 +6,6 @@ import { InputField } from '../../../../../new-components/Form';
 import { FaShieldAlt } from 'react-icons/fa';
 import { BooleanCheckbox } from './BooleanCheckbox';
 import { Controller, useFormContext } from 'react-hook-form';
-import { Badge } from '../../../../../new-components/Badge';
 import { RequestHeaders } from '../../../../../new-components/RequestHeader';
 
 export const inputValidationEnabledSchema = z.object({
@@ -44,9 +43,6 @@ export const InputValidation = ({ formFieldsNamePrefix = '' }) => {
         <h2 className="text-normal font-semibold flex items-center">
           Input Validation
           <div className="flex items-center">
-            <Badge className="mx-2 text-xs" color="blue">
-              BETA
-            </Badge>
             <IconTooltip message="When enabled, the input data will be validated with provided configuration." />
             {/* TODO: add doc link */}
             {/* <LearnMoreLink href="" /> */}

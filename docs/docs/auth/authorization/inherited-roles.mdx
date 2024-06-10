@@ -172,11 +172,11 @@ Let's take the example of an `users` table with the following columns:
 2. `name` - Text
 3. `email` - Text
 
-There are two roles defined namely `employee` and `manager`.
+There are two roles defined:
 
-1. User role - The user role will be able to access all columns of _**their row**_ when the session variable
+1. `user` - The user role will be able to access all columns of _**their row**_ when the session variable
    `X-Hasura-User-Id` is equal to the `id`.
-2. Anonymous role - The anonymous role will be able to access only the `id` and `name` columns of all the users.
+2. `anonymous` - The anonymous role will be able to access only the `id` and `name` columns of all the users.
 
 Let's create a new inherited role called `user_anonymous_inherited_role` which inherits from the `user` and the
 `anonymous` roles.

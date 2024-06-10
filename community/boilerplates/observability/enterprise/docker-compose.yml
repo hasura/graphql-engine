@@ -74,18 +74,18 @@ services:
       ## enable debugging mode. It is recommended to disable this in production
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: ${HGE_ENABLED_LOG_TYPES}
-      HASURA_GRAPHQL_LOG_LEVEL: info
+      HASURA_GRAPHQL_LOG_LEVEL: ${HGE_LOG_LEVEL}
       HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: "/srv/console-assets"
       HASURA_GRAPHQL_REDIS_URL: "redis://redis:6379"
       HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: "redis://redis:6379"
-      HASURA_GRAPHQL_MAX_CACHE_SIZE: "200"
+      HASURA_GRAPHQL_CACHE_MAX_ENTRY_SIZE: "200"
       # HASURA_GRAPHQL_SERVER_PORT: "8080"
       HASURA_GRAPHQL_ENABLED_APIS: ${HGE_ENABLED_APIS}
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
 
       JAEGER_HOST: http://jaeger:4318
       OTEL_COLLECTOR_HOST: http://otel-collector:4318
-
+      HGE_OTEL_STATUS: ${HGE_OTEL_STATUS}
       ## enable basic authorization for the Prometheus metrics endpoint
       ## remember to set the secret credential in the Prometheus target config
       # HASURA_GRAPHQL_METRICS_SECRET: ${HGE_METRICS_SECRET}

@@ -5,6 +5,9 @@
 module Harness.GraphqlEngine
   ( -- * HTTP Calls
 
+    -- ** GET
+    get,
+
     -- ** POST
     post,
     post_,
@@ -56,6 +59,7 @@ import Control.Concurrent (myThreadId)
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson (Value (String), encode, fromJSON, object, (.=))
+import Data.Aeson qualified as Aeson
 import Data.Aeson.Encode.Pretty as AP
 import Data.Aeson.Types (Pair)
 import Data.ByteString (ByteString)
@@ -77,7 +81,7 @@ import Harness.TestEnvironment (Protocol (..), Server (..), TestEnvironment (..)
 import Harness.WebSockets (responseListener, sendMessages)
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
-import Hasura.Prelude
+import Hasura.Prelude hiding (get)
 import Hasura.Server.App (CEConsoleType (OSSConsole))
 import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..), unsafePort)
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
@@ -90,6 +94,22 @@ import System.Metrics qualified as EKG
 import Test.Hspec
 
 -------------------------------------------------------------------------------
+
+-- HTTP Calls - GET
+
+-- | Get some data from graphql-engine
+--
+-- Optimistically assumes success
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
+get ::
+  (HasCallStack) => TestEnvironment -> String -> IO Text
+get testEnv@(getServer -> Server {urlPrefix, port}) path =
+  withFrozenCallStack $ do
+    testLogMessage testEnv $ LogHGERequest (T.pack path) $ traceIf testEnv Aeson.Null
+    responseBody <- Http.get (urlPrefix ++ ":" ++ show port ++ path)
+    testLogMessage testEnv $ LogHGEResponse (T.pack path) (String responseBody)
+    pure responseBody
 
 -- HTTP Calls - POST
 

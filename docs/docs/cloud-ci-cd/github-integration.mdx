@@ -163,8 +163,8 @@ You need to ensure the your Cloud project has been appropriately set up to execu
   added to your Cloud project as well.
 - Ensure that you have connected the required database(s) with the right name and connection params as you have in the
   Metadata to the Cloud project.
-- Follow the steps in our [Metadata Best Practices](/migrations-metadata-seeds/metadata-best-practices.mdx) guide to ensure that your
-  Metadata is in the right format and structure.
+- Follow the steps in our [Metadata Best Practices](/migrations-metadata-seeds/metadata-best-practices.mdx) guide to
+  ensure that your Metadata is in the right format and structure.
 
 ## Troubleshooting failures {#github-integration-troubleshooting}
 
@@ -208,7 +208,7 @@ The following are some troubleshooting steps to fix some possible errors in the 
 - Look at the underlying database error. Make the appropriate fix depending on the error and redeploy.
 - Some common errors:
 
-  - <em>source with name “default” is inconsistent</em>
+  - _source with name “default” is inconsistent_
 
     In this situation, most likely either the target project doesn't have the required database connected or the ENV
     VARS or the database name used to connect the database is not matching in your source and target projects.
@@ -230,6 +230,19 @@ The following are some troubleshooting steps to fix some possible errors in the 
 
     To fix this, try reloading the Metadata and confirming all required ENV VARS for the project are available. If the
     issue persists, please contact the [Hasura Help Center](https://hasura.io/help/).
+
+  - `Error code: 520`
+
+    If you encounter an error code of `520` after attempting to apply migrations, this is likely due to a long-running
+    process. This issue can arise in various database systems when certain actions require exclusive access to data
+    structures, such as tables or rows.
+
+    For example, in PostgreSQL, operations that require an `ACCESS EXCLUSIVE` lock can lead to this error. Such locks
+    are commonly needed when performing actions like adding columns. More about PostgreSQL’s explicit locking can be
+    found in their [documentation on explicit locking](https://www.postgresql.org/docs/current/explicit-locking.html).
+
+    In these cases, it's helpful to create a new table with any new columns / changed column types, insert your data to
+    the new table, and then drop the old table and rename the new one to match the now deprecated table.
 
 ### Inconsistent Metadata after finalizing update
 

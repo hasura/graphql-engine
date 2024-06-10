@@ -27,3 +27,8 @@ services:
     extends:
       file: ../../docker-compose/databases.yaml
       service: sqlserver
+
+  redis:
+    image: redis:7
+    ports:
+      - 6379

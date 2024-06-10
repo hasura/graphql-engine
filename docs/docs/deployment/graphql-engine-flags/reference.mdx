@@ -222,6 +222,18 @@ for JSON encoding-decoding.
 | **Default**         | `false`                                        |
 | **Supported in**    | CE, Enterprise Edition                         |
 
+### Cache Max Entry TTL
+
+The maximum Query Cache TTL value in seconds, defaulting to 3600 seconds (1 hour).
+
+|                     |                                      |
+| ------------------- | ------------------------------------ |
+| **Flag**            | `--query-cache-max-ttl`              |
+| **Env var**         | `HASURA_GRAPHQL_CACHE_MAX_ENTRY_TTL` |
+| **Accepted values** | Integer                              |
+| **Default**         | `3600`                               |
+| **Supported in**    | Enterprise Edition only              |
+
 ### Close WebSocket connections on metadata change
 
 When metadata changes, close all WebSocket connections (with error code `1012`). This is useful when you want to ensure
@@ -387,31 +399,29 @@ subgraph in an Apollo supergraph.
 | **Default**         | `false`                                   |
 | **Supported in**    | CE, Enterprise Edition, Cloud             |
 
-
 ### Enable Automated Persisted Queries
 
 Enables the [Automated Persisted Queries](https://www.apollographql.com/docs/apollo-server/performance/apq/) feature.
 
-|                     |                                                  |
-| ------------------- | ------------------------------------------------ |
-| **Flag**            | `--enable-persisted-queries`                     |
-| **Env var**         | `HASURA_GRAPHQL_ENABLE_PERSISTED_QUERIES`        |
-| **Accepted values** | Boolean                                          |
-| **Default**         | `false`                                          |
-| **Supported in**    | Enterprise Edition                               |
+|                     |                                           |
+| ------------------- | ----------------------------------------- |
+| **Flag**            | `--enable-persisted-queries`              |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_PERSISTED_QUERIES` |
+| **Accepted values** | Boolean                                   |
+| **Default**         | `false`                                   |
+| **Supported in**    | Enterprise Edition                        |
 
 ### Set Automated Persisted Queries TTL
 
 Sets the query TTL in the cache store for Automated Persisted Queries.
 
-|                     |                                                  |
-| ------------------- | ------------------------------------------------ |
-| **Flag**            | `--persisted-queries-ttl`                        |
-| **Env var**         | `HASURA_GRAPHQL_PERSISTED_QUERIES_TTL`           |
-| **Accepted values** | Integer                                          |
-| **Default**         | `5` (seconds)                                    |
-| **Supported in**    | Enterprise Edition                               |
-
+|                     |                                        |
+| ------------------- | -------------------------------------- |
+| **Flag**            | `--persisted-queries-ttl`              |
+| **Env var**         | `HASURA_GRAPHQL_PERSISTED_QUERIES_TTL` |
+| **Accepted values** | Integer                                |
+| **Default**         | `5` (seconds)                          |
+| **Supported in**    | Enterprise Edition                     |
 
 ### Enable Error Log Level for Trigger Errors
 
@@ -425,7 +435,6 @@ Sets the log-level as `error` for Trigger type error logs (Event Triggers, Sched
 | **Default**         | `false`                                          |
 | **Supported in**    | CE, Enterprise Edition                           |
 
-
 ### Enable Console
 
 Enable the Hasura Console (served by the server on `/` and `/console`).
@@ -438,19 +447,6 @@ Enable the Hasura Console (served by the server on `/` and `/console`).
 | **Options**         | `true` or `false`                                                                  |
 | **Default**         | **CE**, **Enterprise Edition**: `false` <br />**Cloud**: Console is always enabled |
 | **Supported in**    | CE, Enterprise Edition                                                             |
-
-### Header Size Limit
-
-Sets the maximum cumulative length of all headers in bytes.
-
-|                     |                                          |
-| ------------------- | ---------------------------------------- |
-| **Flag**            | `--max-total-header-length`              |
-| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
-| **Accepted values** | Integer                                  |
-| **Default**         | `1024*1024` (1MB)                        |
-| **Supported in**    | CE, Enterprise Edition                   |
-
 
 ### Enable High-cardinality Labels for Metrics
 
@@ -466,6 +462,21 @@ metrics).
 | **Options**         | `true` or `false`                                       |
 | **Default**         | `true`                                                  |
 | **Supported in**    | Enterprise Edition                                      |
+
+The list of affected metrics are:
+
+| Metric                                                                                                                                         | High Cardinality enabled                                                  | High Cardinality disabled       |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------- |
+| [hasura_event_queue_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx/#event-queue-time)                                  | trigger_name, source_name                                                 | None                            |
+| [hasura_event_processed_total](/observability/enterprise-edition/prometheus/metrics.mdx/#event-processed-total)                                | trigger_name, source_name                                                 | None                            |
+| [hasura_event_webhook_processing_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx/#event-webhook-processing-time)        | trigger_name, source_name                                                 | None                            |
+| [hasura_event_processing_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx/#event-processing-time)                        | trigger_name, source_name                                                 | None                            |
+| [hasura_event_invocations_total](/observability/enterprise-edition/prometheus/metrics.mdx/#event-invocations-total)                            | trigger_name, source_name                                                 | None                            |
+| [hasura_graphql_requests_total](/observability/enterprise-edition/prometheus/metrics.mdx/#hasura-graphql-requests-total)                       | operation_type, response_status, parameterized_query_hash, operation_name | operation_type, response_status |
+| [hasura_websocket_messages_sent_bytes_total](/observability/enterprise-edition/prometheus/metrics.mdx/#websocket-egress)                       | parameterized_query_hash, operation_name                                  | None                            |
+| [hasura_subscription_total_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx#subscription-total-time)                     | subscription_kind, parameterized_query_hash, operation_name               | subscription_kind               |
+| [hasura_subscription_db_execution_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx#subscription-database-execution-time) | subscription_kind, parameterized_query_hash, operation_name               | subscription_kind               |
+| [hasura_active_subscriptions](/observability/enterprise-edition/prometheus/metrics.mdx#active-subscriptions)                                   | subscription_kind, parameterized_query_hash, operation_name               | subscription_kind               |
 
 ### Enable Log Compression
 
@@ -557,7 +568,7 @@ log types — can be found [here](/deployment/logging.mdx#log-types).
 | **Env var**         | `HASURA_GRAPHQL_ENABLED_LOG_TYPES`                                                                                                                                                               |
 | **Accepted values** | String (Comma-separated)                                                                                                                                                                         |
 | **Options**         | `startup`, `http-log`, `webhook-log`, `websocket-log`, `query-log`, `execution-log`, `livequery-poller-log`, `action-handler-log`, `data-connector-log`, `jwk-refresh-log`, `validate-input-log` |
-| **Default**         | `startup, http-log, webhook-log, websocket-log`, `jwk-refresh-log`                                                                                                                                   |
+| **Default**         | `startup, http-log, webhook-log, websocket-log`, `jwk-refresh-log`                                                                                                                               |
 | **Supported in**    | CE, Enterprise Edition                                                                                                                                                                           |
 
 ### Events HTTP Pool Size
@@ -609,6 +620,18 @@ List of experimental features to be enabled.
 | **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays` |
 | **Default**         | `null`                                                                                                                                                                                                                                                            |
 | **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                     |
+
+### Header Size Limit
+
+Sets the maximum cumulative length of all headers in bytes.
+
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Flag**            | `--max-total-header-length`              |
+| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
+| **Accepted values** | Integer                                  |
+| **Default**         | `1024*1024` (1MB)                        |
+| **Supported in**    | CE, Enterprise Edition                   |
 
 ### Graceful Shutdown Timeout
 
@@ -983,6 +1006,18 @@ The [URL for a read replica](/databases/database-config/read-replicas.mdx#adding
 | **Default**         | `null`                                  |
 | **Supported in**    | Deprecated in versions > `v2.0.0`       |
 
+### Redis Timeout
+
+The timeout for redis queries while serving requests. The timeout is in seconds.
+
+|                     |                                               |
+| ------------------- | --------------------------------------------- |
+| **Flag**            | N/A                                           |
+| **Env var**         | `HASURA_GRAPHQL_REDIS_TIMEOUT`                |
+| **Accepted values** | Integer (Representing an interval in seconds) |
+| **Default**         | `null` (No timeout)                           |
+| **Supported in**    | Enterprise Edition only                       |
+
 ### Redis TLS Hostname
 
 The hostname to use for SNI when connecting to a [caching Redis instance over TLS](/caching/enterprise-caching.mdx).
@@ -1193,6 +1228,19 @@ This sets transaction isolation.
 | **Options**         | `read-committed`, `repeatable-read`, `serializable` |
 | **Default**         | `read-committed`                                    |
 | **Supported in**    | Deprecated in versions > `v2.0.0`                   |
+
+### Trace SQL Queries
+
+Add SQL queries to the OTLP traces.
+
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Flag**            | `--trace-sql-query`                      |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_QUERY_TRACING`    |
+| **Accepted values** | Boolean                                  |
+| **Options**         | `true` or `false`                        |
+| **Default**         | `false`                                  |
+| **Supported in**    | CE, Enterprise Edition                   |
 
 ### Unauthorized Role
 

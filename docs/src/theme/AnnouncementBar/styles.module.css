@@ -1,0 +1,108 @@
+:root {
+  --docusaurus-announcement-bar-height: auto;
+}
+
+.announcementWrapper {
+  background-color: #f3f4f6;
+  padding: 1.5rem;
+}
+
+.announcementBar {
+  display: flex;
+  align-items: center;
+  height: auto;
+  background-color: var(--ifm-color-white);
+  color: var(--ifm-color-black);
+  border: 1px solid transparent;
+  border-radius: 112px;
+  padding: .75rem 1.4rem;
+  /* shadow/default */
+  box-shadow: 0px 1px 2px 0px rgba(28, 38, 63, 0.06), 0px 1px 3px 0px rgba(28, 38, 63, 0.10);
+  /*
+  Unfortunately we can't make announcement bar render above the navbar
+  IE need to use border-bottom instead of shadow
+  See https://github.com/facebookincubator/infima/issues/275
+
+  box-shadow: var(--ifm-global-shadow-lw);
+  z-index: calc(var(--ifm-z-index-fixed) + 1);
+  */
+  border-bottom: 1px solid var(--ifm-color-emphasis-100);
+}
+
+html[data-announcement-bar-initially-dismissed='true'] .announcementBar {
+  display: none;
+}
+
+.announcementBarPlaceholder {
+  flex: 0 0 10px;
+}
+
+/*.announcementBarClose {*/
+/*  flex: 0 0 30px;*/
+/*  align-self: stretch;*/
+/*  margin-right: 1rem;*/
+/*}*/
+.announcementBarClose {
+  display: flex;
+  align-items: center;
+}
+
+.announcementBarContent {
+  flex: 1 1 auto;
+  color: var(--primary-neutral-600);
+  font-size: .938rem;
+  font-weight: 500;
+  padding: 0;
+}
+
+.announcementBarContent a {
+  color: #1E56E3;
+  text-decoration: none;
+}
+
+@media print {
+  .announcementBar {
+    display: none;
+  }
+}
+
+@media (min-width: 997px) {
+  :root {
+    --docusaurus-announcement-bar-height: 30px;
+  }
+}
+@media (max-width: 900px) {
+  .announcementBar {
+    border-radius: 1rem;
+    position: relative;
+    padding: 1rem;
+  }
+  .announcementBarContent {
+    text-align: left;
+    padding-right: 40px;
+  }
+  .announcementBarClose {
+    position: absolute;
+    right: 1rem;
+    margin-right: 0;
+  }
+  .announcementBarClose svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+[data-theme='dark'] .announcementBar {
+  box-shadow: none;
+  border: 1px solid #333E4B;
+  background-color: #28334F;
+}
+[data-theme='dark'] .announcementBarContent {
+  color: #E5E7EB;
+}
+[data-theme='dark'] .announcementBarContent a {
+  color: #80A3FF;
+}
+[data-theme='dark'] .announcementWrapper {
+  background-color: #1c262f;
+}

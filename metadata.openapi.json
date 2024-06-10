@@ -6620,10 +6620,6 @@
                     },
                     "status": {
                         "default": "disabled",
-                        "enum": [
-                            "enabled",
-                            "disabled"
-                        ],
                         "type": "string"
                     }
                 },

@@ -98,6 +98,7 @@ convertMutationSelectionSet ::
   -- | Graphql Operation Name
   Maybe G.Name ->
   HeaderPrecedence ->
+  TraceQueryStatus ->
   m (ExecutionPlan, ParameterizedQueryHash, [ModelInfoPart])
 convertMutationSelectionSet
   env
@@ -115,7 +116,8 @@ convertMutationSelectionSet
   introspectionDisabledRoles
   reqId
   maybeOperationName
-  headerPrecedence = do
+  headerPrecedence
+  traceQueryStatus = do
     mutationParser <-
       onNothing (gqlMutationParser gqlContext)
         $ throw400 ValidationFailed "no mutations exist"
@@ -146,7 +148,7 @@ convertMutationSelectionSet
 
                   httpManager <- askHTTPManager
                   let selSetArguments = getSelSetArgsFromRootField resolvedSelSet rootFieldName
-                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments headerPrecedence
+                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments headerPrecedence traceQueryStatus
                   pure $ (ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins, dbModelInfoList)
             RFRemote (RemoteSchemaName rName) remoteField -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField

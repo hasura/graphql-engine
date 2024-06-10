@@ -1,12 +1,13 @@
 -- | A simple URL templating that enables interpolating environment variables
 module Data.URL.Template
   ( Template (..),
-    TemplateItem,
-    Variable,
+    TemplateItem (..),
+    Variable (..),
     printTemplate,
     mkPlainTemplate,
     parseTemplate,
     renderTemplate,
+    printVariable,
   )
 where
 

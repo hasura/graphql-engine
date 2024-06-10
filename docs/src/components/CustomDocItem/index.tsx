@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import ActualDocItem from '@theme/DocItem';
-import HasuraConBanner from '@site/src/components/HasuraConBanner';
 import GraphQLWithHasuraBanner from '@site/src/components/GraphQLWithHasuraBanner';
 import CustomFooter from '@site/src/components/CustomFooter';
 import styles from './styles.module.scss';
@@ -76,7 +75,6 @@ const CustomDocItem = props => {
         }
       >
         {/*<PageHelpful />*/}
-        <HasuraConBanner {...props} />
         <GraphQLWithHasuraBanner />
         <BrowserOnly fallback={<div>Loading...</div>}>
           {() => <AiChatBot/>}
