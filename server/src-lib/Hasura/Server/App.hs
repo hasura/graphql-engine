@@ -829,7 +829,7 @@ mkWaiApp setupHook appStateRef consoleType ekgStore wsServerEnv = do
   appEnv@AppEnv {..} <- askAppEnv
   spockApp <- liftWithStateless $ \lowerIO ->
     Spock.spockAsApp
-      $ Spock.spockT lowerIO
+      $ Spock.spockConfigT (mkSpockConfig lowerIO (_lsLogger appEnvLoggers)) lowerIO
       $ httpApp setupHook appStateRef appEnv consoleType ekgStore
       $ WS.mkCloseWebsocketsOnMetadataChangeAction (WS._wseServer wsServerEnv)
 
@@ -840,6 +840,30 @@ mkWaiApp setupHook appStateRef consoleType ekgStore wsServerEnv = do
     pure $ WSC.websocketsOr appEnvConnectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
   pure $ HasuraApp waiApp (ES._ssAsyncActions appEnvSubscriptionState) stopWSServer
+
+-- | Build a spock config that handles internal errors arising from spock
+mkSpockConfig ::
+  (MonadIO m, Tracing.MonadTraceContext m) =>
+  (m () -> IO ()) ->
+  L.Logger L.Hasura ->
+  Spock.SpockConfig
+mkSpockConfig lowerIO logger =
+  Spock.defaultSpockConfig
+    { Spock.sc_errorHandler = spockInternalErrorHandler,
+      Spock.sc_logError = lowerIO . spockInternalErrorLogger logger
+    }
+
+-- | Handler for internal errors arising from spock
+spockInternalErrorHandler :: HTTP.Status -> Spock.ActionCtxT ctx IO ()
+spockInternalErrorHandler _status = do
+  -- Ignore the status code and always return 500
+  Spock.setStatus HTTP.status500
+  Spock.lazyBytes $ J.encodingToLazyByteString $ encodeQErr False $ err500 Unexpected "Internal Server Error"
+
+-- | Logger for internal errors arising from spock
+spockInternalErrorLogger :: (Tracing.MonadTraceContext m, MonadIO m) => L.Logger L.Hasura -> Text -> m ()
+spockInternalErrorLogger logger msg =
+  L.unLoggerTracing logger $ L.UnhandledInternalErrorLog $ ErrorCallWithLocation (T.unpack msg) ""
 
 httpApp ::
   forall m impl.
