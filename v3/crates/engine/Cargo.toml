@@ -53,7 +53,7 @@ tower-http = { version = "0.4", features = ["trace", "cors", "fs"] }
 
 # Dependencies to build and run build.rs file
 [build-dependencies]
-build-data = "0.1.5" # To set short commit-sha at build time
+build-data = "0.2.1" # To set short commit-sha at build time
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
