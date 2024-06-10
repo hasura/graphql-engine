@@ -1,0 +1,374 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Check version compatability against postgres-like flavors.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Connection.VersionCheck</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#runCockroachVersionCheck"><span class="hs-identifier">runCockroachVersionCheck</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#CockroachDbVersion"><span class="hs-identifier">CockroachDbVersion</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#parseCrdbVersion"><span class="hs-identifier">parseCrdbVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionIsSupported"><span class="hs-identifier">crdbVersionIsSupported</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier">object</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator">(.=)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.html"><span class="hs-identifier">Data.Aeson.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Pair"><span class="hs-identifier">Pair</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html"><span class="hs-identifier">Data.Environment</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.html"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html"><span class="hs-identifier">Hasura.Backends.Postgres.Connection</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Connect.html"><span class="hs-identifier">Hasura.Backends.Postgres.Connection.Connect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Connect.html#withPostgresDB"><span class="hs-identifier">withPostgresDB</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier">SourceName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.html"><span class="hs-identifier">Text.Parsec</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Text.html"><span class="hs-identifier">Text.Parsec.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="annot"><span class="hs-comment">-- * Cockroach</span></span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="annot"><span class="hs-comment">-- | Cockroach version</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">data</span><span> </span><span id="CockroachDbVersion"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#CockroachDbVersion"><span class="hs-identifier hs-var">CockroachDbVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CockroachDbVersion"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#CockroachDbVersion"><span class="hs-identifier hs-var">CockroachDbVersion</span></a></span></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="crdbMajor"><span class="annot"><span class="annottext">CockroachDbVersion -&gt; Word
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbMajor"><span class="hs-identifier hs-var hs-var">crdbMajor</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span id="crdbMinor"><span class="annot"><span class="annottext">CockroachDbVersion -&gt; Word
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbMinor"><span class="hs-identifier hs-var hs-var">crdbMinor</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span id="crdbPatch"><span class="annot"><span class="annottext">CockroachDbVersion -&gt; Word
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbPatch"><span class="hs-identifier hs-var hs-var">crdbPatch</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="hs-comment">-- | includes additional information such as &quot;-beta.4&quot;</span></span><span>
+</span><span id="line-30"></span><span>    </span><span id="crdbRest"><span class="annot"><span class="annottext">CockroachDbVersion -&gt; String
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbRest"><span class="hs-identifier hs-var hs-var">crdbRest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687772814"><span id="local-6989586621687772822"><span class="annot"><span class="annottext">CockroachDbVersion -&gt; CockroachDbVersion -&gt; Bool
+(CockroachDbVersion -&gt; CockroachDbVersion -&gt; Bool)
+-&gt; (CockroachDbVersion -&gt; CockroachDbVersion -&gt; Bool)
+-&gt; Eq CockroachDbVersion
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: CockroachDbVersion -&gt; CockroachDbVersion -&gt; Bool
+== :: CockroachDbVersion -&gt; CockroachDbVersion -&gt; Bool
+$c/= :: CockroachDbVersion -&gt; CockroachDbVersion -&gt; Bool
+/= :: CockroachDbVersion -&gt; CockroachDbVersion -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687772828"><span id="local-6989586621687772839"><span id="local-6989586621687772843"><span class="annot"><span class="annottext">Int -&gt; CockroachDbVersion -&gt; ShowS
+[CockroachDbVersion] -&gt; ShowS
+CockroachDbVersion -&gt; String
+(Int -&gt; CockroachDbVersion -&gt; ShowS)
+-&gt; (CockroachDbVersion -&gt; String)
+-&gt; ([CockroachDbVersion] -&gt; ShowS)
+-&gt; Show CockroachDbVersion
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; CockroachDbVersion -&gt; ShowS
+showsPrec :: Int -&gt; CockroachDbVersion -&gt; ShowS
+$cshow :: CockroachDbVersion -&gt; String
+show :: CockroachDbVersion -&gt; String
+$cshowList :: [CockroachDbVersion] -&gt; ShowS
+showList :: [CockroachDbVersion] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="annot"><span class="hs-comment">-- | Check cockroachdb version compatability.</span></span><span>
+</span><span id="line-35"></span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#runCockroachVersionCheck"><span class="hs-identifier hs-type">runCockroachVersionCheck</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-type">PG.PostgresConnConfiguration</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span id="runCockroachVersionCheck"><span class="annot"><span class="annottext">runCockroachVersionCheck :: Environment
+-&gt; SourceName -&gt; PostgresConnConfiguration -&gt; IO (Either QErr ())
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#runCockroachVersionCheck"><span class="hs-identifier hs-var hs-var">runCockroachVersionCheck</span></a></span></span><span> </span><span id="local-6989586621687772847"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687772847"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687772848"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687772848"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621687772849"><span class="annot"><span class="annottext">PostgresConnConfiguration
+</span><a href="#local-6989586621687772849"><span class="hs-identifier hs-var">connConf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621687772850"><span class="annot"><span class="annottext">Either QErr (SingleRow (Identity Text))
+</span><a href="#local-6989586621687772850"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><span class="annottext">Environment
+-&gt; SourceName
+-&gt; PostgresConnConfiguration
+-&gt; TxET QErr IO (SingleRow (Identity Text))
+-&gt; IO (Either QErr (SingleRow (Identity Text)))
+forall a.
+Environment
+-&gt; SourceName
+-&gt; PostgresConnConfiguration
+-&gt; TxET QErr IO a
+-&gt; IO (Either QErr a)
+</span><a href="Hasura.Backends.Postgres.Connection.Connect.html#withPostgresDB"><span class="hs-identifier hs-var">withPostgresDB</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687772847"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687772848"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresConnConfiguration
+</span><a href="#local-6989586621687772849"><span class="hs-identifier hs-var">connConf</span></a></span><span>
+</span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">(TxET QErr IO (SingleRow (Identity Text))
+ -&gt; IO (Either QErr (SingleRow (Identity Text))))
+-&gt; TxET QErr IO (SingleRow (Identity Text))
+-&gt; IO (Either QErr (SingleRow (Identity Text)))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
+-&gt; Query
+-&gt; [PrepArg]
+-&gt; Bool
+-&gt; TxET QErr IO (SingleRow (Identity Text))
+forall (m :: * -&gt; *) a e.
+(MonadIO m, FromRes a) =&gt;
+(PGTxErr -&gt; e) -&gt; Query -&gt; [PrepArg] -&gt; Bool -&gt; TxET e m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html#rawQE"><span class="hs-identifier hs-var">PG.rawQE</span></a></span><span> </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#dmlTxErrorHandler"><span class="hs-identifier hs-var">PG.dmlTxErrorHandler</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Query
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html#fromText"><span class="hs-identifier hs-var">PG.fromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;select version();&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="annottext">Either QErr () -&gt; IO (Either QErr ())
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either QErr (SingleRow (Identity Text))
+</span><a href="#local-6989586621687772850"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-comment">-- running the query failed</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687772854"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621687772854"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">QErr -&gt; Either QErr ()
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621687772854"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-44"></span><span>    </span><span class="hs-comment">-- running the query succeeded</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Class.html#SingleRow"><span class="hs-identifier hs-type">PG.SingleRow</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span> </span><span id="local-6989586621687772857"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687772857"><span class="hs-identifier hs-var">versionString</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-46"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either ParseError CockroachDbVersion
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#parseCrdbVersion"><span class="hs-identifier hs-var">parseCrdbVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687772857"><span class="hs-identifier hs-var">versionString</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-47"></span><span>        </span><span class="hs-comment">-- parsing the query output failed</span><span>
+</span><span id="line-48"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687772858"><span class="annot"><span class="annottext">ParseError
+</span><a href="#local-6989586621687772858"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-49"></span><span>          </span><span class="annot"><span class="annottext">QErr -&gt; Either QErr ()
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span>
+</span><span id="line-50"></span><span>            </span><span class="annot"><span class="annottext">(QErr -&gt; Either QErr ()) -&gt; QErr -&gt; Either QErr ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; QErr
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionCheckErr500"><span class="hs-identifier hs-var">crdbVersionCheckErr500</span></a></span><span>
+</span><span id="line-51"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version-parse-error&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; String -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">ParseError -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">ParseError
+</span><a href="#local-6989586621687772858"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>                </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version-string&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687772857"><span class="hs-identifier hs-var">versionString</span></a></span><span>
+</span><span id="line-53"></span><span>              </span><span class="hs-special">]</span><span>
+</span><span id="line-54"></span><span>        </span><span class="hs-comment">-- parsing the query output succeeded</span><span>
+</span><span id="line-55"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687772861"><span class="annot"><span class="annottext">CockroachDbVersion
+</span><a href="#local-6989586621687772861"><span class="hs-identifier hs-var">crdbVersion</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">CockroachDbVersion -&gt; Bool
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionIsSupported"><span class="hs-identifier hs-var">crdbVersionIsSupported</span></a></span><span> </span><span class="annot"><span class="annottext">CockroachDbVersion
+</span><a href="#local-6989586621687772861"><span class="hs-identifier hs-var">crdbVersion</span></a></span><span>
+</span><span id="line-57"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="hs-comment">-- the crdb version is supported</span><span>
+</span><span id="line-58"></span><span>              </span><span class="annot"><span class="annottext">() -&gt; Either QErr ()
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="hs-comment">-- the crdb version is not supported</span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span>              </span><span class="annot"><span class="annottext">QErr -&gt; Either QErr ()
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span>
+</span><span id="line-62"></span><span>                </span><span class="annot"><span class="annottext">(QErr -&gt; Either QErr ()) -&gt; QErr -&gt; Either QErr ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; QErr
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionCheckErr500"><span class="hs-identifier hs-var">crdbVersionCheckErr500</span></a></span><span>
+</span><span id="line-63"></span><span>                  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version-string&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687772857"><span class="hs-identifier hs-var">versionString</span></a></span><span>
+</span><span id="line-64"></span><span>                  </span><span class="hs-special">]</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionCheckErr500"><span class="hs-identifier hs-type">crdbVersionCheckErr500</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Pair"><span class="hs-identifier hs-type">Pair</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span>
+</span><span id="line-67"></span><span id="crdbVersionCheckErr500"><span class="annot"><span class="annottext">crdbVersionCheckErr500 :: [Pair] -&gt; QErr
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionCheckErr500"><span class="hs-identifier hs-var hs-var">crdbVersionCheckErr500</span></a></span></span><span> </span><span id="local-6989586621687772862"><span class="annot"><span class="annottext">[Pair]
+</span><a href="#local-6989586621687772862"><span class="hs-identifier hs-var">extra</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#err500"><span class="hs-identifier hs-var">err500</span></a></span><span>
+</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#ValidationFailed"><span class="hs-identifier hs-var">ValidationFailed</span></a></span><span>
+</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Unsupported CockroachDB version. Supported versions: v22.2 onwards.&quot;</span></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">qeInternal :: Maybe QErrExtra
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#qeInternal"><span class="hs-identifier hs-var">qeInternal</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QErrExtra -&gt; Maybe QErrExtra
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(QErrExtra -&gt; Maybe QErrExtra) -&gt; QErrExtra -&gt; Maybe QErrExtra
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; QErrExtra
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#ExtraInternal"><span class="hs-identifier hs-var">ExtraInternal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair]
+</span><a href="#local-6989586621687772862"><span class="hs-identifier hs-var">extra</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- | Check version is &gt;= 22.2.0</span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- https://hasura.io/docs/latest/databases/postgres/cockroachdb/index</span><span>
+</span><span id="line-77"></span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionIsSupported"><span class="hs-identifier hs-type">crdbVersionIsSupported</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#CockroachDbVersion"><span class="hs-identifier hs-type">CockroachDbVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-78"></span><span id="crdbVersionIsSupported"><span class="annot"><span class="annottext">crdbVersionIsSupported :: CockroachDbVersion -&gt; Bool
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionIsSupported"><span class="hs-identifier hs-var hs-var">crdbVersionIsSupported</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#CockroachDbVersion"><span class="hs-identifier hs-type">CockroachDbVersion</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687772867"><span class="annot"><span class="annottext">Word
+crdbMajor :: CockroachDbVersion -&gt; Word
+crdbMajor :: Word
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbMajor"><span class="hs-identifier hs-var hs-var">crdbMajor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687772868"><span class="annot"><span class="annottext">Word
+crdbMinor :: CockroachDbVersion -&gt; Word
+crdbMinor :: Word
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbMinor"><span class="hs-identifier hs-var hs-var">crdbMinor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687772869"><span class="annot"><span class="annottext">Word
+crdbPatch :: CockroachDbVersion -&gt; Word
+crdbPatch :: Word
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbPatch"><span class="hs-identifier hs-var hs-var">crdbPatch</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687772867"><span class="hs-identifier hs-var">crdbMajor</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">22</span></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687772867"><span class="hs-identifier hs-var">crdbMajor</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">22</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687772868"><span class="hs-identifier hs-var">crdbMinor</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">2</span></span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687772867"><span class="hs-identifier hs-var">crdbMajor</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">22</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687772868"><span class="hs-identifier hs-var">crdbMinor</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">2</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687772869"><span class="hs-identifier hs-var">crdbPatch</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="annot"><span class="hs-comment">-- | Parse a cockroachDB version string</span></span><span>
+</span><span id="line-84"></span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#parseCrdbVersion"><span class="hs-identifier hs-type">parseCrdbVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Error.html#ParseError"><span class="hs-identifier hs-type">P.ParseError</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#CockroachDbVersion"><span class="hs-identifier hs-type">CockroachDbVersion</span></a></span><span>
+</span><span id="line-85"></span><span id="parseCrdbVersion"><span class="annot"><span class="annottext">parseCrdbVersion :: Text -&gt; Either ParseError CockroachDbVersion
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#parseCrdbVersion"><span class="hs-identifier hs-var hs-var">parseCrdbVersion</span></a></span></span><span> </span><span id="local-6989586621687772873"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687772873"><span class="hs-identifier hs-var">versionString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parsec Text () CockroachDbVersion
+-&gt; String -&gt; Text -&gt; Either ParseError CockroachDbVersion
+forall s t a.
+Stream s Identity t =&gt;
+Parsec s () a -&gt; String -&gt; s -&gt; Either ParseError a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Prim.html#parse"><span class="hs-identifier hs-var">P.parse</span></a></span><span> </span><span class="annot"><span class="annottext">Parsec Text () CockroachDbVersion
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionParser"><span class="hs-identifier hs-var">crdbVersionParser</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;select version();&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687772873"><span class="hs-identifier hs-var">versionString</span></a></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- | Cockroach DB version parser.</span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- Example version string:</span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- &gt; &quot;CockroachDB CCL v22.2.0-beta.4 (x86_64-pc-linux-gnu, built 2022/10/17 14:34:07, go1.19.1)&quot;</span><span>
+</span><span id="line-90"></span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionParser"><span class="hs-identifier hs-type">crdbVersionParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Text.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#CockroachDbVersion"><span class="hs-identifier hs-type">CockroachDbVersion</span></a></span><span>
+</span><span id="line-91"></span><span id="crdbVersionParser"><span class="annot"><span class="annottext">crdbVersionParser :: Parsec Text () CockroachDbVersion
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionParser"><span class="hs-identifier hs-var hs-var">crdbVersionParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; ParsecT Text () Identity String
+forall s (m :: * -&gt; *) u.
+Stream s m Char =&gt;
+String -&gt; ParsecT s u m String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#string"><span class="hs-identifier hs-var">P.string</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;CockroachDB&quot;</span></span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParsecT Text () Identity Char
+forall s (m :: * -&gt; *) u. Stream s m Char =&gt; ParsecT s u m Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#space"><span class="hs-identifier hs-var">P.space</span></a></span><span>
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621687772879"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687772879"><span class="hs-identifier hs-var">_distribution</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParsecT Text () Identity String
+forall u. ParsecT Text u Identity String
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#word"><span class="hs-identifier hs-var">word</span></a></span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParsecT Text () Identity Char
+forall s (m :: * -&gt; *) u. Stream s m Char =&gt; ParsecT s u m Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#space"><span class="hs-identifier hs-var">P.space</span></a></span><span>
+</span><span id="line-96"></span><span>  </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ParsecT Text () Identity Char
+forall s (m :: * -&gt; *) u.
+Stream s m Char =&gt;
+Char -&gt; ParsecT s u m Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'v'</span></span><span>
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621687772882"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687772882"><span class="hs-identifier hs-var">crdbMajor</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Word
+forall a. Read a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">read</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Word)
+-&gt; ParsecT Text () Identity String -&gt; ParsecT Text () Identity Word
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ParsecT Text () Identity Char -&gt; ParsecT Text () Identity String
+forall s u (m :: * -&gt; *) a. ParsecT s u m a -&gt; ParsecT s u m [a]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Prim.html#many"><span class="hs-identifier hs-var">P.many</span></a></span><span> </span><span class="annot"><span class="annottext">ParsecT Text () Identity Char
+forall s (m :: * -&gt; *) u. Stream s m Char =&gt; ParsecT s u m Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#digit"><span class="hs-identifier hs-var">P.digit</span></a></span><span>
+</span><span id="line-98"></span><span>  </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ParsecT Text () Identity Char
+forall s (m :: * -&gt; *) u.
+Stream s m Char =&gt;
+Char -&gt; ParsecT s u m Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'.'</span></span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621687772887"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687772887"><span class="hs-identifier hs-var">crdbMinor</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Word
+forall a. Read a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">read</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Word)
+-&gt; ParsecT Text () Identity String -&gt; ParsecT Text () Identity Word
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ParsecT Text () Identity Char -&gt; ParsecT Text () Identity String
+forall s u (m :: * -&gt; *) a. ParsecT s u m a -&gt; ParsecT s u m [a]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Prim.html#many"><span class="hs-identifier hs-var">P.many</span></a></span><span> </span><span class="annot"><span class="annottext">ParsecT Text () Identity Char
+forall s (m :: * -&gt; *) u. Stream s m Char =&gt; ParsecT s u m Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#digit"><span class="hs-identifier hs-var">P.digit</span></a></span><span>
+</span><span id="line-100"></span><span>  </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ParsecT Text () Identity Char
+forall s (m :: * -&gt; *) u.
+Stream s m Char =&gt;
+Char -&gt; ParsecT s u m Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#char"><span class="hs-identifier hs-var">P.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'.'</span></span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621687772888"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687772888"><span class="hs-identifier hs-var">crdbPatch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Word
+forall a. Read a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">read</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Word)
+-&gt; ParsecT Text () Identity String -&gt; ParsecT Text () Identity Word
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ParsecT Text () Identity Char -&gt; ParsecT Text () Identity String
+forall s u (m :: * -&gt; *) a. ParsecT s u m a -&gt; ParsecT s u m [a]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Prim.html#many"><span class="hs-identifier hs-var">P.many</span></a></span><span> </span><span class="annot"><span class="annottext">ParsecT Text () Identity Char
+forall s (m :: * -&gt; *) u. Stream s m Char =&gt; ParsecT s u m Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#digit"><span class="hs-identifier hs-var">P.digit</span></a></span><span>
+</span><span id="line-102"></span><span>  </span><span id="local-6989586621687772889"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687772889"><span class="hs-identifier hs-var">crdbRest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParsecT Text () Identity String
+forall u. ParsecT Text u Identity String
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#word"><span class="hs-identifier hs-var">word</span></a></span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><span class="annottext">CockroachDbVersion -&gt; Parsec Text () CockroachDbVersion
+forall a. a -&gt; ParsecT Text () Identity a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#CockroachDbVersion"><span class="hs-identifier hs-type">CockroachDbVersion</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">String
+Word
+crdbMajor :: Word
+crdbMinor :: Word
+crdbPatch :: Word
+crdbRest :: String
+crdbMajor :: Word
+crdbMinor :: Word
+crdbPatch :: Word
+crdbRest :: String
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbMajor"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span id="local-6989586621687772696"><span class="annot"><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#word"><span class="hs-identifier hs-type">word</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Prim.html#ParsecT"><span class="hs-identifier hs-type">P.ParsecT</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687772696"><span class="hs-identifier hs-type">u</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span></span><span>
+</span><span id="line-106"></span><span id="word"><span class="annot"><span class="annottext">word :: forall u. ParsecT Text u Identity String
+</span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#word"><span class="hs-identifier hs-var hs-var">word</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ParsecT Text u Identity Char -&gt; ParsecT Text u Identity String
+forall s u (m :: * -&gt; *) a. ParsecT s u m a -&gt; ParsecT s u m [a]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Prim.html#many"><span class="hs-identifier hs-var">P.many</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ParsecT Text u Identity Char
+forall s (m :: * -&gt; *) u. Stream s m Char =&gt; ParsecT s u m Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#alphaNum"><span class="hs-identifier hs-var">P.alphaNum</span></a></span><span> </span><span class="annot"><span class="annottext">ParsecT Text u Identity Char
+-&gt; ParsecT Text u Identity Char -&gt; ParsecT Text u Identity Char
+forall a.
+ParsecT Text u Identity a
+-&gt; ParsecT Text u Identity a -&gt; ParsecT Text u Identity a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ParsecT Text u Identity Char
+forall s (m :: * -&gt; *) u.
+Stream s m Char =&gt;
+String -&gt; ParsecT s u m Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/parsec-3.1.15.1-9f2162c3f99a60aa5e5218dbd179dfa03ac96491049d2803971bde613c4ea205/share/doc/html/src/Text.Parsec.Char.html#oneOf"><span class="hs-identifier hs-var">P.oneOf</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;-~!@#$%^&amp;*=_.,&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span></pre></body></html>

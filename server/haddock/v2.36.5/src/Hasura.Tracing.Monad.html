@@ -1,0 +1,800 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Tracing.Monad</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier">TraceT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Monad.html#runTraceT"><span class="hs-identifier">runTraceT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Monad.html#ignoreTraceT"><span class="hs-identifier">ignoreTraceT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Catch</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadCatch</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">MonadMask</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">MonadThrow</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/mmorph-1.2.0-b97db20fdd237afaed65fccc5829c422d35937fead9df9f9f77000a8c06eab8e/share/doc/html/src/Control.Monad.Morph.html"><span class="hs-identifier">Control.Monad.Morph</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html"><span class="hs-identifier">Control.Monad.Trans.Control</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.IORef</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Session.html"><span class="hs-identifier">Hasura.RQL.Types.Session</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfoM"><span class="hs-identifier">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#MonadGetPolicies"><span class="hs-identifier">MonadGetPolicies</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html"><span class="hs-identifier">Hasura.Tracing.Class</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html"><span class="hs-identifier">Hasura.Tracing.Context</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Reporter.html"><span class="hs-identifier">Hasura.Tracing.Reporter</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html"><span class="hs-identifier">Hasura.Tracing.Sampling</span></a></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- TraceT</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- | TraceT is the standard implementation of 'MonadTrace'. Via a 'Reader', it</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- keeps track of the default policy and reporter to use thoughout the stack, as</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- well as the current trace.</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">newtype</span><span> </span><span id="TraceT"><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-var">TraceT</span></a></span></span><span> </span><span id="local-6989586621687755141"><span class="annot"><a href="#local-6989586621687755141"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621687755142"><span class="annot"><a href="#local-6989586621687755142"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TraceT"><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-var">TraceT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Reporter.html#Reporter"><span class="hs-identifier hs-type">Reporter</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceEnv"><span class="hs-identifier hs-type">TraceEnv</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687755141"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755142"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621687755234"><span id="local-6989586621687755239"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; TraceT m a -&gt; TraceT m b)
+-&gt; (forall a b. a -&gt; TraceT m b -&gt; TraceT m a)
+-&gt; Functor (TraceT m)
+forall a b. a -&gt; TraceT m b -&gt; TraceT m a
+forall a b. (a -&gt; b) -&gt; TraceT m a -&gt; TraceT m b
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; TraceT m b -&gt; TraceT m a
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; TraceT m a -&gt; TraceT m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; TraceT m a -&gt; TraceT m b
+fmap :: forall a b. (a -&gt; b) -&gt; TraceT m a -&gt; TraceT m b
+$c&lt;$ :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; TraceT m b -&gt; TraceT m a
+&lt;$ :: forall a b. a -&gt; TraceT m b -&gt; TraceT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621687755250"><span class="annot"><span class="annottext">Monad (TraceT m)
+Monad (TraceT m)
+-&gt; (forall a. String -&gt; TraceT m a) -&gt; MonadFail (TraceT m)
+forall a. String -&gt; TraceT m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. String -&gt; m a) -&gt; MonadFail m
+forall {m :: * -&gt; *}. MonadFail m =&gt; Monad (TraceT m)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; TraceT m a
+$cfail :: forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; TraceT m a
+fail :: forall a. String -&gt; TraceT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadFail</span></span></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- only due to https://gitlab.haskell.org/ghc/ghc/-/issues/15681</span><span>
+</span><span id="line-33"></span><span>      </span><span id="local-6989586621687755262"><span id="local-6989586621687755267"><span id="local-6989586621687755271"><span id="local-6989586621687755275"><span id="local-6989586621687755279"><span class="annot"><span class="annottext">Functor (TraceT m)
+Functor (TraceT m)
+-&gt; (forall a. a -&gt; TraceT m a)
+-&gt; (forall a b. TraceT m (a -&gt; b) -&gt; TraceT m a -&gt; TraceT m b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c) -&gt; TraceT m a -&gt; TraceT m b -&gt; TraceT m c)
+-&gt; (forall a b. TraceT m a -&gt; TraceT m b -&gt; TraceT m b)
+-&gt; (forall a b. TraceT m a -&gt; TraceT m b -&gt; TraceT m a)
+-&gt; Applicative (TraceT m)
+forall a. a -&gt; TraceT m a
+forall a b. TraceT m a -&gt; TraceT m b -&gt; TraceT m a
+forall a b. TraceT m a -&gt; TraceT m b -&gt; TraceT m b
+forall a b. TraceT m (a -&gt; b) -&gt; TraceT m a -&gt; TraceT m b
+forall a b c.
+(a -&gt; b -&gt; c) -&gt; TraceT m a -&gt; TraceT m b -&gt; TraceT m c
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+forall {m :: * -&gt; *}. Applicative m =&gt; Functor (TraceT m)
+forall (m :: * -&gt; *) a. Applicative m =&gt; a -&gt; TraceT m a
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+TraceT m a -&gt; TraceT m b -&gt; TraceT m a
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+TraceT m a -&gt; TraceT m b -&gt; TraceT m b
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+TraceT m (a -&gt; b) -&gt; TraceT m a -&gt; TraceT m b
+forall (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c) -&gt; TraceT m a -&gt; TraceT m b -&gt; TraceT m c
+$cpure :: forall (m :: * -&gt; *) a. Applicative m =&gt; a -&gt; TraceT m a
+pure :: forall a. a -&gt; TraceT m a
+$c&lt;*&gt; :: forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+TraceT m (a -&gt; b) -&gt; TraceT m a -&gt; TraceT m b
+&lt;*&gt; :: forall a b. TraceT m (a -&gt; b) -&gt; TraceT m a -&gt; TraceT m b
+$cliftA2 :: forall (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c) -&gt; TraceT m a -&gt; TraceT m b -&gt; TraceT m c
+liftA2 :: forall a b c.
+(a -&gt; b -&gt; c) -&gt; TraceT m a -&gt; TraceT m b -&gt; TraceT m c
+$c*&gt; :: forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+TraceT m a -&gt; TraceT m b -&gt; TraceT m b
+*&gt; :: forall a b. TraceT m a -&gt; TraceT m b -&gt; TraceT m b
+$c&lt;* :: forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+TraceT m a -&gt; TraceT m b -&gt; TraceT m a
+&lt;* :: forall a b. TraceT m a -&gt; TraceT m b -&gt; TraceT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621687755290"><span id="local-6989586621687755295"><span id="local-6989586621687755299"><span class="annot"><span class="annottext">Applicative (TraceT m)
+Applicative (TraceT m)
+-&gt; (forall a b. TraceT m a -&gt; (a -&gt; TraceT m b) -&gt; TraceT m b)
+-&gt; (forall a b. TraceT m a -&gt; TraceT m b -&gt; TraceT m b)
+-&gt; (forall a. a -&gt; TraceT m a)
+-&gt; Monad (TraceT m)
+forall a. a -&gt; TraceT m a
+forall a b. TraceT m a -&gt; TraceT m b -&gt; TraceT m b
+forall a b. TraceT m a -&gt; (a -&gt; TraceT m b) -&gt; TraceT m b
+forall {m :: * -&gt; *}. Monad m =&gt; Applicative (TraceT m)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; TraceT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+TraceT m a -&gt; TraceT m b -&gt; TraceT m b
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+TraceT m a -&gt; (a -&gt; TraceT m b) -&gt; TraceT m b
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+$c&gt;&gt;= :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+TraceT m a -&gt; (a -&gt; TraceT m b) -&gt; TraceT m b
+&gt;&gt;= :: forall a b. TraceT m a -&gt; (a -&gt; TraceT m b) -&gt; TraceT m b
+$c&gt;&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+TraceT m a -&gt; TraceT m b -&gt; TraceT m b
+&gt;&gt; :: forall a b. TraceT m a -&gt; TraceT m b -&gt; TraceT m b
+$creturn :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; TraceT m a
+return :: forall a. a -&gt; TraceT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>      </span><span id="local-6989586621687755309"><span class="annot"><span class="annottext">Monad (TraceT m)
+Monad (TraceT m)
+-&gt; (forall a. IO a -&gt; TraceT m a) -&gt; MonadIO (TraceT m)
+forall a. IO a -&gt; TraceT m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. IO a -&gt; m a) -&gt; MonadIO m
+forall {m :: * -&gt; *}. MonadIO m =&gt; Monad (TraceT m)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; TraceT m a
+$cliftIO :: forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; TraceT m a
+liftIO :: forall a. IO a -&gt; TraceT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621687755321"><span class="annot"><span class="annottext">Monad (TraceT m)
+Monad (TraceT m)
+-&gt; (forall a. (a -&gt; TraceT m a) -&gt; TraceT m a)
+-&gt; MonadFix (TraceT m)
+forall a. (a -&gt; TraceT m a) -&gt; TraceT m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. (a -&gt; m a) -&gt; m a) -&gt; MonadFix m
+forall {m :: * -&gt; *}. MonadFix m =&gt; Monad (TraceT m)
+forall (m :: * -&gt; *) a.
+MonadFix m =&gt;
+(a -&gt; TraceT m a) -&gt; TraceT m a
+$cmfix :: forall (m :: * -&gt; *) a.
+MonadFix m =&gt;
+(a -&gt; TraceT m a) -&gt; TraceT m a
+mfix :: forall a. (a -&gt; TraceT m a) -&gt; TraceT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadFix</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621687755334"><span id="local-6989586621687755339"><span id="local-6989586621687755343"><span class="annot"><span class="annottext">MonadCatch (TraceT m)
+MonadCatch (TraceT m)
+-&gt; (forall b.
+    ((forall a. TraceT m a -&gt; TraceT m a) -&gt; TraceT m b) -&gt; TraceT m b)
+-&gt; (forall b.
+    ((forall a. TraceT m a -&gt; TraceT m a) -&gt; TraceT m b) -&gt; TraceT m b)
+-&gt; (forall a b c.
+    TraceT m a
+    -&gt; (a -&gt; ExitCase b -&gt; TraceT m c)
+    -&gt; (a -&gt; TraceT m b)
+    -&gt; TraceT m (b, c))
+-&gt; MonadMask (TraceT m)
+forall b.
+((forall a. TraceT m a -&gt; TraceT m a) -&gt; TraceT m b) -&gt; TraceT m b
+forall a b c.
+TraceT m a
+-&gt; (a -&gt; ExitCase b -&gt; TraceT m c)
+-&gt; (a -&gt; TraceT m b)
+-&gt; TraceT m (b, c)
+forall {m :: * -&gt; *}. MonadMask m =&gt; MonadCatch (TraceT m)
+forall (m :: * -&gt; *) b.
+MonadMask m =&gt;
+((forall a. TraceT m a -&gt; TraceT m a) -&gt; TraceT m b) -&gt; TraceT m b
+forall (m :: * -&gt; *) a b c.
+MonadMask m =&gt;
+TraceT m a
+-&gt; (a -&gt; ExitCase b -&gt; TraceT m c)
+-&gt; (a -&gt; TraceT m b)
+-&gt; TraceT m (b, c)
+forall (m :: * -&gt; *).
+MonadCatch m
+-&gt; (forall b. ((forall a. m a -&gt; m a) -&gt; m b) -&gt; m b)
+-&gt; (forall b. ((forall a. m a -&gt; m a) -&gt; m b) -&gt; m b)
+-&gt; (forall a b c.
+    m a -&gt; (a -&gt; ExitCase b -&gt; m c) -&gt; (a -&gt; m b) -&gt; m (b, c))
+-&gt; MonadMask m
+$cmask :: forall (m :: * -&gt; *) b.
+MonadMask m =&gt;
+((forall a. TraceT m a -&gt; TraceT m a) -&gt; TraceT m b) -&gt; TraceT m b
+mask :: forall b.
+((forall a. TraceT m a -&gt; TraceT m a) -&gt; TraceT m b) -&gt; TraceT m b
+$cuninterruptibleMask :: forall (m :: * -&gt; *) b.
+MonadMask m =&gt;
+((forall a. TraceT m a -&gt; TraceT m a) -&gt; TraceT m b) -&gt; TraceT m b
+uninterruptibleMask :: forall b.
+((forall a. TraceT m a -&gt; TraceT m a) -&gt; TraceT m b) -&gt; TraceT m b
+$cgeneralBracket :: forall (m :: * -&gt; *) a b c.
+MonadMask m =&gt;
+TraceT m a
+-&gt; (a -&gt; ExitCase b -&gt; TraceT m c)
+-&gt; (a -&gt; TraceT m b)
+-&gt; TraceT m (b, c)
+generalBracket :: forall a b c.
+TraceT m a
+-&gt; (a -&gt; ExitCase b -&gt; TraceT m c)
+-&gt; (a -&gt; TraceT m b)
+-&gt; TraceT m (b, c)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadMask</span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>      </span><span id="local-6989586621687755357"><span class="annot"><span class="annottext">MonadThrow (TraceT m)
+MonadThrow (TraceT m)
+-&gt; (forall e a.
+    Exception e =&gt;
+    TraceT m a -&gt; (e -&gt; TraceT m a) -&gt; TraceT m a)
+-&gt; MonadCatch (TraceT m)
+forall e a.
+Exception e =&gt;
+TraceT m a -&gt; (e -&gt; TraceT m a) -&gt; TraceT m a
+forall {m :: * -&gt; *}. MonadCatch m =&gt; MonadThrow (TraceT m)
+forall (m :: * -&gt; *) e a.
+(MonadCatch m, Exception e) =&gt;
+TraceT m a -&gt; (e -&gt; TraceT m a) -&gt; TraceT m a
+forall (m :: * -&gt; *).
+MonadThrow m
+-&gt; (forall e a. Exception e =&gt; m a -&gt; (e -&gt; m a) -&gt; m a)
+-&gt; MonadCatch m
+$ccatch :: forall (m :: * -&gt; *) e a.
+(MonadCatch m, Exception e) =&gt;
+TraceT m a -&gt; (e -&gt; TraceT m a) -&gt; TraceT m a
+catch :: forall e a.
+Exception e =&gt;
+TraceT m a -&gt; (e -&gt; TraceT m a) -&gt; TraceT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadCatch</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>      </span><span id="local-6989586621687755372"><span class="annot"><span class="annottext">Monad (TraceT m)
+Monad (TraceT m)
+-&gt; (forall e a. Exception e =&gt; e -&gt; TraceT m a)
+-&gt; MonadThrow (TraceT m)
+forall e a. Exception e =&gt; e -&gt; TraceT m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall e a. Exception e =&gt; e -&gt; m a) -&gt; MonadThrow m
+forall {m :: * -&gt; *}. MonadThrow m =&gt; Monad (TraceT m)
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, Exception e) =&gt;
+e -&gt; TraceT m a
+$cthrowM :: forall (m :: * -&gt; *) e a.
+(MonadThrow m, Exception e) =&gt;
+e -&gt; TraceT m a
+throwM :: forall e a. Exception e =&gt; e -&gt; TraceT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadThrow</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621687755380"><span id="local-6989586621687755386"><span id="local-6989586621687755391"><span id="local-6989586621687755395"><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="#local-6989586621687755380"><span class="hs-identifier hs-type">s</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>      </span><span id="local-6989586621687755401"><span id="local-6989586621687755407"><span id="local-6989586621687755412"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="#local-6989586621687755401"><span class="hs-identifier hs-type">e</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621687755418"><span id="local-6989586621687755433"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/transformers-base-0.4.6-bfccd6e5febd14b0c80b8671d40d0a3d2cf51c261490e5db29874602833b847c/share/doc/html/src/Control.Monad.Base.html#MonadBase"><span class="hs-identifier hs-type">MonadBase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755418"><span class="hs-identifier hs-type">b</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>      </span><span id="local-6989586621687755443"><span id="local-6989586621687755449"><span id="local-6989586621687755455"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755443"><span class="hs-identifier hs-type">b</span></a></span></span></span></span><span>
+</span><span id="line-44"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- | Runs the 'TraceT' monad, by providing the default reporter. This does NOT</span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- start a trace.</span><span>
+</span><span id="line-48"></span><span class="hs-comment">--</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- TODO: we could change this to always start a trace with a default name? This</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- would allow us to guarantee that there is always a current trace, but this</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- might not always be the correct behaviour: in practice, we would end up</span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- generating one that spans the entire lifetime of the engine if 'runTraceT'</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- were to be used from 'main'.</span><span>
+</span><span id="line-54"></span><span id="local-6989586621687755122"><span id="local-6989586621687755123"><span class="annot"><a href="Hasura.Tracing.Monad.html#runTraceT"><span class="hs-identifier hs-type">runTraceT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Reporter.html#Reporter"><span class="hs-identifier hs-type">Reporter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755122"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755123"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687755122"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755123"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-55"></span><span id="runTraceT"><span class="annot"><span class="annottext">runTraceT :: forall (m :: * -&gt; *) a. Reporter -&gt; TraceT m a -&gt; m a
+</span><a href="Hasura.Tracing.Monad.html#runTraceT"><span class="hs-identifier hs-var hs-var">runTraceT</span></a></span></span><span> </span><span id="local-6989586621687755462"><span class="annot"><span class="annottext">Reporter
+</span><a href="#local-6989586621687755462"><span class="hs-identifier hs-var">reporter</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span id="local-6989586621687755463"><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755463"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; (Reporter, Maybe TraceEnv) -&gt; m a
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755463"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Reporter
+</span><a href="#local-6989586621687755462"><span class="hs-identifier hs-var">reporter</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe TraceEnv
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- | Run the 'TraceT' monad, but without actually tracing anything: no report</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- will be emitted, even if calls to 'newTraceWith' force the trace to be</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- sampled.</span><span>
+</span><span id="line-60"></span><span id="local-6989586621687755130"><span id="local-6989586621687755131"><span class="annot"><a href="Hasura.Tracing.Monad.html#ignoreTraceT"><span class="hs-identifier hs-type">ignoreTraceT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755130"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755131"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687755130"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755131"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-61"></span><span id="ignoreTraceT"><span class="annot"><span class="annottext">ignoreTraceT :: forall (m :: * -&gt; *) a. TraceT m a -&gt; m a
+</span><a href="Hasura.Tracing.Monad.html#ignoreTraceT"><span class="hs-identifier hs-var hs-var">ignoreTraceT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Reporter -&gt; TraceT m a -&gt; m a
+forall (m :: * -&gt; *) a. Reporter -&gt; TraceT m a -&gt; m a
+</span><a href="Hasura.Tracing.Monad.html#runTraceT"><span class="hs-identifier hs-var">runTraceT</span></a></span><span> </span><span class="annot"><span class="annottext">Reporter
+</span><a href="Hasura.Tracing.Reporter.html#noReporter"><span class="hs-identifier hs-var">noReporter</span></a></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadTrans</span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621687755474"><span class="annot"><span class="annottext">lift :: forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
+</span><a href="#local-6989586621687755474"><span class="hs-identifier hs-var hs-var hs-var hs-var">lift</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+forall (m :: * -&gt; *) a.
+ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+</span><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-var">TraceT</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a)
+-&gt; (m a -&gt; ReaderT (Reporter, Maybe TraceEnv) m a)
+-&gt; m a
+-&gt; TraceT m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">m a -&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+m a -&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><span class="hs-comment">-- | Hides the fact that TraceT is a reader to the rest of the stack.</span></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687755153"><span id="local-6989586621687755154"><span id="local-6989586621687755484"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621687755153"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755154"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621687755153"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755154"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621687755492"><span class="annot"><span class="annottext">ask :: TraceT m r
+</span><a href="#local-6989586621687755492"><span class="hs-identifier hs-var hs-var hs-var hs-var">ask</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m r -&gt; TraceT m r
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m r
+forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621687755495"><span class="annot"><span class="annottext">local :: forall a. (r -&gt; r) -&gt; TraceT m a -&gt; TraceT m a
+</span><a href="#local-6989586621687755495"><span class="hs-identifier hs-var hs-var hs-var hs-var">local</span></a></span></span><span> </span><span id="local-6989586621687755497"><span class="annot"><span class="annottext">r -&gt; r
+</span><a href="#local-6989586621687755497"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span id="local-6989586621687755498"><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755498"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+forall (m :: * -&gt; *) a.
+ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+</span><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-var">TraceT</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m a)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall (m :: * -&gt; *) a (n :: * -&gt; *) b r.
+(m a -&gt; n b) -&gt; ReaderT r m a -&gt; ReaderT r n b
+</span><span class="hs-identifier hs-var">mapReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(r -&gt; r) -&gt; m a -&gt; m a
+forall a. (r -&gt; r) -&gt; m a -&gt; m a
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; r
+</span><a href="#local-6989586621687755497"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755498"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687755175"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687755175"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687755175"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755175"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621687755526"><span class="annot"><span class="annottext">newTraceWith :: forall a.
+TraceContext -&gt; SamplingPolicy -&gt; Text -&gt; TraceT m a -&gt; TraceT m a
+</span><a href="Hasura.Tracing.Class.html#newTraceWith"><span class="hs-identifier hs-var hs-var hs-var hs-var">newTraceWith</span></a></span></span><span> </span><span id="local-6989586621687755527"><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621687755527"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span id="local-6989586621687755528"><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621687755528"><span class="hs-identifier hs-var">policy</span></a></span></span><span> </span><span id="local-6989586621687755529"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687755529"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span id="local-6989586621687755530"><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755530"><span class="hs-identifier hs-var">body</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+forall (m :: * -&gt; *) a.
+ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+</span><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-var">TraceT</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-73"></span><span>    </span><span id="local-6989586621687755531"><span class="annot"><span class="annottext">Reporter
+</span><a href="#local-6989586621687755531"><span class="hs-identifier hs-var">reporter</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((Reporter, Maybe TraceEnv) -&gt; Reporter)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m Reporter
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">(Reporter, Maybe TraceEnv) -&gt; Reporter
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span>
+</span><span id="line-74"></span><span>    </span><span id="local-6989586621687755534"><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="#local-6989586621687755534"><span class="hs-identifier hs-var">samplingDecision</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SamplingState
+-&gt; SamplingPolicy
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m SamplingDecision
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+SamplingState -&gt; SamplingPolicy -&gt; m SamplingDecision
+</span><a href="Hasura.Tracing.Monad.html#decideSampling"><span class="hs-identifier hs-var">decideSampling</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceContext -&gt; SamplingState
+</span><a href="Hasura.Tracing.Context.html#tcSamplingState"><span class="hs-identifier hs-var">tcSamplingState</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621687755527"><span class="hs-identifier hs-var">context</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621687755528"><span class="hs-identifier hs-var">policy</span></a></span><span>
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621687755537"><span class="annot"><span class="annottext">IORef TraceMetadata
+</span><a href="#local-6989586621687755537"><span class="hs-identifier hs-var">metadataRef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (IORef TraceMetadata)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m (IORef TraceMetadata)
+forall a. IO a -&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (IORef TraceMetadata)
+ -&gt; ReaderT (Reporter, Maybe TraceEnv) m (IORef TraceMetadata))
+-&gt; IO (IORef TraceMetadata)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m (IORef TraceMetadata)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TraceMetadata -&gt; IO (IORef TraceMetadata)
+forall a. a -&gt; IO (IORef a)
+</span><span class="hs-identifier hs-var">newIORef</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-76"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687755540"><span class="annot"><span class="annottext">report :: ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755540"><span class="hs-identifier hs-var hs-var">report</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="#local-6989586621687755534"><span class="hs-identifier hs-var">samplingDecision</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-77"></span><span>          </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleNever"><span class="hs-identifier hs-var">SampleNever</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-78"></span><span>          </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleAlways"><span class="hs-identifier hs-var">SampleAlways</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Reporter
+-&gt; forall (m :: * -&gt; *) a.
+   (MonadIO m, MonadBaseControl IO m) =&gt;
+   TraceContext -&gt; Text -&gt; IO TraceMetadata -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Reporter.html#runReporter"><span class="hs-identifier hs-var">runReporter</span></a></span><span> </span><span class="annot"><span class="annottext">Reporter
+</span><a href="#local-6989586621687755531"><span class="hs-identifier hs-var">reporter</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621687755527"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687755529"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IORef TraceMetadata -&gt; IO TraceMetadata
+forall a. IORef a -&gt; IO a
+</span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="annot"><span class="annottext">IORef TraceMetadata
+</span><a href="#local-6989586621687755537"><span class="hs-identifier hs-var">metadataRef</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span>        </span><span id="local-6989586621687755546"><span class="annot"><span class="annottext">updatedContext :: TraceContext
+</span><a href="#local-6989586621687755546"><span class="hs-identifier hs-var hs-var">updatedContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-80"></span><span>          </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621687755527"><span class="hs-identifier hs-var">context</span></a></span><span>
+</span><span id="line-81"></span><span>            </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">tcSamplingState :: SamplingState
+</span><a href="Hasura.Tracing.Context.html#tcSamplingState"><span class="hs-identifier hs-var">tcSamplingState</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SamplingDecision -&gt; SamplingState -&gt; SamplingState
+</span><a href="Hasura.Tracing.Monad.html#updateSamplingState"><span class="hs-identifier hs-var">updateSamplingState</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="#local-6989586621687755534"><span class="hs-identifier hs-var">samplingDecision</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceContext -&gt; SamplingState
+</span><a href="Hasura.Tracing.Context.html#tcSamplingState"><span class="hs-identifier hs-var">tcSamplingState</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621687755527"><span class="hs-identifier hs-var">context</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>            </span><span class="hs-special">}</span><span>
+</span><span id="line-83"></span><span>        </span><span id="local-6989586621687755548"><span class="annot"><span class="annottext">traceEnv :: TraceEnv
+</span><a href="#local-6989586621687755548"><span class="hs-identifier hs-var hs-var">traceEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TraceContext -&gt; IORef TraceMetadata -&gt; SamplingDecision -&gt; TraceEnv
+</span><a href="Hasura.Tracing.Monad.html#TraceEnv"><span class="hs-identifier hs-var">TraceEnv</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621687755546"><span class="hs-identifier hs-var">updatedContext</span></a></span><span> </span><span class="annot"><span class="annottext">IORef TraceMetadata
+</span><a href="#local-6989586621687755537"><span class="hs-identifier hs-var">metadataRef</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="#local-6989586621687755534"><span class="hs-identifier hs-var">samplingDecision</span></a></span><span>
+</span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755540"><span class="hs-identifier hs-var">report</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT (Reporter, Maybe TraceEnv) m a
+ -&gt; ReaderT (Reporter, Maybe TraceEnv) m a)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((Reporter, Maybe TraceEnv) -&gt; (Reporter, Maybe TraceEnv))
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall a.
+((Reporter, Maybe TraceEnv) -&gt; (Reporter, Maybe TraceEnv))
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Maybe TraceEnv -&gt; Identity (Maybe TraceEnv))
+-&gt; (Reporter, Maybe TraceEnv)
+-&gt; Identity (Reporter, Maybe TraceEnv)
+forall s t a b. Field2 s t a b =&gt; Lens s t a b
+Lens
+  (Reporter, Maybe TraceEnv)
+  (Reporter, Maybe TraceEnv)
+  (Maybe TraceEnv)
+  (Maybe TraceEnv)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.Tuple.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span> </span><span class="annot"><span class="annottext">((Maybe TraceEnv -&gt; Identity (Maybe TraceEnv))
+ -&gt; (Reporter, Maybe TraceEnv)
+ -&gt; Identity (Reporter, Maybe TraceEnv))
+-&gt; Maybe TraceEnv
+-&gt; (Reporter, Maybe TraceEnv)
+-&gt; (Reporter, Maybe TraceEnv)
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">TraceEnv -&gt; Maybe TraceEnv
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TraceEnv
+</span><a href="#local-6989586621687755548"><span class="hs-identifier hs-var">traceEnv</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755530"><span class="hs-identifier hs-var">body</span></a></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621687755561"><span class="annot"><span class="annottext">newSpanWith :: forall a. SpanId -&gt; Text -&gt; TraceT m a -&gt; TraceT m a
+</span><a href="#local-6989586621687755561"><span class="hs-identifier hs-var hs-var hs-var hs-var">newSpanWith</span></a></span></span><span> </span><span id="local-6989586621687755563"><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621687755563"><span class="hs-identifier hs-var">spanId</span></a></span></span><span> </span><span id="local-6989586621687755564"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687755564"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span id="local-6989586621687755565"><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755565"><span class="hs-identifier hs-var">body</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+forall (m :: * -&gt; *) a.
+ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+</span><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-var">TraceT</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621687755566"><span class="annot"><span class="annottext">Reporter
+</span><a href="#local-6989586621687755566"><span class="hs-identifier hs-var">reporter</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687755567"><span class="annot"><span class="annottext">Maybe TraceEnv
+</span><a href="#local-6989586621687755567"><span class="hs-identifier hs-var">traceEnv</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m (Reporter, Maybe TraceEnv)
+forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-88"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe TraceEnv
+</span><a href="#local-6989586621687755567"><span class="hs-identifier hs-var">traceEnv</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-89"></span><span>      </span><span class="hs-comment">-- we are not currently in a trace: ignore this span</span><span>
+</span><span id="line-90"></span><span>      </span><span class="annot"><span class="annottext">Maybe TraceEnv
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755565"><span class="hs-identifier hs-var">body</span></a></span><span>
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687755568"><span class="annot"><span class="annottext">TraceEnv
+</span><a href="#local-6989586621687755568"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">TraceEnv -&gt; SamplingDecision
+</span><a href="Hasura.Tracing.Monad.html#teSamplingDecision"><span class="hs-identifier hs-var">teSamplingDecision</span></a></span><span> </span><span class="annot"><span class="annottext">TraceEnv
+</span><a href="#local-6989586621687755568"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-92"></span><span>        </span><span class="hs-comment">-- this trace is not sampled: ignore this span</span><span>
+</span><span id="line-93"></span><span>        </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleNever"><span class="hs-identifier hs-var">SampleNever</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755565"><span class="hs-identifier hs-var">body</span></a></span><span>
+</span><span id="line-94"></span><span>        </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleAlways"><span class="hs-identifier hs-var">SampleAlways</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-95"></span><span>          </span><span id="local-6989586621687755570"><span class="annot"><span class="annottext">IORef TraceMetadata
+</span><a href="#local-6989586621687755570"><span class="hs-identifier hs-var">metadataRef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (IORef TraceMetadata)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m (IORef TraceMetadata)
+forall a. IO a -&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (IORef TraceMetadata)
+ -&gt; ReaderT (Reporter, Maybe TraceEnv) m (IORef TraceMetadata))
+-&gt; IO (IORef TraceMetadata)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m (IORef TraceMetadata)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TraceMetadata -&gt; IO (IORef TraceMetadata)
+forall a. a -&gt; IO (IORef a)
+</span><span class="hs-identifier hs-var">newIORef</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-96"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687755571"><span class="annot"><span class="annottext">subContext :: TraceContext
+</span><a href="#local-6989586621687755571"><span class="hs-identifier hs-var hs-var">subContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-97"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceEnv -&gt; TraceContext
+</span><a href="Hasura.Tracing.Monad.html#teTraceContext"><span class="hs-identifier hs-var">teTraceContext</span></a></span><span> </span><span class="annot"><span class="annottext">TraceEnv
+</span><a href="#local-6989586621687755568"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">tcCurrentSpan :: SpanId
+</span><a href="Hasura.Tracing.Context.html#tcCurrentSpan"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621687755563"><span class="hs-identifier hs-var">spanId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>                    </span><span class="annot"><span class="annottext">tcCurrentParent :: Maybe SpanId
+</span><a href="#local-6989586621687755574"><span class="hs-identifier hs-var">tcCurrentParent</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SpanId -&gt; Maybe SpanId
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceContext -&gt; SpanId
+</span><a href="Hasura.Tracing.Context.html#tcCurrentSpan"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span> </span><span class="annot"><span class="annottext">(TraceContext -&gt; SpanId) -&gt; TraceContext -&gt; SpanId
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TraceEnv -&gt; TraceContext
+</span><a href="Hasura.Tracing.Monad.html#teTraceContext"><span class="hs-identifier hs-var">teTraceContext</span></a></span><span> </span><span class="annot"><span class="annottext">TraceEnv
+</span><a href="#local-6989586621687755568"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>                  </span><span class="hs-special">}</span><span>
+</span><span id="line-101"></span><span>              </span><span id="local-6989586621687755575"><span class="annot"><span class="annottext">subTraceEnv :: TraceEnv
+</span><a href="#local-6989586621687755575"><span class="hs-identifier hs-var hs-var">subTraceEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-102"></span><span>                </span><span class="annot"><span class="annottext">TraceEnv
+</span><a href="#local-6989586621687755568"><span class="hs-identifier hs-var">env</span></a></span><span>
+</span><span id="line-103"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">teTraceContext :: TraceContext
+</span><a href="Hasura.Tracing.Monad.html#teTraceContext"><span class="hs-identifier hs-var">teTraceContext</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621687755571"><span class="hs-identifier hs-var">subContext</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-104"></span><span>                    </span><span class="annot"><span class="annottext">teMetadataRef :: IORef TraceMetadata
+</span><a href="Hasura.Tracing.Monad.html#teMetadataRef"><span class="hs-identifier hs-var">teMetadataRef</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IORef TraceMetadata
+</span><a href="#local-6989586621687755570"><span class="hs-identifier hs-var">metadataRef</span></a></span><span>
+</span><span id="line-105"></span><span>                  </span><span class="hs-special">}</span><span>
+</span><span id="line-106"></span><span>          </span><span class="annot"><span class="annottext">Reporter
+-&gt; forall (m :: * -&gt; *) a.
+   (MonadIO m, MonadBaseControl IO m) =&gt;
+   TraceContext -&gt; Text -&gt; IO TraceMetadata -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Reporter.html#runReporter"><span class="hs-identifier hs-var">runReporter</span></a></span><span> </span><span class="annot"><span class="annottext">Reporter
+</span><a href="#local-6989586621687755566"><span class="hs-identifier hs-var">reporter</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621687755571"><span class="hs-identifier hs-var">subContext</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687755564"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IORef TraceMetadata -&gt; IO TraceMetadata
+forall a. IORef a -&gt; IO a
+</span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="annot"><span class="annottext">IORef TraceMetadata
+</span><a href="#local-6989586621687755570"><span class="hs-identifier hs-var">metadataRef</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>            </span><span class="annot"><span class="annottext">(ReaderT (Reporter, Maybe TraceEnv) m a
+ -&gt; ReaderT (Reporter, Maybe TraceEnv) m a)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((Reporter, Maybe TraceEnv) -&gt; (Reporter, Maybe TraceEnv))
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall a.
+((Reporter, Maybe TraceEnv) -&gt; (Reporter, Maybe TraceEnv))
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Maybe TraceEnv -&gt; Identity (Maybe TraceEnv))
+-&gt; (Reporter, Maybe TraceEnv)
+-&gt; Identity (Reporter, Maybe TraceEnv)
+forall s t a b. Field2 s t a b =&gt; Lens s t a b
+Lens
+  (Reporter, Maybe TraceEnv)
+  (Reporter, Maybe TraceEnv)
+  (Maybe TraceEnv)
+  (Maybe TraceEnv)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.Tuple.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span> </span><span class="annot"><span class="annottext">((Maybe TraceEnv -&gt; Identity (Maybe TraceEnv))
+ -&gt; (Reporter, Maybe TraceEnv)
+ -&gt; Identity (Reporter, Maybe TraceEnv))
+-&gt; Maybe TraceEnv
+-&gt; (Reporter, Maybe TraceEnv)
+-&gt; (Reporter, Maybe TraceEnv)
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">TraceEnv -&gt; Maybe TraceEnv
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TraceEnv
+</span><a href="#local-6989586621687755575"><span class="hs-identifier hs-var">subTraceEnv</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m a
+</span><a href="#local-6989586621687755565"><span class="hs-identifier hs-var">body</span></a></span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span>  </span><span id="local-6989586621687755583"><span class="annot"><span class="annottext">attachMetadata :: TraceMetadata -&gt; TraceT m ()
+</span><a href="#local-6989586621687755583"><span class="hs-identifier hs-var hs-var hs-var hs-var">attachMetadata</span></a></span></span><span> </span><span id="local-6989586621687755585"><span class="annot"><span class="annottext">TraceMetadata
+</span><a href="#local-6989586621687755585"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m () -&gt; TraceT m ()
+forall (m :: * -&gt; *) a.
+ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+</span><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-var">TraceT</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-110"></span><span>    </span><span class="annot"><span class="annottext">((Reporter, Maybe TraceEnv) -&gt; Maybe (IORef TraceMetadata))
+-&gt; ReaderT
+     (Reporter, Maybe TraceEnv) m (Maybe (IORef TraceMetadata))
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TraceEnv -&gt; IORef TraceMetadata)
+-&gt; Maybe TraceEnv -&gt; Maybe (IORef TraceMetadata)
+forall a b. (a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">TraceEnv -&gt; IORef TraceMetadata
+</span><a href="Hasura.Tracing.Monad.html#teMetadataRef"><span class="hs-identifier hs-var">teMetadataRef</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe TraceEnv -&gt; Maybe (IORef TraceMetadata))
+-&gt; ((Reporter, Maybe TraceEnv) -&gt; Maybe TraceEnv)
+-&gt; (Reporter, Maybe TraceEnv)
+-&gt; Maybe (IORef TraceMetadata)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Reporter, Maybe TraceEnv) -&gt; Maybe TraceEnv
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m (Maybe (IORef TraceMetadata))
+-&gt; (Maybe (IORef TraceMetadata)
+    -&gt; ReaderT (Reporter, Maybe TraceEnv) m ())
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m ()
+forall a b.
+ReaderT (Reporter, Maybe TraceEnv) m a
+-&gt; (a -&gt; ReaderT (Reporter, Maybe TraceEnv) m b)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-111"></span><span>      </span><span class="annot"><span class="annottext">Maybe (IORef TraceMetadata)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; ReaderT (Reporter, Maybe TraceEnv) m ()
+forall a. a -&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687755587"><span class="annot"><span class="annottext">IORef TraceMetadata
+</span><a href="#local-6989586621687755587"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; ReaderT (Reporter, Maybe TraceEnv) m ()
+forall a. IO a -&gt; ReaderT (Reporter, Maybe TraceEnv) m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; ReaderT (Reporter, Maybe TraceEnv) m ())
+-&gt; IO () -&gt; ReaderT (Reporter, Maybe TraceEnv) m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IORef TraceMetadata -&gt; (TraceMetadata -&gt; TraceMetadata) -&gt; IO ()
+forall a. IORef a -&gt; (a -&gt; a) -&gt; IO ()
+</span><span class="hs-identifier hs-var">modifyIORef'</span></span><span> </span><span class="annot"><span class="annottext">IORef TraceMetadata
+</span><a href="#local-6989586621687755587"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceMetadata
+</span><a href="#local-6989586621687755585"><span class="hs-identifier hs-var">metadata</span></a></span><span> </span><span class="annot"><span class="annottext">TraceMetadata -&gt; TraceMetadata -&gt; TraceMetadata
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687755589"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687755589"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687755589"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTraceContext"><span class="hs-identifier hs-type">MonadTraceContext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755589"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-115"></span><span>  </span><span id="local-6989586621687755599"><span class="annot"><span class="annottext">currentContext :: TraceT m (Maybe TraceContext)
+</span><a href="#local-6989586621687755599"><span class="hs-identifier hs-var hs-var hs-var hs-var">currentContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT (Reporter, Maybe TraceEnv) m (Maybe TraceContext)
+-&gt; TraceT m (Maybe TraceContext)
+forall (m :: * -&gt; *) a.
+ReaderT (Reporter, Maybe TraceEnv) m a -&gt; TraceT m a
+</span><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-var">TraceT</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT (Reporter, Maybe TraceEnv) m (Maybe TraceContext)
+ -&gt; TraceT m (Maybe TraceContext))
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m (Maybe TraceContext)
+-&gt; TraceT m (Maybe TraceContext)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((Reporter, Maybe TraceEnv) -&gt; Maybe TraceContext)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m (Maybe TraceContext)
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">(((Reporter, Maybe TraceEnv) -&gt; Maybe TraceContext)
+ -&gt; ReaderT (Reporter, Maybe TraceEnv) m (Maybe TraceContext))
+-&gt; ((Reporter, Maybe TraceEnv) -&gt; Maybe TraceContext)
+-&gt; ReaderT (Reporter, Maybe TraceEnv) m (Maybe TraceContext)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(TraceEnv -&gt; TraceContext) -&gt; Maybe TraceEnv -&gt; Maybe TraceContext
+forall a b. (a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">TraceEnv -&gt; TraceContext
+</span><a href="Hasura.Tracing.Monad.html#teTraceContext"><span class="hs-identifier hs-var">teTraceContext</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe TraceEnv -&gt; Maybe TraceContext)
+-&gt; ((Reporter, Maybe TraceEnv) -&gt; Maybe TraceEnv)
+-&gt; (Reporter, Maybe TraceEnv)
+-&gt; Maybe TraceContext
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Reporter, Maybe TraceEnv) -&gt; Maybe TraceEnv
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687755219"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755219"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755219"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-118"></span><span>  </span><span id="local-6989586621687755612"><span class="annot"><span class="annottext">askUserInfo :: TraceT m UserInfo
+</span><a href="#local-6989586621687755612"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m UserInfo -&gt; TraceT m UserInfo
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m UserInfo
+forall (m :: * -&gt; *). UserInfoM m =&gt; m UserInfo
+</span><a href="Hasura.RQL.Types.Session.html#askUserInfo"><span class="hs-identifier hs-var">askUserInfo</span></a></span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687755226"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#MonadGetPolicies"><span class="hs-identifier hs-type">MonadGetPolicies</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755226"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#MonadGetPolicies"><span class="hs-identifier hs-type">MonadGetPolicies</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687755226"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621687755627"><span class="annot"><span class="annottext">runGetApiTimeLimit :: TraceT m (Maybe MaxTime)
+</span><a href="#local-6989586621687755627"><span class="hs-identifier hs-var hs-var hs-var hs-var">runGetApiTimeLimit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (Maybe MaxTime) -&gt; TraceT m (Maybe MaxTime)
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m (Maybe MaxTime)
+forall (m :: * -&gt; *). MonadGetPolicies m =&gt; m (Maybe MaxTime)
+</span><a href="Hasura.Server.Types.html#runGetApiTimeLimit"><span class="hs-identifier hs-var">runGetApiTimeLimit</span></a></span><span>
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621687755632"><span class="annot"><span class="annottext">runGetPrometheusMetricsGranularity :: TraceT m (IO GranularPrometheusMetricsState)
+</span><a href="#local-6989586621687755632"><span class="hs-identifier hs-var hs-var hs-var hs-var">runGetPrometheusMetricsGranularity</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (IO GranularPrometheusMetricsState)
+-&gt; TraceT m (IO GranularPrometheusMetricsState)
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m (IO GranularPrometheusMetricsState)
+forall (m :: * -&gt; *).
+MonadGetPolicies m =&gt;
+m (IO GranularPrometheusMetricsState)
+</span><a href="Hasura.Server.Types.html#runGetPrometheusMetricsGranularity"><span class="hs-identifier hs-var">runGetPrometheusMetricsGranularity</span></a></span><span>
+</span><span id="line-123"></span><span>  </span><span id="local-6989586621687755637"><span class="annot"><span class="annottext">runGetModelInfoLogStatus :: TraceT m (IO ModelInfoLogState)
+</span><a href="#local-6989586621687755637"><span class="hs-identifier hs-var hs-var hs-var hs-var">runGetModelInfoLogStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (IO ModelInfoLogState) -&gt; TraceT m (IO ModelInfoLogState)
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (IO ModelInfoLogState) -&gt; TraceT m (IO ModelInfoLogState))
+-&gt; m (IO ModelInfoLogState) -&gt; TraceT m (IO ModelInfoLogState)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">m (IO ModelInfoLogState)
+forall (m :: * -&gt; *).
+MonadGetPolicies m =&gt;
+m (IO ModelInfoLogState)
+</span><a href="Hasura.Server.Types.html#runGetModelInfoLogStatus"><span class="hs-identifier hs-var">runGetModelInfoLogStatus</span></a></span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-126"></span><span class="hs-comment">-- Internal</span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span class="annot"><span class="hs-comment">-- | Information about the current trace and span.</span></span><span>
+</span><span id="line-129"></span><span class="hs-keyword">data</span><span> </span><span id="TraceEnv"><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceEnv"><span class="hs-identifier hs-var">TraceEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TraceEnv"><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceEnv"><span class="hs-identifier hs-var">TraceEnv</span></a></span></span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="teTraceContext"><span class="annot"><span class="annottext">TraceEnv -&gt; TraceContext
+</span><a href="Hasura.Tracing.Monad.html#teTraceContext"><span class="hs-identifier hs-var hs-var">teTraceContext</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>    </span><span id="teMetadataRef"><span class="annot"><span class="annottext">TraceEnv -&gt; IORef TraceMetadata
+</span><a href="Hasura.Tracing.Monad.html#teMetadataRef"><span class="hs-identifier hs-var hs-var">teMetadataRef</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IORef</span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceMetadata"><span class="hs-identifier hs-type">TraceMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>    </span><span id="teSamplingDecision"><span class="annot"><span class="annottext">TraceEnv -&gt; SamplingDecision
+</span><a href="Hasura.Tracing.Monad.html#teSamplingDecision"><span class="hs-identifier hs-var hs-var">teSamplingDecision</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingDecision"><span class="hs-identifier hs-type">SamplingDecision</span></a></span><span>
+</span><span id="line-133"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- Helper for consistently deciding whether or not to sample a trace based on</span><span>
+</span><span id="line-136"></span><span class="hs-comment">-- trace context and sampling policy.</span><span>
+</span><span id="line-137"></span><span id="local-6989586621687755191"><span class="annot"><a href="Hasura.Tracing.Monad.html#decideSampling"><span class="hs-identifier hs-type">decideSampling</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687755191"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingState"><span class="hs-identifier hs-type">SamplingState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingPolicy"><span class="hs-identifier hs-type">SamplingPolicy</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687755191"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingDecision"><span class="hs-identifier hs-type">SamplingDecision</span></a></span></span><span>
+</span><span id="line-138"></span><span id="decideSampling"><span class="annot"><span class="annottext">decideSampling :: forall (m :: * -&gt; *).
+MonadIO m =&gt;
+SamplingState -&gt; SamplingPolicy -&gt; m SamplingDecision
+</span><a href="Hasura.Tracing.Monad.html#decideSampling"><span class="hs-identifier hs-var hs-var">decideSampling</span></a></span></span><span> </span><span id="local-6989586621687755645"><span class="annot"><span class="annottext">SamplingState
+</span><a href="#local-6989586621687755645"><span class="hs-identifier hs-var">samplingState</span></a></span></span><span> </span><span id="local-6989586621687755646"><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621687755646"><span class="hs-identifier hs-var">samplingPolicy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="#local-6989586621687755645"><span class="hs-identifier hs-var">samplingState</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-140"></span><span>    </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDefer"><span class="hs-identifier hs-var">SamplingDefer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingPolicy -&gt; m SamplingDecision
+forall a. IO a -&gt; m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621687755646"><span class="hs-identifier hs-var">samplingPolicy</span></a></span><span>
+</span><span id="line-141"></span><span>    </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDeny"><span class="hs-identifier hs-var">SamplingDeny</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingDecision -&gt; m SamplingDecision
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleNever"><span class="hs-identifier hs-var">SampleNever</span></a></span><span>
+</span><span id="line-142"></span><span>    </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingAccept"><span class="hs-identifier hs-var">SamplingAccept</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingDecision -&gt; m SamplingDecision
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleAlways"><span class="hs-identifier hs-var">SampleAlways</span></a></span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span class="hs-comment">-- Helper for consistently updating the sampling state when a sampling decision</span><span>
+</span><span id="line-145"></span><span class="hs-comment">-- is made.</span><span>
+</span><span id="line-146"></span><span class="annot"><a href="Hasura.Tracing.Monad.html#updateSamplingState"><span class="hs-identifier hs-type">updateSamplingState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingDecision"><span class="hs-identifier hs-type">SamplingDecision</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingState"><span class="hs-identifier hs-type">SamplingState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingState"><span class="hs-identifier hs-type">SamplingState</span></a></span><span>
+</span><span id="line-147"></span><span id="updateSamplingState"><span class="annot"><span class="annottext">updateSamplingState :: SamplingDecision -&gt; SamplingState -&gt; SamplingState
+</span><a href="Hasura.Tracing.Monad.html#updateSamplingState"><span class="hs-identifier hs-var hs-var">updateSamplingState</span></a></span></span><span> </span><span id="local-6989586621687755650"><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="#local-6989586621687755650"><span class="hs-identifier hs-var">samplingDecision</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-148"></span><span>  </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDefer"><span class="hs-identifier hs-var">SamplingDefer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-149"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="#local-6989586621687755650"><span class="hs-identifier hs-var">samplingDecision</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-150"></span><span>      </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleNever"><span class="hs-identifier hs-var">SampleNever</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDefer"><span class="hs-identifier hs-var">SamplingDefer</span></a></span><span>
+</span><span id="line-151"></span><span>      </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleAlways"><span class="hs-identifier hs-var">SampleAlways</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingAccept"><span class="hs-identifier hs-var">SamplingAccept</span></a></span><span>
+</span><span id="line-152"></span><span>  </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDeny"><span class="hs-identifier hs-var">SamplingDeny</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDeny"><span class="hs-identifier hs-var">SamplingDeny</span></a></span><span>
+</span><span id="line-153"></span><span>  </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingAccept"><span class="hs-identifier hs-var">SamplingAccept</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingAccept"><span class="hs-identifier hs-var">SamplingAccept</span></a></span><span>
+</span><span id="line-154"></span></pre></body></html>
