@@ -14,7 +14,7 @@ open-dds = { path = "../../open-dds" }
 axum = "0.6.20"
 http = "0.2"
 schemars = "0.8.20"
-serde = "1.0.202"
+serde = "1.0.203"
 thiserror = "1.0"
 
 [dev-dependencies]

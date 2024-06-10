@@ -16,7 +16,7 @@ lazy_static = "1.4.0"
 ndc-models = { git = "https://github.com/hasura/ndc-spec.git", rev = "622c643b4f0b6bbe4601c0f065d6d93a4bd3e9db" }
 ref-cast = "1.0"
 schemars = { version = "0.8.20", features = ["smol_str", "preserve_order"] }
-serde = "1.0.202"
+serde = "1.0.203"
 serde_json = { version = "1.0.116", features = ["preserve_order"] }
 serde_path_to_error = "0.1.14"
 strum = "0.26.2"
