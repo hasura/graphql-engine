@@ -9,6 +9,7 @@
       "maxConnections": 50,
       "poolTimeout": 30,
       "idleTimeout": 180,
+      "checkConnectionAfterIdle": 60,
       "connectionLifetime": 600
     },
     "isolationLevel": "ReadCommitted"
@@ -802,6 +803,61 @@
         "foreignRelations": {},
         "description": null
       },
+      "institution": {
+        "schemaName": "public",
+        "tableName": "institution",
+        "columns": {
+          "departments": {
+            "name": "departments",
+            "type": {
+              "arrayType": {
+                "scalarType": "text"
+              }
+            },
+            "nullable": "nullable",
+            "description": null
+          },
+          "id": {
+            "name": "id",
+            "type": {
+              "scalarType": "int4"
+            },
+            "nullable": "nonNullable",
+            "description": null
+          },
+          "location": {
+            "name": "location",
+            "type": {
+              "compositeType": "location"
+            },
+            "nullable": "nullable",
+            "description": null
+          },
+          "name": {
+            "name": "name",
+            "type": {
+              "scalarType": "text"
+            },
+            "nullable": "nullable",
+            "description": null
+          },
+          "staff": {
+            "name": "staff",
+            "type": {
+              "arrayType": {
+                "compositeType": "staff"
+              }
+            },
+            "nullable": "nullable",
+            "description": null
+          }
+        },
+        "uniquenessConstraints": {
+          "institution_pkey": ["id"]
+        },
+        "foreignRelations": {},
+        "description": null
+      },
       "movie_analytics": {
         "schemaName": "public",
         "tableName": "movie_analytics",
@@ -1081,10 +1137,78 @@
         "description": null
       }
     },
-    "compositeTypes": {},
+    "compositeTypes": {
+      "location": {
+        "name": "location",
+        "fields": {
+          "campuses": {
+            "name": "campuses",
+            "type": {
+              "arrayType": {
+                "scalarType": "text"
+              }
+            },
+            "description": null
+          },
+          "city": {
+            "name": "city",
+            "type": {
+              "scalarType": "text"
+            },
+            "description": null
+          },
+          "country": {
+            "name": "country",
+            "type": {
+              "scalarType": "text"
+            },
+            "description": null
+          }
+        },
+        "description": null
+      },
+      "staff": {
+        "name": "staff",
+        "fields": {
+          "favourite_artist_id": {
+            "name": "favourite_artist_id",
+            "type": {
+              "scalarType": "int4"
+            },
+            "description": null
+          },
+          "first_name": {
+            "name": "first_name",
+            "type": {
+              "scalarType": "text"
+            },
+            "description": null
+          },
+          "last_name": {
+            "name": "last_name",
+            "type": {
+              "scalarType": "text"
+            },
+            "description": null
+          },
+          "specialities": {
+            "name": "specialities",
+            "type": {
+              "arrayType": {
+                "scalarType": "text"
+              }
+            },
+            "description": null
+          }
+        },
+        "description": null
+      }
+    },
     "nativeQueries": {
       "album_by_title": {
-        "sql": "SELECT * FROM public.\"Album\" WHERE \"Title\" LIKE {{title}} AND \"AlbumId\" < {{id}}",
+        "sql": {
+          "inline": "SELECT * FROM public.\"Album\" WHERE \"Title\" LIKE {{title}} AND \"AlbumId\" < {{id}}"
+        },
         "columns": {
           "AlbumId": {
             "name": "AlbumId",
@@ -1132,7 +1256,9 @@
         "description": null
       },
       "articles_by_author": {
-        "sql": "SELECT * FROM public.\"article\" WHERE author_id = {{author_id}}",
+        "sql": {
+          "inline": "SELECT * FROM public.\"article\" WHERE author_id = {{author_id}}"
+        },
         "columns": {
           "author_id": {
             "name": "author_id",
@@ -1172,7 +1298,9 @@
         "description": null
       },
       "artist": {
-        "sql": "SELECT * FROM public.\"Artist\"",
+        "sql": {
+          "inline": "SELECT * FROM public.\"Artist\""
+        },
         "columns": {
           "ArtistId": {
             "name": "ArtistId",
@@ -1195,7 +1323,9 @@
         "description": null
       },
       "artist_below_id": {
-        "sql": "SELECT * FROM public.\"Artist\" WHERE \"ArtistId\" < {{id}}",
+        "sql": {
+          "inline": "SELECT * FROM public.\"Artist\" WHERE \"ArtistId\" < {{id}}"
+        },
         "columns": {
           "ArtistId": {
             "name": "ArtistId",
@@ -1227,7 +1357,9 @@
         "description": null
       },
       "value_types": {
-        "sql": "SELECT {{bool}} as bool, {{int4}} as int4, {{int2}} as int2, {{int8}} as int8, {{float4}} as float4, {{float8}} as \"float8\", {{numeric}} as numeric, {{char}} as char, {{varchar}} as \"varchar\", {{text}} as text, {{date}} as date, {{time}} as time, {{timetz}} as timetz, {{timestamp}} as timestamp, {{timestamptz}} as timestamptz, {{uuid}} as uuid",
+        "sql": {
+          "inline": "SELECT {{bool}} as bool, {{int4}} as int4, {{int2}} as int2, {{int8}} as int8, {{float4}} as float4, {{float8}} as \"float8\", {{numeric}} as numeric, {{char}} as char, {{varchar}} as \"varchar\", {{text}} as text, {{date}} as date, {{time}} as time, {{timetz}} as timetz, {{timestamp}} as timestamp, {{timestamptz}} as timestamptz, {{uuid}} as uuid"
+        },
         "columns": {
           "bool": {
             "name": "bool",

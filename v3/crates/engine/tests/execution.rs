@@ -102,6 +102,14 @@ fn test_model_select_many_nested_select_no_explicit_type_mapping() -> anyhow::Re
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
+// nested selection tests, using Postgres
+#[test]
+fn test_model_select_many_nested_select_postgres() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/nested_select/postgres";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
+}
+
 // Order By Tests
 #[test]
 fn test_model_select_many_order_by() -> anyhow::Result<()> {

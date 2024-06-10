@@ -1,320 +1,334 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "RawConfiguration",
-  "description": "The parsed connector configuration.",
-  "oneOf": [
-    {
-      "description": "Initial configuration, just enough to connect to a database and elaborate a full 'Configuration'.",
-      "type": "object",
-      "required": ["connectionSettings", "version"],
-      "properties": {
-        "version": {
-          "type": "string",
-          "enum": ["3"]
+  "description": "Initial configuration, just enough to connect to a database and elaborate a full 'Configuration'.",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": {
+      "$ref": "#/definitions/Version"
+    },
+    "$schema": {
+      "description": "Jsonschema of the configuration format.",
+      "default": null,
+      "type": ["string", "null"]
+    },
+    "connectionSettings": {
+      "description": "Database connection settings.",
+      "default": {
+        "connectionUri": {
+          "variable": "CONNECTION_URI"
         },
-        "$schema": {
-          "description": "Jsonschema of the configuration format.",
-          "default": null,
-          "type": ["string", "null"]
+        "poolSettings": {
+          "maxConnections": 50,
+          "poolTimeout": 30,
+          "idleTimeout": 180,
+          "checkConnectionAfterIdle": 60,
+          "connectionLifetime": 600
         },
-        "connectionSettings": {
-          "description": "Database connection settings.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/DatabaseConnectionSettings"
-            }
-          ]
-        },
-        "metadata": {
-          "description": "Connector metadata.",
-          "default": {
-            "tables": {},
-            "compositeTypes": {},
-            "nativeQueries": {},
-            "aggregateFunctions": {},
-            "comparisonOperators": {}
-          },
-          "allOf": [
-            {
-              "$ref": "#/definitions/Metadata"
-            }
-          ]
-        },
-        "introspectionOptions": {
-          "description": "Database introspection options.",
-          "default": {
-            "excludedSchemas": [
-              "information_schema",
-              "pg_catalog",
-              "tiger",
-              "crdb_internal",
-              "columnar",
-              "columnar_internal"
-            ],
-            "unqualifiedSchemasForTables": ["public"],
-            "unqualifiedSchemasForTypesAndProcedures": [
-              "public",
-              "pg_catalog",
-              "tiger"
-            ],
-            "comparisonOperatorMapping": [
-              {
-                "operatorName": "=",
-                "exposedName": "_eq",
-                "operatorKind": "equal"
-              },
-              {
-                "operatorName": "<=",
-                "exposedName": "_lte",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": ">",
-                "exposedName": "_gt",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": ">=",
-                "exposedName": "_gte",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "<",
-                "exposedName": "_lt",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "!=",
-                "exposedName": "_neq",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "LIKE",
-                "exposedName": "_like",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "NOT LIKE",
-                "exposedName": "_nlike",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "ILIKE",
-                "exposedName": "_ilike",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "NOT ILIKE",
-                "exposedName": "_nilike",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "SIMILAR TO",
-                "exposedName": "_similar",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "NOT SIMILAR TO",
-                "exposedName": "_nsimilar",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "<>",
-                "exposedName": "_neq",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "~~",
-                "exposedName": "_like",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "!~~",
-                "exposedName": "_nlike",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "~~*",
-                "exposedName": "_ilike",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "!~~*",
-                "exposedName": "_nilike",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "~",
-                "exposedName": "_regex",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "!~",
-                "exposedName": "_nregex",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "~*",
-                "exposedName": "_iregex",
-                "operatorKind": "custom"
-              },
-              {
-                "operatorName": "!~*",
-                "exposedName": "_niregex",
-                "operatorKind": "custom"
-              }
-            ],
-            "introspectPrefixFunctionComparisonOperators": [
-              "box_above",
-              "box_below",
-              "box_contain",
-              "box_contain_pt",
-              "box_contained",
-              "box_left",
-              "box_overabove",
-              "box_overbelow",
-              "box_overlap",
-              "box_overleft",
-              "box_overright",
-              "box_right",
-              "box_same",
-              "circle_above",
-              "circle_below",
-              "circle_contain",
-              "circle_contain_pt",
-              "circle_contained",
-              "circle_left",
-              "circle_overabove",
-              "circle_overbelow",
-              "circle_overlap",
-              "circle_overleft",
-              "circle_overright",
-              "circle_right",
-              "circle_same",
-              "contains_2d",
-              "equals",
-              "geography_overlaps",
-              "geometry_above",
-              "geometry_below",
-              "geometry_contained_3d",
-              "geometry_contains",
-              "geometry_contains_3d",
-              "geometry_contains_nd",
-              "geometry_left",
-              "geometry_overabove",
-              "geometry_overbelow",
-              "geometry_overlaps",
-              "geometry_overlaps_3d",
-              "geometry_overlaps_nd",
-              "geometry_overleft",
-              "geometry_overright",
-              "geometry_right",
-              "geometry_same",
-              "geometry_same_3d",
-              "geometry_same_nd",
-              "geometry_within",
-              "geometry_within_nd",
-              "inet_same_family",
-              "inter_lb",
-              "inter_sb",
-              "inter_sl",
-              "is_contained_2d",
-              "ishorizontal",
-              "isparallel",
-              "isperp",
-              "isvertical",
-              "jsonb_contained",
-              "jsonb_contains",
-              "jsonb_exists",
-              "jsonb_path_exists_opr",
-              "jsonb_path_match_opr",
-              "line_intersect",
-              "line_parallel",
-              "line_perp",
-              "lseg_intersect",
-              "lseg_parallel",
-              "lseg_perp",
-              "network_overlap",
-              "network_sub",
-              "network_sup",
-              "on_pb",
-              "on_pl",
-              "on_ppath",
-              "on_ps",
-              "on_sb",
-              "on_sl",
-              "overlaps_2d",
-              "path_contain_pt",
-              "path_inter",
-              "point_above",
-              "point_below",
-              "point_horiz",
-              "point_left",
-              "point_right",
-              "point_vert",
-              "poly_above",
-              "poly_below",
-              "poly_contain",
-              "poly_contain_pt",
-              "poly_contained",
-              "poly_left",
-              "poly_overabove",
-              "poly_overbelow",
-              "poly_overlap",
-              "poly_overleft",
-              "poly_overright",
-              "poly_right",
-              "poly_same",
-              "pt_contained_poly",
-              "st_3dintersects",
-              "st_contains",
-              "st_containsproperly",
-              "st_coveredby",
-              "st_covers",
-              "st_crosses",
-              "st_disjoint",
-              "st_equals",
-              "st_intersects",
-              "st_isvalid",
-              "st_orderingequals",
-              "st_overlaps",
-              "st_relatematch",
-              "st_touches",
-              "st_within",
-              "starts_with",
-              "ts_match_qv",
-              "ts_match_tq",
-              "ts_match_tt",
-              "ts_match_vq",
-              "tsq_mcontained",
-              "tsq_mcontains",
-              "xmlexists",
-              "xmlvalidate",
-              "xpath_exists"
-            ]
-          },
-          "allOf": [
-            {
-              "$ref": "#/definitions/IntrospectionOptions"
-            }
-          ]
-        },
-        "mutationsVersion": {
-          "description": "Which version of the generated mutation procedures to include in the schema response",
-          "default": null,
-          "anyOf": [
-            {
-              "$ref": "#/definitions/MutationsVersion"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "isolationLevel": "ReadCommitted"
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/DatabaseConnectionSettings"
         }
-      }
+      ]
+    },
+    "metadata": {
+      "description": "Connector metadata.",
+      "default": {
+        "tables": {},
+        "compositeTypes": {},
+        "nativeQueries": {},
+        "aggregateFunctions": {},
+        "comparisonOperators": {},
+        "typeRepresentations": {}
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/Metadata"
+        }
+      ]
+    },
+    "introspectionOptions": {
+      "description": "Database introspection options.",
+      "default": {
+        "excludedSchemas": [
+          "information_schema",
+          "pg_catalog",
+          "tiger",
+          "crdb_internal",
+          "columnar",
+          "columnar_internal"
+        ],
+        "unqualifiedSchemasForTables": ["public"],
+        "unqualifiedSchemasForTypesAndProcedures": [
+          "public",
+          "pg_catalog",
+          "tiger",
+          "auth",
+          "pgsodium"
+        ],
+        "comparisonOperatorMapping": [
+          {
+            "operatorName": "=",
+            "exposedName": "_eq",
+            "operatorKind": "equal"
+          },
+          {
+            "operatorName": "<=",
+            "exposedName": "_lte",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": ">",
+            "exposedName": "_gt",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": ">=",
+            "exposedName": "_gte",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "<",
+            "exposedName": "_lt",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "!=",
+            "exposedName": "_neq",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "LIKE",
+            "exposedName": "_like",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "NOT LIKE",
+            "exposedName": "_nlike",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "ILIKE",
+            "exposedName": "_ilike",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "NOT ILIKE",
+            "exposedName": "_nilike",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "SIMILAR TO",
+            "exposedName": "_similar",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "NOT SIMILAR TO",
+            "exposedName": "_nsimilar",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "<>",
+            "exposedName": "_neq",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "~~",
+            "exposedName": "_like",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "!~~",
+            "exposedName": "_nlike",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "~~*",
+            "exposedName": "_ilike",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "!~~*",
+            "exposedName": "_nilike",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "~",
+            "exposedName": "_regex",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "!~",
+            "exposedName": "_nregex",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "~*",
+            "exposedName": "_iregex",
+            "operatorKind": "custom"
+          },
+          {
+            "operatorName": "!~*",
+            "exposedName": "_niregex",
+            "operatorKind": "custom"
+          }
+        ],
+        "introspectPrefixFunctionComparisonOperators": [
+          "box_above",
+          "box_below",
+          "box_contain",
+          "box_contain_pt",
+          "box_contained",
+          "box_left",
+          "box_overabove",
+          "box_overbelow",
+          "box_overlap",
+          "box_overleft",
+          "box_overright",
+          "box_right",
+          "box_same",
+          "circle_above",
+          "circle_below",
+          "circle_contain",
+          "circle_contain_pt",
+          "circle_contained",
+          "circle_left",
+          "circle_overabove",
+          "circle_overbelow",
+          "circle_overlap",
+          "circle_overleft",
+          "circle_overright",
+          "circle_right",
+          "circle_same",
+          "contains_2d",
+          "equals",
+          "geography_overlaps",
+          "geometry_above",
+          "geometry_below",
+          "geometry_contained_3d",
+          "geometry_contains",
+          "geometry_contains_3d",
+          "geometry_contains_nd",
+          "geometry_left",
+          "geometry_overabove",
+          "geometry_overbelow",
+          "geometry_overlaps",
+          "geometry_overlaps_3d",
+          "geometry_overlaps_nd",
+          "geometry_overleft",
+          "geometry_overright",
+          "geometry_right",
+          "geometry_same",
+          "geometry_same_3d",
+          "geometry_same_nd",
+          "geometry_within",
+          "geometry_within_nd",
+          "inet_same_family",
+          "inter_lb",
+          "inter_sb",
+          "inter_sl",
+          "is_contained_2d",
+          "ishorizontal",
+          "isparallel",
+          "isperp",
+          "isvertical",
+          "jsonb_contained",
+          "jsonb_contains",
+          "jsonb_exists",
+          "jsonb_path_exists_opr",
+          "jsonb_path_match_opr",
+          "line_intersect",
+          "line_parallel",
+          "line_perp",
+          "lseg_intersect",
+          "lseg_parallel",
+          "lseg_perp",
+          "network_overlap",
+          "network_sub",
+          "network_sup",
+          "on_pb",
+          "on_pl",
+          "on_ppath",
+          "on_ps",
+          "on_sb",
+          "on_sl",
+          "overlaps_2d",
+          "path_contain_pt",
+          "path_inter",
+          "point_above",
+          "point_below",
+          "point_horiz",
+          "point_left",
+          "point_right",
+          "point_vert",
+          "poly_above",
+          "poly_below",
+          "poly_contain",
+          "poly_contain_pt",
+          "poly_contained",
+          "poly_left",
+          "poly_overabove",
+          "poly_overbelow",
+          "poly_overlap",
+          "poly_overleft",
+          "poly_overright",
+          "poly_right",
+          "poly_same",
+          "pt_contained_poly",
+          "st_3dintersects",
+          "st_contains",
+          "st_containsproperly",
+          "st_coveredby",
+          "st_covers",
+          "st_crosses",
+          "st_disjoint",
+          "st_equals",
+          "st_intersects",
+          "st_isvalid",
+          "st_orderingequals",
+          "st_overlaps",
+          "st_relatematch",
+          "st_touches",
+          "st_within",
+          "starts_with",
+          "ts_match_qv",
+          "ts_match_tq",
+          "ts_match_tt",
+          "ts_match_vq",
+          "tsq_mcontained",
+          "tsq_mcontains",
+          "xmlexists",
+          "xmlvalidate",
+          "xpath_exists"
+        ]
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/IntrospectionOptions"
+        }
+      ]
+    },
+    "mutationsVersion": {
+      "description": "Which version of the generated mutation procedures to include in the schema response",
+      "default": null,
+      "anyOf": [
+        {
+          "$ref": "#/definitions/MutationsVersion"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
-  ],
+  },
   "definitions": {
+    "Version": {
+      "type": "string",
+      "enum": ["3"]
+    },
     "DatabaseConnectionSettings": {
       "description": "Database connection settings.",
       "type": "object",
@@ -334,6 +348,7 @@
             "maxConnections": 50,
             "poolTimeout": 30,
             "idleTimeout": 180,
+            "checkConnectionAfterIdle": 60,
             "connectionLifetime": 600
           },
           "allOf": [
@@ -397,6 +412,13 @@
         "idleTimeout": {
           "description": "idle timeout for releasing a connection from the pool (seconds)",
           "default": 180,
+          "type": ["integer", "null"],
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "checkConnectionAfterIdle": {
+          "description": "check the connection is alive after being idle for N seconds. Set to null to always check.",
+          "default": 60,
           "type": ["integer", "null"],
           "format": "uint64",
           "minimum": 0.0
@@ -471,6 +493,14 @@
           "allOf": [
             {
               "$ref": "#/definitions/ComparisonOperators"
+            }
+          ]
+        },
+        "typeRepresentations": {
+          "default": {},
+          "allOf": [
+            {
+              "$ref": "#/definitions/TypeRepresentations"
             }
           ]
         }
@@ -716,7 +746,7 @@
           "description": "SQL expression to use for the Native Query. We can interpolate values using `{{variable_name}}` syntax, such as `SELECT * FROM authors WHERE name = {{author_name}}`",
           "allOf": [
             {
-              "$ref": "#/definitions/Native_query_sql"
+              "$ref": "#/definitions/NativeQuerySql"
             }
           ]
         },
@@ -745,7 +775,41 @@
         }
       }
     },
-    "Native_query_sql": {
+    "NativeQuerySql": {
+      "description": "Native Query SQL location.",
+      "anyOf": [
+        {
+          "description": "Refer to an external Native Query SQL file.",
+          "type": "object",
+          "required": ["file"],
+          "properties": {
+            "file": {
+              "description": "Relative path to a sql file.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Inline Native Query SQL string.",
+          "type": "object",
+          "required": ["inline"],
+          "properties": {
+            "inline": {
+              "description": "An inline Native Query SQL string.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/InlineNativeQuerySql"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$ref": "#/definitions/InlineNativeQuerySql"
+        }
+      ]
+    },
+    "InlineNativeQuerySql": {
       "type": "string"
     },
     "ReadOnlyColumnInfo": {
@@ -827,6 +891,137 @@
       "type": "string",
       "enum": ["equal", "in", "custom"]
     },
+    "TypeRepresentations": {
+      "description": "Type representation of scalar types, grouped by type.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/TypeRepresentation"
+      }
+    },
+    "TypeRepresentation": {
+      "description": "Type representation of a scalar type.",
+      "oneOf": [
+        {
+          "description": "JSON booleans",
+          "type": "string",
+          "enum": ["boolean"]
+        },
+        {
+          "description": "Any JSON string",
+          "type": "string",
+          "enum": ["string"]
+        },
+        {
+          "description": "float4",
+          "type": "string",
+          "enum": ["float32"]
+        },
+        {
+          "description": "float8",
+          "type": "string",
+          "enum": ["float64"]
+        },
+        {
+          "description": "int2",
+          "type": "string",
+          "enum": ["int16"]
+        },
+        {
+          "description": "int4",
+          "type": "string",
+          "enum": ["int32"]
+        },
+        {
+          "description": "int8 as integer",
+          "type": "string",
+          "enum": ["int64"]
+        },
+        {
+          "description": "int8 as string",
+          "type": "string",
+          "enum": ["int64AsString"]
+        },
+        {
+          "description": "numeric",
+          "type": "string",
+          "enum": ["bigDecimal"]
+        },
+        {
+          "description": "numeric as string",
+          "type": "string",
+          "enum": ["bigDecimalAsString"]
+        },
+        {
+          "description": "timestamp",
+          "type": "string",
+          "enum": ["timestamp"]
+        },
+        {
+          "description": "timestamp with timezone",
+          "type": "string",
+          "enum": ["timestamptz"]
+        },
+        {
+          "description": "time",
+          "type": "string",
+          "enum": ["time"]
+        },
+        {
+          "description": "time with timezone",
+          "type": "string",
+          "enum": ["timetz"]
+        },
+        {
+          "description": "date",
+          "type": "string",
+          "enum": ["date"]
+        },
+        {
+          "description": "uuid",
+          "type": "string",
+          "enum": ["uUID"]
+        },
+        {
+          "description": "geography",
+          "type": "string",
+          "enum": ["geography"]
+        },
+        {
+          "description": "geometry",
+          "type": "string",
+          "enum": ["geometry"]
+        },
+        {
+          "description": "Any JSON number",
+          "type": "string",
+          "enum": ["number"]
+        },
+        {
+          "description": "Any JSON number, with no decimal part",
+          "type": "string",
+          "enum": ["integer"]
+        },
+        {
+          "description": "An arbitrary json.",
+          "type": "string",
+          "enum": ["json"]
+        },
+        {
+          "description": "One of the specified string values",
+          "type": "object",
+          "required": ["enum"],
+          "properties": {
+            "enum": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "IntrospectionOptions": {
       "description": "Options which only influence how the configuration is updated.",
       "type": "object",
@@ -856,7 +1051,7 @@
         },
         "unqualifiedSchemasForTypesAndProcedures": {
           "description": "The types and procedures in these schemas will be returned unqualified.",
-          "default": ["public", "pg_catalog", "tiger"],
+          "default": ["public", "pg_catalog", "tiger", "auth", "pgsodium"],
           "type": "array",
           "items": {
             "type": "string"
@@ -1139,7 +1334,7 @@
     "MutationsVersion": {
       "description": "Which version of the generated mutations will be included in the schema",
       "type": "string",
-      "enum": ["v1"]
+      "enum": ["v1", "veryExperimentalWip"]
     }
   }
 }

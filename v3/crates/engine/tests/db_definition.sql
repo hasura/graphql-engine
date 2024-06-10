@@ -101,3 +101,64 @@ ALTER SEQUENCE public.movie_analytics_id_seq OWNED BY public.movie_analytics.id;
 --
 
 ALTER TABLE ONLY public.movie_analytics ALTER COLUMN id SET DEFAULT nextval('public.movie_analytics_id_seq'::regclass);
+
+-- `institution` table for testing queries into JSON objects
+
+CREATE TYPE public.location AS (city text, country text, campuses text []);
+
+CREATE TYPE public.staff AS (
+  first_name text,
+  last_name text,
+  specialities text [],
+  favourite_artist_id int
+);
+
+CREATE TABLE public.institution (
+  id integer NOT NULL,
+  name text,
+  location location,
+  staff staff [],
+  departments text [],
+  CONSTRAINT institution_pkey PRIMARY KEY (id)
+);
+
+INSERT INTO public.institution (id, name, location, staff, departments)
+VALUES (
+    1,
+    'Queen Mary University of London',
+    ROW(
+      'London',
+      'UK',
+      ARRAY ['Mile End','Whitechapel','Charterhouse Square','West Smithfield']
+    )::location,
+    ARRAY [ROW('Peter','Landin',ARRAY['Computer Science','Education'],
+    1
+  )::staff ],
+  ARRAY ['Humanities and Social Sciences','Science and Engineering','Medicine and Dentistry']
+),
+(
+  2,
+  'Chalmers University of Technology',
+  Row(
+    'Gothenburg',
+    'Sweden',
+    ARRAY ['Johanneberg','Lindholmen']
+  )::location,
+  ARRAY [ROW('John','Hughes',ARRAY['Computer Science','Functional Programming','Software Testing'],
+  2
+)::staff,
+ROW(
+  'Koen',
+  'Claessen',
+  ARRAY ['Computer Science','Functional Programming','Automated Reasoning'],
+  3
+)::staff ],
+ARRAY ['Architecture and Civil Engineering','Computer Science and Engineering','Electrical Engineering','Physics','Industrial and Materials Science']
+),
+(
+  3,
+  'University of Nowhere',
+  null,
+  null,
+  ARRAY ['nothing',null]
+);
