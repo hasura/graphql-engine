@@ -18,7 +18,6 @@ use indexmap::IndexSet;
 
 pub fn normalize_request<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     request: &http::Request,
 ) -> Result<normalized::Operation<'s, S>> {
@@ -69,7 +68,6 @@ pub fn normalize_request<'s, S: schema::SchemaContext, NSGet: schema::Namespaced
     if let Some(&operation) = operations.get(&operation_name) {
         normalize_operation(
             namespaced_getter,
-            namespace,
             schema,
             &fragments,
             operation,
@@ -82,7 +80,6 @@ pub fn normalize_request<'s, S: schema::SchemaContext, NSGet: schema::Namespaced
     } else if operations.len() == 1 {
         normalize_operation(
             namespaced_getter,
-            namespace,
             schema,
             &fragments,
             operations.values().next().unwrap(),
@@ -144,7 +141,6 @@ pub fn check_fragment_cycles<'q>(
 
 pub fn normalize_operation<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
     operation: &'q executable::OperationDefinition,
@@ -201,7 +197,6 @@ pub fn normalize_operation<'q, 's, S: schema::SchemaContext, NSGet: schema::Name
 
     let normalized_selection_set = selection_set::normalize_selection_set(
         namespaced_getter,
-        namespace,
         schema,
         fragments,
         &variables_context,

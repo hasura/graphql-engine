@@ -175,7 +175,6 @@ pub trait NamespacedGetter<S: SchemaContext> {
     fn get<'s, C>(
         &self,
         namespaced: &'s Namespaced<S, C>,
-        namespace: &S::Namespace,
     ) -> Option<(&'s C, &'s S::NamespacedNodeInfo)>;
 }
 

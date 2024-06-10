@@ -17,7 +17,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: the first_name on type Author_Order_By is not accessible for user"
+        "message": "validation failed: the field first_name on type Author_Order_By is not found"
       }
     ]
   }

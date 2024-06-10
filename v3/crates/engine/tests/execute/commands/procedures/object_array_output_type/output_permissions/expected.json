@@ -44,7 +44,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: field movie_id on type CommandActor is not allowed for user_1"
+        "message": "validation failed: no such field on type CommandActor: movie_id"
       }
     ]
   },
@@ -52,7 +52,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: field name on type CommandActor is not allowed for user_2"
+        "message": "validation failed: no such field on type CommandActor: name"
       }
     ]
   }

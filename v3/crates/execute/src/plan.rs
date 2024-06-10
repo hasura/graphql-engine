@@ -352,7 +352,9 @@ fn plan_query<'n, 's, 'ir>(
                 role,
             },
         ) => {
-            let sdl = schema.generate_sdl(&GDSRoleNamespaceGetter, role);
+            let sdl = schema.generate_sdl(&GDSRoleNamespaceGetter {
+                scope: role.clone(),
+            });
             NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::ServiceField {
                 sdl,
                 selection_set,
@@ -590,7 +592,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                             );
                             RootFieldResult::new(
                                 true, // __type(name: String!): __Type ; the type field is nullable
-                                resolve_type_field(selection_set, schema, &type_name, &GDSRoleNamespaceGetter, &namespace),
+                                resolve_type_field(selection_set, schema, &type_name, &GDSRoleNamespaceGetter{scope:namespace.clone()}),
                             )
                         }
                         NodeQueryPlan::SchemaField {
@@ -605,7 +607,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                             );
                             RootFieldResult::new(
                                 false, // __schema: __Schema! ; the schema field is not nullable
-                                resolve_schema_field(selection_set, schema, &GDSRoleNamespaceGetter, &namespace),
+                                resolve_schema_field(selection_set, schema, &GDSRoleNamespaceGetter{scope:namespace.clone()}),
                             )
                         }
                         NodeQueryPlan::NDCQueryExecution(ndc_query) => RootFieldResult::new(
@@ -800,13 +802,11 @@ fn resolve_type_field<NSGet: NamespacedGetter<GDS>>(
     schema: &gql::schema::Schema<GDS>,
     type_name: &ast::TypeName,
     namespaced_getter: &NSGet,
-    namespace: &Role,
 ) -> Result<json::Value, FieldError> {
     match schema.get_type(type_name) {
         Some(type_info) => Ok(json::to_value(gql::introspection::named_type(
             schema,
             namespaced_getter,
-            namespace,
             type_info,
             selection_set,
         )?)?),
@@ -818,12 +818,10 @@ fn resolve_schema_field<NSGet: NamespacedGetter<GDS>>(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     schema: &gql::schema::Schema<GDS>,
     namespaced_getter: &NSGet,
-    namespace: &Role,
 ) -> Result<json::Value, FieldError> {
     Ok(json::to_value(gql::introspection::schema_type(
         schema,
         namespaced_getter,
-        namespace,
         selection_set,
     )?)?)
 }

@@ -26,7 +26,6 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         &self,
         _schema: &'s schema::Schema<S>,
         _namespaced_getter: &NSGet,
-        _namespace: &<S as schema::SchemaContext>::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
     ) -> Result<json::Value> {
@@ -37,7 +36,6 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         &self,
         _schema: &'s schema::Schema<S>,
         _namespaced_getter: &NSGet,
-        _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
         f: F,
@@ -59,7 +57,6 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         &self,
         _schema: &'s schema::Schema<S>,
         _namespaced_getter: &NSGet,
-        _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
@@ -75,7 +72,6 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         &self,
         _schema: &'s schema::Schema<S>,
         _namespaced_getter: &NSGet,
-        _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
@@ -91,7 +87,6 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         &self,
         _schema: &'s schema::Schema<S>,
         _namespaced_getter: &NSGet,
-        _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
@@ -107,7 +102,6 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         &self,
         _schema: &'s schema::Schema<S>,
         _namespaced_getter: &NSGet,
-        _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
@@ -123,7 +117,6 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         &self,
         _schema: &'s schema::Schema<S>,
         _namespaced_getter: &NSGet,
-        _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
@@ -139,7 +132,6 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         &self,
         _schema: &'s schema::Schema<S>,
         _namespaced_getter: &NSGet,
-        _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
         mut f: F,
@@ -168,7 +160,6 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         &self,
         _schema: &'s schema::Schema<S>,
         _namespaced_getter: &NSGet,
-        _namespace: &S::Namespace,
         _context: &Self::Context,
         _location_type: &LocationType<'q, 's>,
         f: F,

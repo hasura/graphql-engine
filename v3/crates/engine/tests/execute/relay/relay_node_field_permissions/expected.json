@@ -3,7 +3,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: field node on type Query is not allowed for non-existent-role"
+        "message": "validation failed: no such field on type Query: node"
       }
     ]
   },
@@ -11,7 +11,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: field node on type Query is not allowed for user"
+        "message": "validation failed: no such field on type Query: node"
       }
     ]
   }

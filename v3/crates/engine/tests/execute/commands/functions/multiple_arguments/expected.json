@@ -55,7 +55,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: field getActorsByMovieIdBounds on type Query is not allowed for user_2"
+        "message": "validation failed: no such field on type Query: getActorsByMovieIdBounds"
       }
     ]
   }

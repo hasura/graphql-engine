@@ -51,8 +51,9 @@ pub fn bench_generate_ir(c: &mut Criterion) {
         };
 
         let normalized_request = normalize_request(
-            &schema::GDSRoleNamespaceGetter,
-            &session.role,
+            &schema::GDSRoleNamespaceGetter {
+                scope: session.role.clone(),
+            },
             &schema,
             &request,
         )

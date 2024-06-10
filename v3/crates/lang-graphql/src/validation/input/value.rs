@@ -61,13 +61,11 @@ impl<'q, 's, S: schema::SchemaContext> VariableValue<'q, 's, S> {
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
             VariableValue::Json(value, type_, type_info) => normalize(
                 schema,
                 namespaced_getter,
-                namespace,
                 &(),
                 *value,
                 &LocationType::NoLocation { type_ },
@@ -77,7 +75,6 @@ impl<'q, 's, S: schema::SchemaContext> VariableValue<'q, 's, S> {
             | VariableValue::Normalized(value, type_, type_info) => normalize(
                 schema,
                 namespaced_getter,
-                namespace,
                 &(),
                 *value,
                 &LocationType::NoLocation { type_ },
@@ -162,8 +159,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
-
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<serde_json::Value> {
@@ -178,7 +173,7 @@ where
                     .iter()
                     .map(|i| {
                         i.item
-                            .as_json(schema, namespaced_getter, namespace, context, location_type)
+                            .as_json(schema, namespaced_getter, context, location_type)
                     })
                     .collect::<Result<Vec<serde_json::Value>>>()?;
                 Ok(serde_json::Value::Array(list))
@@ -193,7 +188,6 @@ where
                             value.item.as_json(
                                 schema,
                                 namespaced_getter,
-                                namespace,
                                 context,
                                 location_type,
                             )?,
@@ -209,7 +203,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
         f: F,
@@ -219,11 +212,9 @@ where
         NSGet: schema::NamespacedGetter<S>,
     {
         match self {
-            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
-                schema,
-                namespaced_getter,
-                namespace,
-            ),
+            gql::Value::Variable(variable) => context
+                .get(location_type, variable)?
+                .normalize(schema, namespaced_getter),
             gql::Value::SimpleValue(gql::SimpleValue::Enum(e)) => f(e),
             _ => Err(Error::IncorrectFormat {
                 expected_type: "ENUM",
@@ -236,16 +227,13 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
-                schema,
-                namespaced_getter,
-                namespace,
-            ),
+            gql::Value::Variable(variable) => context
+                .get(location_type, variable)?
+                .normalize(schema, namespaced_getter),
             gql::Value::SimpleValue(gql::SimpleValue::Integer(i)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Integer(*i)),
             ),
@@ -260,16 +248,13 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
-                schema,
-                namespaced_getter,
-                namespace,
-            ),
+            gql::Value::Variable(variable) => context
+                .get(location_type, variable)?
+                .normalize(schema, namespaced_getter),
             // Both integer and float input values are accepted for Float type.
             // Ref: https://spec.graphql.org/October2021/#sec-Float.Input-Coercion
             gql::Value::SimpleValue(simple_value) => simple_value
@@ -290,16 +275,13 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
-                schema,
-                namespaced_getter,
-                namespace,
-            ),
+            gql::Value::Variable(variable) => context
+                .get(location_type, variable)?
+                .normalize(schema, namespaced_getter),
             gql::Value::SimpleValue(gql::SimpleValue::Boolean(b)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Boolean(*b)),
             ),
@@ -314,16 +296,13 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
-                schema,
-                namespaced_getter,
-                namespace,
-            ),
+            gql::Value::Variable(variable) => context
+                .get(location_type, variable)?
+                .normalize(schema, namespaced_getter),
             gql::Value::SimpleValue(gql::SimpleValue::String(s)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::String(s.clone())),
             ),
@@ -338,16 +317,13 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
         match self {
-            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
-                schema,
-                namespaced_getter,
-                namespace,
-            ),
+            gql::Value::Variable(variable) => context
+                .get(location_type, variable)?
+                .normalize(schema, namespaced_getter),
             gql::Value::SimpleValue(gql::SimpleValue::String(id)) => Ok(
                 normalized::Value::SimpleValue(normalized::SimpleValue::Id(id.clone())),
             ),
@@ -362,7 +338,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
         mut f: F,
@@ -372,11 +347,9 @@ where
     {
         // TODO single element array coercion
         match self {
-            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
-                schema,
-                namespaced_getter,
-                namespace,
-            ),
+            gql::Value::Variable(variable) => context
+                .get(location_type, variable)?
+                .normalize(schema, namespaced_getter),
 
             gql::Value::List(array) => {
                 let mut accum = Vec::new();
@@ -396,7 +369,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
         f: F,
@@ -405,11 +377,9 @@ where
         F: Fn(normalized::Object<'s, S>, &ast::Name, &Self) -> Result<normalized::Object<'s, S>>,
     {
         match self {
-            gql::Value::Variable(variable) => context.get(location_type, variable)?.normalize(
-                schema,
-                namespaced_getter,
-                namespace,
-            ),
+            gql::Value::Variable(variable) => context
+                .get(location_type, variable)?
+                .normalize(schema, namespaced_getter),
             gql::Value::Object(object) => {
                 let mut accum = IndexMap::new();
                 for key_value in object {

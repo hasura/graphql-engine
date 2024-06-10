@@ -17,7 +17,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: field id on type Author is not allowed for user"
+        "message": "validation failed: no such field on type Author: id"
       }
     ]
   }

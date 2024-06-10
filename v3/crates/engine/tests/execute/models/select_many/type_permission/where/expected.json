@@ -13,7 +13,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: the last_name on type Author_Filter is not accessible for user"
+        "message": "validation failed: the field last_name on type Author_Filter is not found"
       }
     ]
   }

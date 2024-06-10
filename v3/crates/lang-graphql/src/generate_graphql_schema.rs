@@ -21,22 +21,6 @@ pub enum Error {
     SerializeJson(#[from] serde_json::Error),
 }
 
-/// Generate GraphQL schema for each namespace from given schema.
-pub fn build_namespace_schemas<
-    's,
-    S: crate::schema::SchemaContext,
-    NSGet: crate::schema::NamespacedGetter<S>,
->(
-    schema: &'s crate::schema::Schema<S>,
-    namespaced_getter: &NSGet,
-) -> Result<HashMap<&'s S::Namespace, serde_json::Value>, Error> {
-    let mut response = HashMap::new();
-    for ns in &schema.namespaces {
-        response.insert(ns, build_namespace_schema(namespaced_getter, ns, schema)?);
-    }
-    Ok(response)
-}
-
 lazy_static::lazy_static! {
 
     static ref INTROSPECTION_REQUEST: Result<crate::http::Request, String>  = {
@@ -57,19 +41,17 @@ lazy_static::lazy_static! {
 
 /// Generate GraphQL schema for a given namespace
 pub fn build_namespace_schema<
-    's,
     S: crate::schema::SchemaContext,
     NSGet: crate::schema::NamespacedGetter<S>,
 >(
     namespaced_getter: &NSGet,
-    ns: &'s S::Namespace,
-    schema: &'s crate::schema::Schema<S>,
+    schema: &crate::schema::Schema<S>,
 ) -> Result<serde_json::Value, Error> {
     let request = match &(*INTROSPECTION_REQUEST) {
         Ok(req) => req,
         Err(e) => Err(Error::ParseIntrospectionQuery((*e).clone()))?,
     };
-    let nr = crate::validation::normalize_request(namespaced_getter, ns, schema, request)
+    let nr = crate::validation::normalize_request(namespaced_getter, schema, request)
         .map_err(|e| Error::NormalizeIntrospectionQuery(e.to_string()))?;
     let mut result = HashMap::new();
     for (_alias, field) in &nr.selection_set.fields {
@@ -81,7 +63,6 @@ pub fn build_namespace_schema<
                     serde_json::to_value(crate::introspection::schema_type(
                         schema,
                         namespaced_getter,
-                        ns,
                         &field.selection_set,
                     )?)?,
                 );

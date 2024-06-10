@@ -335,8 +335,9 @@ pub(crate) fn normalize_request<'s>(
                     variables: raw_request.variables.unwrap_or_default(),
                 };
                 gql::validation::normalize_request(
-                    &GDSRoleNamespaceGetter,
-                    &session.role,
+                    &GDSRoleNamespaceGetter {
+                        scope: session.role.clone(),
+                    },
                     schema,
                     &request,
                 )
@@ -456,8 +457,9 @@ mod tests {
             };
 
             let normalized_request = normalize_request(
-                &schema::GDSRoleNamespaceGetter,
-                &session.role,
+                &schema::GDSRoleNamespaceGetter {
+                    scope: session.role.clone(),
+                },
                 &schema,
                 &request,
             )?;

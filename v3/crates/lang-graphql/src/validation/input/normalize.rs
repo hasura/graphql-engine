@@ -14,21 +14,18 @@ fn normalize_scalar_value<
 >(
     schema: &'s schema::Schema<S>,
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     context: &V::Context,
     location_type: &LocationType<'q, 's>,
     value: &V,
     scalar: &'s schema::Scalar,
 ) -> Result<normalized::Value<'s, S>> {
     match scalar.name.as_str() {
-        "Int" => value.get_integer(schema, namespaced_getter, namespace, context, location_type),
-        "ID" => value.get_id(schema, namespaced_getter, namespace, context, location_type),
-        "Float" => value.get_float(schema, namespaced_getter, namespace, context, location_type),
-        "Boolean" => {
-            value.get_boolean(schema, namespaced_getter, namespace, context, location_type)
-        }
-        "String" => value.get_string(schema, namespaced_getter, namespace, context, location_type),
-        _ => value.as_json_normalized(schema, namespaced_getter, namespace, context, location_type),
+        "Int" => value.get_integer(schema, namespaced_getter, context, location_type),
+        "ID" => value.get_id(schema, namespaced_getter, context, location_type),
+        "Float" => value.get_float(schema, namespaced_getter, context, location_type),
+        "Boolean" => value.get_boolean(schema, namespaced_getter, context, location_type),
+        "String" => value.get_string(schema, namespaced_getter, context, location_type),
+        _ => value.as_json_normalized(schema, namespaced_getter, context, location_type),
     }
 }
 
@@ -41,7 +38,6 @@ pub fn normalize<
 >(
     schema: &'s schema::Schema<S>,
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     context: &V::Context,
     value: &V,
     location_type: &LocationType<'q, 's>,
@@ -62,7 +58,6 @@ where
                 schema::InputType::Scalar(scalar) => normalize_scalar_value(
                     schema,
                     namespaced_getter,
-                    namespace,
                     context,
                     location_type,
                     value,
@@ -71,7 +66,6 @@ where
                 schema::InputType::Enum(enum_info) => normalize_enum_value(
                     schema,
                     namespaced_getter,
-                    namespace,
                     context,
                     location_type,
                     value,
@@ -81,7 +75,6 @@ where
                     let normalized_object = normalize_input_object(
                         schema,
                         namespaced_getter,
-                        namespace,
                         context,
                         location_type,
                         value,
@@ -100,7 +93,6 @@ where
                 value.fold_list(
                     schema,
                     namespaced_getter,
-                    namespace,
                     context,
                     location_type,
                     |mut l, v| {
@@ -116,7 +108,6 @@ where
                             l.push(normalize(
                                 schema,
                                 namespaced_getter,
-                                namespace,
                                 context,
                                 v,
                                 &LocationType::List {
@@ -137,7 +128,6 @@ where
                 let normalized_value = normalize(
                     schema,
                     namespaced_getter,
-                    namespace,
                     context,
                     value,
                     &LocationType::NoLocation {
@@ -182,7 +172,6 @@ fn normalize_enum_value<
 >(
     schema: &'s schema::Schema<S>,
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     context: &V::Context,
     location_type: &LocationType<'q, 's>,
     value: &V,
@@ -191,22 +180,17 @@ fn normalize_enum_value<
     value.fold_enum(
         schema,
         namespaced_getter,
-        namespace,
         context,
         location_type,
         |raw_enum_value| {
             let (enum_info, namespaced) = namespaced_getter
-                .get(
-                    enum_info.values.get(raw_enum_value).ok_or_else(|| {
-                        Error::EnumValueNotFound {
-                            type_name: enum_info.name.clone(),
-                            enum_value: raw_enum_value.clone(),
-                        }
-                    })?,
-                    namespace,
-                )
-                .ok_or_else(|| Error::EnumValueNotAccessible {
-                    namespace: namespace.to_string(),
+                .get(enum_info.values.get(raw_enum_value).ok_or_else(|| {
+                    Error::EnumValueNotFound {
+                        type_name: enum_info.name.clone(),
+                        enum_value: raw_enum_value.clone(),
+                    }
+                })?)
+                .ok_or_else(|| Error::EnumValueNotFound {
                     type_name: enum_info.name.clone(),
                     enum_value: raw_enum_value.clone(),
                 })?;
@@ -233,7 +217,6 @@ fn normalize_input_object<
 >(
     schema: &'s schema::Schema<S>,
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     context: &V::Context,
     location_type: &LocationType<'q, 's>,
     value: &V,
@@ -247,24 +230,19 @@ where
         value.fold_key_values(
             schema,
             namespaced_getter,
-            namespace,
             context,
             location_type,
             // (IndexMap::new(), 0),
             |mut normalized_object, field, field_value| {
                 // |(mut normalized_object, mut required_field_count), field, field_value| {
                 let (field_info, namespaced) = namespaced_getter
-                    .get(
-                        input_object.fields.get(field).ok_or_else(|| {
-                            Error::InputFieldNotFound {
-                                type_name: input_object.name.clone(),
-                                field_name: field.clone(),
-                            }
-                        })?,
-                        namespace,
-                    )
-                    .ok_or_else(|| Error::InputFieldNotAccessible {
-                        namespace: namespace.to_string(),
+                    .get(input_object.fields.get(field).ok_or_else(|| {
+                        Error::InputFieldNotFound {
+                            type_name: input_object.name.clone(),
+                            field_name: field.clone(),
+                        }
+                    })?)
+                    .ok_or_else(|| Error::InputFieldNotFound {
                         type_name: input_object.name.clone(),
                         field_name: field.clone(),
                     })?;
@@ -290,7 +268,6 @@ where
                 let normalized_field_value = normalize(
                     schema,
                     namespaced_getter,
-                    namespace,
                     context,
                     field_value,
                     // TODO, this has to change to field info
@@ -419,7 +396,6 @@ mod test {
         let normalized_value = normalize::normalize(
             &schema,
             &sdl::SDLNamespacedGetter(),
-            &sdl::Namespace,
             &(),
             &value,
             &location_type,
@@ -448,7 +424,6 @@ mod test {
         let normalized_value = normalize::normalize(
             &schema,
             &sdl::SDLNamespacedGetter(),
-            &sdl::Namespace,
             &(),
             &value,
             &location_type,
@@ -475,7 +450,6 @@ mod test {
         let normalized_value = normalize::normalize(
             &schema,
             &sdl::SDLNamespacedGetter(),
-            &sdl::Namespace,
             &(),
             &value,
             &location_type,
@@ -504,7 +478,6 @@ mod test {
         let normalized_value = normalize::normalize(
             &schema,
             &sdl::SDLNamespacedGetter(),
-            &sdl::Namespace,
             &(),
             &value,
             &location_type,
@@ -534,7 +507,6 @@ mod test {
         let normalized_value = normalize::normalize(
             &schema,
             &sdl::SDLNamespacedGetter(),
-            &sdl::Namespace,
             &(),
             &value,
             &location_type,
@@ -562,7 +534,6 @@ mod test {
         let normalized_value = normalize::normalize(
             &schema,
             &sdl::SDLNamespacedGetter(),
-            &sdl::Namespace,
             &(),
             &value,
             &location_type,
@@ -590,7 +561,6 @@ mod test {
         let normalized_value = normalize::normalize(
             &schema,
             &sdl::SDLNamespacedGetter(),
-            &sdl::Namespace,
             &(),
             &value,
             &location_type,
@@ -630,7 +600,6 @@ mod test {
         let normalized_value = normalize::normalize(
             &schema,
             &sdl::SDLNamespacedGetter(),
-            &sdl::Namespace,
             &(),
             &value,
             &location_type,

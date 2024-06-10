@@ -65,42 +65,30 @@ where
 pub fn named_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     schema: &'s schema::Schema<S>,
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     type_: &'s schema::TypeInfo<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
     match type_ {
         schema::TypeInfo::Scalar(scalar) => scalar_type(scalar, selection_set),
-        schema::TypeInfo::Enum(enum_) => {
-            enum_type(namespaced_getter, namespace, enum_, selection_set)
-        }
+        schema::TypeInfo::Enum(enum_) => enum_type(namespaced_getter, enum_, selection_set),
         schema::TypeInfo::Object(object) => {
-            object_type(namespaced_getter, namespace, schema, object, selection_set)
+            object_type(namespaced_getter, schema, object, selection_set)
         }
-        schema::TypeInfo::Interface(interface) => interface_type(
-            namespaced_getter,
-            namespace,
-            schema,
-            interface,
-            selection_set,
-        ),
+        schema::TypeInfo::Interface(interface) => {
+            interface_type(namespaced_getter, schema, interface, selection_set)
+        }
         schema::TypeInfo::Union(union) => {
-            union_type(namespaced_getter, namespace, schema, union, selection_set)
+            union_type(namespaced_getter, schema, union, selection_set)
         }
-        schema::TypeInfo::InputObject(input_object) => input_object_type(
-            namespaced_getter,
-            namespace,
-            schema,
-            input_object,
-            selection_set,
-        ),
+        schema::TypeInfo::InputObject(input_object) => {
+            input_object_type(namespaced_getter, schema, input_object, selection_set)
+        }
     }
 }
 
 pub fn schema_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     schema: &'s schema::Schema<S>,
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
     selection_set.as_object_selection_set(|type_name, field, field_call| {
@@ -111,12 +99,7 @@ pub fn schema_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter
                 // we publish only those types that are reachable for the
                 // namespace
                 let mut accessible_types: HashSet<TypeName> = HashSet::new();
-                collect_accessible_types(
-                    namespaced_getter,
-                    namespace,
-                    schema,
-                    &mut accessible_types,
-                );
+                collect_accessible_types(namespaced_getter, schema, &mut accessible_types);
 
                 let mut publishable_types = schema
                     .types
@@ -132,19 +115,12 @@ pub fn schema_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter
                 // Careful: https://stackoverflow.com/questions/47121985/why-cant-i-use-a-key-function-that-returns-a-reference-when-sorting-a-vector-wi
                 publishable_types.sort_by(|t1, t2| TypeName::cmp(t1.name(), t2.name()));
                 array_response(&publishable_types, |type_| {
-                    named_type(
-                        schema,
-                        namespaced_getter,
-                        namespace,
-                        type_,
-                        &field.selection_set,
-                    )
+                    named_type(schema, namespaced_getter, type_, &field.selection_set)
                 })
             }
             "queryType" => object_response(named_type_lookup_internal(
                 schema,
                 namespaced_getter,
-                namespace,
                 &schema.query_type,
                 &field.selection_set,
             )),
@@ -154,7 +130,6 @@ pub fn schema_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter
                     object_response(named_type_lookup_internal(
                         schema,
                         namespaced_getter,
-                        namespace,
                         type_name,
                         &field.selection_set,
                     ))
@@ -166,7 +141,6 @@ pub fn schema_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter
                     object_response(named_type_lookup_internal(
                         schema,
                         namespaced_getter,
-                        namespace,
                         type_name,
                         &field.selection_set,
                     ))
@@ -183,20 +157,13 @@ pub fn schema_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter
 fn named_type_lookup_internal<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     schema: &'s schema::Schema<S>,
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     type_name: &ast::TypeName,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
     let type_info = schema.get_type(type_name).ok_or_else(|| {
         Error::Internal(format!("expected type not found in schema: {type_name}"))
     })?;
-    named_type(
-        schema,
-        namespaced_getter,
-        namespace,
-        type_info,
-        selection_set,
-    )
+    named_type(schema, namespaced_getter, type_info, selection_set)
 }
 
 fn scalar_type<'s, S: schema::SchemaContext>(
@@ -217,7 +184,6 @@ fn scalar_type<'s, S: schema::SchemaContext>(
 
 fn enum_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     enum_: &'s schema::Enum<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
@@ -238,7 +204,7 @@ fn enum_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
                     .values()
                     .filter_map(|namespaced_enum_value| {
                         namespaced_getter
-                            .get(namespaced_enum_value, namespace)
+                            .get(namespaced_enum_value)
                             .map(|v| v.0)
                             .filter(|enum_value| {
                                 let is_deprecated = enum_value.deprecation_status.is_deprecated();
@@ -258,7 +224,6 @@ fn enum_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
 
 fn object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     object: &'s schema::Object<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
@@ -280,7 +245,7 @@ fn object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>
                     .values()
                     .filter_map(|namespaced_field| {
                         namespaced_getter
-                            .get(namespaced_field, namespace)
+                            .get(namespaced_field)
                             .map(|v| v.0)
                             .filter(|field| {
                                 let is_field_deprecated = field.deprecation_status.is_deprecated();
@@ -305,13 +270,7 @@ fn object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>
                 }
                 allowed_fields.sort_by(|f1, f2| f1.name.cmp(&f2.name));
                 array_response(&allowed_fields, |field_info| {
-                    object_field(
-                        namespaced_getter,
-                        namespace,
-                        schema,
-                        field_info,
-                        &field.selection_set,
-                    )
+                    object_field(namespaced_getter, schema, field_info, &field.selection_set)
                 })
             }
             "interfaces" => {
@@ -319,9 +278,7 @@ fn object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>
                     .interfaces
                     .iter()
                     .filter_map(|(interface, namespaced)| {
-                        namespaced_getter
-                            .get(namespaced, namespace)
-                            .and(Some(interface))
+                        namespaced_getter.get(namespaced).and(Some(interface))
                     })
                     .collect::<Vec<_>>();
                 interfaces.sort_by(|i1, i2| TypeName::cmp(i1, i2));
@@ -329,7 +286,6 @@ fn object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>
                     named_type_lookup_internal(
                         schema,
                         namespaced_getter,
-                        namespace,
                         interface,
                         &field.selection_set,
                     )
@@ -342,7 +298,6 @@ fn object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>
 
 fn interface_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     interface: &'s schema::Interface<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
@@ -364,7 +319,7 @@ fn interface_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<
                     .values()
                     .filter_map(|namespaced_field| {
                         namespaced_getter
-                            .get(namespaced_field, namespace)
+                            .get(namespaced_field)
                             .map(|v| v.0)
                             .filter(|field| {
                                 let is_field_deprecated = field.deprecation_status.is_deprecated();
@@ -375,13 +330,7 @@ fn interface_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<
                     .collect::<Vec<_>>();
                 allowed_fields.sort_by(|f1, f2| f1.name.cmp(&f2.name));
                 array_response(&allowed_fields, |field_info| {
-                    object_field(
-                        namespaced_getter,
-                        namespace,
-                        schema,
-                        field_info,
-                        &field.selection_set,
-                    )
+                    object_field(namespaced_getter, schema, field_info, &field.selection_set)
                 })
             }
             "interfaces" => {
@@ -389,9 +338,7 @@ fn interface_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<
                     .interfaces
                     .iter()
                     .filter_map(|(interface, namespaced)| {
-                        namespaced_getter
-                            .get(namespaced, namespace)
-                            .and(Some(interface))
+                        namespaced_getter.get(namespaced).and(Some(interface))
                     })
                     .collect::<Vec<_>>();
                 interfaces.sort_by(|i1, i2| TypeName::cmp(i1, i2));
@@ -399,7 +346,6 @@ fn interface_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<
                     named_type_lookup_internal(
                         schema,
                         namespaced_getter,
-                        namespace,
                         interface,
                         &field.selection_set,
                     )
@@ -410,9 +356,7 @@ fn interface_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<
                     .implemented_by
                     .iter()
                     .filter_map(|(member_type, namespaced)| {
-                        namespaced_getter
-                            .get(namespaced, namespace)
-                            .and(Some(member_type))
+                        namespaced_getter.get(namespaced).and(Some(member_type))
                     })
                     .collect::<Vec<_>>();
                 possible_types.sort_by(|t1, t2| t1.0.cmp(&t2.0));
@@ -420,7 +364,6 @@ fn interface_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<
                     named_type_lookup_internal(
                         schema,
                         namespaced_getter,
-                        namespace,
                         member_type,
                         &field.selection_set,
                     )
@@ -433,7 +376,6 @@ fn interface_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<
 
 fn union_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     union: &'s schema::Union<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
@@ -449,9 +391,7 @@ fn union_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
                     .members
                     .iter()
                     .filter_map(|(member_type, namespaced)| {
-                        namespaced_getter
-                            .get(namespaced, namespace)
-                            .and(Some(member_type))
+                        namespaced_getter.get(namespaced).and(Some(member_type))
                     })
                     .collect::<Vec<_>>();
                 possible_types.sort_by(|t1, t2| t1.0.cmp(&t2.0));
@@ -459,7 +399,6 @@ fn union_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
                     named_type_lookup_internal(
                         schema,
                         namespaced_getter,
-                        namespace,
                         member_type,
                         &field.selection_set,
                     )
@@ -472,7 +411,6 @@ fn union_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
 
 fn input_object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     input_object: &'s schema::InputObject<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
@@ -494,7 +432,7 @@ fn input_object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGett
                     .values()
                     .filter_map(|namespaced_input_field| {
                         namespaced_getter
-                            .get(namespaced_input_field, namespace)
+                            .get(namespaced_input_field)
                             .map(|v| v.0)
                             .filter(|input_field| {
                                 let is_field_deprecated =
@@ -519,13 +457,7 @@ fn input_object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGett
                 }
                 allowed_fields.sort_by(|f1, f2| f1.name.cmp(&f2.name));
                 array_response(&allowed_fields, |input_field| {
-                    input_value(
-                        schema,
-                        namespaced_getter,
-                        namespace,
-                        input_field,
-                        &field.selection_set,
-                    )
+                    input_value(schema, namespaced_getter, input_field, &field.selection_set)
                 })
             }
             _ => Ok(json::Value::Null),
@@ -535,7 +467,6 @@ fn input_object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGett
 
 fn object_field<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     object_field: &'s schema::Field<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
@@ -556,7 +487,7 @@ fn object_field<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>
                     .values()
                     .filter_map(|namespaced_input_field| {
                         namespaced_getter
-                            .get(namespaced_input_field, namespace)
+                            .get(namespaced_input_field)
                             .map(|v| v.0)
                             .filter(|input_field| {
                                 let is_field_deprecated =
@@ -567,19 +498,12 @@ fn object_field<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>
                     .collect::<Vec<_>>();
                 allowed_fields.sort_by(|f1, f2| f1.name.cmp(&f2.name));
                 array_response(&allowed_fields, |input_field| {
-                    input_value(
-                        schema,
-                        namespaced_getter,
-                        namespace,
-                        input_field,
-                        &field.selection_set,
-                    )
+                    input_value(schema, namespaced_getter, input_field, &field.selection_set)
                 })
             }
             "type" => object_response(type_(
                 schema,
                 namespaced_getter,
-                namespace,
                 &object_field.field_type,
                 &field.selection_set,
             )),
@@ -595,7 +519,6 @@ fn object_field<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>
 fn input_value<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     schema: &'s schema::Schema<S>,
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     input_value: &'s schema::InputField<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
@@ -607,7 +530,6 @@ fn input_value<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>
             "type" => object_response(type_(
                 schema,
                 namespaced_getter,
-                namespace,
                 &input_value.field_type,
                 &field.selection_set,
             )),
@@ -643,18 +565,11 @@ fn enum_value<'s, S: schema::SchemaContext>(
 fn type_<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     schema: &'s schema::Schema<S>,
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     type_: &'s ast::Type,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
     if type_.nullable {
-        base_type(
-            schema,
-            namespaced_getter,
-            namespace,
-            &type_.base,
-            selection_set,
-        )
+        base_type(schema, namespaced_getter, &type_.base, selection_set)
     } else {
         selection_set.as_object_selection_set(|type_name, field, field_call| {
             match field_call.name.as_str() {
@@ -663,7 +578,6 @@ fn type_<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
                 "ofType" => object_response(base_type(
                     schema,
                     namespaced_getter,
-                    namespace,
                     &type_.base,
                     &field.selection_set,
                 )),
@@ -676,26 +590,21 @@ fn type_<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
 fn base_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     schema: &'s schema::Schema<S>,
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     base_type: &'s ast::BaseType,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
     match &base_type {
         ast::BaseType::Named(n) => {
-            named_type_lookup_internal(schema, namespaced_getter, namespace, n, selection_set)
+            named_type_lookup_internal(schema, namespaced_getter, n, selection_set)
         }
         ast::BaseType::List(l) => {
             selection_set.as_object_selection_set(|type_name, field, field_call| {
                 match field_call.name.as_str() {
                     "__typename" => Ok(json::to_value(type_name)?),
                     "kind" => Ok(json::to_value("LIST")?),
-                    "ofType" => object_response(type_(
-                        schema,
-                        namespaced_getter,
-                        namespace,
-                        l,
-                        &field.selection_set,
-                    )),
+                    "ofType" => {
+                        object_response(type_(schema, namespaced_getter, l, &field.selection_set))
+                    }
                     _ => Ok(json::Value::Null),
                 }
             })
@@ -706,7 +615,6 @@ fn base_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
 // Helper utilities
 fn collect_accessible_types<S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &schema::Schema<S>,
     accessible_types: &mut HashSet<TypeName>,
 ) {
@@ -715,7 +623,6 @@ fn collect_accessible_types<S: schema::SchemaContext, NSGet: schema::NamespacedG
     accessible_types.insert(schema.query_type.clone());
     collect_accessible_types_(
         namespaced_getter,
-        namespace,
         schema,
         &schema.query_type,
         accessible_types,
@@ -725,20 +632,13 @@ fn collect_accessible_types<S: schema::SchemaContext, NSGet: schema::NamespacedG
     // and collect related accessible types
     if let Some(mutation_type) = &schema.mutation_type {
         accessible_types.insert(mutation_type.clone());
-        collect_accessible_types_(
-            namespaced_getter,
-            namespace,
-            schema,
-            mutation_type,
-            accessible_types,
-        );
+        collect_accessible_types_(namespaced_getter, schema, mutation_type, accessible_types);
     }
 }
 
 // Recursively collect types available/accessible to a given `Namespace`.
 fn collect_accessible_types_<S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &schema::Schema<S>,
     current_type_name: &ast::TypeName,
     accessible_types: &mut HashSet<TypeName>,
@@ -747,17 +647,16 @@ fn collect_accessible_types_<S: schema::SchemaContext, NSGet: schema::Namespaced
     match current_type {
         Some(schema::TypeInfo::Object(object)) => {
             for namespaced_fields in object.fields.values() {
-                if let Some((field, _)) = namespaced_getter.get(namespaced_fields, namespace) {
+                if let Some((field, _)) = namespaced_getter.get(namespaced_fields) {
                     for namespaced_input_fields in field.arguments.values() {
                         if let Some((input_field, _)) =
-                            namespaced_getter.get(namespaced_input_fields, namespace)
+                            namespaced_getter.get(namespaced_input_fields)
                         {
                             let input_field_type_name = input_field.field_type.underlying_type();
                             // If a type isn't recorded yet, then traverse through its fields and collect accessible types
                             if accessible_types.insert(input_field_type_name.clone()) {
                                 collect_accessible_types_(
                                     namespaced_getter,
-                                    namespace,
                                     schema,
                                     input_field_type_name,
                                     accessible_types,
@@ -770,7 +669,6 @@ fn collect_accessible_types_<S: schema::SchemaContext, NSGet: schema::Namespaced
                     if accessible_types.insert(field_type_name.clone()) {
                         collect_accessible_types_(
                             namespaced_getter,
-                            namespace,
                             schema,
                             field_type_name,
                             accessible_types,
@@ -781,14 +679,12 @@ fn collect_accessible_types_<S: schema::SchemaContext, NSGet: schema::Namespaced
         }
         Some(schema::TypeInfo::InputObject(input_object)) => {
             for namespaced_fields in input_object.fields.values() {
-                if let Some((input_field, _)) = namespaced_getter.get(namespaced_fields, namespace)
-                {
+                if let Some((input_field, _)) = namespaced_getter.get(namespaced_fields) {
                     let input_field_type_name = input_field.field_type.underlying_type();
                     // If a type isn't recorded yet, then traverse through its fields and collect accessible types
                     if accessible_types.insert(input_field_type_name.clone()) {
                         collect_accessible_types_(
                             namespaced_getter,
-                            namespace,
                             schema,
                             input_field_type_name,
                             accessible_types,

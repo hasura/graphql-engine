@@ -12,7 +12,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: field AuthorByID on type Query is not allowed for user"
+        "message": "validation failed: no such field on type Query: AuthorByID"
       }
     ]
   }

@@ -35,7 +35,12 @@ pub fn main() {
         println!("Now comes the SDL schema for {role}:");
         println!("-------------------------------:");
         println!();
-        println!("{}", sch.generate_sdl(&GDSRoleNamespaceGetter, &role));
+        println!(
+            "{}",
+            sch.generate_sdl(&GDSRoleNamespaceGetter {
+                scope: role.clone()
+            })
+        );
         println!();
         println!();
         println!();
@@ -45,13 +50,7 @@ pub fn main() {
     println!("Now comes the role-agnostic SDL schema :");
     println!("---------------------------------------:");
     println!();
-    println!(
-        "{}",
-        sch.generate_sdl(
-            &GDSNamespaceGetterAgnostic,
-            &Role("this value is irrelevant".to_string())
-        )
-    );
+    println!("{}", sch.generate_sdl(&GDSNamespaceGetterAgnostic,));
     println!();
     println!();
     println!();

@@ -46,20 +46,21 @@ pub use types::{
 /// This 'NamespacedGetter' looks up 'NamespacedNodeInfo's according to actual roles.
 /// It is that instance of 'NamespacedGetter' that is used during normal request-processing
 /// operations.
-pub struct GDSRoleNamespaceGetter;
+pub struct GDSRoleNamespaceGetter {
+    pub scope: Role,
+}
 
 impl lang_graphql::schema::NamespacedGetter<GDS> for GDSRoleNamespaceGetter {
     fn get<'s, C>(
         &self,
         namespaced: &'s gql_schema::Namespaced<GDS, C>,
-        namespace: &Role,
     ) -> Option<(&'s C, &'s <GDS as SchemaContext>::NamespacedNodeInfo)> {
         match &namespaced.namespaced {
             lang_graphql::schema::NamespacedData::AllowAll(namespaced_node_info) => {
                 Some((&namespaced.data, namespaced_node_info))
             }
             lang_graphql::schema::NamespacedData::Conditional(map) => map
-                .get(namespace)
+                .get(&self.scope)
                 .map(|namespaced_node_info| (&namespaced.data, namespaced_node_info)),
         }
     }
@@ -75,7 +76,6 @@ impl lang_graphql::schema::NamespacedGetter<GDS> for GDSNamespaceGetterAgnostic 
     fn get<'s, C>(
         &self,
         namespaced: &'s gql_schema::Namespaced<GDS, C>,
-        _namespace: &Role,
     ) -> Option<(&'s C, &'s <GDS as SchemaContext>::NamespacedNodeInfo)> {
         Some((&namespaced.data, &None))
     }
@@ -421,7 +421,9 @@ mod tests {
         let gds = crate::GDS::new_with_default_flags(metadata).unwrap();
         let sch = gds.build_schema().unwrap();
 
-        sch.generate_sdl(&GDSRoleNamespaceGetter, role)
+        sch.generate_sdl(&GDSRoleNamespaceGetter {
+            scope: role.clone(),
+        })
     }
 
     fn make_role_agnostic_sdl_from_metadata_file(path: &Path) -> String {
@@ -433,10 +435,7 @@ mod tests {
         let gds = crate::GDS::new_with_default_flags(metadata).unwrap();
         let sch = gds.build_schema().unwrap();
 
-        sch.generate_sdl(
-            &GDSNamespaceGetterAgnostic,
-            &Role("this value is irrelevant".to_string()),
-        )
+        sch.generate_sdl(&GDSNamespaceGetterAgnostic)
     }
 
     #[test]

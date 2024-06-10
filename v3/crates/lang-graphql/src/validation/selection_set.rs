@@ -20,7 +20,6 @@ pub fn normalize_selection_set<
     NSGet: schema::NamespacedGetter<S>,
 >(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
     variables: &input::value::Variables<'q, 's, S>,
@@ -34,7 +33,6 @@ where
     let reachability = Vec::new();
     normalize_selection_sets(
         namespaced_getter,
-        namespace,
         schema,
         fragments,
         variables,
@@ -46,7 +44,6 @@ where
 #[allow(clippy::type_complexity)]
 fn normalize_selection_sets<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
     variables: &input::value::Variables<'q, 's, S>,
@@ -67,7 +64,6 @@ where
         for selection_set in selection_sets {
             collect::collect_fields(
                 namespaced_getter,
-                namespace,
                 schema,
                 fragments,
                 path,
@@ -104,7 +100,6 @@ where
         let alias = ast::Alias(alias.clone());
         let (field_calls, selection_set) = merge_fields(
             namespaced_getter,
-            namespace,
             schema,
             fragments,
             variables,
@@ -149,7 +144,6 @@ where
 #[allow(clippy::too_many_arguments)]
 fn merge_fields<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     fragments: &HashMap<&'q ast::Name, &'q executable::FragmentDefinition>,
     variables: &input::value::Variables<'q, 's, S>,
@@ -178,7 +172,6 @@ where
 
         let arguments = normalize_arguments(
             namespaced_getter,
-            namespace,
             schema,
             variables,
             type_name,
@@ -186,8 +179,7 @@ where
             &cannonical_field.info.generic.arguments,
             &cannonical_field.field.arguments,
         )?;
-        let directives =
-            normalize_directives(namespace, schema, &cannonical_field.field.directives)?;
+        let directives = normalize_directives(schema, &cannonical_field.field.directives)?;
 
         let cannonical_field_type = &cannonical_field.info.generic.field_type;
         if cannonical_field_type != alias_type {
@@ -210,10 +202,9 @@ where
                 });
             }
             // TODO deal with directives
-            // let this_directives = normalize_directives(namespace, schema, &field.field.directives)?;
+            // let this_directives = normalize_directives( schema, &field.field.directives)?;
             let this_arguments = normalize_arguments(
                 namespaced_getter,
-                namespace,
                 schema,
                 variables,
                 type_name,
@@ -252,7 +243,6 @@ where
     let normalized_selection_set = match alias_selectable_type {
         Some(selection_type) => normalize_selection_sets(
             namespaced_getter,
-            namespace,
             schema,
             fragments,
             variables,
@@ -273,7 +263,6 @@ where
 
 fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
-    namespace: &S::Namespace,
     schema: &'s schema::Schema<S>,
     variables: &input::value::Variables<'q, 's, S>,
     type_name: &ast::TypeName,
@@ -303,7 +292,7 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::Namespac
         let argument_value = arguments_map.remove(name);
 
         // if the argument is allowed for the given namespace
-        if let Some((argument_info, namespaced)) = namespaced_getter.get(info, namespace) {
+        if let Some((argument_info, namespaced)) = namespaced_getter.get(info) {
             let argument_type = &argument_info.field_type;
             // get the information of the type in the base_type
             let argument_type_info = {
@@ -340,7 +329,6 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::Namespac
                     Some(input::normalize::normalize(
                         schema,
                         namespaced_getter,
-                        namespace,
                         variables,
                         argument_value,
                         // TODO, this has to change to field info
@@ -359,7 +347,6 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::Namespac
                     Some(input::normalize::normalize(
                         schema,
                         namespaced_getter,
-                        namespace,
                         &(),
                         default_value,
                         // TODO, this has to change to field info
@@ -386,11 +373,10 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::Namespac
                 );
             }
 
-        // if the argument isn't allowed for the given namespace, we throw a more
+        // if the argument isn't allowed for the given  we throw a more
         // useful error message
         } else if argument_value.is_some() {
-            return Err(Error::ArgumentNotAllowed {
-                namespace: namespace.to_string(),
+            return Err(Error::ArgumentNotFound {
                 type_name: type_name.clone(),
                 field_name: field_name.clone(),
                 argument_name: name.clone(),
@@ -411,7 +397,6 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::Namespac
 }
 
 fn normalize_directives<'s, S: schema::SchemaContext>(
-    _namespace: &S::Namespace,
     _schema: &'s schema::Schema<S>,
     _directives: &[spanning::Spanning<executable::Directive>],
 ) -> Result<IndexMap<ast::Name, normalized::Directive<'s, S>>> {

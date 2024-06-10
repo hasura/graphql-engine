@@ -147,7 +147,6 @@ impl NamespacedGetter<SDL> for SDLNamespacedGetter {
     fn get<'s, C>(
         &self,
         namespaced: &'s Namespaced<SDL, C>,
-        _namespace: &<SDL as SchemaContext>::Namespace,
     ) -> Option<(&'s C, &'s <SDL as SchemaContext>::NamespacedNodeInfo)> {
         Some((&namespaced.data, &()))
     }

@@ -47,7 +47,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: field rating on type CommandMovie is not allowed for user"
+        "message": "validation failed: no such field on type CommandMovie: rating"
       }
     ]
   }

@@ -61,7 +61,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>>;
@@ -69,7 +68,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>>;
@@ -77,7 +75,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>>;
@@ -85,7 +82,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>>;
@@ -93,7 +89,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>>;
@@ -102,7 +97,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
         f: F,
@@ -115,7 +109,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
         f: F,
@@ -127,7 +120,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
         f: F,
@@ -139,7 +131,6 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<serde_json::Value>;
@@ -148,11 +139,10 @@ where
         &self,
         schema: &'s schema::Schema<S>,
         namespaced_getter: &NSGet,
-        namespace: &S::Namespace,
         context: &Self::Context,
         location_type: &LocationType<'q, 's>,
     ) -> Result<normalized::Value<'s, S>> {
-        self.as_json(schema, namespaced_getter, namespace, context, location_type)
+        self.as_json(schema, namespaced_getter, context, location_type)
             .map(|v| normalized::Value::Json(v))
     }
 

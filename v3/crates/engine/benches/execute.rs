@@ -105,8 +105,9 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 gql::validation::normalize_request(
-                    &schema::GDSRoleNamespaceGetter,
-                    &session.role,
+                    &schema::GDSRoleNamespaceGetter {
+                        scope: session.role.clone(),
+                    },
                     schema,
                     request,
                 )
@@ -116,8 +117,9 @@ pub fn bench_execute(
     );
 
     let normalized_request = gql::validation::normalize_request(
-        &schema::GDSRoleNamespaceGetter,
-        &session.role,
+        &schema::GDSRoleNamespaceGetter {
+            scope: session.role.clone(),
+        },
         &schema,
         &request,
     )

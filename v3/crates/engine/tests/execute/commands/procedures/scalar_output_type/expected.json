@@ -13,7 +13,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: field noopProcedure on type Mutation is not allowed for user_2"
+        "message": "validation failed: no such field on type Mutation: noopProcedure"
       }
     ]
   }
