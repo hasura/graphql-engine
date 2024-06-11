@@ -232,6 +232,11 @@ data ActionType
 
 instance NFData ActionType
 
+instance ToJSON ActionType where
+  toJSON = \case
+    ActionQuery -> "query"
+    ActionMutation kind -> J.toJSON $ "mutation-" <> jsonStringConst kind
+
 data ActionMutationKind
   = ActionSynchronous
   | ActionAsynchronous

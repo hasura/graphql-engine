@@ -11,6 +11,7 @@ module Hasura.RQL.IR.Action
     _ACFScalar,
     AnnActionExecution (..),
     aaeName,
+    aaeType,
     aaeOutputType,
     aaeFields,
     aaePayload,
@@ -100,6 +101,8 @@ $(makePrisms ''ActionFieldG)
 
 data AnnActionExecution (r :: Type) = AnnActionExecution
   { _aaeName :: RQL.ActionName,
+    -- | action type
+    _aaeType :: RQL.ActionType,
     -- | output type
     _aaeOutputType :: GraphQLType,
     -- | output selection
