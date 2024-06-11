@@ -473,7 +473,7 @@ mod tests {
                     let json2: serde_json::Value =
                         serde_json::from_reader(File::open(file2).unwrap()).unwrap();
                     if json1 != json2 {
-                        text_diff(file1, file2)
+                        text_diff(file1, file2);
                     }
                 }),
             )?;

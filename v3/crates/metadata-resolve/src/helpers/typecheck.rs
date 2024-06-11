@@ -160,7 +160,7 @@ mod tests {
         // `Int` accepts any JSON number
         let value = json!(1);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()))
+        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
     }
 
     #[test]
@@ -169,7 +169,7 @@ mod tests {
         // `Float` accepts any JSON number
         let value = json!(123.123);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()))
+        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
     }
 
     #[test]
@@ -177,7 +177,7 @@ mod tests {
         let ty = string_type();
         let value = json!("dog");
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()))
+        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
     }
 
     #[test]
@@ -185,7 +185,7 @@ mod tests {
         let ty = boolean_type();
         let value = json!(true);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()))
+        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
     }
 
     #[test]
@@ -193,7 +193,7 @@ mod tests {
         let ty = id_type();
         let value = json!("12312312sdwfdsff123123");
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()))
+        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
     }
 
     #[test]
@@ -201,7 +201,7 @@ mod tests {
         let ty = array_of(boolean_type());
         let value = json!([true, false]);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()))
+        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
     }
 
     #[test]
@@ -209,7 +209,7 @@ mod tests {
         let ty = array_of(array_of(boolean_type()));
         let value = json!([[true, false]]);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()))
+        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
     }
 
     #[test]
@@ -225,7 +225,7 @@ mod tests {
                     actual: serde_json::Value::Number(123.into())
                 })
             })
-        )
+        );
     }
 
     #[test]
@@ -247,7 +247,7 @@ mod tests {
         assert_eq!(
             typecheck_qualified_type_reference(&ty, &value),
             Err(TypecheckError::NullInNonNullableColumn)
-        )
+        );
     }
 
     #[test]
@@ -255,7 +255,7 @@ mod tests {
         let ty = int_type(true);
         let value = json!(null);
 
-        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()))
+        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()));
     }
 
     #[test]
@@ -269,6 +269,6 @@ mod tests {
                 expected: open_dds::types::InbuiltType::Int,
                 actual: value.clone()
             })
-        )
+        );
     }
 }

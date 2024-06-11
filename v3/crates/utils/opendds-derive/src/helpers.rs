@@ -71,7 +71,7 @@ fn get_doc(attrs: &[syn::Attribute]) -> Option<String> {
     // https://github.com/rust-lang/rust/issues/32088
     if lines.iter().all(|l| l.starts_with('*')) {
         for line in &mut lines {
-            *line = line[1..].trim()
+            *line = line[1..].trim();
         }
         while let Some(&"") = lines.first() {
             lines.remove(0);

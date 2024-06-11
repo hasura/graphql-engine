@@ -474,7 +474,7 @@ impl<'a> Parser<'a> {
     pub fn parse_schema_document(&mut self) -> super::Result<SchemaDocument> {
         let mut definitions = vec![];
         while self.peek().is_some() {
-            definitions.push(self.parse_type_system_definition()?)
+            definitions.push(self.parse_type_system_definition()?);
         }
         Ok(SchemaDocument { definitions })
     }

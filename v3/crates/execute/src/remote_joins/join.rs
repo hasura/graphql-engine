@@ -206,7 +206,7 @@ fn visit_location_path_and_insert_value(
                                 inner_row,
                                 remote_alias.to_string(),
                                 rhs_response,
-                            )?
+                            )?;
                         }
                         *row_field_val = ndc_models::RowFieldValue(json::to_value(rows)?);
                     }

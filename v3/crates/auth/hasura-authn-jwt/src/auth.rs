@@ -25,7 +25,7 @@ fn build_allowed_roles(
             .insert(role.clone(), role_authorization)
             .is_some()
         {
-            Err(InternalError::DuplicateAllowedRoleFound)?
+            Err(InternalError::DuplicateAllowedRoleFound)?;
         }
     }
     Ok(allowed_roles)

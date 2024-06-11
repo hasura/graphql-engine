@@ -220,6 +220,7 @@
                 pkgs.nodePackages.prettier
 
                 # Rust
+                pkgs.bacon
                 pkgs.cargo-edit
                 pkgs.cargo-expand
                 pkgs.cargo-flamegraph

@@ -65,6 +65,6 @@ mod tests {
         let parsed_from_string: HashMap<SessionVariable, SessionVariableValue> =
             serde_json::from_str(json_str.trim()).unwrap();
 
-        assert_eq!(parsed_from_string, session_variables)
+        assert_eq!(parsed_from_string, session_variables);
     }
 }

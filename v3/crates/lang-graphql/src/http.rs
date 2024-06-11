@@ -179,6 +179,6 @@ mod tests {
             PathSegment::field(Name::new("four").unwrap()),
         ];
         let serialized_value = serde_json::value::to_value(path).unwrap();
-        assert_eq!(serialized_value, serde_json::json!(["one", 2, 3, "four"]))
+        assert_eq!(serialized_value, serde_json::json!(["one", 2, 3, "four"]));
     }
 }

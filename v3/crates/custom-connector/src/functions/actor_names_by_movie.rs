@@ -52,7 +52,7 @@ pub(crate) fn rows(
             }),
         ))?;
         if actor_movie_id_int == movie_id_int {
-            actor_names_by_movie.push(actor_name.clone())
+            actor_names_by_movie.push(actor_name.clone());
         }
     }
     let actor_names_by_movie_value = serde_json::to_value(actor_names_by_movie).map_err(|_| {

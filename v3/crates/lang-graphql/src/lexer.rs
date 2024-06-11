@@ -402,7 +402,7 @@ impl<'a> Lexer<'a> {
                     // line is incremented only if the next character is not '\n'
                     if let Some(&b'\n') = self.bytes.get(self.ix + 1) {
                     } else {
-                        self.seek_line()
+                        self.seek_line();
                     }
                 }
                 _ => break,

@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
             let sigint = async {
                 tokio::signal::ctrl_c()
                     .await
-                    .expect("failed to install signal handler")
+                    .expect("failed to install signal handler");
             };
             // wait for a SIGTERM, i.e. a normal `kill` command
             #[cfg(unix)]

@@ -445,7 +445,7 @@ mod tests {
                 PathBuf::from("tests/metadata_with_presets.json").as_ref(),
                 &Role("role_with_presets".to_string())
             ));
-        })
+        });
     }
 
     #[test]
@@ -454,7 +454,7 @@ mod tests {
             insta::assert_snapshot!(make_role_agnostic_sdl_from_metadata_file(
                 PathBuf::from("tests/metadata_with_presets.json").as_ref()
             ));
-        })
+        });
     }
 
     #[test]
@@ -464,7 +464,7 @@ mod tests {
                 PathBuf::from("tests/metadata_with_select_permissions.json").as_ref(),
                 &Role("role_with_some_permissions".to_string())
             ));
-        })
+        });
     }
 
     #[test]
@@ -473,6 +473,6 @@ mod tests {
             insta::assert_snapshot!(make_role_agnostic_sdl_from_metadata_file(
                 PathBuf::from("tests/metadata_with_select_permissions.json").as_ref()
             ));
-        })
+        });
     }
 }

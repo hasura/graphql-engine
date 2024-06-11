@@ -156,7 +156,7 @@ pub fn resolve_object_type(
             };
             for global_id_field in global_id_fields {
                 if resolved_fields.contains_key(global_id_field) {
-                    resolved_global_id_fields.push(global_id_field.clone())
+                    resolved_global_id_fields.push(global_id_field.clone());
                 } else {
                     return Err(Error::UnknownFieldInGlobalId {
                         field_name: global_id_field.clone(),

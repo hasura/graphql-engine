@@ -380,7 +380,7 @@ mod tests {
                 default_role: Role::new("test-role"),
                 allowed_roles: expected_allowed_roles
             }
-        )
+        );
     }
 
     #[tokio::test]
@@ -451,7 +451,7 @@ mod tests {
                 default_role: Role::new("test-role"),
                 allowed_roles: expected_allowed_roles
             }
-        )
+        );
     }
 
     #[tokio::test]
@@ -527,7 +527,7 @@ mod tests {
                 default_role: Role::new("test-role"),
                 allowed_roles: expected_allowed_roles
             }
-        )
+        );
     }
 
     #[tokio::test]
@@ -576,7 +576,7 @@ mod tests {
         mock.assert(); // Make sure the webhook has been called.
 
         let test_role = Role::new("test-admin-role");
-        assert_eq!(auth_response, Identity::RoleEmulationEnabled(test_role))
+        assert_eq!(auth_response, Identity::RoleEmulationEnabled(test_role));
     }
 
     #[tokio::test]
@@ -651,7 +651,7 @@ mod tests {
                 default_role: test_role,
                 allowed_roles: expected_allowed_roles
             }
-        )
+        );
     }
 
     #[tokio::test]

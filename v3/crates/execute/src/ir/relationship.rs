@@ -103,15 +103,15 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                             ModelInputAnnotation::ModelLimitArgument => {
                                 limit = Some(argument.value.as_int_u32().map_err(
                                     error::Error::map_unexpected_value_to_external_error,
-                                )?)
+                                )?);
                             }
                             ModelInputAnnotation::ModelOffsetArgument => {
                                 offset = Some(argument.value.as_int_u32().map_err(
                                     error::Error::map_unexpected_value_to_external_error,
-                                )?)
+                                )?);
                             }
                             ModelInputAnnotation::ModelOrderByExpression => {
-                                order_by = Some(build_ndc_order_by(argument, usage_counts)?)
+                                order_by = Some(build_ndc_order_by(argument, usage_counts)?);
                             }
                             _ => {
                                 return Err(error::InternalEngineError::UnexpectedAnnotation {
@@ -129,7 +129,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                                 &model_source.model.data_connector,
                                 &model_source.model.type_mappings,
                                 usage_counts,
-                            )?
+                            )?;
                         }
                     }
 

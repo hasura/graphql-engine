@@ -294,7 +294,7 @@ fn build_comparison_expression<'s>(
                     &op_value.value,
                     field_path.clone(),
                 );
-                expressions.push(expression)
+                expressions.push(expression);
             }
             schema::Annotation::Input(InputAnnotation::BooleanExpression(
                 BooleanExpressionAnnotation::BooleanExpressionArgument {
@@ -376,7 +376,7 @@ fn resolve_filter_object<'s>(
             data_connector_link,
             type_mappings,
             usage_counts,
-        )?)
+        )?);
     }
     Ok(ndc_models::Expression::And { expressions })
 }

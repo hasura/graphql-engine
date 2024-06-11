@@ -459,7 +459,7 @@ fn get_scalar_comparison_input_type(
     let mut operators = Vec::new();
     for (op_name, input_type) in &comparison_expression.operators {
         let op_name = mk_name(op_name.0.as_str())?;
-        operators.push((op_name, input_type.clone()))
+        operators.push((op_name, input_type.clone()));
     }
     Ok(
         builder.register_type(TypeId::ScalarTypeComparisonExpression {

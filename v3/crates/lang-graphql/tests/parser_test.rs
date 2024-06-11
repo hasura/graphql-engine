@@ -106,7 +106,7 @@ where
         let path = path.with_extension(outfile_extension);
         // TODO: we really want formatted output here, but:
         // https://github.com/rust-analyzer/expect-test/issues/45
-        expect_file![path].assert_eq(&actual)
+        expect_file![path].assert_eq(&actual);
     }
 }
 

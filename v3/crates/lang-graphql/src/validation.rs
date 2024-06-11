@@ -59,7 +59,7 @@ pub fn normalize_request<'s, S: schema::SchemaContext, NSGet: schema::Namespaced
                     &mut fragment_path,
                     &fragments,
                     &fragment_definition.selection_set.item,
-                )?
+                )?;
             }
         }
     }
@@ -105,7 +105,7 @@ pub fn check_fragment_cycles<'q>(
                         fragment_path,
                         fragments,
                         &field_selection_set.item,
-                    )?
+                    )?;
                 }
             }
             executable::Selection::FragmentSpread(spread) => {

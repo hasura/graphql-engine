@@ -225,7 +225,7 @@ async fn get_join_steps(
                         })
                     }
                 },
-            )))
+            )));
         };
         if let Some(rest_join_steps) = get_join_steps(location.rest, http_context).await {
             sequence_steps.push(Box::new(types::Step::Sequence(rest_join_steps)));

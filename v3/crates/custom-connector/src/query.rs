@@ -188,7 +188,7 @@ fn execute_query(
             let mut rows: Vec<IndexMap<String, ndc_models::RowFieldValue>> = vec![];
             for item in &paginated {
                 let row = eval_row(fields, collection_relationships, variables, state, item)?;
-                rows.push(row)
+                rows.push(row);
             }
             Ok(rows)
         })

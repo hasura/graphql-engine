@@ -74,7 +74,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                             .value
                             .as_int_u32()
                             .map_err(error::Error::map_unexpected_value_to_external_error)?,
-                    )
+                    );
                 }
                 ModelInputAnnotation::ModelOffsetArgument => {
                     offset = Some(
@@ -82,7 +82,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                             .value
                             .as_int_u32()
                             .map_err(error::Error::map_unexpected_value_to_external_error)?,
-                    )
+                    );
                 }
                 ModelInputAnnotation::ModelArgumentsExpression => match &argument.value {
                     normalized_ast::Value::Object(arguments) => {
@@ -100,7 +100,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                     })?,
                 },
                 ModelInputAnnotation::ModelOrderByExpression => {
-                    order_by = Some(build_ndc_order_by(argument, &mut usage_counts)?)
+                    order_by = Some(build_ndc_order_by(argument, &mut usage_counts)?);
                 }
                 _ => {
                     return Err(error::InternalEngineError::UnexpectedAnnotation {

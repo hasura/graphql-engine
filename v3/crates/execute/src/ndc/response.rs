@@ -66,7 +66,7 @@ mod test {
         assert_eq!(
             err.to_string(),
             "response received from connector is too large: Received content length 20 exceeds the limit 10"
-        )
+        );
     }
 
     #[tokio::test]
@@ -87,7 +87,7 @@ mod test {
         assert_eq!(
             err.to_string(),
             "response received from connector is too large: Size exceeds the limit 5"
-        )
+        );
     }
 
     #[tokio::test]
@@ -111,7 +111,7 @@ mod test {
         let res = super::handle_response_with_size_limit::<serde_json::Value>(response, 100)
             .await
             .unwrap();
-        assert_eq!(json, res)
+        assert_eq!(json, res);
     }
 
     #[tokio::test]
@@ -136,6 +136,6 @@ mod test {
             super::handle_response_by_chunks_with_size_limit::<serde_json::Value>(response, 100)
                 .await
                 .unwrap();
-        assert_eq!(json, res)
+        assert_eq!(json, res);
     }
 }

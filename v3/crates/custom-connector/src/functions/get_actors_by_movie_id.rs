@@ -65,7 +65,7 @@ pub(crate) fn rows(
         let actor_movie_id_int = get_actor_movie_id(actor)?;
 
         if actor_movie_id_int == movie_id_int {
-            actors_by_movie.push(actor)
+            actors_by_movie.push(actor);
         }
     }
 

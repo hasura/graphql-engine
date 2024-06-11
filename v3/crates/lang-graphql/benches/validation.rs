@@ -34,7 +34,7 @@ pub fn bench_validation(c: &mut Criterion) {
                 b.iter(|| {
                     validation::normalize_request(&sdl::SDLNamespacedGetter(), schema, request)
                         .unwrap()
-                })
+                });
             },
         );
     }

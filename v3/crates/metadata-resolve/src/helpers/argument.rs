@@ -144,7 +144,7 @@ pub fn get_argument_mappings<'a>(
                         ndc_object_type_name: DataConnectorObjectType::ref_cast(
                             underlying_ndc_argument_named_type,
                         ),
-                    })
+                    });
                 }
                 TypeRepresentation::Scalar(_) => (),
                 TypeRepresentation::BooleanExpression(object_boolean_expression_type) => {
@@ -158,7 +158,7 @@ pub fn get_argument_mappings<'a>(
                         ndc_object_type_name: DataConnectorObjectType::ref_cast(
                             underlying_ndc_argument_named_type,
                         ),
-                    })
+                    });
                 }
             }
         }

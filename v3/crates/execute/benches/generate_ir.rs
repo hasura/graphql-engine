@@ -66,7 +66,7 @@ pub fn bench_generate_ir(c: &mut Criterion) {
                 b.iter(|| {
                     execute::generate_ir(schema, &session, &request_headers, normalized_request)
                         .unwrap()
-                })
+                });
             },
         );
     }

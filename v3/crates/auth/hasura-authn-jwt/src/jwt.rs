@@ -524,11 +524,11 @@ pub(crate) async fn decode_and_parse_hasura_claims(
     };
 
     if let Some(issuer) = jwt_config.issuer {
-        validation.set_issuer(&[issuer])
+        validation.set_issuer(&[issuer]);
     };
 
     if let Some(leeway) = jwt_config.allowed_skew {
-        validation.leeway = leeway
+        validation.leeway = leeway;
     };
 
     let claims: serde_json::Value = decode(&jwt, &decoding_key, &validation)

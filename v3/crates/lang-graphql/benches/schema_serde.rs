@@ -12,7 +12,7 @@ fn generate_schema(type_count: usize) -> String {
         for field_i in 0..20 {
             schema_str.push_str(&format!("    sampleField{field_i}: String\n"));
         }
-        schema_str.push_str("}\n")
+        schema_str.push_str("}\n");
     }
     schema_str.push_str("type Query {\n");
     for type_i in 0..type_count {
@@ -92,7 +92,7 @@ pub fn bench_serde(c: &mut Criterion) {
                 BenchmarkId::new("de-bincode", type_count),
                 &serialized,
                 |b, serialized| {
-                    b.iter(|| bincode::deserialize::<Schema<sdl::SDL>>(serialized.as_slice()))
+                    b.iter(|| bincode::deserialize::<Schema<sdl::SDL>>(serialized.as_slice()));
                 },
             );
         }
@@ -116,7 +116,7 @@ pub fn bench_serde(c: &mut Criterion) {
                 BenchmarkId::new("de-msgpack", type_count),
                 &serialized,
                 |b, serialized| {
-                    b.iter(|| rmp_serde::from_read::<_, Schema<sdl::SDL>>(serialized.as_slice()))
+                    b.iter(|| rmp_serde::from_read::<_, Schema<sdl::SDL>>(serialized.as_slice()));
                 },
             );
         }
@@ -140,7 +140,7 @@ pub fn bench_serde(c: &mut Criterion) {
                 BenchmarkId::new("de-postcard", type_count),
                 &serialized,
                 |b, serialized| {
-                    b.iter(|| postcard::from_bytes::<Schema<sdl::SDL>>(serialized.as_slice()))
+                    b.iter(|| postcard::from_bytes::<Schema<sdl::SDL>>(serialized.as_slice()));
                 },
             );
         }

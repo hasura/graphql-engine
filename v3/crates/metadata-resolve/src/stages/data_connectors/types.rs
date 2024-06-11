@@ -226,7 +226,7 @@ impl std::hash::Hash for DataConnectorLink {
     where
         H: std::hash::Hasher,
     {
-        self.name.hash(h)
+        self.name.hash(h);
     }
 }
 

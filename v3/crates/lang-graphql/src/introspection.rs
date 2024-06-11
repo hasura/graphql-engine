@@ -57,7 +57,7 @@ where
 {
     let mut response = Vec::new();
     for v in l {
-        response.push(json::to_value(f(v)?)?)
+        response.push(json::to_value(f(v)?)?);
     }
     Ok(json::Value::Array(response))
 }
@@ -266,7 +266,7 @@ fn object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>
                     schema::DeprecationStatus::NotDeprecated,
                 );
                 if allowed_fields.is_empty() {
-                    allowed_fields.push(&dummy_field)
+                    allowed_fields.push(&dummy_field);
                 }
                 allowed_fields.sort_by(|f1, f2| f1.name.cmp(&f2.name));
                 array_response(&allowed_fields, |field_info| {
@@ -453,7 +453,7 @@ fn input_object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGett
                     schema::DeprecationStatus::NotDeprecated,
                 );
                 if allowed_fields.is_empty() {
-                    allowed_fields.push(&dummy_field)
+                    allowed_fields.push(&dummy_field);
                 }
                 allowed_fields.sort_by(|f1, f2| f1.name.cmp(&f2.name));
                 array_response(&allowed_fields, |input_field| {
@@ -660,7 +660,7 @@ fn collect_accessible_types_<S: schema::SchemaContext, NSGet: schema::Namespaced
                                     schema,
                                     input_field_type_name,
                                     accessible_types,
-                                )
+                                );
                             }
                         }
                     }
@@ -688,7 +688,7 @@ fn collect_accessible_types_<S: schema::SchemaContext, NSGet: schema::Namespaced
                             schema,
                             input_field_type_name,
                             accessible_types,
-                        )
+                        );
                     }
                 }
             }

@@ -55,7 +55,7 @@ pub(crate) fn build_ndc_order_by<'s>(
                             )?;
                             ndc_order_elements.extend(order_by_element);
                         } else {
-                            Err(error::Error::OrderByObjectShouldExactlyHaveOneKeyValuePair)?
+                            Err(error::Error::OrderByObjectShouldExactlyHaveOneKeyValuePair)?;
                         }
                     }
                     _ => Err(error::InternalEngineError::InternalGeneric {
@@ -162,7 +162,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
                         // Currently we only support the 1st type of sort. Hence we don't have any expressions/predicate.
                         expressions: Vec::new(),
                     })),
-                })
+                });
             }
 
             let order_element = ndc_models::OrderByElement {

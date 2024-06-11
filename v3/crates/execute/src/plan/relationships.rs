@@ -125,10 +125,10 @@ pub(crate) fn process_model_relationship_definition(
                 Err(error::InternalError::MappingExistsInRelationship {
                     source_column: source_field_path.field_name.clone(),
                     relationship_name: relationship_name.clone(),
-                })?
+                })?;
             }
         } else {
-            Err(error::InternalError::RemoteRelationshipsAreNotSupported)?
+            Err(error::InternalError::RemoteRelationshipsAreNotSupported)?;
         }
     }
     let ndc_relationship = ndc_models::Relationship {
@@ -190,10 +190,10 @@ pub(crate) fn process_command_relationship_definition(
                 Err(error::InternalError::MappingExistsInRelationship {
                     source_column: source_field_path.field_name.clone(),
                     relationship_name: annotation.relationship_name.clone(),
-                })?
+                })?;
             }
         } else {
-            Err(error::InternalError::RemoteRelationshipsAreNotSupported)?
+            Err(error::InternalError::RemoteRelationshipsAreNotSupported)?;
         }
     }
 

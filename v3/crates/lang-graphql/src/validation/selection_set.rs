@@ -132,7 +132,7 @@ where
     };
 
     if normalized_fields.is_empty() {
-        Err(Error::FieldSelectionSetIsEmpty)?
+        Err(Error::FieldSelectionSetIsEmpty)?;
     }
 
     Ok(normalized::SelectionSet {

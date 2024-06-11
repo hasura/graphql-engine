@@ -31,7 +31,7 @@ where
 {
     get_active_span(|span| {
         set_span_attributes(&span, SpanVisibility::User, result);
-    })
+    });
 }
 
 fn set_span_attributes<R>(span: &SpanRef, visibility: SpanVisibility, result: &R)
@@ -86,7 +86,7 @@ fn set_attribute_on_span(
         AttributeVisibility::Internal => format!("internal.{}", key).into(),
     };
 
-    span.set_attribute(opentelemetry::KeyValue::new(key_with_visibility, value))
+    span.set_attribute(opentelemetry::KeyValue::new(key_with_visibility, value));
 }
 
 /// Sets an attribute on the active span, prefixing the `key` with `internal.` if `visibility` is `Internal`.
@@ -95,13 +95,13 @@ pub fn set_attribute_on_active_span(
     key: &'static str,
     value: impl Into<AttributeValue>,
 ) {
-    get_active_span(|span| set_attribute_on_span(&span, visibility, key, value))
+    get_active_span(|span| set_attribute_on_span(&span, visibility, key, value));
 }
 
 /// Adds an event on the active span, with the given `name` and no attributes.
 // TODO: Add support for attributes
 pub fn add_event_on_active_span(name: String) {
-    get_active_span(|span| span.add_event(name, vec![]))
+    get_active_span(|span| span.add_event(name, vec![]));
 }
 
 /// Wrapper around the OpenTelemetry tracer. Used for providing convenience methods to add spans.
@@ -168,7 +168,7 @@ impl Tracer {
                             "display.name",
                             display_name,
                         );
-                        set_span_attributes(&span, visibility, &result)
+                        set_span_attributes(&span, visibility, &result);
                     });
                     result
                 }

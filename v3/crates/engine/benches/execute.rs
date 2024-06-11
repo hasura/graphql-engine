@@ -84,7 +84,7 @@ pub fn bench_execute(
                 gql::parser::Parser::new(&request.query)
                     .parse_executable_document()
                     .unwrap()
-            })
+            });
         },
     );
 
@@ -112,7 +112,7 @@ pub fn bench_execute(
                     request,
                 )
                 .unwrap();
-            })
+            });
         },
     );
 
@@ -132,7 +132,7 @@ pub fn bench_execute(
         |b, (runtime, schema)| {
             b.to_async(*runtime).iter(|| async {
                 generate_ir(schema, &session, &request_headers, &normalized_request).unwrap()
-            })
+            });
         },
     );
 
@@ -144,7 +144,7 @@ pub fn bench_execute(
         &(&runtime),
         |b, runtime| {
             b.to_async(*runtime)
-                .iter(|| async { generate_request_plan(&ir).unwrap() })
+                .iter(|| async { generate_request_plan(&ir).unwrap() });
         },
     );
 
@@ -162,7 +162,7 @@ pub fn bench_execute(
                         execute_mutation_plan(&http_context, mutation_plan, None).await
                     }
                 }
-            })
+            });
         },
     );
 
@@ -182,7 +182,7 @@ pub fn bench_execute(
                 )
                 .await
                 .unwrap()
-            })
+            });
         },
     );
 

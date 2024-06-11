@@ -21,7 +21,7 @@ pub fn resolve_unstable_features(
     for unstable_feature in unstable_features {
         match unstable_feature {
             UnstableFeature::EnableBooleanExpressionTypes => {
-                metadata_resolve_flags.enable_boolean_expression_types = true
+                metadata_resolve_flags.enable_boolean_expression_types = true;
             }
         }
     }

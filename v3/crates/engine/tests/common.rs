@@ -123,7 +123,7 @@ pub fn test_execution_expectation_legacy(
                 let json2: serde_json::Value =
                     serde_json::from_reader(File::open(file2).unwrap()).unwrap();
                 if json1 != json2 {
-                    text_diff(file1, file2)
+                    text_diff(file1, file2);
                 }
             }),
         )?;
@@ -225,7 +225,7 @@ pub(crate) fn test_introspection_expectation(
                 let json2: serde_json::Value =
                     serde_json::from_reader(File::open(file2).unwrap()).unwrap();
                 if json1 != json2 {
-                    text_diff(file1, file2)
+                    text_diff(file1, file2);
                 }
             }),
         )?;
@@ -365,7 +365,7 @@ pub fn test_execution_expectation(
                 let json2: serde_json::Value =
                     serde_json::from_reader(File::open(file2).unwrap()).unwrap();
                 if json1 != json2 {
-                    text_diff(file1, file2)
+                    text_diff(file1, file2);
                 }
             }),
         )?;
@@ -450,7 +450,7 @@ pub fn test_execute_explain(
                 let json2: serde_json::Value =
                     serde_json::from_reader(File::open(file2).unwrap()).unwrap();
                 if json1 != json2 {
-                    text_diff(file1, file2)
+                    text_diff(file1, file2);
                 }
             }),
         )?;
