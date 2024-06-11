@@ -585,6 +585,13 @@ pub enum Error {
         "Boolean Expression in ValueExpression for Data Connector headers preset is not supported."
     )]
     BooleanExpressionInValueExpressionForHeaderPresetsNotSupported,
+
+    #[error("the following argument for field {field_name:} in type {type_name:} is defined more than once: {argument_name:}")]
+    DuplicateArgumentDefinition {
+        field_name: FieldName,
+        argument_name: ArgumentName,
+        type_name: Qualified<CustomTypeName>,
+    },
 }
 
 impl From<BooleanExpressionError> for Error {

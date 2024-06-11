@@ -23,6 +23,7 @@ use open_dds::data_connector::{
 };
 use open_dds::models::ModelName;
 use open_dds::permissions;
+use open_dds::types::DataConnectorArgumentName;
 use open_dds::types::{CustomTypeName, FieldName, OperatorName};
 use ref_cast::RefCast;
 use std::collections::BTreeMap;
@@ -65,7 +66,7 @@ pub enum ArgumentMappingError {
 
 pub fn get_argument_mappings<'a>(
     arguments: &'a IndexMap<ArgumentName, ArgumentInfo>,
-    argument_mapping: &BTreeMap<ArgumentName, String>,
+    argument_mapping: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
     ndc_arguments_types: &'a BTreeMap<models::ConnectorArgumentName, ndc_models::Type>,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
@@ -86,7 +87,7 @@ pub fn get_argument_mappings<'a>(
     let mut unconsumed_argument_mappings: BTreeMap<&ArgumentName, &models::ConnectorArgumentName> =
         argument_mapping
             .iter()
-            .map(|(k, v)| (k, models::ConnectorArgumentName::ref_cast(v)))
+            .map(|(k, v)| (k, models::ConnectorArgumentName::ref_cast(&v.0)))
             .collect();
 
     let mut resolved_argument_mappings =

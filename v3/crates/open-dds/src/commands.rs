@@ -8,7 +8,7 @@ use crate::{
     data_connector::DataConnectorName,
     identifier::Identifier,
     impl_JsonSchema_with_OpenDd_for,
-    types::{Deprecated, GraphQlFieldName, TypeReference},
+    types::{DataConnectorArgumentName, Deprecated, GraphQlFieldName, TypeReference},
 };
 
 /// The name of a command.
@@ -139,16 +139,19 @@ pub struct CommandV1 {
     pub description: Option<String>,
 }
 
-#[derive(Default, Serialize, opendds_derive::OpenDd, Clone, Debug, PartialEq)]
+#[derive(
+    Default, Deserialize, Serialize, opendds_derive::OpenDd, Clone, Debug, PartialEq, JsonSchema,
+)]
+#[schemars(title = "ArgumentMapping")]
 /// Mapping of a comand or model argument name to the corresponding argument name used in the data connector.
 /// The key of this object is the argument name used in the command or model and the value
 /// is the argument name used in the data connector.
 // We wrap maps into newtype structs so that we have a type and title for them in the JSONSchema which
 // makes it easier to auto-generate documentation.
-pub struct ArgumentMapping(pub BTreeMap<ArgumentName, String>);
+pub struct ArgumentMapping(pub BTreeMap<ArgumentName, DataConnectorArgumentName>);
 
 impl Deref for ArgumentMapping {
-    type Target = BTreeMap<ArgumentName, String>;
+    type Target = BTreeMap<ArgumentName, DataConnectorArgumentName>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

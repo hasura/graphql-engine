@@ -1,8 +1,9 @@
-use crate::types::error::Error;
 use crate::types::subgraph::QualifiedTypeReference;
+use crate::{types::error::Error, ArgumentInfo};
 use indexmap::IndexMap;
 
-use open_dds::types::{CustomTypeName, Deprecated, FieldName};
+use open_dds::arguments::ArgumentName;
+use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated, FieldName};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -110,6 +111,7 @@ pub struct FieldDefinition {
     pub field_type: QualifiedTypeReference,
     pub description: Option<String>,
     pub deprecated: Option<Deprecated>,
+    pub field_arguments: IndexMap<ArgumentName, ArgumentInfo>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -127,6 +129,7 @@ pub struct ResolvedApolloFederationObjectKey {
 pub struct FieldMapping {
     pub column: DataConnectorColumnName,
     pub column_type: ndc_models::Type,
+    pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
 }
 
 /// Mapping from an object to their fields, which contain types.

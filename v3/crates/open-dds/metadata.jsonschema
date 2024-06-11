@@ -111,6 +111,18 @@
                     "name": "last_name",
                     "type": "String",
                     "description": "The last name of the author"
+                  },
+                  {
+                    "name": "biography",
+                    "type": "String",
+                    "description": "AI generated biography for the author",
+                    "arguments": [
+                      {
+                        "name": "ai_model",
+                        "argumentType": "String!",
+                        "description": "The AI model to use for generating the biography"
+                      }
+                    ]
                   }
                 ],
                 "description": "An author of a book",
@@ -128,6 +140,20 @@
                       "author_id": {
                         "column": {
                           "name": "id"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "dataConnectorName": "my_vector_db",
+                    "dataConnectorObjectType": "author",
+                    "fieldMapping": {
+                      "biography": {
+                        "column": {
+                          "name": "biography"
+                        },
+                        "argumentMapping": {
+                          "ai_model": "model"
                         }
                       }
                     }
@@ -1401,6 +1427,14 @@
               "type": "null"
             }
           ]
+        },
+        "arguments": {
+          "description": "The arguments for the field",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldArgumentDefinition"
+          }
         }
       },
       "additionalProperties": false
@@ -1419,6 +1453,30 @@
       "properties": {
         "reason": {
           "description": "The reason for deprecation.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "FieldArgumentDefinition": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldArgumentDefinition",
+      "title": "FieldArgumentDefinition",
+      "type": "object",
+      "required": [
+        "argumentType",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/ArgumentName"
+        },
+        "argumentType": {
+          "$ref": "#/definitions/TypeReference"
+        },
+        "description": {
           "type": [
             "string",
             "null"
@@ -1553,21 +1611,24 @@
     "FieldMapping": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldMapping",
       "title": "FieldMapping",
-      "oneOf": [
-        {
-          "description": "Source field directly maps to some column in the data connector.",
-          "type": "object",
-          "required": [
-            "column"
-          ],
-          "properties": {
-            "column": {
-              "$ref": "#/definitions/ColumnFieldMapping"
+      "type": "object",
+      "required": [
+        "column"
+      ],
+      "properties": {
+        "column": {
+          "$ref": "#/definitions/ColumnFieldMapping"
+        },
+        "argumentMapping": {
+          "default": {},
+          "allOf": [
+            {
+              "$ref": "#/definitions/ArgumentMapping"
             }
-          },
-          "additionalProperties": false
+          ]
         }
-      ]
+      },
+      "additionalProperties": false
     },
     "ColumnFieldMapping": {
       "$id": "https://hasura.io/jsonschemas/metadata/ColumnFieldMapping",
@@ -1590,7 +1651,23 @@
       "additionalProperties": false
     },
     "DataConnectorColumnName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorColumnName",
+      "title": "DataConnectorColumnName",
       "description": "The name of a column in a data connector.",
+      "type": "string"
+    },
+    "ArgumentMapping": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentMapping",
+      "title": "ArgumentMapping",
+      "description": "Mapping of a comand or model argument name to the corresponding argument name used in the data connector. The key of this object is the argument name used in the command or model and the value is the argument name used in the data connector.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/DataConnectorArgumentName"
+      }
+    },
+    "DataConnectorArgumentName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorArgumentName",
+      "title": "DataConnectorArgumentName",
       "type": "string"
     },
     "ScalarTypeV1": {
@@ -2058,15 +2135,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "ArgumentMapping": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentMapping",
-      "title": "ArgumentMapping",
-      "description": "Mapping of a comand or model argument name to the corresponding argument name used in the data connector. The key of this object is the argument name used in the command or model and the value is the argument name used in the data connector.",
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      }
     },
     "OrderableField": {
       "$id": "https://hasura.io/jsonschemas/metadata/OrderableField",

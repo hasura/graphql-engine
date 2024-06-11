@@ -53,21 +53,24 @@
                                           "column_type": {
                                             "type": "named",
                                             "name": "int4"
-                                          }
+                                          },
+                                          "argument_mappings": {}
                                         },
                                         "author_id": {
                                           "column": "author_id",
                                           "column_type": {
                                             "type": "named",
                                             "name": "int4"
-                                          }
+                                          },
+                                          "argument_mappings": {}
                                         },
                                         "title": {
                                           "column": "title",
                                           "column_type": {
                                             "type": "named",
                                             "name": "varchar"
-                                          }
+                                          },
+                                          "argument_mappings": {}
                                         }
                                       }
                                     }
@@ -168,21 +171,24 @@
                                                 "column_type": {
                                                   "type": "named",
                                                   "name": "int8"
-                                                }
+                                                },
+                                                "argument_mappings": {}
                                               },
                                               "first_name": {
                                                 "column": "first_name",
                                                 "column_type": {
                                                   "type": "named",
                                                   "name": "varchar"
-                                                }
+                                                },
+                                                "argument_mappings": {}
                                               },
                                               "last_name": {
                                                 "column": "last_name",
                                                 "column_type": {
                                                   "type": "named",
                                                   "name": "varchar"
-                                                }
+                                                },
+                                                "argument_mappings": {}
                                               }
                                             }
                                           }
@@ -283,21 +289,24 @@
                                                       "column_type": {
                                                         "type": "named",
                                                         "name": "int4"
-                                                      }
+                                                      },
+                                                      "argument_mappings": {}
                                                     },
                                                     "author_id": {
                                                       "column": "author_id",
                                                       "column_type": {
                                                         "type": "named",
                                                         "name": "int4"
-                                                      }
+                                                      },
+                                                      "argument_mappings": {}
                                                     },
                                                     "title": {
                                                       "column": "title",
                                                       "column_type": {
                                                         "type": "named",
                                                         "name": "varchar"
-                                                      }
+                                                      },
+                                                      "argument_mappings": {}
                                                     }
                                                   }
                                                 }
@@ -628,21 +637,24 @@
                                                       "column_type": {
                                                         "type": "named",
                                                         "name": "int8"
-                                                      }
+                                                      },
+                                                      "argument_mappings": {}
                                                     },
                                                     "first_name": {
                                                       "column": "first_name",
                                                       "column_type": {
                                                         "type": "named",
                                                         "name": "varchar"
-                                                      }
+                                                      },
+                                                      "argument_mappings": {}
                                                     },
                                                     "last_name": {
                                                       "column": "last_name",
                                                       "column_type": {
                                                         "type": "named",
                                                         "name": "varchar"
-                                                      }
+                                                      },
+                                                      "argument_mappings": {}
                                                     }
                                                   }
                                                 }
@@ -677,21 +689,24 @@
                                                           "column_type": {
                                                             "type": "named",
                                                             "name": "int4"
-                                                          }
+                                                          },
+                                                          "argument_mappings": {}
                                                         },
                                                         "author_id": {
                                                           "column": "author_id",
                                                           "column_type": {
                                                             "type": "named",
                                                             "name": "int4"
-                                                          }
+                                                          },
+                                                          "argument_mappings": {}
                                                         },
                                                         "title": {
                                                           "column": "title",
                                                           "column_type": {
                                                             "type": "named",
                                                             "name": "varchar"
-                                                          }
+                                                          },
+                                                          "argument_mappings": {}
                                                         }
                                                       }
                                                     }
@@ -763,21 +778,24 @@
                                             "column_type": {
                                               "type": "named",
                                               "name": "int4"
-                                            }
+                                            },
+                                            "argument_mappings": {}
                                           },
                                           "author_id": {
                                             "column": "author_id",
                                             "column_type": {
                                               "type": "named",
                                               "name": "int4"
-                                            }
+                                            },
+                                            "argument_mappings": {}
                                           },
                                           "title": {
                                             "column": "title",
                                             "column_type": {
                                               "type": "named",
                                               "name": "varchar"
-                                            }
+                                            },
+                                            "argument_mappings": {}
                                           }
                                         }
                                       }
@@ -812,21 +830,24 @@
                                                 "column_type": {
                                                   "type": "named",
                                                   "name": "int8"
-                                                }
+                                                },
+                                                "argument_mappings": {}
                                               },
                                               "first_name": {
                                                 "column": "first_name",
                                                 "column_type": {
                                                   "type": "named",
                                                   "name": "varchar"
-                                                }
+                                                },
+                                                "argument_mappings": {}
                                               },
                                               "last_name": {
                                                 "column": "last_name",
                                                 "column_type": {
                                                   "type": "named",
                                                   "name": "varchar"
-                                                }
+                                                },
+                                                "argument_mappings": {}
                                               }
                                             }
                                           }
@@ -898,21 +919,24 @@
                                   "column_type": {
                                     "type": "named",
                                     "name": "int4"
-                                  }
+                                  },
+                                  "argument_mappings": {}
                                 },
                                 "author_id": {
                                   "column": "author_id",
                                   "column_type": {
                                     "type": "named",
                                     "name": "int4"
-                                  }
+                                  },
+                                  "argument_mappings": {}
                                 },
                                 "title": {
                                   "column": "title",
                                   "column_type": {
                                     "type": "named",
                                     "name": "varchar"
-                                  }
+                                  },
+                                  "argument_mappings": {}
                                 }
                               }
                             }
@@ -947,21 +971,24 @@
                                       "column_type": {
                                         "type": "named",
                                         "name": "int4"
-                                      }
+                                      },
+                                      "argument_mappings": {}
                                     },
                                     "author_id": {
                                       "column": "author_id",
                                       "column_type": {
                                         "type": "named",
                                         "name": "int4"
-                                      }
+                                      },
+                                      "argument_mappings": {}
                                     },
                                     "title": {
                                       "column": "title",
                                       "column_type": {
                                         "type": "named",
                                         "name": "varchar"
-                                      }
+                                      },
+                                      "argument_mappings": {}
                                     }
                                   }
                                 }
