@@ -318,6 +318,7 @@ pub fn resolve_boolean_expression_graphql_config(
     Ok(boolean_expressions::BooleanExpressionGraphqlConfig {
         type_name: where_type_name,
         scalar_fields,
+        object_fields: BTreeMap::new(),
         graphql_config: (boolean_expressions::BooleanExpressionGraphqlFieldConfig {
             where_field_name: filter_graphql_config.where_field_name.clone(),
             and_operator_name: filter_graphql_config.operator_names.and.clone(),

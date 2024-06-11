@@ -160,6 +160,7 @@ pub async fn query_post(
     configuration: Configuration<'_>,
     query_request: &ndc_models::QueryRequest,
 ) -> Result<ndc_models::QueryResponse, Error> {
+    println!("{query_request:?}");
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(

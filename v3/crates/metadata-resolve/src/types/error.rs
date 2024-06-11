@@ -642,10 +642,10 @@ pub enum BooleanExpressionError {
         name: Qualified<CustomTypeName>,
         model: Qualified<ModelName>,
     },
-    #[error("unknown scalar boolean expression type {scalar_boolean_expression:} is used in boolean expression {boolean_expression:}")]
-    ScalarBooleanExpressionCouldNotBeFound {
-        boolean_expression: Qualified<CustomTypeName>,
-        scalar_boolean_expression: Qualified<CustomTypeName>,
+    #[error("could not find boolean expression type {child_boolean_expression:} referenced within boolean expression {parent_boolean_expression:}")]
+    BooleanExpressionCouldNotBeFound {
+        parent_boolean_expression: Qualified<CustomTypeName>,
+        child_boolean_expression: Qualified<CustomTypeName>,
     },
     #[error("the boolean expression type {name:} used in model {model:} corresponds to object type {boolean_expression_object_type:} whereas the model's object type is {model_object_type:}")]
     BooleanExpressionTypeForInvalidObjectTypeInModel {

@@ -6,7 +6,9 @@ query MyQuery {
       campuses
     }
     location_country: location {
-      country
+      country {
+        name
+      }
     }
     staff {
       last_name

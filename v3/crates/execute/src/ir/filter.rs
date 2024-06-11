@@ -56,6 +56,20 @@ pub(crate) fn resolve_filter_expression<'s>(
     Ok(resolved_filter_expression)
 }
 
+fn get_boolean_expression_annotation(
+    annotation: &schema::Annotation,
+) -> Result<&BooleanExpressionAnnotation, error::Error> {
+    match annotation {
+        schema::Annotation::Input(InputAnnotation::BooleanExpression(
+            boolean_expression_annotation,
+        )) => Ok(boolean_expression_annotation),
+        _ => Err(error::InternalEngineError::UnexpectedAnnotation {
+            annotation: annotation.clone(),
+        }
+        .into()),
+    }
+}
+
 // Build the NDC filter expression by traversing the relationships when present
 fn build_filter_expression<'s>(
     field: &normalized_ast::InputField<'s, GDS>,
@@ -64,13 +78,33 @@ fn build_filter_expression<'s>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ndc_models::Expression, error::Error> {
-    match field.info.generic {
+    let boolean_expression_annotation = get_boolean_expression_annotation(field.info.generic)?;
+    build_filter_expression_from_boolean_expression(
+        boolean_expression_annotation,
+        field,
+        relationships,
+        data_connector_link,
+        type_mappings,
+        &mut vec![],
+        usage_counts,
+    )
+}
+
+// build filter expression, specifically matching on BooleanExpressionAnnotation
+fn build_filter_expression_from_boolean_expression<'s>(
+    boolean_expression_annotation: &'s BooleanExpressionAnnotation,
+    field: &normalized_ast::InputField<'s, GDS>,
+    relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+    data_connector_link: &'s DataConnectorLink,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    field_path: &mut Vec<DataConnectorColumnName>,
+    usage_counts: &mut UsagesCounts,
+) -> Result<ndc_models::Expression, error::Error> {
+    match boolean_expression_annotation {
         // "_and"
-        schema::Annotation::Input(InputAnnotation::BooleanExpression(
-            BooleanExpressionAnnotation::BooleanExpressionArgument {
-                field: schema::ModelFilterArgument::AndOp,
-            },
-        )) => {
+        BooleanExpressionAnnotation::BooleanExpressionArgument {
+            field: schema::ModelFilterArgument::AndOp,
+        } => {
             let mut and_expressions = Vec::new();
             // The "_and" field value should be a list
             let and_values = field.value.as_list()?;
@@ -91,11 +125,9 @@ fn build_filter_expression<'s>(
             })
         }
         // "_or"
-        schema::Annotation::Input(InputAnnotation::BooleanExpression(
-            BooleanExpressionAnnotation::BooleanExpressionArgument {
-                field: schema::ModelFilterArgument::OrOp,
-            },
-        )) => {
+        BooleanExpressionAnnotation::BooleanExpressionArgument {
+            field: schema::ModelFilterArgument::OrOp,
+        } => {
             let mut or_expressions = Vec::new();
             // The "_or" field value should be a list
             let or_values = field.value.as_list()?;
@@ -116,11 +148,9 @@ fn build_filter_expression<'s>(
             })
         }
         // "_not"
-        schema::Annotation::Input(InputAnnotation::BooleanExpression(
-            BooleanExpressionAnnotation::BooleanExpressionArgument {
-                field: schema::ModelFilterArgument::NotOp,
-            },
-        )) => {
+        BooleanExpressionAnnotation::BooleanExpressionArgument {
+            field: schema::ModelFilterArgument::NotOp,
+        } => {
             // The "_not" field value should be an object
             let not_value = field.value.as_object()?;
 
@@ -136,73 +166,38 @@ fn build_filter_expression<'s>(
             })
         }
         // The column that we want to use for filtering.
-        schema::Annotation::Input(InputAnnotation::BooleanExpression(
-            BooleanExpressionAnnotation::BooleanExpressionArgument {
-                field:
-                    schema::ModelFilterArgument::Field {
-                        field_name,
-                        object_type,
-                    },
-            },
-        )) => {
+        BooleanExpressionAnnotation::BooleanExpressionArgument {
+            field:
+                schema::ModelFilterArgument::Field {
+                    field_name,
+                    object_type,
+                },
+        } => {
             let FieldMapping { column, .. } =
                 get_field_mapping_of_field_name(type_mappings, object_type, field_name)?;
 
-            let mut expressions = Vec::new();
-
-            for (_op_name, op_value) in field.value.as_object()? {
-                match op_value.info.generic {
-                    schema::Annotation::Input(InputAnnotation::Model(
-                        ModelInputAnnotation::IsNullOperation,
-                    )) => {
-                        let expression = build_is_null_expression(column.clone(), &op_value.value)?;
-                        expressions.push(expression);
-                    }
-                    schema::Annotation::Input(InputAnnotation::Model(
-                        ModelInputAnnotation::ComparisonOperation { operator_mapping },
-                    )) => {
-                        let operator =
-                            operator_mapping
-                                .get(&data_connector_link.name)
-                                .ok_or_else(|| {
-                                    error::InternalEngineError::OperatorMappingError(
-                                        error::OperatorMappingError::MissingEntryForDataConnector {
-                                            column_name: column.clone(),
-                                            data_connector_name: data_connector_link.name.clone(),
-                                        },
-                                    )
-                                })?;
-
-                        let expression = build_binary_comparison_expression(
-                            operator,
-                            column.clone(),
-                            &op_value.value,
-                        );
-                        expressions.push(expression)
-                    }
-                    annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
-                        annotation: annotation.clone(),
-                    })?,
-                }
-            }
-            Ok(ndc_models::Expression::And { expressions })
+            build_comparison_expression(
+                field,
+                field_path,
+                &column,
+                data_connector_link,
+                type_mappings,
+            )
         }
         // Relationship field used for filtering.
         // This relationship can either point to another relationship or a column.
-        schema::Annotation::Input(InputAnnotation::BooleanExpression(
-            BooleanExpressionAnnotation::BooleanExpressionArgument {
-                field:
-                    schema::ModelFilterArgument::RelationshipField(FilterRelationshipAnnotation {
-                        relationship_name,
-                        relationship_type,
-                        source_type,
-                        target_source,
-                        target_type,
-                        target_model_name,
-                        mappings,
-                    }),
-            },
-        )) => {
+        BooleanExpressionAnnotation::BooleanExpressionArgument {
+            field:
+                schema::ModelFilterArgument::RelationshipField(FilterRelationshipAnnotation {
+                    relationship_name,
+                    relationship_type,
+                    source_type,
+                    target_source,
+                    target_type,
+                    target_model_name,
+                    mappings,
+                }),
+        } => {
             // Add the target model being used in the usage counts
             count_model(target_model_name, usage_counts);
 
@@ -244,15 +239,102 @@ fn build_filter_expression<'s>(
                 relationship: ndc_relationship_name.0,
                 arguments: BTreeMap::new(),
             };
+
             Ok(ndc_models::Expression::Exists {
                 in_collection: exists_in_relationship,
                 predicate: Some(Box::new(exists_filter_clause)),
             })
         }
-        annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
-            annotation: annotation.clone(),
+        other_boolean_annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
+            annotation: schema::Annotation::Input(InputAnnotation::BooleanExpression(
+                other_boolean_annotation.clone(),
+            )),
         })?,
     }
+}
+
+fn build_comparison_expression<'s>(
+    field: &normalized_ast::InputField<'s, GDS>,
+    field_path: &mut Vec<DataConnectorColumnName>,
+    column: &DataConnectorColumnName,
+    data_connector_link: &'s DataConnectorLink,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+) -> Result<ndc_models::Expression, error::Error> {
+    let mut expressions = Vec::new();
+
+    println!("build_comparison_expression");
+    for (_op_name, op_value) in field.value.as_object()? {
+        println!("{op_value:?}");
+        match op_value.info.generic {
+            schema::Annotation::Input(InputAnnotation::Model(
+                ModelInputAnnotation::IsNullOperation,
+            )) => {
+                let expression =
+                    build_is_null_expression(column.clone(), &op_value.value, field_path.clone())?;
+                expressions.push(expression);
+            }
+            schema::Annotation::Input(InputAnnotation::Model(
+                ModelInputAnnotation::ComparisonOperation { operator_mapping },
+            )) => {
+                let operator =
+                    operator_mapping
+                        .get(&data_connector_link.name)
+                        .ok_or_else(|| {
+                            error::InternalEngineError::OperatorMappingError(
+                                error::OperatorMappingError::MissingEntryForDataConnector {
+                                    column_name: column.clone(),
+                                    data_connector_name: data_connector_link.name.clone(),
+                                },
+                            )
+                        })?;
+
+                let expression = build_binary_comparison_expression(
+                    operator,
+                    column.clone(),
+                    &op_value.value,
+                    field_path.clone(),
+                );
+                expressions.push(expression)
+            }
+            schema::Annotation::Input(InputAnnotation::BooleanExpression(
+                BooleanExpressionAnnotation::BooleanExpressionArgument {
+                    field:
+                        schema::ModelFilterArgument::Field {
+                            field_name: inner_field_name,
+                            object_type: inner_object_type,
+                        },
+                },
+            )) => {
+                // get correct inner column name
+                let FieldMapping {
+                    column: inner_column,
+                    ..
+                } = get_field_mapping_of_field_name(
+                    type_mappings,
+                    inner_object_type,
+                    inner_field_name,
+                )?;
+
+                // add it to the path
+                field_path.push(inner_column);
+
+                let inner_expression = build_comparison_expression(
+                    op_value,
+                    field_path,
+                    column,
+                    data_connector_link,
+                    type_mappings,
+                )?;
+
+                expressions.push(inner_expression);
+            }
+
+            annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
+                annotation: annotation.clone(),
+            })?,
+        }
+    }
+    Ok(ndc_models::Expression::And { expressions })
 }
 
 /// get column name for field name
@@ -299,17 +381,27 @@ fn resolve_filter_object<'s>(
     Ok(ndc_models::Expression::And { expressions })
 }
 
+/// Only pass a path if there are items in it
+fn to_ndc_field_path(field_path: Vec<DataConnectorColumnName>) -> Option<Vec<String>> {
+    if field_path.is_empty() {
+        None
+    } else {
+        Some(field_path.into_iter().map(|s| s.0).collect())
+    }
+}
+
 /// Generate a binary comparison operator
 fn build_binary_comparison_expression(
     operator: &DataConnectorOperatorName,
     column: DataConnectorColumnName,
     value: &normalized_ast::Value<'_, GDS>,
+    field_path: Vec<DataConnectorColumnName>,
 ) -> ndc_models::Expression {
     ndc_models::Expression::BinaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
             name: column.0,
             path: Vec::new(),
-            field_path: None,
+            field_path: to_ndc_field_path(field_path),
         },
         operator: operator.0.clone(),
         value: ndc_models::ComparisonValue::Scalar {
@@ -322,13 +414,14 @@ fn build_binary_comparison_expression(
 fn build_is_null_expression(
     column: DataConnectorColumnName,
     value: &normalized_ast::Value<'_, GDS>,
+    field_path: Vec<DataConnectorColumnName>,
 ) -> Result<ndc_models::Expression, error::Error> {
     // Build an 'IsNull' unary comparison expression
     let unary_comparison_expression = ndc_models::Expression::UnaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
             name: column.0,
             path: Vec::new(),
-            field_path: None,
+            field_path: to_ndc_field_path(field_path),
         },
         operator: ndc_models::UnaryComparisonOperator::IsNull,
     };

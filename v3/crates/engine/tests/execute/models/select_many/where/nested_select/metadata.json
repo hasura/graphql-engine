@@ -5,26 +5,90 @@
       "name": "default",
       "objects": [
         {
-          "kind": "DataConnectorScalarRepresentation",
+          "kind": "BooleanExpressionType",
           "version": "v1",
           "definition": {
-            "dataConnectorName": "db",
-            "dataConnectorScalarType": "String",
-            "representation": "String",
+            "name": "string_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  { "name": "_eq", "argumentType": "String!" }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
             "graphql": {
-              "comparisonExpressionTypeName": "String_Comparison_Exp"
+              "typeName": "String_Comparison_Exp"
             }
           }
         },
         {
-          "kind": "DataConnectorScalarRepresentation",
+          "kind": "BooleanExpressionType",
           "version": "v1",
           "definition": {
-            "dataConnectorName": "db",
-            "dataConnectorScalarType": "Int",
-            "representation": "Int"
+            "name": "int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  { "name": "_eq", "argumentType": "Int!" }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": {
+              "typeName": "Int_Comparison_Exp"
+            }
           }
         },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "institution_bool_exp",
+            "operand": {
+              "object": {
+                "type": "institution",
+                "comparableFields": [
+                  {
+                    "fieldName": "id",
+                    "booleanExpressionType": "int_bool_exp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "location",
+                    "booleanExpressionType": "location_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": { "typeName": "InstitutionBoolExp" }
+          }
+        },
+
         {
           "kind": "ObjectType",
           "version": "v1",
@@ -112,6 +176,59 @@
           }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "country_bool_exp",
+            "operand": {
+              "object": {
+                "type": "country",
+                "comparableFields": [
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "continent",
+                    "booleanExpressionType": "string_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": { "typeName": "CountryBoolExp" }
+          }
+        },
+
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "location_bool_exp",
+            "operand": {
+              "object": {
+                "type": "location",
+                "comparableFields": [
+                  {
+                    "fieldName": "city",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "country",
+                    "booleanExpressionType": "country_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": { "enable": true },
+            "isNull": { "enable": true },
+            "graphql": { "typeName": "LocationBoolExp" }
+          }
+        },
+        {
           "kind": "ObjectType",
           "version": "v1",
           "definition": {
@@ -132,22 +249,18 @@
             "dataConnectorTypeMapping": [
               {
                 "dataConnectorName": "db",
-                "dataConnectorObjectType": "country"
-              }
-            ]
-          }
-        },
-
-        {
-          "kind": "TypePermissions",
-          "version": "v1",
-          "definition": {
-            "typeName": "country",
-            "permissions": [
-              {
-                "role": "admin",
-                "output": {
-                  "allowedFields": ["name", "continent"]
+                "dataConnectorObjectType": "country",
+                "fieldMapping": {
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "continent": {
+                    "column": {
+                      "name": "continent"
+                    }
+                  }
                 }
               }
             ]
@@ -179,11 +292,44 @@
             "dataConnectorTypeMapping": [
               {
                 "dataConnectorName": "db",
-                "dataConnectorObjectType": "location"
+                "dataConnectorObjectType": "location",
+                "fieldMapping": {
+                  "city": {
+                    "column": {
+                      "name": "city"
+                    }
+                  },
+                  "country": {
+                    "column": {
+                      "name": "country"
+                    }
+                  },
+                  "campuses": {
+                    "column": {
+                      "name": "campuses"
+                    }
+                  }
+                }
               }
             ]
           }
         },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "country",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["name", "continent"]
+                }
+              }
+            ]
+          }
+        },
+
         {
           "kind": "TypePermissions",
           "version": "v1",
@@ -224,7 +370,24 @@
             "dataConnectorTypeMapping": [
               {
                 "dataConnectorName": "db",
-                "dataConnectorObjectType": "staff"
+                "dataConnectorObjectType": "staff",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  },
+                  "specialities": {
+                    "column": {
+                      "name": "specialities"
+                    }
+                  }
+                }
               }
             ]
           }
@@ -256,6 +419,7 @@
               "collection": "institution",
               "argumentMapping": {}
             },
+            "filterExpressionType": "institution_bool_exp",
             "graphql": {
               "selectUniques": [],
               "selectMany": {

@@ -101,6 +101,7 @@ fn build_builtin_operator_schema(
 
 // Build input fields for fields that we are allowed to compare
 fn build_comparable_fields_schema(
+    gds: &GDS,
     object_type_name: &Qualified<CustomTypeName>,
     object_type_representation: &ObjectTypeWithRelationships,
     boolean_expression_info: &BooleanExpressionGraphqlConfig,
@@ -108,7 +109,7 @@ fn build_comparable_fields_schema(
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
     let mut input_fields = BTreeMap::new();
 
-    // column fields
+    // scalar column fields
     for (field_name, comparison_expression) in &boolean_expression_info.scalar_fields {
         let field_graphql_name = mk_name(field_name.clone().0.as_str())?;
         let registered_type_name =
@@ -140,6 +141,53 @@ fn build_comparable_fields_schema(
         );
         input_fields.insert(field_graphql_name, input_field);
     }
+
+    // object column fields
+    for (field_name, object_comparison_expression) in &boolean_expression_info.object_fields {
+        let field_graphql_name = mk_name(field_name.clone().0.as_str())?;
+
+        let registered_type_name =
+            builder.register_type(TypeId::InputObjectBooleanExpressionType {
+                graphql_type_name: object_comparison_expression.graphql_type_name.clone(),
+                gds_type_name: object_comparison_expression.object_type_name.clone(),
+            });
+
+        let field_object_type_representation = gds
+            .metadata
+            .object_types
+            .get(&object_comparison_expression.underlying_object_type_name)
+            .unwrap();
+
+        let field_type = ast::TypeContainer::named_null(registered_type_name);
+
+        let annotation = types::Annotation::Input(InputAnnotation::BooleanExpression(
+            BooleanExpressionAnnotation::BooleanExpressionArgument {
+                field: types::ModelFilterArgument::Field {
+                    field_name: field_name.clone(),
+                    object_type: object_type_name.clone(),
+                },
+            },
+        ));
+
+        let field_permissions: HashMap<Role, Option<types::NamespaceAnnotation>> =
+            permissions::get_allowed_roles_for_type(field_object_type_representation)
+                .map(|role| (role.clone(), None))
+                .collect();
+
+        let input_field = builder.conditional_namespaced(
+            gql_schema::InputField::<GDS>::new(
+                field_graphql_name.clone(),
+                None,
+                annotation,
+                field_type,
+                None,
+                gql_schema::DeprecationStatus::NotDeprecated,
+            ),
+            field_permissions,
+        );
+        input_fields.insert(field_graphql_name, input_field);
+    }
+
     Ok(input_fields)
 }
 
@@ -328,6 +376,7 @@ fn build_schema_with_object_boolean_expression_type(
 
         // add in all fields that are directly comparable
         input_fields.extend(build_comparable_fields_schema(
+            gds,
             &object_boolean_expression_type.object_type,
             object_type_representation,
             boolean_expression_info,
@@ -375,6 +424,7 @@ fn build_schema_with_boolean_expression_type(
 
         // add in all fields that are directly comparable
         input_fields.extend(build_comparable_fields_schema(
+            gds,
             &boolean_expression_object_type.object_type,
             object_type_representation,
             boolean_expression_info,

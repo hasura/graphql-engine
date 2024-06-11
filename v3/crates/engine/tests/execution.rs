@@ -231,6 +231,13 @@ fn test_model_select_many_boolean_expression_type() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_model_select_many_where_nested_select() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/nested_select";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
 fn test_model_select_many_where_is_null() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/is_null";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";

@@ -103,8 +103,9 @@ ALTER SEQUENCE public.movie_analytics_id_seq OWNED BY public.movie_analytics.id;
 ALTER TABLE ONLY public.movie_analytics ALTER COLUMN id SET DEFAULT nextval('public.movie_analytics_id_seq'::regclass);
 
 -- `institution` table for testing queries into JSON objects
+CREATE TYPE public.country AS (name text, continent text);
 
-CREATE TYPE public.location AS (city text, country text, campuses text []);
+CREATE TYPE public.location AS (city text, country country, campuses text []);
 
 CREATE TYPE public.staff AS (
   first_name text,
@@ -128,7 +129,7 @@ VALUES (
     'Queen Mary University of London',
     ROW(
       'London',
-      'UK',
+      ROW('UK','Europe') :: country,
       ARRAY ['Mile End','Whitechapel','Charterhouse Square','West Smithfield']
     )::location,
     ARRAY [ROW('Peter','Landin',ARRAY['Computer Science','Education'],
@@ -139,9 +140,9 @@ VALUES (
 (
   2,
   'Chalmers University of Technology',
-  Row(
+  ROW(
     'Gothenburg',
-    'Sweden',
+    ROW('Sweden','Europe') :: country,
     ARRAY ['Johanneberg','Lindholmen']
   )::location,
   ARRAY [ROW('John','Hughes',ARRAY['Computer Science','Functional Programming','Software Testing'],

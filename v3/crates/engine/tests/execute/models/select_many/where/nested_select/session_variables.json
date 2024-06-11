@@ -1,0 +1,9 @@
+[
+  {
+    "x-hasura-role": "admin"
+  },
+  {
+    "x-hasura-role": "user_1",
+    "x-hasura-user-id": "1"
+  }
+]

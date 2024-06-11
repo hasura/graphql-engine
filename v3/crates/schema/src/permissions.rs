@@ -455,6 +455,18 @@ pub(crate) fn get_entity_union_permissions(
     permissions
 }
 
+/// Are we allowed to access a given type at all?
+/// If we are allowed to access at least one field, yes
+pub(crate) fn get_allowed_roles_for_type(
+    object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
+) -> impl Iterator<Item = &'_ Role> {
+    object_type_representation
+        .object_type
+        .fields
+        .keys()
+        .flat_map(|field_name| get_allowed_roles_for_field(object_type_representation, field_name))
+}
+
 /// Build namespace annotations for each field based on the type permissions
 pub(crate) fn get_allowed_roles_for_field<'a>(
     object_type_representation: &'a metadata_resolve::ObjectTypeWithRelationships,

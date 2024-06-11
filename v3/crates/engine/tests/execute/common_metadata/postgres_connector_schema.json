@@ -379,6 +379,27 @@
                       }
                     }
                   },
+                  "country": {
+                    "description": "A country",
+                    "fields": {
+                      "name": {
+                        "description": "The country's name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "continent": {
+                        "description": "The country's continent",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
                   "location": {
                     "description": "A location",
                     "fields": {
@@ -395,7 +416,7 @@
                         "arguments": {},
                         "type": {
                           "type": "named",
-                          "name": "String"
+                          "name": "country"
                         }
                       },
                       "campuses": {

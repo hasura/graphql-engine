@@ -1138,6 +1138,26 @@
       }
     },
     "compositeTypes": {
+      "country": {
+        "name": "country",
+        "fields": {
+          "continent": {
+            "name": "continent",
+            "type": {
+              "scalarType": "text"
+            },
+            "description": null
+          },
+          "name": {
+            "name": "name",
+            "type": {
+              "scalarType": "text"
+            },
+            "description": null
+          }
+        },
+        "description": null
+      },
       "location": {
         "name": "location",
         "fields": {
@@ -1160,7 +1180,7 @@
           "country": {
             "name": "country",
             "type": {
-              "scalarType": "text"
+              "compositeType": "country"
             },
             "description": null
           }

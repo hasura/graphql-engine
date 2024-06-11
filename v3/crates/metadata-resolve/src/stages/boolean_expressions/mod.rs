@@ -9,8 +9,8 @@ mod scalar;
 mod types;
 pub use types::{
     BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, BooleanExpressionTypes,
-    BooleanExpressionsOutput, ComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
-    ResolvedScalarBooleanExpressionType,
+    BooleanExpressionsOutput, ComparisonExpressionInfo, ObjectComparisonExpressionInfo,
+    ResolvedObjectBooleanExpressionType, ResolvedScalarBooleanExpressionType,
 };
 
 pub fn resolve(
@@ -43,9 +43,6 @@ pub fn resolve(
         );
     }
 
-    let all_boolean_expression_names: BTreeSet<_> =
-        raw_boolean_expression_types.keys().cloned().collect();
-
     // let's resolve scalar types first
 
     let mut boolean_expression_scalar_types = BTreeMap::new();
@@ -74,19 +71,19 @@ pub fn resolve(
     let mut boolean_expression_object_types = BTreeMap::new();
 
     for (boolean_expression_type_name, (subgraph, boolean_expression_type)) in
-        raw_boolean_expression_types
+        &raw_boolean_expression_types
     {
         if let BooleanExpressionOperand::Object(boolean_expression_object_operand) =
             &boolean_expression_type.operand
         {
             let object_boolean_expression_type = object::resolve_object_boolean_expression_type(
-                &boolean_expression_type_name,
+                boolean_expression_type_name,
                 boolean_expression_object_operand,
                 subgraph,
                 &boolean_expression_type.graphql,
                 object_types,
                 &boolean_expression_scalar_types,
-                &all_boolean_expression_names,
+                &raw_boolean_expression_types,
                 graphql_config,
             )?;
 

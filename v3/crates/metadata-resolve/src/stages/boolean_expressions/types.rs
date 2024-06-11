@@ -56,6 +56,13 @@ pub struct ComparisonExpressionInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ObjectComparisonExpressionInfo {
+    pub graphql_type_name: ast::TypeName,
+    pub object_type_name: Qualified<CustomTypeName>,
+    pub underlying_object_type_name: Qualified<CustomTypeName>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionGraphqlFieldConfig {
     pub where_field_name: ast::Name,
     pub and_operator_name: ast::Name,
@@ -66,6 +73,7 @@ pub struct BooleanExpressionGraphqlFieldConfig {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionGraphqlConfig {
     pub type_name: ast::TypeName,
+    pub object_fields: BTreeMap<FieldName, ObjectComparisonExpressionInfo>,
     pub scalar_fields: BTreeMap<FieldName, ComparisonExpressionInfo>,
     pub graphql_config: BooleanExpressionGraphqlFieldConfig,
 }

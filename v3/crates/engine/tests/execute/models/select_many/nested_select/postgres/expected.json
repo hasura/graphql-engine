@@ -13,7 +13,9 @@
           ]
         },
         "location_country": {
-          "country": "UK"
+          "country": {
+            "name": "UK"
+          }
         },
         "staff": [
           {
@@ -39,7 +41,9 @@
           "campuses": ["Johanneberg", "Lindholmen"]
         },
         "location_country": {
-          "country": "Sweden"
+          "country": {
+            "name": "Sweden"
+          }
         },
         "staff": [
           {
@@ -82,7 +86,9 @@
           "campuses": null
         },
         "location_country": {
-          "country": null
+          "country": {
+            "name": null
+          }
         },
         "staff": null,
         "staff_first_name": null,
