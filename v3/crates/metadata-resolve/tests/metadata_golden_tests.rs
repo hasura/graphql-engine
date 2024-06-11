@@ -8,10 +8,10 @@ use serde_json::Value;
 
 use metadata_resolve::MetadataResolveFlagsInternal;
 
-#[test_each::path(glob = "crates/metadata-resolve/tests/passing/*/", name(segments = 2))]
+#[test_each::path(glob = "crates/metadata-resolve/tests/passing/**/", name(segments = 2))]
 #[allow(clippy::needless_pass_by_value)] // must receive a `PathBuf`
 fn test_passing_metadata(comparison_folder_path: PathBuf) -> anyhow::Result<()> {
-    let passing_example = comparison_folder_path.join("example.json");
+    let passing_example = comparison_folder_path.join("metadata.json");
 
     let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
         enable_boolean_expression_types: true,
@@ -28,10 +28,10 @@ fn test_passing_metadata(comparison_folder_path: PathBuf) -> anyhow::Result<()> 
     }
 }
 
-#[test_each::path(glob = "crates/metadata-resolve/tests/failing/*/", name(segments = 2))]
+#[test_each::path(glob = "crates/metadata-resolve/tests/failing/**/", name(segments = 2))]
 #[allow(clippy::needless_pass_by_value)] // must receive a `PathBuf`
 fn test_failing_metadata(comparison_folder_path: PathBuf) -> anyhow::Result<()> {
-    let failing_example = comparison_folder_path.join("example.json");
+    let failing_example = comparison_folder_path.join("metadata.json");
     let failing_reason = comparison_folder_path.join("expected_error.txt");
 
     let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
