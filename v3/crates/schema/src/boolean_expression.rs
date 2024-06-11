@@ -1,16 +1,16 @@
 use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema::{self as gql_schema};
-use open_dds::types::CustomTypeName;
+use open_dds::{relationships::RelationshipType, types::CustomTypeName};
 use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::FilterRelationshipAnnotation;
 use super::types::{BooleanExpressionAnnotation, InputAnnotation, TypeId};
 use metadata_resolve::{
-    mk_name, BooleanExpressionGraphqlConfig, ModelExpressionType,
+    mk_name, BooleanExpressionGraphqlConfig, ModelExpressionType, ModelWithPermissions,
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType, ObjectTypeWithRelationships,
-    Qualified, ResolvedObjectBooleanExpressionType,
+    Qualified, Relationship, RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
 };
 
 use crate::permissions;
@@ -201,85 +201,118 @@ fn build_comparable_relationships_schema(
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
     let mut input_fields = BTreeMap::new();
 
-    for (rel_name, relationship) in &object_type_representation.relationships {
+    for relationship in object_type_representation.relationships.values() {
         if let metadata_resolve::RelationshipTarget::Model {
             model_name,
             relationship_type,
-            target_typename,
+            target_typename: _,
             mappings,
         } = &relationship.target
         {
+            // lookup target model for relationship
             let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
                 Error::InternalModelNotFound {
                     model_name: model_name.clone(),
                 }
             })?;
 
+            // lookup type underlying target model
             let target_object_type_representation =
                 get_object_type_representation(gds, &target_model.model.data_type)?;
 
-            // Build relationship field in filter expression only when
-            // both the source boolean expression and target_model are backed by a source
-            // We'll need to find a way of getting this information for BooleanExpressionTypes
-            // that are uncoupled from their data connector source
-            if let (Some(local_data_connector), Some(target_source)) = (
-                &object_boolean_expression_data_connector,
-                &target_model.model.source,
-            ) {
-                let target_model_source = metadata_resolve::ModelTargetSource::from_model_source(
-                    target_source,
-                    relationship,
-                )?;
+            // try and create a new input field
+            if let Some((name, schema)) = build_model_relationship_schema(
+                object_type_representation,
+                object_boolean_expression_data_connector,
+                target_object_type_representation,
+                target_model,
+                relationship,
+                relationship_type,
+                mappings,
+                gds,
+                builder,
+            )? {
+                input_fields.insert(name, schema);
+            }
+        }
+    }
+    Ok(input_fields)
+}
 
-                // filter expression with relationships is currently only supported for local relationships
-                if let metadata_resolve::RelationshipExecutionCategory::Local =
-                    metadata_resolve::relationship_execution_category(
-                        &local_data_connector.link,
-                        &target_source.data_connector,
-                        &target_model_source.capabilities,
-                    )
-                {
-                    if target_source.data_connector.name == local_data_connector.name {
-                        match &target_model.model.filter_expression_type {
-                            None => {}
-                            Some(ModelExpressionType::BooleanExpressionType(_)) => {
-                                todo!("relationships with BooleanExpressionType")
-                            }
-                            Some(ModelExpressionType::ObjectBooleanExpressionType(
-                                target_model_filter_expression,
-                            )) => {
-                                // If the relationship target model does not have filterExpressionType do not include
-                                // it in the source model filter expression input type.
-                                if let Some(ref target_model_filter_expression_graphql) =
-                                    &target_model_filter_expression.graphql
-                                {
-                                    let target_model_filter_expression_type_name =
-                                        &target_model_filter_expression_graphql.type_name;
+type InputField = (
+    ast::Name,
+    gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>,
+);
 
-                                    let annotation = FilterRelationshipAnnotation {
-                                        source_type: relationship.source.clone(),
-                                        relationship_name: relationship.name.clone(),
-                                        target_source: target_model_source.clone(),
-                                        target_type: target_typename.clone(),
-                                        target_model_name: target_model.model.name.clone(),
-                                        relationship_type: relationship_type.clone(),
-                                        mappings: mappings.clone(),
-                                    };
+// build comparable relationships input fields
+fn build_model_relationship_schema(
+    source_object_type_representation: &ObjectTypeWithRelationships,
+    source_object_boolean_expression_data_connector: &Option<ObjectBooleanExpressionDataConnector>,
+    target_object_type_representation: &ObjectTypeWithRelationships,
+    target_model: &ModelWithPermissions,
+    relationship: &Relationship,
+    relationship_type: &RelationshipType,
+    relationship_model_mappings: &[RelationshipModelMapping],
+    gds: &GDS,
+    builder: &mut gql_schema::Builder<GDS>,
+) -> Result<Option<InputField>, Error> {
+    // Build relationship field in filter expression only when
+    // both the source boolean expression and target_model are backed by a source
+    // We'll need to find a way of getting this information for BooleanExpressionTypes
+    // that are uncoupled from their data connector source
+    if let (Some(source_data_connector), Some(target_source)) = (
+        &source_object_boolean_expression_data_connector,
+        &target_model.model.source,
+    ) {
+        let target_model_source =
+            metadata_resolve::ModelTargetSource::from_model_source(target_source, relationship)?;
 
-                                    let namespace_annotations =
-                                        permissions::get_model_relationship_namespace_annotations(
-                                            target_model,
-                                            object_type_representation,
-                                            target_object_type_representation,
-                                            mappings,
-                                            &gds.metadata.object_types,
-                                        )?;
+        // filter expression with relationships is currently only supported for local relationships
+        if let metadata_resolve::RelationshipExecutionCategory::Local =
+            metadata_resolve::relationship_execution_category(
+                &source_data_connector.link,
+                &target_source.data_connector,
+                &target_model_source.capabilities,
+            )
+        {
+            if target_source.data_connector.name == source_data_connector.name {
+                match &target_model.model.filter_expression_type {
+                    None => {}
+                    Some(ModelExpressionType::BooleanExpressionType(_)) => {
+                        todo!("relationships with BooleanExpressionType")
+                    }
+                    Some(ModelExpressionType::ObjectBooleanExpressionType(
+                        target_model_filter_expression,
+                    )) => {
+                        // If the relationship target model does not have filterExpressionType do not include
+                        // it in the source model filter expression input type.
+                        if let Some(ref target_model_filter_expression_graphql) =
+                            &target_model_filter_expression.graphql
+                        {
+                            let annotation = FilterRelationshipAnnotation {
+                                source_type: relationship.source.clone(),
+                                relationship_name: relationship.name.clone(),
+                                target_source: target_model_source.clone(),
+                                target_type: target_model.model.data_type.clone(),
+                                target_model_name: target_model.model.name.clone(),
+                                relationship_type: relationship_type.clone(),
+                                mappings: relationship_model_mappings.to_vec(),
+                            };
 
-                                    input_fields.insert(
-                                    rel_name.clone(),
+                            let namespace_annotations =
+                                permissions::get_model_relationship_namespace_annotations(
+                                    target_model,
+                                    source_object_type_representation,
+                                    target_object_type_representation,
+                                    relationship_model_mappings,
+                                    &gds.metadata.object_types,
+                                )?;
+
+                            return Ok(Some((
+                                    relationship.field_name.clone(),
                                     builder.conditional_namespaced(
                                         gql_schema::InputField::<GDS>::new(
-                                            rel_name.clone(),
+                                            relationship.field_name.clone(),
                                             None,
                                             types::Annotation::Input(InputAnnotation::BooleanExpression(
                                                 BooleanExpressionAnnotation
@@ -292,7 +325,7 @@ fn build_comparable_relationships_schema(
                                             )),
                                             ast::TypeContainer::named_null(
                                                 gql_schema::RegisteredTypeName::new(
-                                                    target_model_filter_expression_type_name.0.clone(),
+                                                    target_model_filter_expression_graphql.type_name.0.clone(),
                                                 ),
                                             ),
                                             None,
@@ -300,18 +333,16 @@ fn build_comparable_relationships_schema(
                                         ),
                                         namespace_annotations
                                     ),
-                                );
-                                }
-                            }
+                                )));
                         }
                     }
                 }
             }
         }
     }
-    Ok(input_fields)
-}
 
+    Ok(None)
+}
 /// There are two types of BooleanExpressionType now, we try to build with both
 pub fn build_boolean_expression_input_schema(
     gds: &GDS,
