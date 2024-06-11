@@ -9,6 +9,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::hash::Hash;
 
 use crate::{impl_OpenDd_default_for, map_impl, seq_impl};
+use jsonschema_tidying::deduplicate_definitions;
 
 mod macros;
 
@@ -167,6 +168,8 @@ pub fn gen_root_schema_for<T: OpenDd>(
             }
         }
     }
+
+    deduplicate_definitions(&mut root_schema);
     root_schema
 }
 

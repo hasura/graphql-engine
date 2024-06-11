@@ -287,7 +287,7 @@
           ],
           "properties": {
             "literal": {
-              "$ref": "#/definitions/Role2"
+              "$ref": "#/definitions/Role"
             }
           },
           "additionalProperties": false
@@ -307,8 +307,36 @@
         }
       ]
     },
-    "Role2": {
-      "type": "string"
+    "EnvironmentValue": {
+      "$id": "https://hasura.io/jsonschemas/EnvironmentValue",
+      "title": "EnvironmentValue",
+      "description": "Either a literal string or a reference to a Hasura secret",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "valueFromEnv"
+          ],
+          "properties": {
+            "valueFromEnv": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "JWTClaimsMappingPathEntry_for_Role": {
       "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingPathEntry_for_Role",
@@ -327,7 +355,7 @@
           "description": "Default value to be used when no value is found when looking up the value using the `path`.",
           "anyOf": [
             {
-              "$ref": "#/definitions/Role2"
+              "$ref": "#/definitions/Role"
             },
             {
               "type": "null"
@@ -351,7 +379,7 @@
             "literal": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Role2"
+                "$ref": "#/definitions/Role"
               }
             }
           },
@@ -392,7 +420,7 @@
             "null"
           ],
           "items": {
-            "$ref": "#/definitions/Role2"
+            "$ref": "#/definitions/Role"
           }
         }
       },
@@ -723,37 +751,6 @@
           "enum": [
             "EdDSA"
           ]
-        }
-      ]
-    },
-    "EnvironmentValue": {
-      "$id": "https://hasura.io/jsonschemas/EnvironmentValue",
-      "title": "EnvironmentValue",
-      "description": "Either a literal string or a reference to a Hasura secret",
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "value"
-          ],
-          "properties": {
-            "value": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "valueFromEnv"
-          ],
-          "properties": {
-            "valueFromEnv": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
         }
       ]
     }

@@ -1,0 +1,11 @@
+[package]
+name = "jsonschema-tidying"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+
+[dependencies]
+regex = "1.10.5"
+schemars = "0.8.21"

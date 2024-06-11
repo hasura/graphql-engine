@@ -1161,7 +1161,7 @@
           "description": "The value expression to compare against.",
           "allOf": [
             {
-              "$ref": "#/definitions/ValueExpression2"
+              "$ref": "#/definitions/ValueExpression"
             }
           ]
         }
@@ -1178,49 +1178,27 @@
     "OperatorName": {
       "type": "string"
     },
-    "ValueExpression2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ValueExpression2",
-      "title": "ValueExpression",
-      "description": "An expression which evaluates to a value that can be used in permissions and various presets.",
-      "oneOf": [
-        {
-          "title": "Literal",
-          "type": "object",
-          "required": [
-            "literal"
-          ],
-          "properties": {
-            "literal": true
-          },
-          "additionalProperties": false
+    "OpenDdSubgraph": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSubgraph",
+      "title": "OpenDdSubgraph",
+      "type": "object",
+      "required": [
+        "name",
+        "objects"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^(?!__)[_a-zA-Z][_a-zA-Z0-9]*$"
         },
-        {
-          "title": "SessionVariable",
-          "type": "object",
-          "required": [
-            "sessionVariable"
-          ],
-          "properties": {
-            "sessionVariable": {
-              "$ref": "#/definitions/OpenDdSessionVariable"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "BooleanExpression",
-          "type": "object",
-          "required": [
-            "booleanExpression"
-          ],
-          "properties": {
-            "booleanExpression": {
-              "$ref": "#/definitions/ModelPredicate"
-            }
-          },
-          "additionalProperties": false
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OpenDdSubgraphObject"
+          }
         }
-      ]
+      },
+      "additionalProperties": false
     },
     "FieldIsNullPredicate": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldIsNullPredicate",
@@ -2799,7 +2777,7 @@
           ],
           "properties": {
             "value": {
-              "$ref": "#/definitions/ValueExpression2"
+              "$ref": "#/definitions/ValueExpression"
             }
           },
           "additionalProperties": false
@@ -3776,28 +3754,6 @@
         "enableRootFields": {
           "description": "Adds the `_entities` and `_services` root fields required for Apollo Federation.",
           "type": "boolean"
-        }
-      },
-      "additionalProperties": false
-    },
-    "OpenDdSubgraph": {
-      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSubgraph",
-      "title": "OpenDdSubgraph",
-      "type": "object",
-      "required": [
-        "name",
-        "objects"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "pattern": "^(?!__)[_a-zA-Z][_a-zA-Z0-9]*$"
-        },
-        "objects": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/OpenDdSubgraphObject"
-          }
         }
       },
       "additionalProperties": false
