@@ -4,6 +4,11 @@ use syn::{self, DeriveInput};
 
 use crate::MacroResult;
 
+lazy_static::lazy_static! {
+    /// Characters that we reject when constructing titles from schema names.
+    static ref INVALID_TITLE_CHARACTER: regex::Regex = regex::Regex::new("[^0-9A-Za-z_]").unwrap();
+}
+
 /// JSON schema attributes
 #[derive(Default, FromMeta)]
 #[darling(default)]
@@ -96,10 +101,13 @@ impl<'a> Container<'a> {
         let schema_name = json_schema_opts
             .rename
             .unwrap_or_else(|| input.ident.to_string());
-        let schema_title = json_schema_opts
-            .title
-            .or(doc_title)
-            .unwrap_or(schema_name.to_string());
+        let schema_title = json_schema_opts.title.or(doc_title).unwrap_or_else(|| {
+            // If the title is automatically created from the schema name, remove characters that
+            // might choke a code generator, such as ' ' or '/'.
+            INVALID_TITLE_CHARACTER
+                .replace_all(&schema_name, "_")
+                .to_string()
+        });
         let schema_example = json_schema_opts.example;
 
         let json_schema_metadata = JsonSchemaMetadata {

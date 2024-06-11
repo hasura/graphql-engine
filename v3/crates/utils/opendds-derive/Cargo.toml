@@ -10,8 +10,10 @@ bench = false
 [dependencies]
 convert_case = "0.6"
 darling = "0.20"
+lazy_static = "1"
 proc-macro2 = "1"
 quote = "1"
+regex = "1"
 syn = { version = "2", features = ["full"] }
 thiserror = "1"
 

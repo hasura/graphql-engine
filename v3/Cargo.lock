@@ -2080,8 +2080,10 @@ version = "0.1.0"
 dependencies = [
  "convert_case 0.6.0",
  "darling",
+ "lazy_static",
  "proc-macro2",
  "quote",
+ "regex",
  "syn 2.0.65",
  "thiserror",
 ]
