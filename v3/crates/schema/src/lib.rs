@@ -56,9 +56,7 @@ impl lang_graphql::schema::NamespacedGetter<GDS> for GDSRoleNamespaceGetter {
         namespaced: &'s gql_schema::Namespaced<GDS, C>,
     ) -> Option<(&'s C, &'s <GDS as SchemaContext>::NamespacedNodeInfo)> {
         match &namespaced.namespaced {
-            lang_graphql::schema::NamespacedData::AllowAll(namespaced_node_info) => {
-                Some((&namespaced.data, namespaced_node_info))
-            }
+            lang_graphql::schema::NamespacedData::AllowAll => Some((&namespaced.data, &None)),
             lang_graphql::schema::NamespacedData::Conditional(map) => map
                 .get(&self.scope)
                 .map(|namespaced_node_info| (&namespaced.data, namespaced_node_info)),
@@ -118,10 +116,6 @@ impl gql_schema::SchemaContext for GDS {
         types::Annotation::Output(types::OutputAnnotation::RootField(
             RootFieldAnnotation::Introspection,
         ))
-    }
-
-    fn introspection_namespace_node() -> Self::NamespacedNodeInfo {
-        None
     }
 
     type TypeId = types::TypeId;

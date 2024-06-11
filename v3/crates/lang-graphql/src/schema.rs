@@ -88,7 +88,6 @@ pub trait SchemaContext: std::fmt::Debug + Clone + PartialEq + Serialize {
     // Option<&GenericNodeInfo>. We can then use None to store empty information about
     // introspection fields.
     fn introspection_node() -> Self::GenericNodeInfo;
-    fn introspection_namespace_node() -> Self::NamespacedNodeInfo;
 
     // Types and functions related to schema generation.
 
@@ -127,13 +126,9 @@ impl<S: SchemaContext> Builder<S> {
         RegisteredTypeName(type_name)
     }
 
-    pub fn allow_all_namespaced<C>(
-        &mut self,
-        data: C,
-        namespaced_node_info: S::NamespacedNodeInfo,
-    ) -> Namespaced<S, C> {
+    pub fn allow_all_namespaced<C>(&mut self, data: C) -> Namespaced<S, C> {
         Namespaced {
-            namespaced: NamespacedData::AllowAll(namespaced_node_info),
+            namespaced: NamespacedData::AllowAll,
             data,
         }
     }
@@ -165,7 +160,7 @@ pub struct Namespaced<S: SchemaContext, C> {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum NamespacedData<S: SchemaContext> {
-    AllowAll(S::NamespacedNodeInfo),
+    AllowAll,
     Conditional(HashMap<S::Namespace, S::NamespacedNodeInfo>),
 }
 
@@ -223,20 +218,17 @@ pub struct Object<S: SchemaContext> {
 }
 
 fn build_typename_field<S: SchemaContext>(builder: &mut Builder<S>) -> Namespaced<S, Field<S>> {
-    builder.allow_all_namespaced(
-        Field {
-            name: mk_name!("__typename"),
-            description: None,
-            info: S::introspection_node(),
-            field_type: ast::Type {
-                base: ast::BaseType::Named(TypeName(mk_name!("String"))),
-                nullable: false,
-            },
-            arguments: BTreeMap::new(),
-            deprecation_status: DeprecationStatus::NotDeprecated,
+    builder.allow_all_namespaced(Field {
+        name: mk_name!("__typename"),
+        description: None,
+        info: S::introspection_node(),
+        field_type: ast::Type {
+            base: ast::BaseType::Named(TypeName(mk_name!("String"))),
+            nullable: false,
         },
-        S::introspection_namespace_node(),
-    )
+        arguments: BTreeMap::new(),
+        deprecation_status: DeprecationStatus::NotDeprecated,
+    })
 }
 
 impl<S: SchemaContext> Object<S> {

@@ -57,8 +57,7 @@ pub fn apollo_federation_service_schema(
         BTreeMap::new(),
         gql_schema::DeprecationStatus::NotDeprecated,
     );
-    let service_fields =
-        BTreeMap::from([(sdl_name, builder.allow_all_namespaced(sdl_field, None))]);
+    let service_fields = BTreeMap::from([(sdl_name, builder.allow_all_namespaced(sdl_field))]);
     Ok(gql_schema::Object::new(
         builder,
         service_typename,

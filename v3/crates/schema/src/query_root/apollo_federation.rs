@@ -98,7 +98,7 @@ pub(crate) fn apollo_federation_field(
     );
     let entities_arguments = BTreeMap::from([(
         mk_name!("representations"),
-        builder.allow_all_namespaced(representations_argument, None),
+        builder.allow_all_namespaced(representations_argument),
     )]);
     let entity_field = gql_schema::Field::new(
         mk_name!("_entities"),

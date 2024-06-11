@@ -149,7 +149,7 @@ fn input_object_type_input_fields(
             let namespaced_input_field = {
                 // if no input permissions are defined, include the field for all roles
                 if object_type_representation.type_input_permissions.is_empty() {
-                    builder.allow_all_namespaced(input_field, None)
+                    builder.allow_all_namespaced(input_field)
                 // if input permissions are defined, include the field conditionally
                 } else {
                     let mut role_map = HashMap::new();

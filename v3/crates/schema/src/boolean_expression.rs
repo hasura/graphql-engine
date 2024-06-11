@@ -32,68 +32,59 @@ fn build_builtin_operator_schema(
 
     input_fields.insert(
         not_field_name.clone(),
-        builder.allow_all_namespaced(
-            gql_schema::InputField::<GDS>::new(
-                not_field_name.clone(),
-                None,
-                types::Annotation::Input(InputAnnotation::BooleanExpression(
-                    BooleanExpressionAnnotation::BooleanExpressionArgument {
-                        field: types::ModelFilterArgument::NotOp,
-                    },
-                )),
-                ast::TypeContainer::named_null(gql_schema::RegisteredTypeName::new(
-                    type_name.0.clone(),
-                )),
-                None,
-                gql_schema::DeprecationStatus::NotDeprecated,
-            ),
+        builder.allow_all_namespaced(gql_schema::InputField::<GDS>::new(
+            not_field_name.clone(),
             None,
-        ),
+            types::Annotation::Input(InputAnnotation::BooleanExpression(
+                BooleanExpressionAnnotation::BooleanExpressionArgument {
+                    field: types::ModelFilterArgument::NotOp,
+                },
+            )),
+            ast::TypeContainer::named_null(gql_schema::RegisteredTypeName::new(
+                type_name.0.clone(),
+            )),
+            None,
+            gql_schema::DeprecationStatus::NotDeprecated,
+        )),
     );
 
     let and_field_name = &boolean_expression_info.graphql_config.and_operator_name;
 
     input_fields.insert(
         and_field_name.clone(),
-        builder.allow_all_namespaced(
-            gql_schema::InputField::<GDS>::new(
-                and_field_name.clone(),
-                None,
-                types::Annotation::Input(InputAnnotation::BooleanExpression(
-                    BooleanExpressionAnnotation::BooleanExpressionArgument {
-                        field: types::ModelFilterArgument::AndOp,
-                    },
-                )),
-                ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
-                    gql_schema::RegisteredTypeName::new(type_name.0.clone()),
-                )),
-                None,
-                gql_schema::DeprecationStatus::NotDeprecated,
-            ),
+        builder.allow_all_namespaced(gql_schema::InputField::<GDS>::new(
+            and_field_name.clone(),
             None,
-        ),
+            types::Annotation::Input(InputAnnotation::BooleanExpression(
+                BooleanExpressionAnnotation::BooleanExpressionArgument {
+                    field: types::ModelFilterArgument::AndOp,
+                },
+            )),
+            ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
+                gql_schema::RegisteredTypeName::new(type_name.0.clone()),
+            )),
+            None,
+            gql_schema::DeprecationStatus::NotDeprecated,
+        )),
     );
 
     let or_field_name = &boolean_expression_info.graphql_config.or_operator_name;
     input_fields.insert(
         or_field_name.clone(),
-        builder.allow_all_namespaced(
-            gql_schema::InputField::<GDS>::new(
-                or_field_name.clone(),
-                None,
-                types::Annotation::Input(InputAnnotation::BooleanExpression(
-                    BooleanExpressionAnnotation::BooleanExpressionArgument {
-                        field: types::ModelFilterArgument::OrOp,
-                    },
-                )),
-                ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
-                    gql_schema::RegisteredTypeName::new(type_name.0.clone()),
-                )),
-                None,
-                gql_schema::DeprecationStatus::NotDeprecated,
-            ),
+        builder.allow_all_namespaced(gql_schema::InputField::<GDS>::new(
+            or_field_name.clone(),
             None,
-        ),
+            types::Annotation::Input(InputAnnotation::BooleanExpression(
+                BooleanExpressionAnnotation::BooleanExpressionArgument {
+                    field: types::ModelFilterArgument::OrOp,
+                },
+            )),
+            ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
+                gql_schema::RegisteredTypeName::new(type_name.0.clone()),
+            )),
+            None,
+            gql_schema::DeprecationStatus::NotDeprecated,
+        )),
     );
 
     input_fields

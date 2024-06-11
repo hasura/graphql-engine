@@ -113,7 +113,7 @@ pub fn query_root_schema(
         if fields
             .insert(
                 apollo_federation_service_field.name.clone(),
-                builder.allow_all_namespaced(apollo_federation_service_field.clone(), None),
+                builder.allow_all_namespaced(apollo_federation_service_field.clone()),
             )
             .is_some()
         {

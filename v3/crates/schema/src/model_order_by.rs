@@ -34,37 +34,31 @@ pub fn build_order_by_enum_type_schema(
     let asc_ast_name = &order_by_input_config.asc_direction_field_value;
     order_by_values.insert(
         asc_ast_name.clone(),
-        builder.allow_all_namespaced(
-            gql_schema::EnumValue {
-                value: asc_ast_name.clone(),
-                description: Some("Sorts the data in ascending order".to_string()),
-                deprecation_status: gql_schema::DeprecationStatus::NotDeprecated,
-                info: types::Annotation::Input(types::InputAnnotation::Model(
-                    types::ModelInputAnnotation::ModelOrderByDirection {
-                        direction: types::ModelOrderByDirection::Asc,
-                    },
-                )),
-            },
-            None,
-        ),
+        builder.allow_all_namespaced(gql_schema::EnumValue {
+            value: asc_ast_name.clone(),
+            description: Some("Sorts the data in ascending order".to_string()),
+            deprecation_status: gql_schema::DeprecationStatus::NotDeprecated,
+            info: types::Annotation::Input(types::InputAnnotation::Model(
+                types::ModelInputAnnotation::ModelOrderByDirection {
+                    direction: types::ModelOrderByDirection::Asc,
+                },
+            )),
+        }),
     );
 
     let desc_ast_name = &order_by_input_config.desc_direction_field_value;
     order_by_values.insert(
         desc_ast_name.clone(),
-        builder.allow_all_namespaced(
-            gql_schema::EnumValue {
-                value: desc_ast_name.clone(),
-                description: Some("Sorts the data in descending order".to_string()),
-                deprecation_status: gql_schema::DeprecationStatus::NotDeprecated,
-                info: types::Annotation::Input(types::InputAnnotation::Model(
-                    types::ModelInputAnnotation::ModelOrderByDirection {
-                        direction: types::ModelOrderByDirection::Desc,
-                    },
-                )),
-            },
-            None,
-        ),
+        builder.allow_all_namespaced(gql_schema::EnumValue {
+            value: desc_ast_name.clone(),
+            description: Some("Sorts the data in descending order".to_string()),
+            deprecation_status: gql_schema::DeprecationStatus::NotDeprecated,
+            info: types::Annotation::Input(types::InputAnnotation::Model(
+                types::ModelInputAnnotation::ModelOrderByDirection {
+                    direction: types::ModelOrderByDirection::Desc,
+                },
+            )),
+        }),
     );
 
     Ok(gql_schema::TypeInfo::Enum(gql_schema::Enum {

@@ -203,8 +203,7 @@ fn convert_enum_type_definition<S: SchemaContext>(
         if values
             .insert(
                 enum_value.clone(),
-                builder
-                    .allow_all_namespaced(normalized_enum_value, S::introspection_namespace_node()),
+                builder.allow_all_namespaced(normalized_enum_value),
             )
             .is_some()
         {}
@@ -240,10 +239,7 @@ where
         if arguments
             .insert(
                 argument_name.clone(),
-                builder.allow_all_namespaced(
-                    normalized_argument_definition,
-                    S::introspection_namespace_node(),
-                ),
+                builder.allow_all_namespaced(normalized_argument_definition),
             )
             .is_some()
         {
@@ -285,10 +281,7 @@ where
         if fields
             .insert(
                 field_name.clone(),
-                builder.allow_all_namespaced(
-                    normalized_field_definition,
-                    S::introspection_namespace_node(),
-                ),
+                builder.allow_all_namespaced(normalized_field_definition),
             )
             .is_some()
         {
@@ -301,7 +294,7 @@ where
         if implements
             .insert(
                 register_type_name(builder, ast::TypeName(interface.item.clone())),
-                builder.allow_all_namespaced((), S::introspection_namespace_node()),
+                builder.allow_all_namespaced(()),
             )
             .is_some()
         {
@@ -338,10 +331,7 @@ where
         if fields
             .insert(
                 field_name.clone(),
-                builder.allow_all_namespaced(
-                    normalized_field_definition,
-                    S::introspection_namespace_node(),
-                ),
+                builder.allow_all_namespaced(normalized_field_definition),
             )
             .is_some()
         {
@@ -354,7 +344,7 @@ where
         if implements
             .insert(
                 register_type_name(builder, ast::TypeName(interface.item.clone())),
-                builder.allow_all_namespaced((), S::introspection_namespace_node()),
+                builder.allow_all_namespaced(()),
             )
             .is_some()
         {
@@ -390,7 +380,7 @@ where
         if members
             .insert(
                 register_type_name(builder, ast::TypeName(member.item.clone())),
-                builder.allow_all_namespaced((), S::introspection_namespace_node()),
+                builder.allow_all_namespaced(()),
             )
             .is_some()
         {
@@ -458,10 +448,7 @@ where
         if fields
             .insert(
                 field_name.clone(),
-                builder.allow_all_namespaced(
-                    normalized_field_definition,
-                    S::introspection_namespace_node(),
-                ),
+                builder.allow_all_namespaced(normalized_field_definition),
             )
             .is_some()
         {

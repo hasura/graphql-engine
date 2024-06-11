@@ -61,19 +61,16 @@ pub fn build_scalar_comparison_input(
 
     input_fields.insert(
         is_null_operator_name.clone(),
-        builder.allow_all_namespaced(
-            gql_schema::InputField::new(
-                is_null_operator_name.clone(),
-                None,
-                types::Annotation::Input(types::InputAnnotation::Model(
-                    types::ModelInputAnnotation::IsNullOperation,
-                )),
-                is_null_input_type,
-                None,
-                gql_schema::DeprecationStatus::NotDeprecated,
-            ),
+        builder.allow_all_namespaced(gql_schema::InputField::new(
+            is_null_operator_name.clone(),
             None,
-        ),
+            types::Annotation::Input(types::InputAnnotation::Model(
+                types::ModelInputAnnotation::IsNullOperation,
+            )),
+            is_null_input_type,
+            None,
+            gql_schema::DeprecationStatus::NotDeprecated,
+        )),
     );
 
     for (op_name, input_type) in operators {
@@ -110,21 +107,18 @@ pub fn build_scalar_comparison_input(
 
         input_fields.insert(
             op_name.clone(),
-            builder.allow_all_namespaced(
-                gql_schema::InputField::new(
-                    op_name.clone(),
-                    None,
-                    types::Annotation::Input(types::InputAnnotation::Model(
-                        types::ModelInputAnnotation::ComparisonOperation {
-                            operator_mapping: this_operator_mapping,
-                        },
-                    )),
-                    nullable_input_type,
-                    None,
-                    gql_schema::DeprecationStatus::NotDeprecated,
-                ),
+            builder.allow_all_namespaced(gql_schema::InputField::new(
+                op_name.clone(),
                 None,
-            ),
+                types::Annotation::Input(types::InputAnnotation::Model(
+                    types::ModelInputAnnotation::ComparisonOperation {
+                        operator_mapping: this_operator_mapping,
+                    },
+                )),
+                nullable_input_type,
+                None,
+                gql_schema::DeprecationStatus::NotDeprecated,
+            )),
         );
     }
 

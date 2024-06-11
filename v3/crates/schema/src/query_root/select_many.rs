@@ -37,7 +37,7 @@ pub(crate) fn generate_select_many_arguments(
         )?;
         arguments.insert(
             limit_argument.name.clone(),
-            builder.allow_all_namespaced(limit_argument, None),
+            builder.allow_all_namespaced(limit_argument),
         );
     }
 
@@ -52,7 +52,7 @@ pub(crate) fn generate_select_many_arguments(
 
         arguments.insert(
             offset_argument.name.clone(),
-            builder.allow_all_namespaced(offset_argument, None),
+            builder.allow_all_namespaced(offset_argument),
         );
     }
 
@@ -68,7 +68,7 @@ pub(crate) fn generate_select_many_arguments(
 
         arguments.insert(
             order_by_argument.name.clone(),
-            builder.allow_all_namespaced(order_by_argument, None),
+            builder.allow_all_namespaced(order_by_argument),
         );
     }
 
@@ -114,7 +114,7 @@ pub(crate) fn generate_select_many_arguments(
 
         arguments.insert(
             where_argument.name.clone(),
-            builder.allow_all_namespaced(where_argument, None),
+            builder.allow_all_namespaced(where_argument),
         );
     }
 

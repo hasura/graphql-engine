@@ -159,8 +159,6 @@ impl SchemaContext for SDL {
 
     fn introspection_node() -> Self::GenericNodeInfo {}
 
-    fn introspection_namespace_node() -> Self::NamespacedNodeInfo {}
-
     type TypeId = ast::Name;
 
     fn to_type_name(type_id: &Self::TypeId) -> ast::TypeName {

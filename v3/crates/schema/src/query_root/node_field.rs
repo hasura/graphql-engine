@@ -105,7 +105,7 @@ pub(crate) fn relay_node_field(
         // If a role implements the `node` field, then
         // it should also have access to the `id` argument,
         // which is why we use `allow_all_namespaced` here.
-        builder.allow_all_namespaced(id_argument, None),
+        builder.allow_all_namespaced(id_argument),
     );
     let mut relay_node_field_permissions = HashMap::new();
     for (role, role_type_permission) in roles_type_permissions {

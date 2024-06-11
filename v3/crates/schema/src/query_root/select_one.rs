@@ -51,7 +51,7 @@ pub(crate) fn select_one_field(
 
         arguments.insert(
             argument.name.clone(),
-            builder.allow_all_namespaced(argument, None),
+            builder.allow_all_namespaced(argument),
         );
     }
 
