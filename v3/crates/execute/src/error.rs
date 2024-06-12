@@ -95,16 +95,13 @@ impl FieldError {
     pub fn to_graphql_error(&self, path: Option<Vec<gql::http::PathSegment>>) -> GraphQLError {
         let details = self.get_details();
         match self {
-            Self::InternalError(_internal) => {
-                println!("{_internal}");
-                GraphQLError {
-                    message: "internal error".into(),
-                    path,
-                    // Internal errors showing up in the API response is not desirable.
-                    // Hence, extensions are masked for internal errors.
-                    extensions: None,
-                }
-            }
+            Self::InternalError(_internal) => GraphQLError {
+                message: "internal error".into(),
+                path,
+                // Internal errors showing up in the API response is not desirable.
+                // Hence, extensions are masked for internal errors.
+                extensions: None,
+            },
             e => GraphQLError {
                 message: e.to_string(),
                 path,
