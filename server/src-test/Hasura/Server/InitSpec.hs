@@ -101,7 +101,8 @@ emptyServeOptionsRaw =
       rsoPersistedQueries = Nothing,
       rsoPersistedQueriesTtl = Nothing,
       rsoRemoteSchemaResponsePriority = Nothing,
-      rsoHeaderPrecedence = Nothing
+      rsoHeaderPrecedence = Nothing,
+      rsoTraceQueryStatus = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec

@@ -332,7 +332,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoPersistedQueries :: Maybe Server.Types.PersistedQueriesState,
     rsoPersistedQueriesTtl :: Maybe Int,
     rsoRemoteSchemaResponsePriority :: Maybe Server.Types.RemoteSchemaResponsePriority,
-    rsoHeaderPrecedence :: Maybe Server.Types.HeaderPrecedence
+    rsoHeaderPrecedence :: Maybe Server.Types.HeaderPrecedence,
+    rsoTraceQueryStatus :: Maybe Server.Types.TraceQueryStatus
   }
 
 deriving stock instance (Show (Logging.EngineLogType impl)) => Show (ServeOptionsRaw impl)
@@ -643,7 +644,8 @@ data ServeOptions impl = ServeOptions
     soPersistedQueries :: Server.Types.PersistedQueriesState,
     soPersistedQueriesTtl :: Int,
     soRemoteSchemaResponsePriority :: Server.Types.RemoteSchemaResponsePriority,
-    soHeaderPrecedence :: Server.Types.HeaderPrecedence
+    soHeaderPrecedence :: Server.Types.HeaderPrecedence,
+    soTraceQueryStatus :: Server.Types.TraceQueryStatus
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

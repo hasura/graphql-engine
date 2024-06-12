@@ -225,6 +225,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soPersistedQueriesTtl <- withOptionDefault rsoPersistedQueriesTtl persistedQueriesTtlOption
   soRemoteSchemaResponsePriority <- withOptionDefault rsoRemoteSchemaResponsePriority remoteSchemaResponsePriorityOption
   soHeaderPrecedence <- withOptionDefault rsoHeaderPrecedence configuredHeaderPrecedenceOption
+  soTraceQueryStatus <- withOptionDefault rsoTraceQueryStatus traceQueryStatusOption
   pure ServeOptions {..}
 
 -- | Fetch Postgres 'Query.ConnParams' components from the environment
