@@ -6,7 +6,7 @@ use crate::MacroResult;
 
 lazy_static::lazy_static! {
     /// Characters that we reject when constructing titles from schema names.
-    static ref INVALID_TITLE_CHARACTER: regex::Regex = regex::Regex::new("[^0-9A-Za-z_]").unwrap();
+    static ref INVALID_NAME_CHARACTER: regex::Regex = regex::Regex::new("[^0-9A-Za-z_]").unwrap();
 }
 
 /// JSON schema attributes
@@ -14,6 +14,7 @@ lazy_static::lazy_static! {
 #[darling(default)]
 struct JsonSchemaOpts {
     rename: Option<String>,
+    id: Option<String>,
     title: Option<String>,
     example: Option<syn::Path>,
 }
@@ -72,6 +73,7 @@ pub struct Container<'a> {
 
 pub struct JsonSchemaMetadata {
     pub schema_name: String,
+    pub id: String,
     pub title: String,
     pub description: Option<String>,
     pub example: Option<syn::Path>,
@@ -98,21 +100,33 @@ impl<'a> Container<'a> {
                 );
             }
         };
+
+        // Rules:
+        // * The schema ID is set by the `id` property, falling back to `rename`.
+        // * The schema ID is always prefixed by a URL base.
+        // * The schema name is set by the `rename` property, falling back to `id`.
+        // * The schema title is set by the `title` property, falling back to `rename`, then `id`.
+        // * If the name or title are automatically created from the ID, remove characters that
+        //   might choke a code generator, such as ' ' or '/'.
+
+        let id = json_schema_opts
+            .id
+            .or_else(|| json_schema_opts.rename.clone())
+            .unwrap_or_else(|| input.ident.to_string());
+        let schema_id = format!("https://hasura.io/jsonschemas/metadata/{id}");
         let schema_name = json_schema_opts
             .rename
-            .unwrap_or_else(|| input.ident.to_string());
-        let schema_title = json_schema_opts.title.or(doc_title).unwrap_or_else(|| {
-            // If the title is automatically created from the schema name, remove characters that
-            // might choke a code generator, such as ' ' or '/'.
-            INVALID_TITLE_CHARACTER
-                .replace_all(&schema_name, "_")
-                .to_string()
-        });
+            .unwrap_or_else(|| INVALID_NAME_CHARACTER.replace_all(&id, "_").to_string());
+        let schema_title = json_schema_opts
+            .title
+            .or(doc_title)
+            .unwrap_or_else(|| schema_name.clone());
         let schema_example = json_schema_opts.example;
 
         let json_schema_metadata = JsonSchemaMetadata {
             schema_name,
             title: schema_title,
+            id: schema_id,
             description: doc_description,
             example: schema_example,
         };

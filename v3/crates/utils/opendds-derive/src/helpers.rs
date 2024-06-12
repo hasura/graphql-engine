@@ -93,6 +93,7 @@ pub fn apply_schema_metadata(
     schema_expr: &proc_macro2::TokenStream,
     json_schema_metadata: JsonSchemaMetadata,
 ) -> proc_macro2::TokenStream {
+    let id = json_schema_metadata.id;
     let title = json_schema_metadata.title;
     let description = json_schema_metadata
         .description
@@ -112,8 +113,8 @@ pub fn apply_schema_metadata(
         };
         let mut schema_object = schema.into_object();
         let metadata = schema_object.metadata();
+        metadata.id = Some(#id.to_owned());
         metadata.title = Some(#title.to_owned());
-        metadata.id = Some(format!("https://hasura.io/jsonschemas/metadata/{}", Self::_schema_name()));
         #description
         #examples
         schemars::schema::Schema::Object(schema_object)
