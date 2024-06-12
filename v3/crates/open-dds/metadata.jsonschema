@@ -150,10 +150,10 @@
                     "fieldMapping": {
                       "biography": {
                         "column": {
-                          "name": "biography"
-                        },
-                        "argumentMapping": {
-                          "ai_model": "model"
+                          "name": "biography",
+                          "argumentMapping": {
+                            "ai_model": "model"
+                          }
                         }
                       }
                     }
@@ -1204,24 +1204,18 @@
     "OperatorName": {
       "type": "string"
     },
-    "OpenDdSubgraph": {
-      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSubgraph",
-      "title": "OpenDdSubgraph",
+    "GraphqlApolloFederationConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/GraphqlApolloFederationConfig",
+      "title": "GraphqlApolloFederationConfig",
+      "description": "Configuration for the GraphQL schema of Hasura features for Apollo Federation.",
       "type": "object",
       "required": [
-        "name",
-        "objects"
+        "enableRootFields"
       ],
       "properties": {
-        "name": {
-          "type": "string",
-          "pattern": "^(?!__)[_a-zA-Z][_a-zA-Z0-9]*$"
-        },
-        "objects": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/OpenDdSubgraphObject"
-          }
+        "enableRootFields": {
+          "description": "Adds the `_entities` and `_services` root fields required for Apollo Federation.",
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -1611,24 +1605,21 @@
     "FieldMapping": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldMapping",
       "title": "FieldMapping",
-      "type": "object",
-      "required": [
-        "column"
-      ],
-      "properties": {
-        "column": {
-          "$ref": "#/definitions/ColumnFieldMapping"
-        },
-        "argumentMapping": {
-          "default": {},
-          "allOf": [
-            {
-              "$ref": "#/definitions/ArgumentMapping"
+      "oneOf": [
+        {
+          "description": "Source field directly maps to some column in the data connector.",
+          "type": "object",
+          "required": [
+            "column"
+          ],
+          "properties": {
+            "column": {
+              "$ref": "#/definitions/ColumnFieldMapping"
             }
-          ]
+          },
+          "additionalProperties": false
         }
-      },
-      "additionalProperties": false
+      ]
     },
     "ColumnFieldMapping": {
       "$id": "https://hasura.io/jsonschemas/metadata/ColumnFieldMapping",
@@ -1646,13 +1637,22 @@
               "$ref": "#/definitions/DataConnectorColumnName"
             }
           ]
+        },
+        "argumentMapping": {
+          "description": "Arguments to the column field",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ArgumentMapping"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
     },
     "DataConnectorColumnName": {
-      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorColumnName",
-      "title": "DataConnectorColumnName",
       "description": "The name of a column in a data connector.",
       "type": "string"
     },
@@ -2129,9 +2129,40 @@
           "default": {},
           "allOf": [
             {
-              "$ref": "#/definitions/ArgumentMapping"
+              "$ref": "#/definitions/ArgumentMapping2"
             }
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ArgumentMapping2": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentMapping",
+      "title": "ArgumentMapping",
+      "description": "Mapping of a comand or model argument name to the corresponding argument name used in the data connector. The key of this object is the argument name used in the command or model and the value is the argument name used in the data connector.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/DataConnectorArgumentName"
+      }
+    },
+    "OpenDdSubgraph": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSubgraph",
+      "title": "OpenDdSubgraph",
+      "type": "object",
+      "required": [
+        "name",
+        "objects"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^(?!__)[_a-zA-Z][_a-zA-Z0-9]*$"
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OpenDdSubgraphObject"
+          }
         }
       },
       "additionalProperties": false
@@ -2495,7 +2526,7 @@
           "default": {},
           "allOf": [
             {
-              "$ref": "#/definitions/ArgumentMapping"
+              "$ref": "#/definitions/ArgumentMapping2"
             }
           ]
         }
@@ -3806,22 +3837,6 @@
         "rootOperationTypeName": {
           "description": "The name of the root operation type name for mutations. Usually `mutation`.",
           "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
-    "GraphqlApolloFederationConfig": {
-      "$id": "https://hasura.io/jsonschemas/metadata/GraphqlApolloFederationConfig",
-      "title": "GraphqlApolloFederationConfig",
-      "description": "Configuration for the GraphQL schema of Hasura features for Apollo Federation.",
-      "type": "object",
-      "required": [
-        "enableRootFields"
-      ],
-      "properties": {
-        "enableRootFields": {
-          "description": "Adds the `_entities` and `_services` root fields required for Apollo Federation.",
-          "type": "boolean"
         }
       },
       "additionalProperties": false

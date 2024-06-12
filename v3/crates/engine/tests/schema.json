@@ -2510,10 +2510,10 @@
                   },
                   "Name": {
                     "column": {
-                      "name": "Name"
-                    },
-                    "argumentMapping": {
-                      "length": "string_length"
+                      "name": "Name",
+                      "argumentMapping": {
+                        "length": "string_length"
+                      }
                     }
                   }
                 }

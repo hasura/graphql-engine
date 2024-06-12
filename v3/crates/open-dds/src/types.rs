@@ -340,10 +340,10 @@ impl ObjectType {
                             "fieldMapping": {
                                 "biography": {
                                     "column": {
-                                        "name": "biography"
-                                    },
-                                    "argumentMapping": {
-                                        "ai_model": "model"
+                                        "name": "biography",
+                                        "argumentMapping": {
+                                            "ai_model": "model"
+                                        }
                                     }
                                 }
                             }
@@ -420,10 +420,9 @@ impl Deref for FieldMappings {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "FieldMapping")]
-pub struct FieldMapping {
-    pub column: ColumnFieldMapping,
-    #[opendd(default, json_schema(default_exp = "serde_json::json!({})"))]
-    pub argument_mapping: ArgumentMapping,
+pub enum FieldMapping {
+    /// Source field directly maps to some column in the data connector.
+    Column(ColumnFieldMapping),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
@@ -434,6 +433,9 @@ pub struct FieldMapping {
 pub struct ColumnFieldMapping {
     /// The name of the target column
     pub name: DataConnectorColumnName, // TODO: Map field arguments
+
+    /// Arguments to the column field
+    pub argument_mapping: Option<ArgumentMapping>,
 }
 
 #[repr(transparent)]

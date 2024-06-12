@@ -313,16 +313,18 @@ pub fn resolve_data_connector_type_mapping(
     for field_name in type_representation.fields.keys() {
         let (resolved_field_mapping_column, resolved_argument_mappings) =
             if let Some(field_mapping) = unconsumed_field_mappings.remove(field_name) {
-                (
-                    &field_mapping.column.name,
-                    field_mapping.argument_mapping.clone(),
-                )
+                match field_mapping {
+                    open_dds::types::FieldMapping::Column(column_mapping) => (
+                        &column_mapping.name,
+                        column_mapping.argument_mapping.clone().unwrap_or_default(),
+                    ),
+                }
             } else {
                 // If no mapping is defined for a field, implicitly create a mapping
                 // with the same column name as the field.
                 (
                     DataConnectorColumnName::ref_cast(&field_name.0 .0),
-                    ArgumentMapping(BTreeMap::new()),
+                    ArgumentMapping::default(),
                 )
             };
         let source_column = get_column(ndc_object_type, field_name, resolved_field_mapping_column)?;
