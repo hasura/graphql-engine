@@ -262,9 +262,7 @@ fn build_comparison_expression<'s>(
 ) -> Result<ndc_models::Expression, error::Error> {
     let mut expressions = Vec::new();
 
-    println!("build_comparison_expression");
     for (_op_name, op_value) in field.value.as_object()? {
-        println!("{op_value:?}");
         match op_value.info.generic {
             schema::Annotation::Input(InputAnnotation::Model(
                 ModelInputAnnotation::IsNullOperation,
