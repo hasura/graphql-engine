@@ -80,6 +80,7 @@ actionExecute customTypes actionInfo = runMaybeT do
     <&> \(argsJson, fields) ->
       IR.AnnActionExecution
         { _aaeName = actionName,
+          _aaeType = _adType definition,
           _aaeFields = fields,
           _aaePayload = argsJson,
           _aaeOutputType = _adOutputType definition,

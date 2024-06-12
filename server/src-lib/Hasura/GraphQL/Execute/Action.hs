@@ -181,6 +181,7 @@ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics
           _aaeForwardClientHeaders
           _aaeWebhook
           handlerPayload
+          _aaeType
           _aaeTimeOut
           _aaeRequestTransform
           _aaeResponseTransform
@@ -565,6 +566,7 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
                   forwardClientHeaders
                   webhookUrl
                   (ActionWebhookPayload actionContext sessionVariables inputPayload gqlQueryText)
+                  (ActionMutation ActionAsynchronous)
                   timeout
                   metadataRequestTransform
                   metadataResponseTransform
@@ -595,6 +597,7 @@ callWebhook ::
   Bool ->
   EnvRecord ResolvedWebhook ->
   ActionWebhookPayload ->
+  ActionType ->
   Timeout ->
   Maybe RequestTransform ->
   Maybe MetadataResponseTransform ->
@@ -612,6 +615,7 @@ callWebhook
   forwardClientHeaders
   resolvedWebhook
   actionWebhookPayload
+  actionType
   timeoutSeconds
   metadataRequestTransform
   metadataResponseTransform
@@ -706,7 +710,7 @@ callWebhook
             (pmActionBytesReceived prometheusMetrics)
             responseBodySize
         logger :: (L.Logger L.Hasura) <- asks getter
-        L.unLoggerTracing logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
+        L.unLoggerTracing logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName actionType
 
         case J.eitherDecode transformedResponseBody of
           Left e -> do

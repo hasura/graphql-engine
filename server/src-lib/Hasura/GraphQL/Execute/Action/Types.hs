@@ -154,7 +154,8 @@ data ActionHandlerLog = ActionHandlerLog
     _ahlRequestSize :: !Int64,
     _ahlTransformedRequestSize :: !(Maybe Int64),
     _ahlResponseSize :: !Int64,
-    _ahlActionName :: !ActionName
+    _ahlActionName :: !ActionName,
+    _ahlActionType :: !ActionType
   }
   deriving (Show, Generic)
 

@@ -42,8 +42,8 @@ more.
 ## Creating a VPC
 
 Once the feature is enabled for your account, you'll see a new tab on the dashboard called **VPCs**. All existing VPCs
-can be found under VPCs tab on cloud dashboard. You can also initiate a request to create a new VPC. To request a new VPC, click on the **Create New
-VPC** button on top. This will open a form with the following fields:
+can be found under VPCs tab on cloud dashboard. Only `VPC owner` can initiate a request to create a new VPC. To request a new VPC, click
+on the **Create New VPC** button on top. This will open a form with the following fields:
 
 <Thumbnail src="/img/deployment/dedicated-vpc/view-vpc-list.png" alt="VPC list" width="1146px" />
 
@@ -73,16 +73,23 @@ resolve this.
 
 ## Create projects within the VPC
 
-Once the VPC is provisioned, create a project by clicking on the **New Project** button in VPC details screen or
-[get in touch with us](https://hasura.io/help/) to migrate your existing Hasura Project to the VPC.
-
-<Thumbnail src="/img/deployment/dedicated-vpc/create-vpc-projects.png" alt="Create VPC Project" width="500px" />
-
+Once the VPC is provisioned, `VPC owner` or `VPC manager` can create a project under the VPC by:
+  - Clicking on the **New Project** button from the Projects tab and select **Create VPC Project**
+    <Thumbnail src="/img/deployment/dedicated-vpc/create-projects-under-vpc-01.png" alt="Create VPC Project" width="900px" />
+  - Clicking on the **New Project** button in VPC details screen
+    <Thumbnail src="/img/deployment/dedicated-vpc/create-projects-under-vpc-02.png" alt="Create VPC Project" width="900px" />
+    
 All projects within a VPC are listed under **Projects**.
 
 <Thumbnail src="/img/deployment/dedicated-vpc/vpc-projects-list.png" alt="VPC Projects List" width="900px" />
 
 If peering is not enabled, the project resides in a dedicated VPC on the Hasura side, but the traffic **from the project to the database** will be routed over the public internet.
+
+:::info Migrating existing projects to VPC
+
+[Get in touch with us](https://hasura.io/help/) to migrate your existing Hasura Project to the VPC.
+
+:::
 
 ## VPC Peering
 
@@ -92,3 +99,11 @@ Follow the Cloud provider-specific instruction to create VPC peering requests:
 - [AWS](/hasura-cloud/dedicated-vpc/aws-network-peering.mdx)
 - [Azure](/hasura-cloud/dedicated-vpc/azure-network-peering.mdx)
 - [GCP](/hasura-cloud/dedicated-vpc/gcp-network-peering.mdx)
+
+## VPC Collaborators
+
+You can invite collaborators to your VPC and grant them either of the following roles:
+  - [VPC Manager](/hasura-cloud/dedicated-vpc/vpc-collaborators.mdx#vpc-manager)
+  - [VPC Viewer](/hasura-cloud/dedicated-vpc/vpc-collaborators.mdx#vpc-viewer)
+
+Read more about [VPC Collaborators](/hasura-cloud/dedicated-vpc/vpc-collaborators.mdx).
