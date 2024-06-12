@@ -106,6 +106,14 @@ fn collect_argument_from_rows(
                     ProcessResponseAs::Array { .. } | ProcessResponseAs::Object { .. } => {
                         collect_argument_from_row(row, join_fields, path, &mut arguments)?;
                     }
+                    ProcessResponseAs::Aggregates { .. } => {
+                        return Err(error::FieldInternalError::InternalGeneric {
+                            description:
+                                "Unexpected aggregate response on the LHS of a remote join"
+                                    .to_owned(),
+                        }
+                        .into())
+                    }
                     ProcessResponseAs::CommandResponse {
                         command_name: _,
                         type_container,

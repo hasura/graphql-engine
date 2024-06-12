@@ -23,6 +23,7 @@ use schema::{Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAn
 
 pub mod apollo_federation;
 pub mod node_field;
+pub mod select_aggregate;
 pub mod select_many;
 pub mod select_one;
 
@@ -213,6 +214,17 @@ fn generate_model_rootfield_ir<'n, 's>(
                 source,
                 &session.variables,
                 request_headers,
+                model_name,
+            )?,
+        },
+        RootFieldKind::SelectAggregate => root_field::QueryRootField::ModelSelectAggregate {
+            selection_set: &field.selection_set,
+            ir: select_aggregate::select_aggregate_generate_ir(
+                field,
+                field_call,
+                data_type,
+                source,
+                &session.variables,
                 model_name,
             )?,
         },

@@ -97,3 +97,42 @@ fn test_introspect_boolean_expression_in_command() -> anyhow::Result<()> {
         ],
     )
 }
+
+#[test]
+fn test_introspect_aggregates_root_field_simple_select() -> anyhow::Result<()> {
+    let test_path_string = "execute/aggregates/root_field/simple_select";
+    common::test_introspection_expectation(
+        test_path_string,
+        &[
+            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/aggregates/common_metadata/pg_types.json",
+            "execute/aggregates/common_metadata/supergraph.json",
+        ],
+    )
+}
+
+#[test]
+fn test_introspect_aggregates_root_field_filtering() -> anyhow::Result<()> {
+    let test_path_string = "execute/aggregates/root_field/filtering";
+    common::test_introspection_expectation(
+        test_path_string,
+        &[
+            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/aggregates/common_metadata/pg_types.json",
+            "execute/aggregates/common_metadata/supergraph.json",
+        ],
+    )
+}
+
+#[test]
+fn test_introspect_aggregates_root_field_nested_object() -> anyhow::Result<()> {
+    let test_path_string = "execute/aggregates/root_field/nested_object";
+    common::test_introspection_expectation(
+        test_path_string,
+        &[
+            "execute/aggregates/common_metadata/custom_connector_schema.json",
+            "execute/aggregates/common_metadata/custom_connector_types.json",
+            "execute/aggregates/common_metadata/supergraph.json",
+        ],
+    )
+}

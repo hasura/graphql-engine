@@ -164,7 +164,8 @@
                   }
                 }
               }
-            }
+            },
+            "aggregate_selection": null
           },
           "type_container": {
             "base": {

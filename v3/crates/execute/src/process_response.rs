@@ -14,7 +14,7 @@ use open_dds::types::FieldName;
 use super::global_id::{global_id_col_format, GLOBAL_ID_VERSION};
 use super::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use super::plan::ProcessResponseAs;
-use crate::error;
+use crate::error::{self, FieldInternalError};
 use metadata_resolve::Qualified;
 use schema::{Annotation, GlobalID, OutputAnnotation, GDS};
 
@@ -378,6 +378,62 @@ fn process_command_field_value(
     }
 }
 
+fn process_aggregate_requested_fields(
+    row_set: ndc_models::RowSet,
+    requested_fields: &IndexMap<String, crate::ir::aggregates::AggregateFieldSelection>,
+) -> Result<json::Map<String, json::Value>, error::FieldError> {
+    let mut json_object = json::Map::<String, json::Value>::new();
+    let mut aggregate_results = row_set.aggregates
+        .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+            summary:
+                "Unable to parse response from NDC, RowSet aggregates property was null when it was expected to be an object"
+                    .to_owned(),
+        })?;
+
+    for (field_name, aggregate_field_selection) in requested_fields {
+        let aggregate_value = aggregate_results.swap_remove(field_name).ok_or_else(|| {
+            error::NDCUnexpectedError::BadNDCResponse {
+                summary: format!("missing aggregate field: {}", field_name),
+            }
+        })?;
+
+        let graphql_field_path = aggregate_field_selection.get_graphql_field_path();
+        set_value_at_json_path(&mut json_object, graphql_field_path, aggregate_value)?;
+    }
+
+    Ok(json_object)
+}
+
+fn set_value_at_json_path(
+    mut json_object: &mut json::Map<String, json::Value>,
+    path: &[Alias],
+    value: json::Value,
+) -> Result<(), error::FieldError> {
+    let mut path_iterator = path.iter();
+    let mut path_element =
+        path_iterator
+            .next()
+            .ok_or_else(|| FieldInternalError::InternalGeneric {
+                description: "Path to set value in JSON was empty".to_owned(),
+            })?;
+
+    for next_path_element in path_iterator {
+        let field_value = json_object
+            .entry(path_element.0.as_str())
+            .or_insert_with(|| json::Value::Object(json::Map::new()));
+        json_object =
+            field_value
+                .as_object_mut()
+                .ok_or_else(|| FieldInternalError::InternalGeneric {
+                    description: "Encountered non-object type in JSON along path".to_owned(),
+                })?;
+        path_element = next_path_element;
+    }
+
+    json_object.insert(path_element.to_string(), value);
+    Ok(())
+}
+
 pub fn process_response(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     rows_sets: Vec<ndc_models::RowSet>,
@@ -411,6 +467,10 @@ pub fn process_response(
                         type_container,
                     )?;
                     json::to_value(result).map_err(error::FieldError::from)
+                }
+                ProcessResponseAs::Aggregates { requested_fields } => {
+                    let result = process_aggregate_requested_fields(row_set, requested_fields)?;
+                    Ok(json::Value::Object(result))
                 }
             }
         },

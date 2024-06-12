@@ -89,7 +89,7 @@ impl NDCRelationshipName {
 }
 
 /// IR that represents the selected fields of an output type.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default)]
 pub(crate) struct ResultSelectionSet<'s> {
     // The fields in the selection set. They are stored in the form that would
     // be converted and sent over the wire. Serialized the map as ordered to

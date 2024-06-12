@@ -16,7 +16,28 @@ pub(crate) fn scalar_types() -> BTreeMap<String, ndc_models::ScalarType> {
             "String".into(),
             ndc_models::ScalarType {
                 representation: Some(ndc_models::TypeRepresentation::String),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: BTreeMap::from_iter([
+                    (
+                        "max".into(),
+                        ndc_models::AggregateFunctionDefinition {
+                            result_type: ndc_models::Type::Nullable {
+                                underlying_type: Box::new(ndc_models::Type::Named {
+                                    name: "String".into(),
+                                }),
+                            },
+                        },
+                    ),
+                    (
+                        "min".into(),
+                        ndc_models::AggregateFunctionDefinition {
+                            result_type: ndc_models::Type::Nullable {
+                                underlying_type: Box::new(ndc_models::Type::Named {
+                                    name: "String".into(),
+                                }),
+                            },
+                        },
+                    ),
+                ]),
                 comparison_operators: BTreeMap::from_iter([(
                     "like".into(),
                     ndc_models::ComparisonOperatorDefinition::Custom {

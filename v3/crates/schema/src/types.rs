@@ -10,6 +10,7 @@ use std::{
 };
 
 use open_dds::{
+    aggregates,
     arguments::ArgumentName,
     commands,
     data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorOperatorName},
@@ -74,6 +75,7 @@ pub struct EntityFieldTypeNameMapping {
 pub enum RootFieldKind {
     SelectOne,
     SelectMany,
+    SelectAggregate,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -186,6 +188,7 @@ pub enum OutputAnnotation {
         typename_mappings: HashMap<ast::TypeName, Vec<types::FieldName>>,
     },
     SDL,
+    Aggregate(crate::aggregates::AggregateOutputAnnotation),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
@@ -219,6 +222,7 @@ pub enum ModelInputAnnotation {
         // Optional because we allow building schema without specifying a data source
         ndc_column: Option<NdcColumnForComparison>,
     },
+    ModelFilterInputArgument,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
@@ -371,6 +375,14 @@ pub enum TypeId {
         graphql_type_name: ast::TypeName,
     },
     ApolloFederationType(PossibleApolloFederationTypes),
+    AggregateSelectOutputType {
+        aggregate_expression_name: Qualified<aggregates::AggregateExpressionName>,
+        graphql_type_name: ast::TypeName,
+    },
+    ModelFilterInputType {
+        model_name: Qualified<models::ModelName>,
+        graphql_type_name: ast::TypeName,
+    },
 }
 
 #[derive(Serialize, Clone, Debug, Hash, PartialEq, Eq)]
@@ -411,6 +423,12 @@ impl TypeId {
                 graphql_type_name, ..
             }
             | TypeId::OrderByEnumType {
+                graphql_type_name, ..
+            }
+            | TypeId::AggregateSelectOutputType {
+                graphql_type_name, ..
+            }
+            | TypeId::ModelFilterInputType {
                 graphql_type_name, ..
             } => graphql_type_name.clone(),
             TypeId::NodeRoot => ast::TypeName(mk_name!("Node")),

@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use super::{
     commands,
-    query_root::{apollo_federation, node_field, select_many, select_one},
+    query_root::{apollo_federation, node_field, select_aggregate, select_many, select_one},
 };
 use schema::GDS;
 
@@ -39,6 +39,11 @@ pub enum QueryRootField<'n, 's> {
     ModelSelectMany {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
         ir: select_many::ModelSelectMany<'n, 's>,
+    },
+    // Operation that selects an aggregate of rows from a model
+    ModelSelectAggregate {
+        selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
+        ir: select_aggregate::ModelSelectAggregate<'n, 's>,
     },
     // Operation that selects a single row from the model corresponding
     // to the Global Id input.

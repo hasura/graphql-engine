@@ -149,7 +149,7 @@ pub(crate) async fn explain_mutation_plan(
 async fn get_execution_steps<'s>(
     http_context: &HttpContext,
     alias: gql::ast::common::Alias,
-    process_response_as: &ProcessResponseAs<'s>,
+    process_response_as: &ProcessResponseAs<'s, 's>,
     join_locations: JoinLocations<(RemoteJoin<'s, '_>, JoinId)>,
     ndc_request: types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
@@ -167,7 +167,9 @@ async fn get_execution_steps<'s>(
                 },
             )))
         }
-        ProcessResponseAs::Array { .. } | ProcessResponseAs::Object { .. } => {
+        ProcessResponseAs::Array { .. }
+        | ProcessResponseAs::Object { .. }
+        | ProcessResponseAs::Aggregates { .. } => {
             // A model execution node
             let data_connector_explain =
                 fetch_explain_from_data_connector(http_context, &ndc_request, data_connector).await;

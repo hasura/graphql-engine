@@ -2,6 +2,7 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use serde::Serialize;
 
+pub mod aggregates;
 pub mod arguments;
 pub mod commands;
 pub mod error;

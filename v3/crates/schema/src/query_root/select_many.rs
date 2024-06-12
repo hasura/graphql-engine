@@ -8,12 +8,12 @@ use lang_graphql::schema as gql_schema;
 use std::collections::BTreeMap;
 
 use crate::mk_deprecation_status;
+use crate::model_filter_input::{
+    add_limit_input_field, add_offset_input_field, add_order_by_input_field, add_where_input_field,
+};
 use crate::{
-    model_arguments,
-    model_filter::get_where_expression_input_field,
-    model_order_by::get_order_by_expression_input_field,
-    permissions,
-    types::{self, output_type::get_custom_output_type, Annotation, ModelInputAnnotation},
+    model_arguments, permissions,
+    types::{self, output_type::get_custom_output_type, Annotation},
     GDS,
 };
 use metadata_resolve;
@@ -27,96 +27,10 @@ pub(crate) fn generate_select_many_arguments(
 {
     let mut arguments = BTreeMap::new();
 
-    // insert limit argument
-    if let Some(limit_field) = &model.model.graphql_api.limit_field {
-        let limit_argument = generate_int_input_argument(
-            limit_field.field_name.as_str(),
-            Annotation::Input(types::InputAnnotation::Model(
-                ModelInputAnnotation::ModelLimitArgument,
-            )),
-        )?;
-        arguments.insert(
-            limit_argument.name.clone(),
-            builder.allow_all_namespaced(limit_argument),
-        );
-    }
-
-    // insert offset argument
-    if let Some(offset_field) = &model.model.graphql_api.offset_field {
-        let offset_argument = generate_int_input_argument(
-            offset_field.field_name.as_str(),
-            Annotation::Input(types::InputAnnotation::Model(
-                ModelInputAnnotation::ModelOffsetArgument,
-            )),
-        )?;
-
-        arguments.insert(
-            offset_argument.name.clone(),
-            builder.allow_all_namespaced(offset_argument),
-        );
-    }
-
-    // generate and insert order_by argument
-    if let Some(order_by_expression_info) = &model.model.graphql_api.order_by_expression {
-        let order_by_argument = {
-            get_order_by_expression_input_field(
-                builder,
-                model.model.name.clone(),
-                order_by_expression_info,
-            )
-        };
-
-        arguments.insert(
-            order_by_argument.name.clone(),
-            builder.allow_all_namespaced(order_by_argument),
-        );
-    }
-
-    // generate and insert where argument
-    let boolean_expression_filter_type =
-        &model
-            .model
-            .filter_expression_type
-            .as_ref()
-            .and_then(|bool_exp| match bool_exp {
-                metadata_resolve::ModelExpressionType::ObjectBooleanExpressionType(
-                    object_boolean_expression_type,
-                ) => object_boolean_expression_type
-                    .graphql
-                    .as_ref()
-                    .map(|graphql_config| {
-                        (
-                            object_boolean_expression_type.name.clone(),
-                            graphql_config.clone(),
-                        )
-                    }),
-                metadata_resolve::ModelExpressionType::BooleanExpressionType(
-                    boolean_expression_object_type,
-                ) => boolean_expression_object_type
-                    .graphql
-                    .as_ref()
-                    .map(|graphql_config| {
-                        (
-                            boolean_expression_object_type.name.clone(),
-                            graphql_config.clone(),
-                        )
-                    }),
-            });
-
-    if let Some((boolean_expression_type_name, boolean_expression_graphql_config)) =
-        boolean_expression_filter_type
-    {
-        let where_argument = get_where_expression_input_field(
-            builder,
-            boolean_expression_type_name.clone(),
-            boolean_expression_graphql_config,
-        );
-
-        arguments.insert(
-            where_argument.name.clone(),
-            builder.allow_all_namespaced(where_argument),
-        );
-    }
+    add_limit_input_field(&mut arguments, builder, model)?;
+    add_offset_input_field(&mut arguments, builder, model)?;
+    add_order_by_input_field(&mut arguments, builder, model)?;
+    add_where_input_field(&mut arguments, builder, model)?;
 
     Ok(arguments)
 }
@@ -189,20 +103,4 @@ pub(crate) fn select_many_field(
         )?,
     );
     Ok((query_root_field, field))
-}
-
-///  Generates the input field for the arguments which are of type int.
-pub(crate) fn generate_int_input_argument(
-    name: &str,
-    annotation: Annotation,
-) -> Result<gql_schema::InputField<GDS>, crate::Error> {
-    let input_field_name = metadata_resolve::mk_name(name)?;
-    Ok(gql_schema::InputField::new(
-        input_field_name,
-        None,
-        annotation,
-        ast::TypeContainer::named_null(gql_schema::RegisteredTypeName::int()),
-        None,
-        gql_schema::DeprecationStatus::NotDeprecated,
-    ))
 }

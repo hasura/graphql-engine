@@ -1,6 +1,7 @@
 use gql::ast::common as ast;
 use lang_graphql as gql;
 use open_dds::{
+    aggregates::AggregationFunctionName,
     arguments::ArgumentName,
     data_connector::{DataConnectorColumnName, DataConnectorName},
     relationships::RelationshipName,
@@ -12,7 +13,7 @@ use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
-use metadata_resolve::Qualified;
+use metadata_resolve::{Qualified, QualifiedTypeName};
 use schema::{Annotation, NamespaceAnnotation};
 
 #[derive(Error, Debug, Transitive)]
@@ -152,6 +153,25 @@ pub enum InternalDeveloperError {
 
     #[error("The value expression could not be converted to header value. Error: ")]
     UnableToConvertValueExpressionToHeaderValue,
+
+    #[error("The aggregation function {aggregation_function} operating over the {aggregate_operand_type} type is missing a data connector mapping for {data_connector_name}")]
+    DataConnectorAggregationFunctionNotFound {
+        aggregate_operand_type: QualifiedTypeName,
+        aggregation_function: AggregationFunctionName,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+
+    #[error("A field ({field_name}) with an AggregatableField annotation was found on a scalar-typed ({aggregate_operand_type}) operand's selection set")]
+    AggregatableFieldFoundOnScalarTypedOperand {
+        field_name: FieldName,
+        aggregate_operand_type: QualifiedTypeName,
+    },
+
+    #[error("The aggregation function {aggregation_function} was used on the model object type and not on a model field. Aggregation functions operate on columns, not rows")]
+    ColumnAggregationFunctionUsedOnModelObjectType {
+        aggregate_operand_type: QualifiedTypeName,
+        aggregation_function: AggregationFunctionName,
+    },
 
     // we'll be adding them shortly, and not advertising the feature until they are complete
     // however temporarily emitting the error allows merging the work in chunks

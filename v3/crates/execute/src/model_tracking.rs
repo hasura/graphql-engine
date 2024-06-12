@@ -66,6 +66,10 @@ pub fn get_all_usage_counts_in_query(ir: &ir::IR<'_, '_>) -> UsagesCounts {
                         let usage_counts = ir.usage_counts.clone();
                         extend_usage_count(usage_counts, &mut all_usage_counts);
                     }
+                    root_field::QueryRootField::ModelSelectAggregate { ir, .. } => {
+                        let usage_counts = ir.usage_counts.clone();
+                        extend_usage_count(usage_counts, &mut all_usage_counts);
+                    }
                     root_field::QueryRootField::NodeSelect(ir1) => match ir1 {
                         None => {}
                         Some(ir2) => {

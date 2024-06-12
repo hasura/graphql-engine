@@ -1,5 +1,6 @@
 use lang_graphql::schema::{self as gql_schema, SchemaContext};
 use lang_graphql::{ast::common as ast, mk_name};
+use open_dds::aggregates::AggregateExpressionName;
 use open_dds::types::FieldName;
 use open_dds::{
     commands::CommandName,
@@ -19,11 +20,13 @@ use metadata_resolve::{
 use self::types::PossibleApolloFederationTypes;
 
 // we deliberately do not export these entire modules and instead explicitly export types below
+mod aggregates;
 mod apollo_federation;
 mod boolean_expression;
 mod commands;
 mod model_arguments;
 mod model_filter;
+mod model_filter_input;
 mod model_order_by;
 mod mutation_root;
 mod permissions;
@@ -31,6 +34,7 @@ mod query_root;
 mod relay;
 mod types;
 
+pub use aggregates::{AggregateOutputAnnotation, AggregationFunctionAnnotation};
 pub use types::output_type::relationship::{
     CommandRelationshipAnnotation, CommandTargetSource, FilterRelationshipAnnotation,
     ModelRelationshipAnnotation, OrderByRelationshipAnnotation,
@@ -221,6 +225,24 @@ impl gql_schema::SchemaContext for GDS {
                     apollo_federation::apollo_federation_service_schema(builder)?,
                 ))
             }
+            types::TypeId::AggregateSelectOutputType {
+                aggregate_expression_name,
+                graphql_type_name,
+            } => aggregates::build_aggregate_select_output_type(
+                self,
+                builder,
+                aggregate_expression_name,
+                graphql_type_name,
+            ),
+            types::TypeId::ModelFilterInputType {
+                model_name,
+                graphql_type_name,
+            } => model_filter_input::build_model_filter_input_type(
+                self,
+                builder,
+                model_name,
+                graphql_type_name,
+            ),
         }
     }
 
@@ -255,6 +277,13 @@ pub enum Error {
     InternalTypeNotFound {
         type_name: Qualified<CustomTypeName>,
     },
+    #[error(
+        "internal error while building schema, field {field_name} not found in type {type_name}"
+    )]
+    InternalObjectTypeFieldNotFound {
+        type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
     #[error("duplicate field name {field_name} generated while building object type {type_name}")]
     DuplicateFieldNameGeneratedInObjectType {
         field_name: ast::Name,
@@ -265,6 +294,16 @@ pub enum Error {
         relationship_name: RelationshipName,
         field_name: ast::Name,
         type_name: Qualified<CustomTypeName>,
+    },
+    #[error("the aggregation function {field_name} conflicts with the aggregatable field {field_name} in the aggregate expression {aggregate_expression} is named {field_name}. Either rename the aggregation function or the field")]
+    AggregationFunctionFieldNameConflict {
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        field_name: ast::Name,
+    },
+    #[error("internal error: duplicate aggregatable field {field_name} in the aggregate expression {aggregate_expression} is named {field_name}")]
+    InternalDuplicateAggregatableField {
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        field_name: ast::Name,
     },
     #[error(
         "internal error: duplicate models with global id implementing the same type {type_name} are found"
@@ -296,6 +335,10 @@ pub enum Error {
     InternalCommandNotFound {
         command_name: Qualified<CommandName>,
     },
+    #[error("internal error while building schema, aggregate expression not found: {aggregate_expression}")]
+    InternalAggregateExpressionNotFound {
+        aggregate_expression: Qualified<AggregateExpressionName>,
+    },
     #[error("Cannot generate select_many API for model {model_name} since order_by_expression isn't defined")]
     NoOrderByExpression { model_name: Qualified<ModelName> },
     #[error("No graphql type name has been defined for scalar type: {type_name}")]
@@ -305,6 +348,10 @@ pub enum Error {
     #[error("No graphql output type name has been defined for object type: {type_name}")]
     NoGraphQlOutputTypeNameForObject {
         type_name: Qualified<CustomTypeName>,
+    },
+    #[error("No graphql select type name has been defined for aggregate expression: {aggregate_expression}")]
+    NoGraphQlSelectTypeNameForAggregateExpression {
+        aggregate_expression: Qualified<AggregateExpressionName>,
     },
     #[error("No graphql input type name has been defined for object type: {type_name}")]
     NoGraphQlInputTypeNameForObject {
@@ -316,6 +363,10 @@ pub enum Error {
         "Cannot generate arguments for model {model_name} since argumentsInputType and it's corresponding graphql config argumentsInput isn't defined"
     )]
     NoArgumentsInputConfigForSelectMany { model_name: Qualified<ModelName> },
+    #[error(
+        "Cannot generate the filter input type for model {model_name} since filterInputTypeName isn't defined in the graphql config"
+    )]
+    NoFilterInputTypeNameConfigNameForModel { model_name: Qualified<ModelName> },
     #[error("Internal error: Relationship capabilities are missing for {relationship} on type {type_name}")]
     InternalMissingRelationshipCapabilities {
         type_name: Qualified<CustomTypeName>,

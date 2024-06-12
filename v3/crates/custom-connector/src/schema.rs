@@ -25,7 +25,7 @@ pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
                 aggregates: Some(ndc_models::LeafCapability {}),
                 variables: Some(ndc_models::LeafCapability {}),
                 nested_fields: ndc_models::NestedFieldCapabilities {
-                    aggregates: None,
+                    aggregates: Some(ndc_models::LeafCapability {}),
                     filter_by: None,
                     order_by: None,
                 },

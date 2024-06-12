@@ -13,6 +13,7 @@ use self::node_field::RelayNodeFieldOutput;
 
 pub mod apollo_federation;
 pub mod node_field;
+pub mod select_aggregate;
 pub mod select_many;
 pub mod select_one;
 
@@ -40,6 +41,16 @@ pub fn query_root_schema(
                 builder,
                 model,
                 select_many,
+                query_root_type_name,
+            )?;
+            fields.insert(field_name, field);
+        }
+        if let Some(select_aggregate) = &model.model.graphql_api.select_aggregate {
+            let (field_name, field) = select_aggregate::select_aggregate_field(
+                gds,
+                builder,
+                model,
+                select_aggregate,
                 query_root_type_name,
             )?;
             fields.insert(field_name, field);

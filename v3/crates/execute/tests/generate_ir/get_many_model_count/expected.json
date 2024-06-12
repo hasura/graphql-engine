@@ -611,7 +611,8 @@
                                                   }
                                                 }
                                               }
-                                            }
+                                            },
+                                            "aggregate_selection": null
                                           },
                                           "name": "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]",
                                           "relationship_info": {
@@ -755,7 +756,8 @@
                                         }
                                       }
                                     }
-                                  }
+                                  },
+                                  "aggregate_selection": null
                                 },
                                 "name": "[{\"subgraph\":\"default\",\"name\":\"article\"},\"Author\"]",
                                 "relationship_info": {
@@ -899,7 +901,8 @@
                               }
                             }
                           }
-                        }
+                        },
+                        "aggregate_selection": null
                       },
                       "name": "[{\"subgraph\":\"default\",\"name\":\"commandArticle\"},\"article\"]",
                       "relationship_info": {

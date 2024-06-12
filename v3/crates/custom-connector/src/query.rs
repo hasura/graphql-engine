@@ -222,19 +222,23 @@ fn eval_aggregate(
         ndc_models::Aggregate::StarCount {} => Ok(serde_json::Value::from(paginated.len())),
         ndc_models::Aggregate::ColumnCount {
             column,
-            field_path: _,
+            field_path,
             distinct,
         } => {
             let values = paginated
                 .iter()
                 .map(|row| {
-                    row.get(column).ok_or((
+                    let column_value = row.get(column).ok_or((
                         StatusCode::BAD_REQUEST,
                         Json(ndc_models::ErrorResponse {
                             message: "invalid column name".into(),
                             details: serde_json::Value::Null,
                         }),
-                    ))
+                    ))?;
+                    let field_path_slice = field_path
+                        .as_ref()
+                        .map_or_else(|| [].as_ref(), |p| p.as_slice());
+                    extract_nested_field(column_value, field_path_slice)
                 })
                 .collect::<Result<Vec<_>>>()?;
 
@@ -270,19 +274,23 @@ fn eval_aggregate(
         }
         ndc_models::Aggregate::SingleColumn {
             column,
-            field_path: _,
+            field_path,
             function,
         } => {
             let values = paginated
                 .iter()
                 .map(|row| {
-                    row.get(column).ok_or((
+                    let column_value = row.get(column).ok_or((
                         StatusCode::BAD_REQUEST,
                         Json(ndc_models::ErrorResponse {
                             message: "invalid column name".into(),
                             details: serde_json::Value::Null,
                         }),
-                    ))
+                    ))?;
+                    let field_path_slice = field_path
+                        .as_ref()
+                        .map_or_else(|| [].as_ref(), |p| p.as_slice());
+                    extract_nested_field(column_value, field_path_slice)
                 })
                 .collect::<Result<Vec<_>>>()?;
             eval_aggregate_function(function, &values)
@@ -290,33 +298,151 @@ fn eval_aggregate(
     }
 }
 
+fn extract_nested_field<'a>(
+    value: &'a serde_json::Value,
+    field_path: &[String],
+) -> Result<&'a serde_json::Value> {
+    if let Some((field, remaining_field_path)) = field_path.split_first() {
+        // Short circuit on null values
+        if value.is_null() {
+            return Ok(value);
+        }
+
+        let object_value = value.as_object().ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message:
+                        "expected object value when extracting a nested field from a field path"
+                            .into(),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?;
+
+        let field_value = object_value.get(field).ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: format!("could not find field {} in nested object", field),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?;
+
+        extract_nested_field(field_value, remaining_field_path)
+    } else {
+        Ok(value)
+    }
+}
+
 fn eval_aggregate_function(
+    function: &str,
+    values: &[&serde_json::Value],
+) -> Result<serde_json::Value> {
+    if let Some((first_value, _)) = values.split_first() {
+        if first_value.is_i64() {
+            eval_aggregate_function_i64(function, values)
+        } else if first_value.is_string() {
+            eval_aggregate_function_string(function, values)
+        } else {
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ndc_models::ErrorResponse {
+                    message: "Can only aggregate over i64 or string values".into(),
+                    details: serde_json::Value::Null,
+                }),
+            ))
+        }
+    } else {
+        // This is a bit of a hack, as technically what this value is should be dependent
+        // on what type the aggregate function operand is, but it is valid while we only
+        // support min and max aggregate functions.
+        Ok(serde_json::Value::Null)
+    }
+}
+
+fn eval_aggregate_function_i64(
     function: &str,
     values: &[&serde_json::Value],
 ) -> Result<serde_json::Value> {
     let int_values = values
         .iter()
-        .map(|value| {
-            value.as_i64().ok_or((
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: "column is not an integer".into(),
-                    details: serde_json::Value::Null,
-                }),
-            ))
+        .filter_map(|value| {
+            if value.is_null() {
+                None
+            } else {
+                Some(value.as_i64().ok_or_else(|| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        Json(ndc_models::ErrorResponse {
+                            message: "aggregate value is not an integer".into(),
+                            details: (*value).clone(),
+                        }),
+                    )
+                }))
+            }
         })
         .collect::<Result<Vec<_>>>()?;
+
     let agg_value = match function {
-        "min" => Ok(int_values.iter().min()),
-        "max" => Ok(int_values.iter().max()),
+        "min" => Ok(int_values.into_iter().min()),
+        "max" => Ok(int_values.into_iter().max()),
         _ => Err((
             StatusCode::BAD_REQUEST,
             Json(ndc_models::ErrorResponse {
-                message: "invalid aggregation function".into(),
-                details: serde_json::Value::Null,
+                message: "invalid integer aggregation function".into(),
+                details: Value::String(function.to_string()),
             }),
         )),
     }?;
+
+    serde_json::to_value(agg_value).map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ndc_models::ErrorResponse {
+                message: " ".into(),
+                details: serde_json::Value::Null,
+            }),
+        )
+    })
+}
+
+fn eval_aggregate_function_string(
+    function: &str,
+    values: &[&serde_json::Value],
+) -> Result<serde_json::Value> {
+    let str_values = values
+        .iter()
+        .filter_map(|value| {
+            if value.is_null() {
+                None
+            } else {
+                Some(value.as_str().ok_or_else(|| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        Json(ndc_models::ErrorResponse {
+                            message: "aggregate value is not a string".into(),
+                            details: (*value).clone(),
+                        }),
+                    )
+                }))
+            }
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let agg_value = match function {
+        "min" => Ok(str_values.into_iter().min()),
+        "max" => Ok(str_values.into_iter().max()),
+        _ => Err((
+            StatusCode::BAD_REQUEST,
+            Json(ndc_models::ErrorResponse {
+                message: "invalid string aggregation function".into(),
+                details: Value::String(function.to_string()),
+            }),
+        )),
+    }?;
+
     serde_json::to_value(agg_value).map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
