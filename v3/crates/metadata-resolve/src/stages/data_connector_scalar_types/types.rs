@@ -12,6 +12,7 @@ pub struct ScalarTypeWithRepresentationInfo<'a> {
     pub representation: Option<TypeName>,
     pub comparison_expression_name: Option<ast::TypeName>,
     pub comparison_operators: data_connectors::ComparisonOperators,
+    pub aggregate_functions: &'a BTreeMap<String, ndc_models::AggregateFunctionDefinition>,
 }
 
 pub struct ScalarTypeWithRepresentationInfoMap<'a>(

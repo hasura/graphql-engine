@@ -59,6 +59,7 @@ build-data = "0.2.1" # To set short commit-sha at build time
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 goldenfile = "1.7.1"
 pretty_assertions = "1.3.0"
+test-each = "*"
 tokio-test = "0.4.2"
 
 [package.metadata.cargo-machete]

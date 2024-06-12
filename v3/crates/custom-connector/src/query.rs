@@ -220,7 +220,11 @@ fn eval_aggregate(
 ) -> Result<serde_json::Value> {
     match aggregate {
         ndc_models::Aggregate::StarCount {} => Ok(serde_json::Value::from(paginated.len())),
-        ndc_models::Aggregate::ColumnCount { column, distinct } => {
+        ndc_models::Aggregate::ColumnCount {
+            column,
+            field_path: _,
+            distinct,
+        } => {
             let values = paginated
                 .iter()
                 .map(|row| {
@@ -264,7 +268,11 @@ fn eval_aggregate(
                 )
             })
         }
-        ndc_models::Aggregate::SingleColumn { column, function } => {
+        ndc_models::Aggregate::SingleColumn {
+            column,
+            field_path: _,
+            function,
+        } => {
             let values = paginated
                 .iter()
                 .map(|row| {
@@ -428,6 +436,7 @@ fn eval_order_by_element(
         } => eval_order_by_column(collection_relationships, variables, state, item, path, name),
         ndc_models::OrderByTarget::SingleColumnAggregate {
             column,
+            field_path: _,
             function,
             path,
         } => eval_order_by_single_column_aggregate(

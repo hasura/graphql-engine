@@ -1,0 +1,1 @@
+metadata is not consistent: the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an operand object type that cannot be found: Invoice (in subgraph default)

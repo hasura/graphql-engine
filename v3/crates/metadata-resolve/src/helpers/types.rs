@@ -118,6 +118,13 @@ pub fn unwrap_custom_type_name(
     }
 }
 
+pub fn unwrap_qualified_type_name(type_reference: &QualifiedTypeReference) -> &QualifiedTypeName {
+    match &type_reference.underlying_type {
+        QualifiedBaseType::List(inner_type) => unwrap_qualified_type_name(inner_type),
+        QualifiedBaseType::Named(type_name) => type_name,
+    }
+}
+
 /// Helper function to create GraphQL compliant name
 pub fn mk_name(name: &str) -> Result<ast::Name, Error> {
     ast::Name::from_str(name).map_err(|_| Error::InvalidGraphQlName {

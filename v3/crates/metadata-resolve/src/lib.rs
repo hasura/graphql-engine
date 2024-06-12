@@ -17,6 +17,10 @@ pub use helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
     NdcColumnForComparison, TypeRepresentation,
 };
+pub use stages::aggregates::{
+    AggregatableFieldInfo, AggregateExpression, AggregateExpressionGraphqlConfig, AggregateOperand,
+    AggregationFunctionInfo, DataConnectorAggregationFunctionInfo,
+};
 pub use stages::boolean_expressions::{
     BooleanExpressionGraphqlConfig, ComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
 };
@@ -28,7 +32,7 @@ pub use stages::model_permissions::{
 };
 pub use stages::models::{
     ConnectorArgumentName, Model, ModelExpressionType, ModelOrderByExpression, ModelSource,
-    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
+    SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
 };
 pub use stages::object_boolean_expressions::{
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
@@ -41,6 +45,7 @@ pub use stages::relationships::{
     RelationshipCapabilities, RelationshipCommandMapping, RelationshipExecutionCategory,
     RelationshipModelMapping, RelationshipTarget,
 };
+pub use stages::scalar_types::ScalarTypeRepresentation;
 pub use stages::type_permissions::TypeInputPermission;
 pub use stages::{resolve, Metadata};
 pub use types::error::{BooleanExpressionError, Error};

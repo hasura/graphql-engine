@@ -10,6 +10,8 @@ use crate::types::subgraph::{
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast, Name};
 
+use open_dds::aggregates::AggregateExpressionName;
+use open_dds::data_connector::DataConnectorObjectType;
 use open_dds::types::Deprecated;
 use open_dds::{
     arguments::ArgumentName,
@@ -66,6 +68,15 @@ pub struct SelectManyGraphQlDefinition {
     pub deprecated: Option<Deprecated>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct SelectAggregateGraphQlDefinition {
+    pub query_root_field: ast::Name,
+    pub description: Option<String>,
+    pub deprecated: Option<Deprecated>,
+    pub aggregate_expression_name: Qualified<AggregateExpressionName>,
+    pub filter_input_field_name: ast::Name,
+}
+
 // TODO: add support for aggregates
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct OrderByExpressionInfo {
@@ -94,20 +105,24 @@ pub struct LimitFieldGraphqlConfig {
 pub struct OffsetFieldGraphqlConfig {
     pub field_name: Name,
 }
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 pub struct ModelGraphQlApi {
     pub arguments_input_config: Option<ModelGraphqlApiArgumentsConfig>,
     pub select_uniques: Vec<SelectUniqueGraphQlDefinition>,
     pub select_many: Option<SelectManyGraphQlDefinition>,
+    pub select_aggregate: Option<SelectAggregateGraphQlDefinition>,
     pub order_by_expression: Option<ModelOrderByExpression>,
     pub limit_field: Option<LimitFieldGraphqlConfig>,
     pub offset_field: Option<OffsetFieldGraphqlConfig>,
+    pub filter_input_type_name: Option<ast::TypeName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ModelSource {
     pub data_connector: data_connectors::DataConnectorLink,
     pub collection: String,
+    pub collection_type: DataConnectorObjectType,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"

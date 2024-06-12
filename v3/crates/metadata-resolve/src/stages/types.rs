@@ -4,12 +4,15 @@ use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
-use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
+use open_dds::{
+    aggregates::AggregateExpressionName, commands::CommandName, models::ModelName,
+    types::CustomTypeName,
+};
 
 use crate::types::subgraph::Qualified;
 
 use crate::stages::{
-    boolean_expressions, command_permissions, graphql_config, model_permissions,
+    aggregates, boolean_expressions, command_permissions, graphql_config, model_permissions,
     object_boolean_expressions, relationships, scalar_types,
 };
 
@@ -26,6 +29,8 @@ pub struct Metadata {
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     pub boolean_expression_types: boolean_expressions::BooleanExpressionTypes,
+    pub aggregate_expressions:
+        BTreeMap<Qualified<AggregateExpressionName>, aggregates::AggregateExpression>,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
     pub roles: Vec<Role>,
 }

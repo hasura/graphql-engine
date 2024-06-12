@@ -1,0 +1,1 @@
+metadata is not consistent: the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'randoField' that does not exist on its operand type Invoice (in subgraph default)

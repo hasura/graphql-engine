@@ -1,0 +1,1 @@
+metadata is not consistent: the filterInputFieldName for aggregate needs to be defined in GraphqlConfig, when models have a selectAggregate graphql API

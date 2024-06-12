@@ -39,10 +39,12 @@
                                   },
                                   "capabilities": {
                                     "supports_explaining_queries": true,
-                                    "supports_explaining_mutations": false
+                                    "supports_explaining_mutations": false,
+                                    "supports_nested_object_aggregations": false
                                   }
                                 },
                                 "collection": "article",
+                                "collection_type": "article",
                                 "type_mappings": {
                                   "{\"subgraph\":\"default\",\"name\":\"article\"}": {
                                     "Object": {
@@ -157,10 +159,12 @@
                                         },
                                         "capabilities": {
                                           "supports_explaining_queries": true,
-                                          "supports_explaining_mutations": false
+                                          "supports_explaining_mutations": false,
+                                          "supports_nested_object_aggregations": false
                                         }
                                       },
                                       "collection": "author",
+                                      "collection_type": "author",
                                       "type_mappings": {
                                         "{\"subgraph\":\"default\",\"name\":\"author\"}": {
                                           "Object": {
@@ -275,10 +279,12 @@
                                               },
                                               "capabilities": {
                                                 "supports_explaining_queries": true,
-                                                "supports_explaining_mutations": false
+                                                "supports_explaining_mutations": false,
+                                                "supports_nested_object_aggregations": false
                                               }
                                             },
                                             "collection": "article",
+                                            "collection_type": "article",
                                             "type_mappings": {
                                               "{\"subgraph\":\"default\",\"name\":\"article\"}": {
                                                 "Object": {
@@ -491,7 +497,8 @@
               },
               "capabilities": {
                 "supports_explaining_queries": true,
-                "supports_explaining_mutations": false
+                "supports_explaining_mutations": false,
+                "supports_nested_object_aggregations": false
               }
             },
             "arguments": {},
@@ -514,7 +521,8 @@
                           },
                           "capabilities": {
                             "supports_explaining_queries": true,
-                            "supports_explaining_mutations": false
+                            "supports_explaining_mutations": false,
+                            "supports_nested_object_aggregations": false
                           }
                         },
                         "collection": "article",
@@ -544,7 +552,8 @@
                                     },
                                     "capabilities": {
                                       "supports_explaining_queries": true,
-                                      "supports_explaining_mutations": false
+                                      "supports_explaining_mutations": false,
+                                      "supports_nested_object_aggregations": false
                                     }
                                   },
                                   "collection": "author",
@@ -574,7 +583,8 @@
                                               },
                                               "capabilities": {
                                                 "supports_explaining_queries": true,
-                                                "supports_explaining_mutations": false
+                                                "supports_explaining_mutations": false,
+                                                "supports_nested_object_aggregations": false
                                               }
                                             },
                                             "collection": "article",
@@ -624,7 +634,8 @@
                                               },
                                               "capabilities": {
                                                 "supports_explaining_queries": true,
-                                                "supports_explaining_mutations": false
+                                                "supports_explaining_mutations": false,
+                                                "supports_nested_object_aggregations": false
                                               }
                                             },
                                             "source_type_mappings": {
@@ -675,10 +686,12 @@
                                                   },
                                                   "capabilities": {
                                                     "supports_explaining_queries": true,
-                                                    "supports_explaining_mutations": false
+                                                    "supports_explaining_mutations": false,
+                                                    "supports_nested_object_aggregations": false
                                                   }
                                                 },
                                                 "collection": "article",
+                                                "collection_type": "article",
                                                 "type_mappings": {
                                                   "{\"subgraph\":\"default\",\"name\":\"article\"}": {
                                                     "Object": {
@@ -765,7 +778,8 @@
                                     },
                                     "capabilities": {
                                       "supports_explaining_queries": true,
-                                      "supports_explaining_mutations": false
+                                      "supports_explaining_mutations": false,
+                                      "supports_nested_object_aggregations": false
                                     }
                                   },
                                   "source_type_mappings": {
@@ -816,10 +830,12 @@
                                         },
                                         "capabilities": {
                                           "supports_explaining_queries": true,
-                                          "supports_explaining_mutations": false
+                                          "supports_explaining_mutations": false,
+                                          "supports_nested_object_aggregations": false
                                         }
                                       },
                                       "collection": "author",
+                                      "collection_type": "author",
                                       "type_mappings": {
                                         "{\"subgraph\":\"default\",\"name\":\"author\"}": {
                                           "Object": {
@@ -906,7 +922,8 @@
                           },
                           "capabilities": {
                             "supports_explaining_queries": true,
-                            "supports_explaining_mutations": false
+                            "supports_explaining_mutations": false,
+                            "supports_nested_object_aggregations": false
                           }
                         },
                         "source_type_mappings": {
@@ -957,10 +974,12 @@
                               },
                               "capabilities": {
                                 "supports_explaining_queries": true,
-                                "supports_explaining_mutations": false
+                                "supports_explaining_mutations": false,
+                                "supports_nested_object_aggregations": false
                               }
                             },
                             "collection": "article",
+                            "collection_type": "article",
                             "type_mappings": {
                               "{\"subgraph\":\"default\",\"name\":\"article\"}": {
                                 "Object": {

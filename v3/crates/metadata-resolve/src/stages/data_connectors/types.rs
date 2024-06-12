@@ -168,6 +168,7 @@ impl DataConnectorSchema {
 pub struct ScalarTypeInfo<'a> {
     pub scalar_type: &'a ndc_models::ScalarType,
     pub comparison_operators: ComparisonOperators,
+    pub aggregate_functions: &'a BTreeMap<String, ndc_models::AggregateFunctionDefinition>,
 }
 
 impl<'a> ScalarTypeInfo<'a> {
@@ -191,6 +192,7 @@ impl<'a> ScalarTypeInfo<'a> {
         ScalarTypeInfo {
             scalar_type: source_scalar,
             comparison_operators,
+            aggregate_functions: &source_scalar.aggregate_functions,
         }
     }
 }
@@ -276,6 +278,13 @@ impl DataConnectorLink {
                 .capabilities
                 .mutation
                 .explain
+                .is_some(),
+            supports_nested_object_aggregations: info
+                .capabilities
+                .capabilities
+                .query
+                .nested_fields
+                .aggregates
                 .is_some(),
         };
         Ok(Self {
@@ -430,6 +439,7 @@ impl ResponseHeaders {
 pub struct DataConnectorCapabilities {
     pub supports_explaining_queries: bool,
     pub supports_explaining_mutations: bool,
+    pub supports_nested_object_aggregations: bool,
 }
 
 #[cfg(test)]

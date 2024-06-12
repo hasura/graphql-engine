@@ -124,6 +124,7 @@ pub struct QueryGraphqlConfig {
     pub offset_field_name: Option<ast::Name>,
     pub filter_input_config: Option<FilterInputGraphqlConfig>,
     pub order_by_field_name: Option<ast::Name>,
+    pub aggregate_config: Option<AggregateGraphqlConfig>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -139,6 +140,13 @@ pub struct FilterInputOperatorNames {
     pub or: ast::Name,
     pub not: ast::Name,
     pub is_null: ast::Name,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct AggregateGraphqlConfig {
+    pub filter_input_field_name: ast::Name,
+    pub count_field_name: ast::Name,
+    pub count_distinct_field_name: ast::Name,
 }
 
 /// Resolve and validate the GraphQL configuration.
@@ -256,6 +264,23 @@ pub fn resolve_graphql_config(
                 }
             };
 
+            let aggregate_config = graphql_config_metadata
+                .query
+                .aggregate
+                .as_ref()
+                .map(|aggregate_config| -> Result<_, Error> {
+                    Ok(AggregateGraphqlConfig {
+                        filter_input_field_name: mk_name(
+                            aggregate_config.filter_input_field_name.0.as_str(),
+                        )?,
+                        count_field_name: mk_name(aggregate_config.count_field_name.0.as_str())?,
+                        count_distinct_field_name: mk_name(
+                            aggregate_config.count_distinct_field_name.0.as_str(),
+                        )?,
+                    })
+                })
+                .transpose()?;
+
             let enable_apollo_federation_fields = graphql_config_metadata
                 .apollo_federation
                 .as_ref()
@@ -268,6 +293,7 @@ pub fn resolve_graphql_config(
                     offset_field_name,
                     filter_input_config,
                     order_by_field_name,
+                    aggregate_config,
                 },
                 global: GlobalGraphqlConfig {
                     query_root_type_name,

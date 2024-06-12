@@ -1,0 +1,1 @@
+metadata is not consistent: the model Invoice (in subgraph default) is using the aggregate expression Invoice_aggregate_exp (in subgraph default) which has the countDistinct aggregation enabled, but countDistinct is not valid when aggregating a model as every object is already logically distinct

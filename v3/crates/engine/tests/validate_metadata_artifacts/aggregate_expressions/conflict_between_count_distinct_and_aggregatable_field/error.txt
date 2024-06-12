@@ -1,0 +1,1 @@
+metadata is not consistent: the name used by query.aggregate.countDistinctFieldName from the GraphqlConfig conflicts with the aggregatable field name _count_distinct in the aggregate expression Invoice_aggregate_exp (in subgraph default)

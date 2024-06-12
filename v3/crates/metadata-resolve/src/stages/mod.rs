@@ -1,3 +1,4 @@
+pub mod aggregates;
 mod apollo;
 pub mod boolean_expressions;
 pub mod command_permissions;
@@ -60,6 +61,19 @@ pub fn resolve(
     let object_types_with_permissions =
         type_permissions::resolve(&metadata_accessor, &object_types)?;
 
+    let aggregates::AggregateExpressionsOutput {
+        aggregate_expressions,
+        graphql_types,
+    } = aggregates::resolve(
+        &metadata_accessor,
+        &data_connectors,
+        &data_connector_scalars,
+        &object_types_with_permissions,
+        &scalar_types,
+        graphql_types,
+        &graphql_config,
+    )?;
+
     let object_boolean_expressions::ObjectBooleanExpressionsOutput {
         object_boolean_expression_types,
         graphql_types,
@@ -98,6 +112,7 @@ pub fn resolve(
         &apollo_federation_entity_enabled_types,
         &object_types_with_permissions,
         &scalar_types,
+        &aggregate_expressions,
         &object_boolean_expression_types,
         &boolean_expression_types,
         &graphql_config,
@@ -159,6 +174,7 @@ pub fn resolve(
         commands: commands_with_permissions,
         object_boolean_expression_types,
         boolean_expression_types,
+        aggregate_expressions,
         graphql_config: graphql_config.global,
         roles,
     })

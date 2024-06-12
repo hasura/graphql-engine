@@ -131,7 +131,7 @@ fn test_filter_error_filter_expression_type_present_filter_input_not_present() -
 
     assert_eq!(
         gds.unwrap_err().to_string(),
-        "metadata is not consistent: the filterInput need to be defined in GraphqlConfig, when models have filterExpressionType"
+        "metadata is not consistent: the filterInput needs to be defined in GraphqlConfig, when models have filterExpressionType"
     );
     Ok(())
 }
@@ -149,7 +149,7 @@ fn test_order_by_error_order_by_expression_type_present_order_by_input_not_prese
 
     assert_eq!(
         gds.unwrap_err().to_string(),
-        "metadata is not consistent: the orderByInput need to be defined in GraphqlConfig, when models have orderByExpressionType"
+        "metadata is not consistent: the orderByInput needs to be defined in GraphqlConfig, when models have orderByExpressionType"
     );
     Ok(())
 }
@@ -183,7 +183,7 @@ fn test_arguments_error_arguments_input_type_present_arguments_input_not_present
 
     assert_eq!(
         gds.unwrap_err().to_string(),
-        "metadata is not consistent: the fieldName for argumentsInput need to be defined in GraphqlConfig, when models have argumentsInputType"
+        "metadata is not consistent: the fieldName for argumentsInput needs to be defined in GraphqlConfig, when models have argumentsInputType"
     );
     Ok(())
 }
@@ -361,6 +361,32 @@ fn test_allow_metadata_with_deprecated_field() -> anyhow::Result<()> {
     let gds = GDS::new_with_default_flags(metadata);
 
     gds?; // assert that it is OK
+    Ok(())
+}
+
+// Aggregate Expression Tests
+#[test_each::path(
+    glob = "crates/engine/tests/validate_metadata_artifacts/aggregate_expressions/*/",
+    name(segments = 1)
+)]
+#[allow(clippy::needless_pass_by_value)] // must receive a `PathBuf`
+fn test_aggregate_expressions(test_folder_path: PathBuf) -> anyhow::Result<()> {
+    let metadata_json = fs::read_to_string(test_folder_path.join("metadata.json"))?;
+    let metadata = open_dds::Metadata::from_json_str(&metadata_json)?;
+
+    let gds = GDS::new_with_default_flags(metadata);
+
+    match fs::read_to_string(test_folder_path.join("error.txt")) {
+        Ok(error_message) => {
+            assert_eq!(gds.unwrap_err().to_string(), error_message.trim());
+        }
+        Err(err) => match err.kind() {
+            std::io::ErrorKind::NotFound => {
+                gds?;
+            } // Assert that it validated okay
+            _ => Err(err)?,
+        },
+    }
     Ok(())
 }
 

@@ -17,7 +17,7 @@ anyhow = "1"
 axum = { version = "0.6", features = ["http2"] }
 env_logger = "0.11"
 indexmap = "2"
-ndc-models = { git = "https://github.com/hasura/ndc-spec.git", rev = "622c643b4f0b6bbe4601c0f065d6d93a4bd3e9db" }
+ndc-models = { git = "https://github.com/hasura/ndc-spec.git", rev = "aa8ad48e42aefd9e585a4c923bebfd56eee40204" }
 regex = "1"
 serde_json = "1"
 serde = "1"

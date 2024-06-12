@@ -1,9 +1,13 @@
-use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
+use open_dds::aggregates::AggregateExpressionName;
+use open_dds::data_connector::{
+    DataConnectorName, DataConnectorObjectType, DataConnectorScalarType,
+};
 pub use types::{
     ConnectorArgumentName, LimitFieldGraphqlConfig, Model, ModelExpressionType, ModelGraphQlApi,
     ModelGraphqlApiArgumentsConfig, ModelOrderByExpression, ModelSource, ModelsOutput,
     NDCFieldSourceMapping, OffsetFieldGraphqlConfig, OrderByExpressionInfo,
-    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, UniqueIdentifierField,
+    SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
+    UniqueIdentifierField,
 };
 mod types;
 
@@ -15,14 +19,15 @@ use crate::helpers::type_mappings;
 use crate::helpers::types::NdcColumnForComparison;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
+    aggregates, boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
     object_boolean_expressions, object_types, scalar_types, type_permissions,
 };
-use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
+use crate::types::subgraph::{
+    mk_qualified_type_reference, ArgumentInfo, Qualified, QualifiedTypeName,
+};
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
-use ref_cast::RefCast;
 
 use open_dds::{
     models::{
@@ -51,6 +56,10 @@ pub fn resolve(
     >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    aggregate_expressions: &BTreeMap<
+        Qualified<AggregateExpressionName>,
+        aggregates::AggregateExpression,
+    >,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
@@ -71,6 +80,7 @@ pub fn resolve(
         object: model,
     } in &metadata_accessor.models
     {
+        let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
         let mut resolved_model = resolve_model(
             subgraph,
             model,
@@ -108,6 +118,20 @@ pub fn resolve(
                 object_boolean_expression_types,
             )?;
         }
+        let qualified_aggregate_expression_name = model
+            .aggregate_expression
+            .as_ref()
+            .map(|aggregate_expression_name| {
+                resolve_aggregate_expression(
+                    aggregate_expression_name,
+                    &qualified_model_name,
+                    &resolved_model.data_type,
+                    &resolved_model.source,
+                    aggregate_expressions,
+                    object_types,
+                )
+            })
+            .transpose()?;
         if let Some(model_graphql_definition) = &model.graphql {
             resolve_model_graphql_api(
                 model_graphql_definition,
@@ -115,10 +139,11 @@ pub fn resolve(
                 &mut graphql_types,
                 data_connector_scalars,
                 &model.description,
+                &qualified_aggregate_expression_name,
                 graphql_config,
             )?;
         }
-        let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
+
         if models
             .insert(qualified_model_name.clone(), resolved_model)
             .is_some()
@@ -134,6 +159,212 @@ pub fn resolve(
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
     })
+}
+
+fn resolve_aggregate_expression(
+    aggregate_expression_name: &AggregateExpressionName,
+    model_name: &Qualified<ModelName>,
+    model_object_type_name: &Qualified<CustomTypeName>,
+    model_source: &Option<ModelSource>,
+    aggregate_expressions: &BTreeMap<
+        Qualified<AggregateExpressionName>,
+        aggregates::AggregateExpression,
+    >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+) -> Result<Qualified<AggregateExpressionName>, Error> {
+    let qualified_aggregate_expression_name = Qualified::new(
+        model_name.subgraph.clone(),
+        aggregate_expression_name.clone(),
+    );
+    let model_object_type = QualifiedTypeName::Custom(model_object_type_name.clone());
+
+    // Check the model has a source
+    let model_source =
+        model_source
+            .as_ref()
+            .ok_or_else(|| Error::CannotUseAggregateExpressionsWithoutSource {
+                model: model_name.clone(),
+            })?;
+
+    // Check that the specified aggregate expression exists
+    let aggregate_expression = aggregate_expressions
+        .get(&qualified_aggregate_expression_name)
+        .ok_or_else(|| Error::UnknownModelAggregateExpression {
+            model_name: model_name.clone(),
+            aggregate_expression: qualified_aggregate_expression_name.clone(),
+        })?;
+
+    // Check that the specified aggregate expression actually aggregates the model's type
+    if model_object_type != aggregate_expression.operand.aggregated_type {
+        return Err(Error::ModelAggregateExpressionOperandTypeMismatch {
+            model_name: model_name.clone(),
+            aggregate_expression: qualified_aggregate_expression_name.clone(),
+            model_type: model_object_type.clone(),
+            aggregate_operand_type: aggregate_expression.operand.aggregated_type.clone(),
+        });
+    }
+
+    // Check aggregate function mappings exist to the Model's source data connector
+    resolve_aggregate_expression_data_connector_mapping(
+        aggregate_expression,
+        model_name,
+        model_object_type_name,
+        &model_source.data_connector.name,
+        &model_source.collection_type,
+        &model_source.data_connector.capabilities,
+        aggregate_expressions,
+        object_types,
+    )?;
+
+    // Check that the aggregate expression does not define count_distinct, as this is
+    // not valid on a model (every object is already "distinct", so it is meaningless)
+    if aggregate_expression.count_distinct.enable {
+        return Err(Error::ModelAggregateExpressionCountDistinctNotAllowed {
+            model_name: model_name.clone(),
+            aggregate_expression: qualified_aggregate_expression_name.clone(),
+        });
+    }
+
+    Ok(qualified_aggregate_expression_name)
+}
+
+fn resolve_aggregate_expression_data_connector_mapping(
+    aggregate_expression: &aggregates::AggregateExpression,
+    model_name: &Qualified<ModelName>,
+    object_type_name: &Qualified<CustomTypeName>,
+    data_connector_name: &Qualified<DataConnectorName>,
+    data_connector_object_type: &DataConnectorObjectType,
+    data_connector_capabilities: &data_connectors::DataConnectorCapabilities,
+    aggregate_expressions: &BTreeMap<
+        Qualified<AggregateExpressionName>,
+        aggregates::AggregateExpression,
+    >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+) -> Result<(), Error> {
+    // Find the object type being aggregated and its field mapping
+    let object_type =
+        object_types
+            .get(object_type_name)
+            .ok_or_else(|| Error::UnknownObjectType {
+                data_type: object_type_name.clone(),
+            })?;
+    let object_type_mapping = object_type
+        .type_mappings
+        .get(data_connector_name, data_connector_object_type)
+        .ok_or_else(|| Error::TypeMappingRequired {
+            model_name: model_name.clone(),
+            type_name: object_type_name.clone(),
+            data_connector: data_connector_name.clone(),
+        })?;
+    let object_type_field_mapping = match object_type_mapping {
+        object_types::TypeMapping::Object { field_mappings, .. } => field_mappings,
+    };
+
+    // Resolve each aggregatable field
+    for aggregatable_field in &aggregate_expression.operand.aggregatable_fields {
+        // Ensure the aggregatable field actually exists in the object type
+        let field_mapping = object_type_field_mapping
+            .get(&aggregatable_field.field_name)
+            .ok_or_else(|| {
+                aggregates::AggregateExpressionError::AggregateOperandObjectFieldNotFound {
+                    name: aggregate_expression.name.clone(),
+                    operand_type: object_type_name.clone(),
+                    field_name: aggregatable_field.field_name.clone(),
+                }
+            })?;
+
+        // Get the underlying data connector type name for the aggregatable field
+        // We only accept named or nullable named types. Array/predicate types are not allowed
+        let data_connector_field_type = match &field_mapping.column_type {
+            ndc_models::Type::Named { name } => Ok(name),
+            ndc_models::Type::Nullable { underlying_type } => match &**underlying_type {
+                ndc_models::Type::Named { name } => Ok(name),
+                _ => Err(Error::ModelAggregateExpressionUnexpectedDataConnectorType {
+                    model_name: model_name.clone(),
+                    aggregate_expression: aggregate_expression.name.clone(),
+                    data_connector_name: data_connector_name.clone(),
+                    field_name: aggregatable_field.field_name.clone(),
+                }),
+            },
+            _ => Err(Error::ModelAggregateExpressionUnexpectedDataConnectorType {
+                model_name: model_name.clone(),
+                aggregate_expression: aggregate_expression.name.clone(),
+                data_connector_name: data_connector_name.clone(),
+                field_name: aggregatable_field.field_name.clone(),
+            }),
+        }?;
+
+        // Get the aggregate expression used to aggregate the field's type
+        let field_aggregate_expression = aggregate_expressions
+            .get(&aggregatable_field.aggregate_expression)
+            .ok_or_else(|| Error::UnknownModelAggregateExpression {
+                model_name: model_name.clone(),
+                aggregate_expression: aggregatable_field.aggregate_expression.clone(),
+            })?;
+
+        // Get the field's aggregate expression operand type, if it an object type
+        let field_object_type_name = match &field_aggregate_expression.operand.aggregated_type {
+            QualifiedTypeName::Inbuilt(_) => None,
+            QualifiedTypeName::Custom(custom_type_name) => {
+                if object_types.contains_key(custom_type_name) {
+                    Some(custom_type_name)
+                } else {
+                    None // Must be a scalar (operands are already validated to be either object or scalar in aggregates resolution)
+                }
+            }
+        };
+
+        // If our field contains a nested object type
+        if let Some(field_object_type_name) = field_object_type_name {
+            // Check that the data connector supports aggregation over nested object fields
+            if !data_connector_capabilities.supports_nested_object_aggregations {
+                return Err(aggregates::AggregateExpressionError::NestedObjectAggregatesNotSupportedByDataConnector {
+                    name: aggregate_expression.name.clone(),
+                    data_connector_name: data_connector_name.clone(),
+                    field_name: aggregatable_field.field_name.clone(),
+                }.into());
+            }
+
+            // Resolve the aggregate expression for the nested object field type
+            resolve_aggregate_expression_data_connector_mapping(
+                field_aggregate_expression,
+                model_name,
+                field_object_type_name,
+                data_connector_name,
+                &DataConnectorObjectType(data_connector_field_type.clone()),
+                data_connector_capabilities,
+                aggregate_expressions,
+                object_types,
+            )?;
+        }
+        // If our field contains a scalar type
+        else {
+            // Check that all aggregation functions over this scalar type
+            // have a data connector mapping to the data connector used by the model
+            let all_functions_have_a_data_connector_mapping = field_aggregate_expression
+                .operand
+                .aggregation_functions
+                .iter()
+                .all(|agg_fn| {
+                    agg_fn.data_connector_functions.iter().any(|dc_fn| {
+                        dc_fn.data_connector_name == *data_connector_name
+                            && dc_fn.operand_scalar_type.0 == *data_connector_field_type
+                    })
+                });
+            if !all_functions_have_a_data_connector_mapping {
+                return Err(Error::ModelAggregateExpressionDataConnectorMappingMissing {
+                    model_name: model_name.clone(),
+                    aggregate_expression: field_aggregate_expression.name.clone(),
+                    data_connector_name: data_connector_name.clone(),
+                    data_connector_operand_type: DataConnectorScalarType(
+                        data_connector_field_type.clone(),
+                    ),
+                });
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn resolve_filter_expression_type(
@@ -412,6 +643,7 @@ fn resolve_model_graphql_api(
     >,
 
     model_description: &Option<String>,
+    aggregate_expression_name: &Option<Qualified<AggregateExpressionName>>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<(), Error> {
     let model_name = &model.name;
@@ -554,6 +786,58 @@ fn resolve_model_graphql_api(
         }),
     }?;
 
+    // record the filter input type name, if set
+    let filter_input_type_name = model_graphql_definition
+        .filter_input_type_name
+        .as_ref()
+        .map(|filter_input_type_name| mk_name(filter_input_type_name.0.as_str()).map(ast::TypeName))
+        .transpose()?;
+    store_new_graphql_type(existing_graphql_types, filter_input_type_name.as_ref())?;
+    model.graphql_api.filter_input_type_name = filter_input_type_name;
+    if aggregate_expression_name.is_none() && model.graphql_api.filter_input_type_name.is_some() {
+        return Err(Error::UnnecessaryFilterInputTypeNameGraphqlConfiguration {
+            model_name: model_name.clone(),
+        });
+    }
+
+    // record select_aggregate root field
+    model.graphql_api.select_aggregate = model_graphql_definition
+        .aggregate
+        .as_ref()
+        .zip(aggregate_expression_name.as_ref()) // Only matters if we have an aggregate expression specified
+        .map(
+            |(graphql_aggregate, aggregate_expression_name)| -> Result<_, Error> {
+                // Check that a filter input type name is configured
+                if model.graphql_api.filter_input_type_name.is_none() {
+                    {
+                        return Err(Error::MissingFilterInputTypeNameGraphqlConfiguration {
+                            model_name: model_name.clone(),
+                        });
+                    }
+                }
+
+                // Check that the filter input field name is configured in graphql config
+                let filter_input_field_name = graphql_config
+                    .query
+                    .aggregate_config
+                    .as_ref()
+                    .map(|agg| agg.filter_input_field_name.clone())
+                    .ok_or_else::<Error, _>(|| Error::GraphqlConfigError {
+                        graphql_config_error:
+                            GraphqlConfigError::MissingAggregateFilterInputFieldNameInGraphqlConfig,
+                    })?;
+
+                Ok(SelectAggregateGraphQlDefinition {
+                    query_root_field: mk_name(&graphql_aggregate.query_root_field.0)?,
+                    description: graphql_aggregate.description.clone(),
+                    deprecated: graphql_aggregate.deprecated.clone(),
+                    aggregate_expression_name: aggregate_expression_name.clone(),
+                    filter_input_field_name,
+                })
+            },
+        )
+        .transpose()?;
+
     // record limit and offset field names
     model.graphql_api.limit_field =
         graphql_config
@@ -649,6 +933,7 @@ fn resolve_model_source(
             data_connector: qualified_data_connector_name.clone(),
             collection: model_source.collection.clone(),
         })?;
+    let source_collection_type = DataConnectorObjectType(source_collection.collection_type.clone());
 
     let source_arguments = source_collection
         .clone()
@@ -677,7 +962,7 @@ fn resolve_model_source(
     let mut type_mappings = BTreeMap::new();
     let source_collection_type_mapping_to_collect = type_mappings::TypeMappingToCollect {
         type_name: &model.data_type,
-        ndc_object_type_name: DataConnectorObjectType::ref_cast(&source_collection.collection_type),
+        ndc_object_type_name: &source_collection_type,
     };
     for type_mapping_to_collect in iter::once(&source_collection_type_mapping_to_collect)
         .chain(argument_type_mappings_to_collect.iter())
@@ -712,13 +997,10 @@ fn resolve_model_source(
                 });
             }
 
-            let collection_type =
-                DataConnectorObjectType::ref_cast(&source_collection.collection_type);
-
-            if data_connector.object_type != *collection_type {
+            if data_connector.object_type != source_collection_type {
                 return Err(Error::DifferentDataConnectorObjectTypeInFilterExpression {
                     model: model.name.clone(),
-                    model_data_connector_object_type: collection_type.clone(),
+                    model_data_connector_object_type: source_collection_type.clone(),
                     filter_expression_type: filter_expression.name.clone(),
                     filter_expression_data_connector_object_type: data_connector
                         .object_type
@@ -734,6 +1016,7 @@ fn resolve_model_source(
             &data_connector_context.inner,
         )?,
         collection: model_source.collection.clone(),
+        collection_type: source_collection_type,
         type_mappings,
         argument_mappings,
         source_arguments,

@@ -28,7 +28,7 @@ bytes = "1.6.0"
 derive_more = "0.99.17"
 futures-util = "0.3"
 indexmap = { version = "2", features = ["serde"] }
-ndc-models = { git = "https://github.com/hasura/ndc-spec.git", rev = "622c643b4f0b6bbe4601c0f065d6d93a4bd3e9db" }
+ndc-models = { git = "https://github.com/hasura/ndc-spec.git", rev = "aa8ad48e42aefd9e585a4c923bebfd56eee40204" }
 nonempty = "0.10"
 reqwest = { version = "0.11", features = ["json", "multipart"] }
 schemars = { version = "0.8.20", features = ["smol_str"] }

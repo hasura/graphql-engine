@@ -1,0 +1,1 @@
+metadata is not consistent: the aggregate expression Invoice_aggregate_exp (in subgraph default) for model Invoice (in subgraph default) has not been defined

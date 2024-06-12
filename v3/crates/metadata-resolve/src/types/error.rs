@@ -1,8 +1,10 @@
+use open_dds::aggregates::AggregateExpressionName;
 use open_dds::data_connector::DataConnectorObjectType;
 use thiserror::Error;
 
 use crate::helpers::argument::ArgumentMappingError;
-use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use crate::stages::aggregates::AggregateExpressionError;
+use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
 use open_dds::{
     arguments::ArgumentName,
@@ -198,6 +200,47 @@ pub enum Error {
         argument_name: ArgumentName,
     },
     #[error(
+        "the aggregate expression {aggregate_expression} for model {model_name} has not been defined"
+    )]
+    UnknownModelAggregateExpression {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+    },
+    #[error(
+        "the model {model_name} is using the aggregate expression {aggregate_expression} but its operand type {aggregate_operand_type} does not match the model's type {model_type}"
+    )]
+    ModelAggregateExpressionOperandTypeMismatch {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        model_type: QualifiedTypeName,
+        aggregate_operand_type: QualifiedTypeName,
+    },
+    #[error(
+        "the model {model_name} is using the aggregate expression {aggregate_expression} but for the data connector {data_connector_name} and scalar type {data_connector_operand_type}, mappings are not provided for all aggregation functions in the aggregate expression"
+    )]
+    ModelAggregateExpressionDataConnectorMappingMissing {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        data_connector_name: Qualified<DataConnectorName>,
+        data_connector_operand_type: DataConnectorScalarType,
+    },
+    #[error(
+        "the model {model_name} is using the aggregate expression {aggregate_expression} but the NDC type of the field {field_name} for data connector {data_connector_name} was not a optionally nullable named type"
+    )]
+    ModelAggregateExpressionUnexpectedDataConnectorType {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        data_connector_name: Qualified<DataConnectorName>,
+        field_name: FieldName,
+    },
+    #[error(
+        "the model {model_name} is using the aggregate expression {aggregate_expression} which has the countDistinct aggregation enabled, but countDistinct is not valid when aggregating a model as every object is already logically distinct"
+    )]
+    ModelAggregateExpressionCountDistinctNotAllowed {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+    },
+    #[error(
         "the mapping for argument {argument_name:} of model {model_name:} has been defined more than once"
     )]
     DuplicateModelArgumentMapping {
@@ -206,6 +249,10 @@ pub enum Error {
     },
     #[error("model arguments graphql input configuration has been specified for model {model_name:} that does not have arguments")]
     UnnecessaryModelArgumentsGraphQlInputConfiguration { model_name: Qualified<ModelName> },
+    #[error("an unnecessary filter input type name graphql configuration has been specified for model {model_name:} that does not use aggregates")]
+    UnnecessaryFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
+    #[error("filter input type name graphql configuration must be specified for model {model_name:} because it uses aggregates")]
+    MissingFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
     #[error("multiple graphql types found with the same name: {graphql_type_name:}")]
     ConflictingGraphQlType { graphql_type_name: ast::TypeName },
     #[error("unknown field {field_name:} in unique identifier defined for model {model_name:}")]
@@ -261,6 +308,8 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
+    #[error("a source must be defined for model {model:} in order to use aggregate expressions")]
+    CannotUseAggregateExpressionsWithoutSource { model: Qualified<ModelName> },
     #[error("a source must be defined for model {model:} in order to use filter expressions")]
     CannotUseFilterExpressionsWithoutSource { model: Qualified<ModelName> },
     #[error("graphql config must be defined for a filter expression to be used in a {model:}")]
@@ -579,6 +628,8 @@ pub enum Error {
     },
     #[error("{type_error:}")]
     TypeError { type_error: TypeError },
+    #[error("{0:}")]
+    AggregateExpressionError(AggregateExpressionError),
 
     // TODO: (anon) refactor the data connector error types
     #[error(
@@ -802,15 +853,15 @@ pub enum GraphqlConfigError {
     MissingGraphqlConfig,
     #[error("graphql configuration should be defined only once in supergraph")]
     MultipleGraphqlConfigDefinition,
-    #[error("the fieldName for limitInput need to be defined in GraphqlConfig, when models have selectMany graphql API")]
+    #[error("the fieldName for limitInput needs to be defined in GraphqlConfig, when models have a selectMany graphql API")]
     MissingLimitFieldInGraphqlConfig,
-    #[error("the fieldName for offsetInput need to be defined in GraphqlConfig, when models have selectMany graphql API")]
+    #[error("the fieldName for offsetInput needs to be defined in GraphqlConfig, when models have a selectMany graphql API")]
     MissingOffsetFieldInGraphqlConfig,
-    #[error("the filterInput need to be defined in GraphqlConfig, when models have filterExpressionType")]
+    #[error("the filterInput needs to be defined in GraphqlConfig, when models have filterExpressionType")]
     MissingFilterInputFieldInGraphqlConfig,
-    #[error("the orderByInput need to be defined in GraphqlConfig, when models have orderByExpressionType")]
+    #[error("the orderByInput needs to be defined in GraphqlConfig, when models have orderByExpressionType")]
     MissingOrderByInputFieldInGraphqlConfig,
-    #[error("the orderByInput.enumTypeNames need to be defined in GraphqlConfig, when models have orderByExpressionType")]
+    #[error("the orderByInput.enumTypeNames needs to be defined in GraphqlConfig, when models have orderByExpressionType")]
     MissingOrderByEnumTypeNamesInGraphqlConfig,
     #[error("only one enumTypeNames can be defined in GraphqlConfig, whose direction values are both 'asc' and 'desc'.")]
     MultipleOrderByEnumTypeNamesInGraphqlConfig,
@@ -818,8 +869,10 @@ pub enum GraphqlConfigError {
             "invalid directions: {directions} defined in orderByInput of GraphqlConfig , currently there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
         )]
     InvalidOrderByDirection { directions: String },
-    #[error("the fieldName for argumentsInput need to be defined in GraphqlConfig, when models have argumentsInputType")]
+    #[error("the fieldName for argumentsInput needs to be defined in GraphqlConfig, when models have argumentsInputType")]
     MissingArgumentsInputFieldInGraphqlConfig,
+    #[error("the filterInputFieldName for aggregate needs to be defined in GraphqlConfig, when models have a selectAggregate graphql API")]
+    MissingAggregateFilterInputFieldNameInGraphqlConfig,
 }
 
 #[derive(Error, Debug)]
@@ -896,4 +949,10 @@ pub enum TypeMappingValidationError {
     },
     #[error("ndc validation error: {0}")]
     NDCValidationError(NDCValidationError),
+}
+
+impl From<AggregateExpressionError> for Error {
+    fn from(val: AggregateExpressionError) -> Self {
+        Error::AggregateExpressionError(val)
+    }
 }

@@ -1,0 +1,1 @@
+metadata is not consistent: the aggregate expression Invoice_aggregate_exp (in subgraph default) has duplicate definitions of the aggregatable field 'invoiceId'

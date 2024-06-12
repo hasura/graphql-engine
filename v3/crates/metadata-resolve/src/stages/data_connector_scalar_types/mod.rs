@@ -127,6 +127,7 @@ fn convert_data_connectors_contexts<'a>(
                     comparison_expression_name: None,
                     comparison_operators: scalar.comparison_operators.clone(),
                     representation: None,
+                    aggregate_functions: scalar.aggregate_functions,
                 },
             );
         }
