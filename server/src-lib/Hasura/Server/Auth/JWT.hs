@@ -371,7 +371,7 @@ fetchAndUpdateJWKs logger httpManager url jwkRef = do
         Just expiryTime -> liftIO $ writeIORef jwkRef (jwkSet, Just expiryTime)
   where
     logNotice = do
-      let err = JwkRefreshLog LevelInfo (Just "Either the expiry is not present or cannot be parsed (retrying again after 1 second)") Nothing
+      let err = JwkRefreshLog LevelInfo (Just "Either the expiry is not present or cannot be parsed (retrying again after 60 seconds)") Nothing
       liftIO $ unLogger logger err
 
 -- | Given a JWK url, fetch JWK from it

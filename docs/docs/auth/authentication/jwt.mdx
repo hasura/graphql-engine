@@ -228,13 +228,13 @@ The following is the behavior in detail:
 
     If it is unable to parse those values, then it will not refresh the JWKs (it assumes that if the above headers are
     not present, the provider doesn't rotate their JWKs). If the parsed time is less than a second, the JWKs
-    will be fetched once per second regardless.
+    will be fetched once per minute regardless.
 
     If `must-revalidate` and `max-age` are present, then it will refresh the JWK again after the time period specified
     in `max-age` has passed.
 
     However, if `max-age` is not specified or if `no-cache` or `no-store` are present, then it will refresh the JWKs
-    once a second.
+    once every minute.
 
 ##### JWK procedure while running
 
@@ -245,7 +245,7 @@ The following is the behavior in detail:
        as a timestamp.
 
 2.  If it is able to parse any of the above successfully, then it will use that parsed time to refetch the JWKs
-    again. If it is unable to parse any values, then it will sleep for 1 minute and then start another refresh cycle.
+    again. If it is unable to parse any values, then it will sleep for one minute and then start another refresh cycle.
 
 ##### JWK publisher URLs
 
