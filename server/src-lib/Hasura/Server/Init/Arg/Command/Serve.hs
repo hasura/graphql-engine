@@ -71,6 +71,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     persistedQueriesTtlOption,
     remoteSchemaResponsePriorityOption,
     configuredHeaderPrecedenceOption,
+    traceQueryStatusOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -167,6 +168,7 @@ serveCommandParser =
     <*> parsePersistedQueriesTtl
     <*> parseRemoteSchemaResponsePriority
     <*> parseConfiguredHeaderPrecedence
+    <*> parseTraceQueryStatus
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1341,6 +1343,14 @@ parseConfiguredHeaderPrecedence =
           <> Opt.help (Config._helpMessage configuredHeaderPrecedenceOption)
       )
 
+parseTraceQueryStatus :: Opt.Parser (Maybe Types.TraceQueryStatus)
+parseTraceQueryStatus =
+  (bool Nothing (Just Types.TraceQueryEnabled))
+    <$> Opt.switch
+      ( Opt.long "trace-sql-query"
+          <> Opt.help (Config._helpMessage traceQueryStatusOption)
+      )
+
 configuredHeaderPrecedenceOption :: Config.Option Types.HeaderPrecedence
 configuredHeaderPrecedenceOption =
   Config.Option
@@ -1349,6 +1359,15 @@ configuredHeaderPrecedenceOption =
       Config._helpMessage =
         "Forward configured metadata headers with higher precedence than client headers"
           <> "when delivering payload to webhook for actions and input validations. (default: false)"
+    }
+
+traceQueryStatusOption :: Config.Option Types.TraceQueryStatus
+traceQueryStatusOption =
+  Config.Option
+    { Config._default = Types.TraceQueryDisabled,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_QUERY_TRACING",
+      Config._helpMessage =
+        "Enable query tracing for all queries. (default: false)"
     }
 
 --------------------------------------------------------------------------------

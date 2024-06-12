@@ -332,7 +332,8 @@ serveOptions =
       soPersistedQueries = Init._default Init.persistedQueriesOption,
       soPersistedQueriesTtl = Init._default Init.persistedQueriesTtlOption,
       soRemoteSchemaResponsePriority = Init._default Init.remoteSchemaResponsePriorityOption,
-      soHeaderPrecedence = Init._default Init.configuredHeaderPrecedenceOption
+      soHeaderPrecedence = Init._default Init.configuredHeaderPrecedenceOption,
+      soTraceQueryStatus = Init._default Init.traceQueryStatusOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

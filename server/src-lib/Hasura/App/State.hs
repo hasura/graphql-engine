@@ -174,7 +174,8 @@ data AppContext = AppContext
     acCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus,
     acSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags,
     acRemoteSchemaResponsePriority :: RemoteSchemaResponsePriority,
-    acHeaderPrecedence :: HeaderPrecedence
+    acHeaderPrecedence :: HeaderPrecedence,
+    acTraceQueryStatus :: TraceQueryStatus
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -297,7 +298,8 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys, checkFeatureFlag) -> 
           acCloseWebsocketsOnMetadataChangeStatus = soCloseWebsocketsOnMetadataChangeStatus,
           acSchemaSampledFeatureFlags = schemaSampledFeatureFlags,
           acRemoteSchemaResponsePriority = soRemoteSchemaResponsePriority,
-          acHeaderPrecedence = soHeaderPrecedence
+          acHeaderPrecedence = soHeaderPrecedence,
+          acTraceQueryStatus = soTraceQueryStatus
         }
   where
     buildEventEngineCtx = Inc.cache proc (httpPoolSize, fetchInterval, fetchBatchSize) -> do

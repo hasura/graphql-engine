@@ -70,9 +70,10 @@ makeSourceJoinCall ::
   IntMap.IntMap JoinArgument ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  TraceQueryStatus ->
   -- | The resulting join index (see 'buildJoinIndex') if any.
   m (Maybe (IntMap.IntMap AO.Value, [ModelInfoPart]))
-makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArguments reqHeaders operationName =
+makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArguments reqHeaders operationName traceQueryStatus =
   Tracing.newSpan ("Remote join to data source " <> sourceName <<> " for field " <>> jaFieldName) do
     -- step 1: create the SourceJoinCall
     -- maybeSourceCall <-
@@ -80,7 +81,7 @@ makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArg
     --     buildSourceJoinCall @b userInfo jaFieldName joinArguments sjc
     maybeSourceCall <-
       AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin
-        $ buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName
+        $ buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName traceQueryStatus
     -- if there actually is a remote call:
     for maybeSourceCall \(sourceCall, modelInfoList) -> do
       -- step 2: send this call over the network
@@ -115,9 +116,10 @@ buildSourceJoinCall ::
   IntMap.IntMap JoinArgument ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  TraceQueryStatus ->
   RemoteSourceJoin b ->
   m (Maybe (AB.AnyBackend SourceJoinCall, [ModelInfoPart]))
-buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName remoteSourceJoin = do
+buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName traceQueryStatus remoteSourceJoin = do
   Tracing.newSpan "Resolve execution step for remote join field" do
     let rows =
           IntMap.toList joinArguments <&> \(argumentId, argument) ->
@@ -142,6 +144,7 @@ buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName 
           reqHeaders
           operationName
           (_rsjStringifyNum remoteSourceJoin)
+          traceQueryStatus
       -- This should never fail, as field names in remote relationships are
       -- validated when building the schema cache.
       fieldName <-

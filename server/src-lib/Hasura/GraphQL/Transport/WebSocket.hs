@@ -105,7 +105,7 @@ import Hasura.Server.Prometheus
     recordGraphqlOperationMetric,
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (GranularPrometheusMetricsState (..), HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), RemoteSchemaResponsePriority, RequestId, getRequestId)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), RemoteSchemaResponsePriority, RequestId, TraceQueryStatus, getRequestId)
 import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -449,8 +449,9 @@ onStart ::
   WS.WSActions WSConnData ->
   ResponseInternalErrorsConfig ->
   HeaderPrecedence ->
+  TraceQueryStatus ->
   m ()
-onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions responseErrorsConfig headerPrecedence = catchAndIgnore $ do
+onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions responseErrorsConfig headerPrecedence traceQueryStatus = catchAndIgnore $ do
   modelInfoLogStatus' <- runGetModelInfoLogStatus
   modelInfoLogStatus <- liftIO modelInfoLogStatus'
   granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
@@ -521,6 +522,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         requestId
         responseErrorsConfig
         headerPrecedence
+        traceQueryStatus
 
   (parameterizedQueryHash, execPlan, modelInfoList) <- onLeft execPlanE (withComplete . preExecErr granularPrometheusMetricsState requestId (Just gqlOpType) opName Nothing)
 
@@ -564,7 +566,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                               genSql
                               resolvedConnectionTemplate
                       (finalResponse, modelInfo) <-
-                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
+                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator traceQueryStatus
                       pure $ (AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse [], modelInfo)
                     E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
@@ -574,7 +576,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                       (time, (resp, _), modelInfo) <- doQErr $ do
                         (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                         (finalResponse, modelInfo) <-
-                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
+                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator traceQueryStatus
                         pure (time, (finalResponse, hdrs), modelInfo)
                       pure $ (AnnotatedResponsePart time Telem.Empty resp [], modelInfo)
                     E.ExecStepRaw json -> do
@@ -648,14 +650,14 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                               genSql
                               resolvedConnectionTemplate
                       (finalResponse, modelInfo) <-
-                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
+                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator traceQueryStatus
                       pure $ (AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse [], modelInfo)
                     E.ExecStepAction actionExecPlan _ remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                       (time, (resp, hdrs), modelInfo) <- doQErr $ do
                         (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                         (finalResponse, modelInfo) <-
-                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
+                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator traceQueryStatus
                         pure (time, (finalResponse, hdrs), modelInfo)
                       pure $ (AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs, modelInfo)
                     E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
@@ -859,6 +861,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
             remoteJoins
             reqUnparsed
             tracesPropagator
+            traceQueryStatus
       return $ (AnnotatedResponsePart telemTimeIO_DT Telem.Remote finalResponse [], modelInfo)
 
     WSServerEnv
@@ -1113,8 +1116,9 @@ onMessage ::
   Maybe (CredentialCache AgentLicenseKey) ->
   ResponseInternalErrorsConfig ->
   HeaderPrecedence ->
+  TraceQueryStatus ->
   m ()
-onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agentLicenseKey responseErrorsConfig headerPrecedence = do
+onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agentLicenseKey responseErrorsConfig headerPrecedence traceQueryStatus = do
   Tracing.newTrace (_wseTraceSamplingPolicy serverEnv) "websocket" do
     case J.eitherDecode msgRaw of
       Left e -> do
@@ -1138,7 +1142,7 @@ onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agen
                 if _mcAnalyzeQueryVariables (scMetricsConfig schemaCache)
                   then CaptureQueryVariables
                   else DoNotCaptureQueryVariables
-          onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables startMsg onMessageActions responseErrorsConfig headerPrecedence
+          onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables startMsg onMessageActions responseErrorsConfig headerPrecedence traceQueryStatus
         CMStop stopMsg -> do
           granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
           onStop serverEnv wsConn stopMsg granularPrometheusMetricsState
