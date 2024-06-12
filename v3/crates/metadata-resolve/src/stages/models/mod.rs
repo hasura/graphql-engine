@@ -691,10 +691,7 @@ fn resolve_model_graphql_api(
             select_unique.description.clone()
         } else {
             model_description.as_ref().map(|description| {
-                format!(
-                    "Selects a single object from the model. Model description: {}",
-                    description
-                )
+                format!("Selects a single object from the model. Model description: {description}")
             })
         };
         model
@@ -773,8 +770,7 @@ fn resolve_model_graphql_api(
             } else {
                 model_description.as_ref().map(|description| {
                     format!(
-                        "Selects multiple objects from the model. Model description: {}",
-                        description
+                        "Selects multiple objects from the model. Model description: {description}"
                     )
                 })
             };

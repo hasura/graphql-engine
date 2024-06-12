@@ -104,8 +104,7 @@ fn join_command_response(
             return Err(error::FieldError::from(
                 error::FieldInternalError::InternalGeneric {
                     description: format!(
-                        "unexpected command response: {}; expected Array or Object",
-                        command_json_val
+                        "unexpected command response: {command_json_val}; expected Array or Object"
                     ),
                 },
             ));

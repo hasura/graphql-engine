@@ -25,16 +25,16 @@ fn test_parser_for_schema(schema_path: &Path) -> Result<(), io::Error> {
             let mut parser = parser::Parser::new(&schema);
             match parser.parse_schema_document() {
                 Err(err) => {
-                    panic!("Parsing error:\n{:#?}", err);
+                    panic!("Parsing error:\n{err:#?}");
                 }
                 Ok(document) => {
-                    let actual_ast = format!("{:#?}", document);
+                    let actual_ast = format!("{document:#?}");
                     let patch = diffy::create_patch(expected_ast.as_str(), actual_ast.as_str());
                     // No diff
                     if patch.hunks().is_empty() {
                         return Ok(());
                     }
-                    println!("AST diff:\n{}", patch);
+                    println!("AST diff:\n{patch}");
 
                     // Also write the actual AST to a temp file, to make it easy to update the golden file if the new output is expected
                     let mut tmp_output = env::temp_dir();
@@ -191,7 +191,7 @@ fn project_root() -> PathBuf {
 // Additional sanity checks to distinguish our error and success expectations:
 fn assert_is_err<T: std::fmt::Debug>(actual: &parser::Result<T>, path: &Path) {
     if actual.is_ok() {
-        println!("erroneously successful parse: {:?}", actual);
+        println!("erroneously successful parse: {actual:?}");
         panic!(
             "There should be errors in the file since this is an error case, but saw none in {:?}",
             path.display()
@@ -201,7 +201,7 @@ fn assert_is_err<T: std::fmt::Debug>(actual: &parser::Result<T>, path: &Path) {
 
 fn assert_is_ok<T: std::fmt::Debug>(actual: &parser::Result<T>, path: &Path) {
     if actual.is_err() {
-        println!("error: {:?}", actual);
+        println!("error: {actual:?}");
         panic!("There should be no errors in the file {:?}", path.display(),);
     }
 }

@@ -482,7 +482,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
     // Add the arguments on which the join is done to the command arguments
     let mut variable_arguments = BTreeMap::new();
     for (_source, target_argument_name) in &join_mapping {
-        let target_value_variable = format!("${}", target_argument_name);
+        let target_value_variable = format!("${target_argument_name}");
         let ndc_argument_name = target_source
             .details
             .argument_mappings

@@ -49,8 +49,7 @@ impl<'de> Deserialize<'de> for Name {
         let s = String::deserialize(deserializer)?;
         if !is_valid_graphql_name(&s) {
             return Err(serde::de::Error::custom(format!(
-                "{} is not a valid graphql name",
-                s
+                "{s} is not a valid graphql name"
             )));
         }
         Ok(Name(SmolStr::new(&s)))
@@ -288,7 +287,7 @@ impl Display for BaseType {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::Named(name) => name.fmt(f),
-            Self::List(ty) => write!(f, "[{}]", ty),
+            Self::List(ty) => write!(f, "[{ty}]"),
         }
     }
 }

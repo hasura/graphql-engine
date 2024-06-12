@@ -504,17 +504,17 @@ fn check_aggregation_function_return_type(
     let validate_scalar_representation = || -> Result<(), Error> {
         let type_name = data_connector_scalars.0.get(&DataConnectorScalarType(ndc_named_return_type.clone()))
             .ok_or_else(||
-                mk_error(format!("The data connector's return type ({0}) isn't a scalar type", ndc_named_return_type).as_str())
+                mk_error(format!("The data connector's return type ({ndc_named_return_type}) isn't a scalar type").as_str())
             )?
             .representation
             .as_ref()
             .ok_or_else(||
-                mk_error(format!("The data connector's return scalar type ({0}) doesn't have a type representation", ndc_named_return_type).as_str())
+                mk_error(format!("The data connector's return scalar type ({ndc_named_return_type}) doesn't have a type representation").as_str())
             )?;
         let ndc_qualified_type_name =
             mk_qualified_type_name(type_name, &aggregate_expression_name.subgraph);
         if ndc_qualified_type_name != *named_return_type {
-            return Err(mk_error(format!("The data connector's return scalar type representation ({0}) does not match the Open DD return type", ndc_qualified_type_name).as_str()));
+            return Err(mk_error(format!("The data connector's return scalar type representation ({ndc_qualified_type_name}) does not match the Open DD return type").as_str()));
         }
         Ok(())
     };
@@ -535,7 +535,7 @@ fn check_aggregation_function_return_type(
                 let ndc_object_type_name = DataConnectorObjectType(ndc_named_return_type.clone());
                 return_object_type.type_mappings.get(data_connector_name, &ndc_object_type_name)
                     .ok_or_else(||
-                        mk_error(format!("There is no type mapping defined from the Open DD return object type to the data connector's object type '{0}'", ndc_named_return_type).as_str())
+                        mk_error(format!("There is no type mapping defined from the Open DD return object type to the data connector's object type '{ndc_named_return_type}'").as_str())
                     )?;
 
                 Ok(())
@@ -587,7 +587,7 @@ fn unwrap_aggregation_function_return_type<'a>(
         // Ensure if the Open DD type is a list, the NDC type is an array, and then recur to unwrap and check the element type
         QualifiedBaseType::List(type_reference) => {
             match ndc_nullable_unwrapped {
-                ndc_models::Type::Named { name } => Err(mk_error(format!("The data connector's return type is the named type '{0}', but the Open DD return type is an array", name).as_str())),
+                ndc_models::Type::Named { name } => Err(mk_error(format!("The data connector's return type is the named type '{name}', but the Open DD return type is an array").as_str())),
                 ndc_models::Type::Nullable { .. } => Err(mk_error("The data connector's return type was doubly-nullable")), // This shouldn't happen, would be an invalid NDC type
                 ndc_models::Type::Array { element_type } => unwrap_aggregation_function_return_type(type_reference, element_type, aggregate_expression_name, aggregation_function_name, data_connector_name),
                 ndc_models::Type::Predicate { .. } => Err(mk_error("The data connector's return type is a predicate type, which is unsupported in aggregation return types")),

@@ -83,7 +83,7 @@ fn set_attribute_on_span(
 ) {
     let key_with_visibility: Key = match visibility {
         AttributeVisibility::Default => key.into(),
-        AttributeVisibility::Internal => format!("internal.{}", key).into(),
+        AttributeVisibility::Internal => format!("internal.{key}").into(),
     };
 
     span.set_attribute(opentelemetry::KeyValue::new(key_with_visibility, value));

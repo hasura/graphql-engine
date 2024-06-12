@@ -320,6 +320,6 @@ mod tests {
             }],
         };
         let actual = serde_json::to_string_pretty(&operation).unwrap();
-        println!("{}", actual);
+        println!("{actual}");
     }
 }

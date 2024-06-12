@@ -324,7 +324,7 @@ fn extract_nested_field<'a>(
             (
                 StatusCode::BAD_REQUEST,
                 Json(ndc_models::ErrorResponse {
-                    message: format!("could not find field {} in nested object", field),
+                    message: format!("could not find field {field} in nested object"),
                     details: serde_json::Value::Null,
                 }),
             )

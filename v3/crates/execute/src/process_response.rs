@@ -264,16 +264,14 @@ pub fn process_command_rows(
     match rows {
         None => Err(error::NDCUnexpectedError::BadNDCResponse {
             summary: format!(
-                "Expected one row in the response for command, but no rows present: {}",
-                command_name
+                "Expected one row in the response for command, but no rows present: {command_name}"
             ),
         })?,
         Some(row_vector) => {
             if row_vector.len() > 1 {
                 Err(error::NDCUnexpectedError::BadNDCResponse {
                     summary: format!(
-                        "Expected only one row in the response for command: {}",
-                        command_name
+                        "Expected only one row in the response for command: {command_name}"
                     ),
                 })?;
             }
@@ -296,7 +294,7 @@ fn process_command_response_row(
     let field_value_result = row
         .swap_remove(FUNCTION_IR_VALUE_COLUMN_NAME)
         .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
-            summary: format!("missing field: {}", FUNCTION_IR_VALUE_COLUMN_NAME),
+            summary: format!("missing field: {FUNCTION_IR_VALUE_COLUMN_NAME}"),
         })?;
 
     process_command_field_value(field_value_result.0, selection_set, type_container)
@@ -393,7 +391,7 @@ fn process_aggregate_requested_fields(
     for (field_name, aggregate_field_selection) in requested_fields {
         let aggregate_value = aggregate_results.swap_remove(field_name).ok_or_else(|| {
             error::NDCUnexpectedError::BadNDCResponse {
-                summary: format!("missing aggregate field: {}", field_name),
+                summary: format!("missing aggregate field: {field_name}"),
             }
         })?;
 

@@ -20,10 +20,10 @@ impl Display for HeaderError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             HeaderError::InvalidHeaderName { header_name } => {
-                write!(f, "invalid HTTP header name: {}", header_name)
+                write!(f, "invalid HTTP header name: {header_name}")
             }
             HeaderError::InvalidHeaderValue { header_name } => {
-                write!(f, "invalid HTTP header value: {}", header_name)
+                write!(f, "invalid HTTP header value: {header_name}")
             }
         }
     }

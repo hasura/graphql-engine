@@ -325,7 +325,7 @@ fn get_schema_sdl<S: SchemaContext, NSGet: NamespacedGetter<S>>(
                 }) {
                     None
                 } else {
-                    Some(format!("mutation: {} ", t))
+                    Some(format!("mutation: {t} "))
                 }
             }
             _ => None,
@@ -334,7 +334,7 @@ fn get_schema_sdl<S: SchemaContext, NSGet: NamespacedGetter<S>>(
     let subscription_field = schema
         .subscription_type
         .as_ref()
-        .map(|t| format!("subscription: {} ", t));
+        .map(|t| format!("subscription: {t} "));
     format!(
         "schema {}",
         in_curly_braces(
@@ -350,7 +350,7 @@ fn get_schema_sdl<S: SchemaContext, NSGet: NamespacedGetter<S>>(
 fn generate_description_sdl(description: &Option<String>) -> String {
     description
         .as_ref()
-        .map(|d| format!("\"\"\"{}\"\"\"", d))
+        .map(|d| format!("\"\"\"{d}\"\"\""))
         .unwrap_or_default()
 }
 
@@ -377,7 +377,7 @@ fn generate_directives_sdl(
                 if args.is_empty() {
                     String::default()
                 } else {
-                    format!("({})", args)
+                    format!("({args})")
                 }
             )
         })
@@ -387,9 +387,9 @@ fn generate_directives_sdl(
         Some(DeprecationStatus::Deprecated { reason }) => {
             let reason_arg = reason
                 .as_ref()
-                .map(|r| format!("(reason: {})", r))
+                .map(|r| format!("(reason: {r})"))
                 .unwrap_or_default();
-            format!("@deprecated{} {}", reason_arg, other_directives)
+            format!("@deprecated{reason_arg} {other_directives}")
         }
         _ => other_directives,
     }
@@ -434,7 +434,7 @@ fn format_input_field_with_type(
     default_value: Option<&ConstValue>,
 ) -> String {
     let field_sdl = match default_value {
-        None => format!("{}: {}", field_name, field_type),
+        None => format!("{field_name}: {field_type}"),
         Some(default_value) => {
             let default_value_sdl = default_value.to_json().to_string();
             let mut default_value_lines = default_value_sdl.lines();
@@ -450,7 +450,7 @@ fn format_input_field_with_type(
                     with_indent(default_value_sdl.as_str())
                 )
             } else {
-                format!("{}: {} = {}", field_name, field_type, default_value_sdl)
+                format!("{field_name}: {field_type} = {default_value_sdl}")
             }
         }
     };
@@ -479,7 +479,7 @@ fn format_field_with_type<S: SchemaContext, NSGet: NamespacedGetter<S>>(
     namespaced_getter: &NSGet,
 ) -> String {
     let field_sdl = if field_arguments.is_empty() {
-        format!("{}: {}", field_name, field_type)
+        format!("{field_name}: {field_type}")
     } else {
         let arguments_sdl = generate_arguments_sdl(field_arguments, namespaced_getter);
         let mut arguments_lines = arguments_sdl.lines();
@@ -496,7 +496,7 @@ fn format_field_with_type<S: SchemaContext, NSGet: NamespacedGetter<S>>(
                 field_type
             )
         } else {
-            format!("{}({}): {}", field_name, arguments_sdl, field_type)
+            format!("{field_name}({arguments_sdl}): {field_type}")
         }
     };
     if deprecation_status == &DeprecationStatus::NotDeprecated {
@@ -551,7 +551,7 @@ fn in_curly_braces(strings: Vec<String>) -> String {
 
 fn with_indent(sdl: &str) -> String {
     sdl.lines()
-        .map(|l| format!("  {}", l))
+        .map(|l| format!("  {l}"))
         .collect::<Vec<String>>()
         .join("\n")
 }

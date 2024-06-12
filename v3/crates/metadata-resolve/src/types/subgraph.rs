@@ -14,7 +14,7 @@ pub struct Qualified<T: Display> {
 impl<T: Display> Display for Qualified<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let qualifier = self.fmt_and_return_qualifier(f)?;
-        write!(f, "{}", qualifier)
+        write!(f, "{qualifier}")
     }
 }
 
@@ -43,7 +43,7 @@ pub struct QualifiedTypeReference {
 impl Display for QualifiedTypeReference {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let qualifier = self.fmt_and_return_qualifier(f)?;
-        write!(f, "{}", qualifier)
+        write!(f, "{qualifier}")
     }
 }
 
@@ -77,7 +77,7 @@ pub enum QualifiedBaseType {
 impl Display for QualifiedBaseType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let qualifier = self.fmt_and_return_qualifier(f)?;
-        write!(f, "{}", qualifier)
+        write!(f, "{qualifier}")
     }
 }
 
@@ -109,7 +109,7 @@ pub enum QualifiedTypeName {
 impl Display for QualifiedTypeName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let qualifier = self.fmt_and_return_qualifier(f)?;
-        write!(f, "{}", qualifier)
+        write!(f, "{qualifier}")
     }
 }
 
@@ -122,7 +122,7 @@ impl QualifiedTypeName {
     ) -> Result<String, std::fmt::Error> {
         match self {
             QualifiedTypeName::Inbuilt(inbuilt_type) => {
-                write!(f, "{}", inbuilt_type)?;
+                write!(f, "{inbuilt_type}")?;
                 Ok(String::new()) // No qualifier for inbuilt types!
             }
             QualifiedTypeName::Custom(custom_type) => custom_type.fmt_and_return_qualifier(f),

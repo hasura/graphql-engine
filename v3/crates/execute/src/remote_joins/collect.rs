@@ -269,7 +269,7 @@ fn resolve_command_response_row(
 ) -> Result<Vec<IndexMap<String, ndc_models::RowFieldValue>>, error::FieldError> {
     let field_value_result = row.get(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
         error::NDCUnexpectedError::BadNDCResponse {
-            summary: format!("missing field: {}", FUNCTION_IR_VALUE_COLUMN_NAME),
+            summary: format!("missing field: {FUNCTION_IR_VALUE_COLUMN_NAME}"),
         }
     })?;
 

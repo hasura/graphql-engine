@@ -210,8 +210,8 @@ impl std::fmt::Display for JSONPath {
             .0
             .iter()
             .map(|element| match element {
-                JSONPathElement::Key(key) => format!(".{}", key),
-                JSONPathElement::Index(index) => format!("[{}]", index),
+                JSONPathElement::Key(key) => format!(".{key}"),
+                JSONPathElement::Index(index) => format!("[{index}]"),
             })
             .collect::<Vec<String>>();
         let mut path = vec!["$".to_string()];

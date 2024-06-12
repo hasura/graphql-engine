@@ -46,7 +46,7 @@ impl Display for Error {
                 )
             }
             Error::OtherError(msg) => {
-                write!(f, "{}", msg)
+                write!(f, "{msg}")
             }
         }
     }

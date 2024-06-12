@@ -276,8 +276,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                     let global_id_fields = typename_mappings.get(&type_name).ok_or(
                         error::InternalEngineError::InternalGeneric {
                             description: format!(
-                                "Global ID fields not found of the type {}",
-                                type_name
+                                "Global ID fields not found of the type {type_name}"
                             ),
                         },
                     )?;

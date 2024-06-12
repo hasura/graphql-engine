@@ -155,7 +155,7 @@ pub async fn execute_query_internal(
                     let request_plan = build_request_plan(&ir)?;
 
                     let display_name = match normalized_request.name {
-                        Some(ref name) => std::borrow::Cow::Owned(format!("Execute {}", name)),
+                        Some(ref name) => std::borrow::Cow::Owned(format!("Execute {name}")),
                         None => std::borrow::Cow::Borrowed("Execute request plan"),
                     };
 

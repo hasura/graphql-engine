@@ -557,7 +557,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
     tracer
         .in_span_async(
             "execute_query_field_plan",
-            format!("{} field planning", field_alias),
+            format!("{field_alias} field planning"),
             tracing_util::SpanVisibility::User,
             || {
                 Box::pin(async {
