@@ -337,6 +337,62 @@
           ]
         },
         {
+          "$id": "https://hasura.io/jsonschemas/metadata/AggregateExpression",
+          "title": "AggregateExpression",
+          "examples": [
+            {
+              "kind": "AggregateExpression",
+              "version": "v1",
+              "definition": {
+                "name": "Invoice_aggregate_exp",
+                "operand": {
+                  "object": {
+                    "aggregatedType": "Invoice",
+                    "aggregatableFields": [
+                      {
+                        "fieldName": "Total",
+                        "aggregateExpression": "Float_aggregate_exp"
+                      }
+                    ]
+                  }
+                },
+                "graphql": {
+                  "selectTypeName": "Invoice_aggregate_fields"
+                },
+                "description": "Aggregate over Invoices"
+              }
+            }
+          ],
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "AggregateExpression"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v1"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/AggregateExpressionV1"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
           "$id": "https://hasura.io/jsonschemas/metadata/Model",
           "title": "Model",
           "description": "The definition of a data model. A data model is a collection of objects of a particular type. Models can support one or more CRUD operations.",
@@ -1204,21 +1260,26 @@
     "OperatorName": {
       "type": "string"
     },
-    "GraphqlApolloFederationConfig": {
-      "$id": "https://hasura.io/jsonschemas/metadata/GraphqlApolloFederationConfig",
-      "title": "GraphqlApolloFederationConfig",
-      "description": "Configuration for the GraphQL schema of Hasura features for Apollo Federation.",
-      "type": "object",
-      "required": [
-        "enableRootFields"
-      ],
-      "properties": {
-        "enableRootFields": {
-          "description": "Adds the `_entities` and `_services` root fields required for Apollo Federation.",
-          "type": "boolean"
+    "OrderByDirection2": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByDirection2",
+      "title": "OrderByDirection",
+      "description": "Sort direction.",
+      "oneOf": [
+        {
+          "description": "Ascending.",
+          "type": "string",
+          "enum": [
+            "Asc"
+          ]
+        },
+        {
+          "description": "Descending.",
+          "type": "string",
+          "enum": [
+            "Desc"
+          ]
         }
-      },
-      "additionalProperties": false
+      ]
     },
     "FieldIsNullPredicate": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldIsNullPredicate",
@@ -1974,6 +2035,456 @@
       },
       "additionalProperties": false
     },
+    "AggregateExpressionV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregateExpressionV1",
+      "title": "AggregateExpressionV1",
+      "description": "Definition of how to aggregate over a particular operand type",
+      "type": "object",
+      "required": [
+        "name",
+        "operand"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name of the command.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AggregateExpressionName"
+            }
+          ]
+        },
+        "operand": {
+          "description": "The type this aggregation expression aggregates over, and its associated configuration",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AggregateOperand"
+            }
+          ]
+        },
+        "count": {
+          "description": "Configuration for the count aggregate function used over the operand",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AggregateCountDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "countDistinct": {
+          "description": "Configuration for the count distinct aggregate function used over the operand",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AggregateCountDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "graphql": {
+          "description": "Configuration for how this command should appear in the GraphQL schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AggregateExpressionGraphQlDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "description": "The description of the command. Gets added to the description of the command's root field in the GraphQL schema.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "AggregateExpressionName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregateExpressionName",
+      "title": "AggregateExpressionName",
+      "description": "The name of an aggregate expression.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "AggregateOperand": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregateOperand",
+      "title": "AggregateOperand",
+      "description": "Definition of an aggregate expression's operand",
+      "oneOf": [
+        {
+          "title": "Object",
+          "description": "If the operand is an object type",
+          "type": "object",
+          "required": [
+            "object"
+          ],
+          "properties": {
+            "object": {
+              "$ref": "#/definitions/ObjectAggregateOperand"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "Scalar",
+          "description": "If the operand is a scalar type",
+          "type": "object",
+          "required": [
+            "scalar"
+          ],
+          "properties": {
+            "scalar": {
+              "$ref": "#/definitions/ScalarAggregateOperand"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ObjectAggregateOperand": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ObjectAggregateOperand",
+      "title": "ObjectAggregateOperand",
+      "description": "Definition of an aggregate over an object-typed operand",
+      "type": "object",
+      "required": [
+        "aggregatableFields",
+        "aggregatedType"
+      ],
+      "properties": {
+        "aggregatedType": {
+          "description": "The name of the object type the aggregate expression is aggregating",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            }
+          ]
+        },
+        "aggregatableFields": {
+          "description": "The fields on the object that are aggregatable",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AggregatableFieldDefinition"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "AggregatableFieldDefinition": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregatableFieldDefinition",
+      "title": "AggregatableFieldDefinition",
+      "description": "Definition of an aggregatable field on an object type",
+      "type": "object",
+      "required": [
+        "aggregateExpression",
+        "fieldName"
+      ],
+      "properties": {
+        "fieldName": {
+          "description": "The name of the field on the operand aggregated type that is aggregatable",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldName"
+            }
+          ]
+        },
+        "description": {
+          "description": "A description of the aggregatable field. Gets added to the description of the field in the GraphQL schema.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aggregateExpression": {
+          "description": "The aggregate expression used to aggregate the type of the field",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AggregateExpressionName"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ScalarAggregateOperand": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ScalarAggregateOperand",
+      "title": "ScalarAggregateOperand",
+      "description": "Definition of an aggregate over a scalar-typed operand",
+      "type": "object",
+      "required": [
+        "aggregatedType",
+        "aggregationFunctions",
+        "dataConnectorAggregationFunctionMapping"
+      ],
+      "properties": {
+        "aggregatedType": {
+          "description": "The name of the scalar type the aggregate expression is aggregating",
+          "allOf": [
+            {
+              "$ref": "#/definitions/TypeName"
+            }
+          ]
+        },
+        "aggregationFunctions": {
+          "description": "The aggregation functions that operate over the scalar type",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AggregationFunctionDefinition"
+          }
+        },
+        "dataConnectorAggregationFunctionMapping": {
+          "description": "Mapping of aggregation functions to corresponding aggregation functions in various data connectors",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataConnectorAggregationFunctionMapping"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "AggregateGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregateGraphqlConfig",
+      "title": "AggregateGraphqlConfig",
+      "type": "object",
+      "required": [
+        "countDistinctFieldName",
+        "countFieldName",
+        "filterInputFieldName"
+      ],
+      "properties": {
+        "filterInputFieldName": {
+          "description": "The name of the filter input parameter of aggregate fields and field name in predicates",
+          "allOf": [
+            {
+              "$ref": "#/definitions/GraphQlFieldName"
+            }
+          ]
+        },
+        "countFieldName": {
+          "description": "The name of the _count field used for the count aggregate function",
+          "allOf": [
+            {
+              "$ref": "#/definitions/GraphQlFieldName"
+            }
+          ]
+        },
+        "countDistinctFieldName": {
+          "description": "The name of the _count_distinct field used for the count distinct aggregate function",
+          "allOf": [
+            {
+              "$ref": "#/definitions/GraphQlFieldName"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "AggregationFunctionDefinition": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregationFunctionDefinition",
+      "title": "AggregationFunctionDefinition",
+      "description": "Definition of an aggregation function",
+      "type": "object",
+      "required": [
+        "name",
+        "returnType"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name of the aggregation function",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AggregationFunctionName"
+            }
+          ]
+        },
+        "description": {
+          "description": "A description of the aggregation function. Gets added to the description of the field in the GraphQL schema.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "returnType": {
+          "$ref": "#/definitions/TypeReference"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AggregationFunctionName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregationFunctionName",
+      "title": "AggregationFunctionName",
+      "description": "The name of an aggregation function.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "DataConnectorAggregationFunctionMapping": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorAggregationFunctionMapping",
+      "title": "DataConnectorAggregationFunctionMapping",
+      "description": "Definition of how to map an aggregate expression's aggregation functions to data connector aggregation functions.",
+      "type": "object",
+      "required": [
+        "dataConnectorName",
+        "dataConnectorScalarType",
+        "functionMapping"
+      ],
+      "properties": {
+        "dataConnectorName": {
+          "description": "The data connector being mapped to",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorName"
+            }
+          ]
+        },
+        "dataConnectorScalarType": {
+          "description": "The matching scalar type in the data connector for the operand scalar type",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorScalarType"
+            }
+          ]
+        },
+        "functionMapping": {
+          "description": "Mapping from Open DD aggregation function to data connector aggregation function",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AggregationFunctionMappings"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "GraphqlApolloFederationConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/GraphqlApolloFederationConfig",
+      "title": "GraphqlApolloFederationConfig",
+      "description": "Configuration for the GraphQL schema of Hasura features for Apollo Federation.",
+      "type": "object",
+      "required": [
+        "enableRootFields"
+      ],
+      "properties": {
+        "enableRootFields": {
+          "description": "Adds the `_entities` and `_services` root fields required for Apollo Federation.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "MutationGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/MutationGraphqlConfig",
+      "title": "MutationGraphqlConfig",
+      "description": "Configuration for the GraphQL schema of Hasura features for mutations.",
+      "type": "object",
+      "required": [
+        "rootOperationTypeName"
+      ],
+      "properties": {
+        "rootOperationTypeName": {
+          "description": "The name of the root operation type name for mutations. Usually `mutation`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AggregationFunctionMappings": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregationFunctionMappings",
+      "title": "AggregationFunctionMappings",
+      "description": "Mapping of aggregation functions to their matching aggregation functions in the data connector.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/AggregateFunctionMapping"
+      }
+    },
+    "AggregateFunctionMapping": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregateFunctionMapping",
+      "title": "AggregateFunctionMapping",
+      "description": "Definition of how to map the aggregation function to a function in the data connector",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name of the aggregation function in the data connector",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorAggregationFunctionName"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "DataConnectorAggregationFunctionName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorAggregationFunctionName",
+      "title": "DataConnectorAggregationFunctionName",
+      "description": "The name of an aggregation function in a data connector",
+      "type": "string"
+    },
+    "AggregateCountDefinition": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregateCountDefinition",
+      "title": "AggregateCountDefinition",
+      "description": "Definition of a count aggregation function",
+      "type": "object",
+      "required": [
+        "enable"
+      ],
+      "properties": {
+        "enable": {
+          "description": "Whether or not the aggregate function is available for use or not",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "A description of the aggregation function. Gets added to the description of the field in the GraphQL schema.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "AggregateExpressionGraphQlDefinition": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AggregateExpressionGraphQlDefinition",
+      "title": "AggregateExpressionGraphQlDefinition",
+      "description": "The definition of how an aggregate expression should appear in the GraphQL API.",
+      "examples": [
+        {
+          "selectTypeName": "Invoice_aggregate_fields"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "selectTypeName"
+      ],
+      "properties": {
+        "selectTypeName": {
+          "description": "The type name to use for the aggregate selection type",
+          "allOf": [
+            {
+              "$ref": "#/definitions/GraphQlTypeName"
+            }
+          ]
+        },
+        "deprecated": {
+          "description": "Whether this command root field is deprecated. If set, this will be added to the graphql schema as a deprecated field.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Deprecated"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "ModelV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ModelV1",
       "title": "ModelV1",
@@ -2042,6 +2553,17 @@
           "items": {
             "$ref": "#/definitions/OrderableField"
           }
+        },
+        "aggregateExpression": {
+          "description": "The name of the AggregateExpression that defines how to aggregate over this model",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AggregateExpressionName"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "graphql": {
           "description": "Configuration for how this model should appear in the GraphQL schema.",
@@ -2246,7 +2768,11 @@
             "queryRootField": "ArticleMany",
             "description": "Description for the select many ArticleMany"
           },
-          "orderByExpressionType": "Article_Order_By"
+          "orderByExpressionType": "Article_Order_By",
+          "aggregate": {
+            "queryRootField": "ArticleAggregate",
+            "description": "Aggregate over Articles"
+          }
         }
       ],
       "type": "object",
@@ -2299,6 +2825,28 @@
           "anyOf": [
             {
               "$ref": "#/definitions/ModelApolloFederationConfiguration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filterInputTypeName": {
+          "description": "The type name of the input type used to hold the filtering settings used by aggregates (etc) to filter their input before processing",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GraphQlTypeName"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aggregate": {
+          "description": "Configures the query root field added to the GraphQL API that can be used to aggregate over the model",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ModelAggregateGraphQlDefinition"
             },
             {
               "type": "null"
@@ -2409,6 +2957,43 @@
         "entitySource": {
           "description": "Whether this model should be used as the source for fetching _entity for object of its type.",
           "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ModelAggregateGraphQlDefinition": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ModelAggregateGraphQlDefinition",
+      "title": "ModelAggregateGraphQlDefinition",
+      "type": "object",
+      "required": [
+        "queryRootField"
+      ],
+      "properties": {
+        "queryRootField": {
+          "description": "The name of the query root field for this API.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/GraphQlFieldName"
+            }
+          ]
+        },
+        "description": {
+          "description": "The description of the aggregate graphql definition of the model. Gets added to the description of the aggregate root field of the model in the graphql schema.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "deprecated": {
+          "description": "Whether this aggregate query field is deprecated. If set, the deprecation status is added to the aggregate root field's graphql schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Deprecated"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -3622,6 +4207,17 @@
               "type": "null"
             }
           ]
+        },
+        "aggregate": {
+          "description": "Configuration for aggregates",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AggregateGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -3799,43 +4395,6 @@
           }
         },
         "typeName": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
-    "OrderByDirection2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/OrderByDirection2",
-      "title": "OrderByDirection",
-      "description": "Sort direction.",
-      "oneOf": [
-        {
-          "description": "Ascending.",
-          "type": "string",
-          "enum": [
-            "Asc"
-          ]
-        },
-        {
-          "description": "Descending.",
-          "type": "string",
-          "enum": [
-            "Desc"
-          ]
-        }
-      ]
-    },
-    "MutationGraphqlConfig": {
-      "$id": "https://hasura.io/jsonschemas/metadata/MutationGraphqlConfig",
-      "title": "MutationGraphqlConfig",
-      "description": "Configuration for the GraphQL schema of Hasura features for mutations.",
-      "type": "object",
-      "required": [
-        "rootOperationTypeName"
-      ],
-      "properties": {
-        "rootOperationTypeName": {
-          "description": "The name of the root operation type name for mutations. Usually `mutation`.",
           "type": "string"
         }
       },

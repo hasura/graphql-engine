@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    aggregates::AggregateExpressionName,
     arguments::ArgumentDefinition,
     commands::ArgumentMapping,
     data_connector::DataConnectorName,
@@ -129,6 +130,8 @@ pub struct ModelV1 {
     pub filter_expression_type: Option<CustomTypeName>,
     /// A list of fields that can be used to order the objects in this model.
     pub orderable_fields: Vec<OrderableField>,
+    /// The name of the AggregateExpression that defines how to aggregate over this model
+    pub aggregate_expression: Option<AggregateExpressionName>,
     /// Configuration for how this model should appear in the GraphQL schema.
     pub graphql: Option<ModelGraphQlDefinition>,
     /// The description of the model.
@@ -183,6 +186,12 @@ pub struct ModelGraphQlDefinition {
     pub order_by_expression_type: Option<GraphQlTypeName>,
     /// Apollo Federation configuration
     pub apollo_federation: Option<ModelApolloFederationConfiguration>,
+    /// The type name of the input type used to hold the filtering settings used by
+    /// aggregates (etc) to filter their input before processing
+    pub filter_input_type_name: Option<GraphQlTypeName>,
+    /// Configures the query root field added to the GraphQL API that can be used to
+    /// aggregate over the model
+    pub aggregate: Option<ModelAggregateGraphQlDefinition>,
 }
 
 impl ModelGraphQlDefinition {
@@ -201,7 +210,11 @@ impl ModelGraphQlDefinition {
                 "queryRootField": "ArticleMany",
                 "description": "Description for the select many ArticleMany"
             },
-            "orderByExpressionType": "Article_Order_By"
+            "orderByExpressionType": "Article_Order_By",
+            "aggregate": {
+                "queryRootField": "ArticleAggregate",
+                "description": "Aggregate over Articles"
+            }
         })
     }
 }
@@ -292,4 +305,19 @@ pub enum OrderByDirection {
 pub struct ModelApolloFederationConfiguration {
     /// Whether this model should be used as the source for fetching _entity for object of its type.
     pub entity_source: bool,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "ModelAggregateGraphQlDefinition"))]
+pub struct ModelAggregateGraphQlDefinition {
+    /// The name of the query root field for this API.
+    pub query_root_field: GraphQlFieldName,
+    /// The description of the aggregate graphql definition of the model.
+    /// Gets added to the description of the aggregate root field of the model in the graphql schema.
+    pub description: Option<String>,
+    /// Whether this aggregate query field is deprecated.
+    /// If set, the deprecation status is added to the aggregate root field's graphql schema.
+    pub deprecated: Option<Deprecated>,
 }

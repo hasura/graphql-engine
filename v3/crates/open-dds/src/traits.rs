@@ -38,6 +38,20 @@ impl_OpenDd_default_for!(i32);
 impl_OpenDd_default_for!(u32);
 impl_OpenDd_default_for!(());
 
+impl<T: OpenDd> OpenDd for Box<T> {
+    fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
+        T::deserialize(json).map(Box::new)
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        T::json_schema(gen)
+    }
+
+    fn _schema_name() -> String {
+        T::_schema_name()
+    }
+}
+
 impl<T: OpenDd> OpenDd for Option<T> {
     fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
         match json {

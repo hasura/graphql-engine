@@ -1,8 +1,8 @@
 use crate::{graphql_config, MetadataWithVersion, OpenDdSupergraphObject};
 
 use super::{
-    boolean_expression, commands, data_connector, flags, models, permissions, relationships, types,
-    Metadata, OpenDdSubgraphObject,
+    aggregates, boolean_expression, commands, data_connector, flags, models, permissions,
+    relationships, types, Metadata, OpenDdSubgraphObject,
 };
 
 pub struct QualifiedObject<T> {
@@ -31,6 +31,7 @@ pub struct MetadataAccessor {
     pub boolean_expression_types: Vec<QualifiedObject<boolean_expression::BooleanExpressionTypeV1>>,
     pub data_connector_scalar_representations:
         Vec<QualifiedObject<types::DataConnectorScalarRepresentationV1>>,
+    pub aggregate_expressions: Vec<QualifiedObject<aggregates::AggregateExpressionV1>>,
     pub models: Vec<QualifiedObject<models::ModelV1>>,
     pub type_permissions: Vec<QualifiedObject<permissions::TypePermissionsV1>>,
     pub model_permissions: Vec<QualifiedObject<permissions::ModelPermissionsV1>>,
@@ -57,7 +58,7 @@ fn load_metadata_objects(
             OpenDdSubgraphObject::GraphqlConfig(graphql_config) => {
                 accessor
                     .graphql_config
-                    .push(QualifiedObject::new(subgraph, graphql_config));
+                    .push(QualifiedObject::new(subgraph, *graphql_config));
             }
             OpenDdSubgraphObject::ObjectType(object_type) => {
                 accessor
@@ -90,6 +91,12 @@ fn load_metadata_objects(
                         subgraph,
                         scalar_representation.upgrade(),
                     ));
+            }
+            OpenDdSubgraphObject::AggregateExpression(aggregate_expression) => {
+                accessor.aggregate_expressions.push(QualifiedObject::new(
+                    subgraph,
+                    aggregate_expression.upgrade(),
+                ));
             }
             OpenDdSubgraphObject::Model(model) => {
                 accessor
@@ -185,6 +192,7 @@ impl MetadataAccessor {
             object_boolean_expression_types: vec![],
             boolean_expression_types: vec![],
             data_connector_scalar_representations: vec![],
+            aggregate_expressions: vec![],
             models: vec![],
             type_permissions: vec![],
             model_permissions: vec![],

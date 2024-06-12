@@ -7,6 +7,7 @@ use crate::types::error::{Error, GraphqlConfigError};
 use lang_graphql::ast::common as ast;
 use open_dds::accessor::QualifiedObject;
 use open_dds::graphql_config::{self, OrderByDirection};
+use open_dds::types::GraphQlFieldName;
 use serde::{Deserialize, Serialize};
 
 lazy_static::lazy_static! {
@@ -40,7 +41,12 @@ lazy_static::lazy_static! {
                  enum_type_names: vec![graphql_config::OrderByEnumTypeName{
                     type_name: "order_by".to_string(),
                     directions: vec![graphql_config::OrderByDirection::Asc, graphql_config::OrderByDirection::Desc],
-                 }] })
+                 }] }),
+            aggregate: Some(graphql_config::AggregateGraphqlConfig {
+                filter_input_field_name: GraphQlFieldName("filter_input".to_string()),
+                count_field_name: GraphQlFieldName("_count".to_string()),
+                count_distinct_field_name: GraphQlFieldName("_count_distinct".to_string()),
+            })
         },
         mutation: graphql_config::MutationGraphqlConfig{
             root_operation_type_name: "Mutation".to_string(),

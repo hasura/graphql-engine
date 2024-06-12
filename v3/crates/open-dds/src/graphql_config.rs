@@ -5,6 +5,8 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::types::GraphQlFieldName;
+
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
@@ -49,6 +51,8 @@ pub struct QueryGraphqlConfig {
     pub filter_input: Option<FilterInputGraphqlConfig>,
     /// Configuration for the sort operation.
     pub order_by_input: Option<OrderByInputGraphqlConfig>,
+    /// Configuration for aggregates
+    pub aggregate: Option<AggregateGraphqlConfig>,
 }
 
 /// Configuration for the arguments input.
@@ -175,4 +179,17 @@ pub struct MutationGraphqlConfig {
 pub struct GraphqlApolloFederationConfig {
     /// Adds the `_entities` and `_services` root fields required for Apollo Federation.
     pub enable_root_fields: bool,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "AggregateGraphqlConfig"))]
+pub struct AggregateGraphqlConfig {
+    /// The name of the filter input parameter of aggregate fields and field name in predicates
+    pub filter_input_field_name: GraphQlFieldName,
+    /// The name of the _count field used for the count aggregate function
+    pub count_field_name: GraphQlFieldName,
+    /// The name of the _count_distinct field used for the count distinct aggregate function
+    pub count_distinct_field_name: GraphQlFieldName,
 }
