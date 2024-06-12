@@ -1,6 +1,6 @@
 {
-  "ArticleMany": {
-    "QueryRootField": {
+  "Query": {
+    "ArticleMany": {
       "ModelSelectMany": {
         "selection_set": {
           "fields": {

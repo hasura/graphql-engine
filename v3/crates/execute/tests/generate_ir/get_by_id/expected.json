@@ -1,6 +1,6 @@
 {
-  "ArticleByID": {
-    "QueryRootField": {
+  "Query": {
+    "ArticleByID": {
       "ModelSelectOne": {
         "selection_set": {
           "fields": {

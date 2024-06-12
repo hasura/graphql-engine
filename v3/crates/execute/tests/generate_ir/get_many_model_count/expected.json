@@ -1,6 +1,6 @@
 {
-  "getLatestArticle": {
-    "QueryRootField": {
+  "Query": {
+    "getLatestArticle": {
       "FunctionBasedCommand": {
         "selection_set": {
           "fields": {

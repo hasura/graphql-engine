@@ -32,7 +32,7 @@ pub fn generate_ir<'n, 's>(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     selection_set: &'s gql::normalized_ast::SelectionSet<'s, GDS>,
-) -> Result<IndexMap<ast::Alias, root_field::RootField<'n, 's>>, error::Error> {
+) -> Result<IndexMap<ast::Alias, root_field::QueryRootField<'n, 's>>, error::Error> {
     let type_name = selection_set
         .type_name
         .clone()
@@ -146,10 +146,7 @@ pub fn generate_ir<'n, 's>(
                 )),
             },
         }?;
-        ir.insert(
-            alias.clone(),
-            root_field::RootField::QueryRootField(field_ir),
-        );
+        ir.insert(alias.clone(), field_ir);
     }
     Ok(ir)
 }

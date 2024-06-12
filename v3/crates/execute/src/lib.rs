@@ -8,7 +8,6 @@ mod plan;
 mod process_response;
 mod remote_joins;
 
-use indexmap::IndexMap;
 use thiserror::Error;
 
 use gql::normalized_ast::Operation;
@@ -354,7 +353,7 @@ pub(crate) fn build_ir<'n, 's>(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     normalized_request: &'s Operation<'s, GDS>,
-) -> Result<IndexMap<ast::Alias, ir::root_field::RootField<'n, 's>>, ir::error::Error> {
+) -> Result<ir::IR<'n, 's>, ir::error::Error> {
     let tracer = tracing_util::global_tracer();
     let ir = tracer.in_span(
         "generate_ir",
@@ -367,7 +366,7 @@ pub(crate) fn build_ir<'n, 's>(
 
 /// Build a plan to execute the request
 pub(crate) fn build_request_plan<'n, 's, 'ir>(
-    ir: &'ir IndexMap<ast::Alias, ir::root_field::RootField<'n, 's>>,
+    ir: &'ir ir::IR<'n, 's>,
 ) -> Result<plan::RequestPlan<'n, 's, 'ir>, plan::error::Error> {
     let tracer = tracing_util::global_tracer();
     let plan = tracer.in_span(
@@ -384,24 +383,29 @@ pub fn generate_ir<'n, 's>(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     normalized_request: &'s Operation<'s, GDS>,
-) -> Result<IndexMap<ast::Alias, ir::root_field::RootField<'n, 's>>, ir::error::Error> {
-    let ir = match &normalized_request.ty {
-        ast::OperationType::Query => ir::query_root::generate_ir(
-            schema,
-            session,
-            request_headers,
-            &normalized_request.selection_set,
-        )?,
-        ast::OperationType::Mutation => ir::mutation_root::generate_ir(
-            &normalized_request.selection_set,
-            &session.variables,
-            request_headers,
-        )?,
+) -> Result<ir::IR<'n, 's>, ir::error::Error> {
+    match &normalized_request.ty {
+        ast::OperationType::Query => {
+            let query_ir = ir::query_root::generate_ir(
+                schema,
+                session,
+                request_headers,
+                &normalized_request.selection_set,
+            )?;
+            Ok(ir::IR::Query(query_ir))
+        }
+        ast::OperationType::Mutation => {
+            let mutation_ir = ir::mutation_root::generate_ir(
+                &normalized_request.selection_set,
+                &session.variables,
+                request_headers,
+            )?;
+            Ok(ir::IR::Mutation(mutation_ir))
+        }
         ast::OperationType::Subscription => {
             Err(ir::error::InternalEngineError::SubscriptionsNotSupported)?
         }
-    };
-    Ok(ir)
+    }
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 {
-  "ArticleMany": {
-    "QueryRootField": {
+  "Query": {
+    "ArticleMany": {
       "ModelSelectMany": {
         "selection_set": {
           "fields": {
@@ -174,10 +174,8 @@
           }
         }
       }
-    }
-  },
-  "AuthorMany": {
-    "QueryRootField": {
+    },
+    "AuthorMany": {
       "ModelSelectMany": {
         "selection_set": {
           "fields": {

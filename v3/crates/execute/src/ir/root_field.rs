@@ -10,13 +10,6 @@ use super::{
 };
 use schema::GDS;
 
-/// IR of a root field
-#[derive(Serialize, Debug)]
-pub enum RootField<'n, 's> {
-    QueryRootField(QueryRootField<'n, 's>),
-    MutationRootField(MutationRootField<'n, 's>),
-}
-
 /// IR of a query root field
 #[derive(Serialize, Debug)]
 pub enum QueryRootField<'n, 's> {

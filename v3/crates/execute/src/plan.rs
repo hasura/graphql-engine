@@ -13,6 +13,7 @@ use lang_graphql::ast::common as ast;
 use serde_json as json;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable};
 
+use super::ir;
 use super::ir::model_selection::ModelSelection;
 use super::ir::root_field;
 use super::ndc;
@@ -148,46 +149,23 @@ impl<'ir> ProcessResponseAs<'ir> {
 /// plan, but currently can't be both. This may change when we support protocols other than
 /// GraphQL.
 pub fn generate_request_plan<'n, 's, 'ir>(
-    ir: &'ir IndexMap<ast::Alias, root_field::RootField<'n, 's>>,
+    ir: &'ir ir::IR<'n, 's>,
 ) -> Result<RequestPlan<'n, 's, 'ir>, error::Error> {
-    let mut request_plan = None;
-
-    for (alias, field) in ir {
-        match field {
-            root_field::RootField::QueryRootField(field_ir) => {
-                let mut query_plan = match request_plan {
-                    Some(RequestPlan::MutationPlan(_)) => {
-                        Err(error::InternalError::InternalGeneric {
-                            description:
-                                "Parsed engine request contains mixed mutation/query operations"
-                                    .to_string(),
-                        })?
-                    }
-                    Some(RequestPlan::QueryPlan(query_plan)) => query_plan,
-                    None => IndexMap::new(),
-                };
-
-                query_plan.insert(alias.clone(), plan_query(field_ir)?);
-                request_plan = Some(RequestPlan::QueryPlan(query_plan));
+    match ir {
+        ir::IR::Query(ir) => {
+            let mut query_plan = IndexMap::new();
+            for (alias, field) in ir {
+                query_plan.insert(alias.clone(), plan_query(field)?);
             }
-
-            root_field::RootField::MutationRootField(field_ir) => {
-                let mut mutation_plan = match request_plan {
-                    Some(RequestPlan::QueryPlan(_)) => {
-                        Err(error::InternalError::InternalGeneric {
-                            description:
-                                "Parsed engine request contains mixed mutation/query operations"
-                                    .to_string(),
-                        })?
-                    }
-                    Some(RequestPlan::MutationPlan(mutation_plan)) => mutation_plan,
-                    None => MutationPlan {
-                        nodes: IndexMap::new(),
-                        type_names: IndexMap::new(),
-                    },
-                };
-
-                match field_ir {
+            Ok(RequestPlan::QueryPlan(query_plan))
+        }
+        ir::IR::Mutation(ir) => {
+            let mut mutation_plan = MutationPlan {
+                nodes: IndexMap::new(),
+                type_names: IndexMap::new(),
+            };
+            for (alias, field) in ir {
+                match field {
                     root_field::MutationRootField::TypeName { type_name } => {
                         mutation_plan
                             .type_names
@@ -195,7 +173,6 @@ pub fn generate_request_plan<'n, 's, 'ir>(
                     }
                     root_field::MutationRootField::ProcedureBasedCommand { selection_set, ir } => {
                         let plan = plan_mutation(selection_set, ir)?;
-
                         mutation_plan
                             .nodes
                             .entry(plan.data_connector.clone())
@@ -203,17 +180,10 @@ pub fn generate_request_plan<'n, 's, 'ir>(
                             .insert(alias.clone(), plan);
                     }
                 };
-
-                request_plan = Some(RequestPlan::MutationPlan(mutation_plan));
             }
+            Ok(RequestPlan::MutationPlan(mutation_plan))
         }
     }
-
-    request_plan.ok_or(error::Error::Internal(
-        error::InternalError::InternalGeneric {
-            description: "Parsed an empty request".to_string(),
-        },
-    ))
 }
 
 // Given a singular root field of a mutation, plan the execution of that root field.
