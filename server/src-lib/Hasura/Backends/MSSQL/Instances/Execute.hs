@@ -55,7 +55,7 @@ import Hasura.RQL.Types.Column qualified as RQLColumn
 import Hasura.RQL.Types.Common as RQLTypes
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types (HeaderPrecedence)
+import Hasura.Server.Types (HeaderPrecedence, TraceQueryStatus)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client as HTTP
@@ -100,8 +100,9 @@ msDBQueryPlan ::
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  TraceQueryStatus ->
   m (DBStepInfo 'MSSQL, [ModelInfoPart])
-msDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
+msDBQueryPlan userInfo sourceName sourceConfig qrf _ _ _ = do
   let sessionVariables = _uiSession userInfo
   QueryWithDDL {qwdBeforeSteps, qwdAfterSteps, qwdQuery = statement} <- planQuery sessionVariables qrf
   queryTags <- ask
@@ -319,8 +320,9 @@ msDBMutationPlan ::
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
   HeaderPrecedence ->
+  TraceQueryStatus ->
   m (DBStepInfo 'MSSQL, [ModelInfoPart])
-msDBMutationPlan _env _manager _logger userInfo stringifyNum sourceName sourceConfig mrf _headers _gName _maybeSelSetArgs _ = do
+msDBMutationPlan _env _manager _logger userInfo stringifyNum sourceName sourceConfig mrf _headers _gName _maybeSelSetArgs _ _ = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceName ModelSourceTypeMSSQL sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceName ModelSourceTypeMSSQL sourceConfig annDelete
@@ -525,8 +527,9 @@ msDBRemoteRelationshipPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Options.StringifyNumbers ->
+  TraceQueryStatus ->
   m (DBStepInfo 'MSSQL, [ModelInfoPart])
-msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _headers _gName _stringifyNumbers = do
+msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _headers _gName _stringifyNumbers _traceQueryStatus = do
   -- `stringifyNumbers` is not currently handled in any SQL Server operation
   statement <- planSourceRelationship (_uiSession userInfo) lhs lhsSchema argumentId relationship
 

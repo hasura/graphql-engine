@@ -10,7 +10,6 @@
 -- This module includes the Postgres implementation of queries, mutations, and more.
 module Hasura.Backends.Postgres.Instances.Execute
   ( PreparedSql (..),
-    pgDBQueryPlanSimple,
   )
 where
 
@@ -93,7 +92,7 @@ import Hasura.RQL.Types.Common (FieldName (..), JsonAggSelect (..), SourceName (
 import Hasura.RQL.Types.Permission (ValidateInput (..), ValidateInputHttpDefinition (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types (HeaderPrecedence)
+import Hasura.Server.Types (HeaderPrecedence, TraceQueryStatus (TraceQueryEnabled))
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -140,8 +139,9 @@ pgDBQueryPlan ::
   QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  TraceQueryStatus ->
   m ((DBStepInfo ('Postgres pgKind)), [ModelInfoPart])
-pgDBQueryPlan userInfo sourceName sourceConfig qrf reqHeaders operationName = do
+pgDBQueryPlan userInfo sourceName sourceConfig qrf reqHeaders operationName traceQueryStatus = do
   (preparedQuery, PlanningSt {_psPrepped = planVals}) <-
     flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) qrf
   queryTagsComment <- ask
@@ -157,25 +157,8 @@ pgDBQueryPlan userInfo sourceName sourceConfig qrf reqHeaders operationName = do
   modelNames <- irToModelInfoGen sourceName ModelSourceTypePostgres preparedQuery
   let modelInfo = getModelInfoPartfromModelNames modelNames (ModelOperationType G.OperationTypeQuery)
   let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags rootFieldPlan queryTagsComment
-  let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
+  let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags traceQueryStatus
   pure $ (DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL (fmap withNoStatistics action) resolvedConnectionTemplate, modelInfo)
-
--- | Used by the @dc-postgres-agent to compile a query.
-pgDBQueryPlanSimple ::
-  (MonadError QErr m, MonadIO m) =>
-  UserInfo ->
-  QueryTagsComment ->
-  QueryDB ('Postgres 'Vanilla) Void (UnpreparedValue ('Postgres 'Vanilla)) ->
-  m (OnBaseMonad (PG.TxET QErr) EncJSON, Maybe PreparedSql)
-pgDBQueryPlanSimple userInfo queryTagsComment query = do
-  (preparedQuery, PlanningSt {_psPrepped = planVals}) <-
-    flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) query
-  rootFieldPlan <- irToRootFieldPlan userInfo planVals preparedQuery
-  -- seems like this function is not being used anywhere in graphql-engine, so we're not going to count the models used
-  let preparedSQLWithQueryTags =
-        appendPreparedSQLWithQueryTags rootFieldPlan queryTagsComment
-  let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
-  pure (action, preparedSQL)
 
 pgDBQueryExplain ::
   forall pgKind m.
@@ -401,11 +384,12 @@ convertFunction ::
   SourceName ->
   ModelSourceType ->
   UserInfo ->
+  TraceQueryStatus ->
   JsonAggSelect ->
   -- | VOLATILE function as 'SelectExp'
   IR.AnnSimpleSelectG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON, [ModelNameInfo])
-convertFunction sourceName modelSourceType userInfo jsonAggSelect unpreparedQuery = do
+convertFunction sourceName modelSourceType userInfo traceQueryStatus jsonAggSelect unpreparedQuery = do
   queryTags <- ask
   -- Transform the RQL AST into a prepared SQL query
   (preparedQuery, PlanningSt {_psPrepped = planVals}) <-
@@ -419,7 +403,7 @@ convertFunction sourceName modelSourceType userInfo jsonAggSelect unpreparedQuer
   modelNames <- irToModelInfoGen sourceName modelSourceType $ queryResultFn preparedQuery
   let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags rootFieldPlan queryTags
   pure
-    ( fst (mkCurPlanTx userInfo preparedSQLWithQueryTags), -- forget (Maybe PreparedSql)
+    ( fst (mkCurPlanTx userInfo preparedSQLWithQueryTags traceQueryStatus), -- forget (Maybe PreparedSql)
       modelNames
     )
 
@@ -444,8 +428,9 @@ pgDBMutationPlan ::
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
   HeaderPrecedence ->
+  TraceQueryStatus ->
   m (DBStepInfo ('Postgres pgKind), [ModelInfoPart])
-pgDBMutationPlan env manager logger userInfo stringifyNum sourceName sourceConfig mrf reqHeaders operationName selSetArguments headerPrecedence = do
+pgDBMutationPlan env manager logger userInfo stringifyNum sourceName sourceConfig mrf reqHeaders operationName selSetArguments headerPrecedence traceQueryStatus = do
   resolvedConnectionTemplate <-
     let connectionTemplateResolver =
           connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
@@ -458,7 +443,7 @@ pgDBMutationPlan env manager logger userInfo stringifyNum sourceName sourceConfi
     MDBInsert s -> convertInsert sourceName ModelSourceTypePostgres env manager logger userInfo s stringifyNum reqHeaders headerPrecedence
     MDBUpdate s -> convertUpdate sourceName ModelSourceTypePostgres env manager logger userInfo s stringifyNum reqHeaders selSetArguments headerPrecedence
     MDBDelete s -> convertDelete sourceName ModelSourceTypePostgres env manager logger userInfo s stringifyNum reqHeaders selSetArguments headerPrecedence
-    MDBFunction returnsSet s -> convertFunction sourceName ModelSourceTypePostgres userInfo returnsSet s
+    MDBFunction returnsSet s -> convertFunction sourceName ModelSourceTypePostgres userInfo traceQueryStatus returnsSet s
   where
     modelInfoList v = getModelInfoPartfromModelNames (snd v) (ModelOperationType G.OperationTypeMutation)
     go resolvedConnectionTemplate v =
@@ -647,8 +632,9 @@ testMultiplexedQueryTx (PGL.MultiplexedQuery query) cohortId cohortVariables = d
 mkCurPlanTx ::
   UserInfo ->
   PreparedSql ->
+  TraceQueryStatus ->
   (OnBaseMonad (PG.TxET QErr) EncJSON, Maybe PreparedSql)
-mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
+mkCurPlanTx userInfo ps@(PreparedSql q prepMap) traceQueryStatus =
   -- generate the SQL and prepared vars or the bytestring
   let args = withUserVars (_uiSession userInfo) prepMap
       -- WARNING: this quietly assumes the intmap keys are contiguous
@@ -656,6 +642,8 @@ mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
    in (,Just ps) $ OnBaseMonad do
         -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/#connection-level-attributes
         Tracing.attachMetadata [("db.system", "postgresql")]
+        when (traceQueryStatus == TraceQueryEnabled)
+          $ Tracing.attachMetadata [("db.query", PG.getQueryText q)]
         runIdentity
           . PG.getRow
           <$> PG.rawQE dmlTxErrorHandler q prepArgs True
@@ -724,14 +712,15 @@ pgDBRemoteRelationshipPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Options.StringifyNumbers ->
+  TraceQueryStatus ->
   m (DBStepInfo ('Postgres pgKind), [ModelInfoPart])
-pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
+pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers traceQueryStatus = do
   -- NOTE: 'QueryTags' currently cannot support remote relationship queries.
   --
   -- In the future if we want to add support we'll need to add a new type of
   -- metadata (e.g. 'ParameterizedQueryHash' doesn't make sense here) and find
   -- a root field name that makes sense to attach to it.
-  (dbStepInfo, modelInfo) <- flip runReaderT emptyQueryTagsComment $ pgDBQueryPlan userInfo sourceName sourceConfig rootSelection reqHeaders operationName
+  (dbStepInfo, modelInfo) <- flip runReaderT emptyQueryTagsComment $ pgDBQueryPlan userInfo sourceName sourceConfig rootSelection reqHeaders operationName traceQueryStatus
   pure (dbStepInfo, modelInfo)
   where
     coerceToColumn = Postgres.unsafePGCol . getFieldNameTxt
