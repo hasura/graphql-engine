@@ -90,7 +90,7 @@ describe('generateAction', () => {
       ),
       headers: [],
       queryParams:
-        '{{ concat ([concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}), "limit={{$body.input?.limit}}&"]) }}',
+        '{{ concat ([{{ if empty($body.input?.tags) }} [] {{ else }} concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}) {{ end }}, "limit={{$body.input?.limit}}&"]) }}',
     });
   });
 
@@ -111,13 +111,14 @@ describe('generateQueryParams', () => {
   it('should generate query params with one non-array param and one array param', async () => {
     const queryParams = await generateQueryParams([status, tags]);
     expect(queryParams).toBe(
-      '{{ concat (["status={{$body.input?.status}}&", concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }})]) }}'
+      '{{ concat (["status={{$body.input?.status}}&", {{ if empty($body.input?.tags) }} [] {{ else }} concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}) {{ end }}]) }}'
     );
   });
   it('should generate query params with one non-array param and one array param (reversed)', async () => {
     const queryParams = await generateQueryParams([tags, status]);
+    console.log(queryParams);
     expect(queryParams).toBe(
-      '{{ concat ([concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}), "status={{$body.input?.status}}&"]) }}'
+      '{{ concat ([{{ if empty($body.input?.tags) }} [] {{ else }} concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}) {{ end }}, "status={{$body.input?.status}}&"]) }}'
     );
   });
 });
