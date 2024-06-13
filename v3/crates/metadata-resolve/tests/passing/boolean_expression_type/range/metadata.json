@@ -1,0 +1,391 @@
+[
+  {
+    "kind": "BooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "string_bool_exp",
+      "operand": {
+        "scalar": {
+          "type": "String",
+          "comparisonOperators": [],
+          "dataConnectorOperatorMapping": [
+            {
+              "dataConnectorName": "custom",
+              "dataConnectorScalarType": "String",
+              "operatorMapping": {}
+            }
+          ]
+        }
+      },
+      "logicalOperators": { "enable": true },
+      "isNull": { "enable": true },
+      "graphql": {
+        "typeName": "String_Comparison_Exp"
+      }
+    }
+  },
+  {
+    "kind": "BooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "int_bool_exp",
+      "operand": {
+        "scalar": {
+          "type": "Int",
+          "comparisonOperators": [],
+          "dataConnectorOperatorMapping": [
+            {
+              "dataConnectorName": "custom",
+              "dataConnectorScalarType": "Int",
+              "operatorMapping": {}
+            }
+          ]
+        }
+      },
+      "logicalOperators": { "enable": true },
+      "isNull": { "enable": true },
+      "graphql": {
+        "typeName": "Int_Comparison_Exp"
+      }
+    }
+  },
+  {
+    "kind": "BooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "int_range_bool_exp",
+      "operand": {
+        "scalar": {
+          "type": "Int",
+          "comparisonOperators": [
+            {
+              "name": "within",
+              "argumentType": "int_range",
+              "argumentMapping": {}
+            }
+          ],
+          "dataConnectorOperatorMapping": [
+            {
+              "dataConnectorName": "custom",
+              "dataConnectorScalarType": "Int",
+              "operatorMapping": { "within": "range" }
+            }
+          ]
+        }
+      },
+      "logicalOperators": { "enable": true },
+      "isNull": { "enable": true },
+      "graphql": {
+        "typeName": "Int_Comparison_Exp"
+      }
+    }
+  },
+
+  {
+    "kind": "BooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "movie_bool_exp",
+      "operand": {
+        "object": {
+          "type": "movie",
+          "comparableFields": [
+            {
+              "fieldName": "id",
+              "booleanExpressionType": "int_bool_exp"
+            },
+            {
+              "fieldName": "title",
+              "booleanExpressionType": "string_bool_exp"
+            },
+            {
+              "fieldName": "rating",
+              "booleanExpressionType": "int_range_bool_exp"
+            }
+          ],
+          "comparableRelationships": []
+        }
+      },
+      "logicalOperators": { "enable": true },
+      "isNull": { "enable": true },
+      "graphql": { "typeName": "InstitutionBoolExp" }
+    }
+  },
+  {
+    "kind": "ObjectType",
+    "version": "v1",
+    "definition": {
+      "name": "int_range",
+      "fields": [
+        {
+          "name": "start",
+          "type": "Int!"
+        },
+        {
+          "name": "end",
+          "type": "Int!"
+        }
+      ],
+      "graphql": {
+        "typeName": "IntRange"
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "custom",
+          "dataConnectorObjectType": "int_range",
+          "fieldMapping": {
+            "start": { "column": { "name": "gte" } },
+            "end": { "column": { "name": "lte" } }
+          }
+        }
+      ]
+    }
+  },
+
+  {
+    "kind": "ObjectType",
+    "version": "v1",
+    "definition": {
+      "name": "movie",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Int!"
+        },
+        {
+          "name": "title",
+          "type": "String!"
+        },
+        { "name": "rating", "type": "Int!" }
+      ],
+      "graphql": {
+        "typeName": "Movie"
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "custom",
+          "dataConnectorObjectType": "movie",
+          "fieldMapping": {}
+        }
+      ]
+    }
+  },
+  {
+    "kind": "TypePermissions",
+    "version": "v1",
+    "definition": {
+      "typeName": "movie",
+      "permissions": [
+        {
+          "role": "admin",
+          "output": {
+            "allowedFields": ["id", "title", "rating"]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Model",
+    "version": "v1",
+    "definition": {
+      "name": "movies",
+      "arguments": [],
+      "objectType": "movie",
+      "source": {
+        "dataConnectorName": "custom",
+        "collection": "movies",
+        "argumentMapping": {}
+      },
+      "graphql": {
+        "selectUniques": [],
+        "selectMany": {
+          "queryRootField": "MovieMany"
+        }
+      },
+      "orderableFields": [
+        {
+          "fieldName": "id",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "title",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "rating",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ModelPermissions",
+    "version": "v1",
+    "definition": {
+      "modelName": "movies",
+      "permissions": [
+        {
+          "role": "admin",
+          "select": {
+            "filter": null
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "DataConnectorLink",
+    "version": "v1",
+    "definition": {
+      "name": "custom",
+      "url": {
+        "singleUrl": {
+          "value": "http://custom_connector:8101"
+        }
+      },
+      "headers": {},
+      "schema": {
+        "version": "v0.1",
+        "schema": {
+          "scalar_types": {
+            "Actor_Name": {
+              "aggregate_functions": {},
+              "comparison_operators": {}
+            },
+            "Int": {
+              "aggregate_functions": {
+                "max": {
+                  "result_type": {
+                    "type": "nullable",
+                    "underlying_type": {
+                      "type": "named",
+                      "name": "Int"
+                    }
+                  }
+                },
+                "min": {
+                  "result_type": {
+                    "type": "nullable",
+                    "underlying_type": {
+                      "type": "named",
+                      "name": "Int"
+                    }
+                  }
+                }
+              },
+              "comparison_operators": {
+                "_eq": {
+                  "type": "equal"
+                }
+              }
+            },
+            "String": {
+              "aggregate_functions": {},
+              "comparison_operators": {
+                "_eq": {
+                  "type": "equal"
+                },
+                "like": {
+                  "argument_type": {
+                    "type": "named",
+                    "name": "String"
+                  },
+                  "type": "custom"
+                }
+              }
+            }
+          },
+          "object_types": {
+            "int_range": {
+              "description": "A range over ints",
+              "fields": {
+                "gte": {
+                  "description": "Lowest int value",
+                  "type": {
+                    "type": "named",
+                    "name": "Int"
+                  }
+                },
+                "lte": {
+                  "description": "Highest int value",
+                  "type": {
+                    "type": "named",
+                    "name": "Int"
+                  }
+                }
+              }
+            },
+            "movie": {
+              "description": "A movie",
+              "fields": {
+                "id": {
+                  "description": "The movie's primary key",
+                  "type": {
+                    "type": "named",
+                    "name": "Int"
+                  }
+                },
+                "rating": {
+                  "description": "The movie's rating",
+                  "type": {
+                    "type": "named",
+                    "name": "Int"
+                  }
+                },
+                "title": {
+                  "description": "The movie's title",
+                  "type": {
+                    "type": "named",
+                    "name": "String"
+                  }
+                }
+              }
+            }
+          },
+          "collections": [
+            {
+              "name": "movies",
+              "description": "A collection of movies",
+              "arguments": {},
+              "type": "movie",
+              "uniqueness_constraints": {
+                "MovieByID": {
+                  "unique_columns": ["id"]
+                }
+              },
+              "foreign_keys": {}
+            }
+          ],
+          "functions": [],
+          "procedures": []
+        },
+        "capabilities": {
+          "capabilities": {
+            "query": {
+              "explain": {},
+              "aggregates": {},
+              "variables": {},
+              "nested_fields": {
+                "filter_by": {},
+                "order_by": {}
+              }
+            },
+            "mutation": {},
+            "relationships": {
+              "relation_comparisons": {},
+              "order_by_aggregate": {}
+            }
+          },
+          "version": "0.1.3"
+        }
+      }
+    }
+  }
+]
