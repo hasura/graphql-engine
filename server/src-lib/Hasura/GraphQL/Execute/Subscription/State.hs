@@ -56,7 +56,7 @@ import Hasura.RQL.Types.Common (SourceName)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus
-  ( DynamicSubscriptionLabel (..),
+  ( DynamicGraphqlOperationLabel (..),
     PrometheusMetrics (..),
     SubscriptionLabel (..),
     SubscriptionMetrics (..),
@@ -258,7 +258,7 @@ addLiveQuery
       liftIO $ Prometheus.Gauge.inc $ submActiveLiveQueryPollers $ pmSubscriptionMetrics $ prometheusMetrics
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
-    let promMetricGranularLabel = SubscriptionLabel liveQuerySubscriptionLabel (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) operationName)
+    let promMetricGranularLabel = SubscriptionLabel liveQuerySubscriptionLabel (Just $ DynamicGraphqlOperationLabel (Just parameterizedQueryHash) operationName)
         promMetricLabel = SubscriptionLabel liveQuerySubscriptionLabel Nothing
     let numSubscriptionMetric = submActiveSubscriptions $ pmSubscriptionMetrics $ prometheusMetrics
     recordMetricWithLabel
@@ -390,7 +390,7 @@ addStreamSubscriptionQuery
       EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
       EKG.Gauge.inc $ smActiveStreamingSubscriptions serverMetrics
 
-    let promMetricGranularLabel = SubscriptionLabel streamingSubscriptionLabel (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) operationName)
+    let promMetricGranularLabel = SubscriptionLabel streamingSubscriptionLabel (Just $ DynamicGraphqlOperationLabel (Just parameterizedQueryHash) operationName)
         promMetricLabel = SubscriptionLabel streamingSubscriptionLabel Nothing
         numSubscriptionMetric = submActiveSubscriptions $ pmSubscriptionMetrics $ prometheusMetrics
     recordMetricWithLabel
@@ -470,7 +470,7 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
           <*> TMap.null newOps
       when cohortIsEmpty $ TMap.delete cohortId cohortMap
       handlerIsEmpty <- TMap.null cohortMap
-      let promMetricGranularLabel = SubscriptionLabel liveQuerySubscriptionLabel (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) maybeOperationName)
+      let promMetricGranularLabel = SubscriptionLabel liveQuerySubscriptionLabel (Just $ DynamicGraphqlOperationLabel (Just parameterizedQueryHash) maybeOperationName)
           promMetricLabel = SubscriptionLabel liveQuerySubscriptionLabel Nothing
       -- when there is no need for handler i.e, this happens to be the last
       -- operation, take the ref for the polling thread to cancel it
@@ -569,7 +569,7 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
           <*> TMap.null newOps
       when cohortIsEmpty $ TMap.delete currentCohortId cohortMap
       handlerIsEmpty <- TMap.null cohortMap
-      let promMetricGranularLabel = SubscriptionLabel streamingSubscriptionLabel (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) maybeOperationName)
+      let promMetricGranularLabel = SubscriptionLabel streamingSubscriptionLabel (Just $ DynamicGraphqlOperationLabel (Just parameterizedQueryHash) maybeOperationName)
           promMetricLabel = SubscriptionLabel streamingSubscriptionLabel Nothing
       -- when there is no need for handler i.e,
       -- operation, take the ref for the polling thread to cancel it
