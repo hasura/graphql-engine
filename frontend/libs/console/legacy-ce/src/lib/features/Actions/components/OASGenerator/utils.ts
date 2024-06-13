@@ -74,7 +74,7 @@ export const generateQueryParams = (parameters: OperationParameters) => {
   if (isThereArray) {
     const stringParams = parameters.map(param => {
       if (isSchemaObject(param?.schema) && param.schema.type === 'array') {
-        return `concat({{ range _, x := $body.input?.${param.name} }} "${param.name}={{x}}&" {{ end }})`;
+        return `{{ if empty($body.input?.${param.name}) }} [] {{ else }} concat({{ range _, x := $body.input?.${param.name} }} "${param.name}={{x}}&" {{ end }}) {{ end }}`;
       }
       return `"${param.name}={{$body.input?.${param.name}}}&"`;
     });
