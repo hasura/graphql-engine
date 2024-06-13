@@ -41,7 +41,7 @@ import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.SQL.Value (TxtEncodedVal (..))
 import Hasura.Server.Logging (ModelInfo (..), ModelInfoLog (..))
-import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), recordSubcriptionMetric, streamingSubscriptionLabel)
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), recordSubscriptionMetric, streamingSubscriptionLabel)
 import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Refined (unrefine)
@@ -289,7 +289,7 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
           (over (each . _2) C._csVariables $ fmap (fmap fst) cohorts)
           resolvedConnectionTemplate
       let dbExecTimeMetric = submDBExecTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
-      recordSubcriptionMetric
+      recordSubscriptionMetric
         granularPrometheusMetricsState
         True
         operationNames
@@ -470,7 +470,7 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
       unLogger logger $ ModelInfoLog LevelInfo $ ModelInfo modelName (toTxt modelType) (toTxt <$> modelSourceName) (toTxt <$> modelSourceType) (toTxt modelQueryType) False
   postPollHook pollDetails
   let totalTimeMetric = submTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
-  recordSubcriptionMetric
+  recordSubscriptionMetric
     granularPrometheusMetricsState
     True
     operationNames
