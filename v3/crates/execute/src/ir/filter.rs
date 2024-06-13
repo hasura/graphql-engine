@@ -201,49 +201,72 @@ fn build_filter_expression_from_boolean_expression<'s>(
             // Add the target model being used in the usage counts
             count_model(target_model_name, usage_counts);
 
-            let ndc_relationship_name = NDCRelationshipName::new(source_type, relationship_name)?;
-            relationships.insert(
-                ndc_relationship_name.clone(),
-                LocalModelRelationshipInfo {
-                    relationship_name,
-                    relationship_type,
-                    source_type,
-                    source_data_connector: data_connector_link,
-                    source_type_mappings: type_mappings,
-                    target_source,
-                    target_type,
-                    mappings,
-                },
-            );
+            // filter expression with relationships is currently only supported for local relationships
+            // this is the first point at which we know the source data connector, so we must
+            // ensure only a local relationship is used
+            match metadata_resolve::relationship_execution_category(
+                data_connector_link,
+                &target_source.model.data_connector,
+                &target_source.capabilities,
+            ) {
+                metadata_resolve::RelationshipExecutionCategory::RemoteForEach => {
+                    Err(error::Error::Internal(error::InternalError::Engine(
+                        error::InternalEngineError::InternalGeneric {
+                            description:
+                                "Remote relationships are not supported in boolean expressions"
+                                    .to_string(),
+                        },
+                    )))
+                }
 
-            // This map contains the relationships or the columns of the
-            // relationship that needs to be used for ordering.
-            let filter_object = field.value.as_object()?;
+                metadata_resolve::RelationshipExecutionCategory::Local => {
+                    let ndc_relationship_name =
+                        NDCRelationshipName::new(source_type, relationship_name)?;
 
-            let mut expressions = Vec::new();
+                    relationships.insert(
+                        ndc_relationship_name.clone(),
+                        LocalModelRelationshipInfo {
+                            relationship_name,
+                            relationship_type,
+                            source_type,
+                            source_data_connector: data_connector_link,
+                            source_type_mappings: type_mappings,
+                            target_source,
+                            target_type,
+                            mappings,
+                        },
+                    );
 
-            for field in filter_object.values() {
-                let field_filter_expression = build_filter_expression(
-                    field,
-                    relationships,
-                    &target_source.model.data_connector,
-                    &target_source.model.type_mappings,
-                    usage_counts,
-                )?;
-                expressions.push(field_filter_expression);
+                    // This map contains the relationships or the columns of the
+                    // relationship that needs to be used for ordering.
+                    let filter_object = field.value.as_object()?;
+
+                    let mut expressions = Vec::new();
+
+                    for field in filter_object.values() {
+                        let field_filter_expression = build_filter_expression(
+                            field,
+                            relationships,
+                            &target_source.model.data_connector,
+                            &target_source.model.type_mappings,
+                            usage_counts,
+                        )?;
+                        expressions.push(field_filter_expression);
+                    }
+
+                    // Using exists clause to build the filter expression for relationship fields.
+                    let exists_filter_clause = ndc_models::Expression::And { expressions };
+                    let exists_in_relationship = ndc_models::ExistsInCollection::Related {
+                        relationship: ndc_relationship_name.0,
+                        arguments: BTreeMap::new(),
+                    };
+
+                    Ok(ndc_models::Expression::Exists {
+                        in_collection: exists_in_relationship,
+                        predicate: Some(Box::new(exists_filter_clause)),
+                    })
+                }
             }
-
-            // Using exists clause to build the filter expression for relationship fields.
-            let exists_filter_clause = ndc_models::Expression::And { expressions };
-            let exists_in_relationship = ndc_models::ExistsInCollection::Related {
-                relationship: ndc_relationship_name.0,
-                arguments: BTreeMap::new(),
-            };
-
-            Ok(ndc_models::Expression::Exists {
-                in_collection: exists_in_relationship,
-                predicate: Some(Box::new(exists_filter_clause)),
-            })
         }
         other_boolean_annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
             annotation: schema::Annotation::Input(InputAnnotation::BooleanExpression(
