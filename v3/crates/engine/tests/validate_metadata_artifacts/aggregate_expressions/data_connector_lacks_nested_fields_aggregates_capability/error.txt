@@ -1,1 +1,0 @@
-metadata is not consistent: the data connector mypg (in subgraph default) does not support aggregates over nested object fields, such as the field billingAddress used in aggregate expression Invoice_aggregate_exp (in subgraph default)

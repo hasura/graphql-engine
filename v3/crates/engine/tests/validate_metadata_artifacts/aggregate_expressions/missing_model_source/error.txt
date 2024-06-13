@@ -1,1 +1,0 @@
-metadata is not consistent: a source must be defined for model Invoice (in subgraph default) in order to use aggregate expressions

@@ -1,0 +1,1 @@
+the aggregate expression Int4_aggregate_exp (in subgraph default) defines an aggregation function mapping to a data connector that does not support aggregates: mypg (in subgraph default)

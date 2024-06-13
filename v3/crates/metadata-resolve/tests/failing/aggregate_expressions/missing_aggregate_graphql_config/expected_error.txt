@@ -1,0 +1,1 @@
+the aggregate expression Invoice_aggregate_exp (in subgraph default) defines a graphql section and so query.aggregate must be set in the GraphqlConfig

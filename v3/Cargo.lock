@@ -929,7 +929,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_path_to_error",
- "test-each",
  "thiserror",
  "tokio",
  "tokio-test",

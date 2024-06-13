@@ -1,1 +1,0 @@
-metadata is not consistent: the model Invoice (in subgraph default) is using the aggregate expression Int4_aggregate_exp (in subgraph default) but its operand type Int4 (in subgraph default) does not match the model's type Invoice (in subgraph default)

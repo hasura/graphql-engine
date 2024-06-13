@@ -1,0 +1,1 @@
+the aggregate expression Int4_aggregate_exp (in subgraph default) specifies an aggregation function '_sum' which is mapped to the data connector 'mypg (in subgraph default)', however the mapped data connector aggregate function cannot be found: schum

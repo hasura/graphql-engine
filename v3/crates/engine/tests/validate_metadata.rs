@@ -364,32 +364,6 @@ fn test_allow_metadata_with_deprecated_field() -> anyhow::Result<()> {
     Ok(())
 }
 
-// Aggregate Expression Tests
-#[test_each::path(
-    glob = "crates/engine/tests/validate_metadata_artifacts/aggregate_expressions/*/",
-    name(segments = 1)
-)]
-#[allow(clippy::needless_pass_by_value)] // must receive a `PathBuf`
-fn test_aggregate_expressions(test_folder_path: PathBuf) -> anyhow::Result<()> {
-    let metadata_json = fs::read_to_string(test_folder_path.join("metadata.json"))?;
-    let metadata = open_dds::Metadata::from_json_str(&metadata_json)?;
-
-    let gds = GDS::new_with_default_flags(metadata);
-
-    match fs::read_to_string(test_folder_path.join("error.txt")) {
-        Ok(error_message) => {
-            assert_eq!(gds.unwrap_err().to_string(), error_message.trim());
-        }
-        Err(err) => match err.kind() {
-            std::io::ErrorKind::NotFound => {
-                gds?;
-            } // Assert that it validated okay
-            _ => Err(err)?,
-        },
-    }
-    Ok(())
-}
-
 fn read_metadata(path: &str) -> anyhow::Result<open_dds::Metadata> {
     let json = read_file(path)?;
     let value = open_dds::Metadata::from_json_str(&json)?;

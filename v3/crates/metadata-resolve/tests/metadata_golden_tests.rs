@@ -28,10 +28,16 @@ fn test_passing_metadata(comparison_folder_path: PathBuf) -> anyhow::Result<()> 
     }
 }
 
-#[test_each::path(glob = "crates/metadata-resolve/tests/failing/**/", name(segments = 2))]
+#[test_each::file(
+    glob = "crates/metadata-resolve/tests/failing/**/metadata.json",
+    name(segments = 3)
+)]
 #[allow(clippy::needless_pass_by_value)] // must receive a `PathBuf`
-fn test_failing_metadata(comparison_folder_path: PathBuf) -> anyhow::Result<()> {
-    let failing_example = comparison_folder_path.join("metadata.json");
+fn test_failing_metadata(
+    metadata_json_text: &str,
+    metadata_json_path: PathBuf,
+) -> anyhow::Result<()> {
+    let comparison_folder_path = metadata_json_path.parent().unwrap();
     let failing_reason = comparison_folder_path.join("expected_error.txt");
 
     let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
@@ -41,7 +47,7 @@ fn test_failing_metadata(comparison_folder_path: PathBuf) -> anyhow::Result<()> 
     let error_untrimmed = fs::read_to_string(failing_reason).unwrap();
     let error = error_untrimmed.trim();
 
-    match read_json(&failing_example) {
+    match serde_json::from_str(metadata_json_text) {
         Ok(metadata_json_value) => {
             match open_dds::traits::OpenDd::deserialize(metadata_json_value) {
                 Ok(metadata) => {

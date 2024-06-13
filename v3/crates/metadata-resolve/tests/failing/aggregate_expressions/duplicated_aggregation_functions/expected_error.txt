@@ -1,0 +1,1 @@
+the aggregate expression Int4_aggregate_exp (in subgraph default) has duplicate definitions of the aggregation function 'sum'
