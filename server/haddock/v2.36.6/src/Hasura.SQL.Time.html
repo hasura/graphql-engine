@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.SQL.Time</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.SQL.Time.html#ZonedTimeOfDay"><span class="hs-identifier">ZonedTimeOfDay</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.html"><span class="hs-identifier">Data.Aeson.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aeson</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.Text.html"><span class="hs-identifier">Data.Attoparsec.Text</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-iso8601-1.1.0.0-7f695bdae565cec5b3d9896776b4c640d49d91b5ff51afd836267bd4caa861b1/share/doc/html/src/Data.Attoparsec.Time.html"><span class="hs-identifier">Data.Attoparsec.Time</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-iso8601-1.1.0.0-7f695bdae565cec5b3d9896776b4c640d49d91b5ff51afd836267bd4caa861b1/share/doc/html/src/Data.Attoparsec.Time.html#timeOfDay"><span class="hs-identifier">timeOfDay</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-iso8601-1.1.0.0-7f695bdae565cec5b3d9896776b4c640d49d91b5ff51afd836267bd4caa861b1/share/doc/html/src/Data.Attoparsec.Time.html#timeZone"><span class="hs-identifier">timeZone</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.LocalTime</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Local</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">data</span><span> </span><span id="ZonedTimeOfDay"><span class="annot"><a href="Hasura.SQL.Time.html#ZonedTimeOfDay"><span class="hs-identifier hs-var">ZonedTimeOfDay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ZonedTimeOfDay"><span class="annot"><a href="Hasura.SQL.Time.html#ZonedTimeOfDay"><span class="hs-identifier hs-var">ZonedTimeOfDay</span></a></span></span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ztodTime"><span class="annot"><span class="annottext">ZonedTimeOfDay -&gt; TimeOfDay
+</span><a href="Hasura.SQL.Time.html#ztodTime"><span class="hs-identifier hs-var hs-var">ztodTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Local.TimeOfDay</span></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span id="ztodZone"><span class="annot"><span class="annottext">ZonedTimeOfDay -&gt; TimeZone
+</span><a href="Hasura.SQL.Time.html#ztodZone"><span class="hs-identifier hs-var hs-var">ztodZone</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Local.TimeZone</span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687600239"><span id="local-6989586621687600247"><span id="local-6989586621687600251"><span class="annot"><span class="annottext">Int -&gt; ZonedTimeOfDay -&gt; ShowS
+[ZonedTimeOfDay] -&gt; ShowS
+ZonedTimeOfDay -&gt; [Char]
+(Int -&gt; ZonedTimeOfDay -&gt; ShowS)
+-&gt; (ZonedTimeOfDay -&gt; [Char])
+-&gt; ([ZonedTimeOfDay] -&gt; ShowS)
+-&gt; Show ZonedTimeOfDay
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; [Char]) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ZonedTimeOfDay -&gt; ShowS
+showsPrec :: Int -&gt; ZonedTimeOfDay -&gt; ShowS
+$cshow :: ZonedTimeOfDay -&gt; [Char]
+show :: ZonedTimeOfDay -&gt; [Char]
+$cshowList :: [ZonedTimeOfDay] -&gt; ShowS
+showList :: [ZonedTimeOfDay] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687600255"><span id="local-6989586621687600261"><span class="annot"><span class="annottext">ZonedTimeOfDay -&gt; ZonedTimeOfDay -&gt; Bool
+(ZonedTimeOfDay -&gt; ZonedTimeOfDay -&gt; Bool)
+-&gt; (ZonedTimeOfDay -&gt; ZonedTimeOfDay -&gt; Bool) -&gt; Eq ZonedTimeOfDay
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ZonedTimeOfDay -&gt; ZonedTimeOfDay -&gt; Bool
+== :: ZonedTimeOfDay -&gt; ZonedTimeOfDay -&gt; Bool
+$c/= :: ZonedTimeOfDay -&gt; ZonedTimeOfDay -&gt; Bool
+/= :: ZonedTimeOfDay -&gt; ZonedTimeOfDay -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="annot"><a href="Hasura.SQL.Time.html#utc"><span class="hs-identifier hs-type">utc</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Local.TimeZone</span></span><span>
+</span><span id="line-19"></span><span id="utc"><span class="annot"><span class="annottext">utc :: TimeZone
+</span><a href="Hasura.SQL.Time.html#utc"><span class="hs-identifier hs-var hs-var">utc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Bool -&gt; [Char] -&gt; TimeZone
+</span><span class="hs-identifier hs-var">Local.TimeZone</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="annot"><a href="Hasura.SQL.Time.html#zonedTimeOfDay"><span class="hs-identifier hs-type">zonedTimeOfDay</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Parser"><span class="hs-identifier hs-type">Aeson.Parser</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Time.html#ZonedTimeOfDay"><span class="hs-identifier hs-type">ZonedTimeOfDay</span></a></span><span>
+</span><span id="line-22"></span><span id="zonedTimeOfDay"><span class="annot"><span class="annottext">zonedTimeOfDay :: Text -&gt; Parser ZonedTimeOfDay
+</span><a href="Hasura.SQL.Time.html#zonedTimeOfDay"><span class="hs-identifier hs-var hs-var">zonedTimeOfDay</span></a></span></span><span> </span><span id="local-6989586621687600268"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687600268"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><span class="annottext">Parser ZonedTimeOfDay -&gt; Text -&gt; Either [Char] ZonedTimeOfDay
+forall a. Parser a -&gt; Text -&gt; Either [Char] a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.Text.Internal.html#parseOnly"><span class="hs-identifier hs-var">A.parseOnly</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser ZonedTimeOfDay
+</span><a href="#local-6989586621687600270"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ZonedTimeOfDay -&gt; Parser Text () -&gt; Parser ZonedTimeOfDay
+forall a b. Parser Text a -&gt; Parser Text b -&gt; Parser Text a
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">Parser Text ()
+forall t. Chunk t =&gt; Parser t ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.Internal.html#endOfInput"><span class="hs-identifier hs-var">endOfInput</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687600268"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="annottext">Either [Char] ZonedTimeOfDay
+-&gt; ([Char] -&gt; Parser ZonedTimeOfDay) -&gt; Parser ZonedTimeOfDay
+forall (m :: * -&gt; *) e a.
+Applicative m =&gt;
+Either e a -&gt; (e -&gt; m a) -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onLeft"><span class="hs-operator hs-var">`onLeft`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687600274"><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621687600274"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Parser ZonedTimeOfDay
+forall a. [Char] -&gt; Parser a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; [Char] -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">([Char] -&gt; Parser ZonedTimeOfDay)
+-&gt; [Char] -&gt; Parser ZonedTimeOfDay
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;could not parse timetz: &quot;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621687600274"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>    </span><span id="local-6989586621687600270"><span class="annot"><span class="annottext">p :: Parser ZonedTimeOfDay
+</span><a href="#local-6989586621687600270"><span class="hs-identifier hs-var hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TimeOfDay -&gt; TimeZone -&gt; ZonedTimeOfDay
+</span><a href="Hasura.SQL.Time.html#ZonedTimeOfDay"><span class="hs-identifier hs-var">ZonedTimeOfDay</span></a></span><span> </span><span class="annot"><span class="annottext">(TimeOfDay -&gt; TimeZone -&gt; ZonedTimeOfDay)
+-&gt; Parser Text TimeOfDay
+-&gt; Parser Text (TimeZone -&gt; ZonedTimeOfDay)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Text TimeOfDay
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-iso8601-1.1.0.0-7f695bdae565cec5b3d9896776b4c640d49d91b5ff51afd836267bd4caa861b1/share/doc/html/src/Data.Attoparsec.Time.html#timeOfDay"><span class="hs-identifier hs-var">timeOfDay</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text (TimeZone -&gt; ZonedTimeOfDay)
+-&gt; Parser Text TimeZone -&gt; Parser ZonedTimeOfDay
+forall a b. Parser Text (a -&gt; b) -&gt; Parser Text a -&gt; Parser Text b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TimeZone -&gt; Maybe TimeZone -&gt; TimeZone
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">TimeZone
+</span><a href="Hasura.SQL.Time.html#utc"><span class="hs-identifier hs-var">utc</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe TimeZone -&gt; TimeZone)
+-&gt; Parser Text (Maybe TimeZone) -&gt; Parser Text TimeZone
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe TimeZone)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-iso8601-1.1.0.0-7f695bdae565cec5b3d9896776b4c640d49d91b5ff51afd836267bd4caa861b1/share/doc/html/src/Data.Attoparsec.Time.html#timeZone"><span class="hs-identifier hs-var">timeZone</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687600283"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">Aeson.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Time.html#ZonedTimeOfDay"><span class="hs-identifier hs-type">ZonedTimeOfDay</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621687600288"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ZonedTimeOfDay
+</span><a href="#local-6989586621687600288"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-type">Aeson.String</span></a></span><span> </span><span id="local-6989586621687600291"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687600291"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser ZonedTimeOfDay
+</span><a href="Hasura.SQL.Time.html#zonedTimeOfDay"><span class="hs-identifier hs-var">zonedTimeOfDay</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687600291"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Parser ZonedTimeOfDay
+forall a. [Char] -&gt; Parser a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; [Char] -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;Expecting a string for timetz&quot;</span></span><span>
+</span><span id="line-31"></span></pre></body></html>
