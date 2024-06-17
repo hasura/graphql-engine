@@ -199,31 +199,32 @@ mkJwtCtx JWTConfig {..} logger httpManager = do
 updateJwkCtx ::
   forall m.
   (MonadIO m, MonadBaseControl IO m) =>
+  ContextAdvice ->
   AuthMode ->
   HTTP.Manager ->
   Logger Hasura ->
   m ()
-updateJwkCtx authMode httpManager logger = do
+updateJwkCtx contextAdvice authMode httpManager logger = do
   case authMode of
     AMAdminSecretAndJWT _ jwtCtxs _ -> for_ jwtCtxs updateJwkFromUrl_
     _ -> pure ()
   where
-    updateJwkFromUrl_ jwtCtx = updateJwkFromUrl jwtCtx httpManager logger
+    updateJwkFromUrl_ jwtCtx = updateJwkFromUrl contextAdvice jwtCtx httpManager logger
 
-updateJwkFromUrl :: forall m. (MonadIO m, MonadBaseControl IO m) => JWTCtx -> HTTP.Manager -> Logger Hasura -> m ()
-updateJwkFromUrl (JWTCtx url ref _ _ _ _ _) httpManager logger =
+updateJwkFromUrl :: forall m. (MonadIO m, MonadBaseControl IO m) => ContextAdvice -> JWTCtx -> HTTP.Manager -> Logger Hasura -> m ()
+updateJwkFromUrl contextAdvice (JWTCtx url ref _ _ _ _ _) httpManager logger =
   for_ url \uri -> do
     (jwkSet, jwkExpiry) <- liftIO $ readIORef ref
     case jwkSet of
       -- get the JWKs initially if the JWKSet is empty
-      JWKSet [] -> fetchAndUpdateJWKs logger httpManager uri ref
+      JWKSet [] -> fetchAndUpdateJWKs contextAdvice logger httpManager uri ref
       -- if the JWKSet is not empty, get the new JWK based on the
       -- expiry time
       _ -> do
         currentTime <- liftIO getCurrentTime
         for_ jwkExpiry \expiryTime ->
           when (currentTime >= expiryTime)
-            $ fetchAndUpdateJWKs logger httpManager uri ref
+            $ fetchAndUpdateJWKs contextAdvice logger httpManager uri ref
 
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime ::

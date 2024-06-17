@@ -883,10 +883,16 @@ updateJwkCtxThread ::
   HTTP.Manager ->
   Logger Hasura ->
   m Void
-updateJwkCtxThread getAppCtx httpManager logger = forever $ do
-  authMode <- liftIO $ acAuthMode <$> getAppCtx
-  updateJwkCtx authMode httpManager logger
-  liftIO $ sleep $ seconds 1
+updateJwkCtxThread getAppCtx httpManager logger = do
+  let sleepSeconds = 60
+  forever $ do
+    authMode <- liftIO $ acAuthMode <$> getAppCtx
+    updateJwkCtx
+      (ContextAdvice $ "retrying again after " <> tshow sleepSeconds <> " seconds")
+      authMode
+      httpManager
+      logger
+    liftIO $ sleep $ seconds sleepSeconds
 
 -- | Event triggers live in the user's DB and other events
 --  (cron, one-off and async actions)

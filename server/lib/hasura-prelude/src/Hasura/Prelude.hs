@@ -69,6 +69,7 @@ module Hasura.Prelude
     alphabet,
     alphaNumerics,
     labelMe,
+    ContextAdvice (..),
 
     -- * Extensions to @Data.Foldable@
     module Data.Time.Clock.Units,
@@ -439,3 +440,7 @@ alphaNumerics = alphabet ++ "0123456789"
 -- | 'labelThread' on this thread
 labelMe :: (MonadIO m) => String -> m ()
 labelMe l = liftIO (myThreadId >>= flip labelThread l)
+
+-- | A newtype wrapper over Text which is only meant to be used to contextualise
+-- an message for human consumption.
+newtype ContextAdvice = ContextAdvice {getContextAdvice :: Text}
