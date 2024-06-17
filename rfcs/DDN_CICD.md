@@ -1,4 +1,4 @@
-### RFC - Include Deployment Configurations on Hasura DDN Project Files
+# RFC - Include Deployment Configurations on Hasura DDN Project Files
 
 ### Summary
 
