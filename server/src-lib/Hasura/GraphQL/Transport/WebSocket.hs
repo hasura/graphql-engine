@@ -105,7 +105,7 @@ import Hasura.Server.Prometheus
     recordGraphqlOperationMetric,
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (GranularPrometheusMetricsState (..), HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), RemoteSchemaResponsePriority, RequestId, TraceQueryStatus, getRequestId)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), RemoteSchemaResponsePriority, RequestId, TraceQueryStatus (TraceQueryEnabled), getRequestId)
 import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -504,6 +504,8 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
   for_ maybeOperationName $ \nm ->
     -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
     Tracing.attachMetadata [("graphql.operation.name", unName nm)]
+  when (traceQueryStatus == TraceQueryEnabled)
+    $ Tracing.attachMetadata [("graphql.query", _unGQLQueryText (_grQuery q))]
   execPlanE <-
     runExceptT
       $ E.getResolvedExecPlan
