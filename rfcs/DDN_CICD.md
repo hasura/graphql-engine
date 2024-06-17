@@ -2,7 +2,7 @@
 
 ### Summary
 
-Currently with the new DX, the deployment configurations are not defined anywhere and this makes sense because the users may want to customize and deploy their connectors and supergraph with different configuration files. This RFC is about applying the same level of configurability to the deployments as well.
+Currently with the new DX, the list of connectors and subgraphs are not defined anywhere (otherwise will need to scan the fs) and this makes sense because the users may want to customize and deploy their connectors and supergraph with different configuration files. This RFC is about applying the same level of configurability to the deployments as well.
 
 ### Motivation
 
