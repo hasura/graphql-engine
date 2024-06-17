@@ -117,8 +117,7 @@
                         }
                       }
                     },
-                    "arguments": {},
-                    "directives": {}
+                    "arguments": {}
                   }
                 ]
               ],
@@ -237,8 +236,7 @@
                               }
                             }
                           },
-                          "arguments": {},
-                          "directives": {}
+                          "arguments": {}
                         }
                       ]
                     ],
@@ -357,8 +355,7 @@
                                     }
                                   }
                                 },
-                                "arguments": {},
-                                "directives": {}
+                                "arguments": {}
                               }
                             ]
                           ],
@@ -381,8 +378,7 @@
                                         },
                                         "namespaced": null
                                       },
-                                      "arguments": {},
-                                      "directives": {}
+                                      "arguments": {}
                                     }
                                   ]
                                 ],
@@ -423,8 +419,7 @@
                                         },
                                         "namespaced": null
                                       },
-                                      "arguments": {},
-                                      "directives": {}
+                                      "arguments": {}
                                     }
                                   ]
                                 ],

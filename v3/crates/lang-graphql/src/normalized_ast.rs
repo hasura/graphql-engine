@@ -226,8 +226,6 @@ pub struct FieldCall<'s, S: SchemaContext> {
     pub info: NodeInfo<'s, S>,
     /// The arguments to the field, empty if no arguments are provided.
     pub arguments: IndexMap<ast::Name, InputField<'s, S>>,
-    /// The directives in the field selector.
-    pub directives: IndexMap<ast::Name, Directive<'s, S>>,
 }
 
 impl<'s, S: SchemaContext> FieldCall<'s, S> {

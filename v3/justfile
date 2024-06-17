@@ -67,7 +67,7 @@ test *ARGS:
   just docker_with_test_env "${COMMAND[@]}"
 
 update-golden-files: docker-refresh
-  docker compose -f ci.docker-compose.yaml run --rm -e REGENERATE_GOLDENFILES=1 test_setup \
+  docker compose -f ci.docker-compose.yaml run --rm -e UPDATE_GOLDENFILES=1 test_setup \
     cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast
   just fix-format
 
@@ -156,7 +156,7 @@ machete:
 
 # update golden tests
 update-golden-files-local: start-docker-test-deps
-  REGENERATE_GOLDENFILES=1 cargo test
+  UPDATE_GOLDENFILES=1 cargo test
   just fix-format
 
 # run the engine using schema from tests

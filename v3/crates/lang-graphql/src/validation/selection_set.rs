@@ -168,36 +168,34 @@ where
     let mut alias_selection_sets = Vec::new();
     let mut field_calls = HashMap::new();
     for (reachability, fields) in typed_fields {
-        let cannonical_field = fields.head;
+        let canonical_field = fields.head;
 
         let arguments = normalize_arguments(
             namespaced_getter,
             schema,
             variables,
             type_name,
-            &cannonical_field.info.generic.name,
-            &cannonical_field.info.generic.arguments,
-            &cannonical_field.field.arguments,
+            &canonical_field.info.generic.name,
+            &canonical_field.info.generic.arguments,
+            &canonical_field.field.arguments,
         )?;
-        let directives = normalize_directives(schema, &cannonical_field.field.directives)?;
-
-        let cannonical_field_type = &cannonical_field.info.generic.field_type;
-        if cannonical_field_type != alias_type {
+        let canonical_field_type = &canonical_field.info.generic.field_type;
+        if canonical_field_type != alias_type {
             return Err(Error::FieldsConflictDifferingTypes {
                 alias: alias.clone(),
                 type1: alias_type.clone(),
-                type2: cannonical_field_type.clone(),
+                type2: canonical_field_type.clone(),
             });
         }
         let mut selection_sets = Vec::with_capacity(fields.len());
-        if let Some(selection_set) = &cannonical_field.field.selection_set {
+        if let Some(selection_set) = &canonical_field.field.selection_set {
             selection_sets.push(&selection_set.item.items);
         }
         for field in fields.tail() {
-            if field.field.name.item != cannonical_field.field.name.item {
+            if field.field.name.item != canonical_field.field.name.item {
                 return Err(Error::FieldsConflictDifferentFields {
                     alias: alias.clone(),
-                    field1: cannonical_field.field.name.item.clone(),
+                    field1: canonical_field.field.name.item.clone(),
                     field2: field.field.name.item.clone(),
                 });
             }
@@ -215,7 +213,7 @@ where
             if arguments != this_arguments {
                 return Err(Error::FieldsConflictDifferingArguments {
                     alias: alias.clone(),
-                    location1: cannonical_field.field.arguments.as_ref().map(|a| a.start),
+                    location1: canonical_field.field.arguments.as_ref().map(|a| a.start),
                     location2: field.field.arguments.as_ref().map(|a| a.start),
                 });
             }
@@ -225,15 +223,14 @@ where
             }
         }
         let field_call = normalized::FieldCall {
-            name: cannonical_field.field.name.item.clone(),
+            name: canonical_field.field.name.item.clone(),
             info: schema::NodeInfo {
-                generic: &cannonical_field.info.generic.info,
-                namespaced: cannonical_field.info.namespaced,
+                generic: &canonical_field.info.generic.info,
+                namespaced: canonical_field.info.namespaced,
             },
             arguments,
-            directives,
         };
-        if cannonical_field.reachable {
+        if canonical_field.reachable {
             field_calls.insert(reachability.iter().copied().cloned().collect(), field_call);
         }
         alias_selection_sets.push((reachability, selection_sets));
@@ -394,11 +391,4 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext, NSGet: schema::Namespac
             argument_names: arguments_map.keys().copied().cloned().collect(),
         })
     }
-}
-
-fn normalize_directives<'s, S: schema::SchemaContext>(
-    _schema: &'s schema::Schema<S>,
-    _directives: &[spanning::Spanning<executable::Directive>],
-) -> Result<IndexMap<ast::Name, normalized::Directive<'s, S>>> {
-    Ok(IndexMap::new())
 }

@@ -247,7 +247,7 @@ you can regenerate them like this:
 Locally (with postgres_connector pointing to localhost)
 
 ```sh
-  REGENERATE_GOLDENFILES=1 cargo test
+  UPDATE_GOLDENFILES=1 cargo test
 ```
 
 Docker:
