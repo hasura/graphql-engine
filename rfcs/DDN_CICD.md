@@ -79,5 +79,3 @@ There are around 1700 projects (approximately 320 of which are paid) currently u
 
 1.  Should we make the path to deployment-config.yaml an optional input? This would allow users to set up multiple deployment configurations and reuse the GitHub action with branch conditions.
 2.  Where should we keep the project name? Should it be inside the deployment config or as a GitHub action input?
-
-This completes the RFC draft. If you have any further details or modifications to add, please let me know!
