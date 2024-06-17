@@ -20,7 +20,7 @@ open-dds = { path = "../open-dds" }
 metadata-resolve = {path = "../metadata-resolve" }
 
 serde = "1.0.203"
-serde_json = "1.0.116"
+serde_json = "1.0.117"
 strum_macros = "0.26.3"
 thiserror = "1.0"
 insta = "1.39.0"

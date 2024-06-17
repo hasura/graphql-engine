@@ -12,7 +12,7 @@ open-dds = { path = "../open-dds" }
 metadata-resolve = { path = "../metadata-resolve" }
 
 serde = "1.0.203"
-serde_json = "1.0.116"
+serde_json = "1.0.117"
 
 [lints]
 workspace = true
