@@ -302,15 +302,85 @@ fn test_model_select_many_where_ndc_operators() -> anyhow::Result<()> {
 }
 
 // Relationships in boolean expressions
+
+// Older style: using `ObjectBooleanExpressionType` and `DataConnectorScalarType`
+
+// What is being tested:
+// 1. Array relationships in boolean expressions (Simple, Nested array relationships). We also test multi column boolean expressions
+
+#[test]
+fn test_model_select_many_where_object_boolean_array_relationship_simple() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/relationships/object_boolean_expression_type/array/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/where/relationships/object_boolean_expression_type/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+#[test]
+fn test_model_select_many_where_object_boolean_array_relationship_nested() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/relationships/object_boolean_expression_type/array/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/where/relationships/object_boolean_expression_type/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Object relationships in boolean expressions (Simple, Nested object relationships). We also test multi column boolean expressions
+#[test]
+fn test_model_select_many_where_object_boolean_object_relationship_simple() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/relationships/object_boolean_expression_type/object/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/where/relationships/object_boolean_expression_type/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+#[test]
+fn test_model_select_many_where_object_boolean_object_relationship_nested() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/relationships/object_boolean_expression_type/object/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/where/relationships/object_boolean_expression_type/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Newer style: using `BooleanExpressionType`
+
 // What is being tested:
 // 1. Array relationships in boolean expressions (Simple, Nested array relationships). We also test multi column boolean expressions
 
 #[test]
 fn test_model_select_many_where_array_relationship_simple() -> anyhow::Result<()> {
-    let test_path_string = "execute/models/select_many/where/relationships/array/simple";
+    let test_path_string =
+        "execute/models/select_many/where/relationships/boolean_expression_type/array/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
-        "execute/models/select_many/where/relationships/common_metadata.json";
+        "execute/models/select_many/where/relationships/boolean_expression_type/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
@@ -322,10 +392,11 @@ fn test_model_select_many_where_array_relationship_simple() -> anyhow::Result<()
 
 #[test]
 fn test_model_select_many_where_array_relationship_nested() -> anyhow::Result<()> {
-    let test_path_string = "execute/models/select_many/where/relationships/array/nested";
+    let test_path_string =
+        "execute/models/select_many/where/relationships/boolean_expression_type/array/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
-        "execute/models/select_many/where/relationships/common_metadata.json";
+        "execute/models/select_many/where/relationships/boolean_expression_type/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
@@ -338,10 +409,11 @@ fn test_model_select_many_where_array_relationship_nested() -> anyhow::Result<()
 // Object relationships in boolean expressions (Simple, Nested object relationships). We also test multi column boolean expressions
 #[test]
 fn test_model_select_many_where_object_relationship_simple() -> anyhow::Result<()> {
-    let test_path_string = "execute/models/select_many/where/relationships/object/simple";
+    let test_path_string =
+        "execute/models/select_many/where/relationships/boolean_expression_type/object/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
-        "execute/models/select_many/where/relationships/common_metadata.json";
+        "execute/models/select_many/where/relationships/boolean_expression_type/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
@@ -353,10 +425,11 @@ fn test_model_select_many_where_object_relationship_simple() -> anyhow::Result<(
 
 #[test]
 fn test_model_select_many_where_object_relationship_nested() -> anyhow::Result<()> {
-    let test_path_string = "execute/models/select_many/where/relationships/object/nested";
+    let test_path_string =
+        "execute/models/select_many/where/relationships/boolean_expression_type/object/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
-        "execute/models/select_many/where/relationships/common_metadata.json";
+        "execute/models/select_many/where/relationships/boolean_expression_type/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[

@@ -1,7 +1,7 @@
 pub use super::{
-    BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,
-    ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
-    ResolvedScalarBooleanExpressionType,
+    BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
+    BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo, ObjectComparisonExpressionInfo,
+    ResolvedObjectBooleanExpressionType, ResolvedScalarBooleanExpressionType,
 };
 use crate::helpers::types::mk_name;
 use crate::stages::{graphql_config, object_types, type_permissions};
@@ -44,6 +44,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         object_boolean_expression_operand.r#type.clone(),
     );
 
+    // get the underlying object type
     let object_type_representation =
         object_types
             .get(&qualified_object_type_name)
@@ -55,6 +56,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 )
             })?;
 
+    // resolve any comparable fields
     let comparable_fields = resolve_comparable_fields(
         &object_boolean_expression_operand.comparable_fields,
         &object_type_representation.object_type,
@@ -63,6 +65,15 @@ pub(crate) fn resolve_object_boolean_expression_type(
         raw_boolean_expression_types,
     )?;
 
+    // resolve any comparable relationships
+    let comparable_relationships = resolve_comparable_relationships(
+        boolean_expression_type_name,
+        &object_boolean_expression_operand.comparable_relationships,
+        subgraph,
+        raw_boolean_expression_types,
+    )?;
+
+    // check that we have data connector information for each scalar type
     let _allowed_data_connectors = resolve_data_connector_types(
         boolean_expression_type_name,
         object_type_representation,
@@ -70,6 +81,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         &comparable_fields,
     )?;
 
+    // resolve graphql schema information
     let resolved_graphql = graphql
         .as_ref()
         .map(|object_boolean_graphql_config| {
@@ -77,6 +89,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 boolean_expression_type_name,
                 object_boolean_graphql_config,
                 &comparable_fields,
+                &comparable_relationships,
                 scalar_boolean_expression_types,
                 raw_boolean_expression_types,
                 subgraph,
@@ -154,6 +167,7 @@ fn resolve_object_boolean_graphql(
     boolean_expression_type_name: &Qualified<CustomTypeName>,
     boolean_expression_graphql_config: &BooleanExpressionTypeGraphQlConfiguration,
     comparable_fields: &BTreeMap<FieldName, Qualified<CustomTypeName>>,
+    comparable_relationships: &BTreeMap<FieldName, BooleanExpressionComparableRelationship>,
     scalar_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         ResolvedScalarBooleanExpressionType,
@@ -255,6 +269,7 @@ fn resolve_object_boolean_graphql(
         type_name: boolean_expression_graphql_name,
         scalar_fields,
         object_fields,
+        relationship_fields: comparable_relationships.clone(),
         graphql_config: (BooleanExpressionGraphqlFieldConfig {
             where_field_name: filter_graphql_config.where_field_name.clone(),
             and_operator_name: filter_graphql_config.operator_names.and.clone(),
@@ -282,6 +297,55 @@ fn resolve_operator_mapping_for_scalar_type(
     operator_mapping
 }
 
+// resolve comparable relationships. These should only be local relationships (ie, in the same data
+// connector), however we are unable to ascertain this early in the pipeline. More indepth checks
+// should occur when resolving models, when the model source is known.
+fn resolve_comparable_relationships(
+    boolean_expression_type_name: &Qualified<CustomTypeName>,
+    comparable_relationships: &Vec<
+        open_dds::boolean_expression::BooleanExpressionComparableRelationship,
+    >,
+    subgraph: &str,
+    raw_boolean_expression_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        (
+            &String,
+            &open_dds::boolean_expression::BooleanExpressionTypeV1,
+        ),
+    >,
+) -> Result<BTreeMap<FieldName, BooleanExpressionComparableRelationship>, Error> {
+    let mut resolved_comparable_relationships = BTreeMap::new();
+
+    for comparable_relationship in comparable_relationships {
+        // if the relationship has provided an optional boolean_expression_type...
+        if let Some(target_boolean_expression_type_name) =
+            &comparable_relationship.boolean_expression_type
+        {
+            // ...check it exists
+            let _raw_boolean_expression_type = lookup_raw_boolean_expression(
+                boolean_expression_type_name,
+                &Qualified::new(
+                    subgraph.to_string(),
+                    target_boolean_expression_type_name.clone(),
+                ),
+                raw_boolean_expression_types,
+            )?;
+        }
+        let resolved_comparable_relationship = BooleanExpressionComparableRelationship {
+            relationship_name: comparable_relationship.relationship_name.clone(),
+            boolean_expression_type: comparable_relationship
+                .boolean_expression_type
+                .as_ref()
+                .map(|bool_exp| Qualified::new(subgraph.to_string(), bool_exp.clone())),
+        };
+        resolved_comparable_relationships.insert(
+            FieldName(comparable_relationship.relationship_name.0.clone()),
+            resolved_comparable_relationship,
+        );
+    }
+
+    Ok(resolved_comparable_relationships)
+}
 // comparable_fields don't do much, all we can do is ensure that the other BooleanExpressionTypes
 // they refer to exist
 fn resolve_comparable_fields(

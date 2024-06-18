@@ -273,6 +273,8 @@ pub enum Error {
     },
     #[error("internal error: no support for: {summary}")]
     InternalUnsupported { summary: String },
+    #[error("internal error while building schema, relationship not found: {relationship_name}")]
+    InternalRelationshipNotFound { relationship_name: RelationshipName },
     #[error("internal error while building schema, type not found: {type_name}")]
     InternalTypeNotFound {
         type_name: Qualified<CustomTypeName>,

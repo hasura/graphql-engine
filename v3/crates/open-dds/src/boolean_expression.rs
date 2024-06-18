@@ -208,14 +208,16 @@ pub struct BooleanExpressionComparableField {
 }
 
 /// Definition of a relationship that can be used for a comparison
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
+)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "BooleanExpressionComparableRelationship"))]
 pub struct BooleanExpressionComparableRelationship {
     /// The name of the relationship to use for comparison
-    relationship_name: RelationshipName,
+    pub relationship_name: RelationshipName,
 
     /// The boolean expression type to use for comparison. This is optional for relationships to
     /// models, and defaults to the filterExpressionType of the model
-    boolean_expression_type: Option<CustomTypeName>,
+    pub boolean_expression_type: Option<CustomTypeName>,
 }

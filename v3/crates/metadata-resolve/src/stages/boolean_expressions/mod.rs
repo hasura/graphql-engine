@@ -8,9 +8,10 @@ mod object;
 mod scalar;
 mod types;
 pub use types::{
-    BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, BooleanExpressionTypes,
-    BooleanExpressionsOutput, ComparisonExpressionInfo, ObjectComparisonExpressionInfo,
-    ResolvedObjectBooleanExpressionType, ResolvedScalarBooleanExpressionType,
+    BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
+    BooleanExpressionGraphqlFieldConfig, BooleanExpressionTypes, BooleanExpressionsOutput,
+    ComparisonExpressionInfo, ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
+    ResolvedScalarBooleanExpressionType,
 };
 
 pub fn resolve(

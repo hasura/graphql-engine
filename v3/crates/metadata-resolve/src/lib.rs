@@ -22,7 +22,8 @@ pub use stages::aggregates::{
     AggregationFunctionInfo, DataConnectorAggregationFunctionInfo,
 };
 pub use stages::boolean_expressions::{
-    BooleanExpressionGraphqlConfig, ComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
+    BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
+    ComparisonExpressionInfo, ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
 };
 pub use stages::command_permissions::CommandWithPermissions;
 pub use stages::commands::Command;

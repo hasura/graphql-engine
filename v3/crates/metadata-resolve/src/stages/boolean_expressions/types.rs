@@ -1,6 +1,7 @@
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorOperatorName},
+    relationships::RelationshipName,
     types::{CustomTypeName, FieldName, GraphQlTypeName, OperatorName, TypeReference},
 };
 use serde::{Deserialize, Serialize};
@@ -71,9 +72,19 @@ pub struct BooleanExpressionGraphqlFieldConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct BooleanExpressionComparableRelationship {
+    /// The name of the relationship to use for comparison
+    pub relationship_name: RelationshipName,
+
+    /// The boolean expression type to use for comparison. This is optional for relationships to
+    /// models, and defaults to the filterExpressionType of the model
+    pub boolean_expression_type: Option<Qualified<CustomTypeName>>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionGraphqlConfig {
     pub type_name: ast::TypeName,
     pub object_fields: BTreeMap<FieldName, ObjectComparisonExpressionInfo>,
     pub scalar_fields: BTreeMap<FieldName, ComparisonExpressionInfo>,
+    pub relationship_fields: BTreeMap<FieldName, BooleanExpressionComparableRelationship>,
     pub graphql_config: BooleanExpressionGraphqlFieldConfig,
 }
