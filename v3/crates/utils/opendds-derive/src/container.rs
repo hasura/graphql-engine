@@ -36,6 +36,7 @@ struct FieldOpts {
     alias: Option<String>,
     #[darling(default)]
     json_schema: JsonSchemaFieldOpts,
+    hidden: Option<bool>,
 }
 
 /// JSON schema field attributes
@@ -179,6 +180,7 @@ pub struct NamedField<'a> {
     pub is_optional: bool,
     pub default_exp: Option<syn::Expr>,
     pub description: Option<String>,
+    pub hidden: bool,
 }
 
 impl<'a> NamedField<'a> {
@@ -197,6 +199,13 @@ impl<'a> NamedField<'a> {
         let is_default = field_opts.default.unwrap_or(false);
         let is_optional = is_option_type(&field.ty);
         let default_exp = field_opts.json_schema.default_exp;
+        let hidden = field_opts.hidden.unwrap_or(false);
+        if hidden && !is_default && !is_optional {
+            Err(syn::Error::new_spanned(
+                field,
+                "field cannot be hidden unless it is optional or default",
+            ))?;
+        }
         Ok(Self {
             field_name,
             field_type,
@@ -206,6 +215,7 @@ impl<'a> NamedField<'a> {
             is_optional,
             default_exp,
             description,
+            hidden,
         })
     }
 }

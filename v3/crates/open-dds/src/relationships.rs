@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    aggregates::AggregateExpressionName,
     arguments::ArgumentName,
     commands::CommandName,
     identifier::Identifier,
@@ -27,7 +28,9 @@ pub struct RelationshipName(pub Identifier);
 
 impl_JsonSchema_with_OpenDd_for!(RelationshipName);
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
+)]
 /// Type of the relationship.
 #[schemars(title = "RelationshipType")]
 pub enum RelationshipType {
@@ -37,10 +40,9 @@ pub enum RelationshipType {
     Array,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "ModelRelationshipTarget")]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[opendd(json_schema(title = "ModelRelationshipTarget"))]
 /// The target model for a relationship.
 pub struct ModelRelationshipTarget {
     /// The name of the data model.
@@ -49,12 +51,30 @@ pub struct ModelRelationshipTarget {
     subgraph: Option<String>,
     /// Type of the relationship - object or array.
     pub relationship_type: RelationshipType,
+    /// How to aggregate over the relationship. Only valid for array relationships
+    #[opendd(hidden)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aggregate: Option<ModelRelationshipTargetAggregate>,
 }
+
+impl_JsonSchema_with_OpenDd_for!(ModelRelationshipTarget);
 
 impl ModelRelationshipTarget {
     pub fn subgraph(&self) -> Option<&str> {
         self.subgraph.as_deref()
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[opendd(json_schema(title = "ModelRelationshipTargetAggregate"))]
+/// Which aggregate expression to use to aggregate the array relationship.
+pub struct ModelRelationshipTargetAggregate {
+    /// The name of the aggregate expression that defines how to aggregate across the relationship.
+    pub aggregate_expression: AggregateExpressionName,
+    /// The description of the relationship aggregate.
+    /// Gets added to the description of the aggregate field in the GraphQL schema
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -180,6 +200,15 @@ impl RelationshipMapping {
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(title = "RelationshipGraphQlDefinition"))]
+/// The definition of how a relationship appears in the GraphQL API
+pub struct RelationshipGraphQlDefinition {
+    /// The field name to use for the field that represents an aggregate over the relationship
+    aggregate_field_name: Option<String>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
 #[opendd(
@@ -259,4 +288,7 @@ pub struct RelationshipV1 {
     /// Whether this relationship is deprecated.
     /// If set, the deprecation status is added to the relationship field's graphql schema.
     pub deprecated: Option<Deprecated>,
+    /// Configuration for how this relationship should appear in the GraphQL schema.
+    #[opendd(hidden)]
+    pub graphql: Option<RelationshipGraphQlDefinition>,
 }

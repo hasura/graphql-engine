@@ -2046,7 +2046,7 @@
       ],
       "properties": {
         "name": {
-          "description": "The name of the command.",
+          "description": "The name of the aggregate expression.",
           "allOf": [
             {
               "$ref": "#/definitions/AggregateExpressionName"
@@ -2095,7 +2095,7 @@
           ]
         },
         "description": {
-          "description": "The description of the command. Gets added to the description of the command's root field in the GraphQL schema.",
+          "description": "The description of the aggregate expression. Gets added to the description of the command's root field in the GraphQL schema.",
           "type": [
             "string",
             "null"

@@ -83,7 +83,7 @@ impl AggregateExpression {
 #[opendd(json_schema(title = "AggregateExpressionV1"))]
 /// Definition of how to aggregate over a particular operand type
 pub struct AggregateExpressionV1 {
-    /// The name of the command.
+    /// The name of the aggregate expression.
     pub name: AggregateExpressionName,
     /// The type this aggregation expression aggregates over, and its associated configuration
     pub operand: AggregateOperand,
@@ -93,7 +93,7 @@ pub struct AggregateExpressionV1 {
     pub count_distinct: Option<AggregateCountDefinition>,
     /// Configuration for how this command should appear in the GraphQL schema.
     pub graphql: Option<AggregateExpressionGraphQlDefinition>,
-    /// The description of the command.
+    /// The description of the aggregate expression.
     /// Gets added to the description of the command's root field in the GraphQL schema.
     pub description: Option<String>,
 }
