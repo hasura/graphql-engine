@@ -2,22 +2,20 @@
 //! or fail in the expected way.
 
 use std::fs;
-use std::path::{Path, PathBuf};
-
-use serde_json::Value;
+use std::path::PathBuf;
 
 use metadata_resolve::MetadataResolveFlagsInternal;
 
-#[test_each::path(glob = "crates/metadata-resolve/tests/passing/**/", name(segments = 2))]
-#[allow(clippy::needless_pass_by_value)] // must receive a `PathBuf`
-fn test_passing_metadata(comparison_folder_path: PathBuf) -> anyhow::Result<()> {
-    let passing_example = comparison_folder_path.join("metadata.json");
-
+#[test_each::file(
+    glob = "crates/metadata-resolve/tests/passing/**/metadata.json",
+    name(segments = 2)
+)]
+fn test_passing_metadata(metadata_json_text: &str) -> anyhow::Result<()> {
     let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
         enable_boolean_expression_types: true,
     };
 
-    let metadata_json_value = read_json(&passing_example)?;
+    let metadata_json_value = serde_json::from_str(metadata_json_text)?;
 
     let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
     let resolved = metadata_resolve::resolve(metadata, &metadata_resolve_flags_internal);
@@ -66,10 +64,4 @@ fn test_failing_metadata(
     };
 
     Ok(())
-}
-
-fn read_json(path: &Path) -> anyhow::Result<Value> {
-    let json_string = fs::read_to_string(path)?;
-    let value = serde_json::from_str(&json_string)?;
-    Ok(value)
 }
