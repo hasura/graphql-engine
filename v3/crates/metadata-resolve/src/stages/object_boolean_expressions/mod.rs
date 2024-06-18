@@ -241,11 +241,11 @@ pub(crate) fn resolve_object_boolean_expression_type(
     let resolved_boolean_expression = ObjectBooleanExpressionType {
         name: qualified_name.clone(),
         object_type: qualified_object_type_name.clone(),
-        data_connector: Some(ObjectBooleanExpressionDataConnector {
+        data_connector: ObjectBooleanExpressionDataConnector {
             object_type: object_boolean_expression.data_connector_object_type.clone(),
             name: qualified_data_connector_name,
             link: data_connector_link,
-        }),
+        },
         graphql: boolean_expression_graphql_config,
     };
     Ok(resolved_boolean_expression)

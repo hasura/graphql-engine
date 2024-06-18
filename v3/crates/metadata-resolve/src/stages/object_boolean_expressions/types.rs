@@ -30,8 +30,5 @@ pub struct ObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
     pub object_type: Qualified<CustomTypeName>,
     pub graphql: Option<boolean_expressions::BooleanExpressionGraphqlConfig>,
-
-    /// in future we'll not be using this at all, for now it is here, and we use it only to check
-    /// the user has not included something that does not make sense
-    pub data_connector: Option<ObjectBooleanExpressionDataConnector>,
+    pub data_connector: ObjectBooleanExpressionDataConnector,
 }
