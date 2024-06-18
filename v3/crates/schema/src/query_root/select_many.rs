@@ -29,8 +29,8 @@ pub(crate) fn generate_select_many_arguments(
 
     add_limit_input_field(&mut arguments, builder, model)?;
     add_offset_input_field(&mut arguments, builder, model)?;
-    add_order_by_input_field(&mut arguments, builder, model)?;
-    add_where_input_field(&mut arguments, builder, model)?;
+    add_order_by_input_field(&mut arguments, builder, model);
+    add_where_input_field(&mut arguments, builder, model);
 
     Ok(arguments)
 }

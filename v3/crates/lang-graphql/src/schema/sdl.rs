@@ -187,7 +187,7 @@ impl SchemaContext for SDL {
                 _ => builder_in_closure.register_type(type_name.0),
             },
             definition,
-        )?)
+        ))
     }
 
     fn get_schema_entry_point(&self) -> EntryPoint<Self> {

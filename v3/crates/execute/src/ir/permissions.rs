@@ -89,7 +89,7 @@ pub(crate) fn process_model_predicate<'s>(
         } => Ok(make_permission_unary_boolean_expression(
             ndc_column.clone(),
             *operator,
-        )?),
+        )),
         metadata_resolve::ModelPredicate::BinaryFieldComparison {
             field: _,
             ndc_column,
@@ -197,15 +197,15 @@ fn make_permission_binary_boolean_expression(
 fn make_permission_unary_boolean_expression(
     ndc_column: DataConnectorColumnName,
     operator: ndc_models::UnaryComparisonOperator,
-) -> Result<ndc_models::Expression, error::Error> {
-    Ok(ndc_models::Expression::UnaryComparisonOperator {
+) -> ndc_models::Expression {
+    ndc_models::Expression::UnaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
             name: ndc_column.0,
             path: Vec::new(),
             field_path: None,
         },
         operator,
-    })
+    }
 }
 
 pub(crate) fn make_value_from_value_expression(

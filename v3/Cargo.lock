@@ -1693,6 +1693,7 @@ dependencies = [
 name = "lang-graphql"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "apollo-parser",
  "async-graphql-parser",
  "axum",

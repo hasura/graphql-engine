@@ -2,10 +2,7 @@ use std::collections::BTreeMap;
 
 use ndc_models;
 
-use crate::{
-    query::Result,
-    state::{AppState, Row},
-};
+use crate::state::{AppState, Row};
 
 pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
     ndc_models::CollectionInfo {
@@ -23,6 +20,6 @@ pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
     }
 }
 
-pub(crate) fn rows(state: &AppState) -> Result<Vec<Row>> {
-    Ok(state.movies.values().cloned().collect())
+pub(crate) fn rows(state: &AppState) -> Vec<Row> {
+    state.movies.values().cloned().collect()
 }

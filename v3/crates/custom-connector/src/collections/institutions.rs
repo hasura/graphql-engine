@@ -23,8 +23,8 @@ pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
     }
 }
 
-pub(crate) fn rows(state: &AppState) -> Result<Vec<Row>> {
-    Ok(state.institutions.values().cloned().collect())
+pub(crate) fn rows(state: &AppState) -> Vec<Row> {
+    state.institutions.values().cloned().collect()
 }
 
 pub struct Institution<'a> {

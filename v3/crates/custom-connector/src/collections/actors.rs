@@ -24,8 +24,8 @@ pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
     }
 }
 
-pub(crate) fn rows(state: &AppState) -> Result<Vec<Row>> {
-    Ok(state.actors.values().cloned().collect())
+pub(crate) fn rows(state: &AppState) -> Vec<Row> {
+    state.actors.values().cloned().collect()
 }
 
 pub(crate) fn filter_actors_by_name<'a>(

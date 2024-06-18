@@ -87,12 +87,12 @@ pub fn build_model_filter_input_type(
         &mut filter_input_type_fields,
         builder,
         model_with_permissions,
-    )?;
+    );
     add_where_input_field(
         &mut filter_input_type_fields,
         builder,
         model_with_permissions,
-    )?;
+    );
 
     Ok(gql_schema::TypeInfo::InputObject(
         gql_schema::InputObject::new(
@@ -151,7 +151,7 @@ pub fn add_order_by_input_field(
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
     model: &metadata_resolve::ModelWithPermissions,
-) -> Result<(), Error> {
+) {
     if let Some(order_by_expression_info) = &model.model.graphql_api.order_by_expression {
         let order_by_argument = {
             get_order_by_expression_input_field(
@@ -166,15 +166,13 @@ pub fn add_order_by_input_field(
             builder.allow_all_namespaced(order_by_argument),
         );
     }
-
-    Ok(())
 }
 
 pub fn add_where_input_field(
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
     model: &metadata_resolve::ModelWithPermissions,
-) -> Result<(), Error> {
+) {
     let boolean_expression_filter_type =
         &model
             .model
@@ -219,8 +217,6 @@ pub fn add_where_input_field(
             builder.allow_all_namespaced(where_argument),
         );
     }
-
-    Ok(())
 }
 
 ///  Generates the input field for the arguments which are of type int.

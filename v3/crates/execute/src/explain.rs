@@ -244,6 +244,7 @@ fn simplify_steps(steps: NonEmpty<Box<types::Step>>) -> NonEmpty<Box<types::Step
     steps.map(simplify_step)
 }
 
+#[allow(clippy::unnecessary_box_returns)] // helper for the above function
 fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
     match *step {
         types::Step::Parallel(steps) => {

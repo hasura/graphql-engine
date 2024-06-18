@@ -293,27 +293,27 @@ impl Display for BaseType {
 }
 
 #[test]
-fn test_graphql_compliant_name() -> Result<(), std::io::Error> {
+fn test_graphql_compliant_name() -> anyhow::Result<()> {
     // Positive tests
-    let name: Name = serde_json::from_str("\"foo\"").unwrap();
+    let name: Name = serde_json::from_str("\"foo\"")?;
     assert_eq!(name.get(), "foo");
 
-    let name: Name = serde_json::from_str("\"FooBar\"").unwrap();
+    let name: Name = serde_json::from_str("\"FooBar\"")?;
     assert_eq!(name.get(), "FooBar");
 
-    let name: Name = serde_json::from_str("\"_foo\"").unwrap();
+    let name: Name = serde_json::from_str("\"_foo\"")?;
     assert_eq!(name.get(), "_foo");
 
-    let name: Name = serde_json::from_str("\"_Foo\"").unwrap();
+    let name: Name = serde_json::from_str("\"_Foo\"")?;
     assert_eq!(name.get(), "_Foo");
 
-    let name: Name = serde_json::from_str("\"foo1\"").unwrap();
+    let name: Name = serde_json::from_str("\"foo1\"")?;
     assert_eq!(name.get(), "foo1");
 
-    let name: Name = serde_json::from_str("\"Foo1\"").unwrap();
+    let name: Name = serde_json::from_str("\"Foo1\"")?;
     assert_eq!(name.get(), "Foo1");
 
-    let name: Name = serde_json::from_str("\"foo_1\"").unwrap();
+    let name: Name = serde_json::from_str("\"foo_1\"")?;
     assert_eq!(name.get(), "foo_1");
 
     // Negative tests

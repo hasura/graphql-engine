@@ -44,7 +44,7 @@ where
                     &mut builder,
                     |_, t| RegisteredTypeName(t),
                     &type_definition,
-                )?;
+                );
                 if normalized_definition.name().as_str() == "Query" {
                     if let TypeInfo::Object(query_root) = normalized_definition {
                         introspection_root_fields = query_root.fields;
@@ -114,46 +114,44 @@ pub fn convert_type_definition<S, F>(
     builder: &mut Builder<S>,
     register_type_name: F,
     definition: &sdl::TypeDefinition,
-) -> Result<TypeInfo<S>>
+) -> TypeInfo<S>
 where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
 {
     match definition {
         sdl::TypeDefinition::Scalar(definition) => {
-            convert_scalar_type_definition(definition).map(TypeInfo::Scalar)
+            TypeInfo::Scalar(convert_scalar_type_definition(definition))
         }
-        sdl::TypeDefinition::Object(definition) => {
-            convert_object_type_definition(builder, register_type_name, definition)
-                .map(TypeInfo::Object)
-        }
-        sdl::TypeDefinition::Interface(definition) => {
-            convert_interface_type_definition(builder, register_type_name, definition)
-                .map(TypeInfo::Interface)
-        }
-        sdl::TypeDefinition::Union(definition) => {
-            convert_union_type_definition(builder, register_type_name, definition)
-                .map(TypeInfo::Union)
-        }
+        sdl::TypeDefinition::Object(definition) => TypeInfo::Object(
+            convert_object_type_definition(builder, register_type_name, definition),
+        ),
+        sdl::TypeDefinition::Interface(definition) => TypeInfo::Interface(
+            convert_interface_type_definition(builder, register_type_name, definition),
+        ),
+        sdl::TypeDefinition::Union(definition) => TypeInfo::Union(convert_union_type_definition(
+            builder,
+            register_type_name,
+            definition,
+        )),
         sdl::TypeDefinition::Enum(definition) => {
-            convert_enum_type_definition(builder, definition).map(TypeInfo::Enum)
+            TypeInfo::Enum(convert_enum_type_definition(builder, definition))
         }
-        sdl::TypeDefinition::InputObject(definition) => {
-            convert_input_object_type_definition(builder, register_type_name, definition)
-                .map(TypeInfo::InputObject)
-        }
+        sdl::TypeDefinition::InputObject(definition) => TypeInfo::InputObject(
+            convert_input_object_type_definition(builder, register_type_name, definition),
+        ),
     }
 }
 
-fn convert_scalar_type_definition(definition: &sdl::ScalarTypeDefinition) -> Result<Scalar> {
-    Ok(Scalar {
+fn convert_scalar_type_definition(definition: &sdl::ScalarTypeDefinition) -> Scalar {
+    Scalar {
         name: ast::TypeName(definition.name.item.clone()),
         description: definition
             .description
             .as_ref()
             .map(|description| description.item.clone()),
         directives: Vec::new(),
-    })
+    }
 }
 
 fn convert_directives(const_directives: &[Spanning<ConstDirective>]) -> Vec<Directive> {
@@ -185,7 +183,7 @@ fn convert_directives(const_directives: &[Spanning<ConstDirective>]) -> Vec<Dire
 fn convert_enum_type_definition<S: SchemaContext>(
     builder: &mut Builder<S>,
     definition: &sdl::EnumTypeDefinition,
-) -> Result<Enum<S>> {
+) -> Enum<S> {
     let mut values = BTreeMap::new();
     for enum_value_definition in &definition.values {
         let enum_value_definition = &enum_value_definition.item;
@@ -208,7 +206,7 @@ fn convert_enum_type_definition<S: SchemaContext>(
             .is_some()
         {}
     }
-    Ok(Enum {
+    Enum {
         name: ast::TypeName(definition.name.item.clone()),
         description: definition
             .description
@@ -216,14 +214,14 @@ fn convert_enum_type_definition<S: SchemaContext>(
             .map(|description| description.item.clone()),
         values,
         directives: convert_directives(&definition.directives),
-    })
+    }
 }
 
 fn convert_field_definition<S, F>(
     builder: &mut Builder<S>,
     mut register_type_name: F,
     definition: &sdl::FieldDefinition,
-) -> Result<Field<S>>
+) -> Field<S>
 where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
@@ -235,7 +233,7 @@ where
             builder,
             &mut register_type_name,
             &field_definition.item,
-        )?;
+        );
         if arguments
             .insert(
                 argument_name.clone(),
@@ -247,7 +245,7 @@ where
         }
     }
 
-    Ok(Field::new(
+    Field::new(
         definition.name.item.clone(),
         definition
             .description
@@ -261,14 +259,14 @@ where
             .map(|t| register_type_name(builder, t)),
         arguments,
         DeprecationStatus::default(),
-    ))
+    )
 }
 
 fn convert_object_type_definition<S, F>(
     builder: &mut Builder<S>,
     mut register_type_name: F,
     definition: &sdl::ObjectTypeDefinition,
-) -> Result<Object<S>>
+) -> Object<S>
 where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
@@ -277,7 +275,7 @@ where
     for field_definition in &definition.fields {
         let field_name = &field_definition.item.name.item;
         let normalized_field_definition =
-            convert_field_definition(builder, &mut register_type_name, &field_definition.item)?;
+            convert_field_definition(builder, &mut register_type_name, &field_definition.item);
         if fields
             .insert(
                 field_name.clone(),
@@ -301,7 +299,7 @@ where
             // TODO throw an error
         }
     }
-    Ok(Object::new(
+    Object::new(
         builder,
         ast::TypeName(definition.name.item.clone()),
         definition
@@ -311,14 +309,14 @@ where
         fields,
         implements,
         convert_directives(&definition.directives),
-    ))
+    )
 }
 
 fn convert_interface_type_definition<S, F>(
     builder: &mut Builder<S>,
     mut register_type_name: F,
     definition: &sdl::InterfaceTypeDefinition,
-) -> Result<Interface<S>>
+) -> Interface<S>
 where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
@@ -327,7 +325,7 @@ where
     for field_definition in &definition.fields {
         let field_name = &field_definition.item.name.item;
         let normalized_field_definition =
-            convert_field_definition(builder, &mut register_type_name, &field_definition.item)?;
+            convert_field_definition(builder, &mut register_type_name, &field_definition.item);
         if fields
             .insert(
                 field_name.clone(),
@@ -352,7 +350,7 @@ where
         }
     }
     let implemented_by = BTreeMap::new();
-    Ok(Interface::new(
+    Interface::new(
         builder,
         ast::TypeName(definition.name.item.clone()),
         definition
@@ -363,14 +361,14 @@ where
         implements,
         implemented_by,
         convert_directives(&definition.directives),
-    ))
+    )
 }
 
 fn convert_union_type_definition<S, F>(
     builder: &mut Builder<S>,
     mut register_type_name: F,
     definition: &sdl::UnionTypeDefinition,
-) -> Result<Union<S>>
+) -> Union<S>
 where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
@@ -387,7 +385,7 @@ where
             // TODO throw an error
         }
     }
-    Ok(Union::new(
+    Union::new(
         builder,
         ast::TypeName(definition.name.item.clone()),
         definition
@@ -396,19 +394,19 @@ where
             .map(|description| description.item.clone()),
         members,
         convert_directives(&definition.directives),
-    ))
+    )
 }
 
 fn convert_input_value_definition<S, F>(
     builder: &mut Builder<S>,
     mut register_type_name: F,
     definition: &sdl::InputValueDefinition,
-) -> Result<InputField<S>>
+) -> InputField<S>
 where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
 {
-    Ok(InputField::new(
+    InputField::new(
         definition.name.item.clone(),
         definition
             .description
@@ -425,14 +423,14 @@ where
             .as_ref()
             .map(|default_value| default_value.item.clone()),
         DeprecationStatus::default(),
-    ))
+    )
 }
 
 fn convert_input_object_type_definition<S, F>(
     builder: &mut Builder<S>,
     mut register_type_name: F,
     definition: &sdl::InputObjectTypeDefinition,
-) -> Result<InputObject<S>>
+) -> InputObject<S>
 where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
@@ -444,7 +442,7 @@ where
             builder,
             &mut register_type_name,
             &field_definition.item,
-        )?;
+        );
         if fields
             .insert(
                 field_name.clone(),
@@ -455,7 +453,7 @@ where
             // TODO, throw an error
         }
     }
-    Ok(InputObject::new(
+    InputObject::new(
         ast::TypeName(definition.name.item.clone()),
         definition
             .description
@@ -463,5 +461,5 @@ where
             .map(|description| description.item.clone()),
         fields,
         convert_directives(&definition.directives),
-    ))
+    )
 }

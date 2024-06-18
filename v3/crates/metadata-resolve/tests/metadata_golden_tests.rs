@@ -44,7 +44,7 @@ fn test_failing_metadata(
         enable_boolean_expression_types: true,
     };
 
-    let error_untrimmed = fs::read_to_string(failing_reason).unwrap();
+    let error_untrimmed = fs::read_to_string(failing_reason)?;
     let error = error_untrimmed.trim();
 
     match serde_json::from_str(metadata_json_text) {
