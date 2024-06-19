@@ -2,10 +2,13 @@ use super::types::{ModelExpressionType, ModelSource};
 
 use crate::types::error::{BooleanExpressionError, Error};
 
-use crate::stages::{boolean_expressions, object_boolean_expressions};
+use crate::stages::{boolean_expressions, data_connectors, object_boolean_expressions};
 use crate::types::subgraph::Qualified;
 
-use open_dds::{models::ModelName, types::CustomTypeName};
+use open_dds::{
+    models::ModelName,
+    types::{CustomTypeName, FieldName},
+};
 
 use std::collections::BTreeMap;
 
@@ -78,8 +81,11 @@ pub(crate) fn resolve_filter_expression_type(
             {
                 Some(boolean_expression_object_type) => {
                     // we're using the new style of BooleanExpressionType
-
-                    // TODO: what checks do we need here?
+                    validate_data_connector_with_object_boolean_expression_type(
+                        &model_source.data_connector,
+                        boolean_expression_object_type,
+                        boolean_expression_types,
+                    )?;
 
                     Ok(ModelExpressionType::BooleanExpressionType(
                         boolean_expression_object_type.clone(),
@@ -94,4 +100,104 @@ pub(crate) fn resolve_filter_expression_type(
             }
         }
     }
+}
+
+// we want to ensure that our `BooleanExpressionType` (and all it's leaves)
+// are compatible with our data connector
+// we want to know
+// a) does each scalar have mappings for our data connector?
+// b) does each relationship live on the same data connector?
+// c) if we used nested objects, does the data connector have the correct capability?
+fn validate_data_connector_with_object_boolean_expression_type(
+    data_connector: &data_connectors::DataConnectorLink,
+    object_boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+) -> Result<(), Error> {
+    if let Some(graphql_config) = &object_boolean_expression_type.graphql {
+        for object_comparison_expression_info in graphql_config.object_fields.values() {
+            // look up the leaf boolean expression type
+            let leaf_boolean_expression = boolean_expression_types
+                .objects
+                .get(&object_comparison_expression_info.object_type_name)
+                .ok_or_else(|| {
+                    Error::from(BooleanExpressionError::BooleanExpressionCouldNotBeFound {
+                        parent_boolean_expression: object_boolean_expression_type.name.clone(),
+                        child_boolean_expression: object_comparison_expression_info
+                            .object_type_name
+                            .clone(),
+                    })
+                })?;
+
+            // this must be a nested object, so let's check our data connector is ready for that
+            if !data_connector.capabilities.supports_nested_object_filtering {
+                return Err(
+                    BooleanExpressionError::NoNestedObjectFilteringCapabilitiesDefined {
+                        parent_type_name: object_boolean_expression_type.name.clone(),
+                        nested_type_name: object_comparison_expression_info
+                            .object_type_name
+                            .clone(),
+                        data_connector_name: data_connector.name.clone(),
+                    }
+                    .into(),
+                );
+            }
+
+            // continue checking the nested object...
+            validate_data_connector_with_object_boolean_expression_type(
+                data_connector,
+                leaf_boolean_expression,
+                boolean_expression_types,
+            )?;
+        }
+
+        for (field_name, comparison_expression_info) in &graphql_config.scalar_fields {
+            // this is always present with `BooleanExpressionType` but not
+            // `ObjectBooleanExpressionType`, remove this partiality in
+            // future
+            if let Some(object_type_name) = &comparison_expression_info.object_type_name {
+                let leaf_boolean_expression = boolean_expression_types
+                    .scalars
+                    .get(object_type_name)
+                    .ok_or_else(|| {
+                        Error::from(BooleanExpressionError::BooleanExpressionCouldNotBeFound {
+                            parent_boolean_expression: object_boolean_expression_type.name.clone(),
+                            child_boolean_expression: object_type_name.clone(),
+                        })
+                    })?;
+
+                // check scalar type
+                validate_data_connector_with_scalar_boolean_expression_type(
+                    leaf_boolean_expression,
+                    &object_boolean_expression_type.name,
+                    data_connector,
+                    field_name,
+                )?;
+            }
+        }
+        // TODO: validate any relationship fields
+    }
+
+    Ok(())
+}
+
+// check that a scalar BooleanExpressionType has info for whichever data connector we are using
+fn validate_data_connector_with_scalar_boolean_expression_type(
+    scalar_boolean_expression_type: &boolean_expressions::ResolvedScalarBooleanExpressionType,
+    parent_boolean_expression_type_name: &Qualified<CustomTypeName>,
+    data_connector: &data_connectors::DataConnectorLink,
+    field_name: &FieldName,
+) -> Result<(), Error> {
+    if !scalar_boolean_expression_type
+        .data_connector_operator_mappings
+        .contains_key(&data_connector.name)
+    {
+        return Err(Error::BooleanExpressionError {
+            boolean_expression_error: BooleanExpressionError::DataConnectorMappingMissingForField {
+                field: field_name.clone(),
+                boolean_expression_name: parent_boolean_expression_type_name.clone(),
+                data_connector_name: data_connector.name.clone(),
+            },
+        });
+    };
+    Ok(())
 }

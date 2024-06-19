@@ -24,6 +24,7 @@
           "comparableRelationships": []
         }
       },
+      "graphql": { "typeName": "AuthorBoolExp" },
       "logicalOperators": {
         "enable": true
       },
@@ -53,6 +54,8 @@
           "dataConnectorOperatorMapping": []
         }
       },
+      "graphql": { "typeName": "PostgresIntBoolExp" },
+
       "logicalOperators": {
         "enable": true
       },
@@ -82,6 +85,8 @@
           "dataConnectorOperatorMapping": []
         }
       },
+      "graphql": { "typeName": "PostgresStringBoolExp" },
+
       "logicalOperators": {
         "enable": true
       },
@@ -154,6 +159,47 @@
           "role": "user_1",
           "output": {
             "allowedFields": ["author_id", "first_name", "last_name"]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Model",
+    "version": "v1",
+    "definition": {
+      "name": "author",
+      "arguments": [],
+      "objectType": "author",
+      "source": {
+        "dataConnectorName": "postgres_db",
+        "collection": "author",
+        "argumentMapping": {}
+      },
+      "filterExpressionType": "author_bool_exp",
+      "graphql": {
+        "selectUniques": [],
+        "selectMany": {
+          "queryRootField": "AuthorMany"
+        }
+      },
+      "orderableFields": [
+        {
+          "fieldName": "author_id",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "first_name",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "last_name",
+          "orderByDirections": {
+            "enableAll": true
           }
         }
       ]

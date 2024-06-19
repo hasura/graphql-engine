@@ -139,6 +139,7 @@
               "capabilities": {
                 "supports_explaining_queries": true,
                 "supports_explaining_mutations": false,
+                "supports_nested_object_filtering": true,
                 "supports_nested_object_aggregations": false
               }
             },

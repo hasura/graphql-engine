@@ -310,6 +310,7 @@ pub fn resolve_boolean_expression_graphql_config(
                     scalar_fields.insert(
                         field_name.clone(),
                         boolean_expressions::ComparisonExpressionInfo {
+                            object_type_name: None,
                             type_name: graphql_type_name.clone(),
                             operator_mapping,
                             operators,

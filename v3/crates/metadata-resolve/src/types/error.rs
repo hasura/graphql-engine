@@ -718,6 +718,12 @@ pub enum BooleanExpressionError {
         field: FieldName,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error("The data connector {data_connector_name} cannot be used for filtering nested object {nested_type_name:} within {parent_type_name:} as it has not defined any capabilities for nested object filtering")]
+    NoNestedObjectFilteringCapabilitiesDefined {
+        parent_type_name: Qualified<CustomTypeName>,
+        nested_type_name: Qualified<CustomTypeName>,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
 }
 
 #[derive(Debug, Error)]

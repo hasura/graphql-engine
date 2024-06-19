@@ -279,6 +279,13 @@ impl DataConnectorLink {
                 .mutation
                 .explain
                 .is_some(),
+            supports_nested_object_filtering: info
+                .capabilities
+                .capabilities
+                .query
+                .nested_fields
+                .filter_by
+                .is_some(),
             supports_nested_object_aggregations: info
                 .capabilities
                 .capabilities
@@ -436,9 +443,11 @@ impl ResponseHeaders {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct DataConnectorCapabilities {
     pub supports_explaining_queries: bool,
     pub supports_explaining_mutations: bool,
+    pub supports_nested_object_filtering: bool,
     pub supports_nested_object_aggregations: bool,
 }
 

@@ -17,7 +17,7 @@ use open_dds::{
     data_connector::{DataConnectorName, DataConnectorOperatorName},
     types::{CustomTypeName, FieldName, OperatorName},
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 /// Resolves a given object boolean expression type
 pub(crate) fn resolve_object_boolean_expression_type(
@@ -73,14 +73,6 @@ pub(crate) fn resolve_object_boolean_expression_type(
         raw_boolean_expression_types,
     )?;
 
-    // check that we have data connector information for each scalar type
-    let _allowed_data_connectors = resolve_data_connector_types(
-        boolean_expression_type_name,
-        object_type_representation,
-        scalar_boolean_expression_types,
-        &comparable_fields,
-    )?;
-
     // resolve graphql schema information
     let resolved_graphql = graphql
         .as_ref()
@@ -104,61 +96,6 @@ pub(crate) fn resolve_object_boolean_expression_type(
         graphql: resolved_graphql,
     };
     Ok(resolved_boolean_expression)
-}
-
-// resolve data connector stuff
-// look at the object_type
-// for each data connector it mentions, check that every linked scalar type
-// has information for this data connector
-fn resolve_data_connector_types(
-    boolean_expression_type_name: &Qualified<CustomTypeName>,
-    object_type_representation: &type_permissions::ObjectTypeWithPermissions,
-    scalar_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        ResolvedScalarBooleanExpressionType,
-    >,
-    comparable_fields: &BTreeMap<FieldName, Qualified<CustomTypeName>>,
-) -> Result<BTreeSet<Qualified<DataConnectorName>>, Error> {
-    let mut working_data_connectors = BTreeSet::new();
-
-    // for each data connector mentioned in `object_type`, check that every field is mapped
-    // in our comparison fields
-    // not sure what to do if this fails as we want schema to work without data connector info
-    for data_connector_name in object_type_representation
-        .type_mappings
-        .data_connector_names()
-    {
-        for (comparable_field_name, comparable_field_type) in comparable_fields {
-            // we don't mind if we can't find this, we've already checked validity so anything
-            // else will be an object-flavoured boolean expression
-            if let Some(scalar_boolean_expression) =
-                scalar_boolean_expression_types.get(comparable_field_type)
-            {
-                // currently this throws an error if any data connector specified in the ObjectType
-                // does not have matching data connector entries for each scalar boolean expression
-                // type
-                // Not sure if this is correct behaviour, or if we only want to make this a problem
-                // when making these available in the GraphQL schema
-                if !scalar_boolean_expression
-                    .data_connector_operator_mappings
-                    .contains_key(data_connector_name)
-                {
-                    return Err(Error::BooleanExpressionError {
-                        boolean_expression_error:
-                            BooleanExpressionError::DataConnectorMappingMissingForField {
-                                field: comparable_field_name.clone(),
-                                boolean_expression_name: boolean_expression_type_name.clone(),
-                                data_connector_name: data_connector_name.clone(),
-                            },
-                    });
-                };
-            }
-        }
-
-        working_data_connectors.insert(data_connector_name.clone());
-    }
-
-    Ok(working_data_connectors)
 }
 
 // validate graphql config
@@ -222,6 +159,7 @@ fn resolve_object_boolean_graphql(
                     scalar_fields.insert(
                         comparable_field_name.clone(),
                         ComparisonExpressionInfo {
+                            object_type_name: Some(comparable_field_type_name.clone()),
                             type_name: graphql_type_name.clone(),
                             operators: operators.clone(),
                             operator_mapping,

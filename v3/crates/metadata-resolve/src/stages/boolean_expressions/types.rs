@@ -49,6 +49,10 @@ pub struct ResolvedScalarBooleanExpressionType {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparisonExpressionInfo {
+    // we reuse this type for ObjectBooleanExpressionType and BooleanExpressionType
+    // the former does not use this, hence partial
+    // it will be good to get rid of `Option` in future
+    pub object_type_name: Option<Qualified<CustomTypeName>>,
     pub type_name: ast::TypeName,
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
     pub operator_mapping:
