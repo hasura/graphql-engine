@@ -1,25 +1,28 @@
 {
   "Query": {
-    "ArticleMany": {
+    "Artist": {
       "ModelSelectMany": {
         "selection_set": {
           "fields": {
-            "article_id": {
-              "alias": "article_id",
+            "ArtistId": {
+              "alias": "ArtistId",
               "field_calls": [
                 [
                   [],
                   {
-                    "name": "article_id",
+                    "name": "ArtistId",
                     "info": {
                       "generic": {
                         "Output": {
                           "Field": {
-                            "name": "article_id",
+                            "name": "ArtistId",
                             "field_type": {
                               "underlying_type": {
                                 "Named": {
-                                  "Inbuilt": "Int"
+                                  "Custom": {
+                                    "subgraph": "default",
+                                    "name": "int4"
+                                  }
                                 }
                               },
                               "nullable": false
@@ -41,39 +44,67 @@
               },
               "type_container": {
                 "base": {
-                  "Named": "Int"
+                  "Named": "int4"
                 },
                 "nullable": false
               }
             },
-            "title": {
-              "alias": "title",
+            "Name": {
+              "alias": "Name",
               "field_calls": [
                 [
                   [],
                   {
-                    "name": "title",
+                    "name": "Name",
                     "info": {
                       "generic": {
                         "Output": {
                           "Field": {
-                            "name": "title",
+                            "name": "Name",
                             "field_type": {
                               "underlying_type": {
                                 "Named": {
-                                  "Inbuilt": "String"
+                                  "Custom": {
+                                    "subgraph": "default",
+                                    "name": "varchar"
+                                  }
                                 }
                               },
-                              "nullable": false
+                              "nullable": true
                             },
                             "field_base_type_kind": "Scalar",
-                            "argument_types": {}
+                            "argument_types": {
+                              "hash": {
+                                "underlying_type": {
+                                  "Named": {
+                                    "Custom": {
+                                      "subgraph": "default",
+                                      "name": "varchar"
+                                    }
+                                  }
+                                },
+                                "nullable": true
+                              }
+                            }
                           }
                         }
                       },
                       "namespaced": null
                     },
-                    "arguments": {}
+                    "arguments": {
+                      "hash": {
+                        "name": "hash",
+                        "info": {
+                          "generic": {
+                            "Input": "FieldArgument"
+                          },
+                          "namespaced": null
+                        },
+                        "value": {
+                          "Json": "sha256"
+                        }
+                      }
+                    }
                   }
                 ]
               ],
@@ -83,16 +114,16 @@
               },
               "type_container": {
                 "base": {
-                  "Named": "String"
+                  "Named": "varchar"
                 },
-                "nullable": false
+                "nullable": true
               }
             }
           },
-          "type_name": "Article"
+          "type_name": "artist"
         },
         "ir": {
-          "field_name": "ArticleMany",
+          "field_name": "Artist",
           "model_selection": {
             "data_connector": {
               "name": {
@@ -111,39 +142,10 @@
                 "supports_nested_object_aggregations": false
               }
             },
-            "collection": "article",
+            "collection": "Artist",
             "arguments": {},
             "filter_clause": {
-              "expression": {
-                "type": "and",
-                "expressions": [
-                  {
-                    "type": "binary_comparison_operator",
-                    "column": {
-                      "type": "column",
-                      "name": "title",
-                      "path": []
-                    },
-                    "operator": "_like",
-                    "value": {
-                      "type": "scalar",
-                      "value": "%Functional%"
-                    }
-                  },
-                  {
-                    "type": "not",
-                    "expression": {
-                      "type": "unary_comparison_operator",
-                      "column": {
-                        "type": "column",
-                        "name": "author_id",
-                        "path": []
-                      },
-                      "operator": "is_null"
-                    }
-                  }
-                ]
-              },
+              "expression": null,
               "relationships": {}
             },
             "limit": null,
@@ -151,18 +153,23 @@
             "order_by": null,
             "selection": {
               "fields": {
-                "article_id": {
+                "ArtistId": {
                   "Column": {
-                    "column": "id",
+                    "column": "ArtistId",
                     "nested_selection": null,
                     "arguments": {}
                   }
                 },
-                "title": {
+                "Name": {
                   "Column": {
-                    "column": "title",
+                    "column": "Name",
                     "nested_selection": null,
-                    "arguments": {}
+                    "arguments": {
+                      "hash": {
+                        "type": "literal",
+                        "value": "sha256"
+                      }
+                    }
                   }
                 }
               }
@@ -173,7 +180,7 @@
             "base": {
               "List": {
                 "base": {
-                  "Named": "Article"
+                  "Named": "artist"
                 },
                 "nullable": false
               }
@@ -185,7 +192,7 @@
               {
                 "model": {
                   "subgraph": "default",
-                  "name": "Articles"
+                  "name": "Artist"
                 },
                 "count": 1
               }

@@ -136,6 +136,14 @@ pub enum NDCValidationError {
         data_connector_name: Qualified<DataConnectorName>,
     },
 
+    #[error("Argument '{argument_name:}' used in argument mapping for the field '{field_name:}' in object type '{object_type_name:}' is not defined in the data connector '{data_connector_name:}'.")]
+    NoSuchArgumentInNDCArgumentMapping {
+        argument_name: open_dds::arguments::ArgumentName,
+        field_name: FieldName,
+        object_type_name: Qualified<CustomTypeName>,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+
     #[error("Internal error while serializing error message. Error: {err:}")]
     InternalSerializationError { err: serde_json::Error },
 }
@@ -192,7 +200,7 @@ pub fn validate_ndc(
         })?;
     for (field_name, field_mapping) in field_mappings {
         let column_name = &field_mapping.column;
-        let _column =
+        let column =
             collection_type
                 .fields
                 .get(&column_name.0)
@@ -203,6 +211,17 @@ pub fn validate_ndc(
                     collection_name: collection_name.clone(),
                     column_name: column_name.clone(),
                 })?;
+        // Check if the arguments in the mapping are valid
+        for (open_dd_argument_name, dc_argument_name) in &field_mapping.argument_mappings {
+            if !column.arguments.contains_key(&dc_argument_name.0) {
+                return Err(NDCValidationError::NoSuchArgumentInNDCArgumentMapping {
+                    argument_name: open_dd_argument_name.clone(),
+                    field_name: field_name.clone(),
+                    object_type_name: model.data_type.clone(),
+                    data_connector_name: db.name.clone(),
+                });
+            }
+        }
         // if field_mapping.field_mapping.column_type != column.r#type {
         //     Err(NDCValidationError::ColumnTypeDoesNotMatch {
         //         db_name: db.name.clone(),

@@ -8,6 +8,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+use super::arguments::map_argument_value_to_ndc_type;
 use super::commands::FunctionBasedCommand;
 use super::model_selection::ModelSelection;
 use super::relationship::{
@@ -32,6 +33,7 @@ pub(crate) enum FieldSelection<'s> {
     Column {
         column: String,
         nested_selection: Option<NestedSelection<'s>>,
+        arguments: BTreeMap<String, ndc_models::Argument>,
     },
     ModelRelationshipLocal {
         query: ModelSelection<'s>,
@@ -137,6 +139,7 @@ fn build_global_id_fields(
             FieldSelection::Column {
                 column: field_mapping.column.0.clone(),
                 nested_selection: None,
+                arguments: BTreeMap::new(),
             },
         );
     }
@@ -228,6 +231,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                     name,
                     field_type,
                     field_base_type_kind,
+                    argument_types,
                 } => {
                     let field_mapping = &field_mappings.get(name).ok_or_else(|| {
                         error::InternalEngineError::InternalGeneric {
@@ -244,11 +248,46 @@ pub(crate) fn generate_selection_set_ir<'s>(
                         request_headers,
                         usage_counts,
                     )?;
+                    let mut field_arguments = BTreeMap::new();
+                    for (argument_name, argument_type) in argument_types {
+                        let argument_value = match field_call.arguments.get(argument_name) {
+                            None => {
+                                if argument_type.nullable {
+                                    Ok(None)
+                                } else {
+                                    Err(error::Error::MissingNonNullableArgument {
+                                        argument_name: argument_name.to_string(),
+                                        field_name: name.to_string(),
+                                    })
+                                }
+                            }
+                            Some(val) => map_argument_value_to_ndc_type(
+                                argument_type,
+                                &val.value,
+                                type_mappings,
+                            )
+                            .map(Some),
+                        }?;
+                        if let Some(argument_value) = argument_value {
+                            let argument = ndc_models::Argument::Literal {
+                                value: argument_value,
+                            };
+                            // If argument name is not found in the mapping, use the open_dd argument name as the ndc argument name
+                            let ndc_argument_name = field_mapping
+                                .argument_mappings
+                                .get(argument_name.as_str())
+                                .map(|n| n.0.clone())
+                                .unwrap_or(argument_name.to_string());
+                            field_arguments.insert(ndc_argument_name, argument);
+                        }
+                    }
+
                     fields.insert(
                         field.alias.to_string(),
                         FieldSelection::Column {
                             column: field_mapping.column.0.clone(),
                             nested_selection,
+                            arguments: field_arguments,
                         },
                     );
                 }

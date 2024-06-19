@@ -14,6 +14,7 @@ use self::relationship::{
 use super::inbuilt_type::base_type_container_for_inbuilt_type;
 use super::{Annotation, PossibleApolloFederationTypes, TypeId};
 use crate::commands::generate_command_argument;
+use crate::field_arguments::generate_field_argument;
 use crate::query_root::select_many::generate_select_many_arguments;
 use crate::{mk_deprecation_status, permissions};
 use crate::{Role, GDS};
@@ -191,6 +192,25 @@ fn object_type_fields(
         .iter()
         .map(|(field_name, field_definition)| -> Result<_, Error> {
             let graphql_field_name = mk_name(field_name.0.as_str())?;
+            let field_arguments = field_definition
+                .field_arguments
+                .iter()
+                .map(|(argument_name, argument_type)| {
+                    generate_field_argument(gds, builder, argument_name, argument_type)
+                })
+                .collect::<Result<BTreeMap<_, _>, _>>()?;
+            let field_argument_types =
+                field_definition
+                    .field_arguments
+                    .iter()
+                    .map(|(argument_name, argument_type)| {
+                        let name = ast::Name::new(&argument_name.0 .0)?;
+                        Ok((name, argument_type.argument_type.clone()))
+                    })
+                    .collect::<Result<
+                        BTreeMap<lang_graphql::ast::common::Name, QualifiedTypeReference>,
+                        Error,
+                    >>()?;
             let field = gql_schema::Field::<GDS>::new(
                 graphql_field_name.clone(),
                 field_definition.description.clone(),
@@ -198,9 +218,10 @@ fn object_type_fields(
                     name: field_name.clone(),
                     field_type: field_definition.field_type.clone(),
                     field_base_type_kind: get_type_kind(gds, &field_definition.field_type)?,
+                    argument_types: field_argument_types,
                 }),
                 get_output_type(gds, builder, &field_definition.field_type)?,
-                BTreeMap::new(),
+                field_arguments,
                 mk_deprecation_status(&field_definition.deprecated),
             );
             // if output permissions are defined for this type, we conditionally

@@ -125,12 +125,15 @@ pub(crate) fn resolve_model_graphql_api(
 
                         let mut order_by_fields = BTreeMap::new();
                         for (field_name, field_mapping) in field_mappings {
-                            order_by_fields.insert(
-                                field_name.clone(),
-                                OrderByExpressionInfo {
-                                    ndc_column: field_mapping.column.clone(),
-                                },
-                            );
+                            // fields with arguments are not allowed in sorting expression
+                            if field_mapping.argument_mappings.is_empty() {
+                                order_by_fields.insert(
+                                    field_name.clone(),
+                                    OrderByExpressionInfo {
+                                        ndc_column: field_mapping.column.clone(),
+                                    },
+                                );
+                            }
                         }
 
                         match &graphql_config.query.order_by_field_name {

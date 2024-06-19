@@ -24,6 +24,7 @@ mod aggregates;
 mod apollo_federation;
 mod boolean_expression;
 mod commands;
+mod field_arguments;
 mod model_arguments;
 mod model_filter;
 mod model_filter_input;

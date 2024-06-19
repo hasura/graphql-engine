@@ -62,6 +62,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
             FieldSelection::Column {
                 column,
                 nested_selection,
+                arguments,
             } => {
                 let (nested_field, nested_join_locations) = nested_selection
                     .as_ref()
@@ -75,7 +76,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     ndc_models::Field::Column {
                         column: column.clone(),
                         fields: nested_field,
-                        arguments: BTreeMap::new(),
+                        arguments: arguments.clone(),
                     },
                 );
                 if let Some(jl) = nested_join_locations {

@@ -9,6 +9,7 @@ use crate::helpers::model::resolve_ndc_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::types::subgraph::Qualified;
 
+use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use open_dds::{
     data_connector::DataConnectorName,
@@ -229,6 +230,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 scalars,
                 type_mapping,
                 graphql_config,
+                &object_type_representation.object_type.fields,
             )
         })
         .transpose()?;
@@ -259,6 +261,7 @@ pub fn resolve_boolean_expression_graphql_config(
     scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
+    fields: &IndexMap<open_dds::types::FieldName, object_types::FieldDefinition>,
 ) -> Result<boolean_expressions::BooleanExpressionGraphqlConfig, Error> {
     let mut scalar_fields = BTreeMap::new();
 
@@ -273,6 +276,12 @@ pub fn resolve_boolean_expression_graphql_config(
         })?;
 
     for (field_name, field_mapping) in field_mappings {
+        // fields with field arguments are not allowed in boolean expressions
+        if let Some(field_definition) = fields.get(field_name) {
+            if !field_definition.field_arguments.is_empty() {
+                continue;
+            }
+        }
         // Generate comparison expression for fields mapped to simple scalar type
         if let Some(scalar_type_info) = data_connector_scalar_types::get_simple_scalar(
             field_mapping.column_type.clone(),

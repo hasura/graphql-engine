@@ -84,6 +84,20 @@ fn test_model_select_many_empty_select() -> anyhow::Result<()> {
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
+#[test]
+fn test_model_select_many_field_arguments() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/field_arguments";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
+fn test_model_select_many_multiple_field_arguments() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/field_arguments/multiple_arguments";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+}
+
 // Nested selection tests
 #[test]
 fn test_model_select_many_nested_select() -> anyhow::Result<()> {

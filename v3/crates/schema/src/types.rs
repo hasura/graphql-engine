@@ -170,6 +170,7 @@ pub enum OutputAnnotation {
         name: types::FieldName,
         field_type: QualifiedTypeReference,
         field_base_type_kind: TypeKind,
+        argument_types: BTreeMap<ast::Name, QualifiedTypeReference>,
     },
     GlobalIDField {
         /// The `global_id_fields` are required to calculate the
@@ -259,6 +260,7 @@ pub enum InputAnnotation {
     },
     Relay(RelayInputAnnotation),
     ApolloFederationRepresentationsInput(ApolloFederationInputAnnotation),
+    FieldArgument,
 }
 
 /// Contains the different possible entities that can be used to generate

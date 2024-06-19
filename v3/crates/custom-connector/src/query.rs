@@ -10,6 +10,7 @@ use regex::Regex;
 use serde_json::Value;
 
 use crate::{
+    arguments::apply_arguments,
     collections::get_collection_by_name,
     state::{AppState, Row},
 };
@@ -1203,10 +1204,10 @@ fn eval_field(
         ndc_models::Field::Column {
             column,
             fields,
-            arguments: _,
+            arguments,
         } => {
             let col_val = eval_column(item, column.as_str())?;
-            match fields {
+            let result = match fields {
                 None => Ok(ndc_models::RowFieldValue(col_val)),
                 Some(nested_field) => eval_nested_field(
                     collection_relationships,
@@ -1215,7 +1216,8 @@ fn eval_field(
                     col_val,
                     nested_field,
                 ),
-            }
+            }?;
+            apply_arguments(result, arguments, variables)
         }
         ndc_models::Field::Relationship {
             relationship,

@@ -24,7 +24,8 @@
                               },
                               "nullable": false
                             },
-                            "field_base_type_kind": "Scalar"
+                            "field_base_type_kind": "Scalar",
+                            "argument_types": {}
                           }
                         }
                       },
@@ -65,7 +66,8 @@
                               },
                               "nullable": false
                             },
-                            "field_base_type_kind": "Scalar"
+                            "field_base_type_kind": "Scalar",
+                            "argument_types": {}
                           }
                         }
                       },
@@ -140,13 +142,15 @@
                 "article_id": {
                   "Column": {
                     "column": "id",
-                    "nested_selection": null
+                    "nested_selection": null,
+                    "arguments": {}
                   }
                 },
                 "title": {
                   "Column": {
                     "column": "title",
-                    "nested_selection": null
+                    "nested_selection": null,
+                    "arguments": {}
                   }
                 }
               }

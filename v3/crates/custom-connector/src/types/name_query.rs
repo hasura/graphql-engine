@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use axum::{http::StatusCode, Json};
 use ndc_models;
 
-use crate::query::Result;
+use crate::{arguments::argument_string, query::Result};
 
 pub(crate) fn definition() -> ndc_models::ObjectType {
     ndc_models::ObjectType {
@@ -21,7 +21,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                         }
                         .into(),
                     },
-                    arguments: BTreeMap::new(),
+                    arguments: argument_string(),
                 },
             ),
             (
@@ -34,7 +34,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                         }
                         .into(),
                     },
-                    arguments: BTreeMap::new(),
+                    arguments: argument_string(),
                 },
             ),
         ]),

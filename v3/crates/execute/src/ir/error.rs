@@ -43,6 +43,12 @@ pub enum Error {
     #[error("order_by expects a list of input objects with exactly one key-value pair per input object. Please split the input object with multiple key-value pairs into a list of single key-value pair objects.")]
     OrderByObjectShouldExactlyHaveOneKeyValuePair,
 
+    #[error("missing non-nullable argument {argument_name:} for field {field_name:}")]
+    MissingNonNullableArgument {
+        argument_name: String,
+        field_name: String,
+    },
+
     #[error("internal: {0}")]
     Internal(#[from] InternalError),
 }

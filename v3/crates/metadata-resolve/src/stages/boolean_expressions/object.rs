@@ -365,6 +365,15 @@ fn resolve_comparable_fields(
 
     // validate comparable fields all exist in underlying object
     for comparable_field in comparable_fields {
+        // fields with field arguments are not allowed in boolean expressions
+        if let Some(field_definition) = object_type_representation
+            .fields
+            .get(&comparable_field.field_name)
+        {
+            if !field_definition.field_arguments.is_empty() {
+                continue;
+            }
+        }
         if !object_type_representation
             .fields
             .contains_key(&comparable_field.field_name)

@@ -237,6 +237,36 @@
                         "type": {
                           "type": "named",
                           "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
                         }
                       },
                       "staff": {

@@ -3,7 +3,10 @@ use std::collections::BTreeMap;
 use axum::{http::StatusCode, Json};
 use ndc_models;
 
-use crate::query::Result;
+use crate::{
+    arguments::{argument_any, argument_string},
+    query::Result,
+};
 
 pub(crate) fn definition() -> ndc_models::ObjectType {
     ndc_models::ObjectType {
@@ -14,7 +17,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                 ndc_models::ObjectField {
                     description: Some("The actor's primary key".into()),
                     r#type: ndc_models::Type::Named { name: "Int".into() },
-                    arguments: BTreeMap::new(),
+                    arguments: argument_any(),
                 },
             ),
             (
@@ -24,7 +27,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     r#type: ndc_models::Type::Named {
                         name: "String".into(),
                     },
-                    arguments: BTreeMap::new(),
+                    arguments: argument_string(),
                 },
             ),
             (
@@ -32,7 +35,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                 ndc_models::ObjectField {
                     description: Some("The actor's movie ID".into()),
                     r#type: ndc_models::Type::Named { name: "Int".into() },
-                    arguments: BTreeMap::new(),
+                    arguments: argument_any(),
                 },
             ),
             (
@@ -40,7 +43,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                 ndc_models::ObjectField {
                     description: Some("The actor's favourite author ID".into()),
                     r#type: ndc_models::Type::Named { name: "Int".into() },
-                    arguments: BTreeMap::new(),
+                    arguments: argument_any(),
                 },
             ),
         ]),

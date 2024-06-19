@@ -2,6 +2,8 @@ use std::collections::BTreeMap;
 
 use ndc_models;
 
+use crate::arguments::{argument_any, argument_string};
+
 pub(crate) fn definition() -> ndc_models::ObjectType {
     ndc_models::ObjectType {
         description: Some("A movie".into()),
@@ -11,7 +13,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                 ndc_models::ObjectField {
                     description: Some("The movie's primary key".into()),
                     r#type: ndc_models::Type::Named { name: "Int".into() },
-                    arguments: BTreeMap::new(),
+                    arguments: argument_any(),
                 },
             ),
             (
@@ -21,7 +23,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     r#type: ndc_models::Type::Named {
                         name: "String".into(),
                     },
-                    arguments: BTreeMap::new(),
+                    arguments: argument_string(),
                 },
             ),
             (
@@ -29,7 +31,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                 ndc_models::ObjectField {
                     description: Some("The movie's rating".into()),
                     r#type: ndc_models::Type::Named { name: "Int".into() },
-                    arguments: BTreeMap::new(),
+                    arguments: argument_any(),
                 },
             ),
             (

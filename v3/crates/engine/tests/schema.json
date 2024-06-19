@@ -2489,13 +2489,7 @@
               },
               {
                 "name": "Name",
-                "type": "varchar",
-                "arguments": [
-                  {
-                    "name": "length",
-                    "argumentType": "int4"
-                  }
-                ]
+                "type": "varchar"
               }
             ],
             "dataConnectorTypeMapping": [
@@ -2510,10 +2504,7 @@
                   },
                   "Name": {
                     "column": {
-                      "name": "Name",
-                      "argumentMapping": {
-                        "length": "string_length"
-                      }
+                      "name": "Name"
                     }
                   }
                 }

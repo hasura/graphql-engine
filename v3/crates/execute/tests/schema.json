@@ -821,6 +821,15 @@
                             "type": "named",
                             "name": "varchar"
                           }
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "varchar"
+                            }
+                          }
                         }
                       }
                     }
@@ -2461,7 +2470,13 @@
               },
               {
                 "name": "Name",
-                "type": "varchar"
+                "type": "varchar",
+                "arguments": [
+                  {
+                    "name": "hash",
+                    "argumentType": "varchar"
+                  }
+                ]
               }
             ],
             "dataConnectorTypeMapping": [
@@ -2476,7 +2491,10 @@
                   },
                   "Name": {
                     "column": {
-                      "name": "Name"
+                      "name": "Name",
+                      "argumentMapping": {
+                        "hash": "hash"
+                      }
                     }
                   }
                 }
