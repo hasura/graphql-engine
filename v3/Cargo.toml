@@ -44,7 +44,7 @@ used_underscore_binding = "allow"
 private_intra_doc_links = "allow"
 
 [workspace.dependencies]
-ndc-models = { git = "https://github.com/hasura/ndc-spec.git", rev = "aa8ad48e42aefd9e585a4c923bebfd56eee40204" }
+ndc-models = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.4" }
 
 anyhow = "1"
 apollo-parser = "0.7"
