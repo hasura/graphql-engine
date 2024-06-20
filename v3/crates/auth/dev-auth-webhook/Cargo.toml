@@ -12,10 +12,10 @@ bench = false
 [dependencies]
 tracing-util = { path = "../../utils/tracing-util" }
 
-anyhow = "1"
-axum = "0.6.20"
-http = "0.2"
-serde_json = "1.0.117"
-tokio = { version = "1.38.0", features = ["full"] }
-tracing = "0.1.40"
-tower-http = { version = "0.4.4", features = ["trace"] }
+anyhow = { workspace = true }
+axum = { workspace = true }
+http = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+tower-http = { workspace = true, features = ["trace"] }

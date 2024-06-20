@@ -4,8 +4,6 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
-[lib]
-
 [dependencies]
-regex = "1.10.5"
-schemars = "0.8.21"
+regex = { workspace = true }
+schemars = { workspace = true }

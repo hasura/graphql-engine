@@ -11,14 +11,14 @@ bench = false
 lang-graphql = { path = "../../lang-graphql" }
 open-dds = { path = "../../open-dds" }
 
-axum = "0.6.20"
-http = "0.2"
-schemars = "0.8.20"
-serde = "1.0.203"
-thiserror = "1.0"
+axum = { workspace = true }
+http = { workspace = true }
+schemars = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
-pretty_assertions = "1.3.0"
+pretty_assertions = { workspace = true }
 
 [lints]
 workspace = true

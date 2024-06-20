@@ -8,19 +8,19 @@ license.workspace = true
 bench = false
 
 [dependencies]
-derive_more = "0.99.17"
-http = "0.2"
-opentelemetry = "0.22.0"
-opentelemetry-contrib = "0.14.0"
-opentelemetry-http = "0.11.1"
-opentelemetry-otlp = "0.15.0"
-opentelemetry_sdk = { version = "0.22.1", features = ["rt-tokio"] }
-opentelemetry-semantic-conventions = "0.14.0"
-opentelemetry-zipkin = "0.20.0"
-tracing-subscriber = "0.3.18"
+derive_more = { workspace = true }
+http = { workspace = true }
+opentelemetry = { workspace = true }
+opentelemetry-contrib = { workspace = true }
+opentelemetry-http = { workspace = true }
+opentelemetry-otlp = { workspace = true }
+opentelemetry_sdk = { workspace = true, features = ["rt-tokio"] }
+opentelemetry-semantic-conventions = { workspace = true }
+opentelemetry-zipkin = { workspace = true }
+tracing-subscriber = { workspace = true }
 
 [dev-dependencies]
-axum = "0.6"
+axum = { workspace = true }
 
 [package.metadata.cargo-machete]
 ignored = [

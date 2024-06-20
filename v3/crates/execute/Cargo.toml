@@ -21,34 +21,29 @@ tracing-util = { path = "../utils/tracing-util" }
 metadata-resolve = {path = "../metadata-resolve" }
 futures-ext = { path = "../utils/futures-ext" }
 
-async-recursion = "1.1.1"
-axum = { version = "0.6.20" }
-base64 = "0.22.1"
-bytes = "1.6.0"
-derive_more = "0.99.17"
-futures-util = "0.3"
-indexmap = { version = "2", features = ["serde"] }
-ndc-models = { git = "https://github.com/hasura/ndc-spec.git", rev = "aa8ad48e42aefd9e585a4c923bebfd56eee40204" }
-nonempty = "0.10"
-reqwest = { version = "0.11", features = ["json", "multipart"] }
-schemars = { version = "0.8.20", features = ["smol_str"] }
-serde = "1.0.203"
-serde_json = "1.0.117"
-thiserror = "1.0"
-tokio = { version = "1.38.0", features = [
-  "macros",
-  "parking_lot",
-  "rt-multi-thread",
-  "signal",
-] }
-transitive = "0.5.0"
-url = "2.4.1"
+async-recursion = { workspace = true }
+axum = { workspace = true }
+base64 = { workspace = true }
+bytes = { workspace = true }
+derive_more = { workspace = true }
+futures-util = { workspace = true }
+indexmap = { workspace = true, features = ["serde"] }
+ndc-models = { workspace = true }
+nonempty = { workspace = true }
+reqwest = { workspace = true, features = ["json", "multipart"] }
+schemars = { workspace = true, features = ["smol_str"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
+transitive = { workspace = true }
+url = { workspace = true }
 
 [dev-dependencies]
-criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
-goldenfile = "1.7.1"
-mockito = { version = "1.1.0", default-features = false, features = [] }
-pretty_assertions = "1.3.0"
+criterion = { workspace = true, features = ["html_reports", "async_tokio"] }
+goldenfile = { workspace = true }
+mockito = { workspace = true }
+pretty_assertions = { workspace = true }
 
 [lints]
 workspace = true

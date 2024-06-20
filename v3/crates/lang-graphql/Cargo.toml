@@ -26,33 +26,33 @@ harness = false
 [dependencies]
 recursion_limit_macro = { path = "../utils/recursion_limit_macro" }
 
-axum = "0.6.20"
-http = "0.2"
-indexmap = { version = "2", features = ["serde"] }
-lexical-core = "0.8"
-nonempty = { version = "0.10", features = ["serialize"] }
-schemars = { version = "0.8.20", features = ["smol_str"] }
-serde = "1.0.203"
-serde_json = "1.0.117"
-serde_with = "3.8.1"
-smol_str = "0.1.23"
-thiserror = "1.0"
-lazy_static = "1.4.0"
+axum = { workspace = true }
+http = { workspace = true }
+indexmap = { workspace = true, features = ["serde"] }
+lexical-core = { workspace = true }
+nonempty = { workspace = true, features = ["serialize"] }
+schemars = { workspace = true, features = ["smol_str"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_with = { workspace = true }
+smol_str = { workspace = true }
+thiserror = { workspace = true }
+lazy_static = { workspace = true }
 
 [dev-dependencies]
-anyhow = "1"
-apollo-parser = "0.7"
-async-graphql-parser = "7.0"
-bincode = "1.3.3"
-bson = "2.11.0"
-criterion = { version = "0.5", features = ["html_reports"] }
-diffy = "0.4.0"
-expect-test = "1.5"
-graphql-parser = "0.4"
-human_bytes = "0.4.1"
-postcard = { version = "1.0.4", features = ["use-std"] }
-pretty_assertions = "1.3.0"
-rmp-serde = "1.3.0"
+anyhow = { workspace = true }
+apollo-parser = { workspace = true }
+async-graphql-parser = { workspace = true }
+bincode = { workspace = true }
+bson = { workspace = true }
+criterion = { workspace = true, features = ["html_reports"] }
+diffy = { workspace = true }
+expect-test = { workspace = true }
+graphql-parser = { workspace = true }
+human_bytes = { workspace = true }
+postcard = { workspace = true, features = ["use-std"] }
+pretty_assertions = { workspace = true }
+rmp-serde = { workspace = true }
 
 [lints]
 workspace = true

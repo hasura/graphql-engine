@@ -13,24 +13,24 @@ lang-graphql = { path = "../../lang-graphql" }
 open-dds = { path = "../../open-dds" }
 tracing-util = { path = "../../utils/tracing-util"}
 
-axum = "0.6.20"
-cookie = "0.18.1"
+axum = { workspace = true }
+cookie = { workspace = true }
 jsonptr = { version = "0.4.0" }
-jsonwebtoken = "8.3.0"
-lazy_static = "1.4.0"
-reqwest = { version = "0.11.8",  features = ["json"] }
-schemars = { version = "0.8.20", features = ["url"] }
-serde = { version = "1.0.203", features = ["derive"] }
-serde_json = "1.0.117"
-thiserror = "1.0"
-url = "2.4.1"
+jsonwebtoken = { workspace = true }
+lazy_static = { workspace = true }
+reqwest = { workspace = true,  features = ["json"] }
+schemars = { workspace = true, features = ["url"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }
 
 [dev-dependencies]
-anyhow = "1"
-jsonwebkey = { version = "0.3.5", features = ["generate", "jsonwebtoken","pkcs-convert"] }
-mockito = {version = "1.1.0", default-features = false, features = []}
-openssl = "0.10.64"
-tokio = { version = "1.38.0", features = ["macros"] }
+anyhow = { workspace = true }
+jsonwebkey = { workspace = true, features = ["generate", "jsonwebtoken","pkcs-convert"] }
+mockito = { workspace = true }
+openssl = { workspace = true }
+tokio = { workspace = true, features = ["macros"] }
 
 [lints]
 workspace = true

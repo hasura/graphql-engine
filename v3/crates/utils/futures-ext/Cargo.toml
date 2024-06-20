@@ -8,12 +8,8 @@ license.workspace = true
 bench = false
 
 [dependencies]
-futures-util = "0.3"
-tokio = { version = "1.38.0", features = [
-  "macros",
-  "rt-multi-thread",
-  "time",
-] }
+futures-util = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }
 
 [lints]
 workspace = true
