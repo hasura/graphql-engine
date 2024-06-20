@@ -34,9 +34,7 @@ export function HeaderLayout(props: HeaderLayoutProps) {
       {/* The following markup has been stolen from the Prometheus page */}
       <div>
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold">
-            OpenTelemetry <sup>(Beta)</sup>
-          </h1>
+          <h1 className="text-xl font-semibold">OpenTelemetry</h1>
 
           {props.badge}
         </div>
