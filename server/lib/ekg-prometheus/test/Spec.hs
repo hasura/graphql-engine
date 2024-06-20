@@ -2,6 +2,7 @@ module Main where
 
 import qualified Counter
 import qualified Export
+import qualified Histogram
 import qualified State
 import qualified Store
 import Test.Hspec
@@ -16,3 +17,4 @@ main = hspec $ do
   Export.tests
   Validation.tests
   VectorMetrics.tests
+  Histogram.tests
