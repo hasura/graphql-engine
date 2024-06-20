@@ -23,6 +23,11 @@ touch app/.env.app.cloud
 ddn connector build create --connector connector.yaml --target-env-file app/.env.app.cloud
 ```
 
+Order of env
+- specify either as --env flags or --env-file flags, which can be specified multiple times
+- all flags override the env specified in the subgraph.yaml file
+- later flags override earlier flags
+
 ## --subgraph flag should take the file name
 
 What this is about: on introducing federation, we realize that the primitive is the subgraph not the supergraph. The following commands are updated to consider the subgraph.yaml file instead of specifying a supergraph.yaml file and the subgraph by name.
@@ -30,7 +35,9 @@ What this is about: on introducing federation, we realize that the primitive is 
 ```bash
 ddn connector init mydb --subgraph app/subgraph.yaml --hub-connector hasura/postgres
 
-ddn connector build create --connector mydb/connector.yaml --target-env-file app/.env.app.cloud
+ddn connector build create --connector mydb/connector.yaml --target-subgraph app/subgraph.yaml --target-connector-link mypg # use env file from subgraph.yaml
+
+ddn connector build create --connector mydb/connector.yaml --target-subgraph app/subgraph.yaml --target-connector-link mypg --target-env-file app/.env.app.cloud
 
 ddn model add --subgraph app/subgraph.yaml --connector-link mydb --name Album
 
