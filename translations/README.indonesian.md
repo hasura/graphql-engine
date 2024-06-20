@@ -8,9 +8,9 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-_Hasura GraphQL Engine_ adalah sebuah _server_ GraphQL ultra-cepat yang menyediakan **API GraphQL instan dan _real-time_ diatas Postgres**, dengan [**pemicu _webhook_**](../event-triggers.md) pada _event_ basis data, dan [**skema jarak jauh**](../remote-schemas.md) untuk mengimplementasi logika bisnis.
+_Hasura GraphQL Engine_ adalah sebuah _server_ GraphQL ultra-cepat yang menyediakan **API GraphQL instan dan _real-time_ di atas PostgreSQL**, dengan [**pemicu _webhook_**](../event-triggers.md) pada _event_ basis data, dan [**skema jarak jauh**](../remote-schemas.md) untuk mengimplementasi logika bisnis.
 
-Hasura dapat membantu Anda membangun aplikasi berbasis GraphQL dengan Postgres atau membantu aplikasi yang sudah ada untuk berpindah ke GraphQL secara bertahap.
+Hasura dapat membantu Anda membangun aplikasi berbasis GraphQL dengan PostgreSQL atau membantu aplikasi yang sudah ada untuk berpindah ke GraphQL secara bertahap.
 
 Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https://hasura.io/docs).
 
@@ -34,7 +34,7 @@ Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https:/
 * **Kontrol akses yang sangat terukur**: Kontrol akses yang dinamik yang terintegrasi dengan sistem otentikasi semisal auth0 atau firebase-auth.
 * **Performa tinggi & rekam jejak yang kecil**: Docker _image_ sebesar ~15MB; ~50MB RAM pada 1000 req/detik; sadar _multi-core_.
 * **Antarmuka untuk admin & proses migrasi**: Antarmuka untuk admin & proses migrasi yang terinspirasi dari Rails.
-* **Postgres** ❤️: Mendukung _types_ dari Postgres (PostGIS/geo-location, dll.), ubah _views_ menjadi *graphs*, memicu fungsi tersimpan (_stored functions_) atau prosedur dengan mutasi.
+* **PostgreSQL** ❤️: Mendukung _types_ dari PostgreSQL (PostGIS/geo-location, dll.), ubah _views_ menjadi *graphs*, memicu fungsi tersimpan (_stored functions_) atau prosedur dengan mutasi.
 
 Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https://hasura.io/docs).
 
@@ -68,7 +68,7 @@ Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https:/
 
 Cara paling cepat untuk mencoba Hasura adalah menggunakan Heroku.
 
-1. Klik pada tombol dibawah ini untuk menjalankan GraphQL Engine di Heroku dengan _add-on_ Postgres secara gratis:
+1. Klik pada tombol di bawah ini untuk menjalankan GraphQL Engine di Heroku dengan _add-on_ Postgres secara gratis:
 
     [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
@@ -145,13 +145,13 @@ Coba lihat seluruh contoh aplikasi pada direktori [_hasura/sample-apps_](https:/
 
 ### Video
 
-* [Tambahkan GraphQL pada sebuah _instance_ Gitlab yang di-_hosting_ sendiri](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 menit*)
+* [Tambahkan GraphQL pada sebuah _instance_ GitLab yang di-_hosting_ sendiri](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 menit*)
 * [Aplikasi Todo dengan Auth0 dan _backend_ GraphQL](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 menit*)
 * [GraphQL di GitLab yang terintegrasi dengan GitLab auth](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 menit*)
 * [Dasbor untuk 10 juta kendaraan dengan geolokasi (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 menit*)
 
 
-## Dukungan & Penyelesaian masalah
+## Dukungan & penyelesaian masalah
 
 Dokumentasi & komunitas Hasura dapat membantu menyelesaikan sebagian besar masalah Anda. Jika Anda menemukan sebuah _bug_ atau memerlukan kontak langsung, Anda dapat mengontak kami melalui salah satu cara dibawah ini:
 
@@ -160,17 +160,17 @@ Dokumentasi & komunitas Hasura dapat membantu menyelesaikan sebagian besar masal
 * Ikuti perkembangan produk: [@HasuraHQ](https://twitter.com/hasurahq)
 * Bicara dengan kami melalui [_website chat_](https://hasura.io)
 
-Kami berkomitmen untuk membina lingkungan yang terbuka dan menyambut komunitas. Silakan lihat [Kode Etik](../code-of-conduct.md).
+Kami berkomitmen untuk membina lingkungan yang terbuka dan menyambut komunitas. Silahkan lihat [kode etik](../code-of-conduct.md).
 
 Jika Anda ingin melaporkan sebuah permasalahan keamanan, mohon [baca ini](../SECURITY.md).
 
 ## Berkontribusi
 
-Coba lihat [petunjuk berkontribusi](../CONTRIBUTING.md) kami untuk detail lebih lanjut.
+Anda dapat melihat [petunjuk berkontribusi](../CONTRIBUTING.md) dari kami untuk detail lebih lanjut.
 
 ## Aset merek
 
-Aset merek Hasura (logo, maskot, lencana _powered by_, dll.) dapat ditemukan di direktori [_assets/brand_](../assets/brand). Jangan ragu untuk menggunakannya pada aplikasi/website Anda. Kami akan sangat senang jika Anda menambahkan lencana "_Powered by Hasura_" di aplikasi yang dibangun menggunakan Hasura. ❤️
+Seluruh aset merek Hasura (logo, maskot, lencana _powered by_, dll.) dapat ditemukan di direktori [_assets/brand_](../assets/brand). Jangan ragu untuk menggunakannya pada aplikasi/website Anda. Kami akan sangat senang jika Anda menambahkan lencana "_Powered by Hasura_" di aplikasi yang telah Anda bangun menggunakan Hasura. ❤️
 
 <div style="display: flex;">
   <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
