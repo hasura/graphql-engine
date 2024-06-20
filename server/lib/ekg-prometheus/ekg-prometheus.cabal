@@ -86,6 +86,7 @@ test-suite ekg-prometheus-tests
   other-modules:
     Counter
     Export
+    Histogram
     State
     Store
     Validation
