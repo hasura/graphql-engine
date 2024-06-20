@@ -15,7 +15,7 @@ tracing-util = { path = "../../utils/tracing-util"}
 
 axum = { workspace = true }
 cookie = { workspace = true }
-jsonptr = { version = "0.4.0" }
+jsonptr = { workspace = true }
 jsonwebtoken = { workspace = true }
 lazy_static = { workspace = true }
 reqwest = { workspace = true,  features = ["json"] }
