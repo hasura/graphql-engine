@@ -78,7 +78,7 @@ runQuery ::
 runQuery reqId query fieldName _userInfo logger _ sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime
-    $ newSpan ("MSSQL Query for root field " <>> fieldName)
+    $ newSpan ("MSSQL Query for root field " <>> fieldName) SKInternal
     $ (<* attachSourceConfigAttributes @'MSSQL sourceConfig)
     $ fmap snd (run tx)
 
@@ -116,7 +116,7 @@ runMutation ::
 runMutation reqId query fieldName _userInfo logger _ sourceConfig tx _genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId
   withElapsedTime
-    $ newSpan ("MSSQL Mutation for root field " <>> fieldName)
+    $ newSpan ("MSSQL Mutation for root field " <>> fieldName) SKInternal
     $ (<* attachSourceConfigAttributes @'MSSQL sourceConfig)
     $ run tx
 

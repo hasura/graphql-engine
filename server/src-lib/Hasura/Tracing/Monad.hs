@@ -19,6 +19,7 @@ import Hasura.Tracing.Class
 import Hasura.Tracing.Context
 import Hasura.Tracing.Reporter
 import Hasura.Tracing.Sampling
+import Hasura.Tracing.TraceId
 
 --------------------------------------------------------------------------------
 -- TraceT
@@ -75,7 +76,7 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
     metadataRef <- liftIO $ newIORef []
     let report = case samplingDecision of
           SampleNever -> id
-          SampleAlways -> runReporter reporter context name (readIORef metadataRef)
+          SampleAlways -> runReporter reporter context name SKServer (readIORef metadataRef)
         updatedContext =
           context
             { tcSamplingState = updateSamplingState samplingDecision (tcSamplingState context)
@@ -83,7 +84,7 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
         traceEnv = TraceEnv updatedContext metadataRef samplingDecision
     report $ local (_2 .~ Just traceEnv) body
 
-  newSpanWith spanId name (TraceT body) = TraceT do
+  newSpanWith spanId name kind (TraceT body) = TraceT do
     (reporter, traceEnv) <- ask
     case traceEnv of
       -- we are not currently in a trace: ignore this span
@@ -103,7 +104,7 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
                   { teTraceContext = subContext,
                     teMetadataRef = metadataRef
                   }
-          runReporter reporter subContext name (readIORef metadataRef)
+          runReporter reporter subContext name kind (readIORef metadataRef)
             $ local (_2 .~ Just subTraceEnv) body
 
   attachMetadata metadata = TraceT do

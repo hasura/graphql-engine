@@ -85,7 +85,7 @@ runPGQuery reqId query fieldName _userInfo logger _ sourceConfig tx genSql resol
   -- log the generated SQL and the graphql query
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
   withElapsedTime
-    $ newSpan ("Postgres Query for root field " <>> fieldName)
+    $ newSpan ("Postgres Query for root field " <>> fieldName) SKInternal
     $ (<* attachSourceConfigAttributes @('Postgres pgKind) sourceConfig)
     $ runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate)
     $ fmap snd (runOnBaseMonad tx)
@@ -114,7 +114,7 @@ runPGMutation reqId query fieldName userInfo logger _ sourceConfig tx _genSql re
   -- log the graphql query
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
   withElapsedTime
-    $ newSpan ("Postgres Mutation for root field " <>> fieldName)
+    $ newSpan ("Postgres Mutation for root field " <>> fieldName) SKInternal
     $ (<* attachSourceConfigAttributes @('Postgres pgKind) sourceConfig)
     $ runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate)
     $ runOnBaseMonad tx
@@ -204,7 +204,7 @@ runPGMutationTransaction reqId query userInfo logger sourceConfig resolvedConnec
   withElapsedTime
     $ runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate)
     $ flip InsOrdHashMap.traverseWithKey mutations \fieldName dbsi ->
-      newSpan ("Postgres Mutation for root field " <>> fieldName)
+      newSpan ("Postgres Mutation for root field " <>> fieldName) SKInternal
         $ (<* attachSourceConfigAttributes @('Postgres pgKind) sourceConfig)
         $ fmap arResult
         $ runOnBaseMonad

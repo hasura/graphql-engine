@@ -490,7 +490,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
   enableAL <- liftIO $ acEnableAllowlist <$> getAppContext appStateRef
   remoteSchemaResponsePriority <- liftIO $ acRemoteSchemaResponsePriority <$> getAppContext appStateRef
 
-  (reqParsed, queryParts) <- Tracing.newSpan "Parse GraphQL" $ do
+  (reqParsed, queryParts) <- Tracing.newSpan "Parse GraphQL" Tracing.SKInternal $ do
     reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
     reqParsed <- onLeft reqParsedE (withComplete . preExecErr granularPrometheusMetricsState requestId Nothing (_grOperationName q) Nothing)
     queryPartsE <- runExceptT $ getSingleOperation reqParsed
@@ -843,7 +843,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       Tracing.HttpPropagator ->
       RemoteSchemaResponsePriority ->
       ExceptT (Either GQExecError QErr) (ExceptT () m) (AnnotatedResponsePart, [ModelInfoPart])
-    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator remoteSchemaResponsePriority = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
+    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator remoteSchemaResponsePriority = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) Tracing.SKInternal $ do
       env <- liftIO $ acEnvironment <$> getAppContext appStateRef
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr

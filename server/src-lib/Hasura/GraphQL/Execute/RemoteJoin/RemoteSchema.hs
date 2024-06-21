@@ -70,17 +70,17 @@ makeRemoteSchemaJoinCall ::
   -- | The resulting join index (see 'buildJoinIndex') if any.
   m (Maybe (IntMap.IntMap AO.Value))
 makeRemoteSchemaJoinCall networkFunction userInfo remoteSchemaJoin jaFieldName joinArguments = do
-  Tracing.newSpan ("Remote join to remote schema for field " <>> jaFieldName) do
+  Tracing.newSpan ("Remote join to remote schema for field " <>> jaFieldName) Tracing.SKClient do
     -- step 1: construct the internal intermediary representation
     maybeRemoteCall <-
-      Tracing.newSpan "Resolve execution step for remote join field"
+      Tracing.newSpan "Resolve execution step for remote join field" Tracing.SKInternal
         $ buildRemoteSchemaCall remoteSchemaJoin joinArguments userInfo
     -- if there actually is a remote call:
     for maybeRemoteCall \remoteCall -> do
       -- step 2: execute it over the network
       responseValue <- executeRemoteSchemaCall networkFunction remoteCall
       -- step 3: build the join index
-      Tracing.newSpan "Build remote join index"
+      Tracing.newSpan "Build remote join index" Tracing.SKInternal
         $ buildJoinIndex remoteCall responseValue
 
 -------------------------------------------------------------------------------

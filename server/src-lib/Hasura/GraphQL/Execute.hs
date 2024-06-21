@@ -389,7 +389,7 @@ getResolvedExecPlan
     -- Construct the full 'ResolvedExecutionPlan' from the 'queryParts :: SingleOperation'.
     (parameterizedQueryHash, resolvedExecPlan, modelInfoList') <-
       case queryParts of
-        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve query execution plan" $ do
+        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve query execution plan" Tracing.SKInternal $ do
           (executionPlan, queryRootFields, dirMap, parameterizedQueryHash, modelInfoList) <-
             EQ.convertQuerySelSet
               env
@@ -412,7 +412,7 @@ getResolvedExecPlan
               traceQueryStatus
           Tracing.attachMetadata [("graphql.operation.type", "query"), ("parameterized_query_hash", bsToTxt $ unParamQueryHash parameterizedQueryHash)]
           pure (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap, modelInfoList)
-        G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve mutation execution plan" $ do
+        G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve mutation execution plan" Tracing.SKInternal $ do
           when (readOnlyMode == ReadOnlyModeEnabled)
             $ throw400 NotSupported "Mutations are not allowed when read-only mode is enabled"
           (executionPlan, parameterizedQueryHash, modelInfoList) <-
@@ -436,7 +436,7 @@ getResolvedExecPlan
               traceQueryStatus
           Tracing.attachMetadata [("graphql.operation.type", "mutation")]
           pure (parameterizedQueryHash, MutationExecutionPlan executionPlan, modelInfoList)
-        G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve subscription execution plan" $ do
+        G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve subscription execution plan" Tracing.SKInternal $ do
           (normalizedDirectives, normalizedSelectionSet) <-
             ER.resolveVariables
               (nullInNonNullableVariables sqlGenCtx)
@@ -445,7 +445,7 @@ getResolvedExecPlan
               directives
               inlinedSelSet
           subscriptionParser <- C.gqlSubscriptionParser gCtx `onNothing` throw400 ValidationFailed "no subscriptions exist"
-          unpreparedAST <- Tracing.newSpan "Parse subscription IR" $ liftEither $ subscriptionParser normalizedSelectionSet
+          unpreparedAST <- Tracing.newSpan "Parse subscription IR" Tracing.SKInternal $ liftEither $ subscriptionParser normalizedSelectionSet
           let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
           -- Process directives on the subscription
           dirMap <-

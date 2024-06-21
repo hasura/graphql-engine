@@ -24,6 +24,7 @@ import Hasura.Prelude
 import Hasura.Server.Logging
 import Hasura.Server.Utils
 import Hasura.Session
+import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Wreq qualified as Wreq
 
@@ -55,7 +56,11 @@ hookMethod authHook = case ahType authHook of
 --   for finer-grained auth. (#2666)
 userInfoFromAuthHook ::
   forall m.
-  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
+  ( MonadIO m,
+    MonadBaseControl IO m,
+    MonadError QErr m,
+    Tracing.MonadTrace m
+  ) =>
   Logger Hasura ->
   HTTP.Manager ->
   AuthHook ->
@@ -74,31 +79,34 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
     performHTTPRequest = do
       let url = T.unpack $ ahUrl hook
       req <- liftIO $ HTTP.mkRequestThrow $ T.pack url
-      liftIO do
-        case ahType hook of
-          AHTGet -> do
-            let isCommonHeader = (`elem` commonClientHeadersIgnored)
-                filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
-                req' = req & set HTTP.headers (addDefaultHeaders filteredHeaders)
-            HTTP.httpLbs req' manager
-          AHTPost -> do
-            let contentType = ("Content-Type", "application/json")
-                headersPayload = J.toJSON $ HashMap.fromList $ hdrsToText reqHeaders
-                req' =
-                  req
-                    & set HTTP.method "POST"
-                    & set HTTP.headers (addDefaultHeaders [contentType])
-                    & set
-                      HTTP.body
-                      ( HTTP.RequestBodyLBS
-                          $ J.encode
-                          $ object
-                            ( ["headers" J..= headersPayload]
-                                -- We will only send the request if `ahSendRequestBody` is set to true
-                                <> ["request" J..= reqs | ahSendRequestBody hook]
-                            )
-                      )
-            HTTP.httpLbs req' manager
+      case ahType hook of
+        AHTGet -> do
+          let isCommonHeader = (`elem` commonClientHeadersIgnored)
+              filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
+              req' = req & set HTTP.headers (addDefaultHeaders filteredHeaders)
+          doHTTPRequest req'
+        AHTPost -> do
+          let contentType = ("Content-Type", "application/json")
+              headersPayload = J.toJSON $ HashMap.fromList $ hdrsToText reqHeaders
+              req' =
+                req
+                  & set HTTP.method "POST"
+                  & set HTTP.headers (addDefaultHeaders [contentType])
+                  & set
+                    HTTP.body
+                    ( HTTP.RequestBodyLBS
+                        $ J.encode
+                        $ object
+                          ( ["headers" J..= headersPayload]
+                              -- We will only send the request if `ahSendRequestBody` is set to true
+                              <> ["request" J..= reqs | ahSendRequestBody hook]
+                          )
+                    )
+          doHTTPRequest req'
+
+    doHTTPRequest :: HTTP.Request -> m (HTTP.Response BL.ByteString)
+    doHTTPRequest req = Tracing.traceHTTPRequest Tracing.composedPropagator req
+      $ \req' -> liftIO $ HTTP.httpLbs req' manager
 
     logAndThrow :: HTTP.HttpException -> m a
     logAndThrow err = do

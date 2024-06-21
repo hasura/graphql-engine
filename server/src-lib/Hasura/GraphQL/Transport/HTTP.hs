@@ -339,7 +339,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
   let gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
   (totalTime, (response, parameterizedQueryHash, gqlOpType, gqlOperationName, modelInfoListForLogging, queryCachedStatus)) <- withElapsedTime $ do
-    (reqParsed, runLimits, queryParts) <- Tracing.newSpan "Parse GraphQL" $ observeGQLQueryError granularPrometheusMetricsState gqlMetrics Nothing (_grOperationName reqUnparsed) Nothing $ do
+    (reqParsed, runLimits, queryParts) <- Tracing.newSpan "Parse GraphQL" Tracing.SKInternal $ observeGQLQueryError granularPrometheusMetricsState gqlMetrics Nothing (_grOperationName reqUnparsed) Nothing $ do
       -- 1. Run system authorization on the 'reqUnparsed :: GQLReqUnparsed' query.
       reqParsed <-
         E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
@@ -572,7 +572,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
         let (allResponses, allModelInfo) = unzip _all
         pure $ (AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses)) [], concat allModelInfo)
 
-    runRemoteGQ fieldName rsi resultCustomizer gqlReq remoteJoins = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
+    runRemoteGQ fieldName rsi resultCustomizer gqlReq remoteJoins = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) Tracing.SKInternal $ do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
         doQErr $ E.execRemoteGQ env tracesPropagator userInfo reqHeaders (rsDef rsi) gqlReq
       value <- extractFieldFromResponse remoteSchemaResponsePriority fieldName resultCustomizer resp

@@ -117,14 +117,14 @@ convertQuerySelSet
   traceQueryStatus = do
     -- 1. Parse the GraphQL query into the 'RootFieldMap' and a 'SelectionSet'
     (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
-      Tracing.newSpan "Parse query IR" $ parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
+      Tracing.newSpan "Parse query IR" Tracing.SKInternal $ parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
 
     -- 2. Parse directives on the query
     dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
 
-        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) do
+        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) Tracing.SKInternal do
           case rootFieldUnpreparedValue of
             RFMulti lst -> do
               allSteps <- traverse (resolveExecutionSteps rootFieldName) lst

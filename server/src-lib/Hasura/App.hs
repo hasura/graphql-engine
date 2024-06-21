@@ -697,7 +697,7 @@ instance HasCacheStaticConfig AppM where
 
 instance MonadTrace AppM where
   newTraceWith c p n (AppM a) = AppM $ newTraceWith c p n a
-  newSpanWith i n (AppM a) = AppM $ newSpanWith i n a
+  newSpanWith i n k (AppM a) = AppM $ newSpanWith i n k a
   attachMetadata = AppM . attachMetadata
 
 instance MonadTraceContext AppM where

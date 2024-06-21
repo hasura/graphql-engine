@@ -119,7 +119,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
               mutationOutput
               columnInfos
           rowCount = tshow . length $ IR._aiInsertObject multiObjIns
-      Tracing.newSpan ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
+      Tracing.newSpan ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) Tracing.SKInternal do
         Tracing.attachMetadata [("count", rowCount)]
         PGE.execInsertQuery stringifyNum tCase userInfo (insertQuery, planVars)
 
@@ -158,7 +158,7 @@ insertObject ::
   Maybe NamingCase ->
   m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
 insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase =
-  Tracing.newSpan ("Insert " <> qualifiedObjectToText table) do
+  Tracing.newSpan ("Insert " <> qualifiedObjectToText table) Tracing.SKInternal do
     validateInsert (HashMap.keys columns) (map IR._riRelationInfo objectRels) (HashMap.keys additionalColumns)
 
     -- insert all object relations and fetch this insert dependent column values
