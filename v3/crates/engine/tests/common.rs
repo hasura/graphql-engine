@@ -79,6 +79,7 @@ pub fn test_execution_expectation_legacy(
 
         let metadata_resolve_flags = metadata_resolve::MetadataResolveFlagsInternal {
             enable_boolean_expression_types: true,
+            enable_aggregate_relationships: true,
         };
 
         let gds = GDS::new(metadata, &metadata_resolve_flags)?;
@@ -267,6 +268,7 @@ pub fn test_execution_expectation(
         // This is where we'll want to enable pre-release features in tests
         let metadata_resolve_flags = metadata_resolve::MetadataResolveFlagsInternal {
             enable_boolean_expression_types: true,
+            enable_aggregate_relationships: true,
         };
 
         let gds = GDS::new(metadata, &metadata_resolve_flags)?;

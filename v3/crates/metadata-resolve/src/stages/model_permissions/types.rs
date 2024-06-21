@@ -86,7 +86,7 @@ pub struct ModelTargetSource {
 impl ModelTargetSource {
     pub fn new(
         model: &ModelWithPermissions,
-        relationship: &relationships::Relationship,
+        relationship: &relationships::RelationshipField,
     ) -> Result<Option<Self>, Error> {
         model
             .model
@@ -98,7 +98,7 @@ impl ModelTargetSource {
 
     pub fn from_model_source(
         model_source: &models::ModelSource,
-        relationship: &relationships::Relationship,
+        relationship: &relationships::RelationshipField,
     ) -> Result<Self, Error> {
         Ok(Self {
             model: model_source.clone(),
@@ -108,7 +108,7 @@ impl ModelTargetSource {
                 .ok_or_else(|| Error::RelationshipError {
                     relationship_error: RelationshipError::NoRelationshipCapabilitiesDefined {
                         type_name: relationship.source.clone(),
-                        relationship_name: relationship.name.clone(),
+                        relationship_name: relationship.relationship_name.clone(),
                         data_connector_name: model_source.data_connector.name.clone(),
                     },
                 })?

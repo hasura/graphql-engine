@@ -76,7 +76,7 @@ pub struct CommandTargetSource {
 impl CommandTargetSource {
     pub fn new(
         command: &metadata_resolve::CommandWithPermissions,
-        relationship: &metadata_resolve::Relationship,
+        relationship: &metadata_resolve::RelationshipField,
     ) -> Result<Option<Self>, crate::Error> {
         command
             .command
@@ -102,7 +102,7 @@ impl CommandTargetSource {
                         .as_ref()
                         .ok_or_else(|| crate::Error::InternalMissingRelationshipCapabilities {
                             type_name: relationship.source.clone(),
-                            relationship: relationship.name.clone(),
+                            relationship: relationship.relationship_name.clone(),
                         })?
                         .clone(),
                 })

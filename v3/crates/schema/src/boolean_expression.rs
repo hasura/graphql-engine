@@ -14,7 +14,7 @@ use metadata_resolve::{
     mk_name, BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
     ComparisonExpressionInfo, ModelExpressionType, ModelWithPermissions,
     ObjectBooleanExpressionType, ObjectComparisonExpressionInfo, ObjectTypeWithRelationships,
-    Qualified, Relationship, RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
+    Qualified, RelationshipField, RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
 };
 
 use crate::permissions;
@@ -210,7 +210,7 @@ fn build_new_comparable_relationships_schema(
 
         // lookup the relationship used in the underlying object type
         let relationship = object_type_representation
-            .relationships
+            .relationship_fields
             .get(&field_name)
             .ok_or_else(|| Error::InternalRelationshipNotFound {
                 relationship_name: relationship.relationship_name.clone(),
@@ -263,7 +263,7 @@ fn build_comparable_relationships_schema(
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
     let mut input_fields = BTreeMap::new();
 
-    for relationship in object_type_representation.relationships.values() {
+    for relationship in object_type_representation.relationship_fields.values() {
         if let metadata_resolve::RelationshipTarget::Model {
             model_name,
             relationship_type,
@@ -310,7 +310,7 @@ fn build_model_relationship_schema(
     source_object_type_representation: &ObjectTypeWithRelationships,
     target_object_type_representation: &ObjectTypeWithRelationships,
     target_model: &ModelWithPermissions,
-    relationship: &Relationship,
+    relationship: &RelationshipField,
     relationship_type: &RelationshipType,
     relationship_model_mappings: &[RelationshipModelMapping],
     gds: &GDS,
@@ -337,7 +337,7 @@ fn build_model_relationship_schema(
 
         let annotation = FilterRelationshipAnnotation {
             source_type: relationship.source.clone(),
-            relationship_name: relationship.name.clone(),
+            relationship_name: relationship.relationship_name.clone(),
             target_source: target_model_source.clone(),
             target_type: target_model.model.data_type.clone(),
             target_model_name: target_model.model.name.clone(),

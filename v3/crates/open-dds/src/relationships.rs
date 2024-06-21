@@ -205,7 +205,7 @@ impl RelationshipMapping {
 /// The definition of how a relationship appears in the GraphQL API
 pub struct RelationshipGraphQlDefinition {
     /// The field name to use for the field that represents an aggregate over the relationship
-    aggregate_field_name: Option<String>,
+    pub aggregate_field_name: Option<FieldName>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]

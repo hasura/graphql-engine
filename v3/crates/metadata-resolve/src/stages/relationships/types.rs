@@ -1,6 +1,7 @@
 use crate::stages::{object_types, type_permissions};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use indexmap::IndexMap;
+use open_dds::aggregates::AggregateExpressionName;
 use open_dds::permissions::Role;
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use serde::{Deserialize, Serialize};
@@ -22,8 +23,10 @@ pub struct ObjectTypeWithRelationships {
     /// permissions on this type, when it is used in an input context (e.g. in
     /// an argument type of Model or Command)
     pub type_input_permissions: BTreeMap<Role, type_permissions::TypeInputPermission>,
-    /// any relationships defined on this object
-    pub relationships: IndexMap<ast::Name, Relationship>,
+    /// any relationship fields defined on this object, indexed by field name
+    /// note that a single relationship may result in the generation of multiple fields
+    /// (ie normal relationship + aggregate relationship)
+    pub relationship_fields: IndexMap<ast::Name, RelationshipField>,
     /// type mappings for each data connector
     pub type_mappings: object_types::DataConnectorTypeMappingsForObject,
 }
@@ -36,6 +39,12 @@ pub enum RelationshipTarget {
         relationship_type: RelationshipType,
         target_typename: Qualified<CustomTypeName>,
         mappings: Vec<RelationshipModelMapping>,
+    },
+    ModelAggregate {
+        model_name: Qualified<ModelName>,
+        target_typename: Qualified<CustomTypeName>,
+        mappings: Vec<RelationshipModelMapping>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
     },
     Command {
         command_name: Qualified<CommandName>,
@@ -65,12 +74,9 @@ pub struct RelationshipCommandMapping {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct Relationship {
-    pub name: RelationshipName,
-    // `ast::Name` representation of `RelationshipName`. This is used to avoid
-    // the recurring conversion between `RelationshipName` to `ast::Name` during
-    // relationship IR generation
+pub struct RelationshipField {
     pub field_name: ast::Name,
+    pub relationship_name: RelationshipName,
     pub source: Qualified<CustomTypeName>,
     pub target: RelationshipTarget,
     pub target_capabilities: Option<RelationshipCapabilities>,

@@ -12,6 +12,7 @@ mod ordering;
 mod source;
 mod types;
 
+pub use aggregation::resolve_aggregate_expression;
 pub use source::get_ndc_column_for_comparison;
 
 use crate::types::error::Error;

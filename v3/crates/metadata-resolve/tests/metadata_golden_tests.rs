@@ -8,11 +8,12 @@ use metadata_resolve::MetadataResolveFlagsInternal;
 
 #[test_each::file(
     glob = "crates/metadata-resolve/tests/passing/**/metadata.json",
-    name(segments = 2)
+    name(segments = 3)
 )]
 fn test_passing_metadata(metadata_json_text: &str) -> anyhow::Result<()> {
     let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
         enable_boolean_expression_types: true,
+        enable_aggregate_relationships: true,
     };
 
     let metadata_json_value = serde_json::from_str(metadata_json_text)?;
@@ -40,6 +41,7 @@ fn test_failing_metadata(
 
     let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
         enable_boolean_expression_types: true,
+        enable_aggregate_relationships: true,
     };
 
     let error_untrimmed = fs::read_to_string(failing_reason)?;

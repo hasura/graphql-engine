@@ -4,7 +4,7 @@ use open_dds::data_connector::{
     DataConnectorName, DataConnectorObjectType, DataConnectorScalarType,
 };
 
-use crate::types::error::Error;
+use crate::types::error::{Error, ModelAggregateExpressionError};
 
 use crate::stages::{aggregates, data_connectors, object_types, type_permissions};
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
@@ -13,7 +13,7 @@ use open_dds::{models::ModelName, types::CustomTypeName};
 
 use std::collections::BTreeMap;
 
-pub(crate) fn resolve_aggregate_expression(
+pub fn resolve_aggregate_expression(
     aggregate_expression_name: &AggregateExpressionName,
     model_name: &Qualified<ModelName>,
     model_object_type_name: &Qualified<CustomTypeName>,
@@ -23,7 +23,7 @@ pub(crate) fn resolve_aggregate_expression(
         aggregates::AggregateExpression,
     >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-) -> Result<Qualified<AggregateExpressionName>, Error> {
+) -> Result<Qualified<AggregateExpressionName>, ModelAggregateExpressionError> {
     let qualified_aggregate_expression_name = Qualified::new(
         model_name.subgraph.clone(),
         aggregate_expression_name.clone(),
@@ -31,29 +31,32 @@ pub(crate) fn resolve_aggregate_expression(
     let model_object_type = QualifiedTypeName::Custom(model_object_type_name.clone());
 
     // Check the model has a source
-    let model_source =
-        model_source
-            .as_ref()
-            .ok_or_else(|| Error::CannotUseAggregateExpressionsWithoutSource {
-                model: model_name.clone(),
-            })?;
+    let model_source = model_source.as_ref().ok_or_else(|| {
+        ModelAggregateExpressionError::CannotUseAggregateExpressionsWithoutSource {
+            model: model_name.clone(),
+        }
+    })?;
 
     // Check that the specified aggregate expression exists
     let aggregate_expression = aggregate_expressions
         .get(&qualified_aggregate_expression_name)
-        .ok_or_else(|| Error::UnknownModelAggregateExpression {
-            model_name: model_name.clone(),
-            aggregate_expression: qualified_aggregate_expression_name.clone(),
-        })?;
+        .ok_or_else(
+            || ModelAggregateExpressionError::UnknownModelAggregateExpression {
+                model_name: model_name.clone(),
+                aggregate_expression: qualified_aggregate_expression_name.clone(),
+            },
+        )?;
 
     // Check that the specified aggregate expression actually aggregates the model's type
     if model_object_type != aggregate_expression.operand.aggregated_type {
-        return Err(Error::ModelAggregateExpressionOperandTypeMismatch {
-            model_name: model_name.clone(),
-            aggregate_expression: qualified_aggregate_expression_name.clone(),
-            model_type: model_object_type.clone(),
-            aggregate_operand_type: aggregate_expression.operand.aggregated_type.clone(),
-        });
+        return Err(
+            ModelAggregateExpressionError::ModelAggregateExpressionOperandTypeMismatch {
+                model_name: model_name.clone(),
+                aggregate_expression: qualified_aggregate_expression_name.clone(),
+                model_type: model_object_type.clone(),
+                aggregate_operand_type: aggregate_expression.operand.aggregated_type.clone(),
+            },
+        );
     }
 
     // Check aggregate function mappings exist to the Model's source data connector
@@ -71,10 +74,12 @@ pub(crate) fn resolve_aggregate_expression(
     // Check that the aggregate expression does not define count_distinct, as this is
     // not valid on a model (every object is already "distinct", so it is meaningless)
     if aggregate_expression.count_distinct.enable {
-        return Err(Error::ModelAggregateExpressionCountDistinctNotAllowed {
-            model_name: model_name.clone(),
-            aggregate_expression: qualified_aggregate_expression_name.clone(),
-        });
+        return Err(
+            ModelAggregateExpressionError::ModelAggregateExpressionCountDistinctNotAllowed {
+                model_name: model_name.clone(),
+                aggregate_expression: qualified_aggregate_expression_name.clone(),
+            },
+        );
     }
 
     Ok(qualified_aggregate_expression_name)
@@ -92,21 +97,22 @@ fn resolve_aggregate_expression_data_connector_mapping(
         aggregates::AggregateExpression,
     >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-) -> Result<(), Error> {
+) -> Result<(), ModelAggregateExpressionError> {
     // Find the object type being aggregated and its field mapping
-    let object_type =
-        object_types
-            .get(object_type_name)
-            .ok_or_else(|| Error::UnknownObjectType {
-                data_type: object_type_name.clone(),
-            })?;
+    let object_type = object_types.get(object_type_name).ok_or_else(|| {
+        ModelAggregateExpressionError::OtherError(Box::new(Error::UnknownObjectType {
+            data_type: object_type_name.clone(),
+        }))
+    })?;
     let object_type_mapping = object_type
         .type_mappings
         .get(data_connector_name, data_connector_object_type)
-        .ok_or_else(|| Error::TypeMappingRequired {
-            model_name: model_name.clone(),
-            type_name: object_type_name.clone(),
-            data_connector: data_connector_name.clone(),
+        .ok_or_else(|| {
+            ModelAggregateExpressionError::OtherError(Box::new(Error::TypeMappingRequired {
+                model_name: model_name.clone(),
+                type_name: object_type_name.clone(),
+                data_connector: data_connector_name.clone(),
+            }))
         })?;
     let object_type_field_mapping = match object_type_mapping {
         object_types::TypeMapping::Object { field_mappings, .. } => field_mappings,
@@ -118,11 +124,14 @@ fn resolve_aggregate_expression_data_connector_mapping(
         let field_mapping = object_type_field_mapping
             .get(&aggregatable_field.field_name)
             .ok_or_else(|| {
-                aggregates::AggregateExpressionError::AggregateOperandObjectFieldNotFound {
-                    name: aggregate_expression.name.clone(),
-                    operand_type: object_type_name.clone(),
-                    field_name: aggregatable_field.field_name.clone(),
-                }
+                ModelAggregateExpressionError::OtherError(Box::new(
+                    aggregates::AggregateExpressionError::AggregateOperandObjectFieldNotFound {
+                        name: aggregate_expression.name.clone(),
+                        operand_type: object_type_name.clone(),
+                        field_name: aggregatable_field.field_name.clone(),
+                    }
+                    .into(),
+                ))
             })?;
 
         // Get the underlying data connector type name for the aggregatable field
@@ -131,14 +140,14 @@ fn resolve_aggregate_expression_data_connector_mapping(
             ndc_models::Type::Named { name } => Ok(name),
             ndc_models::Type::Nullable { underlying_type } => match &**underlying_type {
                 ndc_models::Type::Named { name } => Ok(name),
-                _ => Err(Error::ModelAggregateExpressionUnexpectedDataConnectorType {
+                _ => Err(ModelAggregateExpressionError::ModelAggregateExpressionUnexpectedDataConnectorType {
                     model_name: model_name.clone(),
                     aggregate_expression: aggregate_expression.name.clone(),
                     data_connector_name: data_connector_name.clone(),
                     field_name: aggregatable_field.field_name.clone(),
                 }),
             },
-            _ => Err(Error::ModelAggregateExpressionUnexpectedDataConnectorType {
+            _ => Err(ModelAggregateExpressionError::ModelAggregateExpressionUnexpectedDataConnectorType {
                 model_name: model_name.clone(),
                 aggregate_expression: aggregate_expression.name.clone(),
                 data_connector_name: data_connector_name.clone(),
@@ -149,10 +158,12 @@ fn resolve_aggregate_expression_data_connector_mapping(
         // Get the aggregate expression used to aggregate the field's type
         let field_aggregate_expression = aggregate_expressions
             .get(&aggregatable_field.aggregate_expression)
-            .ok_or_else(|| Error::UnknownModelAggregateExpression {
-                model_name: model_name.clone(),
-                aggregate_expression: aggregatable_field.aggregate_expression.clone(),
-            })?;
+            .ok_or_else(
+                || ModelAggregateExpressionError::UnknownModelAggregateExpression {
+                    model_name: model_name.clone(),
+                    aggregate_expression: aggregatable_field.aggregate_expression.clone(),
+                },
+            )?;
 
         // Get the field's aggregate expression operand type, if it an object type
         let field_object_type_name = match &field_aggregate_expression.operand.aggregated_type {
@@ -170,11 +181,11 @@ fn resolve_aggregate_expression_data_connector_mapping(
         if let Some(field_object_type_name) = field_object_type_name {
             // Check that the data connector supports aggregation over nested object fields
             if !data_connector_capabilities.supports_nested_object_aggregations {
-                return Err(aggregates::AggregateExpressionError::NestedObjectAggregatesNotSupportedByDataConnector {
+                return Err(ModelAggregateExpressionError::OtherError(Box::new(aggregates::AggregateExpressionError::NestedObjectAggregatesNotSupportedByDataConnector {
                     name: aggregate_expression.name.clone(),
                     data_connector_name: data_connector_name.clone(),
                     field_name: aggregatable_field.field_name.clone(),
-                }.into());
+                }.into())));
             }
 
             // Resolve the aggregate expression for the nested object field type
@@ -204,7 +215,7 @@ fn resolve_aggregate_expression_data_connector_mapping(
                     })
                 });
             if !all_functions_have_a_data_connector_mapping {
-                return Err(Error::ModelAggregateExpressionDataConnectorMappingMissing {
+                return Err(ModelAggregateExpressionError::ModelAggregateExpressionDataConnectorMappingMissing {
                     model_name: model_name.clone(),
                     aggregate_expression: field_aggregate_expression.name.clone(),
                     data_connector_name: data_connector_name.clone(),

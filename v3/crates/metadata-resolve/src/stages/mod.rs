@@ -133,11 +133,13 @@ pub fn resolve(
 
     let object_types_with_relationships = relationships::resolve(
         &metadata_accessor,
+        flags,
         &data_connectors,
         &data_connector_scalars,
         &object_types_with_permissions,
         &models,
         &commands,
+        &aggregate_expressions,
     )?;
 
     let commands_with_permissions = command_permissions::resolve(

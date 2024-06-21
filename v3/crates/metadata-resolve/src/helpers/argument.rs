@@ -406,7 +406,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                 let relationship_field_name = mk_name(&name.0)?;
 
                 let relationship = &object_type_representation
-                    .relationships
+                    .relationship_fields
                     .get(&relationship_field_name)
                     .ok_or_else(|| Error::TypePredicateError {
                         type_predicate_error:
@@ -423,11 +423,19 @@ pub(crate) fn resolve_model_predicate_with_type(
                                 .to_string(),
                         })
                     }
+                    relationships::RelationshipTarget::ModelAggregate { .. } => {
+                        Err(Error::UnsupportedFeature {
+                            message:
+                                "Predicate cannot be built using model aggregate relationships"
+                                    .to_string(),
+                        })
+                    }
                     relationships::RelationshipTarget::Model {
                         model_name,
                         relationship_type,
                         target_typename,
                         mappings,
+                        ..
                     } => {
                         let target_model = models.get(model_name).ok_or_else(|| {
                             Error::TypePredicateError { type_predicate_error: TypePredicateError::UnknownModelUsedInRelationshipTypePredicate {
@@ -449,7 +457,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                                         Error::RelationshipError {
                                     relationship_error:
                                         RelationshipError::NoRelationshipCapabilitiesDefined {
-                                            relationship_name: relationship.name.clone(),
+                                            relationship_name: relationship.relationship_name.clone(),
                                             type_name: type_name.clone(),
                                             data_connector_name: target_model_source
                                                 .data_connector
@@ -540,7 +548,7 @@ pub(crate) fn resolve_model_predicate_with_type(
 
                                 let annotation = model_permissions::PredicateRelationshipInfo {
                                     source_type: relationship.source.clone(),
-                                    relationship_name: relationship.name.clone(),
+                                    relationship_name: relationship.relationship_name.clone(),
                                     target_model_name: model_name.clone(),
                                     target_source: target_source.clone(),
                                     target_type: target_typename.clone(),

@@ -200,47 +200,6 @@ pub enum Error {
         argument_name: ArgumentName,
     },
     #[error(
-        "the aggregate expression {aggregate_expression} for model {model_name} has not been defined"
-    )]
-    UnknownModelAggregateExpression {
-        model_name: Qualified<ModelName>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-    },
-    #[error(
-        "the model {model_name} is using the aggregate expression {aggregate_expression} but its operand type {aggregate_operand_type} does not match the model's type {model_type}"
-    )]
-    ModelAggregateExpressionOperandTypeMismatch {
-        model_name: Qualified<ModelName>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-        model_type: QualifiedTypeName,
-        aggregate_operand_type: QualifiedTypeName,
-    },
-    #[error(
-        "the model {model_name} is using the aggregate expression {aggregate_expression} but for the data connector {data_connector_name} and scalar type {data_connector_operand_type}, mappings are not provided for all aggregation functions in the aggregate expression"
-    )]
-    ModelAggregateExpressionDataConnectorMappingMissing {
-        model_name: Qualified<ModelName>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-        data_connector_name: Qualified<DataConnectorName>,
-        data_connector_operand_type: DataConnectorScalarType,
-    },
-    #[error(
-        "the model {model_name} is using the aggregate expression {aggregate_expression} but the NDC type of the field {field_name} for data connector {data_connector_name} was not a optionally nullable named type"
-    )]
-    ModelAggregateExpressionUnexpectedDataConnectorType {
-        model_name: Qualified<ModelName>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-        data_connector_name: Qualified<DataConnectorName>,
-        field_name: FieldName,
-    },
-    #[error(
-        "the model {model_name} is using the aggregate expression {aggregate_expression} which has the countDistinct aggregation enabled, but countDistinct is not valid when aggregating a model as every object is already logically distinct"
-    )]
-    ModelAggregateExpressionCountDistinctNotAllowed {
-        model_name: Qualified<ModelName>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-    },
-    #[error(
         "the mapping for argument {argument_name:} of model {model_name:} has been defined more than once"
     )]
     DuplicateModelArgumentMapping {
@@ -308,8 +267,6 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
-    #[error("a source must be defined for model {model:} in order to use aggregate expressions")]
-    CannotUseAggregateExpressionsWithoutSource { model: Qualified<ModelName> },
     #[error("a source must be defined for model {model:} in order to use filter expressions")]
     CannotUseFilterExpressionsWithoutSource { model: Qualified<ModelName> },
     #[error("graphql config must be defined for a filter expression to be used in a {model:}")]
@@ -630,6 +587,8 @@ pub enum Error {
     TypeError { type_error: TypeError },
     #[error("{0:}")]
     AggregateExpressionError(AggregateExpressionError),
+    #[error("{0}")]
+    ModelAggregateExpressionError(ModelAggregateExpressionError),
 
     // TODO: (anon) refactor the data connector error types
     #[error(
@@ -643,6 +602,51 @@ pub enum Error {
         argument_name: ArgumentName,
         type_name: Qualified<CustomTypeName>,
     },
+}
+
+#[derive(Debug, Error)]
+pub enum ModelAggregateExpressionError {
+    #[error("a source must be defined for model {model:} in order to use aggregate expressions")]
+    CannotUseAggregateExpressionsWithoutSource { model: Qualified<ModelName> },
+    #[error("the aggregate expression {aggregate_expression} used with model {model_name} has not been defined")]
+    UnknownModelAggregateExpression {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+    },
+    #[error("the aggregate expression {aggregate_expression} is used with the model {model_name} but its operand type {aggregate_operand_type} does not match the model's type {model_type}")]
+    ModelAggregateExpressionOperandTypeMismatch {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        model_type: QualifiedTypeName,
+        aggregate_operand_type: QualifiedTypeName,
+    },
+    #[error("the aggregate expression {aggregate_expression} is used with the model {model_name} which has the countDistinct aggregation enabled, but countDistinct is not valid when aggregating a model as every object is already logically distinct")]
+    ModelAggregateExpressionCountDistinctNotAllowed {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+    },
+    #[error("the aggregate expression {aggregate_expression} is used with the model {model_name} but the NDC type of the field {field_name} for data connector {data_connector_name} was not a optionally nullable named type")]
+    ModelAggregateExpressionUnexpectedDataConnectorType {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        data_connector_name: Qualified<DataConnectorName>,
+        field_name: FieldName,
+    },
+    #[error("the aggregate expression {aggregate_expression} is used with the model {model_name} but for the data connector {data_connector_name} and scalar type {data_connector_operand_type}, mappings are not provided for all aggregation functions in the aggregate expression")]
+    ModelAggregateExpressionDataConnectorMappingMissing {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        data_connector_name: Qualified<DataConnectorName>,
+        data_connector_operand_type: DataConnectorScalarType,
+    },
+    #[error("{0}")]
+    OtherError(Box<Error>),
+}
+
+impl From<ModelAggregateExpressionError> for Error {
+    fn from(val: ModelAggregateExpressionError) -> Self {
+        Error::ModelAggregateExpressionError(val)
+    }
 }
 
 impl From<BooleanExpressionError> for Error {
@@ -779,6 +783,30 @@ pub enum RelationshipError {
         relationship_name: RelationshipName,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error("The relationship {relationship_name} on type {type_name} defines an aggregate, but the aggregate relationships feature is disabled")]
+    AggregateRelationshipsDisabled {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+    },
+    #[error("The relationship {relationship_name} on type {type_name} defines an aggregate, but aggregates can only be used with array relationships, not object relationships")]
+    AggregateIsOnlyAllowedOnArrayRelationships {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+    },
+    #[error("The aggregate defined on the relationship {relationship_name} on type {type_name} has an error: {error}")]
+    ModelAggregateExpressionError {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        error: ModelAggregateExpressionError,
+    },
+}
+
+impl From<RelationshipError> for Error {
+    fn from(val: RelationshipError) -> Self {
+        Error::RelationshipError {
+            relationship_error: val,
+        }
+    }
 }
 
 #[derive(Debug, Error)]
@@ -908,7 +936,7 @@ pub enum TypeMappingValidationError {
         type_name: Qualified<CustomTypeName>,
         field_names: Vec<FieldName>,
     },
-    #[error("unknown target column name {column_name:} for field {field_name:} ")]
+    #[error("unknown target column name {column_name:} for field {field_name:}")]
     UnknownTargetColumn {
         column_name: String,
         field_name: FieldName,

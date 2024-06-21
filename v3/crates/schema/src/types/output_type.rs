@@ -238,7 +238,7 @@ fn object_type_fields(
             Ok((graphql_field_name, namespaced_field))
         })
         .collect::<Result<BTreeMap<_, _>, _>>()?;
-    for (relationship_field_name, relationship) in &object_type_representation.relationships {
+    for (relationship_field_name, relationship) in &object_type_representation.relationship_fields {
         let deprecation_status = mk_deprecation_status(&relationship.deprecated);
 
         let relationship_field = match &relationship.target {
@@ -283,7 +283,7 @@ fn object_type_fields(
                         Annotation::Output(super::OutputAnnotation::RelationshipToCommand(
                             CommandRelationshipAnnotation {
                                 source_type: relationship.source.clone(),
-                                relationship_name: relationship.name.clone(),
+                                relationship_name: relationship.relationship_name.clone(),
                                 command_name: command_name.clone(),
                                 target_source: CommandTargetSource::new(command, relationship)?,
                                 target_type: target_type.clone(),
@@ -352,7 +352,7 @@ fn object_type_fields(
                         Annotation::Output(super::OutputAnnotation::RelationshipToModel(
                             ModelRelationshipAnnotation {
                                 source_type: relationship.source.clone(),
-                                relationship_name: relationship.name.clone(),
+                                relationship_name: relationship.relationship_name.clone(),
                                 model_name: model_name.clone(),
                                 target_source: metadata_resolve::ModelTargetSource::new(
                                     model,
@@ -376,13 +376,17 @@ fn object_type_fields(
                     )?,
                 )
             }
+            metadata_resolve::RelationshipTarget::ModelAggregate { .. } => {
+                // Model aggregates currently not implemented, so just skip them for now
+                continue;
+            }
         };
         if graphql_fields
             .insert(relationship_field_name.clone(), relationship_field)
             .is_some()
         {
             return Err(Error::RelationshipFieldNameConflict {
-                relationship_name: relationship.name.clone(),
+                relationship_name: relationship.relationship_name.clone(),
                 field_name: relationship_field_name.clone(),
                 type_name: type_name.clone(),
             });

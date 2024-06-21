@@ -1,1 +1,1 @@
-the aggregate expression Invoice_aggregate_exp (in subgraph default) for model Invoice (in subgraph default) has not been defined
+the aggregate expression Invoice_aggregate_exp (in subgraph default) used with model Invoice (in subgraph default) has not been defined

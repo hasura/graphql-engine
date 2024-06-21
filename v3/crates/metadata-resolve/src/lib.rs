@@ -42,8 +42,8 @@ pub use stages::object_types::{
     FieldMapping, ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 pub use stages::relationships::{
-    relationship_execution_category, ObjectTypeWithRelationships, Relationship,
-    RelationshipCapabilities, RelationshipCommandMapping, RelationshipExecutionCategory,
+    relationship_execution_category, ObjectTypeWithRelationships, RelationshipCapabilities,
+    RelationshipCommandMapping, RelationshipExecutionCategory, RelationshipField,
     RelationshipModelMapping, RelationshipTarget,
 };
 pub use stages::scalar_types::ScalarTypeRepresentation;

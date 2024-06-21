@@ -11,6 +11,7 @@ use serde::Deserialize;
 #[serde(rename_all = "snake_case")]
 pub enum UnstableFeature {
     EnableBooleanExpressionTypes,
+    EnableAggregateRelationships,
 }
 
 pub fn resolve_unstable_features(
@@ -22,6 +23,9 @@ pub fn resolve_unstable_features(
         match unstable_feature {
             UnstableFeature::EnableBooleanExpressionTypes => {
                 metadata_resolve_flags.enable_boolean_expression_types = true;
+            }
+            UnstableFeature::EnableAggregateRelationships => {
+                metadata_resolve_flags.enable_aggregate_relationships = true;
             }
         }
     }

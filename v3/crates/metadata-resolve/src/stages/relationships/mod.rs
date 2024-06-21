@@ -5,7 +5,10 @@ use std::collections::BTreeSet;
 
 use indexmap::IndexMap;
 
-use open_dds::relationships::{self, FieldAccess, RelationshipName, RelationshipV1};
+use open_dds::aggregates::AggregateExpressionName;
+use open_dds::relationships::{
+    self, FieldAccess, RelationshipName, RelationshipType, RelationshipV1,
+};
 use open_dds::{
     commands::CommandName, data_connector::DataConnectorName, models::ModelName,
     types::CustomTypeName,
@@ -13,21 +16,24 @@ use open_dds::{
 
 use crate::helpers::types::mk_name;
 use crate::stages::{
-    commands, data_connector_scalar_types, data_connectors, models, object_types, type_permissions,
+    aggregates, commands, data_connector_scalar_types, data_connectors, models, object_types,
+    type_permissions,
 };
 use crate::types::error::{Error, RelationshipError};
+use crate::types::internal_flags::MetadataResolveFlagsInternal;
 use crate::types::subgraph::Qualified;
 
 pub use types::{
-    ObjectTypeWithRelationships, Relationship, RelationshipCapabilities,
-    RelationshipCommandMapping, RelationshipExecutionCategory, RelationshipModelMapping,
-    RelationshipTarget, RelationshipTargetName,
+    ObjectTypeWithRelationships, RelationshipCapabilities, RelationshipCommandMapping,
+    RelationshipExecutionCategory, RelationshipField, RelationshipModelMapping, RelationshipTarget,
+    RelationshipTargetName,
 };
 
 /// resolve relationships
 /// returns updated `types` value
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    flags: &MetadataResolveFlagsInternal,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -39,6 +45,10 @@ pub fn resolve(
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
+    aggregate_expressions: &BTreeMap<
+        Qualified<AggregateExpressionName>,
+        aggregates::AggregateExpression,
+    >,
 ) -> Result<BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>, Error> {
     let mut object_types_with_relationships = BTreeMap::new();
     for (
@@ -57,7 +67,7 @@ pub fn resolve(
                 object_type: object_type.clone(),
                 type_output_permissions: type_output_permissions.clone(),
                 type_input_permissions: type_input_permissions.clone(),
-                relationships: IndexMap::new(),
+                relationship_fields: IndexMap::new(),
                 type_mappings: type_mappings.clone(),
             },
         );
@@ -76,28 +86,33 @@ pub fn resolve(
                 type_name: qualified_relationship_source_type_name.clone(),
             })?;
 
-        let resolved_relationship = resolve_relationship(
+        let resolved_relationships = resolve_relationships(
             relationship,
             subgraph,
             models,
             commands,
             data_connectors,
             data_connector_scalars,
+            aggregate_expressions,
+            object_types_with_permissions,
             &object_representation.object_type,
+            flags,
         )?;
 
-        if object_representation
-            .relationships
-            .insert(
-                resolved_relationship.field_name.clone(),
-                resolved_relationship,
-            )
-            .is_some()
-        {
-            return Err(Error::DuplicateRelationshipInSourceType {
-                type_name: qualified_relationship_source_type_name,
-                relationship_name: relationship.name.clone(),
-            });
+        for resolved_relationship in resolved_relationships {
+            if object_representation
+                .relationship_fields
+                .insert(
+                    resolved_relationship.field_name.clone(),
+                    resolved_relationship,
+                )
+                .is_some()
+            {
+                return Err(Error::DuplicateRelationshipInSourceType {
+                    type_name: qualified_relationship_source_type_name,
+                    relationship_name: relationship.name.clone(),
+                });
+            }
         }
     }
 
@@ -395,7 +410,239 @@ fn get_relationship_capabilities(
     }))
 }
 
-pub fn resolve_relationship(
+fn resolve_aggregate_relationship_field(
+    model_relationship_target: &relationships::ModelRelationshipTarget,
+    resolved_target_model: &models::Model,
+    resolved_relationship_mappings: &[RelationshipModelMapping],
+    resolved_target_capabilities: &Option<RelationshipCapabilities>,
+    relationship: &RelationshipV1,
+    source_type_name: &Qualified<CustomTypeName>,
+    aggregate_expressions: &BTreeMap<
+        Qualified<AggregateExpressionName>,
+        aggregates::AggregateExpression,
+    >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    flags: &MetadataResolveFlagsInternal,
+) -> Result<Option<RelationshipField>, Error> {
+    // If an aggregate has been specified
+    let aggregate_expression_name_and_description = model_relationship_target
+        .aggregate
+        .as_ref()
+        .map(|aggregate| -> Result<_, Error> {
+            // Check if the feature is enabled or not
+            if !flags.enable_aggregate_relationships {
+                return Err(RelationshipError::AggregateRelationshipsDisabled {
+                    type_name: source_type_name.clone(),
+                    relationship_name: relationship.name.clone(),
+                }
+                .into());
+            }
+
+            // Ensure the relationship is an array relationship
+            if model_relationship_target.relationship_type != RelationshipType::Array {
+                return Err(
+                    RelationshipError::AggregateIsOnlyAllowedOnArrayRelationships {
+                        type_name: source_type_name.clone(),
+                        relationship_name: relationship.name.clone(),
+                    }
+                    .into(),
+                );
+            }
+
+            // Validate its usage with the relationship's target model
+            let aggregate_expression_name = models::resolve_aggregate_expression(
+                &aggregate.aggregate_expression,
+                &resolved_target_model.name,
+                &resolved_target_model.data_type,
+                &resolved_target_model.source,
+                aggregate_expressions,
+                object_types,
+            )
+            .map_err(|error| RelationshipError::ModelAggregateExpressionError {
+                type_name: source_type_name.clone(),
+                relationship_name: relationship.name.clone(),
+                error,
+            })?;
+
+            Ok((aggregate_expression_name, &aggregate.description))
+        })
+        .transpose()?;
+
+    let field_name = relationship
+        .graphql
+        .as_ref()
+        .and_then(|g| g.aggregate_field_name.as_ref())
+        .map(|f| mk_name(f.0.as_str()))
+        .transpose()?;
+
+    // We only get an aggregate if both the expression and a field name has been specified.
+    // Without the field name, the aggregate is inaccessible
+    Ok(aggregate_expression_name_and_description
+        .zip(field_name)
+        .map(
+            |((aggregate_expression, description), field_name)| RelationshipField {
+                field_name,
+                relationship_name: relationship.name.clone(),
+                source: source_type_name.clone(),
+                target: RelationshipTarget::ModelAggregate {
+                    model_name: resolved_target_model.name.clone(),
+                    target_typename: resolved_target_model.data_type.clone(),
+                    mappings: resolved_relationship_mappings.to_vec(),
+                    aggregate_expression,
+                },
+                target_capabilities: resolved_target_capabilities.clone(),
+                description: description.clone(),
+                deprecated: relationship.deprecated.clone(),
+            },
+        ))
+}
+
+fn resolve_model_relationship_fields(
+    target_model: &relationships::ModelRelationshipTarget,
+    subgraph: &str,
+    models: &IndexMap<Qualified<ModelName>, crate::Model>,
+    data_connectors: &data_connectors::DataConnectors,
+    source_type_name: &Qualified<CustomTypeName>,
+    relationship: &RelationshipV1,
+    source_type: &object_types::ObjectTypeRepresentation,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
+    aggregate_expressions: &BTreeMap<
+        Qualified<AggregateExpressionName>,
+        aggregates::AggregateExpression,
+    >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    flags: &MetadataResolveFlagsInternal,
+) -> Result<Vec<RelationshipField>, Error> {
+    let qualified_target_model_name = Qualified::new(
+        target_model.subgraph().unwrap_or(subgraph).to_string(),
+        target_model.name.clone(),
+    );
+    let resolved_target_model = models.get(&qualified_target_model_name).ok_or_else(|| {
+        Error::UnknownTargetModelUsedInRelationship {
+            type_name: source_type_name.clone(),
+            relationship_name: relationship.name.clone(),
+            model_name: qualified_target_model_name.clone(),
+        }
+    })?;
+
+    let source_data_connector = resolved_target_model
+        .source
+        .as_ref()
+        .map(|source| &source.data_connector);
+
+    let target_capabilities = get_relationship_capabilities(
+        source_type_name,
+        &relationship.name,
+        source_data_connector,
+        &RelationshipTargetName::Model(resolved_target_model.name.clone()),
+        data_connectors,
+    )?;
+
+    let mappings = resolve_relationship_mappings_model(
+        relationship,
+        source_type_name,
+        source_type,
+        resolved_target_model,
+        data_connector_scalars,
+    )?;
+
+    let aggregate_relationship_field = resolve_aggregate_relationship_field(
+        target_model,
+        resolved_target_model,
+        &mappings,
+        &target_capabilities,
+        relationship,
+        source_type_name,
+        aggregate_expressions,
+        object_types,
+        flags,
+    )?;
+
+    let regular_relationship_field = RelationshipField {
+        field_name: mk_name(&relationship.name.0)?,
+        relationship_name: relationship.name.clone(),
+        source: source_type_name.clone(),
+        target: RelationshipTarget::Model {
+            model_name: qualified_target_model_name,
+            relationship_type: target_model.relationship_type.clone(),
+            target_typename: resolved_target_model.data_type.clone(),
+            mappings,
+        },
+        target_capabilities,
+        description: relationship.description.clone(),
+        deprecated: relationship.deprecated.clone(),
+    };
+
+    Ok(std::iter::once(regular_relationship_field)
+        .chain(aggregate_relationship_field)
+        .collect())
+}
+
+fn resolve_command_relationship_field(
+    target_command: &relationships::CommandRelationshipTarget,
+    subgraph: &str,
+    commands: &IndexMap<Qualified<CommandName>, commands::Command>,
+    data_connectors: &data_connectors::DataConnectors,
+    source_type_name: &Qualified<CustomTypeName>,
+    relationship: &RelationshipV1,
+    source_type: &object_types::ObjectTypeRepresentation,
+) -> Result<RelationshipField, Error> {
+    let qualified_target_command_name = Qualified::new(
+        target_command
+            .subgraph
+            .as_deref()
+            .unwrap_or(subgraph)
+            .to_string(),
+        target_command.name.clone(),
+    );
+    let resolved_target_command =
+        commands
+            .get(&qualified_target_command_name)
+            .ok_or_else(|| Error::UnknownTargetCommandUsedInRelationship {
+                type_name: source_type_name.clone(),
+                relationship_name: relationship.name.clone(),
+                command_name: qualified_target_command_name.clone(),
+            })?;
+    let source_data_connector = resolved_target_command
+        .source
+        .as_ref()
+        .map(|source| &source.data_connector);
+
+    let target = RelationshipTarget::Command {
+        command_name: qualified_target_command_name,
+        target_type: resolved_target_command.output_type.clone(),
+        mappings: resolve_relationship_mappings_command(
+            relationship,
+            source_type_name,
+            source_type,
+            resolved_target_command,
+        )?,
+    };
+
+    let target_capabilities = get_relationship_capabilities(
+        source_type_name,
+        &relationship.name,
+        source_data_connector,
+        &RelationshipTargetName::Command(resolved_target_command.name.clone()),
+        data_connectors,
+    )?;
+
+    let field_name = mk_name(&relationship.name.0)?;
+    Ok(RelationshipField {
+        field_name,
+        relationship_name: relationship.name.clone(),
+        source: source_type_name.clone(),
+        target,
+        target_capabilities,
+        description: relationship.description.clone(),
+        deprecated: relationship.deprecated.clone(),
+    })
+}
+
+pub fn resolve_relationships(
     relationship: &RelationshipV1,
     subgraph: &str,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
@@ -405,99 +652,42 @@ pub fn resolve_relationship(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
+    aggregate_expressions: &BTreeMap<
+        Qualified<AggregateExpressionName>,
+        aggregates::AggregateExpression,
+    >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     source_type: &object_types::ObjectTypeRepresentation,
-) -> Result<Relationship, Error> {
+    flags: &MetadataResolveFlagsInternal,
+) -> Result<Vec<RelationshipField>, Error> {
     let source_type_name = Qualified::new(subgraph.to_string(), relationship.source_type.clone());
-    let (relationship_target, source_data_connector, target_name) = match &relationship.target {
+    match &relationship.target {
         relationships::RelationshipTarget::Model(target_model) => {
-            let qualified_target_model_name = Qualified::new(
-                target_model.subgraph().unwrap_or(subgraph).to_string(),
-                target_model.name.clone(),
-            );
-            let resolved_target_model =
-                models.get(&qualified_target_model_name).ok_or_else(|| {
-                    Error::UnknownTargetModelUsedInRelationship {
-                        type_name: source_type_name.clone(),
-                        relationship_name: relationship.name.clone(),
-                        model_name: qualified_target_model_name.clone(),
-                    }
-                })?;
-            let source_data_connector = resolved_target_model
-                .source
-                .as_ref()
-                .map(|source| &source.data_connector);
-            (
-                RelationshipTarget::Model {
-                    model_name: qualified_target_model_name,
-                    relationship_type: target_model.relationship_type.clone(),
-                    target_typename: resolved_target_model.data_type.clone(),
-                    mappings: resolve_relationship_mappings_model(
-                        relationship,
-                        &source_type_name,
-                        source_type,
-                        resolved_target_model,
-                        data_connector_scalars,
-                    )?,
-                },
-                source_data_connector,
-                RelationshipTargetName::Model(resolved_target_model.name.clone()),
+            resolve_model_relationship_fields(
+                target_model,
+                subgraph,
+                models,
+                data_connectors,
+                &source_type_name,
+                relationship,
+                source_type,
+                data_connector_scalars,
+                aggregate_expressions,
+                object_types,
+                flags,
             )
         }
         relationships::RelationshipTarget::Command(target_command) => {
-            let qualified_target_command_name = Qualified::new(
-                target_command
-                    .subgraph
-                    .as_deref()
-                    .unwrap_or(subgraph)
-                    .to_string(),
-                target_command.name.clone(),
-            );
-            let resolved_target_command =
-                commands
-                    .get(&qualified_target_command_name)
-                    .ok_or_else(|| Error::UnknownTargetCommandUsedInRelationship {
-                        type_name: source_type_name.clone(),
-                        relationship_name: relationship.name.clone(),
-                        command_name: qualified_target_command_name.clone(),
-                    })?;
-
-            let source_data_connector = resolved_target_command
-                .source
-                .as_ref()
-                .map(|source| &source.data_connector);
-            (
-                RelationshipTarget::Command {
-                    command_name: qualified_target_command_name,
-                    target_type: resolved_target_command.output_type.clone(),
-                    mappings: resolve_relationship_mappings_command(
-                        relationship,
-                        &source_type_name,
-                        source_type,
-                        resolved_target_command,
-                    )?,
-                },
-                source_data_connector,
-                RelationshipTargetName::Command(resolved_target_command.name.clone()),
-            )
+            let command_relationship_field = resolve_command_relationship_field(
+                target_command,
+                subgraph,
+                commands,
+                data_connectors,
+                &source_type_name,
+                relationship,
+                source_type,
+            )?;
+            Ok(vec![command_relationship_field])
         }
-    };
-
-    let target_capabilities = get_relationship_capabilities(
-        &source_type_name,
-        &relationship.name,
-        source_data_connector,
-        &target_name,
-        data_connectors,
-    )?;
-
-    let field_name = mk_name(&relationship.name.0)?;
-    Ok(Relationship {
-        name: relationship.name.clone(),
-        field_name,
-        source: source_type_name,
-        target: relationship_target,
-        target_capabilities,
-        description: relationship.description.clone(),
-        deprecated: relationship.deprecated.clone(),
-    })
+    }
 }
