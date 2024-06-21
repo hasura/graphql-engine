@@ -101,7 +101,8 @@ serveOptions =
       soPersistedQueriesTtl = Init._default Init.persistedQueriesTtlOption,
       soRemoteSchemaResponsePriority = Init._default Init.remoteSchemaResponsePriorityOption,
       soHeaderPrecedence = Init._default Init.configuredHeaderPrecedenceOption,
-      soTraceQueryStatus = Init._default Init.traceQueryStatusOption
+      soTraceQueryStatus = Init._default Init.traceQueryStatusOption,
+      soDisableNativeQueryValidation = Init._default Init.disableNativeQueryValidationOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

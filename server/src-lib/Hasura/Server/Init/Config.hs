@@ -90,6 +90,7 @@ import Database.PG.Query qualified as Query
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.Logging qualified as Logging
+import Hasura.NativeQuery.Validation qualified as NativeQuery.Validation
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata (MetadataDefaults)
@@ -333,7 +334,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoPersistedQueriesTtl :: Maybe Int,
     rsoRemoteSchemaResponsePriority :: Maybe Server.Types.RemoteSchemaResponsePriority,
     rsoHeaderPrecedence :: Maybe Server.Types.HeaderPrecedence,
-    rsoTraceQueryStatus :: Maybe Server.Types.TraceQueryStatus
+    rsoTraceQueryStatus :: Maybe Server.Types.TraceQueryStatus,
+    rsoDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation
   }
 
 deriving stock instance (Show (Logging.EngineLogType impl)) => Show (ServeOptionsRaw impl)
@@ -645,7 +647,8 @@ data ServeOptions impl = ServeOptions
     soPersistedQueriesTtl :: Int,
     soRemoteSchemaResponsePriority :: Server.Types.RemoteSchemaResponsePriority,
     soHeaderPrecedence :: Server.Types.HeaderPrecedence,
-    soTraceQueryStatus :: Server.Types.TraceQueryStatus
+    soTraceQueryStatus :: Server.Types.TraceQueryStatus,
+    soDisableNativeQueryValidation :: NativeQuery.Validation.DisableNativeQueryValidation
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

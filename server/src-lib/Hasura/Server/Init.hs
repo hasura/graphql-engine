@@ -34,6 +34,7 @@ import Hasura.Base.Error qualified as Error
 import Hasura.GraphQL.ApolloFederation (getApolloFederationStatus)
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.Logging qualified as Logging
+import Hasura.NativeQuery.Validation qualified as NativeQuery
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Schema.Options qualified as Options
@@ -226,6 +227,10 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soRemoteSchemaResponsePriority <- withOptionDefault rsoRemoteSchemaResponsePriority remoteSchemaResponsePriorityOption
   soHeaderPrecedence <- withOptionDefault rsoHeaderPrecedence configuredHeaderPrecedenceOption
   soTraceQueryStatus <- withOptionDefault rsoTraceQueryStatus traceQueryStatusOption
+  soDisableNativeQueryValidation <-
+    case rsoDisableNativeQueryValidation of
+      NativeQuery.AlwaysValidateNativeQueries -> withOptionDefault Nothing disableNativeQueryValidationOption
+      NativeQuery.NeverValidateNativeQueries -> pure NativeQuery.NeverValidateNativeQueries
   pure ServeOptions {..}
 
 -- | Fetch Postgres 'Query.ConnParams' components from the environment

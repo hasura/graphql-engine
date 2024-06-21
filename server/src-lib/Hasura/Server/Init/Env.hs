@@ -35,6 +35,7 @@ import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Cache
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.Logging qualified as Logging
+import Hasura.NativeQuery.Validation qualified as NativeQuery
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..))
 import Hasura.RQL.Types.NamingCase (NamingCase)
@@ -246,6 +247,9 @@ instance FromEnv Metadata where
 
 instance FromEnv Options.StringifyNumbers where
   fromEnv = fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers) . fromEnv @Bool
+
+instance FromEnv NativeQuery.DisableNativeQueryValidation where
+  fromEnv = fmap (bool NativeQuery.AlwaysValidateNativeQueries NativeQuery.NeverValidateNativeQueries) . fromEnv @Bool
 
 instance FromEnv Options.RemoteSchemaPermissions where
   fromEnv = fmap (bool Options.DisableRemoteSchemaPermissions Options.EnableRemoteSchemaPermissions) . fromEnv @Bool
