@@ -140,7 +140,10 @@
                   }
                 ],
                 "comparableRelationships": [
-                  { "relationshipName": "Artist" },
+                  {
+                    "relationshipName": "Artist",
+                    "booleanExpressionType": "artist_bool_exp"
+                  },
                   { "relationshipName": "Tracks" }
                 ]
               }
@@ -391,6 +394,7 @@
               "dataConnectorName": "db",
               "collection": "Artist"
             },
+            "filterExpressionType": "artist_bool_exp",
             "graphql": {
               "selectUniques": [
                 {
@@ -403,7 +407,6 @@
               },
               "orderByExpressionType": "Artist_Order_By"
             },
-            "filterExpressionType": "artist_bool_exp",
             "orderableFields": [
               {
                 "fieldName": "ArtistId",
