@@ -33,24 +33,33 @@ pub struct ObjectTypeWithRelationships {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum RelationshipTarget {
-    Model {
-        // TODO(Abhinav): Refactor resolved types to contain denormalized data (eg: actual resolved model)
-        model_name: Qualified<ModelName>,
-        relationship_type: RelationshipType,
-        target_typename: Qualified<CustomTypeName>,
-        mappings: Vec<RelationshipModelMapping>,
-    },
-    ModelAggregate {
-        model_name: Qualified<ModelName>,
-        target_typename: Qualified<CustomTypeName>,
-        mappings: Vec<RelationshipModelMapping>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-    },
-    Command {
-        command_name: Qualified<CommandName>,
-        target_type: QualifiedTypeReference,
-        mappings: Vec<RelationshipCommandMapping>,
-    },
+    Model(ModelRelationshipTarget),
+    ModelAggregate(ModelAggregateRelationshipTarget),
+    Command(CommandRelationshipTarget),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ModelRelationshipTarget {
+    // TODO(Abhinav): Refactor resolved types to contain denormalized data (eg: actual resolved model)
+    pub model_name: Qualified<ModelName>,
+    pub relationship_type: RelationshipType,
+    pub target_typename: Qualified<CustomTypeName>,
+    pub mappings: Vec<RelationshipModelMapping>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ModelAggregateRelationshipTarget {
+    pub model_name: Qualified<ModelName>,
+    pub target_typename: Qualified<CustomTypeName>,
+    pub mappings: Vec<RelationshipModelMapping>,
+    pub aggregate_expression: Qualified<AggregateExpressionName>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct CommandRelationshipTarget {
+    pub command_name: Qualified<CommandName>,
+    pub target_type: QualifiedTypeReference,
+    pub mappings: Vec<RelationshipCommandMapping>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

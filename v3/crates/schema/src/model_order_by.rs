@@ -150,12 +150,14 @@ pub fn build_model_order_by_input_schema(
         // relationship fields
         // TODO(naveen): Add support for command relationships.
         for (rel_name, relationship) in &object_type_representation.relationship_fields {
-            if let metadata_resolve::RelationshipTarget::Model {
-                model_name,
-                relationship_type,
-                target_typename,
-                mappings,
-            } = &relationship.target
+            if let metadata_resolve::RelationshipTarget::Model(
+                metadata_resolve::ModelRelationshipTarget {
+                    model_name,
+                    relationship_type,
+                    target_typename,
+                    mappings,
+                },
+            ) = &relationship.target
             {
                 let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
                     crate::Error::InternalModelNotFound {

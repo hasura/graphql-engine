@@ -430,13 +430,14 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     .to_string(),
                         })
                     }
-                    relationships::RelationshipTarget::Model {
-                        model_name,
-                        relationship_type,
-                        target_typename,
-                        mappings,
-                        ..
-                    } => {
+                    relationships::RelationshipTarget::Model(
+                        relationships::ModelRelationshipTarget {
+                            model_name,
+                            relationship_type,
+                            target_typename,
+                            mappings,
+                        },
+                    ) => {
                         let target_model = models.get(model_name).ok_or_else(|| {
                             Error::TypePredicateError { type_predicate_error: TypePredicateError::UnknownModelUsedInRelationshipTypePredicate {
                                 type_name: type_name.clone(),

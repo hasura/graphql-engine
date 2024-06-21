@@ -258,12 +258,14 @@ fn build_new_comparable_relationships_schema(
             })?;
 
         // we haven't thought about Command relationship targets yet
-        if let metadata_resolve::RelationshipTarget::Model {
-            model_name,
-            relationship_type,
-            target_typename: _,
-            mappings,
-        } = &relationship.target
+        if let metadata_resolve::RelationshipTarget::Model(
+            metadata_resolve::ModelRelationshipTarget {
+                model_name,
+                relationship_type,
+                target_typename: _,
+                mappings,
+            },
+        ) = &relationship.target
         {
             // lookup target model for relationship
             let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
@@ -343,12 +345,14 @@ fn build_comparable_relationships_schema(
     let mut input_fields = BTreeMap::new();
 
     for relationship in object_type_representation.relationship_fields.values() {
-        if let metadata_resolve::RelationshipTarget::Model {
-            model_name,
-            relationship_type,
-            target_typename: _,
-            mappings,
-        } = &relationship.target
+        if let metadata_resolve::RelationshipTarget::Model(
+            metadata_resolve::ModelRelationshipTarget {
+                model_name,
+                relationship_type,
+                target_typename: _,
+                mappings,
+            },
+        ) = &relationship.target
         {
             // lookup target model for relationship
             let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {

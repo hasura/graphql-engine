@@ -24,6 +24,7 @@ use crate::types::internal_flags::MetadataResolveFlagsInternal;
 use crate::types::subgraph::Qualified;
 
 pub use types::{
+    CommandRelationshipTarget, ModelAggregateRelationshipTarget, ModelRelationshipTarget,
     ObjectTypeWithRelationships, RelationshipCapabilities, RelationshipCommandMapping,
     RelationshipExecutionCategory, RelationshipField, RelationshipModelMapping, RelationshipTarget,
     RelationshipTargetName,
@@ -484,12 +485,12 @@ fn resolve_aggregate_relationship_field(
                 field_name,
                 relationship_name: relationship.name.clone(),
                 source: source_type_name.clone(),
-                target: RelationshipTarget::ModelAggregate {
+                target: RelationshipTarget::ModelAggregate(ModelAggregateRelationshipTarget {
                     model_name: resolved_target_model.name.clone(),
                     target_typename: resolved_target_model.data_type.clone(),
                     mappings: resolved_relationship_mappings.to_vec(),
                     aggregate_expression,
-                },
+                }),
                 target_capabilities: resolved_target_capabilities.clone(),
                 description: description.clone(),
                 deprecated: relationship.deprecated.clone(),
@@ -565,12 +566,12 @@ fn resolve_model_relationship_fields(
         field_name: mk_name(&relationship.name.0)?,
         relationship_name: relationship.name.clone(),
         source: source_type_name.clone(),
-        target: RelationshipTarget::Model {
+        target: RelationshipTarget::Model(ModelRelationshipTarget {
             model_name: qualified_target_model_name,
             relationship_type: target_model.relationship_type.clone(),
             target_typename: resolved_target_model.data_type.clone(),
             mappings,
-        },
+        }),
         target_capabilities,
         description: relationship.description.clone(),
         deprecated: relationship.deprecated.clone(),
@@ -611,7 +612,7 @@ fn resolve_command_relationship_field(
         .as_ref()
         .map(|source| &source.data_connector);
 
-    let target = RelationshipTarget::Command {
+    let target = RelationshipTarget::Command(CommandRelationshipTarget {
         command_name: qualified_target_command_name,
         target_type: resolved_target_command.output_type.clone(),
         mappings: resolve_relationship_mappings_command(
@@ -620,7 +621,7 @@ fn resolve_command_relationship_field(
             source_type,
             resolved_target_command,
         )?,
-    };
+    });
 
     let target_capabilities = get_relationship_capabilities(
         source_type_name,
