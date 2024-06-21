@@ -27,6 +27,8 @@ pub struct ResolvedObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
     pub object_type: Qualified<CustomTypeName>,
     pub graphql: Option<BooleanExpressionGraphqlConfig>,
+    // do we allow _and, _or, etc for this type?
+    pub include_logical_operators: IncludeLogicalOperators,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -45,6 +47,21 @@ pub struct ResolvedScalarBooleanExpressionType {
 
     // optional name for exposing this in the GraphQL schema
     pub graphql_name: Option<GraphQlTypeName>,
+
+    // do we allow _is_null comparisons for this type?
+    pub include_is_null: IncludeIsNull,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum IncludeIsNull {
+    Yes,
+    No,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum IncludeLogicalOperators {
+    Yes,
+    No,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -57,7 +74,7 @@ pub struct ComparisonExpressionInfo {
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
     pub operator_mapping:
         BTreeMap<Qualified<DataConnectorName>, BTreeMap<OperatorName, DataConnectorOperatorName>>,
-    pub is_null_operator_name: ast::Name,
+    pub is_null_operator_name: Option<ast::Name>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

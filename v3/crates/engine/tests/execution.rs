@@ -251,12 +251,26 @@ fn test_model_select_many_where_nested_select() -> anyhow::Result<()> {
     common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
+// is_null tests
+
+// old boolean expressions
 #[test]
-fn test_model_select_many_where_is_null() -> anyhow::Result<()> {
-    let test_path_string = "execute/models/select_many/where/is_null";
+fn test_model_select_many_where_is_null_object_boolean_expression_type() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/where/is_null/object_boolean_expression_type";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
+
+// new boolean expressions
+#[test]
+fn test_model_select_many_where_is_null_boolean_expression_type() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/is_null/boolean_expression_type";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
+}
+
+// end of is_null tests
 
 #[test]
 fn test_model_select_many_where_filter() -> anyhow::Result<()> {

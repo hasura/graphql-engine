@@ -49,29 +49,31 @@ pub fn build_scalar_comparison_input(
         Qualified<DataConnectorName>,
         BTreeMap<OperatorName, DataConnectorOperatorName>,
     >,
-    is_null_operator_name: &ast::Name,
+    maybe_is_null_operator_name: &Option<ast::Name>,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
     let mut input_fields: BTreeMap<ast::Name, Namespaced<GDS, InputField<GDS>>> = BTreeMap::new();
 
-    // Add is_null field
-    let is_null_input_type = ast::TypeContainer {
-        base: ast::BaseTypeContainer::Named(gql_schema::RegisteredTypeName::boolean()),
-        nullable: true,
-    };
+    if let Some(is_null_operator_name) = maybe_is_null_operator_name {
+        // Add is_null field
+        let is_null_input_type = ast::TypeContainer {
+            base: ast::BaseTypeContainer::Named(gql_schema::RegisteredTypeName::boolean()),
+            nullable: true,
+        };
 
-    input_fields.insert(
-        is_null_operator_name.clone(),
-        builder.allow_all_namespaced(gql_schema::InputField::new(
+        input_fields.insert(
             is_null_operator_name.clone(),
-            None,
-            types::Annotation::Input(types::InputAnnotation::Model(
-                types::ModelInputAnnotation::IsNullOperation,
+            builder.allow_all_namespaced(gql_schema::InputField::new(
+                is_null_operator_name.clone(),
+                None,
+                types::Annotation::Input(types::InputAnnotation::Model(
+                    types::ModelInputAnnotation::IsNullOperation,
+                )),
+                is_null_input_type,
+                None,
+                gql_schema::DeprecationStatus::NotDeprecated,
             )),
-            is_null_input_type,
-            None,
-            gql_schema::DeprecationStatus::NotDeprecated,
-        )),
-    );
+        );
+    }
 
     for (op_name, input_type) in operators {
         // comparison_operator: input_type

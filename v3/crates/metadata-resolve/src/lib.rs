@@ -23,7 +23,8 @@ pub use stages::aggregates::{
 };
 pub use stages::boolean_expressions::{
     BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
-    ComparisonExpressionInfo, ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
+    ComparisonExpressionInfo, IncludeLogicalOperators, ObjectComparisonExpressionInfo,
+    ResolvedObjectBooleanExpressionType,
 };
 pub use stages::command_permissions::CommandWithPermissions;
 pub use stages::commands::Command;

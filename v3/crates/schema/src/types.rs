@@ -371,7 +371,7 @@ pub enum TypeId {
             Qualified<DataConnectorName>,
             BTreeMap<types::OperatorName, DataConnectorOperatorName>,
         >,
-        is_null_operator_name: ast::Name,
+        is_null_operator_name: Option<ast::Name>,
     },
     OrderByEnumType {
         graphql_type_name: ast::TypeName,

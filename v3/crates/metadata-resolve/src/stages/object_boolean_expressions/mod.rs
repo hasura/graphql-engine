@@ -314,10 +314,9 @@ pub fn resolve_boolean_expression_graphql_config(
                             type_name: graphql_type_name.clone(),
                             operator_mapping,
                             operators,
-                            is_null_operator_name: filter_graphql_config
-                                .operator_names
-                                .is_null
-                                .clone(),
+                            is_null_operator_name: Some(
+                                filter_graphql_config.operator_names.is_null.clone(),
+                            ),
                         },
                     );
                 };

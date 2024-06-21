@@ -4,13 +4,18 @@ use crate::types::internal_flags::MetadataResolveFlagsInternal;
 use crate::Qualified;
 use open_dds::{boolean_expression::BooleanExpressionOperand, types::CustomTypeName};
 use std::collections::{BTreeMap, BTreeSet};
+mod graphql;
 mod object;
 mod scalar;
 mod types;
+
+mod helpers;
+
 pub use types::{
     BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
     BooleanExpressionGraphqlFieldConfig, BooleanExpressionTypes, BooleanExpressionsOutput,
-    ComparisonExpressionInfo, ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
+    ComparisonExpressionInfo, IncludeIsNull, IncludeLogicalOperators,
+    ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
     ResolvedScalarBooleanExpressionType,
 };
 
@@ -57,6 +62,7 @@ pub fn resolve(
             let scalar_boolean_expression_type = scalar::resolve_scalar_boolean_expression_type(
                 boolean_expression_type_name,
                 boolean_expression_scalar_operand,
+                &boolean_expression_type.is_null,
                 subgraph,
                 data_connectors,
                 &boolean_expression_type.graphql,
@@ -80,6 +86,7 @@ pub fn resolve(
             let object_boolean_expression_type = object::resolve_object_boolean_expression_type(
                 boolean_expression_type_name,
                 boolean_expression_object_operand,
+                &boolean_expression_type.logical_operators,
                 subgraph,
                 &boolean_expression_type.graphql,
                 object_types,

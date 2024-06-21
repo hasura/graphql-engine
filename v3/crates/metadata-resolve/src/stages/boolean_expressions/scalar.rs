@@ -1,10 +1,12 @@
+use super::helpers;
 use super::types::ResolvedScalarBooleanExpressionType;
 use crate::stages::data_connectors;
 use crate::types::error::Error;
 use crate::Qualified;
 use open_dds::{
     boolean_expression::{
-        BooleanExpressionScalarOperand, BooleanExpressionTypeGraphQlConfiguration,
+        BooleanExpressionIsNull, BooleanExpressionScalarOperand,
+        BooleanExpressionTypeGraphQlConfiguration,
     },
     types::CustomTypeName,
 };
@@ -14,6 +16,7 @@ use std::collections::BTreeMap;
 pub(crate) fn resolve_scalar_boolean_expression_type(
     boolean_expression_type_name: &Qualified<CustomTypeName>,
     scalar_boolean_expression_operand: &BooleanExpressionScalarOperand,
+    is_null: &BooleanExpressionIsNull,
     subgraph: &str,
     data_connectors: &data_connectors::DataConnectors,
     graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
@@ -71,6 +74,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
         name: boolean_expression_type_name.clone(),
         comparison_operators: resolved_comparison_operators,
         data_connector_operator_mappings,
+        include_is_null: helpers::resolve_is_null(is_null),
         graphql_name,
     })
 }

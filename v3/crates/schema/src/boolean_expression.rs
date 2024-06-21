@@ -12,7 +12,7 @@ use super::types::output_type::relationship::FilterRelationshipAnnotation;
 use super::types::{BooleanExpressionAnnotation, InputAnnotation, TypeId};
 use metadata_resolve::{
     mk_name, BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
-    ComparisonExpressionInfo, ModelExpressionType, ModelWithPermissions,
+    ComparisonExpressionInfo, IncludeLogicalOperators, ModelExpressionType, ModelWithPermissions,
     ObjectBooleanExpressionType, ObjectComparisonExpressionInfo, ObjectTypeWithRelationships,
     Qualified, RelationshipField, RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
 };
@@ -477,12 +477,15 @@ fn build_schema_with_boolean_expression_type(
     if let Some(boolean_expression_info) = &boolean_expression_object_type.graphql {
         let mut input_fields = BTreeMap::new();
 
-        // add `_and`, `_not` etc
-        input_fields.extend(build_builtin_operator_schema(
-            boolean_expression_info,
-            type_name,
-            builder,
-        ));
+        if boolean_expression_object_type.include_logical_operators == IncludeLogicalOperators::Yes
+        {
+            // add `_and`, `_not` etc
+            input_fields.extend(build_builtin_operator_schema(
+                boolean_expression_info,
+                type_name,
+                builder,
+            ));
+        }
 
         let object_type_representation =
             get_object_type_representation(gds, &boolean_expression_object_type.object_type)?;
