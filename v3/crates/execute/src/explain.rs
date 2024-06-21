@@ -149,7 +149,7 @@ pub(crate) async fn explain_mutation_plan(
 async fn get_execution_steps<'s>(
     http_context: &HttpContext,
     alias: gql::ast::common::Alias,
-    process_response_as: &ProcessResponseAs<'s, 's>,
+    process_response_as: &ProcessResponseAs<'s>,
     join_locations: JoinLocations<(RemoteJoin<'s, '_>, JoinId)>,
     ndc_request: types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,

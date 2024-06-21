@@ -14,9 +14,10 @@ use open_dds::types::FieldName;
 use super::global_id::{global_id_col_format, GLOBAL_ID_VERSION};
 use super::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use super::plan::ProcessResponseAs;
-use crate::error::{self, FieldInternalError};
+use crate::error;
+use crate::ir;
 use metadata_resolve::Qualified;
-use schema::{Annotation, GlobalID, OutputAnnotation, GDS};
+use schema::{AggregateOutputAnnotation, Annotation, GlobalID, OutputAnnotation, GDS};
 
 trait KeyValueResponse {
     fn remove(&mut self, key: &str) -> Option<json::Value>;
@@ -378,9 +379,8 @@ fn process_command_field_value(
 
 fn process_aggregate_requested_fields(
     row_set: ndc_models::RowSet,
-    requested_fields: &IndexMap<String, crate::ir::aggregates::AggregateFieldSelection>,
-) -> Result<json::Map<String, json::Value>, error::FieldError> {
-    let mut json_object = json::Map::<String, json::Value>::new();
+    aggregate_output_selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+) -> Result<json::Value, error::FieldError> {
     let mut aggregate_results = row_set.aggregates
         .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
             summary:
@@ -388,48 +388,60 @@ fn process_aggregate_requested_fields(
                     .to_owned(),
         })?;
 
-    for (field_name, aggregate_field_selection) in requested_fields {
-        let aggregate_value = aggregate_results.swap_remove(field_name).ok_or_else(|| {
-            error::NDCUnexpectedError::BadNDCResponse {
-                summary: format!("missing aggregate field: {field_name}"),
-            }
-        })?;
-
-        let graphql_field_path = aggregate_field_selection.get_graphql_field_path();
-        set_value_at_json_path(&mut json_object, graphql_field_path, aggregate_value)?;
-    }
-
-    Ok(json_object)
+    reshape_aggregate_fields(&mut aggregate_results, &[], aggregate_output_selection_set)
 }
 
-fn set_value_at_json_path(
-    mut json_object: &mut json::Map<String, json::Value>,
-    path: &[Alias],
-    value: json::Value,
-) -> Result<(), error::FieldError> {
-    let mut path_iterator = path.iter();
-    let mut path_element =
-        path_iterator
-            .next()
-            .ok_or_else(|| FieldInternalError::InternalGeneric {
-                description: "Path to set value in JSON was empty".to_owned(),
-            })?;
+fn reshape_aggregate_fields(
+    aggregate_results: &mut IndexMap<String, json::Value>,
+    graphql_field_path: &[&Alias],
+    aggregate_output_selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+) -> Result<json::Value, error::FieldError> {
+    let json_object = aggregate_output_selection_set
+        .fields
+        .values()
+        .map(|field| {
+            let graphql_field_path = graphql_field_path
+                .iter()
+                .chain(std::iter::once(&&field.alias))
+                .copied()
+                .collect::<Vec<&Alias>>();
 
-    for next_path_element in path_iterator {
-        let field_value = json_object
-            .entry(path_element.0.as_str())
-            .or_insert_with(|| json::Value::Object(json::Map::new()));
-        json_object =
-            field_value
-                .as_object_mut()
-                .ok_or_else(|| FieldInternalError::InternalGeneric {
-                    description: "Encountered non-object type in JSON along path".to_owned(),
-                })?;
-        path_element = next_path_element;
-    }
+            let field_call = field.field_call()?;
 
-    json_object.insert(path_element.to_string(), value);
-    Ok(())
+            match field_call.info.generic {
+                Annotation::Output(OutputAnnotation::Aggregate(
+                    AggregateOutputAnnotation::AggregationFunctionField(..),
+                )) => {
+                    let field_name = ir::aggregates::mk_alias_from_graphql_field_path(
+                        graphql_field_path.as_slice(),
+                    );
+                    let aggregate_value =
+                        aggregate_results.swap_remove(&field_name).ok_or_else(|| {
+                            error::NDCUnexpectedError::BadNDCResponse {
+                                summary: format!("missing aggregate field: {field_name}"),
+                            }
+                        })?;
+                    Ok((field.alias.to_string(), aggregate_value))
+                }
+
+                Annotation::Output(OutputAnnotation::Aggregate(
+                    AggregateOutputAnnotation::AggregatableField { .. },
+                )) => {
+                    let json_object = reshape_aggregate_fields(
+                        aggregate_results,
+                        graphql_field_path.as_slice(),
+                        &field.selection_set,
+                    )?;
+                    Ok((field.alias.to_string(), json_object))
+                }
+                annotation => Err(error::FieldInternalError::UnexpectedAnnotation {
+                    annotation: annotation.clone(),
+                })?,
+            }
+        })
+        .collect::<Result<json::Map<String, json::Value>, error::FieldError>>()?;
+
+    Ok(json::Value::Object(json_object))
 }
 
 pub fn process_response(
@@ -466,9 +478,8 @@ pub fn process_response(
                     )?;
                     json::to_value(result).map_err(error::FieldError::from)
                 }
-                ProcessResponseAs::Aggregates { requested_fields } => {
-                    let result = process_aggregate_requested_fields(row_set, requested_fields)?;
-                    Ok(json::Value::Object(result))
+                ProcessResponseAs::Aggregates => {
+                    process_aggregate_requested_fields(row_set, selection_set)
                 }
             }
         },

@@ -28,33 +28,14 @@ pub struct AggregateSelectionSet<'s> {
 pub enum AggregateFieldSelection<'s> {
     Count {
         column_path: Vec<&'s str>,
-        graphql_field_path: Vec<Alias>,
     },
     CountDistinct {
         column_path: Vec<&'s str>,
-        graphql_field_path: Vec<Alias>,
     },
     AggregationFunction {
         function_name: &'s DataConnectorAggregationFunctionName,
         column_path: nonempty::NonEmpty<&'s str>,
-        graphql_field_path: Vec<Alias>,
     },
-}
-
-impl<'s> AggregateFieldSelection<'s> {
-    pub fn get_graphql_field_path(&self) -> &Vec<Alias> {
-        match self {
-            AggregateFieldSelection::Count {
-                graphql_field_path, ..
-            }
-            | AggregateFieldSelection::CountDistinct {
-                graphql_field_path, ..
-            }
-            | AggregateFieldSelection::AggregationFunction {
-                graphql_field_path, ..
-            } => graphql_field_path,
-        }
-    }
 }
 
 pub fn generate_aggregate_selection_set_ir<'s>(
@@ -88,16 +69,16 @@ fn add_aggregate_selections<'s>(
     aggregate_operand_type: &QualifiedTypeName,
     data_connector_name: &Qualified<DataConnectorName>,
     column_path: &[&'s metadata_resolve::FieldMapping],
-    graphql_field_path: &[Alias],
+    graphql_field_path: &[&Alias],
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     field_mappings: Option<&'s BTreeMap<FieldName, metadata_resolve::FieldMapping>>,
 ) -> Result<(), error::Error> {
     for field in selection_set.fields.values() {
         let graphql_field_path = graphql_field_path
             .iter()
-            .chain(std::iter::once(&field.alias))
-            .cloned()
-            .collect::<Vec<Alias>>();
+            .chain(std::iter::once(&&field.alias))
+            .copied()
+            .collect::<Vec<&Alias>>();
 
         let field_call = field.field_call()?;
         match field_call.info.generic {
@@ -109,7 +90,6 @@ fn add_aggregate_selections<'s>(
                         mk_alias_from_graphql_field_path(&graphql_field_path);
                     let selection = AggregateFieldSelection::Count {
                         column_path: column_path.iter().map(|m| m.column.0.as_str()).collect(),
-                        graphql_field_path,
                     };
                     aggregate_field_selections.insert(selection_field_name, selection);
                 }
@@ -119,7 +99,6 @@ fn add_aggregate_selections<'s>(
                         mk_alias_from_graphql_field_path(&graphql_field_path);
                     let selection = AggregateFieldSelection::CountDistinct {
                         column_path: column_path.iter().map(|m| m.column.0.as_str()).collect(),
-                        graphql_field_path,
                     };
                     aggregate_field_selections.insert(selection_field_name, selection);
                 }
@@ -157,7 +136,6 @@ fn add_aggregate_selections<'s>(
                     let selection = AggregateFieldSelection::AggregationFunction {
                         function_name: &data_connector_function_info.function_name,
                         column_path: column_path.map(|m| m.column.0.as_str()),
-                        graphql_field_path,
                     };
                     aggregate_field_selections.insert(selection_field_name, selection);
                 }
@@ -205,7 +183,7 @@ fn add_aggregate_selections<'s>(
                     aggregate_operand_type,
                     data_connector_name,
                     &column_path,
-                    &graphql_field_path,
+                    graphql_field_path.as_slice(),
                     type_mappings,
                     field_operand_field_mappings,
                 )?;
@@ -219,11 +197,11 @@ fn add_aggregate_selections<'s>(
     Ok(())
 }
 
-fn mk_alias_from_graphql_field_path(graphql_field_path: &[Alias]) -> String {
+pub fn mk_alias_from_graphql_field_path(graphql_field_path: &[&Alias]) -> String {
     graphql_field_path
         .iter()
         .map(|alias| alias.0.as_str())
-        .collect::<Vec<_>>()
+        .collect::<Vec<&str>>()
         .join("_")
 }
 

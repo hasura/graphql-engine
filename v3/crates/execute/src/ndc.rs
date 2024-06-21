@@ -119,7 +119,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
     execution_span_attribute: String,
     field_span_attribute: String,
-    process_response_as: ProcessResponseAs<'s, 'ir>,
+    process_response_as: ProcessResponseAs<'ir>,
     project_id: Option<&ProjectId>,
 ) -> Result<json::Value, error::FieldError> {
     let tracer = tracing_util::global_tracer();

@@ -120,7 +120,7 @@ pub struct RemoteJoin<'s, 'ir> {
     ///   field or an argument name.
     pub join_mapping: HashMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
     /// Represents how to process the join response.
-    pub process_response_as: ProcessResponseAs<'s, 'ir>,
+    pub process_response_as: ProcessResponseAs<'ir>,
     /// Represents the type of the remote join
     pub remote_join_type: RemoteJoinType,
 }

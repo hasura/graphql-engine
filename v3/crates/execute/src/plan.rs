@@ -14,7 +14,6 @@ use serde_json as json;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable};
 
 use super::ir;
-use super::ir::aggregates::AggregateFieldSelection;
 use super::ir::model_selection::ModelSelection;
 use super::ir::root_field;
 use super::ndc;
@@ -82,7 +81,7 @@ pub struct NDCQueryExecution<'s, 'ir> {
     pub execution_tree: ExecutionTree<'s, 'ir>,
     pub execution_span_attribute: &'static str,
     pub field_span_attribute: String,
-    pub process_response_as: ProcessResponseAs<'s, 'ir>,
+    pub process_response_as: ProcessResponseAs<'ir>,
     // This selection set can either be owned by the IR structures or by the normalized query request itself.
     // We use the more restrictive lifetime `'ir` here which allows us to construct this struct using the selection
     // set either from the IR or from the normalized query request.
@@ -106,7 +105,7 @@ pub struct NDCMutationExecution<'n, 's, 'ir> {
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
-    pub process_response_as: ProcessResponseAs<'s, 'ir>,
+    pub process_response_as: ProcessResponseAs<'ir>,
     pub selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
 }
 
@@ -123,7 +122,7 @@ pub struct ExecutionNode<'s> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum ProcessResponseAs<'s, 'ir> {
+pub enum ProcessResponseAs<'ir> {
     Object {
         is_nullable: bool,
     },
@@ -134,12 +133,10 @@ pub enum ProcessResponseAs<'s, 'ir> {
         command_name: &'ir metadata_resolve::Qualified<open_dds::commands::CommandName>,
         type_container: &'ir ast::TypeContainer<ast::TypeName>,
     },
-    Aggregates {
-        requested_fields: &'ir IndexMap<String, AggregateFieldSelection<'s>>,
-    },
+    Aggregates,
 }
 
-impl<'s, 'ir> ProcessResponseAs<'s, 'ir> {
+impl<'ir> ProcessResponseAs<'ir> {
     pub fn is_nullable(&self) -> bool {
         match self {
             ProcessResponseAs::Object { is_nullable }
@@ -270,21 +267,12 @@ fn plan_query<'n, 's, 'ir>(
         }
         root_field::QueryRootField::ModelSelectAggregate { ir, selection_set } => {
             let execution_tree = generate_execution_tree(&ir.model_selection)?;
-            let requested_fields = ir
-                .model_selection
-                .aggregate_selection
-                .as_ref()
-                .map(|selection| &selection.fields)
-                .ok_or_else(|| error::InternalError::InternalGeneric {
-                    description: "Found a ModelSelectAggregate without an aggregate selection"
-                        .to_owned(),
-                })?;
             NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
                 execution_tree,
                 selection_set,
                 execution_span_attribute: "execute_model_select_aggregate",
                 field_span_attribute: ir.field_name.to_string(),
-                process_response_as: ProcessResponseAs::Aggregates { requested_fields },
+                process_response_as: ProcessResponseAs::Aggregates,
             })
         }
         root_field::QueryRootField::NodeSelect(optional_ir) => match optional_ir {
