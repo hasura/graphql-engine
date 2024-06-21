@@ -558,9 +558,17 @@ fn eval_order_by_element(
     match &element.target {
         ndc_models::OrderByTarget::Column {
             name,
+            field_path,
             path,
-            field_path: _,
-        } => eval_order_by_column(collection_relationships, variables, state, item, path, name),
+        } => eval_order_by_column(
+            collection_relationships,
+            variables,
+            state,
+            item,
+            path,
+            name,
+            field_path,
+        ),
         ndc_models::OrderByTarget::SingleColumnAggregate {
             column,
             field_path: _,
@@ -630,6 +638,7 @@ fn eval_order_by_column(
     item: &BTreeMap<String, serde_json::Value>,
     path: &[ndc_models::PathElement],
     name: &str,
+    field_path: &Option<Vec<String>>,
 ) -> Result<serde_json::Value> {
     let rows: Vec<Row> = eval_path(collection_relationships, variables, state, path, item)?;
     if rows.len() > 1 {
@@ -642,7 +651,7 @@ fn eval_order_by_column(
         ));
     }
     match rows.first() {
-        Some(row) => eval_column(row, name),
+        Some(row) => eval_column_field_path(row, name, field_path),
         None => Ok(serde_json::Value::Null),
     }
 }
@@ -1057,24 +1066,43 @@ fn eval_comparison_target(
     match target {
         ndc_models::ComparisonTarget::Column {
             name,
+            field_path,
             path,
-            field_path: _,
         } => {
             let rows = eval_path(collection_relationships, variables, state, path, item)?;
             let mut values = vec![];
             for row in &rows {
-                let value = eval_column(row, name.as_str())?;
+                let value = eval_column_field_path(row, name.as_str(), field_path)?;
                 values.push(value);
             }
             Ok(values)
         }
-        ndc_models::ComparisonTarget::RootCollectionColumn {
-            name,
-            field_path: _,
-        } => {
-            let value = eval_column(root, name.as_str())?;
+        ndc_models::ComparisonTarget::RootCollectionColumn { name, field_path } => {
+            let value = eval_column_field_path(root, name.as_str(), field_path)?;
             Ok(vec![value])
         }
+    }
+}
+
+fn eval_column_field_path(
+    row: &Row,
+    column_name: &str,
+    field_path: &Option<Vec<String>>,
+) -> Result<serde_json::Value> {
+    let column_value = eval_column(row, column_name)?;
+    match field_path {
+        None => Ok(column_value),
+        Some(path) => path
+            .iter()
+            .try_fold(&column_value, |value, field_name| value.get(field_name))
+            .cloned()
+            .ok_or((
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: "invalid field path".into(),
+                    details: serde_json::Value::Null,
+                }),
+            )),
     }
 }
 
