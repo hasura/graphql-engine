@@ -1,9 +1,11 @@
 -- | Generic validation of native queries while tracking them.
 module Hasura.NativeQuery.Validation
   ( validateArgumentDeclaration,
+    DisableNativeQueryValidation (..),
   )
 where
 
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.Set (Set)
 import Data.Set qualified as Set
@@ -45,3 +47,23 @@ validateArgumentDeclaration NativeQueryMetadata {_nqmCode, _nqmArguments} = do
     $ fromErrorMessage
     $ "The following columns are declared as arguments, but are not used in the query: "
     <> toErrorValue unusedArguments
+
+-- | Should we validate Native Queries against the database?
+-- Avoiding that could speed-up schema cache rebuild significantly.
+data DisableNativeQueryValidation
+  = AlwaysValidateNativeQueries
+  | NeverValidateNativeQueries
+  deriving (Eq, Show)
+
+instance J.FromJSON DisableNativeQueryValidation where
+  parseJSON =
+    J.withBool "DisableNativeQueryValidation"
+      $ pure
+      . \case
+        True -> NeverValidateNativeQueries
+        False -> AlwaysValidateNativeQueries
+
+instance J.ToJSON DisableNativeQueryValidation where
+  toJSON = \case
+    AlwaysValidateNativeQueries -> J.Bool False
+    NeverValidateNativeQueries -> J.Bool True

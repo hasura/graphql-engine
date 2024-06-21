@@ -115,6 +115,7 @@ import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.GraphQL.Transport.WebSocket.Types (WSServerEnv (..))
 import Hasura.Logging
 import Hasura.Metadata.Class
+import Hasura.NativeQuery.Validation (DisableNativeQueryValidation)
 import Hasura.PingSources
 import Hasura.Prelude
 import Hasura.QueryTags
@@ -538,6 +539,7 @@ initialiseAppContext env serveOptions AppInit {..} = do
   -- Create the schema cache
   rebuildableSchemaCache <-
     buildFirstSchemaCache
+      (soDisableNativeQueryValidation serveOptions)
       env
       logger
       (mkPgSourceResolver pgLogger)
@@ -601,6 +603,7 @@ migrateCatalogAndFetchMetadata
 -- and avoid a breaking change.
 buildFirstSchemaCache ::
   (MonadIO m) =>
+  DisableNativeQueryValidation ->
   Env.Environment ->
   Logger Hasura ->
   SourceResolver ('Postgres 'Vanilla) ->
@@ -612,6 +615,7 @@ buildFirstSchemaCache ::
   Maybe SchemaRegistry.SchemaRegistryContext ->
   m RebuildableSchemaCache
 buildFirstSchemaCache
+  disableNativeQueryValidation
   env
   logger
   pgSourceResolver
@@ -625,7 +629,7 @@ buildFirstSchemaCache
     result <-
       runExceptT
         $ runCacheBuild cacheBuildParams
-        $ buildRebuildableSchemaCache logger env metadataWithVersion cacheDynamicConfig mSchemaRegistryContext
+        $ buildRebuildableSchemaCache logger env disableNativeQueryValidation metadataWithVersion cacheDynamicConfig mSchemaRegistryContext
     result `onLeft` \err -> do
       -- TODO: we used to bundle the first schema cache build with the catalog
       -- migration, using the same error handler for both, meaning that an

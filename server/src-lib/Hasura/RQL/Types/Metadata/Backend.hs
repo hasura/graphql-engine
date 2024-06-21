@@ -14,6 +14,7 @@ import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.LogicalModel.Cache (LogicalModelInfo)
 import Hasura.NativeQuery.Metadata (ArgumentName, InterpolatedQuery, NativeQueryMetadata)
+import Hasura.NativeQuery.Validation (DisableNativeQueryValidation)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -242,6 +243,7 @@ class
 
   validateNativeQuery ::
     (MonadIO m, MonadError QErr m) =>
+    DisableNativeQueryValidation ->
     Env.Environment ->
     SourceName ->
     SourceConnConfiguration b ->
@@ -249,7 +251,7 @@ class
     LogicalModelInfo b ->
     NativeQueryMetadata b ->
     m (InterpolatedQuery ArgumentName)
-  validateNativeQuery _ _ _ _ _ _ =
+  validateNativeQuery _ _ _ _ _ _ _ =
     throw500 "validateNativeQuery: not implemented for this backend."
 
   validateStoredProcedure ::

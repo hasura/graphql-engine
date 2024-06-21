@@ -36,7 +36,7 @@ import Hasura.NativeQuery.Metadata
     NativeQueryMetadata (..),
   )
 import Hasura.NativeQuery.Types (NullableScalarType (nstType))
-import Hasura.NativeQuery.Validation (validateArgumentDeclaration)
+import Hasura.NativeQuery.Validation (DisableNativeQueryValidation (..), validateArgumentDeclaration)
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (SourceName)
@@ -46,6 +46,7 @@ validateNativeQuery ::
   forall m pgKind sourceConfig.
   (MonadIO m, MonadError QErr m) =>
   InsOrdHashMap.InsOrdHashMap PGScalarType PQ.Oid ->
+  DisableNativeQueryValidation ->
   Env.Environment ->
   SourceName ->
   PG.PostgresConnConfiguration ->
@@ -53,15 +54,19 @@ validateNativeQuery ::
   LogicalModelInfo ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
   m (InterpolatedQuery ArgumentName)
-validateNativeQuery pgTypeOidMapping env sourceName connConf _sourceConfig logicalModel nq = do
+validateNativeQuery pgTypeOidMapping disableNativeQueryValidation env sourceName connConf _sourceConfig logicalModel nq = do
   validateArgumentDeclaration nq
   let nqmCode = trimQueryEnd (_nqmCode nq)
       model = nq {_nqmCode = nqmCode}
-  (prepname, preparedQuery) <- nativeQueryToPreparedStatement logicalModel model
-  description <- runCheck prepname (PG.fromText preparedQuery)
-  let returnColumns = bimap toTxt nstType <$> InsOrdHashMap.toList (columnsFromFields $ _lmiFields logicalModel)
+  case disableNativeQueryValidation of
+    NeverValidateNativeQueries ->
+      pure ()
+    AlwaysValidateNativeQueries -> do
+      (prepname, preparedQuery) <- nativeQueryToPreparedStatement logicalModel model
+      description <- runCheck prepname (PG.fromText preparedQuery)
+      let returnColumns = bimap toTxt nstType <$> InsOrdHashMap.toList (columnsFromFields $ _lmiFields logicalModel)
+      for_ (toList returnColumns) (matchTypes description)
 
-  for_ (toList returnColumns) (matchTypes description)
   pure nqmCode
   where
     -- Run stuff against the database.
