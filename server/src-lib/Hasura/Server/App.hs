@@ -257,6 +257,13 @@ setHeader :: (MonadIO m) => HTTP.Header -> Spock.ActionCtxT ctx m ()
 setHeader (headerName, headerValue) =
   Spock.setHeader (bsToTxt $ CI.original headerName) (bsToTxt headerValue)
 
+createReqsText :: ByteString -> ByteString -> ReqsText
+createReqsText operationName query = GQLSingleRequest gqlReq
+  where
+    gqlQueryText = GQLQueryText $ bsToTxt query
+    gqlOperationName = OperationName $ bsToTxt operationName
+    gqlReq = GQLReq (Just gqlOperationName) gqlQueryText Nothing
+
 -- | Typeclass representing the metadata API authorization effect
 class (Monad m) => MonadMetadataApiAuthorization m where
   authorizeV1QueryApi ::
@@ -326,7 +333,9 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
   let origHeaders = Wai.requestHeaders req
       ipAddress = Wai.getSourceFromFallback req
       pathInfo = Wai.rawPathInfo req
+      queryParams = Wai.rawQueryString req
       propagators = getOtelTracesPropagator scOpenTelemetryConfig
+      requestInfo = createReqsText pathInfo queryParams
 
   -- Bytes are actually read from the socket here. Time this.
   (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
@@ -369,7 +378,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
         res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState handler
         pure (res, userInfo, authHeaders, includeInternal, Nothing, extraUserInfo)
       AHPost handler -> do
-        (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo Nothing
+        (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo requestInfo
         (queryJSON, parsedReq) <-
           runExcept (parseBody reqBody) `onLeft` \e -> do
             logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal Nothing origHeaders extraUserInfo (qErrModifier e)
