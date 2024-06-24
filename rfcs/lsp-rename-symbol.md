@@ -72,11 +72,11 @@ Extend the LSP to include support for the `textDocument/rename` method.
 ### 3. User Interaction
 
 - In VSCode, trigger the rename symbol operation through the UI or a keyboard shortcut. [Image](https://drive.google.com/file/d/1v3VHN0onlqn1GDKWJQCbNxaQ0O2SHh-P/view?usp=sharing)
-- Ensure the extension registers for and handles the textDocument/rename request appropriately to facilitate the rename operation seamlessly.
+- Ensure the extension registers for and handles the `textDocument/rename` request appropriately to facilitate the rename operation seamlessly.
 
 ### Examples
 
-- Simple example: Rename `DataConnectorLink.definition.name`. All references of this symbol should be renamed across all `Models`, `ObjectType`, `ObjectBooleanExpressionType` etc.
+- **Simple example**: Rename `DataConnectorLink.definition.name`. All references of this symbol should be renamed across all `Models`, `ObjectType`, `ObjectBooleanExpressionType` etc.
 
 ```
 kind: DataConnectorLink
@@ -87,7 +87,7 @@ definition:
 
 [Demo Video](https://drive.google.com/file/d/1f5CoDk1Xa3NeDKalEOT1ETl-SDhC8JDD/view?usp=sharing)
 
-- Complex example: Rename `Model.definition.source.dataConnectorName`. A `Model` references `DataConnectorLink`. When user renames the `dataConnectorName` from within a `Model`, it should give similar result to the previous example and rename the `DataConnectorLink` object everywhere, and update all its references as well as the original `DataConnectorLink` object.
+- **Complex example**: Rename `Model.definition.source.dataConnectorName`. A `Model` references `DataConnectorLink`. When user renames the `dataConnectorName` from within a `Model`, it should give similar result to the previous example and rename the `DataConnectorLink` object everywhere, and update all its references as well as the original `DataConnectorLink` object.
 
 ```
 kind: Model
@@ -102,8 +102,8 @@ definition:
 
 [Demo Video](https://drive.google.com/file/d/1_zwCUqIbMG-E_rRI6bCDY_WWBv4AiYes/view?usp=sharing)
 
-- Complicated example: Rename `ModelPermissions.definition.permissions.role.select.filter.fieldComparison.operator`. The operator is coming directly from the `DataConnectorLink`. Here `ModelPermissions` declares the `modelName` which has an underlying `ObjectType`, whose field `countryOfOrigin` in the below example has a `ScalarType` (say `Text`) which is backed by a
-  `DataConnectorScalarRepresentation` which links the `dataConnectorScalarType` to the graphql `ScalarType`. This `dataConnectorScalarType` (say [postgres `text` type](https://www.postgresql.org/docs/current/datatype-character.html)) is
+- **Complicated example**: Rename `ModelPermissions.definition.permissions.role.select.filter.fieldComparison.operator`. The operator is coming directly from the `DataConnectorLink`. Here `ModelPermissions` declares the `modelName` which has an underlying `ObjectType`, whose field `countryOfOrigin` in the below example has a `ScalarType` (say `Text`) which is backed by a
+  `DataConnectorScalarRepresentation` which links the `dataConnectorScalarType` to the graphql `ScalarType`. This `dataConnectorScalarType` (say `text`) is
   defined in `DataConnectorLink`'s schema under `scalar_types`, which also contains the `comparison_operators` that are allowed for this type, and `_eq` is one such operator. Renaming the `_eq` symbol here should rename the original `DataConnectorLink`'s schema and also any other references, where the `_eq` operator from the `text` type is used for the given `DataConnectorLink`.
 
 ```
