@@ -8,6 +8,7 @@ pub mod data_connectors;
 pub mod graphql_config;
 pub mod model_permissions;
 pub mod models;
+pub mod models_graphql;
 pub mod object_boolean_expressions;
 pub mod object_types;
 pub mod relationships;
@@ -34,8 +35,10 @@ pub fn resolve(
     let graphql_config =
         graphql_config::resolve(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
 
+    // Fetch and check schema information for all our data connectors
     let data_connectors = data_connectors::resolve(&metadata_accessor)?;
 
+    // Validate object types defined in metadata
     let object_types::DataConnectorTypeMappingsOutput {
         graphql_types,
         global_id_enabled_types,
@@ -43,11 +46,14 @@ pub fn resolve(
         object_types,
     } = object_types::resolve(&metadata_accessor, &data_connectors)?;
 
+    // Validate custom defined scalar types
     let scalar_types::ScalarTypesOutput {
         scalar_types,
         graphql_types,
     } = scalar_types::resolve(&metadata_accessor, &graphql_types)?;
 
+    // Validate `DataConnectorScalarType` metadata. This will soon be deprecated and subsumed by
+    // `BooleanExpressionType`
     let data_connector_scalar_types::DataConnectorWithScalarsOutput {
         data_connector_scalars,
         graphql_types,
@@ -58,9 +64,11 @@ pub fn resolve(
         &graphql_types,
     )?;
 
+    // Fetch and validate permissions, and attach them to the relevant object types
     let object_types_with_permissions =
         type_permissions::resolve(&metadata_accessor, &object_types)?;
 
+    // Check aggregate expressions
     let aggregates::AggregateExpressionsOutput {
         aggregate_expressions,
         graphql_types,
@@ -74,6 +82,8 @@ pub fn resolve(
         &graphql_config,
     )?;
 
+    // Validate `ObjectBooleanExpressionType` metadata. This will soon be deprecated and subsumed
+    // by `BooleanExpressionType`.
     let object_boolean_expressions::ObjectBooleanExpressionsOutput {
         object_boolean_expression_types,
         graphql_types,
@@ -86,35 +96,48 @@ pub fn resolve(
         &graphql_config,
     )?;
 
-    // resolve fancy new boolean expression types
+    // Resolve fancy new boolean expression types
     let boolean_expressions::BooleanExpressionsOutput {
         boolean_expression_types,
-        ..
+        graphql_types,
     } = boolean_expressions::resolve(
         &metadata_accessor,
         flags,
+        &graphql_types,
         &graphql_config,
         &data_connectors,
         &object_types_with_permissions,
     )?;
 
+    // Resolve models and their sources
     let models::ModelsOutput {
         models,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
-        graphql_types: _graphql_types,
     } = models::resolve(
         &metadata_accessor,
         &data_connectors,
         &data_connector_scalars,
-        &graphql_types,
         &global_id_enabled_types,
         &apollo_federation_entity_enabled_types,
         &object_types_with_permissions,
         &scalar_types,
+        &object_boolean_expression_types,
+    )?;
+
+    // Resolve the filter expressions and graphql settings for models
+    // This is a separate step so we can look up resolved models and their sources
+    let models_graphql::ModelsGraphqlOutput {
+        models_with_graphql,
+        graphql_types: _,
+    } = models_graphql::resolve(
+        &models,
+        &data_connector_scalars,
+        &object_types_with_permissions,
         &aggregate_expressions,
         &object_boolean_expression_types,
         &boolean_expression_types,
+        &graphql_types,
         &graphql_config,
     )?;
 
@@ -148,7 +171,7 @@ pub fn resolve(
         &object_types_with_relationships,
         &scalar_types,
         &object_boolean_expression_types,
-        &models,
+        &models_with_graphql,
         &data_connectors,
         &data_connector_scalars,
     )?;
@@ -159,7 +182,7 @@ pub fn resolve(
         &data_connector_scalars,
         &object_types_with_relationships,
         &scalar_types,
-        &models,
+        &models_with_graphql,
         &object_boolean_expression_types,
     )?;
 

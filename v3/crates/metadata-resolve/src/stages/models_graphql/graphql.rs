@@ -1,17 +1,15 @@
-use super::types::{
-    LimitFieldGraphqlConfig, Model, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig,
-    ModelOrderByExpression, ModelSource, OffsetFieldGraphqlConfig, OrderByExpressionInfo,
-    SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
-    UniqueIdentifierField,
-};
 use open_dds::aggregates::AggregateExpressionName;
 use open_dds::data_connector::DataConnectorName;
 
-use crate::types::error::{Error, GraphqlConfigError};
-
-use super::get_ndc_column_for_comparison;
+use super::types::{
+    LimitFieldGraphqlConfig, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig,
+    ModelOrderByExpression, OffsetFieldGraphqlConfig, OrderByExpressionInfo,
+    SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
+    UniqueIdentifierField,
+};
 use crate::helpers::types::{mk_name, store_new_graphql_type};
-use crate::stages::{data_connector_scalar_types, graphql_config, object_types};
+use crate::stages::{data_connector_scalar_types, graphql_config, models, object_types};
+use crate::types::error::{Error, GraphqlConfigError};
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
@@ -22,13 +20,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) fn resolve_model_graphql_api(
     model_graphql_definition: &ModelGraphQlDefinition,
-    model: &mut Model,
+    model: &models::Model,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-
     model_description: &Option<String>,
     aggregate_expression_name: &Option<Qualified<AggregateExpressionName>>,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -52,7 +49,7 @@ pub(crate) fn resolve_model_graphql_api(
                 .source
                 .as_ref()
                 .map(|model_source| {
-                    get_ndc_column_for_comparison(
+                    models::get_ndc_column_for_comparison(
                         &model.name,
                         &model.data_type,
                         model_source,
@@ -100,7 +97,7 @@ pub(crate) fn resolve_model_graphql_api(
         .source
         .as_ref()
         .map(
-            |model_source: &ModelSource| -> Result<Option<ModelOrderByExpression>, Error> {
+            |model_source: &models::ModelSource| -> Result<Option<ModelOrderByExpression>, Error> {
                 let order_by_expression_type_name = match &model_graphql_definition
                     .order_by_expression_type
                 {

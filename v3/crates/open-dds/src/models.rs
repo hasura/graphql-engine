@@ -166,7 +166,7 @@ impl ModelSource {
     }
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(
     title = "ModelGraphQlDefinition",
@@ -220,7 +220,7 @@ impl ModelGraphQlDefinition {
 }
 
 /// The definition of the GraphQL API for selecting a unique row/object from a model.
-#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "SelectUniqueGraphQlDefinition"))]
 pub struct SelectUniqueGraphQlDefinition {
@@ -237,7 +237,7 @@ pub struct SelectUniqueGraphQlDefinition {
 }
 
 /// The definition of the GraphQL API for selecting rows from a model.
-#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "SelectManyGraphQlDefinition"))]
 pub struct SelectManyGraphQlDefinition {
@@ -298,7 +298,7 @@ pub enum OrderByDirection {
     Desc,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[opendd(json_schema(title = "ModelApolloFederationConfiguration"))]
@@ -307,7 +307,7 @@ pub struct ModelApolloFederationConfiguration {
     pub entity_source: bool,
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[opendd(json_schema(title = "ModelAggregateGraphQlDefinition"))]

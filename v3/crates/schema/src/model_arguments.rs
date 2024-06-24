@@ -16,7 +16,6 @@ pub fn get_model_arguments_input_field(
     model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<gql_schema::InputField<GDS>, crate::Error> {
     model
-        .model
         .graphql_api
         .arguments_input_config
         .as_ref()

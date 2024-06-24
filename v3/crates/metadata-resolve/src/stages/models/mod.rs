@@ -1,39 +1,32 @@
-use open_dds::aggregates::AggregateExpressionName;
 use open_dds::data_connector::DataConnectorName;
 pub use types::{
-    ConnectorArgumentName, Model, ModelExpressionType, ModelGraphQlApi, ModelOrderByExpression,
-    ModelSource, ModelsOutput, NDCFieldSourceMapping, SelectAggregateGraphQlDefinition,
-    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
+    ConnectorArgumentName, Model, ModelRaw, ModelSource, ModelsOutput, NDCFieldSourceMapping,
 };
-mod aggregation;
-mod filter;
-mod graphql;
+mod helpers;
 mod ordering;
 mod source;
 mod types;
-
-pub use aggregation::resolve_aggregate_expression;
-pub use source::get_ndc_column_for_comparison;
+pub use helpers::get_ndc_column_for_comparison;
 
 use crate::types::error::Error;
 
 use crate::stages::{
-    aggregates, boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
-    object_boolean_expressions, scalar_types, type_permissions,
+    data_connector_scalar_types, data_connectors, object_boolean_expressions, scalar_types,
+    type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 
 use indexmap::IndexMap;
-use lang_graphql::ast::common::{self as ast};
 
 use open_dds::{
     models::{ModelName, ModelV1},
     types::CustomTypeName,
 };
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
-/// resolve models
+/// resolve models and their sources
+/// we check aggregations, filtering and graphql in the next stage (`models_graphql`)
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
@@ -41,8 +34,6 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-
-    existing_graphql_types: &BTreeSet<ast::TypeName>,
     global_id_enabled_types: &BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -50,22 +41,15 @@ pub fn resolve(
     >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    aggregate_expressions: &BTreeMap<
-        Qualified<AggregateExpressionName>,
-        aggregates::AggregateExpression,
-    >,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
-    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ModelsOutput, Error> {
     // resolve models
     // TODO: validate types
     let mut models = IndexMap::new();
     let mut global_id_models = BTreeMap::new();
-    let mut graphql_types = existing_graphql_types.clone();
     let mut global_id_enabled_types = global_id_enabled_types.clone();
     let mut apollo_federation_entity_enabled_types = apollo_federation_entity_enabled_types.clone();
 
@@ -112,55 +96,6 @@ pub fn resolve(
             resolved_model.source = Some(resolved_model_source);
         }
 
-        if let Some(filter_expression_type) = &model.filter_expression_type {
-            // We can only create a boolean expression if a source is attached to a model,
-            // throw an error if this is not the case
-            let model_source = match resolved_model.source {
-                Some(ref source) => Ok(source),
-                None => Err(Error::CannotUseFilterExpressionsWithoutSource {
-                    model: Qualified::new(subgraph.to_string(), model.name.clone()),
-                }),
-            }?;
-
-            let resolved_expression = filter::resolve_filter_expression_type(
-                &resolved_model.name,
-                model_source,
-                &resolved_model.data_type,
-                &Qualified::new(subgraph.to_string(), filter_expression_type.clone()),
-                object_boolean_expression_types,
-                boolean_expression_types,
-            )?;
-            resolved_model.filter_expression_type = Some(resolved_expression);
-        }
-
-        let qualified_aggregate_expression_name = model
-            .aggregate_expression
-            .as_ref()
-            .map(|aggregate_expression_name| {
-                aggregation::resolve_aggregate_expression(
-                    aggregate_expression_name,
-                    &qualified_model_name,
-                    &resolved_model.data_type,
-                    &resolved_model.source,
-                    aggregate_expressions,
-                    object_types,
-                )
-            })
-            .transpose()?;
-
-        if let Some(model_graphql_definition) = &model.graphql {
-            let graphql_api = graphql::resolve_model_graphql_api(
-                model_graphql_definition,
-                &mut resolved_model,
-                &mut graphql_types,
-                data_connector_scalars,
-                &model.description,
-                &qualified_aggregate_expression_name,
-                graphql_config,
-            )?;
-            resolved_model.graphql_api = graphql_api;
-        }
-
         if models
             .insert(qualified_model_name.clone(), resolved_model)
             .is_some()
@@ -172,7 +107,6 @@ pub fn resolve(
     }
     Ok(ModelsOutput {
         models,
-        graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
     })
@@ -302,6 +236,19 @@ fn resolve_model(
         }
     }
 
+    let model_raw = ModelRaw {
+        aggregate_expression: model
+            .aggregate_expression
+            .as_ref()
+            .map(|agg_name| Qualified::new(subgraph.to_string(), agg_name.clone())),
+        description: model.description.clone(),
+        filter_expression_type: model
+            .filter_expression_type
+            .as_ref()
+            .map(|filter_name| Qualified::new(subgraph.to_string(), filter_name.clone())),
+        graphql: model.graphql.clone(),
+    };
+
     Ok(Model {
         name: qualified_model_name,
         data_type: qualified_object_type_name,
@@ -311,14 +258,13 @@ fn resolve_model(
             .global_id_fields
             .clone(),
         arguments,
-        graphql_api: ModelGraphQlApi::default(),
         source: None,
         global_id_source,
         apollo_federation_key_source,
-        filter_expression_type: None,
         orderable_fields: ordering::resolve_orderable_fields(
             model,
             &object_type_representation.object_type.fields,
         )?,
+        raw: model_raw,
     })
 }

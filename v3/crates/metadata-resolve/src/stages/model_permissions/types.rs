@@ -1,4 +1,4 @@
-use crate::stages::{data_connectors, models, object_types, relationships};
+use crate::stages::{data_connectors, models, models_graphql, object_types, relationships};
 use crate::types::error::{Error, RelationshipError};
 use crate::types::permission::ValueExpression;
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
@@ -22,6 +22,8 @@ use serde::{Deserialize, Serialize};
 pub struct ModelWithPermissions {
     pub model: models::Model,
     pub select_permissions: BTreeMap<Role, SelectPermission>,
+    pub filter_expression_type: Option<models_graphql::ModelExpressionType>,
+    pub graphql_api: models_graphql::ModelGraphQlApi,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

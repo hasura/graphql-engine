@@ -299,7 +299,7 @@ fn build_new_comparable_relationships_schema(
                     None => {
                         // no specific type is provided by the relationship, so
                         // lookup filter expression graphql for target model
-                        match &target_model.model.filter_expression_type {
+                        match &target_model.filter_expression_type {
                             Some(ModelExpressionType::BooleanExpressionType(
                                 target_boolean_expression_type,
                             )) => target_boolean_expression_type.graphql.clone(),
@@ -366,8 +366,7 @@ fn build_comparable_relationships_schema(
                 get_object_type_representation(gds, &target_model.model.data_type)?;
 
             // lookup filter expression graphql for target model
-            let target_boolean_expression_graphql = match &target_model.model.filter_expression_type
-            {
+            let target_boolean_expression_graphql = match &target_model.filter_expression_type {
                 None => None,
                 Some(ModelExpressionType::BooleanExpressionType(
                     target_boolean_expression_type,

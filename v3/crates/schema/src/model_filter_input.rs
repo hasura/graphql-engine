@@ -42,7 +42,6 @@ pub fn get_model_filter_input_type(
     model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<gql_schema::RegisteredTypeName, Error> {
     model
-        .model
         .graphql_api
         .filter_input_type_name
         .as_ref()
@@ -109,7 +108,7 @@ pub fn add_limit_input_field(
     builder: &mut gql_schema::Builder<GDS>,
     model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<(), Error> {
-    if let Some(limit_field) = &model.model.graphql_api.limit_field {
+    if let Some(limit_field) = &model.graphql_api.limit_field {
         let limit_argument = generate_int_input_argument(
             limit_field.field_name.as_str(),
             Annotation::Input(types::InputAnnotation::Model(
@@ -130,7 +129,7 @@ pub fn add_offset_input_field(
     builder: &mut gql_schema::Builder<GDS>,
     model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<(), Error> {
-    if let Some(offset_field) = &model.model.graphql_api.offset_field {
+    if let Some(offset_field) = &model.graphql_api.offset_field {
         let offset_argument = generate_int_input_argument(
             offset_field.field_name.as_str(),
             Annotation::Input(types::InputAnnotation::Model(
@@ -152,7 +151,7 @@ pub fn add_order_by_input_field(
     builder: &mut gql_schema::Builder<GDS>,
     model: &metadata_resolve::ModelWithPermissions,
 ) {
-    if let Some(order_by_expression_info) = &model.model.graphql_api.order_by_expression {
+    if let Some(order_by_expression_info) = &model.graphql_api.order_by_expression {
         let order_by_argument = {
             get_order_by_expression_input_field(
                 builder,
@@ -175,7 +174,6 @@ pub fn add_where_input_field(
 ) {
     let boolean_expression_filter_type =
         &model
-            .model
             .filter_expression_type
             .as_ref()
             .and_then(|bool_exp| match bool_exp {

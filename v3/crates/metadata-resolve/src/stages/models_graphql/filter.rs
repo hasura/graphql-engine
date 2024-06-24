@@ -1,10 +1,8 @@
-use super::types::{ModelExpressionType, ModelSource};
-
 use crate::types::error::{BooleanExpressionError, Error};
 
-use crate::stages::{boolean_expressions, data_connectors, object_boolean_expressions};
+use super::types::ModelExpressionType;
+use crate::stages::{boolean_expressions, data_connectors, models, object_boolean_expressions};
 use crate::types::subgraph::Qualified;
-
 use open_dds::{
     models::ModelName,
     types::{CustomTypeName, FieldName},
@@ -16,7 +14,7 @@ use std::collections::BTreeMap;
 // model
 pub(crate) fn resolve_filter_expression_type(
     model_name: &Qualified<ModelName>,
-    model_source: &ModelSource,
+    model_source: &models::ModelSource,
     model_data_type: &Qualified<CustomTypeName>,
     boolean_expression_type_name: &Qualified<CustomTypeName>,
     object_boolean_expression_types: &BTreeMap<

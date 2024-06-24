@@ -16,8 +16,8 @@ use open_dds::{
 
 use crate::helpers::types::mk_name;
 use crate::stages::{
-    aggregates, commands, data_connector_scalar_types, data_connectors, models, object_types,
-    type_permissions,
+    aggregates, commands, data_connector_scalar_types, data_connectors, models, models_graphql,
+    object_types, type_permissions,
 };
 use crate::types::error::{Error, RelationshipError};
 use crate::types::internal_flags::MetadataResolveFlagsInternal;
@@ -451,8 +451,11 @@ fn resolve_aggregate_relationship_field(
             }
 
             // Validate its usage with the relationship's target model
-            let aggregate_expression_name = models::resolve_aggregate_expression(
-                &aggregate.aggregate_expression,
+            let aggregate_expression_name = models_graphql::resolve_aggregate_expression(
+                &Qualified::new(
+                    resolved_target_model.name.subgraph.to_string(),
+                    aggregate.aggregate_expression.clone(),
+                ),
                 &resolved_target_model.name,
                 &resolved_target_model.data_type,
                 &resolved_target_model.source,

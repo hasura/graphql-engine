@@ -32,9 +32,11 @@ pub use stages::data_connectors::DataConnectorLink;
 pub use stages::model_permissions::{
     FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
 };
-pub use stages::models::{
-    ConnectorArgumentName, Model, ModelExpressionType, ModelOrderByExpression, ModelSource,
-    SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
+pub use stages::models::{ConnectorArgumentName, Model, ModelSource};
+
+pub use stages::models_graphql::{
+    ModelExpressionType, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
+    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
 };
 pub use stages::object_boolean_expressions::{
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,

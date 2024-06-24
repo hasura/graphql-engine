@@ -8,6 +8,7 @@ mod graphql;
 mod object;
 mod scalar;
 mod types;
+use lang_graphql::ast::common as ast;
 
 mod helpers;
 
@@ -22,6 +23,7 @@ pub use types::{
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     flags: &MetadataResolveFlagsInternal,
+    existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
@@ -35,6 +37,9 @@ pub fn resolve(
     };
 
     let mut raw_boolean_expression_types = BTreeMap::new();
+
+    // TODO: make sure we are adding new types here, we are almost certainly not doing this atm
+    let graphql_types = existing_graphql_types.clone();
 
     // first we collect all the boolean_expression_types
     // so we have a full set to refer to when resolving them
@@ -107,6 +112,6 @@ pub fn resolve(
             objects: boolean_expression_object_types,
             scalars: boolean_expression_scalar_types,
         },
-        graphql_types: BTreeSet::new(),
+        graphql_types,
     })
 }

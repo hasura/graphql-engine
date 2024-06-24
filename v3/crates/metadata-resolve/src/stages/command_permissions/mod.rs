@@ -9,8 +9,8 @@ use open_dds::{
 };
 
 use crate::stages::{
-    commands, data_connector_scalar_types, data_connectors, models, object_boolean_expressions,
-    relationships, scalar_types,
+    commands, data_connector_scalar_types, data_connectors, models_graphql,
+    object_boolean_expressions, relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::permission::ValueExpression;
@@ -47,7 +47,7 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
-    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -127,7 +127,7 @@ pub fn resolve_command_permissions(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
-    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,

@@ -1,4 +1,3 @@
-use super::types::ModelSource;
 use open_dds::aggregates::AggregateExpressionName;
 use open_dds::data_connector::{
     DataConnectorName, DataConnectorObjectType, DataConnectorScalarType,
@@ -6,7 +5,7 @@ use open_dds::data_connector::{
 
 use crate::types::error::{Error, ModelAggregateExpressionError};
 
-use crate::stages::{aggregates, data_connectors, object_types, type_permissions};
+use crate::stages::{aggregates, data_connectors, models, object_types, type_permissions};
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 
 use open_dds::{models::ModelName, types::CustomTypeName};
@@ -14,20 +13,16 @@ use open_dds::{models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
 
 pub fn resolve_aggregate_expression(
-    aggregate_expression_name: &AggregateExpressionName,
+    aggregate_expression_name: &Qualified<AggregateExpressionName>,
     model_name: &Qualified<ModelName>,
     model_object_type_name: &Qualified<CustomTypeName>,
-    model_source: &Option<ModelSource>,
+    model_source: &Option<models::ModelSource>,
     aggregate_expressions: &BTreeMap<
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
 ) -> Result<Qualified<AggregateExpressionName>, ModelAggregateExpressionError> {
-    let qualified_aggregate_expression_name = Qualified::new(
-        model_name.subgraph.clone(),
-        aggregate_expression_name.clone(),
-    );
     let model_object_type = QualifiedTypeName::Custom(model_object_type_name.clone());
 
     // Check the model has a source
@@ -39,11 +34,11 @@ pub fn resolve_aggregate_expression(
 
     // Check that the specified aggregate expression exists
     let aggregate_expression = aggregate_expressions
-        .get(&qualified_aggregate_expression_name)
+        .get(aggregate_expression_name)
         .ok_or_else(
             || ModelAggregateExpressionError::UnknownModelAggregateExpression {
                 model_name: model_name.clone(),
-                aggregate_expression: qualified_aggregate_expression_name.clone(),
+                aggregate_expression: aggregate_expression_name.clone(),
             },
         )?;
 
@@ -52,7 +47,7 @@ pub fn resolve_aggregate_expression(
         return Err(
             ModelAggregateExpressionError::ModelAggregateExpressionOperandTypeMismatch {
                 model_name: model_name.clone(),
-                aggregate_expression: qualified_aggregate_expression_name.clone(),
+                aggregate_expression: aggregate_expression_name.clone(),
                 model_type: model_object_type.clone(),
                 aggregate_operand_type: aggregate_expression.operand.aggregated_type.clone(),
             },
@@ -77,12 +72,12 @@ pub fn resolve_aggregate_expression(
         return Err(
             ModelAggregateExpressionError::ModelAggregateExpressionCountDistinctNotAllowed {
                 model_name: model_name.clone(),
-                aggregate_expression: qualified_aggregate_expression_name.clone(),
+                aggregate_expression: aggregate_expression_name.clone(),
             },
         );
     }
 
-    Ok(qualified_aggregate_expression_name)
+    Ok(aggregate_expression_name.clone())
 }
 
 fn resolve_aggregate_expression_data_connector_mapping(

@@ -25,7 +25,7 @@ pub fn query_root_schema(
 ) -> Result<gql_schema::Object<GDS>, crate::Error> {
     let mut fields = BTreeMap::new();
     for model in gds.metadata.models.values() {
-        for select_unique in &model.model.graphql_api.select_uniques {
+        for select_unique in &model.graphql_api.select_uniques {
             let (field_name, field) = select_one::select_one_field(
                 gds,
                 builder,
@@ -35,7 +35,7 @@ pub fn query_root_schema(
             )?;
             fields.insert(field_name, field);
         }
-        for select_many in &model.model.graphql_api.select_many {
+        for select_many in &model.graphql_api.select_many {
             let (field_name, field) = select_many::select_many_field(
                 gds,
                 builder,
@@ -45,7 +45,7 @@ pub fn query_root_schema(
             )?;
             fields.insert(field_name, field);
         }
-        if let Some(select_aggregate) = &model.model.graphql_api.select_aggregate {
+        if let Some(select_aggregate) = &model.graphql_api.select_aggregate {
             let (field_name, field) = select_aggregate::select_aggregate_field(
                 gds,
                 builder,

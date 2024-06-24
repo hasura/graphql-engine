@@ -6,7 +6,7 @@ use crate::helpers::types::{
     unwrap_custom_type_name, TypeRepresentation,
 };
 use crate::stages::{
-    data_connector_scalar_types, data_connectors, model_permissions, models,
+    data_connector_scalar_types, data_connectors, model_permissions, models, models_graphql,
     object_boolean_expressions, object_types, relationships, scalar_types, type_permissions,
 };
 use crate::types::error::{
@@ -196,7 +196,7 @@ pub(crate) fn resolve_value_expression_for_argument(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
-    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -311,7 +311,7 @@ pub(crate) fn resolve_model_predicate_with_type(
     scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
 ) -> Result<model_permissions::ModelPredicate, Error> {
     match model_predicate {
@@ -447,7 +447,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                         })?;
 
                         // predicates with relationships is currently only supported for local relationships
-                        if let Some(target_model_source) = &target_model.source {
+                        if let Some(target_model_source) = &target_model.inner.source {
                             if target_model_source.data_connector.name == *data_connector_name {
                                 let target_source =
                                     model_permissions::ModelTargetSource::from_model_source(
@@ -469,9 +469,9 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     })?;
 
                                 let target_object_type_representation = object_types
-                                    .get(&target_model.data_type)
+                                    .get(&target_model.inner.data_type)
                                     .ok_or(Error::UnknownType {
-                                        data_type: target_model.data_type.clone(),
+                                        data_type: target_model.inner.data_type.clone(),
                                     })?;
 
                                 // validate data connector name
@@ -559,16 +559,17 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     source_type_mappings,
                                 };
 
-                                let target_object_type =
-                                    object_types.get(&target_model.data_type).ok_or_else(|| {
+                                let target_object_type = object_types
+                                    .get(&target_model.inner.data_type)
+                                    .ok_or_else(|| {
                                         Error::from(TypePredicateError::ObjectTypeNotFound {
-                                            type_name: target_model.data_type.clone(),
+                                            type_name: target_model.inner.data_type.clone(),
                                         })
                                     })?;
 
                                 let target_model_predicate = resolve_model_predicate_with_type(
                                     nested_predicate,
-                                    &target_model.data_type,
+                                    &target_model.inner.data_type,
                                     target_object_type,
                                     data_connector_field_mappings,
                                     data_connector_name,
@@ -578,7 +579,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     object_types,
                                     scalar_types,
                                     models,
-                                    &target_model.type_fields,
+                                    &target_model.inner.type_fields,
                                 )?;
 
                                 Ok(model_permissions::ModelPredicate::Relationship {
@@ -595,7 +596,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                             Err(Error::from(
                                 TypePredicateError::TargetSourceRequiredForRelationshipPredicate {
                                     source_type_name: type_name.clone(),
-                                    target_model_name: target_model.name.clone(),
+                                    target_model_name: target_model.inner.name.clone(),
                                 },
                             ))
                         }

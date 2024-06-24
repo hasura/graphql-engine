@@ -1,8 +1,8 @@
 mod types;
 use crate::helpers::typecheck;
 use crate::stages::{
-    data_connector_scalar_types, data_connectors, models, object_boolean_expressions, object_types,
-    relationships, scalar_types,
+    data_connector_scalar_types, data_connectors, models, models_graphql,
+    object_boolean_expressions, object_types, relationships, scalar_types,
 };
 use indexmap::IndexMap;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
@@ -31,7 +31,6 @@ use open_dds::{
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
-
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
@@ -39,7 +38,7 @@ pub fn resolve(
 
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
@@ -51,7 +50,9 @@ pub fn resolve(
             (
                 model_name.clone(),
                 ModelWithPermissions {
-                    model: model.clone(),
+                    model: model.inner.clone(),
+                    filter_expression_type: model.filter_expression_type.clone(),
+                    graphql_api: model.graphql_api.clone(),
                     select_permissions: BTreeMap::new(),
                 },
             )
@@ -108,7 +109,7 @@ fn resolve_model_predicate_with_model(
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
 ) -> Result<ModelPredicate, Error> {
     let model_source = model
         .source
@@ -192,7 +193,7 @@ pub fn resolve_model_select_permissions(
     >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
