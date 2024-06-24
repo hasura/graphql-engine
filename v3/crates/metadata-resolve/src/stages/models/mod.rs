@@ -1,24 +1,27 @@
-use open_dds::data_connector::DataConnectorName;
 pub use types::{
     ConnectorArgumentName, Model, ModelRaw, ModelSource, ModelsOutput, NDCFieldSourceMapping,
 };
+mod aggregation;
 mod helpers;
 mod ordering;
 mod source;
 mod types;
+pub use aggregation::resolve_aggregate_expression;
 pub use helpers::get_ndc_column_for_comparison;
 
 use crate::types::error::Error;
 
 use crate::stages::{
-    data_connector_scalar_types, data_connectors, object_boolean_expressions, scalar_types,
-    type_permissions,
+    aggregates, data_connector_scalar_types, data_connectors, object_boolean_expressions,
+    scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 
 use indexmap::IndexMap;
 
 use open_dds::{
+    aggregates::AggregateExpressionName,
+    data_connector::DataConnectorName,
     models::{ModelName, ModelV1},
     types::CustomTypeName,
 };
@@ -44,6 +47,10 @@ pub fn resolve(
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
+    >,
+    aggregate_expressions: &BTreeMap<
+        Qualified<AggregateExpressionName>,
+        aggregates::AggregateExpression,
     >,
 ) -> Result<ModelsOutput, Error> {
     // resolve models
@@ -95,6 +102,23 @@ pub fn resolve(
             )?;
             resolved_model.source = Some(resolved_model_source);
         }
+
+        let qualified_aggregate_expression_name = model
+            .aggregate_expression
+            .as_ref()
+            .map(|aggregate_expression_name| {
+                aggregation::resolve_aggregate_expression(
+                    &Qualified::new(subgraph.to_string(), aggregate_expression_name.clone()),
+                    &qualified_model_name,
+                    &resolved_model.data_type,
+                    &resolved_model.source,
+                    aggregate_expressions,
+                    object_types,
+                )
+            })
+            .transpose()?;
+
+        resolved_model.aggregate_expression = qualified_aggregate_expression_name;
 
         if models
             .insert(qualified_model_name.clone(), resolved_model)
@@ -237,10 +261,6 @@ fn resolve_model(
     }
 
     let model_raw = ModelRaw {
-        aggregate_expression: model
-            .aggregate_expression
-            .as_ref()
-            .map(|agg_name| Qualified::new(subgraph.to_string(), agg_name.clone())),
         description: model.description.clone(),
         filter_expression_type: model
             .filter_expression_type
@@ -252,6 +272,7 @@ fn resolve_model(
     Ok(Model {
         name: qualified_model_name,
         data_type: qualified_object_type_name,
+        aggregate_expression: None, // we fill this in once we have resolved the model source
         type_fields: object_type_representation.object_type.fields.clone(),
         global_id_fields: object_type_representation
             .object_type

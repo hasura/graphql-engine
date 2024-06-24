@@ -2,24 +2,19 @@ mod filter;
 mod graphql;
 mod types;
 use crate::types::subgraph::Qualified;
-mod aggregation;
 
 use crate::stages::{
-    aggregates, boolean_expressions, data_connector_scalar_types, graphql_config, models,
-    object_boolean_expressions, type_permissions,
+    boolean_expressions, data_connector_scalar_types, graphql_config, models,
+    object_boolean_expressions,
 };
 use crate::types::error::Error;
-pub use aggregation::resolve_aggregate_expression;
 pub use types::{
     ModelExpressionType, ModelGraphQlApi, ModelOrderByExpression, ModelWithGraphql,
     ModelsGraphqlOutput, SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition,
     SelectUniqueGraphQlDefinition,
 };
 
-use open_dds::{
-    aggregates::AggregateExpressionName, data_connector::DataConnectorName, models::ModelName,
-    types::CustomTypeName,
-};
+use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
@@ -30,11 +25,6 @@ pub fn resolve(
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
-    >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    aggregate_expressions: &BTreeMap<
-        Qualified<AggregateExpressionName>,
-        aggregates::AggregateExpression,
     >,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -71,22 +61,6 @@ pub fn resolve(
             None => None,
         };
 
-        let qualified_aggregate_expression_name = model
-            .raw
-            .aggregate_expression
-            .as_ref()
-            .map(|aggregate_expression_name| {
-                aggregation::resolve_aggregate_expression(
-                    aggregate_expression_name,
-                    &model.name,
-                    &model.data_type,
-                    &model.source,
-                    aggregate_expressions,
-                    object_types,
-                )
-            })
-            .transpose()?;
-
         let graphql_api = match model.raw.graphql {
             Some(ref model_graphql_definition) => graphql::resolve_model_graphql_api(
                 model_graphql_definition,
@@ -94,7 +68,7 @@ pub fn resolve(
                 &mut graphql_types,
                 data_connector_scalars,
                 &model.raw.description,
-                &qualified_aggregate_expression_name,
+                &model.aggregate_expression,
                 graphql_config,
             )?,
             None => ModelGraphQlApi::default(),

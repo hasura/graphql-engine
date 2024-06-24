@@ -47,6 +47,7 @@ pub struct Model {
     pub global_id_source: Option<NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
     pub orderable_fields: Vec<OrderableField>,
+    pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
     pub raw: ModelRaw,
 }
 
@@ -70,7 +71,6 @@ pub struct ConnectorArgumentName(pub String);
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelRaw {
     pub filter_expression_type: Option<Qualified<CustomTypeName>>,
-    pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
     pub graphql: Option<ModelGraphQlDefinition>,
     pub description: Option<String>,
 }
