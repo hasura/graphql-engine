@@ -1,0 +1,643 @@
+[
+  {
+    "kind": "Relationship",
+    "version": "v1",
+    "definition": {
+      "sourceType": "author",
+      "name": "Articles",
+      "target": {
+        "model": {
+          "name": "Articles",
+          "relationshipType": "Array"
+        }
+      },
+      "mapping": [
+        {
+          "source": {
+            "fieldPath": [
+              {
+                "fieldName": "author_id"
+              }
+            ]
+          },
+          "target": {
+            "modelField": [
+              {
+                "fieldName": "author_id"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Model",
+    "version": "v1",
+    "definition": {
+      "name": "Authors",
+      "objectType": "author",
+      "source": {
+        "dataConnectorName": "postgres_db",
+        "collection": "author"
+      },
+      "filterExpressionType": "author_bool_exp",
+      "orderableFields": [
+        {
+          "fieldName": "author_id",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "first_name",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "last_name",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        }
+      ]
+    }
+  },
+
+  {
+    "kind": "Model",
+    "version": "v1",
+    "definition": {
+      "name": "Articles",
+      "objectType": "article",
+      "source": {
+        "dataConnectorName": "postgres_db_2",
+        "collection": "articles"
+      },
+      "orderableFields": [
+        {
+          "fieldName": "article_id",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "title",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "author_id",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        }
+      ]
+    }
+  },
+
+  {
+    "kind": "BooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "author_bool_exp",
+      "operand": {
+        "object": {
+          "type": "author",
+          "comparableFields": [
+            {
+              "fieldName": "author_id",
+              "booleanExpressionType": "postgres_int_comparison_bool_exp"
+            },
+            {
+              "fieldName": "first_name",
+              "booleanExpressionType": "postgres_string_comparison_bool_exp"
+            },
+            {
+              "fieldName": "last_name",
+              "booleanExpressionType": "postgres_string_comparison_bool_exp"
+            }
+          ],
+          "comparableRelationships": [
+            {
+              "relationshipName": "Articles"
+            }
+          ]
+        }
+      },
+      "logicalOperators": {
+        "enable": true
+      },
+      "isNull": {
+        "enable": true
+      },
+      "graphql": { "typeName": "AuthorBoolExp" }
+    }
+  },
+  {
+    "kind": "BooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "article_bool_exp",
+      "operand": {
+        "object": {
+          "type": "article",
+          "comparableFields": [
+            {
+              "fieldName": "article_id",
+              "booleanExpressionType": "postgres_int_comparison_bool_exp"
+            },
+            {
+              "fieldName": "author_id",
+              "booleanExpressionType": "postgres_int_comparison_bool_exp"
+            },
+            {
+              "fieldName": "title",
+              "booleanExpressionType": "postgres_string_comparison_bool_exp"
+            }
+          ],
+          "comparableRelationships": []
+        }
+      },
+      "logicalOperators": {
+        "enable": true
+      },
+      "isNull": {
+        "enable": true
+      },
+      "graphql": { "typeName": "ArticleBoolExp" }
+    }
+  },
+
+  {
+    "kind": "BooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "postgres_int_comparison_bool_exp",
+      "operand": {
+        "scalar": {
+          "type": "Int",
+          "comparisonOperators": [
+            {
+              "name": "equals",
+              "argumentType": "Int!"
+            },
+            {
+              "name": "_in",
+              "argumentType": "[Int!]!"
+            }
+          ],
+          "dataConnectorOperatorMapping": [
+            {
+              "dataConnectorName": "postgres_db",
+              "dataConnectorScalarType": "int8",
+              "operatorMapping": {
+                "equals": "_eq"
+              }
+            },
+            {
+              "dataConnectorName": "postgres_db_2",
+              "dataConnectorScalarType": "int8",
+              "operatorMapping": {
+                "equals": "_eq"
+              }
+            }
+          ]
+        }
+      },
+      "logicalOperators": {
+        "enable": true
+      },
+      "isNull": {
+        "enable": true
+      },
+      "graphql": { "typeName": "PostgresInt" }
+    }
+  },
+  {
+    "kind": "BooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "postgres_string_comparison_bool_exp",
+      "operand": {
+        "scalar": {
+          "type": "String",
+          "comparisonOperators": [
+            {
+              "name": "equals",
+              "argumentType": "String!"
+            },
+            {
+              "name": "_in",
+              "argumentType": "[String!]!"
+            }
+          ],
+          "dataConnectorOperatorMapping": [
+            {
+              "dataConnectorName": "postgres_db",
+              "dataConnectorScalarType": "String",
+              "operatorMapping": {
+                "equals": "_eq"
+              }
+            },
+            {
+              "dataConnectorName": "postgres_db_2",
+              "dataConnectorScalarType": "String",
+              "operatorMapping": {
+                "equals": "_eq"
+              }
+            }
+          ]
+        }
+      },
+      "logicalOperators": {
+        "enable": true
+      },
+      "isNull": {
+        "enable": true
+      },
+      "graphql": { "typeName": "PostgresString" }
+    }
+  },
+  {
+    "kind": "ObjectType",
+    "version": "v1",
+    "definition": {
+      "name": "author",
+      "fields": [
+        {
+          "name": "author_id",
+          "type": "Int!"
+        },
+        {
+          "name": "first_name",
+          "type": "String!"
+        },
+        {
+          "name": "last_name",
+          "type": "String!"
+        }
+      ],
+      "graphql": {
+        "typeName": "Author"
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "postgres_db",
+          "dataConnectorObjectType": "author",
+          "fieldMapping": {
+            "author_id": {
+              "column": {
+                "name": "id"
+              }
+            },
+            "first_name": {
+              "column": {
+                "name": "first_name"
+              }
+            },
+            "last_name": {
+              "column": {
+                "name": "last_name"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "TypePermissions",
+    "version": "v1",
+    "definition": {
+      "typeName": "author",
+      "permissions": [
+        {
+          "role": "admin",
+          "output": {
+            "allowedFields": ["author_id", "first_name", "last_name"]
+          }
+        },
+        {
+          "role": "user_1",
+          "output": {
+            "allowedFields": ["author_id", "first_name", "last_name"]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ObjectType",
+    "version": "v1",
+    "definition": {
+      "name": "article",
+      "fields": [
+        {
+          "name": "article_id",
+          "type": "Int!"
+        },
+        {
+          "name": "author_id",
+          "type": "Int!"
+        },
+        {
+          "name": "title",
+          "type": "String!"
+        }
+      ],
+      "graphql": {
+        "typeName": "Article"
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "postgres_db_2",
+          "dataConnectorObjectType": "article",
+          "fieldMapping": {
+            "article_id": {
+              "column": {
+                "name": "id"
+              }
+            },
+            "author_id": {
+              "column": {
+                "name": "author_id"
+              }
+            },
+            "title": {
+              "column": {
+                "name": "title"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "TypePermissions",
+    "version": "v1",
+    "definition": {
+      "typeName": "article",
+      "permissions": [
+        {
+          "role": "admin",
+          "output": {
+            "allowedFields": ["article_id", "author_id", "title"]
+          }
+        },
+        {
+          "role": "user_1",
+          "output": {
+            "allowedFields": ["article_id", "author_id", "title"]
+          }
+        }
+      ]
+    }
+  },
+
+  {
+    "definition": {
+      "name": "postgres_db",
+      "url": {
+        "singleUrl": {
+          "value": "http://postgres_connector:8080"
+        }
+      },
+      "schema": {
+        "version": "v0.1",
+        "schema": {
+          "scalar_types": {
+            "String": {
+              "aggregate_functions": {},
+              "comparison_operators": {
+                "_eq": {
+                  "type": "equal"
+                },
+                "_like": {
+                  "argument_type": {
+                    "type": "named",
+                    "name": "String"
+                  },
+                  "type": "custom"
+                }
+              },
+              "update_operators": {}
+            },
+            "int8": {
+              "aggregate_functions": {},
+              "comparison_operators": {
+                "_eq": {
+                  "type": "equal"
+                },
+                "_gt": {
+                  "argument_type": {
+                    "type": "named",
+                    "name": "int8"
+                  },
+                  "type": "custom"
+                },
+                "_lt": {
+                  "argument_type": {
+                    "type": "named",
+                    "name": "int8"
+                  },
+                  "type": "custom"
+                }
+              },
+              "update_operators": {}
+            }
+          },
+          "object_types": {
+            "author": {
+              "description": "An author",
+              "fields": {
+                "last_name": {
+                  "description": "The author's last name",
+                  "arguments": {},
+                  "type": {
+                    "type": "named",
+                    "name": "String"
+                  }
+                },
+                "first_name": {
+                  "description": "The author's first name",
+                  "arguments": {},
+                  "type": {
+                    "type": "named",
+                    "name": "String"
+                  }
+                },
+                "id": {
+                  "description": "The author's primary key",
+                  "arguments": {},
+                  "type": {
+                    "type": "named",
+                    "name": "int4"
+                  }
+                }
+              }
+            }
+          },
+          "collections": [
+            {
+              "name": "author",
+              "description": "A collection of authors",
+              "arguments": {},
+              "type": "author",
+              "deletable": false,
+              "uniqueness_constraints": {
+                "AuthorByID": {
+                  "unique_columns": ["id"]
+                }
+              },
+              "foreign_keys": {}
+            }
+          ],
+          "functions": [],
+          "procedures": []
+        },
+        "capabilities": {
+          "capabilities": {
+            "query": {
+              "explain": {},
+              "aggregates": {},
+              "variables": {}
+            },
+            "mutation": {},
+            "relationships": {
+              "relation_comparisons": {},
+              "order_by_aggregate": {}
+            }
+          },
+          "version": "0.1.0"
+        }
+      }
+    },
+    "version": "v1",
+    "kind": "DataConnectorLink"
+  },
+  {
+    "definition": {
+      "name": "postgres_db_2",
+      "url": {
+        "singleUrl": {
+          "value": "http://postgres_connector_2:8080"
+        }
+      },
+      "schema": {
+        "version": "v0.1",
+        "schema": {
+          "scalar_types": {
+            "String": {
+              "aggregate_functions": {},
+              "comparison_operators": {
+                "_eq": {
+                  "type": "equal"
+                },
+                "_like": {
+                  "argument_type": {
+                    "type": "named",
+                    "name": "String"
+                  },
+                  "type": "custom"
+                }
+              },
+              "update_operators": {}
+            },
+            "int8": {
+              "aggregate_functions": {},
+              "comparison_operators": {
+                "_eq": {
+                  "type": "equal"
+                },
+                "_gt": {
+                  "argument_type": {
+                    "type": "named",
+                    "name": "int8"
+                  },
+                  "type": "custom"
+                },
+                "_lt": {
+                  "argument_type": {
+                    "type": "named",
+                    "name": "int8"
+                  },
+                  "type": "custom"
+                }
+              },
+              "update_operators": {}
+            }
+          },
+          "object_types": {
+            "article": {
+              "description": "An article",
+              "fields": {
+                "author_id": {
+                  "description": "The article's author ID",
+                  "arguments": {},
+                  "type": {
+                    "type": "named",
+                    "name": "int8"
+                  }
+                },
+                "id": {
+                  "description": "The article's primary key",
+                  "arguments": {},
+                  "type": {
+                    "type": "named",
+                    "name": "int8"
+                  }
+                },
+                "title": {
+                  "description": "The article's title",
+                  "arguments": {},
+                  "type": {
+                    "type": "named",
+                    "name": "String"
+                  }
+                }
+              }
+            }
+          },
+          "collections": [
+            {
+              "name": "articles",
+              "description": "A collection of articles",
+              "arguments": {},
+              "type": "article",
+              "deletable": false,
+              "uniqueness_constraints": {
+                "ArticleByID": {
+                  "unique_columns": ["id"]
+                }
+              },
+              "foreign_keys": {}
+            }
+          ],
+          "functions": [],
+          "procedures": []
+        },
+        "capabilities": {
+          "capabilities": {
+            "query": {
+              "explain": {},
+              "aggregates": {},
+              "variables": {}
+            },
+            "mutation": {},
+            "relationships": {
+              "relation_comparisons": {},
+              "order_by_aggregate": {}
+            }
+          },
+          "version": "0.1.0"
+        }
+      }
+    },
+    "version": "v1",
+    "kind": "DataConnectorLink"
+  }
+]

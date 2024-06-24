@@ -7,6 +7,7 @@ use open_dds::types::TypeName;
 use std::collections::BTreeMap;
 
 // basic scalar type info
+#[derive(Debug)]
 pub struct ScalarTypeWithRepresentationInfo<'a> {
     pub scalar_type: &'a ndc_models::ScalarType,
     pub representation: Option<TypeName>,
@@ -15,6 +16,7 @@ pub struct ScalarTypeWithRepresentationInfo<'a> {
     pub aggregate_functions: &'a BTreeMap<String, ndc_models::AggregateFunctionDefinition>,
 }
 
+#[derive(Debug)]
 pub struct ScalarTypeWithRepresentationInfoMap<'a>(
     pub BTreeMap<DataConnectorScalarType, ScalarTypeWithRepresentationInfo<'a>>,
 );

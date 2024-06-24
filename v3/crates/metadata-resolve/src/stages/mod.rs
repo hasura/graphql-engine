@@ -158,6 +158,7 @@ pub fn resolve(
     } = models_graphql::resolve(
         &models,
         &data_connector_scalars,
+        &object_types_with_relationships,
         &object_boolean_expression_types,
         &boolean_expression_types,
         &graphql_types,

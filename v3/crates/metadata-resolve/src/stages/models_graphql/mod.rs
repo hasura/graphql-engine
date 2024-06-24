@@ -5,7 +5,7 @@ use crate::types::subgraph::Qualified;
 
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, graphql_config, models,
-    object_boolean_expressions,
+    object_boolean_expressions, relationships,
 };
 use crate::types::error::Error;
 pub use types::{
@@ -26,6 +26,7 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
@@ -56,6 +57,8 @@ pub fn resolve(
                     filter_expression_type_name,
                     object_boolean_expression_types,
                     boolean_expression_types,
+                    object_types,
+                    models,
                 )?)
             }
             None => None,
