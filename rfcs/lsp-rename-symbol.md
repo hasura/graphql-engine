@@ -1,5 +1,7 @@
 # RFC: Support for Rename Symbol Operation in VSCode Extension using LSP
 
+**Status**: Under implementation.
+
 ## Motivation
 
 Say a user wants to rename a `DataConnectorLink`. Currently they will have to go through every `Model`, `ObjectType`, etc where the `DataConnectorLink` name is referred and do a lot of find and
