@@ -10,6 +10,7 @@ use std::{
 use expect_test::expect_file;
 
 #[cfg(test)]
+#[allow(clippy::print_stdout)]
 fn test_parser_for_schema(schema_path: &Path) -> Result<(), io::Error> {
     let schema = fs::read_to_string(schema_path)?;
     let expected_ast_path = schema_path.with_extension("ast.txt");
@@ -189,6 +190,7 @@ fn project_root() -> PathBuf {
 }
 
 // Additional sanity checks to distinguish our error and success expectations:
+#[allow(clippy::print_stdout)]
 fn assert_is_err<T: std::fmt::Debug>(actual: &parser::Result<T>, path: &Path) {
     if actual.is_ok() {
         println!("erroneously successful parse: {actual:?}");
@@ -199,6 +201,7 @@ fn assert_is_err<T: std::fmt::Debug>(actual: &parser::Result<T>, path: &Path) {
     }
 }
 
+#[allow(clippy::print_stdout)]
 fn assert_is_ok<T: std::fmt::Debug>(actual: &parser::Result<T>, path: &Path) {
     if actual.is_err() {
         println!("error: {actual:?}");

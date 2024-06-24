@@ -11,6 +11,7 @@ use std::{
 use hasura_authn_core::Role;
 use schema::{GDSNamespaceGetterAgnostic, GDSRoleNamespaceGetter};
 
+#[allow(clippy::print_stdout)]
 pub fn main() {
     let mut metadata_string = String::new();
     let mut h = stdin();

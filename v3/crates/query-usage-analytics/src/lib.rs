@@ -107,6 +107,7 @@ mod tests {
 
     #[test]
     // just a dummy serialize test for now to visualize the output
+    #[allow(clippy::print_stdout)]
     fn dummy_serialize() {
         /*
         * Consider we are serializing usage analytics for the following query

@@ -209,10 +209,11 @@ fn check_titles(schema: &Schema, is_externally_tagged_enum_variant: bool) {
             .as_ref()
             .is_some_and(|metadata| metadata.title.is_some());
 
-        if should_have_title && !has_title {
-            println!("{}", serde_json::to_string_pretty(schema).unwrap());
-            panic!("Schema does not have a title present.")
-        }
+        assert!(
+            !should_have_title || has_title,
+            "Schema does not have a title present: {}",
+            serde_json::to_string_pretty(schema).unwrap()
+        );
     }
 }
 
@@ -232,10 +233,12 @@ fn check_no_arbitrary_additional_properties(schema: &Schema, config: &JsonSchema
                         .contains(&title.as_str())
                 })
             });
-            if has_arbitrary_additional_properties && !is_allowed {
-                println!("{}", serde_json::to_string_pretty(schema).unwrap());
-                panic!("Schema has arbitrary additional properties")
-            }
+
+            assert!(
+                !has_arbitrary_additional_properties || is_allowed,
+                "Schema has arbitrary additional properties: {}",
+                serde_json::to_string_pretty(schema).unwrap()
+            );
         }
     }
 }

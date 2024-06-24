@@ -91,6 +91,7 @@ struct EngineState {
 }
 
 #[tokio::main]
+#[allow(clippy::print_stdout)]
 async fn main() {
     let server = ServerOptions::parse();
 
@@ -276,6 +277,7 @@ impl EngineRouter {
     }
 }
 
+#[allow(clippy::print_stdout)]
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let auth_config =
         read_auth_config(&server.authn_config_path).map_err(StartupError::ReadAuth)?;

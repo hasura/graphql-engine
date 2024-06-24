@@ -22,6 +22,7 @@ fn generate_schema(type_count: usize) -> String {
     schema_str
 }
 
+#[allow(clippy::print_stdout)]
 pub fn bench_serde(c: &mut Criterion) {
     let mut group = c.benchmark_group("schema_serde");
     for type_count in [100, 1000, 10000] {

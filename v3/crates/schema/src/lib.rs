@@ -460,6 +460,7 @@ mod tests {
 
     use crate::{GDSNamespaceGetterAgnostic, GDSRoleNamespaceGetter};
 
+    #[allow(clippy::print_stdout)]
     fn make_sdl_from_metadata_file_for_role(path: &Path, role: &Role) -> String {
         println!("{path:#?}");
         let metadata_string = fs::read_to_string(path).unwrap();
@@ -474,6 +475,7 @@ mod tests {
         })
     }
 
+    #[allow(clippy::print_stdout)]
     fn make_role_agnostic_sdl_from_metadata_file(path: &Path) -> String {
         println!("{path:#?}");
         let metadata_string = fs::read_to_string(path).unwrap();
