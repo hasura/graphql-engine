@@ -156,7 +156,7 @@ main = do
             snd
               <$> (liftEitherM . runExceptT . _pecRunTx pgContext (PGExecCtxInfo (Tx PG.ReadWrite Nothing) InternalRawQuery))
                 (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
-          schemaCache <- runCacheBuild cacheBuildParams $ buildRebuildableSchemaCache logger envMap metadataWithVersion dynamicConfig Nothing
+          schemaCache <- runCacheBuild cacheBuildParams $ buildRebuildableSchemaCache logger envMap (soDisableNativeQueryValidation serveOptions) metadataWithVersion dynamicConfig Nothing
           pure (_mwrvMetadata metadataWithVersion, schemaCache)
 
         cacheRef <- newMVar schemaCache

@@ -117,7 +117,7 @@ instance BackendMetadata 'DataConnector where
   getTableInfo = getTableInfo'
   supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
 
-  validateNativeQuery _ _ _ sc _ nq = do
+  validateNativeQuery _disableNativeQueryValidation _ _ _ sc _ nq = do
     unless (isJust (API._cInterpolatedQueries (DC._scCapabilities sc))) do
       let nqName = _nqmRootFieldName nq
       throw400 NotSupported $ "validateNativeQuery: " <> toTxt nqName <> " - Native Queries not implemented for this Data Connector backend."

@@ -16,6 +16,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging
 import Hasura.Metadata.Class
+import Hasura.NativeQuery.Validation (DisableNativeQueryValidation (AlwaysValidateNativeQueries))
 import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
@@ -136,7 +137,7 @@ suite srcConfig pgExecCtx pgConnInfo = do
       migrateCatalogAndBuildCache env time = do
         dynamicConfig <- asks fst
         (migrationResult, metadataWithVersion) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) (ExtensionsSchema "public") MaintenanceModeDisabled time
-        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadataWithVersion dynamicConfig Nothing)
+        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env AlwaysValidateNativeQueries metadataWithVersion dynamicConfig Nothing)
 
       dropAndInit env time = lift do
         scVar <- asks snd
