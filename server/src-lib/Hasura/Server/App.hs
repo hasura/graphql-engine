@@ -409,7 +409,11 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
     let queryTime = Just (ioWaitTime, serviceTime)
 
     -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/span-general/#general-identity-attributes
-    lift $ Tracing.attachMetadata [("enduser.role", roleNameToTxt $ _uiRole userInfo)]
+    lift
+      $ Tracing.attachMetadata
+        [ ("enduser.role", roleNameToTxt $ _uiRole userInfo),
+          ("session_variables", lbsToTxt $ J.encode (_uiSession userInfo))
+        ]
 
     -- apply the error modifier
     let modResult = fmapL qErrModifier result

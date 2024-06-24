@@ -503,7 +503,10 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig sc
   for_ maybeOperationName $ \nm ->
     -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
-    Tracing.attachMetadata [("graphql.operation.name", unName nm)]
+    Tracing.attachMetadata
+      [ ("graphql.operation.name", unName nm),
+        ("session_variables", lbsToTxt $ J.encode (_uiSession userInfo))
+      ]
   when (traceQueryStatus == TraceQueryEnabled)
     $ Tracing.attachMetadata [("graphql.query", _unGQLQueryText (_grQuery q))]
   execPlanE <-
