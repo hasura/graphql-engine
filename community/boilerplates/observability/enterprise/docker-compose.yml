@@ -1,5 +1,3 @@
-version: "3.6"
-
 volumes:
   prometheus_data: {}
   grafana_data: {}
@@ -177,7 +175,7 @@ services:
       - 6831:6831/udp
       - 6832:6832/udp
       - 5778:5778
-      - 4002:16686
+      - ${JAEGER_UI_PORT}:16686
       - 14250:14250
       - 14268:14268
       - 14269:14269
@@ -185,7 +183,6 @@ services:
       - 4318:4318 # OTLP HTTP
       - 9411:9411
     environment:
-      COLLECTOR_ZIPKIN_HOST_PORT: ":9411"
       COLLECTOR_OTLP_ENABLED: "true"
 
   loki:
@@ -212,6 +209,7 @@ services:
       - "55679" # zpages extension
     environment:
       DD_API_KEY: ${DD_API_KEY}
+      NEW_RELIC_API_KEY: ${NEW_RELIC_API_KEY}
       HONEYCOMB_API_KEY: ${HONEYCOMB_API_KEY}
       HONEYCOMB_DATASET: ${HONEYCOMB_DATASET}
       # GOOGLE_APPLICATION_CREDENTIALS: /etc/otel/gcp-sa.json

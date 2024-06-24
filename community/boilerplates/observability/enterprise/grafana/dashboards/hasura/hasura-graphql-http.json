@@ -1,38 +1,44 @@
 {
-  "__elements": {},
   "__inputs": [
     {
-      "description": "",
-      "label": "Prometheus",
       "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
       "pluginId": "prometheus",
-      "pluginName": "Prometheus",
-      "type": "datasource"
+      "pluginName": "Prometheus"
     }
   ],
+  "__elements": {},
   "__requires": [
     {
+      "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "type": "grafana",
-      "version": "9.5.2"
+      "version": "10.4.2"
     },
     {
+      "type": "datasource",
       "id": "prometheus",
       "name": "Prometheus",
-      "type": "datasource",
       "version": "1.0.0"
     },
     {
+      "type": "panel",
       "id": "stat",
       "name": "Stat",
-      "type": "panel",
       "version": ""
     },
     {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
       "id": "timeseries",
       "name": "Time series",
-      "type": "panel",
       "version": ""
     }
   ],
@@ -119,13 +125,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -133,7 +143,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"query\",instance=~\"$instance\",job=~\"$job\",response_status=\"success\"}[$__range]))",
+          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"query\",instance=~\"$instance\",job=~\"$job\",operation_name=~\"$operation_name\",parameterized_query_hash=~\"$query_hash\", response_status=\"success\"}[$__range]))",
           "legendFormat": "Success",
           "range": true,
           "refId": "A"
@@ -204,13 +214,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -270,13 +284,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -284,7 +302,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"mutation\",job=~\"$job\",instance=~\"$instance\", response_status=\"success\"}[$__range]))",
+          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"mutation\",job=~\"$job\",instance=~\"$instance\", response_status=\"success\",operation_name=~\"$operation_name\",parameterized_query_hash=~\"$query_hash\"}[$__range]))",
           "legendFormat": "Success",
           "range": true,
           "refId": "A"
@@ -295,7 +313,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"query\",job=~\"$job\",instance=~\"$instance\"}[$__range]))",
+          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"mutation\",job=~\"$job\",instance=~\"$instance\"}[$__range]))",
           "hide": false,
           "legendFormat": "Total",
           "range": true,
@@ -355,13 +373,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -382,12 +404,396 @@
       "type": "stat"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Service"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 111
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Query Hash"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 268
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 48,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "10.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "topk(10, sum by (job,operation_name,parameterized_query_hash) (increase(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_name=~\"$operation_name\",parameterized_query_hash=~\"$query_hash\",operation_type=\"query\"}[$__range]))) > 0",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Top Queries",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "operation_name",
+                "parameterized_query_hash",
+                "Value",
+                "job"
+              ]
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Value"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "Value": 3,
+              "job": 1,
+              "operation_name": 0,
+              "parameterized_query_hash": 2
+            },
+            "renameByName": {
+              "Value": "Count",
+              "job": "Service",
+              "operation_name": "Operation Name",
+              "parameterized_query_hash": "Query Hash"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false,
+            "inspect": false
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 49,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": [],
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "topk(10, sum by (job,operation_name,parameterized_query_hash) (increase(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_name=~\"$operation_name\",parameterized_query_hash=~\"$query_hash\",operation_type=\"mutation\"}[$__range]))) > 0",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Top Mutations",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "operation_name",
+                "parameterized_query_hash",
+                "Value",
+                "job"
+              ]
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Value"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "Value": 3,
+              "job": 1,
+              "operation_name": 0,
+              "parameterized_query_hash": 2
+            },
+            "renameByName": {
+              "Value": "Count",
+              "job": "Service",
+              "operation_name": "Operation Name",
+              "parameterized_query_hash": "Query Hash"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false,
+            "inspect": false
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 6,
+        "y": 18
+      },
+      "id": 50,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": [],
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "topk(10, 1 - (sum by (job,operation_type, operation_name, parameterized_query_hash) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_name=~\"$operation_name\",parameterized_query_hash=~\"$query_hash\",response_status=\"success\"}[$__range])) / sum by (job,operation_type, operation_name, parameterized_query_hash) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_name=~\"$operation_name\",parameterized_query_hash=~\"$query_hash\"}[$__range]))))  > 0",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Top Error Rate",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "job",
+                "operation_name",
+                "operation_type",
+                "Value",
+                "parameterized_query_hash"
+              ]
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Value"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "Value": 4,
+              "job": 2,
+              "operation_name": 0,
+              "operation_type": 1,
+              "parameterized_query_hash": 3
+            },
+            "renameByName": {
+              "Value": "Count",
+              "job": "Service",
+              "operation_name": "Operation Name",
+              "operation_type": "Operation Type",
+              "parameterized_query_hash": "Parameterized Query Hash"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 27
       },
       "id": 26,
       "panels": [],
@@ -406,6 +812,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -419,6 +826,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 4,
@@ -449,17 +857,21 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 9,
+        "w": 24,
         "x": 0,
-        "y": 10
+        "y": 28
       },
       "id": 38,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -474,8 +886,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (job,instance) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"query\"}[$__rate_interval]))",
-          "legendFormat": "__auto",
+          "expr": "sum by (job, operation_name, parameterized_query_hash) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"query\",operation_name=~\"$operation_name\",parameterized_query_hash=~\"$query_hash\"}[$__rate_interval]))",
+          "legendFormat": "{{job}} - {{operation_name}}",
           "range": true,
           "refId": "A"
         }
@@ -495,6 +907,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -508,6 +921,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 4,
@@ -538,17 +952,21 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 10
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 37
       },
       "id": 39,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -563,8 +981,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (job,instance) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"mutation\"}[$__rate_interval]))",
-          "legendFormat": "__auto",
+          "expr": "sum by (job,operation_name, parameterized_query_hash) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"mutation\",operation_name=~\"$operation_name\",parameterized_query_hash=~\"$query_hash\"}[$__rate_interval]))",
+          "legendFormat": "{{job}} - {{operation_name}}",
           "range": true,
           "refId": "A"
         }
@@ -584,6 +1002,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -597,6 +1016,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 4,
@@ -631,17 +1051,21 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 9,
+        "w": 24,
         "x": 0,
-        "y": 18
+        "y": 46
       },
       "id": 41,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -656,8 +1080,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (job,instance) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"query\",response_status=\"failed\"}[$__rate_interval]))",
-          "legendFormat": "__auto",
+          "expr": "sum by (job,operation_type, operation_name) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"query\",operation_name=~\"$operation_name\",response_status=\"failed\"}[$__rate_interval]))",
+          "legendFormat": "{{job}} - {{operation_name}}",
           "range": true,
           "refId": "A"
         }
@@ -677,6 +1101,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -690,6 +1115,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 4,
@@ -720,17 +1146,21 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 18
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 55
       },
       "id": 40,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -745,13 +1175,24 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (job,instance) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"mutation\",response_status=\"failed\"}[$__rate_interval]))",
-          "legendFormat": "__auto",
+          "expr": "sum by (job,operation_name,parameterized_query_hash) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"mutation\",operation_name=~\"$operation_name\",response_status=\"failed\"}[$__rate_interval]))",
+          "legendFormat": "{{job}} - {{operation_name}}",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "Mutation Error Rate",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "unary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        }
+      ],
       "type": "timeseries"
     },
     {
@@ -766,6 +1207,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -779,6 +1221,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 4,
@@ -817,7 +1260,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 26
+        "y": 64
       },
       "id": 37,
       "options": {
@@ -860,6 +1303,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -873,6 +1317,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 4,
@@ -911,7 +1356,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 26
+        "y": 64
       },
       "id": 42,
       "options": {
@@ -948,7 +1393,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 72
       },
       "id": 45,
       "panels": [],
@@ -967,6 +1412,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -980,6 +1426,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineStyle": {
               "fill": "solid"
@@ -1017,7 +1464,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 35
+        "y": 73
       },
       "id": 46,
       "options": {
@@ -1060,6 +1507,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1073,6 +1521,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineStyle": {
               "fill": "solid"
@@ -1110,7 +1559,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 35
+        "y": 73
       },
       "id": 47,
       "options": {
@@ -1165,6 +1614,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1178,6 +1628,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 4,
@@ -1212,7 +1663,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 42
+        "y": 80
       },
       "id": 43,
       "options": {
@@ -1255,6 +1706,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1268,6 +1720,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 4,
@@ -1302,7 +1755,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 42
+        "y": 80
       },
       "id": 44,
       "options": {
@@ -1336,16 +1789,17 @@
   ],
   "refresh": "5s",
   "revision": 1,
-  "schemaVersion": 38,
-  "style": "dark",
-  "tags": ["hasura"],
+  "schemaVersion": 39,
+  "tags": [
+    "hasura"
+  ],
   "templating": {
     "list": [
       {
         "current": {
           "selected": false,
           "text": "Prometheus",
-          "value": "Prometheus"
+          "value": "PBFA97CFB590B2093"
         },
         "description": "Prometheus source",
         "hide": 0,
@@ -1405,11 +1859,89 @@
         "skipUrlSync": false,
         "sort": 0,
         "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Operation Type",
+        "multi": true,
+        "name": "operation_type",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "query",
+            "value": "query"
+          },
+          {
+            "selected": false,
+            "text": "mutation",
+            "value": "mutation"
+          }
+        ],
+        "query": "query,mutation",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "allValue": "",
+        "current": {},
+        "definition": "label_values(hasura_graphql_requests_total{job=~\"$job\", instance=~\"$instance\", operation_type=~\"$operation_type\"},operation_name)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Operation Name",
+        "multi": true,
+        "name": "operation_name",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(hasura_graphql_requests_total{job=~\"$job\", instance=~\"$instance\", operation_type=~\"$operation_type\"},operation_name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "definition": "label_values(hasura_graphql_requests_total{job=~\"$job\", instance=~\"$instance\", operation_type=~\"$operation_type\", operation_name=~\"$operation_name\"},parameterized_query_hash)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Query Hash",
+        "multi": true,
+        "name": "query_hash",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(hasura_graphql_requests_total{job=~\"$job\", instance=~\"$instance\", operation_type=~\"$operation_type\", operation_name=~\"$operation_name\"},parameterized_query_hash)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
       }
     ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {},
