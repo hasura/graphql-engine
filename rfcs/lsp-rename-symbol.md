@@ -2,7 +2,11 @@
 
 ## Motivation
 
-The rename symbol operation is a fundamental feature in code editors like Visual Studio Code (VSCode). To enhance user experience and productivity, it's crucial to support this operation seamlessly within VSCode extensions that adhere to the Language Server Protocol (LSP). This RFC proposes the necessary additions and modifications to achieve this functionality.
+Say a user wants to rename a `DataConnectorLink`. Currently they will have to go through every `Model`, `ObjectType`, etc where the `DataConnectorLink` name is referred and do a lot of find and
+replace. We can make use of Rename Symbol operation in the VSCode
+extension for such use cases, which should find-and-replace all instances of the given `DataConnectorLink` intelligently.
+
+The rename symbol operation is a fundamental feature in code editors like Visual Studio Code (VSCode). To enhance user experience and productivity, it's crucial to support this operation seamlessly within Hasura VSCode extension. This RFC proposes the necessary additions and modifications to achieve this functionality.
 
 ## Goals
 
