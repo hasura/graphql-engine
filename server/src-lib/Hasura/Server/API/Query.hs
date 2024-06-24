@@ -225,7 +225,7 @@ runQuery appContext sc query = do
         saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
 
         (_, modSchemaCache', _, _, _) <-
-          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache" Tracing.SKInternal
             $ setMetadataResourceVersionInSchemaCache newResourceVersion
             & runCacheRWT dynamicConfig modSchemaCache
 

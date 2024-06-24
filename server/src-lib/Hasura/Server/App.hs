@@ -517,7 +517,7 @@ v1MetadataHandler ::
   WS.WebsocketCloseOnMetadataChangeAction ->
   RQLMetadata ->
   m (HttpResponse EncJSON)
-v1MetadataHandler schemaCacheRefUpdater closeWebsocketsOnMetadataChangeAction query = Tracing.newSpan "Metadata" $ do
+v1MetadataHandler schemaCacheRefUpdater closeWebsocketsOnMetadataChangeAction query = Tracing.newSpan "Metadata" Tracing.SKInternal $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   appContext <- asks hcAppContext
   r <-
@@ -547,7 +547,7 @@ v2QueryHandler ::
   ((RebuildableSchemaCache -> m (EncJSON, RebuildableSchemaCache)) -> m EncJSON) ->
   V2Q.RQLQuery ->
   m (HttpResponse EncJSON)
-v2QueryHandler schemaCacheRefUpdater query = Tracing.newSpan "v2 Query" $ do
+v2QueryHandler schemaCacheRefUpdater query = Tracing.newSpan "v2 Query" Tracing.SKInternal $ do
   schemaCache <- asks hcSchemaCache
   (liftEitherM . authorizeV2QueryApi query) =<< ask
   res <-

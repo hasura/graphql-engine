@@ -48,6 +48,7 @@ import Hasura.Server.Auth.JWT hiding (processJwt_)
 import Hasura.Server.Auth.WebHook
 import Hasura.Server.Utils
 import Hasura.Session (ExtraUserInfo, UserAdminSecret (..), UserInfo, UserRoleBuild (..), getSessionVariableValue, mkSessionVariablesHeaders, mkUserInfo)
+import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
@@ -71,8 +72,8 @@ class (Monad m) => UserAuthentication m where
 -- Although this exists only in memory we store only a hash of the admin secret
 -- primarily in order to:
 --
---     - prevent theoretical timing attacks from a naive `==` check
---     - prevent misuse or inadvertent leaking of the secret
+--    - prevent theoretical timing attacks from a naive `==` check
+--    - prevent misuse or inadvertent leaking of the secret
 newtype AdminSecretHash = AdminSecretHash (Crypto.Digest Crypto.SHA512)
   deriving (Ord, Eq)
 
@@ -229,7 +230,7 @@ updateJwkFromUrl contextAdvice (JWTCtx url ref _ _ _ _ _) httpManager logger =
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime ::
   forall m.
-  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) =>
   Logger Hasura ->
   HTTP.Manager ->
   [HTTP.Header] ->

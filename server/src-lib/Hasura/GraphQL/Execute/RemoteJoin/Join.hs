@@ -81,7 +81,7 @@ processRemoteJoins ::
   TraceQueryStatus ->
   m (EncJSON, [ModelInfoPart])
 processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo lhs maybeJoinTree gqlreq tracesPropagator traceQueryStatus =
-  Tracing.newSpan "Process remote joins" $ forRemoteJoins maybeJoinTree (lhs, []) \joinTree -> do
+  Tracing.newSpan "Process remote joins" Tracing.SKInternal $ forRemoteJoins maybeJoinTree (lhs, []) \joinTree -> do
     lhsParsed <-
       JO.eitherDecode (encJToLBS lhs)
         `onLeft` (throw500 . T.pack)
@@ -190,7 +190,7 @@ foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders op
       (intMap, model) = unzip compositeValue'
       joinIndices' = IntMap.fromList $ zip key intMap
       modelInfoList = concat model
-  Tracing.newSpan "Join remote join results"
+  Tracing.newSpan "Join remote join results" Tracing.SKInternal
     $ (,(modelInfoList))
     <$> (joinResults joinIndices' compositeValue)
 

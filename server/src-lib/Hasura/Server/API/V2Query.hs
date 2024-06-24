@@ -123,7 +123,7 @@ runQuery appContext schemaCache rqlQuery = do
     $ throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
   let dynamicConfig = buildCacheDynamicConfig appContext
-  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
+  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" Tracing.SKInternal $ liftEitherM fetchMetadata
   ((result, updatedMetadata), modSchemaCache, invalidations, sourcesIntrospection, schemaRegistryAction) <-
     runQueryM (acSQLGenCtx appContext) rqlQuery
       -- We can use defaults here unconditionally, since there is no MD export function in V2Query
@@ -134,21 +134,21 @@ runQuery appContext schemaCache rqlQuery = do
       MaintenanceModeDisabled -> do
         -- set modified metadata in storage and notify schema sync
         newResourceVersion <-
-          Tracing.newSpan "updateMetadataAndNotifySchemaSync"
+          Tracing.newSpan "updateMetadataAndNotifySchemaSync" Tracing.SKInternal
             $ liftEitherM
             $ updateMetadataAndNotifySchemaSync appEnvInstanceId currentResourceVersion updatedMetadata invalidations
 
         -- save sources introspection to stored-introspection DB
-        Tracing.newSpan "storeSourcesIntrospection"
+        Tracing.newSpan "storeSourcesIntrospection" Tracing.SKInternal
           $ saveSourcesIntrospection (_lsLogger appEnvLoggers) sourcesIntrospection newResourceVersion
 
         (_, modSchemaCache', _, _, _) <-
-          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache" Tracing.SKInternal
             $ setMetadataResourceVersionInSchemaCache newResourceVersion
             & runCacheRWT dynamicConfig modSchemaCache
 
         -- run schema registry action
-        Tracing.newSpan "runSchemaRegistryAction"
+        Tracing.newSpan "runSchemaRegistryAction" Tracing.SKInternal
           $ for_ schemaRegistryAction
           $ \action -> do
             liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache')) updatedMetadata
@@ -188,7 +188,7 @@ runQueryM ::
   SQLGenCtx ->
   RQLQuery ->
   m EncJSON
-runQueryM sqlGen rq = Tracing.newSpan (T.pack $ constrName rq) $ case rq of
+runQueryM sqlGen rq = Tracing.newSpan (T.pack $ constrName rq) Tracing.SKInternal $ case rq of
   RQInsert q -> runInsert sqlGen q
   RQSelect q -> runSelect sqlGen q
   RQUpdate q -> runUpdate sqlGen q

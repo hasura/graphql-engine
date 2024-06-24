@@ -125,13 +125,13 @@ convertMutationSelectionSet
     (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
     -- Parse the GraphQL query into the RQL AST
     (unpreparedQueries :: RootFieldMap (MutationRootField UnpreparedValue)) <-
-      Tracing.newSpan "Parse mutation IR" $ liftEither $ mutationParser resolvedSelSet
+      Tracing.newSpan "Parse mutation IR" Tracing.SKInternal $ liftEither $ mutationParser resolvedSelSet
 
     -- Process directives on the mutation
     _dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
     let parameterizedQueryHash = calculateParameterizedQueryHash resolvedSelSet
 
-        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) do
+        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) Tracing.SKInternal do
           case rootFieldUnpreparedValue of
             RFDB sourceName exists ->
               AB.dispatchAnyBackend @BackendExecute

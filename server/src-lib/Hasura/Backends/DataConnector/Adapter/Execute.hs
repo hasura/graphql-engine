@@ -30,7 +30,7 @@ import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.Session
-import Hasura.Tracing (MonadTrace)
+import Hasura.Tracing (MonadTrace, SpanKind (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -125,7 +125,7 @@ instance BackendExecute 'DataConnector where
 buildQueryAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> Plan API.QueryRequest API.QueryResponse -> AgentClientT m EncJSON
 buildQueryAction sourceName SourceConfig {..} Plan {..} = do
   queryResponse <- Client.query sourceName _scConfig _pRequest
-  reshapedResponse <- Tracing.newSpan "QueryResponse reshaping" $ _pResponseReshaper queryResponse
+  reshapedResponse <- Tracing.newSpan "QueryResponse reshaping" SKInternal $ _pResponseReshaper queryResponse
   pure $ encJFromJEncoding reshapedResponse
 
 -- Delegates the generation to the Agent's /explain endpoint if it has that capability,
@@ -150,5 +150,5 @@ toExplainPlan fieldName queryRequest =
 buildMutationAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> Plan API.MutationRequest API.MutationResponse -> AgentClientT m EncJSON
 buildMutationAction sourceName SourceConfig {..} Plan {..} = do
   mutationResponse <- Client.mutation sourceName _scConfig _pRequest
-  reshapedResponse <- Tracing.newSpan "MutationResponse reshaping" $ _pResponseReshaper mutationResponse
+  reshapedResponse <- Tracing.newSpan "MutationResponse reshaping" SKInternal $ _pResponseReshaper mutationResponse
   pure $ encJFromJEncoding reshapedResponse

@@ -72,7 +72,7 @@ runDBQuery' requestId query fieldName _userInfo logger licenseKeyCacheMaybe sour
   --  _ -> do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
-    . Tracing.newSpan ("Data Connector backend query for root field " <>> fieldName)
+    . Tracing.newSpan ("Data Connector backend query for root field " <>> fieldName) Tracing.SKClient
     . (<* Tracing.attachSourceConfigAttributes @'DataConnector sourceConfig)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds agentAuthKey)
     . runOnBaseMonad
@@ -149,7 +149,7 @@ runDBMutation' requestId query fieldName _userInfo logger licenseKeyCacheMaybe s
   --   _ -> do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
-    . Tracing.newSpan ("Data Connector backend mutation for root field " <>> fieldName)
+    . Tracing.newSpan ("Data Connector backend mutation for root field " <>> fieldName) Tracing.SKClient
     . (<* Tracing.attachSourceConfigAttributes @'DataConnector sourceConfig)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds agentAuthKey)
     . runOnBaseMonad

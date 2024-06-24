@@ -113,7 +113,7 @@ runMetadataQuery ::
 runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetadata {..} = do
   AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
-  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
+  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" Tracing.SKInternal $ liftEitherM fetchMetadata
   let exportsMetadata = \case
         RMV1 (RMExportMetadata _) -> True
         RMV2 (RMV2ExportMetadata _) -> True
@@ -160,7 +160,7 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
           $ "Attempting to insert new metadata in storage"
 
         newResourceVersion <-
-          Tracing.newSpan "updateMetadataAndNotifySchemaSync"
+          Tracing.newSpan "updateMetadataAndNotifySchemaSync" Tracing.SKInternal
             $ liftEitherM
             $ updateMetadataAndNotifySchemaSync appEnvInstanceId (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata cacheInvalidations
 
@@ -177,24 +177,24 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
           <> showMetadataResourceVersion newResourceVersion
 
         -- save sources introspection to stored-introspection DB
-        Tracing.newSpan "storeSourcesIntrospection"
+        Tracing.newSpan "storeSourcesIntrospection" Tracing.SKInternal
           $ saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
 
         -- run the schema registry action
-        Tracing.newSpan "runSchemaRegistryAction"
+        Tracing.newSpan "runSchemaRegistryAction" Tracing.SKInternal
           $ for_ schemaRegistryAction
           $ \action -> do
             liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache)) modMetadata
 
         (_, modSchemaCache', _, _, _) <-
-          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache" Tracing.SKInternal
             $ setMetadataResourceVersionInSchemaCache newResourceVersion
             & runCacheRWT dynamicConfig modSchemaCache
 
         -- Close all subscriptions with 1012 code (subscribers should reconnect)
         -- and close poller threads
         when ((_cdcCloseWebsocketsOnMetadataChangeStatus dynamicConfig) == CWMCEnabled)
-          $ Tracing.newSpan "closeWebsocketsOnMetadataChange"
+          $ Tracing.newSpan "closeWebsocketsOnMetadataChange" Tracing.SKInternal
           $ liftIO
           $ WS.runWebsocketCloseOnMetadataChangeAction closeWebsocketsOnMetadataChange
 
@@ -369,10 +369,10 @@ runMetadataQueryM env schemaSampledFeatureFlags remoteSchemaPerms currentResourc
     -- NOTE: This is a good place to install tracing, since it's involved in
     -- the recursive case via "bulk":
     RMV1 q ->
-      Tracing.newSpan ("v1 " <> T.pack (constrName q))
+      Tracing.newSpan ("v1 " <> T.pack (constrName q)) Tracing.SKInternal
         $ runMetadataQueryV1M env schemaSampledFeatureFlags remoteSchemaPerms currentResourceVersion q
     RMV2 q ->
-      Tracing.newSpan ("v2 " <> T.pack (constrName q))
+      Tracing.newSpan ("v2 " <> T.pack (constrName q)) Tracing.SKInternal
         $ runMetadataQueryV2M currentResourceVersion q
 
 runMetadataQueryV1M ::
