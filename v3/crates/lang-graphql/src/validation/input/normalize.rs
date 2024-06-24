@@ -380,7 +380,7 @@ mod test {
         // Test if foo: [Int] = [1,2,3] is coerced to [1,2,3]
         let int_typename = ast::TypeName(mk_name!("Int"));
         let int_scalar = Scalar {
-            name: int_typename.clone(),
+            name: int_typename,
             description: None,
             directives: vec![],
         };
@@ -410,7 +410,7 @@ mod test {
         // Test if foo: [Int] = 1 is coerced to [1]
         let int_typename = ast::TypeName(mk_name!("Int"));
         let int_scalar = Scalar {
-            name: int_typename.clone(),
+            name: int_typename,
             description: None,
             directives: vec![],
         };
@@ -438,7 +438,7 @@ mod test {
         // Test if foo: [Int] = null is coerced to null
         let int_typename = ast::TypeName(mk_name!("Int"));
         let int_scalar = Scalar {
-            name: int_typename.clone(),
+            name: int_typename,
             description: None,
             directives: vec![],
         };
@@ -464,7 +464,7 @@ mod test {
         // Test if foo: [Int] = [1, "b", true] is not coerced
         let int_typename = ast::TypeName(mk_name!("Int"));
         let int_scalar = Scalar {
-            name: int_typename.clone(),
+            name: int_typename,
             description: None,
             directives: vec![],
         };
@@ -491,7 +491,7 @@ mod test {
         // Test if foo: [[Int]] = 1 is coerced to [[1]]
         let int_typename = ast::TypeName(mk_name!("Int"));
         let int_scalar = Scalar {
-            name: int_typename.clone(),
+            name: int_typename,
             description: None,
             directives: vec![],
         };
@@ -521,7 +521,7 @@ mod test {
         // Test if foo: [[Int]] = [1,2,3] is not coerced
         let int_typename = ast::TypeName(mk_name!("Int"));
         let int_scalar = Scalar {
-            name: int_typename.clone(),
+            name: int_typename,
             description: None,
             directives: vec![],
         };
@@ -547,7 +547,7 @@ mod test {
         // Test if foo: [[Int]] = null is coerced to null
         let int_typename = ast::TypeName(mk_name!("Int"));
         let int_scalar = Scalar {
-            name: int_typename.clone(),
+            name: int_typename,
             description: None,
             directives: vec![],
         };
@@ -575,7 +575,7 @@ mod test {
         // Test if foo: [[Int]] = [[1], [2, 3]] is coerced to [[1], [2, 3]]
         let int_typename = ast::TypeName(mk_name!("Int"));
         let int_scalar = Scalar {
-            name: int_typename.clone(),
+            name: int_typename,
             description: None,
             directives: vec![],
         };

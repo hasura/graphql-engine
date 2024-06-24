@@ -176,7 +176,7 @@ fn add_aggregatable_fields(
         {
             return Err(Error::InternalDuplicateAggregatableField {
                 aggregate_expression: aggregate_expression.name.clone(),
-                field_name: field_graphql_name.clone(),
+                field_name: field_graphql_name,
             });
         }
     }
@@ -297,7 +297,7 @@ fn add_aggregation_functions(
         {
             return Err(Error::AggregationFunctionFieldNameConflict {
                 aggregate_expression: aggregate_expression.name.clone(),
-                field_name: field_graphql_name.clone(),
+                field_name: field_graphql_name,
             });
         }
     }

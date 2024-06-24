@@ -296,7 +296,7 @@ fn resolve_scalar_operand(
                 return Err(
                     AggregateExpressionError::AggregateOperandScalarTypeNotFound {
                         name: aggregate_expression_name.clone(),
-                        type_name: qualified_custom_scalar_name.clone(),
+                        type_name: qualified_custom_scalar_name,
                     }
                     .into(),
                 );

@@ -423,7 +423,7 @@ fn build_model_relationship_schema(
         let annotation = FilterRelationshipAnnotation {
             source_type: relationship.source.clone(),
             relationship_name: relationship.relationship_name.clone(),
-            target_source: target_model_source.clone(),
+            target_source: target_model_source,
             target_type: target_model.model.data_type.clone(),
             target_model_name: target_model.model.name.clone(),
             relationship_type: relationship_type.clone(),

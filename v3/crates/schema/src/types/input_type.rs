@@ -114,8 +114,7 @@ fn get_custom_input_type(
                 .map(|graphql_config| graphql_config.type_name.clone())
                 .ok_or_else(|| Error::NoGraphQlInputTypeNameForObject {
                     type_name: gds_type_name.clone(),
-                })?
-                .clone(),
+                })?,
         }),
     }
     .map(|type_id| builder.register_type(type_id))

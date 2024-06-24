@@ -225,7 +225,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
             resolve_boolean_expression_graphql_config(
                 &data_connector_name,
-                graphql_type_name.clone(),
+                graphql_type_name,
                 subgraph,
                 scalars,
                 type_mapping,

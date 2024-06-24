@@ -26,8 +26,8 @@ pub fn merge_with_common_metadata(
     let common_metadata = fs::read_to_string(common_metadata_path).unwrap();
     let test_metadata = fs::read_to_string(metadata_path_string).unwrap();
 
-    let mut first_json_value: Value = serde_json::from_str(&common_metadata.to_string()).unwrap();
-    let second_json_value: Value = serde_json::from_str(&test_metadata.to_string()).unwrap();
+    let mut first_json_value: Value = serde_json::from_str(&common_metadata).unwrap();
+    let second_json_value: Value = serde_json::from_str(&test_metadata).unwrap();
     first_json_value.merge(&second_json_value);
     first_json_value
 }

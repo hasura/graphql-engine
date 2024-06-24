@@ -390,10 +390,10 @@ fn resolve_value_expression(
 ) -> Result<ValueExpression, Error> {
     match value_expression_input {
         open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-            Ok::<ValueExpression, Error>(ValueExpression::SessionVariable(session_variable.clone()))
+            Ok::<ValueExpression, Error>(ValueExpression::SessionVariable(session_variable))
         }
         open_dds::permissions::ValueExpression::Literal(json_value) => {
-            Ok(ValueExpression::Literal(json_value.clone()))
+            Ok(ValueExpression::Literal(json_value))
         }
         open_dds::permissions::ValueExpression::BooleanExpression(_) => {
             Err(Error::BooleanExpressionInValueExpressionForHeaderPresetsNotSupported)

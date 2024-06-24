@@ -48,7 +48,7 @@ pub fn resolve_aggregate_expression(
             ModelAggregateExpressionError::ModelAggregateExpressionOperandTypeMismatch {
                 model_name: model_name.clone(),
                 aggregate_expression: aggregate_expression_name.clone(),
-                model_type: model_object_type.clone(),
+                model_type: model_object_type,
                 aggregate_operand_type: aggregate_expression.operand.aggregated_type.clone(),
             },
         );

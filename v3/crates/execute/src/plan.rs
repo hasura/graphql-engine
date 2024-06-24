@@ -430,7 +430,7 @@ fn assign_join_ids<'s, 'ir>(
                 }
             };
             let new_location = Location {
-                join_node: new_node.clone(),
+                join_node: new_node,
                 rest: assign_join_ids(&location.rest, state),
             };
             (key.to_string(), new_location)
@@ -574,7 +574,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                             );
                             RootFieldResult::new(
                                 true, // __type(name: String!): __Type ; the type field is nullable
-                                resolve_type_field(selection_set, schema, &type_name, &GDSRoleNamespaceGetter{scope:namespace.clone()}),
+                                resolve_type_field(selection_set, schema, &type_name, &GDSRoleNamespaceGetter{scope:namespace}),
                             )
                         }
                         NodeQueryPlan::SchemaField {
@@ -589,7 +589,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                             );
                             RootFieldResult::new(
                                 false, // __schema: __Schema! ; the schema field is not nullable
-                                resolve_schema_field(selection_set, schema, &GDSRoleNamespaceGetter{scope:namespace.clone()}),
+                                resolve_schema_field(selection_set, schema, &GDSRoleNamespaceGetter{scope:namespace}),
                             )
                         }
                         NodeQueryPlan::NDCQueryExecution(ndc_query) => RootFieldResult::new(
