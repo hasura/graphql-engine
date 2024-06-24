@@ -58,7 +58,6 @@ Extend the LSP to include support for the `textDocument/rename` method.
 
 - Implement the `textDocument/rename` request handler in the language server component of the VSCode extension.
 - Parse the request parameters (`textDocument`, `position`, `newName`) to identify the symbol to be renamed and the new name.
-- Determine the scope of the rename operation (e.g., file, workspace) based on the textDocument.uri.
 
 #### b. Perform Symbol Renaming
 
