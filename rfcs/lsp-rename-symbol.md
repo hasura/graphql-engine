@@ -88,7 +88,7 @@ Extend the LSP to include support for the `textDocument/rename` method.
 kind: DataConnectorLink
 version: v1
 definition:
-  name: mypg
+  name: mypg  <---- Rename this, all references should get renamed
 ```
 
 [Demo Video](https://drive.google.com/file/d/1f5CoDk1Xa3NeDKalEOT1ETl-SDhC8JDD/view?usp=sharing)
@@ -102,11 +102,39 @@ definition:
   name: Orders
   objectType: Orders
   source:
-    dataConnectorName: mypg
+    dataConnectorName: mypg  <---- Rename this
   ...
+
+
+kind: DataConnectorLink
+version: v1
+definition:
+  name: mypg    <----- This (and other references) should get renamed
 ```
 
 [Demo Video](https://drive.google.com/file/d/1_zwCUqIbMG-E_rRI6bCDY_WWBv4AiYes/view?usp=sharing)
+
+**Note**: Similar renames could be done with all objects which are referenced within other objects. For example, renaming a `field` from the `allowedFields` list of a `TypePermissions` object, should rename the original field in the `ObjectType`, as well as any other references of that `ObjectType`'s field everywhere in the metadata.
+
+```
+kind: TypePermissions
+definition:
+  typeName: Carts
+  permissions:
+    - role: admin
+      output:
+        allowedFields:
+          - createdAt  <---- Rename this
+...
+
+kind: ObjectType
+version: v1
+definition:
+  name: Carts
+  fields:
+    - name: createdAt  <---- This (and other references) should get renamed
+      type: Timestamptz
+```
 
 - **Complicated example**: Rename `ModelPermissions.definition.permissions.role.select.filter.fieldComparison.operator`. The operator is coming directly from the `DataConnectorLink`. Here `ModelPermissions` declares the `modelName` which has an underlying `ObjectType`, whose field `countryOfOrigin` in the below example has a `ScalarType` (say `Text`) which is backed by a
   `DataConnectorScalarRepresentation` which links the `dataConnectorScalarType` to the graphql `ScalarType`. This `dataConnectorScalarType` (say `text`) is
@@ -123,7 +151,7 @@ definition:
         filter:
           fieldComparison:
             field: countryOfOrigin
-            operator: _eq
+            operator: _eq    <------ Rename This
             value:
     ...
 
@@ -172,7 +200,7 @@ definition:
           aggregate_functions:
           ...
           comparison_operators:
-            _eq:
+            _eq:     <------ This (and other references) should get Renamed
               type: equal
             ...
 
