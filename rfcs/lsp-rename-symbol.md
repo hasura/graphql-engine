@@ -71,8 +71,7 @@ Extend the LSP to include support for the `textDocument/rename` method.
 
 ### 3. User Interaction
 
-- In VSCode, trigger the rename symbol operation through the UI or a keyboard shortcut.
-  [TODO: Insert Image]
+- In VSCode, trigger the rename symbol operation through the UI or a keyboard shortcut. [Image](https://drive.google.com/file/d/1v3VHN0onlqn1GDKWJQCbNxaQ0O2SHh-P/view?usp=sharing)
 - Ensure the extension registers for and handles the textDocument/rename request appropriately to facilitate the rename operation seamlessly.
 
 ### Examples
@@ -86,6 +85,8 @@ definition:
   name: mypg
 ```
 
+[Demo Video](https://drive.google.com/file/d/1f5CoDk1Xa3NeDKalEOT1ETl-SDhC8JDD/view?usp=sharing)
+
 - Complex example: Rename `Model.definition.source.dataConnectorName`. A `Model` references `DataConnectorLink`. When user renames the `dataConnectorName` from within a `Model`, it should give similar result to the previous example and rename the `DataConnectorLink` object everywhere, and update all its references as well as the original `DataConnectorLink` object.
 
 ```
@@ -98,6 +99,8 @@ definition:
     dataConnectorName: mypg
   ...
 ```
+
+[Demo Video](https://drive.google.com/file/d/1_zwCUqIbMG-E_rRI6bCDY_WWBv4AiYes/view?usp=sharing)
 
 - Complicated example: Rename `ModelPermissions.definition.permissions.role.select.filter.fieldComparison.operator`. The operator is coming directly from the `DataConnectorLink`. Here `ModelPermissions` declares the `modelName` which has an underlying `ObjectType`, whose field `countryOfOrigin` in the below example has a `ScalarType` (say `Text`) which is backed by a
   `DataConnectorScalarRepresentation` which links the `dataConnectorScalarType` to the graphql `ScalarType`. This `dataConnectorScalarType` (say [postgres `text` type](https://www.postgresql.org/docs/current/datatype-character.html)) is
