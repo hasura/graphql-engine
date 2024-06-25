@@ -104,7 +104,7 @@ pub(crate) fn collect_type_mapping_for_source(
                 {
                     if object_type_exists(object_type_name, object_types).is_ok() {
                         let underlying_ndc_field_named_type =
-                            get_underlying_named_type(&field_mapping.column_type)?;
+                            get_underlying_named_type(&field_mapping.column_type);
 
                         let field_type_mapping_to_collect = TypeMappingToCollect {
                             type_name: object_type_name,

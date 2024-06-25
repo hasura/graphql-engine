@@ -137,8 +137,7 @@ pub fn get_argument_mappings<'a>(
             })? {
                 TypeRepresentation::Object(_) => {
                     let underlying_ndc_argument_named_type =
-                        ndc_validation::get_underlying_named_type(ndc_argument_type)
-                            .map_err(ArgumentMappingError::NDCValidationError)?;
+                        ndc_validation::get_underlying_named_type(ndc_argument_type);
 
                     type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
                         type_name: object_type_name,
@@ -150,8 +149,7 @@ pub fn get_argument_mappings<'a>(
                 TypeRepresentation::Scalar(_) => (),
                 TypeRepresentation::BooleanExpression(object_boolean_expression_type) => {
                     let underlying_ndc_argument_named_type =
-                        ndc_validation::get_underlying_named_type(ndc_argument_type)
-                            .map_err(ArgumentMappingError::NDCValidationError)?;
+                        ndc_validation::get_underlying_named_type(ndc_argument_type);
 
                     // resolve the object type the boolean expression refers to
                     type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {

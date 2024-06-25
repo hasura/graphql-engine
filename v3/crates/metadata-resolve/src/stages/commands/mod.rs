@@ -314,11 +314,7 @@ pub fn resolve_command_source(
         .map(|custom_type_name| {
             // Get the corresponding object_type (data_connector.object_type) associated with the result_type for the source
             let source_result_type_name =
-                ndc_validation::get_underlying_named_type(&command_source_response.result_type)
-                    .map_err(|e| Error::CommandTypeMappingCollectionError {
-                        command_name: command.name.clone(),
-                        error: type_mappings::TypeMappingCollectionError::NDCValidationError(e),
-                    })?;
+                ndc_validation::get_underlying_named_type(&command_source_response.result_type);
 
             let source_result_type_mapping_to_resolve = type_mappings::TypeMappingToCollect {
                 type_name: custom_type_name,

@@ -346,7 +346,7 @@ pub fn validate_ndc_command(
 
     // Validate if the result type of function/procedure exists in the schema types(scalar + object)
     let command_source_ndc_result_type_name =
-        get_underlying_named_type(command_source_ndc_result_type)?;
+        get_underlying_named_type(command_source_ndc_result_type);
     if !(schema
         .scalar_types
         .contains_key(command_source_ndc_result_type_name)
@@ -441,7 +441,7 @@ fn validate_argument_preset_type(
 ) -> Result<(), NDCValidationError> {
     for (arg_name, arg_info) in arguments {
         if **arg_name == preset_argument_name.0 .0 {
-            let type_name = get_underlying_named_type(&arg_info.argument_type)?;
+            let type_name = get_underlying_named_type(&arg_info.argument_type);
             let scalar_type = schema
                 .scalar_types
                 .get(type_name)
@@ -469,15 +469,13 @@ fn validate_argument_preset_type(
     Ok(())
 }
 
-pub fn get_underlying_named_type(
-    result_type: &ndc_models::Type,
-) -> Result<&String, NDCValidationError> {
+pub fn get_underlying_named_type(result_type: &ndc_models::Type) -> &String {
     match result_type {
-        ndc_models::Type::Named { name } => Ok(name),
+        ndc_models::Type::Named { name } => name,
         ndc_models::Type::Array { element_type } => get_underlying_named_type(element_type),
         ndc_models::Type::Nullable { underlying_type } => {
             get_underlying_named_type(underlying_type)
         }
-        ndc_models::Type::Predicate { object_type_name } => Ok(object_type_name),
+        ndc_models::Type::Predicate { object_type_name } => object_type_name,
     }
 }
