@@ -29,6 +29,6 @@ services:
       service: sqlserver
 
   redis:
-    image: redis:7
+    image: redis:5
     ports:
       - 6379
