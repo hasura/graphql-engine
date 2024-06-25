@@ -1,4 +1,4 @@
-use crate::stages::{object_boolean_expressions, relationships, scalar_types};
+use crate::stages::{boolean_expressions, object_boolean_expressions, relationships, scalar_types};
 use crate::types::error::{BooleanExpressionError, Error};
 
 use crate::types::subgraph::{
@@ -40,7 +40,12 @@ pub fn store_new_graphql_type(
 pub enum TypeRepresentation<'a, ObjectType> {
     Scalar(&'a scalar_types::ScalarTypeRepresentation),
     Object(&'a ObjectType),
+    /// The old expression of boolean expression types
     BooleanExpression(&'a object_boolean_expressions::ObjectBooleanExpressionType),
+    /// New object boolean expression type
+    BooleanExpressionObject(&'a boolean_expressions::ResolvedObjectBooleanExpressionType),
+    /// New scalar boolean expression type
+    BooleanExpressionScalar(&'a boolean_expressions::ResolvedScalarBooleanExpressionType),
 }
 
 /// validate whether a given CustomTypeName exists within `object_types`, `scalar_types` or
@@ -53,28 +58,63 @@ pub fn get_type_representation<'a, ObjectType>(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &'a boolean_expressions::BooleanExpressionTypes,
 ) -> Result<TypeRepresentation<'a, ObjectType>, Error> {
-    match object_types.get(custom_type_name) {
-        Some(object_type_representation) => {
-            Ok(TypeRepresentation::Object(object_type_representation))
-        }
-        None => match scalar_types.get(custom_type_name) {
-            Some(scalar_type_representation) => {
-                Ok(TypeRepresentation::Scalar(scalar_type_representation))
-            }
-            None => match object_boolean_expression_types.get(custom_type_name) {
-                Some(object_boolean_expression_type) => Ok(TypeRepresentation::BooleanExpression(
-                    object_boolean_expression_type,
-                )),
-                None => Err(Error::UnknownType {
-                    data_type: custom_type_name.clone(),
-                }),
-            },
-        },
-    }
+    object_types
+        .get(custom_type_name)
+        .map(|object_type_representation| TypeRepresentation::Object(object_type_representation))
+        .or_else(|| {
+            scalar_types
+                .get(custom_type_name)
+                .map(|scalar_type_representation| {
+                    TypeRepresentation::Scalar(scalar_type_representation)
+                })
+        })
+        .or_else(|| {
+            object_boolean_expression_types.get(custom_type_name).map(
+                |object_boolean_expression_type| {
+                    TypeRepresentation::BooleanExpression(object_boolean_expression_type)
+                },
+            )
+        })
+        .or_else(|| {
+            boolean_expression_types
+                .objects
+                .get(custom_type_name)
+                .map(|boolean_expression_type| {
+                    TypeRepresentation::BooleanExpressionObject(boolean_expression_type)
+                })
+        })
+        .or_else(|| {
+            boolean_expression_types
+                .scalars
+                .get(custom_type_name)
+                .map(|boolean_expression_type| {
+                    TypeRepresentation::BooleanExpressionScalar(boolean_expression_type)
+                })
+        })
+        .ok_or_else(|| Error::UnknownType {
+            data_type: custom_type_name.clone(),
+        })
 }
 
 pub(crate) fn get_object_type_for_boolean_expression<'a>(
+    boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
+    object_types: &'a BTreeMap<
+        Qualified<CustomTypeName>,
+        relationships::ObjectTypeWithRelationships,
+    >,
+) -> Result<&'a relationships::ObjectTypeWithRelationships, Error> {
+    object_types
+        .get(&boolean_expression_type.object_type)
+        .ok_or(Error::from(
+            BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
+                type_name: boolean_expression_type.object_type.clone(),
+            },
+        ))
+}
+
+pub(crate) fn get_object_type_for_object_boolean_expression<'a>(
     object_boolean_expression_type: &object_boolean_expressions::ObjectBooleanExpressionType,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,

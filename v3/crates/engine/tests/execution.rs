@@ -933,9 +933,29 @@ fn test_command_argument_presets() -> anyhow::Result<()> {
 // arguments: 1 boolean expression as a preset
 // output: object (commandActor) output type
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
+
+// old `object_boolean_expression_type`
 #[test]
-fn test_boolean_expression_command_argument_presets() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/boolean_expression_command_argument";
+fn test_boolean_expression_command_argument_presets_object_boolean_expression_type(
+) -> anyhow::Result<()> {
+    let test_path_string = "execute/commands/functions/boolean_expression_command_argument/object_boolean_expression_type";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
+// new `boolean_expression_type`
+#[test]
+fn test_boolean_expression_command_argument_presets_boolean_expression_type() -> anyhow::Result<()>
+{
+    let test_path_string =
+        "execute/commands/functions/boolean_expression_command_argument/boolean_expression_type";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
     common::test_execution_expectation(

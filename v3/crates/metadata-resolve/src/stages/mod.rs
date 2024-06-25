@@ -123,6 +123,7 @@ pub fn resolve(
         &object_types_with_permissions,
         &scalar_types,
         &object_boolean_expression_types,
+        &boolean_expression_types,
         &aggregate_expressions,
     )?;
 
@@ -132,6 +133,7 @@ pub fn resolve(
         &object_types_with_permissions,
         &scalar_types,
         &object_boolean_expression_types,
+        &boolean_expression_types,
     )?;
 
     apollo::resolve(
@@ -171,6 +173,7 @@ pub fn resolve(
         &object_types_with_relationships,
         &scalar_types,
         &object_boolean_expression_types,
+        &boolean_expression_types,
         &models_with_graphql,
         &data_connectors,
         &data_connector_scalars,
@@ -184,6 +187,7 @@ pub fn resolve(
         &scalar_types,
         &models_with_graphql,
         &object_boolean_expression_types,
+        &boolean_expression_types,
     )?;
 
     let roles = roles::resolve(

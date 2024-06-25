@@ -114,6 +114,7 @@ pub fn get_custom_output_type(
         &gds.metadata.object_types,
         &gds.metadata.scalar_types,
         &gds.metadata.object_boolean_expression_types,
+        &gds.metadata.boolean_expression_types,
     )
     .map_err(|_| crate::Error::InternalTypeNotFound {
         type_name: gds_type.clone(),
@@ -143,7 +144,11 @@ pub fn get_custom_output_type(
                     .clone(),
             }))
         }
-        TypeRepresentation::BooleanExpression(_) => Err(Error::BooleanExpressionUsedAsOutputType),
+        TypeRepresentation::BooleanExpression(_)
+        | TypeRepresentation::BooleanExpressionObject(_)
+        | TypeRepresentation::BooleanExpressionScalar(_) => {
+            Err(Error::BooleanExpressionUsedAsOutputType)
+        }
     }
 }
 
@@ -160,14 +165,16 @@ pub(crate) fn get_type_kind(
                     &gds.metadata.object_types,
                     &gds.metadata.scalar_types,
                     &gds.metadata.object_boolean_expression_types,
+                    &gds.metadata.boolean_expression_types,
                 )
                 .map_err(|_| Error::InternalTypeNotFound {
                     type_name: type_name.to_owned(),
                 })? {
                     TypeRepresentation::Scalar(_) => Ok(super::TypeKind::Scalar),
-                    TypeRepresentation::Object(_) | TypeRepresentation::BooleanExpression(_) => {
-                        Ok(super::TypeKind::Object)
-                    }
+                    TypeRepresentation::Object(_)
+                    | TypeRepresentation::BooleanExpressionObject(_)
+                    | TypeRepresentation::BooleanExpressionScalar(_)
+                    | TypeRepresentation::BooleanExpression(_) => Ok(super::TypeKind::Object),
                 }
             }
         },

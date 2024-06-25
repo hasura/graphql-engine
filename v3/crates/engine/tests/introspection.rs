@@ -84,19 +84,42 @@ fn test_graphql_deprecated() -> anyhow::Result<()> {
     )
 }
 
+// command arguments with boolean expressions
+
+// old `object_boolean_expression_type`
+
 #[test]
-fn test_introspect_boolean_expression_in_command() -> anyhow::Result<()> {
+fn test_introspect_boolean_expression_in_command_object_boolean_expression_type(
+) -> anyhow::Result<()> {
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
     common::test_introspection_expectation(
-        "execute/commands/functions/boolean_expression_command_argument/",
+        "execute/commands/functions/boolean_expression_command_argument/object_boolean_expression_type",
         &[
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
     )
 }
+
+// new `boolean_expression_type`
+
+#[test]
+fn test_introspect_boolean_expression_in_command_boolean_expression_type() -> anyhow::Result<()> {
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+
+    common::test_introspection_expectation(
+        "execute/commands/functions/boolean_expression_command_argument/boolean_expression_type",
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
+// end of command arguments with boolean expressions
 
 #[test]
 fn test_introspect_aggregates_root_field_simple_select() -> anyhow::Result<()> {

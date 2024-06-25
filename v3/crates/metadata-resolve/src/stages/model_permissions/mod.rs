@@ -1,7 +1,7 @@
 mod types;
 use crate::helpers::typecheck;
 use crate::stages::{
-    data_connector_scalar_types, data_connectors, models, models_graphql,
+    boolean_expressions, data_connector_scalar_types, data_connectors, models, models_graphql,
     object_boolean_expressions, object_types, relationships, scalar_types,
 };
 use indexmap::IndexMap;
@@ -43,6 +43,7 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> Result<IndexMap<Qualified<ModelName>, ModelWithPermissions>, Error> {
     let mut models_with_permissions: IndexMap<Qualified<ModelName>, ModelWithPermissions> = models
         .iter()
@@ -85,6 +86,7 @@ pub fn resolve(
                 scalar_types,
                 models, // This is required to get the model for the relationship target
                 object_boolean_expression_types,
+                boolean_expression_types,
             )?;
 
             model.select_permissions = select_permissions;
@@ -198,6 +200,7 @@ pub fn resolve_model_select_permissions(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> Result<BTreeMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = BTreeMap::new();
     for model_permission in &model_permissions.permissions {
@@ -253,6 +256,7 @@ pub fn resolve_model_select_permissions(
                             object_types,
                             scalar_types,
                             object_boolean_expression_types,
+                            boolean_expression_types,
                             models,
                             data_connectors,
                             data_connector_scalars,

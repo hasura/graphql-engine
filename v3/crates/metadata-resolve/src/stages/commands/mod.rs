@@ -6,7 +6,8 @@ use crate::helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
 };
 use crate::stages::{
-    data_connectors, models, object_boolean_expressions, scalar_types, type_permissions,
+    boolean_expressions, data_connectors, models, object_boolean_expressions, scalar_types,
+    type_permissions,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
@@ -33,6 +34,7 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> Result<IndexMap<Qualified<CommandName>, Command>, Error> {
     let mut commands: IndexMap<Qualified<CommandName>, Command> = IndexMap::new();
     for open_dds::accessor::QualifiedObject {
@@ -46,6 +48,7 @@ pub fn resolve(
             object_types,
             scalar_types,
             object_boolean_expression_types,
+            boolean_expression_types,
         )?;
         if let Some(command_source) = &command.source {
             let command_source = resolve_command_source(
@@ -56,6 +59,7 @@ pub fn resolve(
                 object_types,
                 scalar_types,
                 object_boolean_expression_types,
+                boolean_expression_types,
             )?;
             resolved_command.source = Some(command_source);
         }
@@ -81,6 +85,7 @@ fn type_exists(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> bool {
     match &type_obj.underlying_type {
         BaseType::List(type_obj) => type_exists(
@@ -89,6 +94,7 @@ fn type_exists(
             object_types,
             scalar_types,
             object_boolean_expression_types,
+            boolean_expression_types,
         ),
         BaseType::Named(type_name) => match type_name {
             TypeName::Inbuilt(_) => true,
@@ -101,6 +107,7 @@ fn type_exists(
                     object_types,
                     scalar_types,
                     object_boolean_expression_types,
+                    boolean_expression_types,
                 )
                 .is_ok()
             }
@@ -117,6 +124,7 @@ pub fn resolve_command(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> Result<Command, Error> {
     let mut arguments = IndexMap::new();
     let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
@@ -129,6 +137,7 @@ pub fn resolve_command(
             object_types,
             scalar_types,
             object_boolean_expression_types,
+            boolean_expression_types,
         ) {
             if arguments
                 .insert(
@@ -196,6 +205,7 @@ pub fn resolve_command_source(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> Result<CommandSource, Error> {
     if command.source.is_some() {
         return Err(Error::DuplicateCommandSourceDefinition {
@@ -282,6 +292,7 @@ pub fn resolve_command_source(
         object_types,
         scalar_types,
         object_boolean_expression_types,
+        boolean_expression_types,
     )
     .map_err(|err| match &command_source.data_connector_command {
         DataConnectorCommand::Function(function_name) => {

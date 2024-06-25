@@ -43,10 +43,7 @@
         }
       },
       "logicalOperators": { "enable": true },
-      "isNull": { "enable": true },
-      "graphql": {
-        "typeName": "Int_Comparison_Exp"
-      }
+      "isNull": { "enable": true }
     }
   },
   {

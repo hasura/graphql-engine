@@ -2,12 +2,13 @@ use crate::helpers::model::resolve_ndc_type;
 use crate::helpers::ndc_validation;
 use crate::helpers::type_mappings;
 use crate::helpers::types::{
-    get_object_type_for_boolean_expression, get_type_representation, mk_name,
-    unwrap_custom_type_name, TypeRepresentation,
+    get_object_type_for_boolean_expression, get_object_type_for_object_boolean_expression,
+    get_type_representation, mk_name, unwrap_custom_type_name, TypeRepresentation,
 };
 use crate::stages::{
-    data_connector_scalar_types, data_connectors, model_permissions, models, models_graphql,
-    object_boolean_expressions, object_types, relationships, scalar_types, type_permissions,
+    boolean_expressions, data_connector_scalar_types, data_connectors, model_permissions, models,
+    models_graphql, object_boolean_expressions, object_types, relationships, scalar_types,
+    type_permissions,
 };
 use crate::types::error::{
     Error, RelationshipError, TypeError, TypeMappingValidationError, TypePredicateError,
@@ -77,6 +78,7 @@ pub fn get_argument_mappings<'a>(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &'a boolean_expressions::BooleanExpressionTypes,
 ) -> Result<
     (
         BTreeMap<ArgumentName, models::ConnectorArgumentName>,
@@ -130,6 +132,7 @@ pub fn get_argument_mappings<'a>(
                 object_types,
                 scalar_types,
                 object_boolean_expression_types,
+                boolean_expression_types,
             )
             .map_err(|_| ArgumentMappingError::UnknownType {
                 argument_name: argument_name.clone(),
@@ -146,7 +149,19 @@ pub fn get_argument_mappings<'a>(
                         ),
                     });
                 }
-                TypeRepresentation::Scalar(_) => (),
+                TypeRepresentation::Scalar(_) | TypeRepresentation::BooleanExpressionScalar(_) => {}
+                TypeRepresentation::BooleanExpressionObject(boolean_expression_type) => {
+                    let underlying_ndc_argument_named_type =
+                        ndc_validation::get_underlying_named_type(ndc_argument_type);
+
+                    // resolve the object type the boolean expression refers to
+                    type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
+                        type_name: &boolean_expression_type.object_type,
+                        ndc_object_type_name: DataConnectorObjectType::ref_cast(
+                            underlying_ndc_argument_named_type,
+                        ),
+                    });
+                }
                 TypeRepresentation::BooleanExpression(object_boolean_expression_type) => {
                     let underlying_ndc_argument_named_type =
                         ndc_validation::get_underlying_named_type(ndc_argument_type);
@@ -194,6 +209,7 @@ pub(crate) fn resolve_value_expression_for_argument(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
@@ -219,18 +235,24 @@ pub(crate) fn resolve_value_expression_for_argument(
                     },
                 })?;
 
-            // lookup the relevant ObjectBooleanExpressionType
-            let object_boolean_expression_type = object_boolean_expression_types
-                .get(base_type)
-                .ok_or_else(|| Error::UnknownType {
-                    data_type: base_type.clone(),
-                })?;
-
-            // get the type that the expression is based on
-            let object_type_representation = get_object_type_for_boolean_expression(
-                object_boolean_expression_type,
-                object_types,
-            )?;
+            // lookup the relevant boolean expression type and get the underlying object type
+            let object_type_representation = match object_boolean_expression_types.get(base_type) {
+                Some(object_boolean_expression_type) => {
+                    get_object_type_for_object_boolean_expression(
+                        object_boolean_expression_type,
+                        object_types,
+                    )
+                }
+                None => match boolean_expression_types.objects.get(base_type) {
+                    Some(boolean_expression_type) => get_object_type_for_boolean_expression(
+                        boolean_expression_type,
+                        object_types,
+                    ),
+                    None => Err(Error::UnknownType {
+                        data_type: base_type.clone(),
+                    }),
+                },
+            }?;
 
             // get the data_connector_object_type from the NDC command argument type
             // or explode

@@ -167,7 +167,13 @@ pub(crate) fn test_introspection_expectation(
             metadata
         );
 
-        let gds = GDS::new_with_default_flags(metadata)?;
+        let metadata_resolve_flags = metadata_resolve::MetadataResolveFlagsInternal {
+            enable_boolean_expression_types: true,
+            enable_aggregate_relationships: true,
+        };
+
+        let gds = GDS::new(metadata, &metadata_resolve_flags)?;
+
         let schema = GDS::build_schema(&gds)?;
 
         // Verify successful serialization and deserialization of the schema.

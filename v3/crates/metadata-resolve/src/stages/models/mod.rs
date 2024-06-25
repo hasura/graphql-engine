@@ -12,8 +12,8 @@ pub use helpers::get_ndc_column_for_comparison;
 use crate::types::error::Error;
 
 use crate::stages::{
-    aggregates, data_connector_scalar_types, data_connectors, object_boolean_expressions,
-    scalar_types, type_permissions,
+    aggregates, boolean_expressions, data_connector_scalar_types, data_connectors,
+    object_boolean_expressions, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 
@@ -48,6 +48,7 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     aggregate_expressions: &BTreeMap<
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
@@ -99,6 +100,7 @@ pub fn resolve(
                 object_types,
                 scalar_types,
                 object_boolean_expression_types,
+                boolean_expression_types,
             )?;
             resolved_model.source = Some(resolved_model_source);
         }

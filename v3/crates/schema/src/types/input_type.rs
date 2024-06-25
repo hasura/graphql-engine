@@ -74,6 +74,7 @@ fn get_custom_input_type(
         &gds.metadata.object_types,
         &gds.metadata.scalar_types,
         &gds.metadata.object_boolean_expression_types,
+        &gds.metadata.boolean_expression_types,
     )
     .map_err(|_| crate::Error::InternalTypeNotFound {
         type_name: gds_type_name.clone(),
@@ -115,6 +116,21 @@ fn get_custom_input_type(
                 .ok_or_else(|| Error::NoGraphQlInputTypeNameForObject {
                     type_name: gds_type_name.clone(),
                 })?,
+        }),
+        TypeRepresentation::BooleanExpressionObject(
+            metadata_resolve::ResolvedObjectBooleanExpressionType { graphql, .. },
+        ) => Ok(super::TypeId::InputObjectBooleanExpressionType {
+            gds_type_name: gds_type_name.clone(),
+            graphql_type_name: graphql
+                .as_ref()
+                .map(|graphql_config| graphql_config.type_name.clone())
+                .ok_or_else(|| Error::NoGraphQlInputTypeNameForObject {
+                    type_name: gds_type_name.clone(),
+                })?,
+        }),
+        // if we found this, we didn't find anything, basically
+        TypeRepresentation::BooleanExpressionScalar(_) => Err(crate::Error::InternalTypeNotFound {
+            type_name: gds_type_name.clone(),
         }),
     }
     .map(|type_id| builder.register_type(type_id))

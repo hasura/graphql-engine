@@ -8,8 +8,8 @@ use crate::types::error::Error;
 use super::helpers;
 use crate::helpers::type_mappings;
 use crate::stages::{
-    data_connector_scalar_types, data_connectors, object_boolean_expressions, scalar_types,
-    type_permissions,
+    boolean_expressions, data_connector_scalar_types, data_connectors, object_boolean_expressions,
+    scalar_types, type_permissions,
 };
 use crate::types::subgraph::Qualified;
 
@@ -36,6 +36,7 @@ pub(crate) fn resolve_model_source(
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
 ) -> Result<ModelSource, Error> {
     if model.source.is_some() {
         return Err(Error::DuplicateModelSourceDefinition {
@@ -82,6 +83,7 @@ pub(crate) fn resolve_model_source(
         object_types,
         scalar_types,
         object_boolean_expression_types,
+        boolean_expression_types,
     )
     .map_err(|err| Error::ModelCollectionArgumentMappingError {
         data_connector_name: qualified_data_connector_name.clone(),
