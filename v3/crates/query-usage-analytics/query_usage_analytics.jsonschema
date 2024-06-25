@@ -1,0 +1,517 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GqlOperation",
+  "description": "This is the data to emit (serlialized) for analytics, when a GraphQL operation is executed.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "query"
+      ],
+      "properties": {
+        "query": {
+          "type": "object",
+          "required": [
+            "fields",
+            "operation_name"
+          ],
+          "properties": {
+            "operation_name": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GqlField"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "mutation"
+      ],
+      "properties": {
+        "mutation": {
+          "type": "object",
+          "required": [
+            "fields",
+            "operation_name"
+          ],
+          "properties": {
+            "operation_name": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GqlField"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "subscription"
+      ],
+      "properties": {
+        "subscription": {
+          "type": "object",
+          "required": [
+            "fields",
+            "operation_name"
+          ],
+          "properties": {
+            "operation_name": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GqlField"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "GqlField": {
+      "description": "A GraphQL field appearing in the query",
+      "type": "object",
+      "required": [
+        "alias",
+        "arguments",
+        "fields",
+        "name",
+        "used"
+      ],
+      "properties": {
+        "name": {
+          "description": "Name of the GraphQL field",
+          "type": "string"
+        },
+        "alias": {
+          "description": "Alias of this field used in the query",
+          "type": "string"
+        },
+        "arguments": {
+          "description": "Arguments of this field",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GqlInputField"
+          }
+        },
+        "fields": {
+          "description": "Fields in its selection set",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GqlField"
+          }
+        },
+        "used": {
+          "description": "Which OpenDD objects it is using",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OpenddObject"
+          }
+        }
+      }
+    },
+    "GqlInputField": {
+      "description": "A GraphQL input field",
+      "type": "object",
+      "required": [
+        "fields",
+        "name",
+        "used"
+      ],
+      "properties": {
+        "name": {
+          "description": "Name of the input field",
+          "type": "string"
+        },
+        "fields": {
+          "description": "Fields of this input field",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GqlInputField"
+          }
+        },
+        "used": {
+          "description": "Which OpenDD objects it is using",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OpenddObject"
+          }
+        }
+      }
+    },
+    "OpenddObject": {
+      "description": "All kinds of OpenDD objects that could be used in a GraphQL operation",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "model"
+          ],
+          "properties": {
+            "model": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "$ref": "#/definitions/Qualified_for_ModelName"
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "command"
+          ],
+          "properties": {
+            "command": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "$ref": "#/definitions/Qualified_for_CommandName"
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "field"
+          ],
+          "properties": {
+            "field": {
+              "$ref": "#/definitions/FieldUsage"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "permission"
+          ],
+          "properties": {
+            "permission": {
+              "$ref": "#/definitions/PermissionUsage"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "relationship"
+          ],
+          "properties": {
+            "relationship": {
+              "$ref": "#/definitions/RelationshipUsage"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Qualified_for_ModelName": {
+      "type": "object",
+      "required": [
+        "name",
+        "subgraph"
+      ],
+      "properties": {
+        "subgraph": {
+          "type": "string"
+        },
+        "name": {
+          "$ref": "#/definitions/ModelName"
+        }
+      }
+    },
+    "ModelName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ModelName",
+      "title": "ModelName",
+      "description": "The name of data model.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "Qualified_for_CommandName": {
+      "type": "object",
+      "required": [
+        "name",
+        "subgraph"
+      ],
+      "properties": {
+        "subgraph": {
+          "type": "string"
+        },
+        "name": {
+          "$ref": "#/definitions/CommandName"
+        }
+      }
+    },
+    "CommandName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/CommandName",
+      "title": "CommandName",
+      "description": "The name of a command.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "FieldUsage": {
+      "type": "object",
+      "required": [
+        "name",
+        "opendd_type"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/FieldName"
+        },
+        "opendd_type": {
+          "$ref": "#/definitions/Qualified_for_CustomTypeName"
+        }
+      }
+    },
+    "FieldName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldName",
+      "title": "FieldName",
+      "description": "The name of a field in a user-defined object type.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "Qualified_for_CustomTypeName": {
+      "type": "object",
+      "required": [
+        "name",
+        "subgraph"
+      ],
+      "properties": {
+        "subgraph": {
+          "type": "string"
+        },
+        "name": {
+          "$ref": "#/definitions/CustomTypeName"
+        }
+      }
+    },
+    "CustomTypeName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/CustomTypeName",
+      "title": "CustomTypeName",
+      "description": "The name of a user-defined type.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "PermissionUsage": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "field_presets"
+          ],
+          "properties": {
+            "field_presets": {
+              "$ref": "#/definitions/FieldPresetsUsage"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "filter_predicate"
+          ],
+          "properties": {
+            "filter_predicate": {
+              "$ref": "#/definitions/FilterPredicateUsage"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "argument_presets"
+          ],
+          "properties": {
+            "argument_presets": {
+              "$ref": "#/definitions/ArgumentPresetsUsage"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "FieldPresetsUsage": {
+      "type": "object",
+      "required": [
+        "fields"
+      ],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldUsage"
+          }
+        }
+      }
+    },
+    "FilterPredicateUsage": {
+      "type": "object",
+      "required": [
+        "fields",
+        "relationships"
+      ],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldUsage"
+          }
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RelationshipUsage"
+          }
+        }
+      }
+    },
+    "RelationshipUsage": {
+      "type": "object",
+      "required": [
+        "name",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/RelationshipName"
+        },
+        "source": {
+          "$ref": "#/definitions/Qualified_for_CustomTypeName"
+        },
+        "target": {
+          "$ref": "#/definitions/RelationshipTarget"
+        }
+      }
+    },
+    "RelationshipName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationshipName",
+      "title": "RelationshipName",
+      "description": "The name of the GraphQL relationship field.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "RelationshipTarget": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "model"
+          ],
+          "properties": {
+            "model": {
+              "type": "object",
+              "required": [
+                "model_name",
+                "relationship_type"
+              ],
+              "properties": {
+                "model_name": {
+                  "$ref": "#/definitions/Qualified_for_ModelName"
+                },
+                "relationship_type": {
+                  "$ref": "#/definitions/RelationshipType"
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "command"
+          ],
+          "properties": {
+            "command": {
+              "type": "object",
+              "required": [
+                "command_name"
+              ],
+              "properties": {
+                "command_name": {
+                  "$ref": "#/definitions/Qualified_for_CommandName"
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "RelationshipType": {
+      "title": "RelationshipType",
+      "description": "Type of the relationship.",
+      "oneOf": [
+        {
+          "description": "Select one related object from the target.",
+          "type": "string",
+          "enum": [
+            "Object"
+          ]
+        },
+        {
+          "description": "Select multiple related objects from the target.",
+          "type": "string",
+          "enum": [
+            "Array"
+          ]
+        }
+      ]
+    },
+    "ArgumentPresetsUsage": {
+      "type": "object",
+      "required": [
+        "arguments"
+      ],
+      "properties": {
+        "arguments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ConnectorArgumentName"
+          }
+        }
+      }
+    },
+    "ConnectorArgumentName": {
+      "description": "The name of an argument as defined by a data connector",
+      "type": "string"
+    }
+  }
+}

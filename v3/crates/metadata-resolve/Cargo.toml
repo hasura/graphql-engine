@@ -19,6 +19,7 @@ ndc-models = { workspace = true }
 nonempty = { workspace = true }
 ref-cast = { workspace = true }
 reqwest = { workspace = true, features = ["json", "multipart"] }
+schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

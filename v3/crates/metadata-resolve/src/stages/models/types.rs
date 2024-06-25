@@ -12,6 +12,7 @@ use open_dds::{
     models::{ModelGraphQlDefinition, ModelName, OrderableField},
     types::{CustomTypeName, FieldName},
 };
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -54,6 +55,7 @@ pub struct Model {
 #[derive(
     Serialize,
     Deserialize,
+    JsonSchema,
     Clone,
     Debug,
     PartialEq,

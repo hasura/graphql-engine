@@ -10,9 +10,15 @@ bench = false
 [dependencies]
 open-dds = { path = "../open-dds" }
 metadata-resolve = { path = "../metadata-resolve" }
+schemars = { version = "0.8.20", features = ["preserve_order"] }
 
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+
+[dev-dependencies]
+goldenfile = "^1.7.1"
+schemars = { version = "0.8.20", features = ["preserve_order"] }
 
 [lints]
 workspace = true

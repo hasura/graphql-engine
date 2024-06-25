@@ -2,10 +2,13 @@ use std::fmt::Display;
 use std::{collections::BTreeMap, fmt::Write};
 
 use open_dds::types::{BaseType, CustomTypeName, InbuiltType, TypeName, TypeReference};
+use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, ser::SerializeMap, Deserialize, Serialize};
 use serde_json;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq, PartialOrd, Ord)]
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq, Hash, Eq, PartialOrd, Ord,
+)]
 pub struct Qualified<T: Display> {
     pub subgraph: String,
     pub name: T,
