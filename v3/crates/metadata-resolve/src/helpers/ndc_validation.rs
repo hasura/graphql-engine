@@ -159,7 +159,7 @@ pub enum NDCValidationError {
 }
 
 // Get the underlying type name by resolving Array and Nullable container types
-fn get_underlying_type_name(output_type: &QualifiedTypeReference) -> &QualifiedTypeName {
+pub fn get_underlying_type_name(output_type: &QualifiedTypeReference) -> &QualifiedTypeName {
     match &output_type.underlying_type {
         QualifiedBaseType::List(output_type) => get_underlying_type_name(output_type),
         QualifiedBaseType::Named(type_name) => type_name,

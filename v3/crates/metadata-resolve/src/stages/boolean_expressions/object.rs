@@ -4,15 +4,18 @@ pub use super::{
     BooleanExpressionComparableRelationship, ResolvedObjectBooleanExpressionType,
     ResolvedScalarBooleanExpressionType,
 };
+use crate::helpers::ndc_validation::get_underlying_type_name;
 use crate::stages::{graphql_config, object_types, type_permissions};
 use crate::types::error::{BooleanExpressionError, Error};
+use crate::types::subgraph::mk_qualified_type_name;
 use crate::Qualified;
 use open_dds::{
     boolean_expression::{
         BooleanExpressionComparableField, BooleanExpressionLogicalOperators,
-        BooleanExpressionObjectOperand, BooleanExpressionTypeGraphQlConfiguration,
+        BooleanExpressionObjectOperand, BooleanExpressionOperand, BooleanExpressionScalarOperand,
+        BooleanExpressionTypeGraphQlConfiguration,
     },
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, FieldName, TypeName},
 };
 use std::collections::BTreeMap;
 
@@ -174,34 +177,60 @@ fn resolve_comparable_fields(
                 continue;
             }
         }
-        if !object_type_representation
-            .fields
-            .contains_key(&comparable_field.field_name)
-        {
-            return Err(
-                BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
-                    field_name: comparable_field.field_name.clone(),
-                    object_boolean_expression_type: boolean_expression_type_name.clone(),
-                }
-                .into(),
-            );
-        }
 
-        let field_boolean_expression_type = Qualified::new(
+        let field = object_type_representation
+            .fields
+            .get(&comparable_field.field_name)
+            .ok_or_else(|| {
+                Error::from(
+                    BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
+                        field_name: comparable_field.field_name.clone(),
+                        object_boolean_expression_type: boolean_expression_type_name.clone(),
+                    },
+                )
+            })?;
+
+        let field_boolean_expression_type_name = Qualified::new(
             subgraph.to_string(),
             comparable_field.boolean_expression_type.clone(),
         );
 
         // lookup the boolean expression type to check it exists
-        let _raw_boolean_expression_type = helpers::lookup_raw_boolean_expression(
+        let (_, raw_boolean_expression_type) = helpers::lookup_raw_boolean_expression(
             boolean_expression_type_name,
-            &field_boolean_expression_type,
+            &field_boolean_expression_type_name,
             raw_boolean_expression_types,
         )?;
 
+        // get type of field
+        let field_type = get_underlying_type_name(&field.field_type);
+
+        // get type underlying boolean expression
+        let boolean_expression_underlying_type = match &raw_boolean_expression_type.operand {
+            BooleanExpressionOperand::Object(BooleanExpressionObjectOperand { r#type, .. }) => {
+                TypeName::Custom(r#type.clone())
+            }
+            BooleanExpressionOperand::Scalar(BooleanExpressionScalarOperand { r#type, .. }) => {
+                r#type.clone()
+            }
+        };
+
+        let qualified_boolean_expression_type =
+            mk_qualified_type_name(&boolean_expression_underlying_type, subgraph);
+
+        // ensure the two types are the same
+        if qualified_boolean_expression_type != *field_type {
+            return Err(Error::from(BooleanExpressionError::FieldTypeMismatch {
+                field_boolean_expression_type_name: field_boolean_expression_type_name.clone(),
+                field_name: comparable_field.field_name.clone(),
+                field_type: field_type.clone(),
+                underlying_type: qualified_boolean_expression_type,
+            }));
+        }
+
         resolved_comparable_fields.insert(
             comparable_field.field_name.clone(),
-            field_boolean_expression_type,
+            field_boolean_expression_type_name,
         );
     }
 

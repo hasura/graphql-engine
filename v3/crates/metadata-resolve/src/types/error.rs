@@ -728,6 +728,13 @@ pub enum BooleanExpressionError {
         nested_type_name: Qualified<CustomTypeName>,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error("The field {field_name:} has type {field_type:} but the field's boolean expression type {field_boolean_expression_type_name:} has type {underlying_type:}")]
+    FieldTypeMismatch {
+        field_name: FieldName,
+        field_type: QualifiedTypeName,
+        field_boolean_expression_type_name: Qualified<CustomTypeName>,
+        underlying_type: QualifiedTypeName,
+    },
 }
 
 #[derive(Debug, Error)]
