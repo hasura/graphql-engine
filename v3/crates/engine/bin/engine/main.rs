@@ -13,6 +13,7 @@ use axum::{
     Extension, Json, Router,
 };
 use clap::Parser;
+use reqwest::header::CONTENT_TYPE;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use tracing_util::{
@@ -61,6 +62,9 @@ struct ServerOptions {
     /// The port on which the server listens.
     #[arg(long, value_name = "PORT", env = "PORT", default_value_t = DEFAULT_PORT)]
     port: u16,
+    /// Enables the '/v1/sql' endpoint
+    #[arg(long, env = "ENABLE_SQL_INTERFACE")]
+    enable_sql_interface: bool,
     /// Enable CORS. Support preflight request and include related headers in responses.
     #[arg(long, env = "ENABLE_CORS")]
     enable_cors: bool,
@@ -88,6 +92,7 @@ struct EngineState {
     http_context: HttpContext,
     schema: gql::schema::Schema<GDS>,
     auth_config: AuthConfig,
+    sql_context: sql::catalog::Context,
 }
 
 #[tokio::main]
@@ -156,7 +161,7 @@ async fn shutdown_signal() {
 enum StartupError {
     #[error("could not read the auth config - {0}")]
     ReadAuth(anyhow::Error),
-    #[error("could not read the schema - {0}")]
+    #[error("failed to build engine state - {0}")]
     ReadSchema(anyhow::Error),
 }
 
@@ -174,6 +179,8 @@ struct EngineRouter {
     /// The metadata routes for the introspection metadata file.
     /// Contains /metadata and /metadata-hash routes.
     metadata_routes: Option<Router>,
+    /// Routes for the SQL interface
+    sql_routes: Option<Router>,
     /// The CORS layer for the engine.
     cors_layer: Option<CorsLayer>,
 }
@@ -233,6 +240,7 @@ impl EngineRouter {
         Self {
             base_router: base_routes,
             metadata_routes: None,
+            sql_routes: None,
             cors_layer: None,
         }
     }
@@ -257,12 +265,35 @@ impl EngineRouter {
         Ok(())
     }
 
+    fn add_sql_route(&mut self, state: Arc<EngineState>) {
+        let sql_routes = Router::new()
+            .route("/v1/sql", post(handle_sql_request))
+            .layer(axum::middleware::from_fn(
+                hasura_authn_core::resolve_session,
+            ))
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                authentication_middleware,
+            ))
+            .layer(axum::middleware::from_fn(sql_request_tracing_middleware))
+            // *PLEASE DO NOT ADD ANY MIDDLEWARE
+            // BEFORE THE `explain_request_tracing_middleware`*
+            // Refer to it for more details.
+            .layer(TraceLayer::new_for_http())
+            .with_state(state);
+        self.sql_routes = Some(sql_routes);
+    }
+
     fn add_cors_layer(&mut self, allow_origin: &[String]) {
         self.cors_layer = Some(cors::build_cors_layer(allow_origin));
     }
 
     fn into_make_service(self) -> axum::routing::IntoMakeService<Router> {
         let mut app = self.base_router;
+        // Merge the metadata routes if they exist.
+        if let Some(sql_routes) = self.sql_routes {
+            app = app.merge(sql_routes);
+        }
         // Merge the metadata routes if they exist.
         if let Some(metadata_routes) = self.metadata_routes {
             app = app.merge(metadata_routes);
@@ -279,25 +310,20 @@ impl EngineRouter {
 
 #[allow(clippy::print_stdout)]
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
-    let auth_config =
-        read_auth_config(&server.authn_config_path).map_err(StartupError::ReadAuth)?;
-
     let metadata_resolve_flags = resolve_unstable_features(&server.unstable_features);
 
-    let schema = read_schema(&server.metadata_path, &metadata_resolve_flags)
-        .map_err(StartupError::ReadSchema)?;
+    let state = build_state(
+        &server.authn_config_path,
+        &server.metadata_path,
+        &metadata_resolve_flags,
+    )
+    .map_err(StartupError::ReadSchema)?;
 
-    let http_context = HttpContext {
-        client: reqwest::Client::new(),
-        ndc_response_size_limit: None,
-    };
-    let state = Arc::new(EngineState {
-        http_context,
-        schema,
-        auth_config,
-    });
+    let mut engine_router = EngineRouter::new(state.clone());
 
-    let mut engine_router = EngineRouter::new(state);
+    if server.enable_sql_interface {
+        engine_router.add_sql_route(state.clone());
+    }
 
     // If `--introspection-metadata` is specified we also serve the file indicated on `/metadata`
     // and its hash on `/metadata-hash`.
@@ -373,6 +399,33 @@ async fn explain_request_tracing_middleware<B: Send>(
 ) -> axum::response::Response {
     let tracer = tracing_util::global_tracer();
     let path = "/v1/explain";
+    tracer
+        .in_span_async_with_parent_context(
+            path,
+            path,
+            SpanVisibility::User,
+            &request.headers().clone(),
+            || {
+                Box::pin(async move {
+                    let response = next.run(request).await;
+                    TraceableHttpResponse::new(response, path)
+                })
+            },
+        )
+        .await
+        .response
+}
+
+/// Middleware to start tracing of the `/v1/sql` request.
+/// This middleware must be active for the entire duration
+/// of the request i.e. this middleware should be the
+/// entry point and the exit point of the SQL request.
+async fn sql_request_tracing_middleware<B: Send>(
+    request: Request<B>,
+    next: Next<B>,
+) -> axum::response::Response {
+    let tracer = tracing_util::global_tracer();
+    let path = "/v1/sql";
     tracer
         .in_span_async_with_parent_context(
             path,
@@ -540,16 +593,78 @@ async fn handle_explain_request(
     response
 }
 
-fn read_schema(
+/// Handle a SQL request and execute it.
+async fn handle_sql_request(
+    State(state): State<Arc<EngineState>>,
+    Extension(session): Extension<Session>,
+    Json(request): Json<sql::execute::SqlRequest>,
+) -> axum::response::Response {
+    let tracer = tracing_util::global_tracer();
+    let response = tracer
+        .in_span_async(
+            "handle_sql_request",
+            "Handle SQL Request",
+            SpanVisibility::User,
+            || {
+                Box::pin(async {
+                    sql::execute::execute_sql(
+                        &state.sql_context,
+                        Arc::new(session),
+                        Arc::new(state.http_context.clone()),
+                        &request,
+                    )
+                    .await
+                })
+            },
+        )
+        .await;
+
+    // Set the span as error if the response contains an error
+    set_status_on_current_span(&response);
+
+    match response {
+        Ok(r) => {
+            let mut response = (axum::http::StatusCode::OK, r).into_response();
+            response.headers_mut().insert(
+                CONTENT_TYPE,
+                axum::http::HeaderValue::from_static("application/json"),
+            );
+            response
+        }
+        Err(e) => (
+            axum::http::StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": e.to_string()})),
+        )
+            .into_response(),
+    }
+}
+
+/// Build the engine state - include auth, metadata, and sql context.
+fn build_state(
+    authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
     metadata_resolve_flags: &metadata_resolve::MetadataResolveFlagsInternal,
-) -> Result<gql::schema::Schema<GDS>, anyhow::Error> {
+) -> Result<Arc<EngineState>, anyhow::Error> {
+    let auth_config = read_auth_config(authn_config_path).map_err(StartupError::ReadAuth)?;
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
-    Ok(engine::build::build_schema(
-        metadata,
-        metadata_resolve_flags,
-    )?)
+    let resolved_metadata = metadata_resolve::resolve(metadata, metadata_resolve_flags)?;
+    let http_context = HttpContext {
+        client: reqwest::Client::new(),
+        ndc_response_size_limit: None,
+    };
+    let sql_context = sql::catalog::Context::from_metadata(&resolved_metadata);
+    let schema = schema::GDS {
+        metadata: resolved_metadata,
+    }
+    .build_schema()?;
+    let state = Arc::new(EngineState {
+        http_context,
+        schema,
+        auth_config,
+        sql_context,
+    });
+    Ok(state)
 }
 
 fn read_auth_config(path: &PathBuf) -> Result<AuthConfig, anyhow::Error> {

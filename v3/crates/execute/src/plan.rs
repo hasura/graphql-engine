@@ -4,6 +4,8 @@ mod model_selection;
 mod relationships;
 pub(crate) mod selection_set;
 
+pub use relationships::process_model_relationship_definition;
+
 use gql::normalized_ast;
 use gql::schema::NamespacedGetter;
 use hasura_authn_core::Role;

@@ -73,7 +73,7 @@ pub(crate) fn collect_relationships(
     Ok(())
 }
 
-pub(crate) fn process_model_relationship_definition(
+pub fn process_model_relationship_definition(
     relationship_info: &LocalModelRelationshipInfo,
 ) -> Result<ndc_models::Relationship, error::Error> {
     let &LocalModelRelationshipInfo {

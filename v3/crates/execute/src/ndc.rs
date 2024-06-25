@@ -56,7 +56,7 @@ pub async fn execute_ndc_query<'n, 's>(
         .await
 }
 
-pub(crate) async fn fetch_from_data_connector<'s>(
+pub async fn fetch_from_data_connector<'s>(
     http_context: &HttpContext,
     query_request: &ndc_models::QueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,

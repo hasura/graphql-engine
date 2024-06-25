@@ -75,7 +75,7 @@ pub(crate) fn get_argument_presets(
     }
 }
 
-pub(crate) fn process_model_predicate<'s>(
+pub fn process_model_predicate<'s>(
     model_predicate: &'s metadata_resolve::ModelPredicate,
     session_variables: &SessionVariables,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,

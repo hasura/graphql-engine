@@ -1,0 +1,24 @@
+[package]
+name = "sql"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+metadata-resolve = {path = "../metadata-resolve" }
+open-dds = { path = "../open-dds" }
+schema = { path = "../schema" }
+execute = { path = "../execute" }
+tracing-util = { path = "../utils/tracing-util" }
+hasura-authn-core = { path = "../auth/hasura-authn-core" }
+
+ndc-models = { workspace = true }
+indexmap = { workspace = true }
+datafusion = { version = "39.0.0", features = ["serde"] }
+async-trait = "0.1.80"
+futures = "0.3.30"
+serde = { workspace = true, features = ["rc"] }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

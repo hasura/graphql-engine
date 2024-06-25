@@ -31,7 +31,7 @@ use schema::{Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInpu
 use schema::{CommandRelationshipAnnotation, CommandTargetSource};
 
 #[derive(Debug, Serialize)]
-pub(crate) struct LocalModelRelationshipInfo<'s> {
+pub struct LocalModelRelationshipInfo<'s> {
     pub relationship_name: &'s RelationshipName,
     pub relationship_type: &'s RelationshipType,
     pub source_type: &'s Qualified<CustomTypeName>,

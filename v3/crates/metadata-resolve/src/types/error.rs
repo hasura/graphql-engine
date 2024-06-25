@@ -989,7 +989,7 @@ pub enum TypeMappingValidationError {
         unknown_ndc_field_type_name: String,
     },
     #[error("ndc validation error: {0}")]
-    NDCValidationError(NDCValidationError),
+    NDCValidationError(#[from] NDCValidationError),
 }
 
 impl From<AggregateExpressionError> for Error {

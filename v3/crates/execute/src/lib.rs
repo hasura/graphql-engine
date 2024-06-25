@@ -1,13 +1,14 @@
 mod error;
 mod explain;
 mod global_id;
-mod ir;
-mod model_tracking;
-mod ndc;
+pub mod ir;
+pub mod model_tracking;
+pub mod ndc;
 mod plan;
 mod process_response;
 mod remote_joins;
 
+pub use plan::process_model_relationship_definition;
 use plan::ExecuteQueryResult;
 use thiserror::Error;
 
@@ -28,9 +29,11 @@ use tracing_util::{
 // we explicitly export things used by other crates
 pub use explain::execute_explain;
 pub use explain::types::{redact_ndc_explain, ExplainResponse};
+pub use ndc::fetch_from_data_connector;
 pub use plan::{execute_mutation_plan, execute_query_plan, generate_request_plan, RequestPlan};
 
 /// Context for making HTTP requests
+#[derive(Debug, Clone)]
 pub struct HttpContext {
     /// The HTTP client to use for making requests
     pub client: reqwest::Client,

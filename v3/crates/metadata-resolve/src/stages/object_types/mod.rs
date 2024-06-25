@@ -9,6 +9,7 @@ pub use types::{
     ResolvedApolloFederationObjectKey, ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
+use crate::helpers::ndc_validation::get_underlying_named_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::stages::data_connectors;
 
@@ -328,9 +329,17 @@ pub fn resolve_data_connector_type_mapping(
                 )
             };
         let source_column = get_column(ndc_object_type, field_name, resolved_field_mapping_column)?;
+        let underlying_column_type = get_underlying_named_type(&source_column.r#type);
+        let column_type_representation = data_connector_context
+            .inner
+            .schema
+            .scalar_types
+            .get(underlying_column_type)
+            .and_then(|scalar_type| scalar_type.representation.clone());
         let resolved_field_mapping = FieldMapping {
             column: resolved_field_mapping_column.clone(),
             column_type: source_column.r#type.clone(),
+            column_type_representation,
             argument_mappings: resolved_argument_mappings.0,
         };
 

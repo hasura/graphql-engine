@@ -18,6 +18,7 @@ pub use tracer::{
 // risking mismatches and multiple globals
 pub use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
 pub use opentelemetry::trace::get_active_span;
+pub use opentelemetry::trace::FutureExt;
 pub use opentelemetry::trace::Status;
 pub use opentelemetry::Context;
 pub use opentelemetry_contrib::trace::propagator::trace_context_response::TraceContextResponsePropagator;
