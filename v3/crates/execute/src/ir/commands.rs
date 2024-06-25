@@ -2,6 +2,7 @@
 //!
 //! A 'command' executes a function/procedure and returns back the result of the execution.
 use hasura_authn_core::SessionVariables;
+use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::ast::common::TypeContainer;
 use lang_graphql::ast::common::TypeName;
@@ -18,6 +19,9 @@ use std::collections::BTreeMap;
 use super::arguments;
 use super::error::InternalDeveloperError;
 use super::selection_set;
+use super::selection_set::FieldSelection;
+use super::selection_set::NestedSelection;
+use super::selection_set::ResultSelectionSet;
 use crate::ir::error;
 use crate::ir::permissions;
 use crate::model_tracking::{count_command, UsagesCounts};
@@ -208,6 +212,7 @@ pub(crate) fn generate_command_info<'n, 's>(
         request_headers,
         &mut usage_counts,
     )?;
+    let selection = wrap_selection_in_response_config(command_source, selection);
 
     Ok(CommandInfo {
         command_name: command_name.clone(),
@@ -218,6 +223,47 @@ pub(crate) fn generate_command_info<'n, 's>(
         type_container: field.type_container.clone(),
         usage_counts,
     })
+}
+
+/// Wrap a selection set in a `{"headers": ..., "response": ...}` selection
+/// shape for command selections, where `CommandsResponseConfig` is configured.
+///
+/// When the output type of a NDC function/procedure is an object type,
+/// containing headers and response fields; and the response field is also an
+/// object type -
+/// 1. Engine needs to generate fields selection IR such that it contains
+/// `{"headers": ..., "response": ...}` shape, and the actual selection from the
+/// user-facing query goes inside the `response` field
+fn wrap_selection_in_response_config<'a>(
+    command_source: &CommandSourceDetail,
+    original_selection: Option<NestedSelection<'a>>,
+) -> Option<NestedSelection<'a>> {
+    match &command_source.data_connector.response_config {
+        None => original_selection,
+        Some(response_config) => {
+            if command_source.ndc_type_opendd_type_same {
+                original_selection
+            } else {
+                let headers_field_name = response_config.headers_field.clone();
+                let headers_field = FieldSelection::Column {
+                    column: headers_field_name.clone(),
+                    nested_selection: None,
+                    arguments: BTreeMap::new(),
+                };
+                let result_field_name = response_config.result_field.clone();
+                let result_field = FieldSelection::Column {
+                    column: result_field_name.clone(),
+                    nested_selection: original_selection,
+                    arguments: BTreeMap::new(),
+                };
+                let fields = IndexMap::from_iter([
+                    (headers_field_name, headers_field),
+                    (result_field_name, result_field),
+                ]);
+                Some(NestedSelection::Object(ResultSelectionSet { fields }))
+            }
+        }
+    }
 }
 
 /// Generates the IR for a 'function based command' operation

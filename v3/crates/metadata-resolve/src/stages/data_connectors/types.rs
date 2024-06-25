@@ -60,11 +60,11 @@ impl<'a> DataConnectorContext<'a> {
 #[derive(Clone)]
 pub struct DataConnectorCoreInfo<'a> {
     pub url: &'a data_connector::DataConnectorUrl,
-    pub headers: &'a IndexMap<String, open_dds::EnvironmentValue>,
+    pub headers: IndexMap<String, String>,
     pub schema: DataConnectorSchema,
     pub capabilities: &'a ndc_models::CapabilitiesResponse,
     pub argument_presets: Vec<ArgumentPreset>,
-    pub response_headers: Option<ResponseHeaders>,
+    pub response_headers: Option<CommandsResponseConfig>,
 }
 
 impl<'a> DataConnectorCoreInfo<'a> {
@@ -96,14 +96,18 @@ impl<'a> DataConnectorCoreInfo<'a> {
         validate_ndc_argument_presets(&argument_presets, &resolved_schema)?;
 
         let response_headers = if let Some(headers) = &data_connector.response_headers {
-            Some(ResponseHeaders::new(headers, data_connector_name)?)
+            Some(CommandsResponseConfig::new(headers, data_connector_name)?)
         } else {
             None
         };
 
         Ok(DataConnectorCoreInfo {
             url: &data_connector.url,
-            headers: &data_connector.headers,
+            headers: data_connector
+                .headers
+                .iter()
+                .map(|(k, v)| (k.clone(), v.value.clone()))
+                .collect(),
             schema: resolved_schema,
             capabilities: &schema_and_capabilities.capabilities,
             argument_presets,
@@ -219,7 +223,7 @@ pub struct DataConnectorLink {
     /// HTTP response headers configuration that is forwarded from a NDC
     /// function/procedure to the client.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub response_headers: Option<ResponseHeaders>,
+    pub response_config: Option<CommandsResponseConfig>,
     pub capabilities: DataConnectorCapabilities,
 }
 
@@ -261,7 +265,7 @@ impl DataConnectorLink {
                 })
             }
         };
-        let headers = SerializableHeaderMap::new(info.headers).map_err(|e| match e {
+        let headers = SerializableHeaderMap::new(&info.headers).map_err(|e| match e {
             HeaderError::InvalidHeaderName { header_name } => Error::InvalidHeaderName {
                 data_connector: name.clone(),
                 header_name,
@@ -300,7 +304,7 @@ impl DataConnectorLink {
             headers,
             capabilities,
             argument_presets: info.argument_presets.clone(),
-            response_headers: info.response_headers.clone(),
+            response_config: info.response_headers.clone(),
         })
     }
 }
@@ -415,13 +419,15 @@ fn to_error(err: HeaderError, data_connector_name: &Qualified<DataConnectorName>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ResponseHeaders {
+/// Configure how NDC functions/procedures should be processed to extract
+/// headers and result
+pub struct CommandsResponseConfig {
     pub headers_field: String,
     pub result_field: String,
     pub forward_headers: Vec<SerializableHeaderName>,
 }
 
-impl ResponseHeaders {
+impl CommandsResponseConfig {
     fn new(
         response_headers: &open_dds::data_connector::ResponseHeaders,
         data_connector_name: &Qualified<DataConnectorName>,

@@ -105,6 +105,7 @@ pub(crate) fn resolve_model_source(
             object_types,
             scalar_types,
             &mut type_mappings,
+            &None,
         )
         .map_err(|error| Error::ModelTypeMappingCollectionError {
             model_name: model.name.clone(),

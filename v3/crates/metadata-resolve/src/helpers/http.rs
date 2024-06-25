@@ -1,7 +1,6 @@
 //! Wrapper over HTTP types which can serialized/deserialized
 
 use indexmap::IndexMap;
-use open_dds::EnvironmentValue;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{
     de::Error as DeError,
@@ -63,7 +62,6 @@ impl<'de> Deserialize<'de> for SerializableUrl {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SerializableHeaderName(pub HeaderName);
 
-#[allow(dead_code)]
 impl SerializableHeaderName {
     pub fn new(header_name_str: String) -> Result<Self, HeaderError> {
         let header_name =
@@ -97,7 +95,7 @@ impl<'de> Deserialize<'de> for SerializableHeaderName {
 pub struct SerializableHeaderMap(pub HeaderMap);
 
 impl SerializableHeaderMap {
-    pub fn new(headers: &IndexMap<String, EnvironmentValue>) -> Result<Self, HeaderError> {
+    pub fn new(headers: &IndexMap<String, String>) -> Result<Self, HeaderError> {
         let header_map = headers
             .iter()
             .map(|(k, v)| {
@@ -105,10 +103,8 @@ impl SerializableHeaderMap {
                     HeaderName::from_str(k).map_err(|_| HeaderError::InvalidHeaderName {
                         header_name: k.clone(),
                     })?,
-                    HeaderValue::from_str(&v.value).map_err(|_| {
-                        HeaderError::InvalidHeaderValue {
-                            header_name: k.clone(),
-                        }
+                    HeaderValue::from_str(v).map_err(|_| HeaderError::InvalidHeaderValue {
+                        header_name: k.clone(),
                     })?,
                 ))
             })

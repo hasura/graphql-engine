@@ -77,6 +77,8 @@ pub struct GraphQLError {
 pub struct Response {
     #[serde(skip_serializing)]
     pub status_code: http::status::StatusCode,
+    #[serde(skip_serializing)]
+    pub headers: http::HeaderMap,
     pub data: Option<IndexMap<ast::Alias, serde_json::Value>>,
     /// Errors entry shouldn't be present if no errors raised
     /// <https://spec.graphql.org/October2021/#sel-FAPHFCBUBpEm7G>
@@ -88,6 +90,7 @@ impl Response {
     pub fn ok(data: IndexMap<ast::Alias, serde_json::Value>) -> Self {
         Self {
             status_code: http::status::StatusCode::OK,
+            headers: http::HeaderMap::default(),
             data: Some(data),
             errors: None,
         }
@@ -95,9 +98,11 @@ impl Response {
     pub fn partial(
         data: IndexMap<ast::Alias, serde_json::Value>,
         errors: Vec<GraphQLError>,
+        headers: http::HeaderMap,
     ) -> Self {
         Self {
             status_code: http::status::StatusCode::OK,
+            headers,
             data: Some(data),
             errors: NonEmpty::from_vec(errors),
         }
@@ -106,6 +111,7 @@ impl Response {
     pub fn error_with_status(status_code: http::status::StatusCode, error: GraphQLError) -> Self {
         Self {
             status_code,
+            headers: http::HeaderMap::default(),
             data: None,
             errors: Some(nonempty![error]),
         }
@@ -117,6 +123,7 @@ impl Response {
     ) -> Self {
         Self {
             status_code,
+            headers: http::HeaderMap::default(),
             data: None,
             errors: Some(nonempty![GraphQLError {
                 message,
@@ -126,9 +133,10 @@ impl Response {
         }
     }
 
-    pub fn error(error: GraphQLError) -> Self {
+    pub fn error(error: GraphQLError, headers: http::HeaderMap) -> Self {
         Self {
             status_code: http::status::StatusCode::OK,
+            headers,
             data: None,
             errors: Some(nonempty![error]),
         }
@@ -140,6 +148,7 @@ impl Response {
     ) -> Self {
         Self {
             status_code,
+            headers: http::HeaderMap::default(),
             data: None,
             errors: Some(errors),
         }
@@ -148,6 +157,7 @@ impl Response {
     pub fn errors(errors: NonEmpty<GraphQLError>) -> Self {
         Self {
             status_code: http::status::StatusCode::OK,
+            headers: http::HeaderMap::default(),
             data: None,
             errors: Some(errors),
         }
@@ -160,7 +170,16 @@ impl Response {
 
 impl axum::response::IntoResponse for Response {
     fn into_response(self) -> axum::response::Response {
-        (self.status_code, axum::Json(self)).into_response()
+        (
+            self.status_code,
+            // we clone here because -
+            // 1. we can't move out `self.headers`, as we serialize `self` into JSON response in next step.
+            // 2. size of response headers shouldn't be a lot, so this should be inexpensive to clone.
+            // 3. if this becomes expensive, we could introduce a local struct with only data and errors and serialize that.
+            self.headers.clone(),
+            axum::Json(self),
+        )
+            .into_response()
     }
 }
 

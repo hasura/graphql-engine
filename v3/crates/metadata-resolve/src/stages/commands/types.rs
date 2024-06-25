@@ -24,6 +24,9 @@ pub struct CommandGraphQlApi {
 pub struct CommandSource {
     pub data_connector: data_connectors::DataConnectorLink,
     pub source: DataConnectorCommand,
+    // Is the output type of this command in OpenDD and NDC same. This can be
+    // different in the case when `CommandsResponseConfig` is set
+    pub ndc_type_opendd_type_same: bool,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"

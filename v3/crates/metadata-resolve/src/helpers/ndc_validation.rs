@@ -1,6 +1,9 @@
 use std::collections::BTreeMap;
 
-use crate::stages::{commands, data_connectors, models, object_types};
+use crate::{
+    data_connectors::CommandsResponseConfig,
+    stages::{commands, data_connectors, models, object_types},
+};
 use ndc_models;
 use open_dds::{
     commands::{CommandName, DataConnectorCommand, FunctionName, ProcedureName},
@@ -144,6 +147,13 @@ pub enum NDCValidationError {
         data_connector_name: Qualified<DataConnectorName>,
     },
 
+    #[error("Field {field_name:} not found in object type {object_type:} in data connector {data_connector_name:}.")]
+    NoSuchFieldInObjectType {
+        data_connector_name: Qualified<DataConnectorName>,
+        field_name: String,
+        object_type: String,
+    },
+
     #[error("Internal error while serializing error message. Error: {err:}")]
     InternalSerializationError { err: serde_json::Error },
 }
@@ -274,7 +284,11 @@ pub fn validate_ndc_command(
     command_source: &commands::CommandSource,
     command_output_type: &QualifiedTypeReference,
     schema: &data_connectors::DataConnectorSchema,
-) -> Result<(), NDCValidationError> {
+    commands_response_config: Option<&CommandsResponseConfig>,
+) -> Result<bool, NDCValidationError> {
+    // is the source type or open
+    let mut source_type_open_dd_type_same = true;
+
     let db = &command_source.data_connector;
 
     let (
@@ -370,6 +384,15 @@ pub fn validate_ndc_command(
             match schema.object_types.get(command_source_ndc_result_type_name) {
                 // Check if the command.output_type is available in schema.object_types
                 Some(command_source_ndc_type) => {
+                    let actual_command_source_type = resolve_actual_command_source_type(
+                        commands_response_config,
+                        command_source_ndc_type,
+                        schema,
+                        command_source_ndc_result_type_name,
+                        &db.name,
+                    )?;
+                    source_type_open_dd_type_same =
+                        actual_command_source_type == command_source_ndc_type;
                     // Check if the command.output_type has typeMappings
                     let object_types::TypeMapping::Object { field_mappings, .. } = command_source
                         .type_mappings
@@ -381,7 +404,10 @@ pub fn validate_ndc_command(
                     // Check if the field mappings for the output_type is valid
                     for (field_name, field_mapping) in field_mappings {
                         let column_name = &field_mapping.column;
-                        if !command_source_ndc_type.fields.contains_key(&column_name.0) {
+                        if !actual_command_source_type
+                            .fields
+                            .contains_key(&column_name.0)
+                        {
                             return Err(NDCValidationError::NoSuchColumnForCommand {
                                 db_name: db.name.clone(),
                                 command_name: command_name.clone(),
@@ -403,7 +429,50 @@ pub fn validate_ndc_command(
             };
         }
     }
-    Ok(())
+    Ok(source_type_open_dd_type_same)
+}
+
+/// When `CommandsResponseConfig` is configured, a source/procedure's result
+/// type may not match the output type of a corresponding Command. The result
+/// type of the NDC function/procedure would be an object type with "headers"
+/// and "result" fields. And "result" field's type is what should match the
+/// Command's output type.
+pub fn resolve_actual_command_source_type<'a>(
+    commands_response_config: Option<&CommandsResponseConfig>,
+    command_source_ndc_type: &'a ndc_models::ObjectType,
+    schema: &'a data_connectors::DataConnectorSchema,
+    command_source_ndc_type_name: &str,
+    db_name: &Qualified<DataConnectorName>,
+) -> Result<&'a ndc_models::ObjectType, NDCValidationError> {
+    match commands_response_config {
+        None => Ok(command_source_ndc_type),
+        Some(response_config) => {
+            if command_source_ndc_type
+                .fields
+                .contains_key(&response_config.headers_field)
+                && command_source_ndc_type
+                    .fields
+                    .contains_key(&response_config.result_field)
+            {
+                let result_field = command_source_ndc_type
+                    .fields
+                    .get(&response_config.result_field)
+                    .ok_or_else(|| NDCValidationError::NoSuchFieldInObjectType {
+                        data_connector_name: db_name.clone(),
+                        field_name: response_config.result_field.clone(),
+                        object_type: command_source_ndc_type_name.to_string(),
+                    })?;
+
+                let type_name = get_underlying_named_type(&result_field.r#type);
+                schema
+                    .object_types
+                    .get(type_name)
+                    .ok_or_else(|| NDCValidationError::NoSuchType(type_name.clone()))
+            } else {
+                Ok(command_source_ndc_type)
+            }
+        }
+    }
 }
 
 /// Validate argument presets of a 'DataConnectorLink' with NDC schema

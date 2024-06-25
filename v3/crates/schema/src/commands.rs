@@ -117,6 +117,7 @@ pub(crate) fn function_command_field(
                 data_connector: command_source.data_connector.clone(),
                 type_mappings: command_source.type_mappings.clone(),
                 argument_mappings: command_source.argument_mappings.clone(),
+                ndc_type_opendd_type_same: command_source.ndc_type_opendd_type_same,
             };
             let function_name = match &command_source.source {
                 DataConnectorCommand::Function(function_name) => function_name.clone(),
@@ -170,6 +171,7 @@ pub(crate) fn procedure_command_field(
                 data_connector: command_source.data_connector.clone(),
                 type_mappings: command_source.type_mappings.clone(),
                 argument_mappings: command_source.argument_mappings.clone(),
+                ndc_type_opendd_type_same: command_source.ndc_type_opendd_type_same,
             };
             let procedure_name = match &command_source.source {
                 DataConnectorCommand::Procedure(procedure_name) => procedure_name.clone(),

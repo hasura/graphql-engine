@@ -1243,3 +1243,35 @@ fn test_aggregates_root_field_nested_object() -> anyhow::Result<()> {
         ],
     )
 }
+
+// Tests of NDC header forwarding
+
+// Tests a mutation command "login", with NDC forward headers configuration.
+#[test]
+fn test_command_mutation_forwarded_headers() -> anyhow::Result<()> {
+    let test_path_string = "execute/commands/procedures/forward_headers";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
+// Tests a mutation command "login", with NDC forward headers configuration.
+#[test]
+fn test_command_query_forwarded_headers() -> anyhow::Result<()> {
+    let test_path_string = "execute/commands/functions/forward_headers";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}

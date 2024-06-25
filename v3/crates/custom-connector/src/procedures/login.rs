@@ -1,6 +1,7 @@
 use axum::{http::StatusCode, Json};
 use ndc_models;
 use std::collections::BTreeMap;
+use uuid::Uuid;
 
 use crate::{
     query::Result,
@@ -71,11 +72,13 @@ pub(crate) fn execute(
         }),
     ))?;
 
+    let cookie_val1 = Uuid::new_v4();
+    let cookie_val2 = Uuid::new_v4();
     let login_response = LoginResponse {
         response: true,
         headers: ResponseHeaders {
-            cookie: "Set-Cookie: cookie_name=cookie_val;".to_string(),
-            session_token: "abcdefghi".to_string(),
+            cookie: format!("foo={cookie_val1:}; bar={cookie_val2:};"),
+            session_token: Uuid::new_v4().to_string(),
         },
     };
     serde_json::to_value(login_response).map_err(|_| {

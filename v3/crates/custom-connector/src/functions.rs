@@ -18,6 +18,7 @@ pub mod get_all_actors;
 pub mod get_all_movies;
 pub mod get_institutions_by_institution_query;
 pub mod get_movie_by_id;
+pub mod get_session_details;
 pub mod latest_actor;
 pub mod latest_actor_id;
 pub mod latest_actor_name;
@@ -34,6 +35,7 @@ pub(crate) fn get_functions() -> Vec<ndc_models::FunctionInfo> {
         get_all_actors::function_info(),
         get_all_movies::function_info(),
         get_institutions_by_institution_query::function_info(),
+        get_session_details::function_info(),
         // TODO: Looks like the other functions where never added to the schema?
     ]
 }
@@ -59,6 +61,7 @@ pub(crate) fn get_function_by_name(
         "get_institutions_by_institution_query" => {
             get_institutions_by_institution_query::rows(arguments, state)
         }
+        "get_session_details" => get_session_details::rows(arguments),
         _ => Err((
             StatusCode::BAD_REQUEST,
             Json(ndc_models::ErrorResponse {

@@ -128,7 +128,11 @@ pub fn test_execution_expectation_legacy(
                 }
             }),
         )?;
-        write!(expected, "{}", serde_json::to_string_pretty(&response.0)?)?;
+        write!(
+            expected,
+            "{}",
+            serde_json::to_string_pretty(&response.inner())?
+        )?;
         Ok(())
     })
 }
@@ -215,7 +219,7 @@ pub(crate) fn test_introspection_expectation(
                 None,
             )
             .await;
-            responses.push(response.0);
+            responses.push(response.inner());
         }
 
         let mut expected = test_ctx.mint.new_goldenfile_with_differ(
@@ -245,10 +249,11 @@ pub fn test_execution_expectation(
         let mut test_ctx = setup(&root_test_dir);
         let test_path = root_test_dir.join(test_path_string);
 
+        let metadata_path = test_path.join("metadata.json");
         let request_path = test_path.join("request.gql");
         let variables_path = test_path.join("variables.json");
         let response_path = test_path_string.to_string() + "/expected.json";
-        let metadata_path = test_path.join("metadata.json");
+        let response_headers_path = test_path.join("expected_headers.json");
 
         let metadata_json_value = merge_with_common_metadata(
             &metadata_path,
@@ -315,6 +320,14 @@ pub fn test_execution_expectation(
             "Found less than 2 roles in test scenario"
         );
 
+        // expected response headers are a `Vec<String>`; one set for each
+        // session/role.
+        let expected_headers: Option<Vec<Vec<String>>> =
+            match fs::read_to_string(response_headers_path) {
+                Ok(response_headers_str) => Some(json::from_str(&response_headers_str)?),
+                Err(_) => None,
+            };
+
         // Execute the test
         let mut responses = Vec::new();
 
@@ -335,7 +348,7 @@ pub fn test_execution_expectation(
                         None,
                     )
                     .await;
-                    responses.push(response.0);
+                    responses.push(response.inner());
                 }
             }
             Some(vars) => {
@@ -354,11 +367,24 @@ pub fn test_execution_expectation(
                         None,
                     )
                     .await;
-                    responses.push(response.0);
+                    responses.push(response.inner());
                 }
             }
         }
 
+        // assert response headers matches
+        if let Some(expected_headers) = expected_headers {
+            for (response, expected_response_headers) in responses.iter().zip(expected_headers) {
+                for header_name in &expected_response_headers {
+                    assert!(
+                        response.headers.contains_key(header_name),
+                        "Header {header_name:} not found in response headers."
+                    );
+                }
+            }
+        }
+
+        // assert response body matches
         let mut expected = test_ctx.mint.new_goldenfile_with_differ(
             response_path,
             Box::new(|file1, file2| {

@@ -508,7 +508,7 @@ async fn handle_request(
     // The only way to determine the error is to inspect the status code from the `Response` struct.
     // In `/graphql` API, all responses are sent with `200` OK including errors, which leaves no way to deduce errors in the tracing middleware.
     set_status_on_current_span(&response);
-    response.0
+    response.inner()
 }
 
 async fn handle_explain_request(

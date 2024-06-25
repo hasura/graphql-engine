@@ -3,18 +3,12 @@ pub mod response;
 use std::borrow::Cow;
 
 use axum::http::HeaderMap;
-use serde_json as json;
 
-use gql::normalized_ast;
-use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
 use super::error;
-use super::plan::ProcessResponseAs;
-use super::process_response::process_command_mutation_response;
 use super::{HttpContext, ProjectId};
-use schema::GDS;
 
 pub mod client;
 
@@ -116,12 +110,10 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     http_context: &HttpContext,
     query: &ndc_models::MutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
-    selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
     execution_span_attribute: String,
     field_span_attribute: String,
-    process_response_as: ProcessResponseAs<'ir>,
     project_id: Option<&ProjectId>,
-) -> Result<json::Value, error::FieldError> {
+) -> Result<ndc_models::MutationResponse, error::FieldError> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -150,39 +142,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
                         project_id,
                     )
                     .await?;
-                    // Post process the response to add the `__typename` fields
-                    tracer.in_span(
-                        "process_response",
-                        "Process NDC response",
-                        SpanVisibility::Internal,
-                        || {
-                            // NOTE: NDC returns a `Vec<RowSet>` (to account for
-                            // variables). We don't use variables in NDC queries yet,
-                            // hence we always pick the first `RowSet`.
-                            let mutation_results = connector_response
-                                .operation_results
-                                .into_iter()
-                                .next()
-                                .ok_or(error::NDCUnexpectedError::BadNDCResponse {
-                                    summary: "missing rowset".to_string(),
-                                })?;
-
-                            match process_response_as {
-                                ProcessResponseAs::CommandResponse {
-                                    command_name: _,
-                                    type_container,
-                                } => process_command_mutation_response(
-                                    mutation_results,
-                                    selection_set,
-                                    type_container,
-                                ),
-                                _ => Err(error::FieldInternalError::InternalGeneric {
-                                    description: "Only commands are supported for mutations"
-                                        .to_string(),
-                                })?,
-                            }
-                        },
-                    )
+                    Ok(connector_response)
                 })
             },
         )

@@ -120,6 +120,11 @@ pub(crate) fn object_types() -> BTreeMap<String, ndc_models::ObjectType> {
         ("institution".into(), institution::definition()),
         ("location".into(), location::definition()),
         ("staff_member".into(), staff_member::definition()),
-        ("login_response".into(), login::definition()),
+        ("login_response".into(), login::definition_login_response()),
+        (
+            "session_response".into(),
+            login::definition_session_response(),
+        ),
+        ("session_info".into(), login::definition_session_info()),
     ])
 }

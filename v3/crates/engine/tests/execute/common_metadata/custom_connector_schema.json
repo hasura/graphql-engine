@@ -15,6 +15,22 @@
               }
             },
             "headers": {},
+            "argumentPresets": [
+              {
+                "argument": "headers",
+                "value": {
+                  "httpHeaders": {
+                    "forward": ["cookie", "authorization", "x-hasura-role"],
+                    "additional": {}
+                  }
+                }
+              }
+            ],
+            "responseHeaders": {
+              "headersField": "headers",
+              "resultField": "response",
+              "forwardHeaders": ["set-cookie"]
+            },
             "schema": {
               "version": "v0.1",
               "schema": {
@@ -364,6 +380,44 @@
                         }
                       }
                     }
+                  },
+                  "session_info": {
+                    "description": "Session details",
+                    "fields": {
+                      "expiry": {
+                        "description": "Token expiry",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "token": {
+                        "description": "Session token",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "session_response": {
+                    "description": "Response of session details",
+                    "fields": {
+                      "headers": {
+                        "description": "Response headers to be forwarded",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "response": {
+                        "description": "Session details",
+                        "type": {
+                          "type": "named",
+                          "name": "session_info"
+                        }
+                      }
+                    }
                   }
                 },
                 "collections": [
@@ -401,6 +455,21 @@
                         "unique_columns": ["id"]
                       }
                     },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "actors_by_movie",
+                    "description": "Actors parameterized by movie",
+                    "arguments": {
+                      "movie_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "type": "actor",
+                    "uniqueness_constraints": {},
                     "foreign_keys": {}
                   },
                   {
@@ -664,6 +733,30 @@
                         "type": "named",
                         "name": "institution"
                       }
+                    }
+                  },
+                  {
+                    "name": "get_session_details",
+                    "description": "Get session details of a user",
+                    "arguments": {
+                      "headers": {
+                        "description": "headers required for session details",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "user_id": {
+                        "description": "user id of the user",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "session_response"
                     }
                   }
                 ],

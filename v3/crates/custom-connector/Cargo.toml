@@ -23,6 +23,7 @@ serde_json = { workspace = true, features = ["preserve_order"] }
 serde = { workspace = true }
 sha2 = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
+uuid = { version = "1", features = ["v4"] }
 
 [lints]
 workspace = true

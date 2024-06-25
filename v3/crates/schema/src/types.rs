@@ -106,6 +106,7 @@ pub struct CommandSourceDetail {
     )]
     pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
     pub argument_mappings: BTreeMap<ArgumentName, ConnectorArgumentName>,
+    pub ndc_type_opendd_type_same: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]

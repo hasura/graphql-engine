@@ -117,6 +117,7 @@ fn collect_argument_from_rows(
                     ProcessResponseAs::CommandResponse {
                         command_name: _,
                         type_container,
+                        response_config: _,
                     } => {
                         let mut command_rows = resolve_command_response_row(row, type_container)?;
                         for command_row in &mut command_rows {

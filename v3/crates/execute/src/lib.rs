@@ -8,6 +8,7 @@ mod plan;
 mod process_response;
 mod remote_joins;
 
+use plan::ExecuteQueryResult;
 use thiserror::Error;
 
 use gql::normalized_ast::Operation;
@@ -61,7 +62,24 @@ impl<'a> TraceableError for GraphQLErrors<'a> {
 }
 
 /// A simple wrapper around a GraphQL HTTP response
-pub struct GraphQLResponse(pub gql::http::Response);
+pub struct GraphQLResponse(gql::http::Response);
+
+impl GraphQLResponse {
+    fn from_result(result: ExecuteQueryResult) -> Self {
+        Self(result.to_graphql_response())
+    }
+
+    fn from_error(err: &error::RequestError) -> Self {
+        Self(Response::error(
+            err.to_graphql_error(),
+            axum::http::HeaderMap::default(),
+        ))
+    }
+
+    pub fn inner(self) -> gql::http::Response {
+        self.0
+    }
+}
 
 /// Implement traceable for GraphQL Response
 impl Traceable for GraphQLResponse {
@@ -92,7 +110,7 @@ pub async fn execute_query(
         project_id,
     )
     .await
-    .unwrap_or_else(|e| GraphQLResponse(Response::error(e.to_graphql_error())))
+    .unwrap_or_else(|e| GraphQLResponse::from_error(&e))
 }
 
 #[derive(Error, Debug)]
@@ -190,7 +208,7 @@ pub async fn execute_query_internal(
                                         .await
                                     }
                                 };
-                                GraphQLResponse(execute_query_result.to_graphql_response())
+                                GraphQLResponse::from_result(execute_query_result)
                             })
                         })
                         .await;

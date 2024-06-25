@@ -219,6 +219,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     process_response_as: ProcessResponseAs::CommandResponse {
                         command_name: &ir.command_info.command_name,
                         type_container: &ir.command_info.type_container,
+                        response_config: &ir.command_info.data_connector.response_config,
                     },
                     remote_join_type: RemoteJoinType::ToCommand,
                 };

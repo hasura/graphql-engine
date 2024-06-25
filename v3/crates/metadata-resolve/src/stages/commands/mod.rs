@@ -1,7 +1,7 @@
 mod types;
 
 use crate::helpers::argument::get_argument_mappings;
-use crate::helpers::ndc_validation;
+use crate::helpers::ndc_validation::{self};
 use crate::helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
 };
@@ -21,7 +21,7 @@ use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 
 use std::collections::BTreeMap;
 
-use crate::helpers::type_mappings;
+use crate::helpers::type_mappings::{self, SpecialCaseTypeMapping};
 
 /// resolve commands
 pub fn resolve(
@@ -325,6 +325,37 @@ pub fn resolve_command_source(
         })
         .transpose()?;
 
+    // Get the ndc object type from the source result type name
+    let ndc_object_type = source_result_type_mapping_to_resolve
+        .as_ref()
+        .map(|type_mapping_to_resolve| {
+            let ndc_type_name = &type_mapping_to_resolve.ndc_object_type_name.0;
+            data_connector_context
+                .inner
+                .schema
+                .object_types
+                .get(ndc_type_name)
+                .ok_or_else(|| Error::CommandTypeMappingCollectionError {
+                    command_name: command.name.clone(),
+                    error: type_mappings::TypeMappingCollectionError::NDCValidationError(
+                        crate::NDCValidationError::NoSuchType(ndc_type_name.clone()),
+                    ),
+                })
+        })
+        .transpose()?;
+
+    let special_case = data_connector_context
+        .inner
+        .response_headers
+        .as_ref()
+        .zip(ndc_object_type)
+        .map(
+            |(response_config, ndc_object_type)| SpecialCaseTypeMapping {
+                response_config,
+                ndc_object_type,
+            },
+        );
+
     for type_mapping_to_collect in source_result_type_mapping_to_resolve
         .iter()
         .chain(argument_type_mappings_to_resolve.iter())
@@ -335,6 +366,7 @@ pub fn resolve_command_source(
             object_types,
             scalar_types,
             &mut type_mappings,
+            &special_case,
         )
         .map_err(|error| Error::CommandTypeMappingCollectionError {
             command_name: command.name.clone(),
@@ -342,23 +374,28 @@ pub fn resolve_command_source(
         })?;
     }
 
-    let command_source = CommandSource {
+    let mut command_source = CommandSource {
         data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
             &data_connector_context.inner,
         )?,
         source: command_source.data_connector_command.clone(),
+        ndc_type_opendd_type_same: true,
         type_mappings,
         argument_mappings,
         source_arguments: command_source_response.arguments,
     };
 
-    ndc_validation::validate_ndc_command(
+    let commands_response_config = special_case.map(|x| x.response_config);
+    let source_type_opendd_type_same = ndc_validation::validate_ndc_command(
         &command.name,
         &command_source,
         &command.output_type,
         &data_connector_context.inner.schema,
+        commands_response_config,
     )?;
+
+    command_source.ndc_type_opendd_type_same = source_type_opendd_type_same;
 
     Ok(command_source)
 }

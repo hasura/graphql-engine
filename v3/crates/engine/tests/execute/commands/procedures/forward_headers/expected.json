@@ -1,0 +1,14 @@
+[
+  {
+    "data": {
+      "login": true,
+      "another_login": true
+    }
+  },
+  {
+    "data": {
+      "login": true,
+      "another_login": true
+    }
+  }
+]
