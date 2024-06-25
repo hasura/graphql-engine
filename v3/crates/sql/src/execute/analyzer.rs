@@ -36,7 +36,7 @@ use metadata_resolve::{self as resolved};
 use open_dds::identifier::Identifier;
 use open_dds::types::FieldName;
 
-use crate::plan::NDCQuery;
+use crate::{catalog::introspection::HASURA_METADATA_SCHEMA, plan::NDCQuery};
 
 /// Analyzed rule that inlines TableScan that provide a [`LogicalPlan`]
 /// (DataFrame / ViewTable)
@@ -92,7 +92,9 @@ fn analyze_internal(
             projected_schema,
             filters: _,
             fetch: _,
-        }) if table_name.schema() != Some("hasura") => {
+        }) if table_name.schema() != Some(HASURA_METADATA_SCHEMA)
+            && table_name.schema() != Some("information_schema") =>
+        {
             let table = catalog.get(default_schema, &table_name).ok_or_else(|| {
                 DataFusionError::Internal(format!(
                     "table provider not found for replace_table_scan: {table_name}"
