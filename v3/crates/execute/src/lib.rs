@@ -65,15 +65,23 @@ impl<'a> TraceableError for GraphQLErrors<'a> {
 pub struct GraphQLResponse(gql::http::Response);
 
 impl GraphQLResponse {
-    fn from_result(result: ExecuteQueryResult) -> Self {
+    pub fn from_result(result: ExecuteQueryResult) -> Self {
         Self(result.to_graphql_response())
     }
 
-    fn from_error(err: &error::RequestError) -> Self {
+    pub fn from_error(err: &error::RequestError) -> Self {
         Self(Response::error(
             err.to_graphql_error(),
             axum::http::HeaderMap::default(),
         ))
+    }
+
+    pub fn from_response(response: gql::http::Response) -> Self {
+        Self(response)
+    }
+
+    pub fn does_contain_error(&self) -> bool {
+        self.0.does_contains_error()
     }
 
     pub fn inner(self) -> gql::http::Response {
