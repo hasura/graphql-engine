@@ -8,11 +8,12 @@ use lang_graphql::schema as gql_schema;
 use std::collections::BTreeMap;
 
 use crate::mk_deprecation_status;
+use crate::model_arguments::add_model_arguments_field;
 use crate::model_filter_input::{
     add_limit_input_field, add_offset_input_field, add_order_by_input_field, add_where_input_field,
 };
 use crate::{
-    model_arguments, permissions,
+    permissions,
     types::{self, output_type::get_custom_output_type, Annotation},
     GDS,
 };
@@ -52,30 +53,14 @@ pub(crate) fn select_many_field(
     let query_root_field = select_many.query_root_field.clone();
     let mut arguments = generate_select_many_arguments(builder, model)?;
 
-    // Generate the `args` input object and add the model
-    // arguments within it.
-    if !model.model.arguments.is_empty() {
-        let model_arguments_input =
-            model_arguments::get_model_arguments_input_field(builder, model)?;
-
-        let name = model_arguments_input.name.clone();
-
-        let model_arguments = builder.conditional_namespaced(
-            model_arguments_input,
-            permissions::get_select_permissions_namespace_annotations(
-                model,
-                &gds.metadata.object_types,
-            )?,
-        );
-
-        if arguments.insert(name.clone(), model_arguments).is_some() {
-            return Err(crate::Error::GraphQlArgumentConflict {
-                argument_name: name,
-                field_name: query_root_field,
-                type_name: parent_type.clone(),
-            });
-        }
-    }
+    add_model_arguments_field(
+        &mut arguments,
+        gds,
+        builder,
+        model,
+        &select_many.query_root_field,
+        parent_type,
+    )?;
 
     let field_type = ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
         get_custom_output_type(gds, builder, &model.model.data_type)?,

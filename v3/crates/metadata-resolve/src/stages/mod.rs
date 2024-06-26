@@ -150,6 +150,7 @@ pub fn resolve(
         &models,
         &commands,
         &aggregate_expressions,
+        &graphql_config,
     )?;
 
     // Resolve the filter expressions and graphql settings for models
@@ -158,6 +159,7 @@ pub fn resolve(
         models_with_graphql,
         graphql_types: _,
     } = models_graphql::resolve(
+        &metadata_accessor,
         &models,
         &data_connector_scalars,
         &object_types_with_relationships,

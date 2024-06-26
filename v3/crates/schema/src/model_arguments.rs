@@ -1,12 +1,16 @@
 use lang_graphql::ast::common as ast;
 
-use crate::GDS;
+use crate::{
+    permissions,
+    types::{
+        input_type::get_input_type, Annotation, InputAnnotation, ModelInputAnnotation, TypeId,
+    },
+    GDS,
+};
 use lang_graphql::schema as gql_schema;
 use open_dds::models::ModelName;
 use std::collections::{BTreeMap, HashMap};
 
-use super::types::input_type::get_input_type;
-use super::types::{Annotation, InputAnnotation, ModelInputAnnotation, TypeId};
 use metadata_resolve::Qualified;
 
 /// Creates the `args` input object within which the model
@@ -122,4 +126,38 @@ pub fn build_model_arguments_input_schema(
             Vec::new(),
         ),
     ))
+}
+
+/// Generate the `args` input object and add the model arguments within it.
+pub fn add_model_arguments_field(
+    arguments: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
+    gds: &GDS,
+    builder: &mut gql_schema::Builder<GDS>,
+    model: &metadata_resolve::ModelWithPermissions,
+    parent_field_name: &ast::Name,
+    parent_type: &ast::TypeName,
+) -> Result<(), crate::Error> {
+    if !model.model.arguments.is_empty() {
+        let model_arguments_input = get_model_arguments_input_field(builder, model)?;
+
+        let name = model_arguments_input.name.clone();
+
+        let model_arguments = builder.conditional_namespaced(
+            model_arguments_input,
+            permissions::get_select_permissions_namespace_annotations(
+                model,
+                &gds.metadata.object_types,
+            )?,
+        );
+
+        if arguments.insert(name.clone(), model_arguments).is_some() {
+            return Err(crate::Error::GraphQlArgumentConflict {
+                argument_name: name,
+                field_name: parent_field_name.clone(),
+                type_name: parent_type.clone(),
+            });
+        }
+    }
+
+    Ok(())
 }

@@ -11,24 +11,23 @@ use open_dds::{
 use ndc_models;
 use serde::Serialize;
 
-use super::permissions;
-use super::selection_set::FieldSelection;
 use super::{
-    commands::generate_function_based_command, filter::resolve_filter_expression,
-    filter::ResolvedFilterExpression, model_selection::model_selection_ir,
-};
-use super::{
-    order_by::{build_ndc_order_by, ResolvedOrderBy},
-    selection_set::NDCRelationshipName,
+    commands::generate_function_based_command,
+    filter::{resolve_filter_expression, ResolvedFilterExpression},
+    model_selection::{self, model_selection_ir},
+    order_by::build_ndc_order_by,
+    permissions,
+    selection_set::{FieldSelection, NDCRelationshipName},
 };
 
 use crate::model_tracking::{count_model, UsagesCounts};
 use crate::{ir::error, model_tracking::count_command};
-use metadata_resolve;
-use metadata_resolve::{serialize_qualified_btreemap, Qualified};
-use schema::ModelRelationshipAnnotation;
-use schema::{Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation, GDS};
-use schema::{CommandRelationshipAnnotation, CommandTargetSource};
+use metadata_resolve::{self, serialize_qualified_btreemap, Qualified, RelationshipModelMapping};
+use schema::{
+    Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, CommandTargetSource,
+    InputAnnotation, ModelAggregateRelationshipAnnotation, ModelInputAnnotation,
+    ModelRelationshipAnnotation, GDS,
+};
 
 #[derive(Debug, Serialize)]
 pub struct LocalModelRelationshipInfo<'s> {
@@ -55,8 +54,7 @@ pub(crate) struct LocalCommandRelationshipInfo<'s> {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct RemoteModelRelationshipInfo<'s> {
-    pub annotation: &'s ModelRelationshipAnnotation,
+pub struct RemoteModelRelationshipInfo {
     /// This contains processed information about the mappings.
     /// `RelationshipMapping` only contains mapping of field names. This
     /// contains mapping of field names and `metadata_resolve::FieldMapping`.
@@ -161,40 +159,106 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                 }
                 None => error::Error::from(normalized_ast::Error::NoTypenameFound),
             })?;
+
+    let selection_ir = model_selection_ir(
+        &field.selection_set,
+        &relationship_annotation.target_type,
+        &target_source.model,
+        BTreeMap::new(),
+        filter_clause,
+        permissions::get_select_filter_predicate(field_call)?,
+        limit,
+        offset,
+        order_by,
+        session_variables,
+        request_headers,
+        usage_counts,
+    )?;
     match metadata_resolve::relationship_execution_category(
         source_data_connector,
         &target_source.model.data_connector,
         &target_source.capabilities,
     ) {
         metadata_resolve::RelationshipExecutionCategory::Local => build_local_model_relationship(
-            field,
-            field_call,
-            relationship_annotation,
+            selection_ir,
+            &relationship_annotation.relationship_name,
+            &relationship_annotation.relationship_type,
+            &relationship_annotation.source_type,
             source_data_connector,
             source_type_mappings,
+            &relationship_annotation.target_type,
             target_source,
-            filter_clause,
-            limit,
-            offset,
-            order_by,
-            session_variables,
-            request_headers,
-            usage_counts,
+            &relationship_annotation.mappings,
         ),
         metadata_resolve::RelationshipExecutionCategory::RemoteForEach => {
             build_remote_relationship(
-                field,
-                field_call,
-                relationship_annotation,
+                selection_ir,
+                &relationship_annotation.relationship_name,
+                &relationship_annotation.source_type,
                 source_type_mappings,
-                target_source,
-                filter_clause,
-                limit,
-                offset,
-                order_by,
-                session_variables,
-                request_headers,
-                usage_counts,
+                &relationship_annotation.mappings,
+            )
+        }
+    }
+}
+
+pub(crate) fn generate_model_aggregate_relationship_ir<'s>(
+    field: &Field<'s, GDS>,
+    relationship_annotation: &'s ModelAggregateRelationshipAnnotation,
+    source_data_connector: &'s metadata_resolve::DataConnectorLink,
+    source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
+) -> Result<FieldSelection<'s>, error::Error> {
+    let field_call = field.field_call()?;
+
+    let target_source =
+        relationship_annotation
+            .target_source
+            .as_ref()
+            .ok_or_else(|| match &field.selection_set.type_name {
+                Some(type_name) => {
+                    error::Error::from(error::InternalDeveloperError::NoSourceDataConnector {
+                        type_name: type_name.clone(),
+                        field_name: field_call.name.clone(),
+                    })
+                }
+                None => error::Error::from(normalized_ast::Error::NoTypenameFound),
+            })?;
+
+    let selection_ir = model_selection::generate_aggregate_model_selection_ir(
+        field,
+        field_call,
+        &relationship_annotation.target_type,
+        &target_source.model,
+        &relationship_annotation.model_name,
+        session_variables,
+        usage_counts,
+    )?;
+
+    match metadata_resolve::relationship_execution_category(
+        source_data_connector,
+        &target_source.model.data_connector,
+        &target_source.capabilities,
+    ) {
+        metadata_resolve::RelationshipExecutionCategory::Local => build_local_model_relationship(
+            selection_ir,
+            &relationship_annotation.relationship_name,
+            &RelationshipType::Array,
+            &relationship_annotation.source_type,
+            source_data_connector,
+            source_type_mappings,
+            &relationship_annotation.target_type,
+            target_source,
+            &relationship_annotation.mappings,
+        ),
+        metadata_resolve::RelationshipExecutionCategory::RemoteForEach => {
+            build_remote_relationship(
+                selection_ir,
+                &relationship_annotation.relationship_name,
+                &relationship_annotation.source_type,
+                source_type_mappings,
+                &relationship_annotation.mappings,
             )
         }
     }
@@ -257,55 +321,35 @@ pub(crate) fn generate_command_relationship_ir<'s>(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn build_local_model_relationship<'s>(
-    field: &normalized_ast::Field<'s, GDS>,
-    field_call: &normalized_ast::FieldCall<'s, GDS>,
-    annotation: &'s ModelRelationshipAnnotation,
-    data_connector: &'s metadata_resolve::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    relationships_ir: model_selection::ModelSelection<'s>,
+    relationship_name: &'s RelationshipName,
+    relationship_type: &'s RelationshipType,
+    source_type: &'s Qualified<CustomTypeName>,
+    source_data_connector: &'s metadata_resolve::DataConnectorLink,
+    source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    target_type: &'s Qualified<CustomTypeName>,
     target_source: &'s metadata_resolve::ModelTargetSource,
-    filter_clause: ResolvedFilterExpression<'s>,
-    limit: Option<u32>,
-    offset: Option<u32>,
-    order_by: Option<ResolvedOrderBy<'s>>,
-    session_variables: &SessionVariables,
-    request_headers: &reqwest::header::HeaderMap,
-    usage_counts: &mut UsagesCounts,
+    target_mappings: &'s Vec<RelationshipModelMapping>,
 ) -> Result<FieldSelection<'s>, error::Error> {
-    let relationships_ir = model_selection_ir(
-        &field.selection_set,
-        &annotation.target_type,
-        &target_source.model,
-        BTreeMap::new(),
-        filter_clause,
-        permissions::get_select_filter_predicate(field_call)?,
-        limit,
-        offset,
-        order_by,
-        session_variables,
-        request_headers,
-        usage_counts,
-    )?;
     let rel_info = LocalModelRelationshipInfo {
-        relationship_name: &annotation.relationship_name,
-        relationship_type: &annotation.relationship_type,
-        source_type: &annotation.source_type,
-        source_data_connector: data_connector,
-        source_type_mappings: type_mappings,
+        relationship_name,
+        relationship_type,
+        source_type,
+        source_data_connector,
+        source_type_mappings,
         target_source,
-        target_type: &annotation.target_type,
-        mappings: &annotation.mappings,
+        target_type,
+        mappings: target_mappings,
     };
 
     Ok(FieldSelection::ModelRelationshipLocal {
         query: relationships_ir,
-        name: NDCRelationshipName::new(&annotation.source_type, &annotation.relationship_name)?,
+        name: NDCRelationshipName::new(source_type, relationship_name)?,
         relationship_info: rel_info,
     })
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn build_local_command_relationship<'s>(
     field: &normalized_ast::Field<'s, GDS>,
     field_call: &normalized_ast::FieldCall<'s, GDS>,
@@ -351,39 +395,30 @@ pub(crate) fn build_local_command_relationship<'s>(
     })
 }
 
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn build_remote_relationship<'n, 's>(
-    field: &'n normalized_ast::Field<'s, GDS>,
-    field_call: &'n normalized_ast::FieldCall<'s, GDS>,
-    annotation: &'s ModelRelationshipAnnotation,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    target_source: &'s metadata_resolve::ModelTargetSource,
-    filter_clause: ResolvedFilterExpression<'s>,
-    limit: Option<u32>,
-    offset: Option<u32>,
-    order_by: Option<ResolvedOrderBy<'s>>,
-    session_variables: &SessionVariables,
-    request_headers: &reqwest::header::HeaderMap,
-    usage_counts: &mut UsagesCounts,
+pub(crate) fn build_remote_relationship<'s>(
+    mut remote_relationships_ir: model_selection::ModelSelection<'s>,
+    relationship_name: &'s RelationshipName,
+    source_type: &'s Qualified<CustomTypeName>,
+    source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    target_mappings: &'s Vec<RelationshipModelMapping>,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let mut join_mapping: Vec<(SourceField, TargetField)> = vec![];
     for metadata_resolve::RelationshipModelMapping {
         source_field: source_field_path,
         target_field: target_field_path,
         target_ndc_column,
-    } in &annotation.mappings
+    } in target_mappings
     {
         let source_column = get_field_mapping_of_field_name(
-            type_mappings,
-            &annotation.source_type,
-            &annotation.relationship_name,
+            source_type_mappings,
+            source_type,
+            relationship_name,
             &source_field_path.field_name,
         )?;
         let target_column = target_ndc_column.as_ref().ok_or_else(|| {
             error::InternalEngineError::InternalGeneric {
                 description: format!(
-                    "No column mapping for relationship {} on {}",
-                    annotation.relationship_name, annotation.source_type
+                    "No column mapping for relationship {relationship_name} on {source_type}"
                 ),
             }
         })?;
@@ -392,20 +427,6 @@ pub(crate) fn build_remote_relationship<'n, 's>(
         let target_field = (target_field_path.field_name.clone(), target_column.clone());
         join_mapping.push((source_field, target_field));
     }
-    let mut remote_relationships_ir = model_selection_ir(
-        &field.selection_set,
-        &annotation.target_type,
-        &target_source.model,
-        BTreeMap::new(),
-        filter_clause,
-        permissions::get_select_filter_predicate(field_call)?,
-        limit,
-        offset,
-        order_by,
-        session_variables,
-        request_headers,
-        usage_counts,
-    )?;
 
     // modify `ModelSelection` to include the join condition in `where` with a variable
     for (_source, (_field_name, target_column)) in &join_mapping {
@@ -429,17 +450,13 @@ pub(crate) fn build_remote_relationship<'n, 's>(
                 None => Some(comparison_exp),
             };
     }
-    let rel_info = RemoteModelRelationshipInfo {
-        annotation,
-        join_mapping,
-    };
+    let rel_info = RemoteModelRelationshipInfo { join_mapping };
     Ok(FieldSelection::ModelRelationshipRemote {
         ir: remote_relationships_ir,
         relationship_info: rel_info,
     })
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn build_remote_command_relationship<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,

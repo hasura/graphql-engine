@@ -210,7 +210,7 @@ pub enum Error {
     UnnecessaryModelArgumentsGraphQlInputConfiguration { model_name: Qualified<ModelName> },
     #[error("an unnecessary filter input type name graphql configuration has been specified for model {model_name:} that does not use aggregates")]
     UnnecessaryFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
-    #[error("filter input type name graphql configuration must be specified for model {model_name:} because it uses aggregates")]
+    #[error("filter input type name graphql configuration must be specified for model {model_name:} because aggregates are used with it")]
     MissingFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
     #[error("multiple graphql types found with the same name: {graphql_type_name:}")]
     ConflictingGraphQlType { graphql_type_name: ast::TypeName },

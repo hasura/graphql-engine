@@ -50,7 +50,7 @@ pub(crate) enum FieldSelection<'s> {
     },
     ModelRelationshipRemote {
         ir: ModelSelection<'s>,
-        relationship_info: RemoteModelRelationshipInfo<'s>,
+        relationship_info: RemoteModelRelationshipInfo,
     },
     CommandRelationshipRemote {
         ir: FunctionBasedCommand<'s>,
@@ -337,6 +337,19 @@ pub(crate) fn generate_selection_set_ir<'s>(
                             type_mappings,
                             session_variables,
                             request_headers,
+                            usage_counts,
+                        )?,
+                    );
+                }
+                OutputAnnotation::RelationshipToModelAggregate(relationship_annotation) => {
+                    fields.insert(
+                        field.alias.to_string(),
+                        relationship::generate_model_aggregate_relationship_ir(
+                            field,
+                            relationship_annotation,
+                            data_connector,
+                            type_mappings,
+                            session_variables,
                             usage_counts,
                         )?,
                     );

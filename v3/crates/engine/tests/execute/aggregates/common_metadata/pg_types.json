@@ -116,6 +116,147 @@
           }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Customer",
+            "fields": [
+              {
+                "name": "Address",
+                "type": "String"
+              },
+              {
+                "name": "City",
+                "type": "String"
+              },
+              {
+                "name": "Company",
+                "type": "String"
+              },
+              {
+                "name": "Country",
+                "type": "String"
+              },
+              {
+                "name": "CustomerId",
+                "type": "Int!",
+                "description": "The identifier of customer"
+              },
+              {
+                "name": "Email",
+                "type": "String!"
+              },
+              {
+                "name": "Fax",
+                "type": "String"
+              },
+              {
+                "name": "FirstName",
+                "type": "String!",
+                "description": "The first name of a customer"
+              },
+              {
+                "name": "LastName",
+                "type": "String!",
+                "description": "The last name of a customer"
+              },
+              {
+                "name": "Phone",
+                "type": "String"
+              },
+              {
+                "name": "PostalCode",
+                "type": "String"
+              },
+              {
+                "name": "State",
+                "type": "String"
+              },
+              {
+                "name": "SupportRepId",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "Customer"
+            },
+            "description": "The record of all customers",
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Customer",
+                "fieldMapping": {
+                  "Address": {
+                    "column": {
+                      "name": "Address"
+                    }
+                  },
+                  "City": {
+                    "column": {
+                      "name": "City"
+                    }
+                  },
+                  "Company": {
+                    "column": {
+                      "name": "Company"
+                    }
+                  },
+                  "Country": {
+                    "column": {
+                      "name": "Country"
+                    }
+                  },
+                  "CustomerId": {
+                    "column": {
+                      "name": "CustomerId"
+                    }
+                  },
+                  "Email": {
+                    "column": {
+                      "name": "Email"
+                    }
+                  },
+                  "Fax": {
+                    "column": {
+                      "name": "Fax"
+                    }
+                  },
+                  "FirstName": {
+                    "column": {
+                      "name": "FirstName"
+                    }
+                  },
+                  "LastName": {
+                    "column": {
+                      "name": "LastName"
+                    }
+                  },
+                  "Phone": {
+                    "column": {
+                      "name": "Phone"
+                    }
+                  },
+                  "PostalCode": {
+                    "column": {
+                      "name": "PostalCode"
+                    }
+                  },
+                  "State": {
+                    "column": {
+                      "name": "State"
+                    }
+                  },
+                  "SupportRepId": {
+                    "column": {
+                      "name": "SupportRepId"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
           "kind": "ScalarType",
           "version": "v1",
           "definition": {

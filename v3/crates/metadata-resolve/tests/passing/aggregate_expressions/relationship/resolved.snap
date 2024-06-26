@@ -399,6 +399,9 @@ Metadata {
                                     ),
                                 ),
                             },
+                            filter_input_field_name: Name(
+                                "filter_input",
+                            ),
                         },
                     ),
                     target_capabilities: Some(

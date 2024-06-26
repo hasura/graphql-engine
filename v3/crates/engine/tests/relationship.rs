@@ -190,6 +190,13 @@ fn test_remote_relationships_model_to_model_array() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_remote_relationships_model_to_model_array_aggregate() -> anyhow::Result<()> {
+    let test_path_string = "execute/remote_relationships/array/aggregate";
+    let common_metadata_path_string = "execute/common_metadata/two_postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
 fn test_remote_relationships_model_to_command_array() -> anyhow::Result<()> {
     let test_path_string = "execute/remote_relationships/command/model_to_command";
     let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";

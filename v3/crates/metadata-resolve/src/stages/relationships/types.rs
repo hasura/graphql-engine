@@ -53,6 +53,7 @@ pub struct ModelAggregateRelationshipTarget {
     pub target_typename: Qualified<CustomTypeName>,
     pub mappings: Vec<RelationshipModelMapping>,
     pub aggregate_expression: Qualified<AggregateExpressionName>,
+    pub filter_input_field_name: ast::Name,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

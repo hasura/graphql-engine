@@ -21,6 +21,7 @@ use lang_graphql::ast::common::{self as ast};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub fn resolve(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -66,6 +67,7 @@ pub fn resolve(
 
         let graphql_api = match model.raw.graphql {
             Some(ref model_graphql_definition) => graphql::resolve_model_graphql_api(
+                metadata_accessor,
                 model_graphql_definition,
                 &model,
                 &mut graphql_types,

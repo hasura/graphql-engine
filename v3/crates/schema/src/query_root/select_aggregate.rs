@@ -37,22 +37,13 @@ pub(crate) fn select_aggregate_field(
 
     let root_field_name = select_aggregate.query_root_field.clone();
 
-    let mut arguments =
-        BTreeMap::<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>::new();
-
-    add_model_arguments_field(
-        &mut arguments,
+    let arguments = generate_select_aggregate_arguments(
         gds,
         builder,
         model,
-        &root_field_name,
-        parent_type,
-    )?;
-    model_filter_input::add_filter_input_argument_field(
-        &mut arguments,
         &select_aggregate.filter_input_field_name,
-        builder,
-        model,
+        &select_aggregate.query_root_field,
+        parent_type,
     )?;
 
     let field_permissions = permissions::get_select_permissions_namespace_annotations(
@@ -83,36 +74,31 @@ pub(crate) fn select_aggregate_field(
     Ok((root_field_name, field))
 }
 
-fn add_model_arguments_field(
-    arguments: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
+pub fn generate_select_aggregate_arguments(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
     model: &metadata_resolve::ModelWithPermissions,
-    root_field_name: &ast::Name,
+    filter_input_field_name: &ast::Name,
+    parent_field_name: &ast::Name,
     parent_type: &ast::TypeName,
-) -> Result<(), Error> {
-    if !model.model.arguments.is_empty() {
-        let model_arguments_input =
-            model_arguments::get_model_arguments_input_field(builder, model)?;
+) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
+    let mut arguments =
+        BTreeMap::<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>::new();
 
-        let name = model_arguments_input.name.clone();
+    model_arguments::add_model_arguments_field(
+        &mut arguments,
+        gds,
+        builder,
+        model,
+        parent_field_name,
+        parent_type,
+    )?;
+    model_filter_input::add_filter_input_argument_field(
+        &mut arguments,
+        filter_input_field_name,
+        builder,
+        model,
+    )?;
 
-        let model_arguments = builder.conditional_namespaced(
-            model_arguments_input,
-            permissions::get_select_permissions_namespace_annotations(
-                model,
-                &gds.metadata.object_types,
-            )?,
-        );
-
-        if arguments.insert(name.clone(), model_arguments).is_some() {
-            return Err(crate::Error::GraphQlArgumentConflict {
-                argument_name: name,
-                field_name: root_field_name.clone(),
-                type_name: parent_type.clone(),
-            });
-        }
-    }
-
-    Ok(())
+    Ok(arguments)
 }

@@ -6,6 +6,7 @@ use open_dds::{
     relationships,
     types::{CustomTypeName, InbuiltType},
 };
+use relationship::ModelAggregateRelationshipAnnotation;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use self::relationship::{
@@ -15,8 +16,9 @@ use super::inbuilt_type::base_type_container_for_inbuilt_type;
 use super::{Annotation, PossibleApolloFederationTypes, TypeId};
 use crate::commands::generate_command_argument;
 use crate::field_arguments::generate_field_argument;
+use crate::query_root::select_aggregate;
 use crate::query_root::select_many::generate_select_many_arguments;
-use crate::{mk_deprecation_status, permissions};
+use crate::{aggregates, mk_deprecation_status, permissions};
 use crate::{Role, GDS};
 use metadata_resolve::{self, mk_name};
 use metadata_resolve::{get_type_representation, TypeRepresentation};
@@ -192,6 +194,7 @@ fn object_type_fields(
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,
+    parent_graphql_type_name: &ast::TypeName,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>>, Error> {
     let mut graphql_fields = object_type_representation
         .object_type
@@ -253,6 +256,7 @@ fn object_type_fields(
         type_name,
         object_type_representation,
         object_types,
+        parent_graphql_type_name,
     )?;
 
     Ok(graphql_fields)
@@ -269,6 +273,7 @@ fn add_relationship_fields(
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,
+    parent_graphql_type_name: &ast::TypeName,
 ) -> Result<(), Error> {
     for (relationship_field_name, relationship) in &object_type_representation.relationship_fields {
         let relationship_field = match &relationship.target {
@@ -294,10 +299,18 @@ fn add_relationship_fields(
                     object_types,
                 )?
             }
-            metadata_resolve::RelationshipTarget::ModelAggregate { .. } => {
-                // Model aggregates currently not implemented, so just skip them for now
-                continue;
-            }
+            metadata_resolve::RelationshipTarget::ModelAggregate(
+                model_aggregate_relationship_target,
+            ) => model_aggregate_relationship_field(
+                model_aggregate_relationship_target,
+                builder,
+                gds,
+                relationship_field_name,
+                relationship,
+                object_type_representation,
+                object_types,
+                parent_graphql_type_name,
+            )?,
         };
         if graphql_fields
             .insert(relationship_field_name.clone(), relationship_field)
@@ -461,6 +474,81 @@ fn model_relationship_field(
     Ok(field)
 }
 
+/// Create a model relationship field
+fn model_aggregate_relationship_field(
+    model_aggregate_relationship_target: &metadata_resolve::ModelAggregateRelationshipTarget,
+    builder: &mut gql_schema::Builder<GDS>,
+    gds: &GDS,
+    relationship_field_name: &ast::Name,
+    relationship: &metadata_resolve::RelationshipField,
+    object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
+    parent_graphql_type_name: &ast::TypeName,
+) -> Result<gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>, Error> {
+    let aggregate_expression_name = &model_aggregate_relationship_target.aggregate_expression;
+    let aggregate_expression = gds
+        .metadata
+        .aggregate_expressions
+        .get(aggregate_expression_name)
+        .ok_or_else(|| Error::InternalAggregateExpressionNotFound {
+            aggregate_expression: aggregate_expression_name.clone(),
+        })?;
+
+    let model = gds
+        .metadata
+        .models
+        .get(&model_aggregate_relationship_target.model_name)
+        .ok_or_else(|| Error::InternalModelNotFound {
+            model_name: model_aggregate_relationship_target.model_name.clone(),
+        })?;
+
+    let aggregate_select_output_type =
+        aggregates::get_aggregate_select_output_type(builder, aggregate_expression)?;
+
+    let arguments = select_aggregate::generate_select_aggregate_arguments(
+        gds,
+        builder,
+        model,
+        &model_aggregate_relationship_target.filter_input_field_name,
+        relationship_field_name,
+        parent_graphql_type_name,
+    )?;
+
+    let target_object_type_representation =
+        get_object_type_representation(gds, &model.model.data_type)?;
+
+    let field = builder.conditional_namespaced(
+        gql_schema::Field::<GDS>::new(
+            relationship_field_name.clone(),
+            relationship.description.clone(),
+            Annotation::Output(super::OutputAnnotation::RelationshipToModelAggregate(
+                ModelAggregateRelationshipAnnotation {
+                    source_type: relationship.source.clone(),
+                    relationship_name: relationship.relationship_name.clone(),
+                    model_name: model_aggregate_relationship_target.model_name.clone(),
+                    target_source: metadata_resolve::ModelTargetSource::new(model, relationship)?,
+                    target_type: model_aggregate_relationship_target.target_typename.clone(),
+                    mappings: model_aggregate_relationship_target.mappings.clone(),
+                },
+            )),
+            ast::TypeContainer::named_non_null(aggregate_select_output_type),
+            arguments,
+            mk_deprecation_status(&relationship.deprecated),
+        ),
+        permissions::get_model_relationship_namespace_annotations(
+            model,
+            object_type_representation,
+            target_object_type_representation,
+            &model_aggregate_relationship_target.mappings,
+            object_types,
+        )?,
+    );
+    Ok(field)
+}
+
 fn generate_apollo_federation_directives(
     apollo_federation_config: &metadata_resolve::ResolvedObjectApolloFederationConfig,
 ) -> Vec<Directive> {
@@ -510,6 +598,7 @@ pub fn output_type_schema(
         type_name,
         object_type_representation,
         &gds.metadata.object_types,
+        &graphql_type_name,
     )?;
     let directives = match &object_type_representation
         .object_type

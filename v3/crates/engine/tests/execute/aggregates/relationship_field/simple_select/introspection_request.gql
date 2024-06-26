@@ -1,0 +1,165 @@
+query MyQuery {
+  Customer_type: __type(name: "Customer") {
+    name
+    description
+    kind
+    fields {
+      name
+      description
+      args {
+        name
+        description
+        type {
+          kind
+          name
+          ofType {
+            kind
+            name
+            ofType {
+              kind
+              name
+            }
+          }
+        }
+      }
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+  Invoice_filter_input_type: __type(name: "Invoice_filter_input") {
+    name
+    description
+    kind
+    inputFields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+  Invoice_aggregate_exp_type: __type(name: "Invoice_aggregate_exp") {
+    name
+    description
+    kind
+    fields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+  String_aggregate_exp_type: __type(name: "String_aggregate_exp") {
+    name
+    description
+    kind
+    fields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+  Int_aggregate_exp_type: __type(name: "Int_aggregate_exp") {
+    name
+    description
+    kind
+    fields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+  Numeric_aggregate_exp_type: __type(name: "Numeric_aggregate_exp") {
+    name
+    description
+    kind
+    fields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+  Timestamp_aggregate_exp_type: __type(name: "Timestamp_aggregate_exp") {
+    name
+    description
+    kind
+    fields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+}

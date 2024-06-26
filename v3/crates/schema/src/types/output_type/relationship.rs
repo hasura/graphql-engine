@@ -28,6 +28,16 @@ pub struct ModelRelationshipAnnotation {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct ModelAggregateRelationshipAnnotation {
+    pub source_type: Qualified<CustomTypeName>,
+    pub relationship_name: RelationshipName,
+    pub model_name: Qualified<ModelName>,
+    pub target_source: Option<metadata_resolve::ModelTargetSource>,
+    pub target_type: Qualified<CustomTypeName>,
+    pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct FilterRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,

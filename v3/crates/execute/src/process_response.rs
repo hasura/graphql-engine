@@ -75,7 +75,7 @@ where
 }
 
 /// Processes a single NDC row and adds `__typename`
-/// wh needed.
+/// where needed.
 fn process_single_query_response_row<T>(
     mut row: T,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
@@ -145,13 +145,11 @@ where
                                     .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
                                         summary: format!("missing field: {}", field.alias.clone()),
                                     })?;
-                                let relationship_json_value_result =
-                                    serde_json::from_value(field_json_value_result).ok();
-                                match relationship_json_value_result {
-                                    None => Err(error::NDCUnexpectedError::BadNDCResponse {
-                                        summary: "Unable to parse RowSet".into(),
+                                match serde_json::from_value(field_json_value_result) {
+                                    Err(err) => Err(error::NDCUnexpectedError::BadNDCResponse {
+                                        summary: format!("Unable to parse RowSet: {err}"),
                                     })?,
-                                    Some(rows_set) => {
+                                    Ok(rows_set) => {
                                         // Depending upon the field's type (list or object),
                                         // process the selection set accordingly.
                                         if field.type_container.is_list() {
@@ -172,6 +170,22 @@ where
                                     }
                                 }
                             }
+                            OutputAnnotation::RelationshipToModelAggregate { .. } => {
+                                let field_json_value_result = row
+                                    .remove(field.alias.0.as_str())
+                                    .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                                        summary: format!("missing field: {}", field.alias.clone()),
+                                    })?;
+                                match serde_json::from_value(field_json_value_result) {
+                                    Err(err) => Err(error::NDCUnexpectedError::BadNDCResponse {
+                                        summary: format!("Unable to parse RowSet: {err}"),
+                                    })?,
+                                    Ok(row_set) => process_aggregate_requested_fields(
+                                        row_set,
+                                        &field.selection_set,
+                                    ),
+                                }
+                            }
                             OutputAnnotation::RelationshipToCommand(
                                 command_relationship_annotation,
                             ) => {
@@ -180,14 +194,13 @@ where
                                     .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
                                         summary: format!("missing field: {}", field.alias.clone()),
                                     })?;
-                                let relationship_json_value_result: Option<ndc_models::RowSet> =
-                                    serde_json::from_value(field_json_value_result).ok();
-
-                                match relationship_json_value_result {
-                                    None => Err(error::NDCUnexpectedError::BadNDCResponse {
-                                        summary: "Unable to parse RowSet".into(),
+                                match serde_json::from_value::<ndc_models::RowSet>(
+                                    field_json_value_result,
+                                ) {
+                                    Err(err) => Err(error::NDCUnexpectedError::BadNDCResponse {
+                                        summary: format!("Unable to parse RowSet: {err}"),
                                     })?,
-                                    Some(rows_set) => {
+                                    Ok(rows_set) => {
                                         // the output of a command is optional and can be None
                                         // so we match on the result and return null if the
                                         // command returned None

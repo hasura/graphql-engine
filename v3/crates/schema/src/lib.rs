@@ -38,7 +38,8 @@ mod types;
 pub use aggregates::{AggregateOutputAnnotation, AggregationFunctionAnnotation};
 pub use types::output_type::relationship::{
     CommandRelationshipAnnotation, CommandTargetSource, FilterRelationshipAnnotation,
-    ModelRelationshipAnnotation, OrderByRelationshipAnnotation,
+    ModelAggregateRelationshipAnnotation, ModelRelationshipAnnotation,
+    OrderByRelationshipAnnotation,
 };
 pub use types::{
     Annotation, ApolloFederationRootFields, ArgumentNameAndPath, ArgumentPresets,

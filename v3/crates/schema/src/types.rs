@@ -185,6 +185,7 @@ pub enum OutputAnnotation {
         global_id_fields: Vec<types::FieldName>,
     },
     RelationshipToModel(output_type::relationship::ModelRelationshipAnnotation),
+    RelationshipToModelAggregate(output_type::relationship::ModelAggregateRelationshipAnnotation),
     RelationshipToCommand(output_type::relationship::CommandRelationshipAnnotation),
     RelayNodeInterfaceID {
         typename_mappings: HashMap<ast::TypeName, Vec<types::FieldName>>,

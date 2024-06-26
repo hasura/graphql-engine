@@ -17,7 +17,26 @@
               "schema": {
                 "scalar_types": {
                   "String": {
-                    "aggregate_functions": {},
+                    "aggregate_functions": {
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      }
+                    },
                     "comparison_operators": {
                       "_eq": {
                         "type": "equal"
@@ -819,7 +838,26 @@
               "schema": {
                 "scalar_types": {
                   "String": {
-                    "aggregate_functions": {},
+                    "aggregate_functions": {
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "String"
+                          }
+                        }
+                      }
+                    },
                     "comparison_operators": {
                       "_neq": {
                         "argument_type": {

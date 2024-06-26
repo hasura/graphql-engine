@@ -1,5 +1,7 @@
 use open_dds::aggregates::AggregateExpressionName;
 use open_dds::data_connector::DataConnectorName;
+use open_dds::models::{ModelGraphQlDefinition, ModelName};
+use open_dds::relationships::{ModelRelationshipTarget, RelationshipTarget};
 
 use super::types::{
     LimitFieldGraphqlConfig, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig,
@@ -14,11 +16,10 @@ use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
 
-use open_dds::models::ModelGraphQlDefinition;
-
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) fn resolve_model_graphql_api(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
     model_graphql_definition: &ModelGraphQlDefinition,
     model: &models::Model,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
@@ -181,8 +182,22 @@ pub(crate) fn resolve_model_graphql_api(
         .transpose()?;
     store_new_graphql_type(existing_graphql_types, filter_input_type_name.as_ref())?;
     graphql_api.filter_input_type_name = filter_input_type_name;
-    if aggregate_expression_name.is_none() && graphql_api.filter_input_type_name.is_some() {
+
+    let aggregates_are_used_with_this_model_type = aggregate_expression_name.is_some()
+        || is_model_used_in_any_aggregate_relationship(metadata_accessor, &model.name);
+
+    // If aggregates are not used with this model type then we don't need a
+    // filter input type name
+    if graphql_api.filter_input_type_name.is_some() && !aggregates_are_used_with_this_model_type {
         return Err(Error::UnnecessaryFilterInputTypeNameGraphqlConfiguration {
+            model_name: model_name.clone(),
+        });
+    }
+    // But if they are used, then we need a filter input type name
+    else if graphql_api.filter_input_type_name.is_none()
+        && aggregates_are_used_with_this_model_type
+    {
+        return Err(Error::MissingFilterInputTypeNameGraphqlConfiguration {
             model_name: model_name.clone(),
         });
     }
@@ -194,15 +209,6 @@ pub(crate) fn resolve_model_graphql_api(
         .zip(aggregate_expression_name.as_ref()) // Only matters if we have an aggregate expression specified
         .map(
             |(graphql_aggregate, aggregate_expression_name)| -> Result<_, Error> {
-                // Check that a filter input type name is configured
-                if graphql_api.filter_input_type_name.is_none() {
-                    {
-                        return Err(Error::MissingFilterInputTypeNameGraphqlConfiguration {
-                            model_name: model_name.clone(),
-                        });
-                    }
-                }
-
                 // Check that the filter input field name is configured in graphql config
                 let filter_input_field_name = graphql_config
                     .query
@@ -273,4 +279,31 @@ pub(crate) fn resolve_model_graphql_api(
     }
 
     Ok(graphql_api)
+}
+
+fn is_model_used_in_any_aggregate_relationship(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    model_name: &Qualified<ModelName>,
+) -> bool {
+    // Check all relationships to see if any target this model and if they
+    // define an aggregate
+    metadata_accessor
+        .relationships
+        .iter()
+        .any(|relationship| match &relationship.object.target {
+            RelationshipTarget::Model(
+                target @ ModelRelationshipTarget {
+                    aggregate: Some(_), // If the relationship defines an aggregate
+                    name,
+                    ..
+                },
+            ) => {
+                // And the target of the relationship is this model
+                target
+                    .subgraph()
+                    .is_some_and(|subgraph| subgraph == model_name.subgraph.as_str())
+                    && *name == model_name.name
+            }
+            _ => false,
+        })
 }
