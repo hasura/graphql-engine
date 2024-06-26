@@ -1,1 +1,0 @@
-filter input type name graphql configuration must be specified for model Invoice (in subgraph default) because it uses aggregates

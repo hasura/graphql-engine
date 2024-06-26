@@ -1,1 +1,0 @@
-field author_id is missing a mapping for data connector postgres_db (in subgraph __unknown_namespace) in boolean expression author_bool_exp (in subgraph __unknown_namespace)

@@ -1,1 +1,0 @@
-graphql configuration should be defined only once in supergraph

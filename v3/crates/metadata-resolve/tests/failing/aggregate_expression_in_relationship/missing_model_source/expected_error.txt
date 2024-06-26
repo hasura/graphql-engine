@@ -1,1 +1,0 @@
-The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: a source must be defined for model InvoiceLine (in subgraph default) in order to use aggregate expressions

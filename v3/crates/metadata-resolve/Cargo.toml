@@ -26,9 +26,7 @@ thiserror = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-test-each = { workspace = true }
-anyhow = { workspace = true }
-similar-asserts = { workspace = true }
+insta = { workspace = true, features = ["glob"] }
 
 [lints]
 workspace = true

@@ -1,1 +1,0 @@
-The field location has type location (in subgraph default) but the field's boolean expression type string_bool_exp (in subgraph default) has type String

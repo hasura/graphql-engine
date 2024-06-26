@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/boolean_expression/remote_relationship_not_allowed/metadata.json
+---
+Model Articles (in subgraph __unknown_namespace) has source data connector postgres_db_2 (in subgraph __unknown_namespace) but its filter expression type author_bool_exp (in subgraph __unknown_namespace) is backed by data connector postgres_db (in subgraph __unknown_namespace)

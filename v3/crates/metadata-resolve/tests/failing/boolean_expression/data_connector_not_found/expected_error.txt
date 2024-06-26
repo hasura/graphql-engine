@@ -1,1 +1,0 @@
-data connector postgres_db (in subgraph __unknown_namespace) referenced in type mappings of type author (in subgraph __unknown_namespace) is not found in object type author (in subgraph __unknown_namespace)

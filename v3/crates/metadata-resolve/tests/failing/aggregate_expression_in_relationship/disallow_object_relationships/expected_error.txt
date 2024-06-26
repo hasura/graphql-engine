@@ -1,1 +1,0 @@
-The relationship customer on type Invoice (in subgraph default) defines an aggregate, but aggregates can only be used with array relationships, not object relationships

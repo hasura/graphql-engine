@@ -1,1 +1,0 @@
-__ is a reserved prefix for subgraph names at path $.subgraphs[0].name

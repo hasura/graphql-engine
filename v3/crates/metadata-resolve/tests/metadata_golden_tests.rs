@@ -1,69 +1,77 @@
 //! Tests that attempt to resolve different metadata files and assert that they parse successfully
 //! or fail in the expected way.
 
-use std::fs;
-use std::path::PathBuf;
-
 use metadata_resolve::MetadataResolveFlagsInternal;
 
-#[test_each::file(
-    glob = "crates/metadata-resolve/tests/passing/**/metadata.json",
-    name(segments = 3)
-)]
-fn test_passing_metadata(metadata_json_text: &str) -> anyhow::Result<()> {
-    let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
-        enable_boolean_expression_types: true,
-        enable_aggregate_relationships: true,
-    };
+#[test]
+fn test_passing_metadata() {
+    insta::glob!("passing/**/metadata.json", |path| {
+        insta::with_settings!({
+            snapshot_path => path.parent().unwrap(),
+            snapshot_suffix => "",
+            prepend_module_to_snapshot => false,
+        }, {
+            let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
+                enable_boolean_expression_types: true,
+                enable_aggregate_relationships: true,
+            };
 
-    let metadata_json_value = serde_json::from_str(metadata_json_text)?;
+            let metadata_json_text = std::fs::read_to_string(path)
+                .unwrap_or_else(|error| panic!("Could not read file {path:?}: {error}"));
 
-    let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
-    let resolved = metadata_resolve::resolve(metadata, metadata_resolve_flags_internal);
+            let metadata_json_value = serde_json::from_str(&metadata_json_text)
+                .unwrap_or_else(|error| panic!("Could not parse JSON: {error}"));
 
-    match resolved {
-        Ok(_) => Ok(()),
-        Err(msg) => panic!("{msg}"),
-    }
+            let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)
+                .unwrap_or_else(|error| panic!("Could not deserialize metadata: {error}"));
+
+            let resolved = metadata_resolve::resolve(metadata, metadata_resolve_flags_internal)
+                .unwrap_or_else(|error| panic!("Could not resolve metadata: {error}"));
+
+            insta::assert_debug_snapshot!("resolved", resolved);
+        });
+    });
 }
 
-#[test_each::file(
-    glob = "crates/metadata-resolve/tests/failing/**/metadata.json",
-    name(segments = 3)
-)]
-#[allow(clippy::needless_pass_by_value)] // must receive a `PathBuf`
-fn test_failing_metadata(
-    metadata_json_text: &str,
-    metadata_json_path: PathBuf,
-) -> anyhow::Result<()> {
-    let comparison_folder_path = metadata_json_path.parent().unwrap();
-    let failing_reason = comparison_folder_path.join("expected_error.txt");
-
-    let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
-        enable_boolean_expression_types: true,
-        enable_aggregate_relationships: true,
-    };
-
-    let error_untrimmed = fs::read_to_string(failing_reason)?;
-    let error = error_untrimmed.trim();
-
-    match serde_json::from_str(metadata_json_text) {
-        Ok(metadata_json_value) => {
-            match open_dds::traits::OpenDd::deserialize(metadata_json_value) {
-                Ok(metadata) => {
-                    match metadata_resolve::resolve(metadata, metadata_resolve_flags_internal) {
-                        Ok(_) => panic!("Expected to fail with {error}"),
-                        Err(msg) => similar_asserts::assert_eq!(error, msg.to_string()),
-                    }
-                }
-                Err(msg) => similar_asserts::assert_eq!(msg.to_string(), error),
+#[test]
+fn test_failing_metadata() {
+    insta::glob!("failing/**/metadata.json", |path| {
+        insta::with_settings!({
+            snapshot_path => path.parent().unwrap(),
+            snapshot_suffix => "",
+            prepend_module_to_snapshot => false,
+        }, {
+            let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
+                enable_boolean_expression_types: true,
+                enable_aggregate_relationships: true,
             };
-        }
 
-        Err(msg) => {
-            similar_asserts::assert_eq!(msg.to_string(), error);
-        }
-    };
+            let metadata_json_text = std::fs::read_to_string(path)
+                .unwrap_or_else(|error| panic!("Could not read file {path:?}: {error}"));
 
-    Ok(())
+            match serde_json::from_str(&metadata_json_text) {
+                Ok(metadata_json_value) => {
+                    match open_dds::traits::OpenDd::deserialize(metadata_json_value) {
+                        Ok(metadata) => {
+                            match metadata_resolve::resolve(metadata, metadata_resolve_flags_internal) {
+                                Ok(_) => {
+                                    panic!("Unexpected success when resolving {path:?}.");
+                                }
+                                Err(msg) => {
+                                    insta::assert_snapshot!("resolve_error", msg);
+                                }
+                            }
+                        }
+                        Err(msg) => {
+                            insta::assert_snapshot!("deserialize_error", msg);
+                        }
+                    };
+                }
+
+                Err(msg) => {
+                    insta::assert_snapshot!("parse_error", msg);
+                }
+            };
+        });
+    });
 }

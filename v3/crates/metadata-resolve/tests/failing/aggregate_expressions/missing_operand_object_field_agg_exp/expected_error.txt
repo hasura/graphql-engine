@@ -1,1 +1,0 @@
-the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an aggregatable field 'invoiceId' that references an aggregate expression that cannot be found: Int4_aggregate_exp (in subgraph default)

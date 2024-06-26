@@ -1,1 +1,0 @@
-The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: the aggregate expression Wrong_aggregate_exp (in subgraph default) used with model InvoiceLine (in subgraph default) has not been defined

@@ -1,1 +1,0 @@
-NDC validation error: type foobar is not defined in the agent schema

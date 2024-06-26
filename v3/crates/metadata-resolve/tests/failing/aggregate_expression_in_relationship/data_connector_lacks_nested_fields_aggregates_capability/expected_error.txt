@@ -1,1 +1,0 @@
-The aggregate defined on the relationship invoiceLines on type Invoice (in subgraph default) has an error: the data connector mypg (in subgraph default) does not support aggregates over nested object fields, such as the field detail used in aggregate expression InvoiceLine_aggregate_exp (in subgraph default)

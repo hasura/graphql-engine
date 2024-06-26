@@ -1,1 +1,0 @@
-an unnecessary filter input type name graphql configuration has been specified for model Invoice (in subgraph default) that does not use aggregates
