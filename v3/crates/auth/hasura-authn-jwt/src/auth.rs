@@ -148,7 +148,7 @@ mod tests {
     ) -> anyhow::Result<String> {
         let claims: Claims = get_claims(
             &serde_json::to_value(hasura_claims)?,
-            &DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER,
+            jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
         )?;
         let jwt_header = jwt::Header {
             alg,
@@ -180,27 +180,25 @@ mod tests {
     async fn test_unsuccessful_role_emulation() -> anyhow::Result<()> {
         let encoded_claims = get_encoded_claims(Algorithm::HS256, &get_default_hasura_claims())?;
 
-        let jwt_secret_config_json = json!(
-            {
-               "key": {
-                 "fixed": {
+        let jwt_secret_config_json = json!({
+            "key": {
+                "fixed": {
                     "algorithm": "HS256",
                     "key": {
-                       "value": "token"
-                    }
-                 }
-               },
-               "tokenLocation": {
-                  "type": "BearerAuthorization"
-               },
-               "claimsConfig": {
-                  "namespace": {
-                     "claimsFormat": "Json",
-                     "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
-                  }
-               }
-            }
-        );
+                        "value": "token"
+                    },
+                },
+            },
+            "tokenLocation": {
+                "type": "BearerAuthorization",
+            },
+            "claimsConfig": {
+                "namespace": {
+                    "claimsFormat": "Json",
+                    "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                },
+            },
+        });
 
         let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json)?;
 
@@ -279,27 +277,25 @@ mod tests {
         );
         let encoded_claims = get_encoded_claims(Algorithm::HS256, &hasura_claims)?;
 
-        let jwt_secret_config_json = json!(
-            {
-               "key": {
-                 "fixed": {
+        let jwt_secret_config_json = json!({
+            "key": {
+                "fixed": {
                     "algorithm": "HS256",
                     "key": {
-                       "value": "token"
-                    }
-                 }
-               },
-               "tokenLocation": {
-                  "type": "BearerAuthorization"
-               },
-               "claimsConfig": {
-                  "namespace": {
-                     "claimsFormat": "Json",
-                     "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
-                  }
-               }
-            }
-        );
+                       "value": "token",
+                    },
+                }
+            },
+            "tokenLocation": {
+                "type": "BearerAuthorization",
+            },
+            "claimsConfig": {
+                "namespace": {
+                    "claimsFormat": "Json",
+                    "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
+                },
+            },
+        });
 
         let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json)?;
 

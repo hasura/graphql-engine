@@ -33,7 +33,7 @@ pub fn resolve(
     // The graphql config represents the shape of the Hasura features in the graphql schema,
     // and which features should be enabled or disabled. We check this structure is valid.
     let graphql_config =
-        graphql_config::resolve(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
+        graphql_config::resolve(&metadata_accessor.graphql_config, metadata_accessor.flags)?;
 
     // Fetch and check schema information for all our data connectors
     let data_connectors = data_connectors::resolve(&metadata_accessor)?;

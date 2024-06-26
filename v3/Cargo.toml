@@ -82,7 +82,6 @@ json_value_merge = "2"
 jsonptr = "0.4"
 jsonwebkey = "0.3"
 jsonwebtoken = "8"
-lazy_static = "1"
 lexical-core = "0.8"
 mockito = { version = "1", default-features = false }
 nonempty = "0.10"

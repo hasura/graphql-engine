@@ -1,9 +1,9 @@
-/// Module that defines the Hasura session variables.
-use core::fmt;
+//! Module that defines the Hasura session variables.
+
+use std::borrow::Cow;
 use std::convert::Infallible;
 use std::str::FromStr;
 
-use lazy_static::lazy_static;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -11,23 +11,20 @@ use serde::{Deserialize, Serialize};
 /// "x-hasura-role".
 #[derive(Debug, Clone, Hash, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
 #[schemars(rename = "OpenDdSessionVariable")]
-pub struct SessionVariable(String);
+pub struct SessionVariable(Cow<'static, str>);
 
-lazy_static! {
-    pub static ref SESSION_VARIABLE_ROLE: SessionVariable =
-        SessionVariable("x-hasura-role".to_string());
-}
+pub const SESSION_VARIABLE_ROLE: SessionVariable = SessionVariable(Cow::Borrowed("x-hasura-role"));
 
 impl FromStr for SessionVariable {
     type Err = Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(SessionVariable(s.trim().to_lowercase()))
+        Ok(SessionVariable(s.trim().to_lowercase().into()))
     }
 }
 
-impl fmt::Display for SessionVariable {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for SessionVariable {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
@@ -57,8 +54,8 @@ mod tests {
     fn serialize_and_deserialize_session_variable() {
         let mut session_variables = HashMap::new();
         session_variables.insert(
-            SessionVariable("test-role".to_string()),
-            SessionVariableValue("test-role".to_string()),
+            SessionVariable("test-role".into()),
+            SessionVariableValue("test-role".into()),
         );
         let json_str = serde_json::to_string(&session_variables).unwrap();
 

@@ -17,7 +17,6 @@ axum = { workspace = true }
 cookie = { workspace = true }
 jsonptr = { workspace = true }
 jsonwebtoken = { workspace = true }
-lazy_static = { workspace = true }
 reqwest = { workspace = true,  features = ["json"] }
 schemars = { workspace = true, features = ["url"] }
 serde = { workspace = true, features = ["derive"] }

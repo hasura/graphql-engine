@@ -1,6 +1,7 @@
 //! This is where we will resolve graphql configuration
 
 use std::collections::HashSet;
+use std::sync::OnceLock;
 
 use crate::helpers::types::mk_name;
 use crate::types::error::{Error, GraphqlConfigError};
@@ -9,51 +10,6 @@ use open_dds::accessor::QualifiedObject;
 use open_dds::graphql_config::{self, OrderByDirection};
 use open_dds::types::GraphQlFieldName;
 use serde::{Deserialize, Serialize};
-
-lazy_static::lazy_static! {
-    static ref FALLBACK_GRAPHQL_CONFIG: graphql_config::GraphqlConfig = graphql_config::GraphqlConfig::V1(graphql_config::GraphqlConfigV1 {
-        query: graphql_config::QueryGraphqlConfig {
-            root_operation_type_name: "Query".to_string(),
-            arguments_input: Some (graphql_config::ArgumentsInputGraphqlConfig {
-                field_name: "args".to_string(),
-            }),
-            limit_input: Some(graphql_config::LimitInputGraphqlConfig {
-                field_name: "limit".to_string(),
-            }),
-            offset_input: Some(graphql_config::OffsetInputGraphqlConfig {
-                field_name: "offset".to_string(),
-            }),
-            filter_input: Some(graphql_config::FilterInputGraphqlConfig {
-                field_name: "where".to_string(),
-                operator_names: graphql_config::FilterInputOperatorNames {
-                    and: "_and".to_string(),
-                    or: "_or".to_string(),
-                    not: "_not".to_string(),
-                    is_null: "_is_null".to_string(),
-                },
-            }),
-            order_by_input: Some(graphql_config::OrderByInputGraphqlConfig {
-                field_name:"order_by".to_string(),
-                enum_direction_values: graphql_config::OrderByDirectionValues {
-                    asc: "Asc".to_string(),
-                    desc: "Desc".to_string(),
-                },
-                 enum_type_names: vec![graphql_config::OrderByEnumTypeName{
-                    type_name: "order_by".to_string(),
-                    directions: vec![graphql_config::OrderByDirection::Asc, graphql_config::OrderByDirection::Desc],
-                 }] }),
-            aggregate: Some(graphql_config::AggregateGraphqlConfig {
-                filter_input_field_name: GraphQlFieldName("filter_input".to_string()),
-                count_field_name: GraphQlFieldName("_count".to_string()),
-                count_distinct_field_name: GraphQlFieldName("_count_distinct".to_string()),
-            })
-        },
-        mutation: graphql_config::MutationGraphqlConfig{
-            root_operation_type_name: "Mutation".to_string(),
-        },
-        apollo_federation: None,
-    });
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct GraphqlConfig {
@@ -79,7 +35,7 @@ pub struct GraphqlConfig {
 ///     * if the flag is not set, use the fallback object
 pub fn resolve(
     graphql_configs: &Vec<QualifiedObject<graphql_config::GraphqlConfig>>,
-    flags: &open_dds::flags::Flags,
+    flags: open_dds::flags::Flags,
 ) -> Result<GraphqlConfig, Error> {
     if graphql_configs.is_empty() {
         if flags.require_graphql_config {
@@ -87,8 +43,7 @@ pub fn resolve(
                 graphql_config_error: GraphqlConfigError::MissingGraphqlConfig,
             });
         }
-        let graphql_config = resolve_graphql_config(&FALLBACK_GRAPHQL_CONFIG)?;
-        Ok(graphql_config)
+        resolve_graphql_config(fallback_graphql_config())
     } else {
         match graphql_configs.as_slice() {
             // There should only be one graphql config in supergraph
@@ -304,4 +259,56 @@ pub fn resolve_graphql_config(
             })
         }
     }
+}
+
+fn fallback_graphql_config() -> &'static graphql_config::GraphqlConfig {
+    static CELL: OnceLock<graphql_config::GraphqlConfig> = OnceLock::new();
+    CELL.get_or_init(|| {
+        graphql_config::GraphqlConfig::V1(graphql_config::GraphqlConfigV1 {
+            query: graphql_config::QueryGraphqlConfig {
+                root_operation_type_name: "Query".to_string(),
+                arguments_input: Some(graphql_config::ArgumentsInputGraphqlConfig {
+                    field_name: "args".to_string(),
+                }),
+                limit_input: Some(graphql_config::LimitInputGraphqlConfig {
+                    field_name: "limit".to_string(),
+                }),
+                offset_input: Some(graphql_config::OffsetInputGraphqlConfig {
+                    field_name: "offset".to_string(),
+                }),
+                filter_input: Some(graphql_config::FilterInputGraphqlConfig {
+                    field_name: "where".to_string(),
+                    operator_names: graphql_config::FilterInputOperatorNames {
+                        and: "_and".to_string(),
+                        or: "_or".to_string(),
+                        not: "_not".to_string(),
+                        is_null: "_is_null".to_string(),
+                    },
+                }),
+                order_by_input: Some(graphql_config::OrderByInputGraphqlConfig {
+                    field_name: "order_by".to_string(),
+                    enum_direction_values: graphql_config::OrderByDirectionValues {
+                        asc: "Asc".to_string(),
+                        desc: "Desc".to_string(),
+                    },
+                    enum_type_names: vec![graphql_config::OrderByEnumTypeName {
+                        type_name: "order_by".to_string(),
+                        directions: vec![
+                            graphql_config::OrderByDirection::Asc,
+                            graphql_config::OrderByDirection::Desc,
+                        ],
+                    }],
+                }),
+                aggregate: Some(graphql_config::AggregateGraphqlConfig {
+                    filter_input_field_name: GraphQlFieldName("filter_input".to_string()),
+                    count_field_name: GraphQlFieldName("_count".to_string()),
+                    count_distinct_field_name: GraphQlFieldName("_count_distinct".to_string()),
+                }),
+            },
+            mutation: graphql_config::MutationGraphqlConfig {
+                root_operation_type_name: "Mutation".to_string(),
+            },
+            apollo_federation: None,
+        })
+    })
 }

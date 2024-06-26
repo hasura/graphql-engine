@@ -1,15 +1,13 @@
-use std::{
-    collections::{HashMap, HashSet},
-    str::FromStr,
-    time::Duration,
-};
+use std::collections::{HashMap, HashSet};
+use std::str::FromStr;
+use std::sync::OnceLock;
+use std::time::Duration;
 
 use auth_base::{Identity, Role, RoleAuthorization, SessionVariable, SessionVariableValue};
 use axum::{
     http::{HeaderMap, HeaderName, StatusCode},
     response::IntoResponse,
 };
-use lazy_static::lazy_static;
 use reqwest::{header::ToStrError, Url};
 use serde::{de::Error as SerdeDeError, Deserialize, Deserializer, Serialize, Serializer};
 
@@ -76,29 +74,6 @@ impl IntoResponse for Error {
         )
         .into_response()
     }
-}
-
-lazy_static! {
-    /// Ignore the following list of request headers, sent by the client
-    /// when making a GET request to the auth hook. Note that, in the case
-    /// the auth hook mode is `POST`, this is *not* applicable i.e. all the
-    /// headers sent by the client are forwarded to the auth hook.
-    static ref COMMON_CLIENT_HEADERS_TO_IGNORE: HashSet<String> = HashSet::from([
-        "Content-Length",
-        "Content-MD5",
-        "User-Agent",
-        "Host",
-        "Origin",
-        "Referer",
-        "Accept",
-        "Accept-Encoding",
-        "Accept-Language",
-        "Accept-Datetime",
-        "Cache-Control",
-        "Connection",
-        "DNT",
-        "Content-Type",
-    ].map(str::to_lowercase));
 }
 
 fn serialize_url<S>(url: &Url, s: S) -> Result<S::Ok, S::Error>
@@ -171,7 +146,7 @@ async fn make_auth_hook_request(
         AuthHookMethod::Get => {
             let mut auth_hook_headers = tracing_util::get_trace_headers();
             for (header_name, header_value) in client_headers {
-                if !COMMON_CLIENT_HEADERS_TO_IGNORE.contains(header_name.as_str()) {
+                if !ignore_header(header_name.as_str()) {
                     auth_hook_headers.insert(header_name, header_value.clone());
                 }
             }
@@ -304,6 +279,41 @@ pub async fn authenticate_request(
             },
         )
         .await
+}
+
+/// Ignore the following list of request headers, sent by the client when making a GET request to
+/// the auth hook.
+///
+/// Note that, in the case the auth hook mode is `POST`, this is *not* applicable, i.e. all the
+/// headers sent by the client are forwarded to the auth hook.
+const COMMON_CLIENT_HEADERS_TO_IGNORE: [&str; 14] = [
+    "Accept",
+    "Accept-Datetime",
+    "Accept-Encoding",
+    "Accept-Language",
+    "Cache-Control",
+    "Connection",
+    "Content-Length",
+    "Content-MD5",
+    "Content-Type",
+    "DNT",
+    "Host",
+    "Origin",
+    "Referer",
+    "User-Agent",
+];
+
+/// Decides whether to ignore the given header sent by the client when making a GET request to
+/// the auth hook.
+///
+/// The header is compared to a static list of headers (above).
+///
+/// Note that, in the case the auth hook mode is `POST`, this is *not* applicable, i.e. all the
+/// headers sent by the client are forwarded to the auth hook.
+fn ignore_header(header: &str) -> bool {
+    static CELL: OnceLock<HashSet<String>> = OnceLock::new();
+    CELL.get_or_init(|| HashSet::from(COMMON_CLIENT_HEADERS_TO_IGNORE.map(str::to_lowercase)))
+        .contains(header)
 }
 
 #[cfg(test)]

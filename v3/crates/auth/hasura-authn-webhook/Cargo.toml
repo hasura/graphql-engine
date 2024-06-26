@@ -14,8 +14,7 @@ open-dds = { path = "../../open-dds" }
 tracing-util = { path = "../../utils/tracing-util" }
 
 axum = { workspace = true }
-lazy_static = { workspace = true }
-reqwest = { workspace = true,  features = ["json"] }
+reqwest = { workspace = true, features = ["json"] }
 schemars = { workspace = true, features = ["smol_str", "url"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

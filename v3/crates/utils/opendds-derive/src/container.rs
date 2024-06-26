@@ -1,13 +1,10 @@
+use std::sync::OnceLock;
+
 use convert_case::{Case, Casing};
 use darling::{FromAttributes, FromField, FromMeta};
 use syn::{self, DeriveInput};
 
 use crate::MacroResult;
-
-lazy_static::lazy_static! {
-    /// Characters that we reject when constructing titles from schema names.
-    static ref INVALID_NAME_CHARACTER: regex::Regex = regex::Regex::new("[^0-9A-Za-z_]").unwrap();
-}
 
 /// JSON schema attributes
 #[derive(Default, FromMeta)]
@@ -82,6 +79,10 @@ pub struct JsonSchemaMetadata {
 
 impl<'a> Container<'a> {
     pub fn from_derive_input(input: &'a DeriveInput) -> MacroResult<Self> {
+        static INVALID_NAME_CHARACTER: OnceLock<regex::Regex> = OnceLock::new();
+        let invalid_name_character =
+            INVALID_NAME_CHARACTER.get_or_init(|| regex::Regex::new("[^0-9A-Za-z_]").unwrap());
+
         let (doc_title, doc_description) =
             crate::helpers::get_title_and_desc_from_doc(&input.attrs);
         let (json_schema_opts, data) = match &input.data {
@@ -117,7 +118,7 @@ impl<'a> Container<'a> {
         let schema_id = format!("https://hasura.io/jsonschemas/metadata/{id}");
         let schema_name = json_schema_opts
             .rename
-            .unwrap_or_else(|| INVALID_NAME_CHARACTER.replace_all(&id, "_").to_string());
+            .unwrap_or_else(|| invalid_name_character.replace_all(&id, "_").to_string());
         let schema_title = json_schema_opts
             .title
             .or(doc_title)

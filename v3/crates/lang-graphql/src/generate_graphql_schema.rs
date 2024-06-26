@@ -3,6 +3,8 @@ This module provides functions to generate introspection result as GraphQL schem
 for each namespace from the schema.
  */
 use std::collections::HashMap;
+use std::sync::OnceLock;
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -21,24 +23,6 @@ pub enum Error {
     SerializeJson(#[from] serde_json::Error),
 }
 
-lazy_static::lazy_static! {
-
-    static ref INTROSPECTION_REQUEST: Result<crate::http::Request, String>  = {
-        Ok(
-            crate::http::Request {
-                operation_name: None,
-                query: {
-                    let query_str = include_str!("introspection_query.graphql");
-                    crate::parser::Parser::new(query_str)
-                        .parse_executable_document()
-                        .map_err(|e| e.to_string())?
-                },
-                variables: HashMap::new(),
-            }
-        )
-    };
-}
-
 /// Generate GraphQL schema for a given namespace
 pub fn build_namespace_schema<
     S: crate::schema::SchemaContext,
@@ -47,12 +31,9 @@ pub fn build_namespace_schema<
     namespaced_getter: &NSGet,
     schema: &crate::schema::Schema<S>,
 ) -> Result<serde_json::Value, Error> {
-    let request = match &(*INTROSPECTION_REQUEST) {
-        Ok(req) => req,
-        Err(e) => Err(Error::ParseIntrospectionQuery((*e).clone()))?,
-    };
-    let nr = crate::validation::normalize_request(namespaced_getter, schema, request)
-        .map_err(|e| Error::NormalizeIntrospectionQuery(e.to_string()))?;
+    let nr =
+        crate::validation::normalize_request(namespaced_getter, schema, introspection_request())
+            .map_err(|e| Error::NormalizeIntrospectionQuery(e.to_string()))?;
     let mut result = HashMap::new();
     for (_alias, field) in &nr.selection_set.fields {
         let field_call = field.field_call().map_err(|_| Error::FieldCallNotFound)?;
@@ -73,4 +54,18 @@ pub fn build_namespace_schema<
         }
     }
     Ok(serde_json::to_value(result)?)
+}
+
+fn introspection_request() -> &'static crate::http::Request {
+    static CELL: OnceLock<crate::http::Request> = OnceLock::new();
+    CELL.get_or_init(|| crate::http::Request {
+        operation_name: None,
+        query: {
+            let query_str = include_str!("introspection_query.graphql");
+            crate::parser::Parser::new(query_str)
+                .parse_executable_document()
+                .unwrap()
+        },
+        variables: HashMap::new(),
+    })
 }

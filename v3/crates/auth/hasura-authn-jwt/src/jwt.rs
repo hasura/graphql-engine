@@ -8,7 +8,6 @@ use hasura_authn_core::{Role, SessionVariable, SessionVariableValue};
 use jsonptr::Pointer;
 use jsonwebtoken::{self as jwt, decode, DecodingKey, Validation};
 use jwt::decode_header;
-use lazy_static::lazy_static;
 use reqwest::header::{AUTHORIZATION, COOKIE};
 use reqwest::StatusCode;
 use schemars::gen::SchemaGenerator;
@@ -24,14 +23,7 @@ use url::Url;
 
 /// Name of the key, which is by default used to lookup the Hasura claims
 /// in the claims obtained after decoding the JWT.
-const DEFAULT_HASURA_CLAIMS_NAMESPACE: &str = "claims.jwt.hasura.io";
-
-lazy_static! {
-    /// Make top level JSON pointer of the `DEFAULT_HASURA_CLAIMS_NAMESPACE`
-    /// by escaping the `/` by `~1`.
-    pub(crate) static ref DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER: String =
-        "/".to_owned() + &DEFAULT_HASURA_CLAIMS_NAMESPACE.replace('/', "~1");
-}
+pub(crate) const DEFAULT_HASURA_CLAIMS_NAMESPACE: &str = "claims.jwt.hasura.io";
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -361,7 +353,7 @@ impl JWTConfig {
                 "claimsConfig": {
                     "namespace": {
                         "claimsFormat": "Json",
-                        "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
+                        "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                     }
                 }
             }
@@ -723,7 +715,7 @@ mod tests {
         let hasura_claims = get_default_hasura_claims();
         let claims: Claims = get_claims(
             &serde_json::to_value(hasura_claims)?,
-            &DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER,
+            jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
         )?;
         let jwt_header = jwt::Header {
             alg,
@@ -851,7 +843,7 @@ mod tests {
                "claimsConfig": {
                   "namespace": {
                      "claimsFormat": "Json",
-                     "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
+                     "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                   }
                }
             }
@@ -886,7 +878,7 @@ mod tests {
                "claimsConfig": {
                   "namespace": {
                      "claimsFormat": "StringifiedJson",
-                     "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
+                     "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                   }
                }
             }
@@ -898,7 +890,7 @@ mod tests {
         let stringified_hasura_claims = serde_json::to_string(&hasura_claims)?;
         let claims = get_claims(
             &serde_json::to_value(stringified_hasura_claims)?,
-            &DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER,
+            jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
         )?;
         let alg = jwt::Algorithm::HS256;
         let jwt_header = jwt::Header {
@@ -1105,7 +1097,7 @@ mod tests {
 
         let claims: Claims = get_claims(
             &serde_json::to_value(&hasura_claims)?,
-            &DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER,
+            jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
         )?;
 
         let mut jwt_header = jwt::Header::new(jwt::Algorithm::ES256);
@@ -1119,21 +1111,20 @@ mod tests {
 
         let jwk_url = url + "/jwk";
 
-        let jwt_config_json = json!(
-            {
-                "key": {
-                   "jwkFromUrl": jwk_url
+        let jwt_config_json = json!({
+            "key": {
+               "jwkFromUrl": jwk_url,
+            },
+            "tokenLocation": {
+               "type": "BearerAuthorization",
+            },
+            "claimsConfig": {
+                "namespace": {
+                    "claimsFormat": "Json",
+                    "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                 },
-                "tokenLocation": {
-                   "type": "BearerAuthorization"
-                },
-                "claimsConfig": {
-                   "namespace": {
-                      "claimsFormat": "Json",
-                      "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
-                   }
-                }
-            }
+            },
+        }
         );
 
         let jwt_config: JWTConfig = serde_json::from_value(jwt_config_json)?;
@@ -1334,23 +1325,21 @@ mod tests {
         let hasura_claims = get_default_hasura_claims();
         let claims: Claims = get_claims(
             &serde_json::to_value(hasura_claims.clone())?,
-            &DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER,
+            jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]).as_str(),
         )?;
         let encoded_claims = encode(&jwt_header, &claims, &encoding_key)?;
-        let jwt_secret_config_json = json!(
-            {
-                "key": jwt_key_config,
-                "tokenLocation": {
-                    "type": "BearerAuthorization"
+        let jwt_secret_config_json = json!({
+            "key": jwt_key_config,
+            "tokenLocation": {
+                "type": "BearerAuthorization"
+            },
+            "claimsConfig": {
+                "namespace": {
+                    "claimsFormat": "Json",
+                    "location": jsonptr::Pointer::new([DEFAULT_HASURA_CLAIMS_NAMESPACE]),
                 },
-                "claimsConfig": {
-                    "namespace": {
-                        "claimsFormat": "Json",
-                        "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
-                    }
-                }
-            }
-        );
+            },
+        });
         let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json)?;
         let http_client = reqwest::Client::new();
         let decoded_claims =

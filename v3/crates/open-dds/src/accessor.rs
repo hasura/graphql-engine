@@ -19,9 +19,7 @@ impl<T> QualifiedObject<T> {
     }
 }
 
-lazy_static::lazy_static! {
-    static ref DEFAULT_FLAGS: flags::Flags = flags::Flags::default();
-}
+const DEFAULT_FLAGS: flags::Flags = flags::Flags::new();
 
 pub struct MetadataAccessor {
     pub data_connectors: Vec<QualifiedObject<data_connector::DataConnectorLinkV1>>,
@@ -199,7 +197,7 @@ impl MetadataAccessor {
             relationships: vec![],
             commands: vec![],
             command_permissions: vec![],
-            flags: flags.unwrap_or_else(|| DEFAULT_FLAGS.clone()),
+            flags: flags.unwrap_or(DEFAULT_FLAGS),
             graphql_config: vec![],
         }
     }

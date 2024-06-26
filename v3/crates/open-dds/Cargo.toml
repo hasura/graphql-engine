@@ -13,7 +13,6 @@ opendds-derive = { path = "../utils/opendds-derive" }
 
 derive_more = { workspace = true }
 indexmap = { workspace = true, features = ["serde"] }
-lazy_static = { workspace = true }
 ndc-models = { workspace = true }
 ref-cast = { workspace = true }
 schemars = { workspace = true, features = ["smol_str", "preserve_order"] }
