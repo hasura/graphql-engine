@@ -19,6 +19,7 @@ schemars = { workspace = true, features = ["smol_str", "preserve_order"] }
 serde = { workspace = true }
 serde_json = { workspace = true, features = ["preserve_order"] }
 serde_path_to_error = { workspace = true }
+smol_str = { workspace = true }
 strum = { workspace = true }
 strum_macros = { workspace = true }
 thiserror = { workspace = true }

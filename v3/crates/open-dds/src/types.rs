@@ -63,13 +63,12 @@ impl CustomTypeName {
         let identifier = Identifier::new(s)?;
         // Should not be an inbuilt type
         if InbuiltType::deserialize(StrDeserializer::<serde::de::value::Error>::new(
-            identifier.0.as_str(),
+            identifier.as_str(),
         ))
         .is_ok()
         {
             Err(format!(
-                "custom types cannot have the same name as an inbuilt type: {}",
-                identifier.0
+                "custom types cannot have the same name as an inbuilt type: {identifier}"
             ))
         } else {
             Ok(CustomTypeName(identifier))

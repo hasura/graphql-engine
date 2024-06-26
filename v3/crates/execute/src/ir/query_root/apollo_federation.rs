@@ -141,9 +141,9 @@ pub(crate) fn entities_ir<'n, 's>(
                 .iter()
                 .map(|(field_name, field_mapping)| {
                     // Get the value of the field from the representation
-                    let val = representation.get(&field_name.0 .0).ok_or(
+                    let val = representation.get(field_name.0.as_str()).ok_or(
                         error::Error::FieldNotFoundInEntityRepresentation {
-                            field_name: field_name.0 .0.clone(),
+                            field_name: field_name.0.to_string(),
                         },
                     )?;
                     Ok(ndc_models::Expression::BinaryComparisonOperator {

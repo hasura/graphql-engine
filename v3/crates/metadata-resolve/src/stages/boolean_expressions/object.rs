@@ -19,6 +19,14 @@ use open_dds::{
 };
 use std::collections::BTreeMap;
 
+pub(crate) type RawBooleanExpressionTypes<'a> = BTreeMap<
+    Qualified<CustomTypeName>,
+    (
+        &'a open_dds::identifier::SubgraphIdentifier,
+        &'a open_dds::boolean_expression::BooleanExpressionTypeV1,
+    ),
+>;
+
 /// Resolves a given object boolean expression type
 pub(crate) fn resolve_object_boolean_expression_type(
     boolean_expression_type_name: &Qualified<CustomTypeName>,
@@ -31,13 +39,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         Qualified<CustomTypeName>,
         ResolvedScalarBooleanExpressionType,
     >,
-    raw_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        (
-            &String,
-            &open_dds::boolean_expression::BooleanExpressionTypeV1,
-        ),
-    >,
+    raw_boolean_expression_types: &RawBooleanExpressionTypes,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ResolvedObjectBooleanExpressionType, Error> {
     let qualified_object_type_name = Qualified::new(
@@ -109,13 +111,7 @@ fn resolve_comparable_relationships(
         open_dds::boolean_expression::BooleanExpressionComparableRelationship,
     >,
     subgraph: &str,
-    raw_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        (
-            &String,
-            &open_dds::boolean_expression::BooleanExpressionTypeV1,
-        ),
-    >,
+    raw_boolean_expression_types: &RawBooleanExpressionTypes,
 ) -> Result<BTreeMap<FieldName, BooleanExpressionComparableRelationship>, Error> {
     let mut resolved_comparable_relationships = BTreeMap::new();
 
@@ -156,13 +152,7 @@ fn resolve_comparable_fields(
     object_type_representation: &object_types::ObjectTypeRepresentation,
     boolean_expression_type_name: &Qualified<CustomTypeName>,
     subgraph: &str,
-    raw_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        (
-            &String,
-            &open_dds::boolean_expression::BooleanExpressionTypeV1,
-        ),
-    >,
+    raw_boolean_expression_types: &RawBooleanExpressionTypes,
 ) -> Result<BTreeMap<FieldName, Qualified<CustomTypeName>>, Error> {
     let mut resolved_comparable_fields = BTreeMap::new();
 

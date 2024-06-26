@@ -3066,6 +3066,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_path_to_error",
+ "smol_str",
  "strum",
  "strum_macros",
  "thiserror",

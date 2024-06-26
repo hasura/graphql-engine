@@ -44,7 +44,7 @@ pub fn resolve(
     } in &metadata_accessor.aggregate_expressions
     {
         let aggregate_expression_name =
-            Qualified::new(subgraph.clone(), aggregate_expression.name.clone());
+            Qualified::new(subgraph.to_string(), aggregate_expression.name.clone());
 
         // Have we seen this aggregate expression name before?
         // Check this before checking anything else, so we can fail fast
@@ -226,7 +226,7 @@ fn resolve_aggregatable_field(
         .aggregate_expressions
         .iter()
         .find(|agg_exp| {
-            agg_exp.subgraph == aggregate_expression_name.subgraph
+            agg_exp.subgraph.as_str() == aggregate_expression_name.subgraph.as_str()
                 && agg_exp.object.name == aggregate_field_def.aggregate_expression
         })
         .map(|agg_exp| &agg_exp.object)

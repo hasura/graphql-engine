@@ -1,19 +1,25 @@
-use crate::{graphql_config, MetadataWithVersion, OpenDdSupergraphObject};
+use crate::graphql_config;
+use crate::identifier::SubgraphIdentifier;
+use crate::{MetadataWithVersion, OpenDdSupergraphObject};
 
 use super::{
     aggregates, boolean_expression, commands, data_connector, flags, models, permissions,
     relationships, types, Metadata, OpenDdSubgraphObject,
 };
 
+const GLOBALS_SUBGRAPH: SubgraphIdentifier = SubgraphIdentifier::new_inline_static("__globals");
+const UNKNOWN_SUBGRAPH: SubgraphIdentifier =
+    SubgraphIdentifier::new_inline_static("__unknown_namespace");
+
 pub struct QualifiedObject<T> {
-    pub subgraph: String,
+    pub subgraph: SubgraphIdentifier,
     pub object: T,
 }
 
 impl<T> QualifiedObject<T> {
-    pub fn new(subgraph: &str, object: T) -> Self {
+    pub fn new(subgraph: &SubgraphIdentifier, object: T) -> Self {
         QualifiedObject {
-            subgraph: subgraph.to_string(),
+            subgraph: subgraph.clone(),
             object,
         }
     }
@@ -43,7 +49,7 @@ pub struct MetadataAccessor {
 
 fn load_metadata_objects(
     metadata_objects: Vec<OpenDdSubgraphObject>,
-    subgraph: &str,
+    subgraph: &SubgraphIdentifier,
     accessor: &mut MetadataAccessor,
 ) {
     for object in metadata_objects {
@@ -138,7 +144,7 @@ fn load_metadata_supergraph_object(
         OpenDdSupergraphObject::GraphqlConfig(graphql_config) => {
             accessor
                 .graphql_config
-                .push(QualifiedObject::new("__globals", graphql_config));
+                .push(QualifiedObject::new(&GLOBALS_SUBGRAPH, graphql_config));
         }
     }
 }
@@ -148,15 +154,16 @@ impl MetadataAccessor {
         match metadata {
             Metadata::WithoutNamespaces(metadata) => {
                 let mut accessor: MetadataAccessor = MetadataAccessor::new_empty(None);
-                load_metadata_objects(metadata, "__unknown_namespace", &mut accessor);
+                load_metadata_objects(metadata, &UNKNOWN_SUBGRAPH, &mut accessor);
                 accessor
             }
             Metadata::Versioned(MetadataWithVersion::V1(metadata)) => {
                 let mut accessor: MetadataAccessor =
                     MetadataAccessor::new_empty(Some(metadata.flags));
                 for namespaced_metadata in metadata.namespaces {
-                    let namespace = &namespaced_metadata.name;
-                    load_metadata_objects(namespaced_metadata.objects, namespace, &mut accessor);
+                    let subgraph =
+                        SubgraphIdentifier::new_without_validation(&namespaced_metadata.name);
+                    load_metadata_objects(namespaced_metadata.objects, &subgraph, &mut accessor);
                 }
                 accessor
             }

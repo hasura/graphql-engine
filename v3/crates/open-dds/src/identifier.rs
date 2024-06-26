@@ -1,7 +1,8 @@
 use std::ops::Deref;
 
 use schemars::schema::{Schema::Object as SchemaObjectVariant, SchemaObject, StringValidation};
-use serde::{de::Error, Deserialize, Serialize};
+use serde::{de::Error, Deserialize};
+use smol_str::SmolStr;
 
 use crate::{
     impl_JsonSchema_with_OpenDd_for,
@@ -22,34 +23,35 @@ macro_rules! identifier {
 /// is guaranteed to be a valid identifier, i.e.
 /// - starts with an alphabet or underscore
 /// - all characters are either alphanumeric or underscore
-#[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, derive_more::Display)]
-pub struct Identifier(pub String);
+#[derive(
+    Clone, Debug, derive_more::Display, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize,
+)]
+pub struct Identifier(SmolStr);
 
 impl Identifier {
-    pub fn new(string: String) -> Result<Identifier, &'static str> {
-        if let Some(c) = string.chars().next() {
+    pub fn new(value: impl AsRef<str>) -> Result<Identifier, &'static str> {
+        let value = value.as_ref();
+        if let Some(c) = value.chars().next() {
             if !c.is_ascii_alphabetic() && c != '_' {
                 return Err("must start with an alphabet or underscore");
             }
         } else {
             return Err("cannot be an empty string");
         }
-        if !string
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_')
-        {
+        if !value.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
             return Err("must contain only alphanumeric characters or underscore");
         }
-        Ok(Identifier(string))
+        Ok(Identifier(SmolStr::new(value)))
     }
 
     pub fn as_str(&self) -> &str {
-        self.0.as_str()
+        self.0.as_ref()
     }
 }
 
 impl Deref for Identifier {
-    type Target = String;
+    type Target = str;
+
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -117,18 +119,32 @@ macro_rules! subgraph_identifier {
 /// - does not start with __
 /// - starts with an alphabet or underscore
 /// - all characters are either alphanumeric or underscore
-#[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, derive_more::Display)]
-pub struct SubgraphIdentifier(pub String);
+#[derive(
+    Clone, Debug, derive_more::Display, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize,
+)]
+pub struct SubgraphIdentifier(SmolStr);
 
 impl SubgraphIdentifier {
-    pub fn new(string: String) -> Result<SubgraphIdentifier, &'static str> {
-        let Identifier(string) = Identifier::new(string)?;
-
-        if string.starts_with("__") {
+    pub fn new(value: impl AsRef<str>) -> Result<SubgraphIdentifier, &'static str> {
+        let value = value.as_ref();
+        let Identifier(inner) = Identifier::new(value)?;
+        if inner.starts_with("__") {
             return Err("__ is a reserved prefix for subgraph names");
         }
+        Ok(SubgraphIdentifier(SmolStr::new(value)))
+    }
 
-        Ok(SubgraphIdentifier(string))
+    /// Creates a new subgraph identifier, skipping validation.
+    pub fn new_without_validation(value: impl AsRef<str>) -> SubgraphIdentifier {
+        SubgraphIdentifier(SmolStr::new(value))
+    }
+
+    /// Creates a new subgraph identifier from a static string, skipping
+    /// validation.
+    ///
+    /// Panics if the string is more than 23 characters.
+    pub const fn new_inline_static(value: &'static str) -> SubgraphIdentifier {
+        SubgraphIdentifier(SmolStr::new_inline(value))
     }
 
     pub fn as_str(&self) -> &str {
@@ -137,7 +153,8 @@ impl SubgraphIdentifier {
 }
 
 impl Deref for SubgraphIdentifier {
-    type Target = String;
+    type Target = str;
+
     fn deref(&self) -> &Self::Target {
         &self.0
     }

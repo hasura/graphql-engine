@@ -31,13 +31,7 @@ pub(crate) fn resolve_object_boolean_graphql(
         Qualified<CustomTypeName>,
         ResolvedScalarBooleanExpressionType,
     >,
-    raw_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        (
-            &String,
-            &open_dds::boolean_expression::BooleanExpressionTypeV1,
-        ),
-    >,
+    raw_boolean_expression_types: &super::object::RawBooleanExpressionTypes,
     subgraph: &str,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<BooleanExpressionGraphqlConfig, Error> {

@@ -509,7 +509,7 @@ fn validate_argument_preset_type(
     schema: &data_connectors::DataConnectorSchema,
 ) -> Result<(), NDCValidationError> {
     for (arg_name, arg_info) in arguments {
-        if **arg_name == preset_argument_name.0 .0 {
+        if arg_name.as_str() == preset_argument_name.0.as_str() {
             let type_name = get_underlying_named_type(&arg_info.argument_type);
             let scalar_type = schema
                 .scalar_types

@@ -214,7 +214,7 @@ fn object_type_fields(
                     .field_arguments
                     .iter()
                     .map(|(argument_name, argument_type)| {
-                        let name = ast::Name::new(&argument_name.0 .0)?;
+                        let name = ast::Name::new(argument_name.0.as_str())?;
                         Ok((name, argument_type.argument_type.clone()))
                     })
                     .collect::<Result<
@@ -557,7 +557,7 @@ fn generate_apollo_federation_directives(
         let fields = key
             .fields
             .iter()
-            .map(|f| f.0 .0.clone())
+            .map(|f| f.0.to_string())
             .collect::<Vec<_>>()
             .join(" ");
         let key_directive = gql_schema::Directive {

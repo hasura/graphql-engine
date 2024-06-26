@@ -1,8 +1,10 @@
-use std::collections::{BTreeMap, BTreeSet};
 pub mod types;
+
+use std::borrow::Cow;
+use std::collections::{BTreeMap, BTreeSet};
+
 use open_dds::commands::ArgumentMapping;
 use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
-use ref_cast::RefCast;
 pub use types::{
     DataConnectorTypeMappingsForObject, DataConnectorTypeMappingsOutput, FieldDefinition,
     FieldMapping, ObjectTypeRepresentation, ObjectTypeWithTypeMappings,
@@ -316,7 +318,7 @@ pub fn resolve_data_connector_type_mapping(
             if let Some(field_mapping) = unconsumed_field_mappings.remove(field_name) {
                 match field_mapping {
                     open_dds::types::FieldMapping::Column(column_mapping) => (
-                        &column_mapping.name,
+                        Cow::Borrowed(&column_mapping.name),
                         column_mapping.argument_mapping.clone().unwrap_or_default(),
                     ),
                 }
@@ -324,11 +326,12 @@ pub fn resolve_data_connector_type_mapping(
                 // If no mapping is defined for a field, implicitly create a mapping
                 // with the same column name as the field.
                 (
-                    DataConnectorColumnName::ref_cast(&field_name.0 .0),
+                    Cow::Owned(DataConnectorColumnName(field_name.0.to_string())),
                     ArgumentMapping::default(),
                 )
             };
-        let source_column = get_column(ndc_object_type, field_name, resolved_field_mapping_column)?;
+        let source_column =
+            get_column(ndc_object_type, field_name, &resolved_field_mapping_column)?;
         let underlying_column_type = get_underlying_named_type(&source_column.r#type);
         let column_type_representation = data_connector_context
             .inner
@@ -337,7 +340,7 @@ pub fn resolve_data_connector_type_mapping(
             .get(underlying_column_type)
             .and_then(|scalar_type| scalar_type.representation.clone());
         let resolved_field_mapping = FieldMapping {
-            column: resolved_field_mapping_column.clone(),
+            column: resolved_field_mapping_column.into_owned(),
             column_type: source_column.r#type.clone(),
             column_type_representation,
             argument_mappings: resolved_argument_mappings.0,

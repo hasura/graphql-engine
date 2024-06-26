@@ -189,7 +189,7 @@ fn resolve_relationship_mappings_model(
     >,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
-    let mut field_mapping_btree_set_for_validation: BTreeSet<&String> = BTreeSet::new();
+    let mut field_mapping_btree_set_for_validation: BTreeSet<&str> = BTreeSet::new();
     for relationship_mapping in &relationship.mapping {
         let resolved_relationship_source_mapping = resolve_relationship_source_mapping(
             &relationship.name,
@@ -292,8 +292,8 @@ fn resolve_relationship_mappings_command(
     target_command: &commands::Command,
 ) -> Result<Vec<RelationshipCommandMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
-    let mut field_mapping_btree_set_for_validation: BTreeSet<&String> = BTreeSet::new();
-    let mut target_command_arguments_btree_set_for_validation: BTreeSet<&String> = BTreeSet::new();
+    let mut field_mapping_btree_set_for_validation: BTreeSet<&str> = BTreeSet::new();
+    let mut target_command_arguments_btree_set_for_validation: BTreeSet<&str> = BTreeSet::new();
 
     for relationship_mapping in &relationship.mapping {
         let resolved_relationship_source_mapping = resolve_relationship_source_mapping(
