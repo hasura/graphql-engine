@@ -22,7 +22,7 @@ pub use types::{
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    flags: &MetadataResolveFlagsInternal,
+    flags: MetadataResolveFlagsInternal,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
     data_connectors: &data_connectors::DataConnectors,

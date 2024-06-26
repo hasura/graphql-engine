@@ -82,7 +82,7 @@ pub fn test_execution_expectation_legacy(
             enable_aggregate_relationships: true,
         };
 
-        let gds = GDS::new(metadata, &metadata_resolve_flags)?;
+        let gds = GDS::new(metadata, metadata_resolve_flags)?;
         let schema = GDS::build_schema(&gds)?;
 
         // Ensure schema is serialized successfully.
@@ -172,7 +172,7 @@ pub(crate) fn test_introspection_expectation(
             enable_aggregate_relationships: true,
         };
 
-        let gds = GDS::new(metadata, &metadata_resolve_flags)?;
+        let gds = GDS::new(metadata, metadata_resolve_flags)?;
 
         let schema = GDS::build_schema(&gds)?;
 
@@ -282,7 +282,7 @@ pub fn test_execution_expectation(
             enable_aggregate_relationships: true,
         };
 
-        let gds = GDS::new(metadata, &metadata_resolve_flags)?;
+        let gds = GDS::new(metadata, metadata_resolve_flags)?;
         let schema = GDS::build_schema(&gds)?;
 
         // Verify successful serialization and deserialization of the schema.

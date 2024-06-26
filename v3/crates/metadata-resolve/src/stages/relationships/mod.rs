@@ -35,7 +35,7 @@ pub use types::{
 /// returns updated `types` value
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    flags: &MetadataResolveFlagsInternal,
+    flags: MetadataResolveFlagsInternal,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -424,7 +424,7 @@ fn resolve_aggregate_relationship_field(
         aggregates::AggregateExpression,
     >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    flags: &MetadataResolveFlagsInternal,
+    flags: MetadataResolveFlagsInternal,
 ) -> Result<Option<RelationshipField>, Error> {
     // If an aggregate has been specified
     let aggregate_expression_name_and_description = model_relationship_target
@@ -519,7 +519,7 @@ fn resolve_model_relationship_fields(
         aggregates::AggregateExpression,
     >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    flags: &MetadataResolveFlagsInternal,
+    flags: MetadataResolveFlagsInternal,
 ) -> Result<Vec<RelationshipField>, Error> {
     let qualified_target_model_name = Qualified::new(
         target_model.subgraph().unwrap_or(subgraph).to_string(),
@@ -670,7 +670,7 @@ pub fn resolve_relationships(
     >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     source_type: &object_types::ObjectTypeRepresentation,
-    flags: &MetadataResolveFlagsInternal,
+    flags: MetadataResolveFlagsInternal,
 ) -> Result<Vec<RelationshipField>, Error> {
     let source_type_name = Qualified::new(subgraph.to_string(), relationship.source_type.clone());
     match &relationship.target {

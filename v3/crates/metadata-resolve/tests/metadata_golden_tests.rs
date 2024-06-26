@@ -19,7 +19,7 @@ fn test_passing_metadata(metadata_json_text: &str) -> anyhow::Result<()> {
     let metadata_json_value = serde_json::from_str(metadata_json_text)?;
 
     let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
-    let resolved = metadata_resolve::resolve(metadata, &metadata_resolve_flags_internal);
+    let resolved = metadata_resolve::resolve(metadata, metadata_resolve_flags_internal);
 
     match resolved {
         Ok(_) => Ok(()),
@@ -51,7 +51,7 @@ fn test_failing_metadata(
         Ok(metadata_json_value) => {
             match open_dds::traits::OpenDd::deserialize(metadata_json_value) {
                 Ok(metadata) => {
-                    match metadata_resolve::resolve(metadata, &metadata_resolve_flags_internal) {
+                    match metadata_resolve::resolve(metadata, metadata_resolve_flags_internal) {
                         Ok(_) => panic!("Expected to fail with {error}"),
                         Err(msg) => similar_asserts::assert_eq!(error, msg.to_string()),
                     }

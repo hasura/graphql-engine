@@ -14,7 +14,7 @@ pub enum BuildError {
 
 pub fn build_schema(
     metadata: open_dds::Metadata,
-    metadata_resolve_flags: &metadata_resolve::MetadataResolveFlagsInternal,
+    metadata_resolve_flags: metadata_resolve::MetadataResolveFlagsInternal,
 ) -> Result<gql_schema::Schema<GDS>, BuildError> {
     let resolved_metadata = metadata_resolve::resolve(metadata, metadata_resolve_flags)?;
     let gds = schema::GDS {

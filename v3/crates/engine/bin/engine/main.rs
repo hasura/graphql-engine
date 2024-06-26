@@ -315,7 +315,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let state = build_state(
         &server.authn_config_path,
         &server.metadata_path,
-        &metadata_resolve_flags,
+        metadata_resolve_flags,
     )
     .map_err(StartupError::ReadSchema)?;
 
@@ -643,7 +643,7 @@ async fn handle_sql_request(
 fn build_state(
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
-    metadata_resolve_flags: &metadata_resolve::MetadataResolveFlagsInternal,
+    metadata_resolve_flags: metadata_resolve::MetadataResolveFlagsInternal,
 ) -> Result<Arc<EngineState>, anyhow::Error> {
     let auth_config = read_auth_config(authn_config_path).map_err(StartupError::ReadAuth)?;
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
