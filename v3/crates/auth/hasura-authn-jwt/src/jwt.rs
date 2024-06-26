@@ -24,7 +24,7 @@ use url::Url;
 
 /// Name of the key, which is by default used to lookup the Hasura claims
 /// in the claims obtained after decoding the JWT.
-const DEFAULT_HASURA_CLAIMS_NAMESPACE: &str = "https://hasura.io/jwt/claims";
+const DEFAULT_HASURA_CLAIMS_NAMESPACE: &str = "claims.jwt.hasura.io";
 
 lazy_static! {
     /// Make top level JSON pointer of the `DEFAULT_HASURA_CLAIMS_NAMESPACE`
@@ -361,7 +361,7 @@ impl JWTConfig {
                 "claimsConfig": {
                     "namespace": {
                         "claimsFormat": "Json",
-                        "location": "/https:~1~1hasura.io~1jwt~1claims"
+                        "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
                     }
                 }
             }
@@ -707,7 +707,7 @@ mod tests {
                 "name": "John Doe",
                 "iat": 1693439022,
                 "exp": 1916239022,
-                "https://hasura.io/jwt/claims": {}
+                "claims.jwt.hasura.io": {}
             }
         );
         *claims_json
@@ -851,7 +851,7 @@ mod tests {
                "claimsConfig": {
                   "namespace": {
                      "claimsFormat": "Json",
-                     "location": "/https:~1~1hasura.io~1jwt~1claims"
+                     "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
                   }
                }
             }
@@ -886,7 +886,7 @@ mod tests {
                "claimsConfig": {
                   "namespace": {
                      "claimsFormat": "StringifiedJson",
-                     "location": "/https:~1~1hasura.io~1jwt~1claims"
+                     "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
                   }
                }
             }
@@ -1130,7 +1130,7 @@ mod tests {
                 "claimsConfig": {
                    "namespace": {
                       "claimsFormat": "Json",
-                      "location": "/https:~1~1hasura.io~1jwt~1claims"
+                      "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
                    }
                 }
             }
@@ -1346,7 +1346,7 @@ mod tests {
                 "claimsConfig": {
                     "namespace": {
                         "claimsFormat": "Json",
-                        "location": "/https:~1~1hasura.io~1jwt~1claims"
+                        "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
                     }
                 }
             }

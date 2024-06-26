@@ -130,7 +130,7 @@ mod tests {
                 "name": "John Doe",
                 "iat": 1693439022,
                 "exp": 1916239022,
-                "https://hasura.io/jwt/claims": {}
+                "claims.jwt.hasura.io": {}
             }
         );
         *claims_json
@@ -196,7 +196,7 @@ mod tests {
                "claimsConfig": {
                   "namespace": {
                      "claimsFormat": "Json",
-                     "location": "/https:~1~1hasura.io~1jwt~1claims"
+                     "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
                   }
                }
             }
@@ -295,7 +295,7 @@ mod tests {
                "claimsConfig": {
                   "namespace": {
                      "claimsFormat": "Json",
-                     "location": "/https:~1~1hasura.io~1jwt~1claims"
+                     "location": *DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER
                   }
                }
             }

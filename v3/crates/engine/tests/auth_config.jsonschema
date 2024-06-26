@@ -139,7 +139,7 @@
           "claimsConfig": {
             "namespace": {
               "claimsFormat": "Json",
-              "location": "/https:~1~1hasura.io~1jwt~1claims"
+              "location": "/claims.jwt.hasura.io"
             }
           },
           "tokenLocation": {
