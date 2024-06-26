@@ -143,7 +143,6 @@ pub fn resolve(
 
     let object_types_with_relationships = relationships::resolve(
         &metadata_accessor,
-        flags,
         &data_connectors,
         &data_connector_scalars,
         &object_types_with_permissions,

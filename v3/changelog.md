@@ -4,6 +4,37 @@
 
 ### Added
 
+#### Aggregates of Array Relationships
+
+Aggregates of array relationships can now be defined by specifying an
+`aggregate` in the `Relationship`'s target. Note that this is only supported
+when the target of the relationship is a `Model`. You must also specify the
+`aggregateFieldName` under the `graphql` section.
+
+```yaml
+kind: Relationship
+version: v1
+definition:
+  name: invoices
+  sourceType: Customer
+  target:
+    model:
+      name: Invoice
+      relationshipType: Array
+      aggregate: # New!
+        aggregateExpression: Invoice_aggregate_exp
+        description: Aggregate of the customer's invoices
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: customerId
+      target:
+        modelField:
+          - fieldName: customerId
+  graphql: # New!
+    aggregateFieldName: invoicesAggregate
+```
+
 ### Changed
 
 ### Fixed

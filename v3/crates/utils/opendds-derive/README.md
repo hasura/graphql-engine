@@ -325,6 +325,11 @@ enums.
   trait implemented. The default JSON value will be inferred using
   `serde_json::json!(Default::default())`.
 
+- `[opendd(hidden = true)]`
+
+  Hide the field from the json schema, useful for keeping work in progress out
+  of the public API.
+
 ## Notes
 
 - Please make sure the following crates/modules are accessible in the module

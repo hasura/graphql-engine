@@ -13,7 +13,6 @@ fn test_passing_metadata() {
         }, {
             let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
                 enable_boolean_expression_types: true,
-                enable_aggregate_relationships: true,
             };
 
             let metadata_json_text = std::fs::read_to_string(path)
@@ -43,7 +42,6 @@ fn test_failing_metadata() {
         }, {
             let metadata_resolve_flags_internal = MetadataResolveFlagsInternal {
                 enable_boolean_expression_types: true,
-                enable_aggregate_relationships: true,
             };
 
             let metadata_json_text = std::fs::read_to_string(path)

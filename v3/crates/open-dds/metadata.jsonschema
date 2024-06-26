@@ -3682,6 +3682,17 @@
               "type": "null"
             }
           ]
+        },
+        "graphql": {
+          "description": "Configuration for how this relationship should appear in the GraphQL schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RelationshipGraphQlDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -3758,6 +3769,17 @@
               "$ref": "#/definitions/RelationshipType"
             }
           ]
+        },
+        "aggregate": {
+          "description": "How to aggregate over the relationship. Only valid for array relationships",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ModelRelationshipTargetAggregate"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -3782,6 +3804,33 @@
           ]
         }
       ]
+    },
+    "ModelRelationshipTargetAggregate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ModelRelationshipTargetAggregate",
+      "title": "ModelRelationshipTargetAggregate",
+      "description": "Which aggregate expression to use to aggregate the array relationship.",
+      "type": "object",
+      "required": [
+        "aggregateExpression"
+      ],
+      "properties": {
+        "aggregateExpression": {
+          "description": "The name of the aggregate expression that defines how to aggregate across the relationship.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AggregateExpressionName"
+            }
+          ]
+        },
+        "description": {
+          "description": "The description of the relationship aggregate. Gets added to the description of the aggregate field in the GraphQL schema",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
     },
     "CommandRelationshipTarget": {
       "$id": "https://hasura.io/jsonschemas/metadata/CommandRelationshipTarget",
@@ -3953,6 +4002,26 @@
       "properties": {
         "argumentName": {
           "$ref": "#/definitions/ArgumentName"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RelationshipGraphQlDefinition": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationshipGraphQlDefinition",
+      "title": "RelationshipGraphQlDefinition",
+      "description": "The definition of how a relationship appears in the GraphQL API",
+      "type": "object",
+      "properties": {
+        "aggregateFieldName": {
+          "description": "The field name to use for the field that represents an aggregate over the relationship",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/FieldName"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false

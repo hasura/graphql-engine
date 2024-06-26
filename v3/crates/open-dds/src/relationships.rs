@@ -52,7 +52,6 @@ pub struct ModelRelationshipTarget {
     /// Type of the relationship - object or array.
     pub relationship_type: RelationshipType,
     /// How to aggregate over the relationship. Only valid for array relationships
-    #[opendd(hidden)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub aggregate: Option<ModelRelationshipTargetAggregate>,
 }
@@ -289,6 +288,5 @@ pub struct RelationshipV1 {
     /// If set, the deprecation status is added to the relationship field's graphql schema.
     pub deprecated: Option<Deprecated>,
     /// Configuration for how this relationship should appear in the GraphQL schema.
-    #[opendd(hidden)]
     pub graphql: Option<RelationshipGraphQlDefinition>,
 }

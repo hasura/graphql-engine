@@ -790,11 +790,6 @@ pub enum RelationshipError {
         relationship_name: RelationshipName,
         data_connector_name: Qualified<DataConnectorName>,
     },
-    #[error("The relationship {relationship_name} on type {type_name} defines an aggregate, but the aggregate relationships feature is disabled")]
-    AggregateRelationshipsDisabled {
-        type_name: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
-    },
     #[error("The relationship {relationship_name} on type {type_name} defines an aggregate, but aggregates can only be used with array relationships, not object relationships")]
     AggregateIsOnlyAllowedOnArrayRelationships {
         type_name: Qualified<CustomTypeName>,
