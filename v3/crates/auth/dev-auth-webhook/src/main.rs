@@ -12,11 +12,11 @@ const DEFAULT_PORT: u16 = 3050;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     if let Ok(otlp_endpoint) = env::var("OTLP_ENDPOINT") {
-        let _ = tracing_util::start_tracer(
+        tracing_util::initialize_tracing(
             Some(&otlp_endpoint),
             env!("CARGO_PKG_NAME"),
             env!("CARGO_PKG_VERSION"),
-        );
+        )?;
     }
 
     let app = Router::new()

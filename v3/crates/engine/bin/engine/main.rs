@@ -113,14 +113,14 @@ struct EngineState {
 async fn main() {
     let server = ServerOptions::parse();
 
-    let tracer = tracing_util::start_tracer(
+    tracing_util::initialize_tracing(
         server.otlp_endpoint.as_deref(),
         "graphql-engine",
         env!("CARGO_PKG_VERSION"),
     )
     .unwrap();
 
-    if let Err(e) = tracer
+    if let Err(e) = tracing_util::global_tracer()
         .in_span_async(
             "app init",
             "App initialization",

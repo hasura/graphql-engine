@@ -91,6 +91,7 @@ opentelemetry-contrib = "0.14"
 opentelemetry-http = "0.11"
 opentelemetry-otlp = "0.15"
 opentelemetry-semantic-conventions = "0.14"
+opentelemetry-stdout = { version = "0.3", default-features = false }
 opentelemetry-zipkin = "0.20"
 opentelemetry_sdk = "0.22"
 postcard = "1"

@@ -14,9 +14,10 @@ opentelemetry = { workspace = true }
 opentelemetry-contrib = { workspace = true }
 opentelemetry-http = { workspace = true }
 opentelemetry-otlp = { workspace = true }
-opentelemetry_sdk = { workspace = true, features = ["rt-tokio"] }
 opentelemetry-semantic-conventions = { workspace = true }
+opentelemetry-stdout = { workspace = true , features = ["trace"] }
 opentelemetry-zipkin = { workspace = true }
+opentelemetry_sdk = { workspace = true, features = ["rt-tokio"] }
 tracing-subscriber = { workspace = true }
 
 [dev-dependencies]

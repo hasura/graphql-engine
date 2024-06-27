@@ -11,6 +11,8 @@ use opentelemetry_http::HeaderExtractor;
 
 use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
 
+pub static GLOBAL_TRACER_NAME: &str = "engine-tracing-util";
+
 #[derive(Clone, Copy, derive_more::Display)]
 pub enum SpanVisibility {
     #[display(fmt = "internal")]
@@ -209,5 +211,5 @@ impl Tracer {
 
 /// Util for accessing the globally installed tracer
 pub fn global_tracer() -> Tracer {
-    Tracer::new(opentelemetry::global::tracer("engine-tracing-util"))
+    Tracer::new(opentelemetry::global::tracer(GLOBAL_TRACER_NAME))
 }
