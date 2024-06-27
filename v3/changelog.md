@@ -39,6 +39,10 @@ definition:
 
 ### Fixed
 
+- The Open DD schema for `DataConnectorLink` now references the correct version
+  (v0.1.4) of the NDC schema when using the NDC `CapabilitiesResponse` and
+  `SchemaResponse` types
+
 ## [v2024.06.13]
 
 Initial release.
