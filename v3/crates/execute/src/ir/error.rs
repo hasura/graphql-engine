@@ -16,6 +16,7 @@ use transitive::Transitive;
 use metadata_resolve::{Qualified, QualifiedTypeName};
 use schema::{Annotation, NamespaceAnnotation};
 
+#[allow(clippy::duplicated_attributes)] // suppress spurious warnings from Clippy
 #[derive(Error, Debug, Transitive)]
 #[transitive(from(json::Error, InternalError))]
 #[transitive(from(gql::normalized_ast::Error, InternalError))]
@@ -82,6 +83,7 @@ impl TraceableError for Error {
     }
 }
 
+#[allow(clippy::duplicated_attributes)] // suppress spurious warnings from Clippy
 #[derive(Error, Debug, Transitive)]
 #[transitive(from(json::Error, InternalEngineError))]
 #[transitive(from(gql::normalized_ast::Error, InternalEngineError))]

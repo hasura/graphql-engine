@@ -28,6 +28,9 @@ print_stdout = "warn"
 print_stderr = "warn"
 # unstable warnings; we might need to suppress them
 redundant_clone = "warn"
+# disable this warning until
+# https://github.com/rust-lang/rust-clippy/issues/12643 is fixed
+manual_unwrap_or_default = "allow"
 # disable certain pedantic warnings
 doc_markdown = "allow"
 implicit_hasher = "allow"

@@ -1,10 +1,9 @@
+use convert_case::{Case, Casing};
 use std::sync::OnceLock;
 
-use convert_case::{Case, Casing};
+use crate::MacroResult;
 use darling::{FromAttributes, FromField, FromMeta};
 use syn::{self, DeriveInput};
-
-use crate::MacroResult;
 
 /// JSON schema attributes
 #[derive(Default, FromMeta)]

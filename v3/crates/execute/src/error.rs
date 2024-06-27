@@ -69,6 +69,7 @@ impl TraceableError for RequestError {
 
 /// Field errors are raised during execution from a root field
 /// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Field-errors>
+#[allow(clippy::duplicated_attributes)] // suppress spurious warnings from Clippy
 #[derive(Error, Debug, Transitive)]
 #[transitive(from(json::Error, FieldInternalError))]
 #[transitive(from(NDCUnexpectedError, FieldInternalError))]
