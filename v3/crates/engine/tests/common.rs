@@ -77,11 +77,7 @@ pub fn test_execution_expectation_legacy(
             metadata
         );
 
-        let metadata_resolve_flags = metadata_resolve::MetadataResolveFlagsInternal {
-            enable_boolean_expression_types: true,
-        };
-
-        let gds = GDS::new(metadata, metadata_resolve_flags)?;
+        let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
         let schema = GDS::build_schema(&gds)?;
 
         // Ensure schema is serialized successfully.
@@ -167,11 +163,7 @@ pub(crate) fn test_introspection_expectation(
             metadata
         );
 
-        let metadata_resolve_flags = metadata_resolve::MetadataResolveFlagsInternal {
-            enable_boolean_expression_types: true,
-        };
-
-        let gds = GDS::new(metadata, metadata_resolve_flags)?;
+        let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
 
         let schema = GDS::build_schema(&gds)?;
 
@@ -276,12 +268,7 @@ pub fn test_execution_expectation(
             metadata
         );
 
-        // This is where we'll want to enable pre-release features in tests
-        let metadata_resolve_flags = metadata_resolve::MetadataResolveFlagsInternal {
-            enable_boolean_expression_types: true,
-        };
-
-        let gds = GDS::new(metadata, metadata_resolve_flags)?;
+        let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
         let schema = GDS::build_schema(&gds)?;
 
         // Verify successful serialization and deserialization of the schema.
@@ -493,4 +480,14 @@ pub fn test_execute_explain(
         write!(expected, "{}", serde_json::to_string_pretty(&response)?)?;
         Ok(())
     })
+}
+
+// This is where we'll want to enable pre-release features in tests
+fn test_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration {
+    metadata_resolve::configuration::Configuration {
+        allow_unknown_subgraphs: false,
+        unstable_features: metadata_resolve::configuration::UnstableFeatures {
+            enable_boolean_expression_types: true,
+        },
+    }
 }

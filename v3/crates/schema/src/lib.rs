@@ -1,24 +1,3 @@
-use lang_graphql::schema::{self as gql_schema, SchemaContext};
-use lang_graphql::{ast::common as ast, mk_name};
-use open_dds::aggregates::AggregateExpressionName;
-use open_dds::types::FieldName;
-use open_dds::{
-    commands::CommandName,
-    models::ModelName,
-    permissions::Role,
-    relationships::RelationshipName,
-    types::{CustomTypeName, Deprecated},
-};
-use serde::{Deserialize, Serialize};
-use std::str::FromStr;
-use thiserror::Error;
-
-use metadata_resolve::{
-    resolve, Error as ResolveMetadataError, Metadata, MetadataResolveFlagsInternal, Qualified,
-};
-
-use self::types::PossibleApolloFederationTypes;
-
 // we deliberately do not export these entire modules and instead explicitly export types below
 mod aggregates;
 mod apollo_federation;
@@ -34,6 +13,22 @@ mod permissions;
 mod query_root;
 mod relay;
 mod types;
+
+use std::str::FromStr;
+
+use serde::{Deserialize, Serialize};
+
+use lang_graphql::schema::{self as gql_schema, SchemaContext};
+use lang_graphql::{ast::common as ast, mk_name};
+use metadata_resolve::Qualified;
+use open_dds::{
+    aggregates::AggregateExpressionName,
+    commands::CommandName,
+    models::ModelName,
+    permissions::Role,
+    relationships::RelationshipName,
+    types::{CustomTypeName, Deprecated, FieldName},
+};
 
 pub use aggregates::{AggregateOutputAnnotation, AggregationFunctionAnnotation};
 pub use types::output_type::relationship::{
@@ -87,22 +82,26 @@ impl lang_graphql::schema::NamespacedGetter<GDS> for GDSNamespaceGetterAgnostic 
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct GDS {
-    pub metadata: Metadata,
+    pub metadata: metadata_resolve::Metadata,
 }
 
 impl GDS {
     pub fn new(
         user_metadata: open_dds::Metadata,
-        metadata_resolve_flags: metadata_resolve::MetadataResolveFlagsInternal,
+        metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
     ) -> Result<Self, Error> {
-        let resolved_metadata = resolve(user_metadata, metadata_resolve_flags)?;
+        let resolved_metadata =
+            metadata_resolve::resolve(user_metadata, metadata_resolve_configuration)?;
         Ok(GDS {
             metadata: resolved_metadata,
         })
     }
 
     pub fn new_with_default_flags(user_metadata: open_dds::Metadata) -> Result<Self, Error> {
-        let resolved_metadata = resolve(user_metadata, MetadataResolveFlagsInternal::default())?;
+        let resolved_metadata = metadata_resolve::resolve(
+            user_metadata,
+            metadata_resolve::configuration::Configuration::default(),
+        )?;
         Ok(GDS {
             metadata: resolved_metadata,
         })
@@ -210,19 +209,19 @@ impl gql_schema::SchemaContext for GDS {
             types::TypeId::OrderByEnumType { graphql_type_name } => {
                 model_order_by::build_order_by_enum_type_schema(self, builder, graphql_type_name)
             }
-            types::TypeId::ApolloFederationType(PossibleApolloFederationTypes::Entity) => {
+            types::TypeId::ApolloFederationType(types::PossibleApolloFederationTypes::Entity) => {
                 Ok(gql_schema::TypeInfo::Union(
                     apollo_federation::apollo_federation_entities_schema(builder, self)?,
                 ))
             }
-            types::TypeId::ApolloFederationType(PossibleApolloFederationTypes::Any) => {
+            types::TypeId::ApolloFederationType(types::PossibleApolloFederationTypes::Any) => {
                 Ok(gql_schema::TypeInfo::Scalar(gql_schema::Scalar {
                     name: ast::TypeName(mk_name!("_Any")),
                     description: None,
                     directives: Vec::new(),
                 }))
             }
-            types::TypeId::ApolloFederationType(PossibleApolloFederationTypes::Service) => {
+            types::TypeId::ApolloFederationType(types::PossibleApolloFederationTypes::Service) => {
                 Ok(gql_schema::TypeInfo::Object(
                     apollo_federation::apollo_federation_service_schema(builder)?,
                 ))
@@ -261,16 +260,16 @@ impl gql_schema::SchemaContext for GDS {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("metadata is not consistent: {error}")]
     ResolveError {
-        #[source]
-        error: ResolveMetadataError,
+        #[from]
+        error: metadata_resolve::Error,
     },
     #[error("internal error while building schema: {error}")]
     InternalBuildError {
-        #[source]
+        #[from]
         error: gql_schema::build::Error,
     },
     #[error("internal error: no support for: {summary}")]
@@ -409,18 +408,6 @@ pub enum Error {
 impl From<ast::InvalidGraphQlName> for Error {
     fn from(error: ast::InvalidGraphQlName) -> Self {
         Error::InvalidGraphQlName { name: error.0 }
-    }
-}
-
-impl From<ResolveMetadataError> for Error {
-    fn from(error: ResolveMetadataError) -> Self {
-        Error::ResolveError { error }
-    }
-}
-
-impl From<gql_schema::build::Error> for Error {
-    fn from(error: gql_schema::build::Error) -> Self {
-        Self::InternalBuildError { error }
     }
 }
 

@@ -19,13 +19,13 @@ mod types;
 
 pub use types::Metadata;
 
+use crate::types::configuration::Configuration;
 use crate::types::error::Error;
-use crate::types::internal_flags::MetadataResolveFlagsInternal;
 
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
 pub fn resolve(
     metadata: open_dds::Metadata,
-    flags: MetadataResolveFlagsInternal,
+    configuration: Configuration,
 ) -> Result<Metadata, Error> {
     let metadata_accessor: open_dds::accessor::MetadataAccessor =
         open_dds::accessor::MetadataAccessor::new(metadata);
@@ -102,7 +102,7 @@ pub fn resolve(
         graphql_types,
     } = boolean_expressions::resolve(
         &metadata_accessor,
-        flags,
+        configuration,
         &graphql_types,
         &graphql_config,
         &data_connectors,
@@ -143,6 +143,7 @@ pub fn resolve(
 
     let object_types_with_relationships = relationships::resolve(
         &metadata_accessor,
+        configuration,
         &data_connectors,
         &data_connector_scalars,
         &object_types_with_permissions,

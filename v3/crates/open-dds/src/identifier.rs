@@ -57,6 +57,12 @@ impl Deref for Identifier {
     }
 }
 
+impl std::borrow::Borrow<str> for Identifier {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
+
 impl OpenDd for Identifier {
     fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
         let string: String =
@@ -156,6 +162,12 @@ impl Deref for SubgraphIdentifier {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::borrow::Borrow<str> for SubgraphIdentifier {
+    fn borrow(&self) -> &str {
         &self.0
     }
 }

@@ -1,16 +1,18 @@
-use crate::stages::{data_connectors, graphql_config, type_permissions};
-use crate::types::error::{BooleanExpressionError, Error};
-use crate::types::internal_flags::MetadataResolveFlagsInternal;
-use crate::Qualified;
-use open_dds::{boolean_expression::BooleanExpressionOperand, types::CustomTypeName};
-use std::collections::{BTreeMap, BTreeSet};
 mod graphql;
+mod helpers;
 mod object;
 mod scalar;
 mod types;
-use lang_graphql::ast::common as ast;
 
-mod helpers;
+use std::collections::{BTreeMap, BTreeSet};
+
+use lang_graphql::ast::common as ast;
+use open_dds::{boolean_expression::BooleanExpressionOperand, types::CustomTypeName};
+
+use crate::stages::{data_connectors, graphql_config, type_permissions};
+use crate::types::configuration::Configuration;
+use crate::types::error::{BooleanExpressionError, Error};
+use crate::Qualified;
 
 pub use types::{
     BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
@@ -22,13 +24,15 @@ pub use types::{
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    flags: MetadataResolveFlagsInternal,
+    configuration: Configuration,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
 ) -> Result<BooleanExpressionsOutput, Error> {
-    if !flags.enable_boolean_expression_types
+    if !configuration
+        .unstable_features
+        .enable_boolean_expression_types
         && !metadata_accessor.boolean_expression_types.is_empty()
     {
         return Err(Error::BooleanExpressionError {

@@ -1,7 +1,6 @@
 mod types;
 
-use std::collections::BTreeMap;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use indexmap::IndexMap;
 
@@ -15,6 +14,7 @@ use open_dds::{
     types::CustomTypeName,
 };
 
+use crate::configuration::Configuration;
 use crate::helpers::types::mk_name;
 use crate::stages::{
     aggregates, commands, data_connector_scalar_types, data_connectors, graphql_config, models,
@@ -34,6 +34,7 @@ pub use types::{
 /// returns updated `types` value
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    configuration: Configuration,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -88,8 +89,10 @@ pub fn resolve(
             })?;
 
         let resolved_relationships = resolve_relationships(
+            configuration,
             relationship,
             subgraph,
+            &metadata_accessor.subgraphs,
             models,
             commands,
             data_connectors,
@@ -507,7 +510,7 @@ fn resolve_aggregate_relationship_field(
 
 fn resolve_model_relationship_fields(
     target_model: &relationships::ModelRelationshipTarget,
-    subgraph: &str,
+    subgraph: &open_dds::identifier::SubgraphIdentifier,
     models: &IndexMap<Qualified<ModelName>, crate::Model>,
     data_connectors: &data_connectors::DataConnectors,
     source_type_name: &Qualified<CustomTypeName>,
@@ -598,7 +601,7 @@ pub fn make_relationship_field_name(
 
 fn resolve_command_relationship_field(
     target_command: &relationships::CommandRelationshipTarget,
-    subgraph: &str,
+    subgraph: &open_dds::identifier::SubgraphIdentifier,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connectors::DataConnectors,
     source_type_name: &Qualified<CustomTypeName>,
@@ -606,11 +609,7 @@ fn resolve_command_relationship_field(
     source_type: &object_types::ObjectTypeRepresentation,
 ) -> Result<RelationshipField, Error> {
     let qualified_target_command_name = Qualified::new(
-        target_command
-            .subgraph
-            .as_deref()
-            .unwrap_or(subgraph)
-            .to_string(),
+        target_command.subgraph().unwrap_or(subgraph).to_string(),
         target_command.name.clone(),
     );
     let resolved_target_command =
@@ -657,9 +656,11 @@ fn resolve_command_relationship_field(
     })
 }
 
-pub fn resolve_relationships(
+fn resolve_relationships(
+    configuration: Configuration,
     relationship: &RelationshipV1,
-    subgraph: &str,
+    subgraph: &open_dds::identifier::SubgraphIdentifier,
+    known_subgraphs: &HashSet<open_dds::identifier::SubgraphIdentifier>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connectors::DataConnectors,
@@ -678,6 +679,9 @@ pub fn resolve_relationships(
     let source_type_name = Qualified::new(subgraph.to_string(), relationship.source_type.clone());
     match &relationship.target {
         relationships::RelationshipTarget::Model(target_model) => {
+            if should_skip(configuration, known_subgraphs, target_model.subgraph()) {
+                return Ok(vec![]);
+            }
             resolve_model_relationship_fields(
                 target_model,
                 subgraph,
@@ -693,6 +697,9 @@ pub fn resolve_relationships(
             )
         }
         relationships::RelationshipTarget::Command(target_command) => {
+            if should_skip(configuration, known_subgraphs, target_command.subgraph()) {
+                return Ok(vec![]);
+            }
             let command_relationship_field = resolve_command_relationship_field(
                 target_command,
                 subgraph,
@@ -705,4 +712,19 @@ pub fn resolve_relationships(
             Ok(vec![command_relationship_field])
         }
     }
+}
+
+// If we have been asked to allow unknown subgraphs, and the target subgraph is unknown, return an
+// empty set of relationships.
+//
+// Currently, only relationships know about other subgraphs. If this changes, we will need to add
+// the same functionality to that stage of metadata resolution, and perhaps think about creating an
+// abstraction for that purpose.
+fn should_skip(
+    configuration: Configuration,
+    known_subgraphs: &HashSet<open_dds::identifier::SubgraphIdentifier>,
+    target_subgraph: Option<&str>,
+) -> bool {
+    configuration.allow_unknown_subgraphs
+        && target_subgraph.is_some_and(|subgraph| !known_subgraphs.contains(subgraph))
 }

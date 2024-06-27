@@ -42,6 +42,7 @@ const DEFAULT_PORT: u16 = 3000;
 
 const MB: usize = 1_048_576;
 
+#[allow(clippy::struct_excessive_bools)] // booleans are pretty useful here
 #[derive(Parser)]
 #[command(version = VERSION)]
 struct ServerOptions {
@@ -79,6 +80,10 @@ struct ServerOptions {
         value_delimiter = ','
     )]
     cors_allow_origin: Vec<String>,
+    /// Allow unknown subgraphs, pruning relationships that refer to them.
+    /// Useful when working with part of a supergraph.
+    #[arg(long, env = "PARTIAL_SUPERGRAPH")]
+    partial_supergraph: bool,
     /// List of internal unstable features to enable, separated by commas
     #[arg(
         long = "unstable-feature",
@@ -318,7 +323,10 @@ impl EngineRouter {
 
 #[allow(clippy::print_stdout)]
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
-    let metadata_resolve_flags = resolve_unstable_features(&server.unstable_features);
+    let metadata_resolve_configuration = metadata_resolve::configuration::Configuration {
+        allow_unknown_subgraphs: server.partial_supergraph,
+        unstable_features: resolve_unstable_features(&server.unstable_features),
+    };
 
     let expose_internal_errors = if server.expose_internal_errors {
         execute::ExposeInternalErrors::Expose
@@ -330,7 +338,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         expose_internal_errors,
         &server.authn_config_path,
         &server.metadata_path,
-        metadata_resolve_flags,
+        metadata_resolve_configuration,
     )
     .map_err(StartupError::ReadSchema)?;
 
@@ -661,12 +669,12 @@ fn build_state(
     expose_internal_errors: execute::ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
-    metadata_resolve_flags: metadata_resolve::MetadataResolveFlagsInternal,
+    metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
 ) -> Result<Arc<EngineState>, anyhow::Error> {
     let auth_config = read_auth_config(authn_config_path).map_err(StartupError::ReadAuth)?;
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
-    let resolved_metadata = metadata_resolve::resolve(metadata, metadata_resolve_flags)?;
+    let resolved_metadata = metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
     let http_context = HttpContext {
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,

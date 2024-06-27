@@ -88,6 +88,12 @@ pub struct CommandRelationshipTarget {
     pub subgraph: Option<String>,
 }
 
+impl CommandRelationshipTarget {
+    pub fn subgraph(&self) -> Option<&str> {
+        self.subgraph.as_deref()
+    }
+}
+
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
 )]

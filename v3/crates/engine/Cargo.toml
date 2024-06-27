@@ -6,6 +6,8 @@ license.workspace = true
 
 build = "build.rs"
 
+default-run = "engine"
+
 [lib]
 bench = false
 

@@ -1,10 +1,10 @@
-use crate::graphql_config;
-use crate::identifier::SubgraphIdentifier;
-use crate::{MetadataWithVersion, OpenDdSupergraphObject};
+use std::collections::HashSet;
 
-use super::{
-    aggregates, boolean_expression, commands, data_connector, flags, models, permissions,
-    relationships, types, Metadata, OpenDdSubgraphObject,
+use crate::identifier::SubgraphIdentifier;
+use crate::{
+    aggregates, boolean_expression, commands, data_connector, flags, graphql_config, models,
+    permissions, relationships, types, Metadata, MetadataWithVersion, OpenDdSubgraphObject,
+    OpenDdSupergraphObject,
 };
 
 const GLOBALS_SUBGRAPH: SubgraphIdentifier = SubgraphIdentifier::new_inline_static("__globals");
@@ -28,6 +28,7 @@ impl<T> QualifiedObject<T> {
 const DEFAULT_FLAGS: flags::Flags = flags::Flags::new();
 
 pub struct MetadataAccessor {
+    pub subgraphs: HashSet<SubgraphIdentifier>,
     pub data_connectors: Vec<QualifiedObject<data_connector::DataConnectorLinkV1>>,
     pub object_types: Vec<QualifiedObject<types::ObjectTypeV1>>,
     pub object_boolean_expression_types: Vec<QualifiedObject<types::ObjectBooleanExpressionTypeV1>>,
@@ -52,6 +53,7 @@ fn load_metadata_objects(
     subgraph: &SubgraphIdentifier,
     accessor: &mut MetadataAccessor,
 ) {
+    accessor.subgraphs.insert(subgraph.clone());
     for object in metadata_objects {
         match object {
             OpenDdSubgraphObject::DataConnectorLink(data_connector) => {
@@ -191,6 +193,7 @@ impl MetadataAccessor {
 
     fn new_empty(flags: Option<flags::Flags>) -> MetadataAccessor {
         MetadataAccessor {
+            subgraphs: HashSet::new(),
             data_connectors: vec![],
             object_types: vec![],
             scalar_types: vec![],
