@@ -1,24 +1,26 @@
 mod filter;
 mod graphql;
 mod types;
-use crate::types::subgraph::Qualified;
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use indexmap::IndexMap;
+
+use lang_graphql::ast::common as ast;
+use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, graphql_config, models,
     object_boolean_expressions, relationships,
 };
 use crate::types::error::Error;
+use crate::types::subgraph::Qualified;
+
+pub(crate) use types::ModelWithGraphql;
 pub use types::{
-    ModelExpressionType, ModelGraphQlApi, ModelOrderByExpression, ModelWithGraphql,
-    ModelsGraphqlOutput, SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition,
-    SelectUniqueGraphQlDefinition,
+    ModelExpressionType, ModelGraphQlApi, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
+    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
 };
-
-use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
-
-use indexmap::IndexMap;
-use lang_graphql::ast::common::{self as ast};
-use std::collections::{BTreeMap, BTreeSet};
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
@@ -35,9 +37,11 @@ pub fn resolve(
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<ModelsGraphqlOutput, Error> {
-    let mut models_with_graphql = IndexMap::new();
-    let mut graphql_types = existing_graphql_types.clone();
+) -> Result<types::ModelsWithGraphql, Error> {
+    let mut models_with_graphql = types::ModelsWithGraphql::new();
+
+    // Used to ensure we don't resolve the same type twice.
+    let mut existing_graphql_types = existing_graphql_types.clone();
 
     for (model_name, model) in models.clone() {
         let filter_expression_type = match &model.raw.filter_expression_type {
@@ -70,18 +74,18 @@ pub fn resolve(
                 metadata_accessor,
                 model_graphql_definition,
                 &model,
-                &mut graphql_types,
+                &mut existing_graphql_types,
                 data_connector_scalars,
                 &model.raw.description,
                 &model.aggregate_expression,
                 graphql_config,
             )?,
-            None => ModelGraphQlApi::default(),
+            None => types::ModelGraphQlApi::default(),
         };
 
         models_with_graphql.insert(
             model_name,
-            ModelWithGraphql {
+            types::ModelWithGraphql {
                 inner: model,
                 graphql_api,
                 filter_expression_type,
@@ -89,8 +93,5 @@ pub fn resolve(
         );
     }
 
-    Ok(ModelsGraphqlOutput {
-        models_with_graphql,
-        graphql_types,
-    })
+    Ok(models_with_graphql)
 }

@@ -1,31 +1,28 @@
-use crate::stages::{boolean_expressions, models, object_boolean_expressions};
-use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use std::collections::BTreeMap;
+
 use indexmap::IndexMap;
+use serde::{Deserialize, Serialize};
+
+use lang_graphql::ast::common::{self as ast};
 use open_dds::{
+    aggregates::AggregateExpressionName,
     data_connector::{DataConnectorColumnName, DataConnectorName},
     models::ModelName,
-    types::FieldName,
+    types::{Deprecated, FieldName},
 };
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
 
 use crate::helpers::types::NdcColumnForComparison;
-use lang_graphql::ast::common::{self as ast};
-
-use open_dds::aggregates::AggregateExpressionName;
-use open_dds::types::Deprecated;
+use crate::stages::{boolean_expressions, models, object_boolean_expressions};
+use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 
 /// A Model, once we have added filter expression and graphql for it
-pub struct ModelWithGraphql {
+pub(crate) struct ModelWithGraphql {
     pub inner: models::Model,
     pub filter_expression_type: Option<ModelExpressionType>,
     pub graphql_api: ModelGraphQlApi,
 }
 
-pub struct ModelsGraphqlOutput {
-    pub models_with_graphql: IndexMap<Qualified<ModelName>, ModelWithGraphql>,
-    pub graphql_types: BTreeSet<ast::TypeName>,
-}
+pub(crate) type ModelsWithGraphql = IndexMap<Qualified<ModelName>, ModelWithGraphql>;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ModelExpressionType {

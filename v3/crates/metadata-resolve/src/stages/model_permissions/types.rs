@@ -1,22 +1,21 @@
+use std::collections::BTreeMap;
+
+use serde::{Deserialize, Serialize};
+
+use open_dds::{
+    arguments::ArgumentName,
+    data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
+    models::ModelName,
+    permissions::Role,
+    relationships::{RelationshipName, RelationshipType},
+    types::{CustomTypeName, FieldName},
+};
+
 use crate::stages::{data_connectors, models, models_graphql, object_types, relationships};
 use crate::types::error::{Error, RelationshipError};
 use crate::types::permission::ValueExpression;
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
-use open_dds::{
-    data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
-    models::ModelName,
-    relationships::{RelationshipName, RelationshipType},
-    types::CustomTypeName,
-};
-
-use std::collections::BTreeMap;
-
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
-
-use ndc_models;
-
-use open_dds::{arguments::ArgumentName, permissions::Role, types::FieldName};
-use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelWithPermissions {
