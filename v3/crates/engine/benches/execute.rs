@@ -173,6 +173,7 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 execute_query_internal(
+                    execute::ExposeInternalErrors::Expose,
                     &http_context,
                     schema,
                     &session,

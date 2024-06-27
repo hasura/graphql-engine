@@ -12,6 +12,7 @@ use axum::{
     routing::{get, post},
     Extension, Json, Router,
 };
+
 use clap::Parser;
 use reqwest::header::CONTENT_TYPE;
 use tower_http::cors::CorsLayer;
@@ -86,9 +87,16 @@ struct ServerOptions {
         value_delimiter = ','
     )]
     unstable_features: Vec<UnstableFeature>,
+
+    /// Whether internal errors should be shown or censored.
+    /// It is recommended to only show errors while developing since internal errors may contain
+    /// sensitve information.
+    #[arg(long, env = "EXPOSE_INTERNAL_ERRORS")]
+    expose_internal_errors: bool,
 }
 
 struct EngineState {
+    expose_internal_errors: execute::ExposeInternalErrors,
     http_context: HttpContext,
     schema: gql::schema::Schema<GDS>,
     auth_config: AuthConfig,
@@ -312,7 +320,14 @@ impl EngineRouter {
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let metadata_resolve_flags = resolve_unstable_features(&server.unstable_features);
 
+    let expose_internal_errors = if server.expose_internal_errors {
+        execute::ExposeInternalErrors::Expose
+    } else {
+        execute::ExposeInternalErrors::Censor
+    };
+
     let state = build_state(
+        expose_internal_errors,
         &server.authn_config_path,
         &server.metadata_path,
         metadata_resolve_flags,
@@ -543,6 +558,7 @@ async fn handle_request(
             SpanVisibility::User,
             || {
                 Box::pin(execute::execute_query(
+                    state.expose_internal_errors,
                     &state.http_context,
                     &state.schema,
                     &session,
@@ -578,6 +594,7 @@ async fn handle_explain_request(
             SpanVisibility::User,
             || {
                 Box::pin(execute::execute_explain(
+                    state.expose_internal_errors,
                     &state.http_context,
                     &state.schema,
                     &session,
@@ -641,6 +658,7 @@ async fn handle_sql_request(
 
 /// Build the engine state - include auth, metadata, and sql context.
 fn build_state(
+    expose_internal_errors: execute::ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
     metadata_resolve_flags: metadata_resolve::MetadataResolveFlagsInternal,
@@ -659,6 +677,7 @@ fn build_state(
     }
     .build_schema()?;
     let state = Arc::new(EngineState {
+        expose_internal_errors,
         http_context,
         schema,
         auth_config,

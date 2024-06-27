@@ -18,19 +18,28 @@ use schema::GDS;
 use tracing_util::SpanVisibility;
 
 pub async fn execute_explain(
+    expose_internal_errors: crate::ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     request: RawRequest,
 ) -> types::ExplainResponse {
-    super::explain_query_internal(http_context, schema, session, request_headers, request)
-        .await
-        .unwrap_or_else(|e| types::ExplainResponse::error(e.to_graphql_error()))
+    super::explain_query_internal(
+        expose_internal_errors,
+        http_context,
+        schema,
+        session,
+        request_headers,
+        request,
+    )
+    .await
+    .unwrap_or_else(|e| types::ExplainResponse::error(e.to_graphql_error(expose_internal_errors)))
 }
 
 /// Produce an /explain plan for a given GraphQL query.
 pub(crate) async fn explain_query_plan(
+    expose_internal_errors: crate::ExposeInternalErrors,
     http_context: &HttpContext,
     query_plan: plan::QueryPlan<'_, '_, '_>,
 ) -> Result<types::Step, error::RequestError> {
@@ -41,6 +50,7 @@ pub(crate) async fn explain_query_plan(
             NodeQueryPlan::NDCQueryExecution(ndc_query_execution)
             | NodeQueryPlan::RelayNodeSelect(Some(ndc_query_execution)) => {
                 let sequence_steps = get_execution_steps(
+                    expose_internal_errors,
                     http_context,
                     alias,
                     &ndc_query_execution.process_response_as,
@@ -57,6 +67,7 @@ pub(crate) async fn explain_query_plan(
                 let mut parallel_steps = Vec::new();
                 for ndc_query_execution in parallel_ndc_query_executions {
                     let sequence_steps = get_execution_steps(
+                        expose_internal_errors,
                         http_context,
                         alias.clone(),
                         &ndc_query_execution.process_response_as,
@@ -108,6 +119,7 @@ pub(crate) async fn explain_query_plan(
 
 /// Produce an /explain plan for a given GraphQL mutation.
 pub(crate) async fn explain_mutation_plan(
+    expose_internal_errors: crate::ExposeInternalErrors,
     http_context: &HttpContext,
     mutation_plan: plan::MutationPlan<'_, '_, '_>,
 ) -> Result<types::Step, error::RequestError> {
@@ -122,6 +134,7 @@ pub(crate) async fn explain_mutation_plan(
     for (_, mutation_group) in mutation_plan.nodes {
         for (alias, ndc_mutation_execution) in mutation_group {
             let sequence_steps = get_execution_steps(
+                expose_internal_errors,
                 http_context,
                 alias,
                 &ndc_mutation_execution.process_response_as,
@@ -147,6 +160,7 @@ pub(crate) async fn explain_mutation_plan(
 }
 
 async fn get_execution_steps<'s>(
+    expose_internal_errors: crate::ExposeInternalErrors,
     http_context: &HttpContext,
     alias: gql::ast::common::Alias,
     process_response_as: &ProcessResponseAs<'s>,
@@ -157,8 +171,13 @@ async fn get_execution_steps<'s>(
     let mut sequence_steps = match process_response_as {
         ProcessResponseAs::CommandResponse { .. } => {
             // A command execution node
-            let data_connector_explain =
-                fetch_explain_from_data_connector(http_context, &ndc_request, data_connector).await;
+            let data_connector_explain = fetch_explain_from_data_connector(
+                expose_internal_errors,
+                http_context,
+                &ndc_request,
+                data_connector,
+            )
+            .await;
             NonEmpty::new(Box::new(types::Step::CommandSelect(
                 types::CommandSelectIR {
                     command_name: alias.to_string(),
@@ -171,8 +190,13 @@ async fn get_execution_steps<'s>(
         | ProcessResponseAs::Object { .. }
         | ProcessResponseAs::Aggregates { .. } => {
             // A model execution node
-            let data_connector_explain =
-                fetch_explain_from_data_connector(http_context, &ndc_request, data_connector).await;
+            let data_connector_explain = fetch_explain_from_data_connector(
+                expose_internal_errors,
+                http_context,
+                &ndc_request,
+                data_connector,
+            )
+            .await;
             NonEmpty::new(Box::new(types::Step::ModelSelect(types::ModelSelectIR {
                 model_name: alias.to_string(),
                 ndc_request,
@@ -180,7 +204,9 @@ async fn get_execution_steps<'s>(
             })))
         }
     };
-    if let Some(join_steps) = get_join_steps(join_locations, http_context).await {
+    if let Some(join_steps) =
+        get_join_steps(expose_internal_errors, join_locations, http_context).await
+    {
         sequence_steps.push(Box::new(types::Step::Sequence(join_steps)));
         sequence_steps.push(Box::new(types::Step::HashJoin));
     };
@@ -193,6 +219,7 @@ async fn get_execution_steps<'s>(
 /// TODO: Currently the steps are sequential, we should make them parallel once the executor supports it.
 #[async_recursion]
 async fn get_join_steps(
+    expose_internal_errors: crate::ExposeInternalErrors,
     join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'async_recursion>, JoinId)>,
     http_context: &HttpContext,
 ) -> Option<NonEmpty<Box<types::Step>>> {
@@ -204,6 +231,7 @@ async fn get_join_steps(
             query_request.variables = Some(vec![]);
             let ndc_request = types::NDCRequest::Query(query_request);
             let data_connector_explain = fetch_explain_from_data_connector(
+                expose_internal_errors,
                 http_context,
                 &ndc_request,
                 remote_join.target_data_connector,
@@ -229,7 +257,9 @@ async fn get_join_steps(
                 },
             )));
         };
-        if let Some(rest_join_steps) = get_join_steps(location.rest, http_context).await {
+        if let Some(rest_join_steps) =
+            get_join_steps(expose_internal_errors, location.rest, http_context).await
+        {
             sequence_steps.push(Box::new(types::Step::Sequence(rest_join_steps)));
             sequence_steps.push(Box::new(types::Step::HashJoin));
         };
@@ -271,6 +301,7 @@ fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
 }
 
 async fn fetch_explain_from_data_connector(
+    expose_internal_errors: crate::ExposeInternalErrors,
     http_context: &HttpContext,
     ndc_request: &types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
@@ -319,7 +350,7 @@ async fn fetch_explain_from_data_connector(
     match response {
         Ok(Some(response)) => types::NDCExplainResponse::success(response),
         Ok(None) => types::NDCExplainResponse::not_supported(),
-        Err(e) => types::NDCExplainResponse::error(&e),
+        Err(e) => types::NDCExplainResponse::error(&e, expose_internal_errors),
     }
 }
 

@@ -68,13 +68,19 @@ impl<'a> TraceableError for GraphQLErrors<'a> {
 pub struct GraphQLResponse(gql::http::Response);
 
 impl GraphQLResponse {
-    pub fn from_result(result: ExecuteQueryResult) -> Self {
-        Self(result.to_graphql_response())
+    pub fn from_result(
+        result: ExecuteQueryResult,
+        expose_internal_errors: ExposeInternalErrors,
+    ) -> Self {
+        Self(result.to_graphql_response(expose_internal_errors))
     }
 
-    pub fn from_error(err: &error::RequestError) -> Self {
+    pub fn from_error(
+        err: &error::RequestError,
+        expose_internal_errors: ExposeInternalErrors,
+    ) -> Self {
         Self(Response::error(
-            err.to_graphql_error(),
+            err.to_graphql_error(expose_internal_errors),
             axum::http::HeaderMap::default(),
         ))
     }
@@ -105,6 +111,7 @@ impl Traceable for GraphQLResponse {
 pub struct ProjectId(pub String);
 
 pub async fn execute_query(
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
     session: &Session,
@@ -113,6 +120,7 @@ pub async fn execute_query(
     project_id: Option<&ProjectId>,
 ) -> GraphQLResponse {
     execute_query_internal(
+        expose_internal_errors,
         http_context,
         schema,
         session,
@@ -121,7 +129,7 @@ pub async fn execute_query(
         project_id,
     )
     .await
-    .unwrap_or_else(|e| GraphQLResponse::from_error(&e))
+    .unwrap_or_else(|e| GraphQLResponse::from_error(&e, expose_internal_errors))
 }
 
 #[derive(Error, Debug)]
@@ -143,8 +151,15 @@ impl TraceableError for GraphQlValidationError {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum ExposeInternalErrors {
+    Expose,
+    Censor,
+}
+
 /// Executes a GraphQL query
 pub async fn execute_query_internal(
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
@@ -219,7 +234,10 @@ pub async fn execute_query_internal(
                                         .await
                                     }
                                 };
-                                GraphQLResponse::from_result(execute_query_result)
+                                GraphQLResponse::from_result(
+                                    execute_query_result,
+                                    expose_internal_errors,
+                                )
                             })
                         })
                         .await;
@@ -232,6 +250,7 @@ pub async fn execute_query_internal(
 
 /// Explains (query plan) a GraphQL query
 pub async fn explain_query_internal(
+    expose_internal_errors: ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
@@ -280,6 +299,7 @@ pub async fn explain_query_internal(
                                     let request_result = match request_plan {
                                         plan::RequestPlan::MutationPlan(mutation_plan) => {
                                             crate::explain::explain_mutation_plan(
+                                                expose_internal_errors,
                                                 http_context,
                                                 mutation_plan,
                                             )
@@ -287,6 +307,7 @@ pub async fn explain_query_internal(
                                         }
                                         plan::RequestPlan::QueryPlan(query_plan) => {
                                             crate::explain::explain_query_plan(
+                                                expose_internal_errors,
                                                 http_context,
                                                 query_plan,
                                             )
@@ -297,7 +318,7 @@ pub async fn explain_query_internal(
                                     match request_result {
                                         Ok(step) => step.make_explain_response(),
                                         Err(e) => explain::types::ExplainResponse::error(
-                                            e.to_graphql_error(),
+                                            e.to_graphql_error(expose_internal_errors),
                                         ),
                                     }
                                 })

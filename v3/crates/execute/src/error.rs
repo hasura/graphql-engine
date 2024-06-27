@@ -33,12 +33,18 @@ pub enum RequestError {
 }
 
 impl RequestError {
-    pub fn to_graphql_error(&self) -> GraphQLError {
-        let message = match self {
+    pub fn to_graphql_error(
+        &self,
+        expose_internal_errors: crate::ExposeInternalErrors,
+    ) -> GraphQLError {
+        let message = match (self, expose_internal_errors) {
             // Error messages for internal errors from IR conversion and Plan generations are masked.
-            Self::IRConversionError(ir::error::Error::Internal(_))
-            | Self::PlanError(plan::error::Error::Internal(_)) => "internal error".into(),
-            e => e.to_string(),
+            (
+                Self::IRConversionError(ir::error::Error::Internal(_))
+                | Self::PlanError(plan::error::Error::Internal(_)),
+                crate::ExposeInternalErrors::Censor,
+            ) => "internal error".into(),
+            (e, _) => e.to_string(),
         };
         GraphQLError {
             message,
@@ -92,17 +98,21 @@ impl FieldError {
         }
     }
 
-    pub fn to_graphql_error(&self, path: Option<Vec<gql::http::PathSegment>>) -> GraphQLError {
+    pub fn to_graphql_error(
+        &self,
+        expose_internal_errors: crate::ExposeInternalErrors,
+        path: Option<Vec<gql::http::PathSegment>>,
+    ) -> GraphQLError {
         let details = self.get_details();
-        match self {
-            Self::InternalError(_internal) => GraphQLError {
+        match (self, expose_internal_errors) {
+            (Self::InternalError(_internal), crate::ExposeInternalErrors::Censor) => GraphQLError {
                 message: "internal error".into(),
                 path,
                 // Internal errors showing up in the API response is not desirable.
                 // Hence, extensions are masked for internal errors.
                 extensions: None,
             },
-            e => GraphQLError {
+            (e, _) => GraphQLError {
                 message: e.to_string(),
                 path,
                 extensions: details.map(|details| gql::http::Extensions { details }),

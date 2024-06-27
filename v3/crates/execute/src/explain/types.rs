@@ -107,8 +107,11 @@ pub(crate) enum NDCRequest {
 }
 
 impl NDCExplainResponse {
-    pub(crate) fn error(error: &error::FieldError) -> Self {
-        Self::Error(error.to_graphql_error(None))
+    pub(crate) fn error(
+        error: &error::FieldError,
+        expose_internal_errors: crate::ExposeInternalErrors,
+    ) -> Self {
+        Self::Error(error.to_graphql_error(expose_internal_errors, None))
     }
     pub(crate) fn success(response: ndc_models::ExplainResponse) -> Self {
         Self::Response(response)

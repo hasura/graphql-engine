@@ -537,7 +537,10 @@ const SET_COOKIE_HEADER_NAME: axum::http::HeaderName =
 impl ExecuteQueryResult {
     /// Converts the result into a GraphQL response
     #[allow(clippy::wrong_self_convention)]
-    pub fn to_graphql_response(self) -> gql::http::Response {
+    pub fn to_graphql_response(
+        self,
+        expose_internal_errors: crate::ExposeInternalErrors,
+    ) -> gql::http::Response {
         let mut data = IndexMap::new();
         let mut errors = Vec::new();
         let mut headers = Vec::new();
@@ -549,13 +552,13 @@ impl ExecuteQueryResult {
                     // When error occur, check if the field is nullable
                     if field_result.is_nullable {
                         // If field is nullable, collect error and mark the field as null
-                        errors.push(e.to_graphql_error(Some(path)));
+                        errors.push(e.to_graphql_error(expose_internal_errors, Some(path)));
                         json::Value::Null
                     } else {
                         // If the field is not nullable, return `null` data response with the error.
                         // We return whatever headers we have collected until this point.
                         return gql::http::Response::error(
-                            e.to_graphql_error(Some(path)),
+                            e.to_graphql_error(expose_internal_errors, Some(path)),
                             Self::merge_headers(headers),
                         );
                     }
