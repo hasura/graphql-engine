@@ -161,6 +161,19 @@ pub fn resolve_command_permissions(
                     command_name: command.name.clone(),
                 })?;
 
+            let data_connector_core_info =
+                data_connectors.0.get(data_connector_name).ok_or_else(|| {
+                    Error::UnknownCommandDataConnector {
+                        command_name: command.name.clone(),
+                        data_connector: data_connector_name.clone(),
+                    }
+                })?;
+
+            let data_connector_link = data_connectors::DataConnectorLink::new(
+                data_connector_name.clone(),
+                &data_connector_core_info.inner,
+            )?;
+
             match command.arguments.get(&argument_preset.argument) {
                 Some(argument) => {
                     let value_expression = resolve_value_expression_for_argument(
@@ -168,14 +181,13 @@ pub fn resolve_command_permissions(
                         &argument_preset.value,
                         &argument.argument_type,
                         source_argument_type,
-                        data_connector_name,
+                        &data_connector_link,
                         subgraph,
                         object_types,
                         scalar_types,
                         object_boolean_expression_types,
                         boolean_expression_types,
                         models,
-                        data_connectors,
                         data_connector_scalars,
                     )?;
 

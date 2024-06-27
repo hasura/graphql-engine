@@ -35,7 +35,6 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
@@ -76,10 +75,22 @@ pub fn resolve(
             })?;
 
         if model.select_permissions.is_empty() {
+            let boolean_expression_graphql = model
+                .filter_expression_type
+                .as_ref()
+                .and_then(|filter| match filter {
+                    models_graphql::ModelExpressionType::BooleanExpressionType(
+                        boolean_expression_type,
+                    ) => Some(boolean_expression_type),
+                    models_graphql::ModelExpressionType::ObjectBooleanExpressionType(_) => None,
+                })
+                .and_then(|bool_exp| bool_exp.graphql.as_ref());
+
             let select_permissions = resolve_model_select_permissions(
                 &model.model,
                 subgraph,
                 permissions,
+                boolean_expression_graphql,
                 data_connectors,
                 data_connector_scalars,
                 object_types,
@@ -103,6 +114,7 @@ fn resolve_model_predicate_with_model(
     model_predicate: &open_dds::permissions::ModelPredicate,
     model: &models::Model,
     subgraph: &str,
+    boolean_expression_graphql: Option<&boolean_expressions::BooleanExpressionGraphqlConfig>,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -111,6 +123,7 @@ fn resolve_model_predicate_with_model(
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
 ) -> Result<ModelPredicate, Error> {
     let model_source = model
@@ -151,17 +164,30 @@ fn resolve_model_predicate_with_model(
             data_connector: model_source.data_connector.name.clone(),
         })?;
 
+    let data_connector_core_info = data_connectors.0.get(data_connector_name).ok_or_else(|| {
+        Error::UnknownModelDataConnector {
+            model_name: model.name.clone(),
+            data_connector: data_connector_name.clone(),
+        }
+    })?;
+
+    let data_connector_link = data_connectors::DataConnectorLink::new(
+        data_connector_name.clone(),
+        &data_connector_core_info.inner,
+    )?;
+
     resolve_model_predicate_with_type(
         model_predicate,
         &model.data_type,
         object_type_representation,
+        boolean_expression_graphql,
         field_mappings,
-        data_connector_name,
+        &data_connector_link,
         subgraph,
-        data_connectors,
         scalars,
         object_types,
         scalar_types,
+        boolean_expression_types,
         models,
         fields,
     )
@@ -188,6 +214,7 @@ pub fn resolve_model_select_permissions(
     model: &models::Model,
     subgraph: &str,
     model_permissions: &ModelPermissionsV1,
+    boolean_expression_graphql: Option<&boolean_expressions::BooleanExpressionGraphqlConfig>,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -211,11 +238,13 @@ pub fn resolve_model_select_permissions(
                         model_predicate,
                         model,
                         subgraph,
+                        boolean_expression_graphql,
                         data_connectors,
                         data_connector_scalars,
                         &model.type_fields,
                         object_types,
                         scalar_types,
+                        boolean_expression_types,
                         models,
                     )
                     .map(FilterPermission::Filter)?
@@ -244,6 +273,12 @@ pub fn resolve_model_select_permissions(
                         model_name: model.name.clone(),
                     })?;
 
+                let data_connector_core_info = data_connectors.0.get(data_connector_name).unwrap();
+                let data_connector_link = data_connectors::DataConnectorLink::new(
+                    data_connector_name.clone(),
+                    &data_connector_core_info.inner,
+                )?;
+
                 match model.arguments.get(&argument_preset.argument) {
                     Some(argument) => {
                         let value_expression = resolve_value_expression_for_argument(
@@ -251,14 +286,13 @@ pub fn resolve_model_select_permissions(
                             &argument_preset.value,
                             &argument.argument_type,
                             source_argument_type,
-                            data_connector_name,
+                            &data_connector_link,
                             subgraph,
                             object_types,
                             scalar_types,
                             object_boolean_expression_types,
                             boolean_expression_types,
                             models,
-                            data_connectors,
                             data_connector_scalars,
                         )?;
 

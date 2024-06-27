@@ -873,6 +873,10 @@ pub enum TypePredicateError {
     ObjectTypeNotFound {
         type_name: Qualified<CustomTypeName>,
     },
+    #[error("operator mappings not found for data connector {data_connector_name:}")]
+    OperatorMappingsNotFound {
+        data_connector_name: Qualified<DataConnectorName>,
+    },
 }
 
 impl From<TypePredicateError> for Error {

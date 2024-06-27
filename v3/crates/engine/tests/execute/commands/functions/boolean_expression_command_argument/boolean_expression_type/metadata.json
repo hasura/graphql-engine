@@ -47,7 +47,7 @@
                       "booleanExpression": {
                         "fieldComparison": {
                           "field": "actor_id",
-                          "operator": "_eq",
+                          "operator": "fancy_equals_operator",
                           "value": {
                             "literal": 1
                           }
@@ -67,7 +67,7 @@
                       "booleanExpression": {
                         "fieldComparison": {
                           "field": "actor_id",
-                          "operator": "_eq",
+                          "operator": "fancy_equals_operator",
                           "value": {
                             "literal": 2
                           }
@@ -99,7 +99,7 @@
                   {
                     "dataConnectorName": "custom",
                     "dataConnectorScalarType": "Int",
-                    "operatorMapping": { "equals": "_eq" }
+                    "operatorMapping": { "fancy_equals_operator": "_eq" }
                   }
                 ]
               }
@@ -126,7 +126,7 @@
                   {
                     "dataConnectorName": "custom",
                     "dataConnectorScalarType": "String",
-                    "operatorMapping": { "equals": "_eq" }
+                    "operatorMapping": { "fancy_equals_operator": "_eq" }
                   }
                 ]
               }
