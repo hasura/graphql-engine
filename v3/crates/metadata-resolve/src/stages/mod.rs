@@ -1,5 +1,6 @@
 pub mod aggregates;
 mod apollo;
+mod arguments;
 pub mod boolean_expressions;
 pub mod command_permissions;
 pub mod commands;
@@ -151,6 +152,17 @@ pub fn resolve(
         &commands,
         &aggregate_expressions,
         &graphql_config,
+    )?;
+
+    // now we know about relationships, we can check our arguments (particularly, any
+    // boolean expressions they use and whether their relationships are valid)
+    arguments::resolve(
+        &commands,
+        &models,
+        &object_types_with_relationships,
+        &scalar_types,
+        &object_boolean_expression_types,
+        &boolean_expression_types,
     )?;
 
     // Resolve the filter expressions and graphql settings for models

@@ -136,7 +136,7 @@ test-local *ARGS: start-docker-test-deps
 # run a watch process that runs the tests locally
 watch-local: start-docker-test-deps start-docker-run-deps
   RUST_LOG=DEBUG \
-  cargo watch \
+  cargo watch -i "**/*.snap.new" \
    -x test \
    -x 'clippy --no-deps' \
    -x 'run --bin engine -- \

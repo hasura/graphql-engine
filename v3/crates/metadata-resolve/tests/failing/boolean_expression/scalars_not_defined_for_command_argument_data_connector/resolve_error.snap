@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/boolean_expression/scalars_not_defined_for_command_argument_data_connector/metadata.json
+---
+field actor_id is missing a mapping for data connector custom (in subgraph __unknown_namespace) in boolean expression ActorBoolExp (in subgraph __unknown_namespace)
