@@ -16,7 +16,7 @@ pub(crate) fn function_info() -> ndc_models::FunctionInfo {
         description: Some("Get session details of a user".into()),
         arguments: BTreeMap::from_iter([
             (
-                "headers".into(),
+                "_headers".into(),
                 ndc_models::ArgumentInfo {
                     description: Some("headers required for session details".into()),
                     argument_type: ndc_models::Type::Named {
@@ -39,10 +39,10 @@ pub(crate) fn function_info() -> ndc_models::FunctionInfo {
 }
 
 pub(crate) fn rows(arguments: &BTreeMap<String, serde_json::Value>) -> Result<Vec<Row>> {
-    let _headers = arguments.get("headers").ok_or((
+    let _headers = arguments.get("_headers").ok_or((
         StatusCode::BAD_REQUEST,
         Json(ndc_models::ErrorResponse {
-            message: "required argument field 'headers' is missing".into(),
+            message: "required argument field '_headers' is missing".into(),
             details: serde_json::Value::Null,
         }),
     ))?;

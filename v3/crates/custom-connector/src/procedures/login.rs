@@ -14,7 +14,7 @@ pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
         description: Some("Perform a user login".into()),
         arguments: BTreeMap::from_iter([
             (
-                "headers".into(),
+                "_headers".into(),
                 ndc_models::ArgumentInfo {
                     description: Some("headers required for authentication".into()),
                     argument_type: ndc_models::Type::Named {
@@ -50,10 +50,10 @@ pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
 pub(crate) fn execute(
     arguments: &BTreeMap<String, serde_json::Value>,
 ) -> Result<serde_json::Value> {
-    let _headers = arguments.get("headers").ok_or((
+    let _headers = arguments.get("_headers").ok_or((
         StatusCode::BAD_REQUEST,
         Json(ndc_models::ErrorResponse {
-            message: "required argument field 'headers' is missing".into(),
+            message: "required argument field '_headers' is missing".into(),
             details: serde_json::Value::Null,
         }),
     ))?;

@@ -17,7 +17,7 @@
             "headers": {},
             "argumentPresets": [
               {
-                "argument": "headers",
+                "argument": "_headers",
                 "value": {
                   "httpHeaders": {
                     "forward": ["cookie", "authorization", "x-hasura-role"],
@@ -739,7 +739,7 @@
                     "name": "get_session_details",
                     "description": "Get session details of a user",
                     "arguments": {
-                      "headers": {
+                      "_headers": {
                         "description": "headers required for session details",
                         "type": {
                           "type": "named",
@@ -891,7 +891,7 @@
                     "name": "login",
                     "description": "Perform a user login",
                     "arguments": {
-                      "headers": {
+                      "_headers": {
                         "description": "headers required for authentication",
                         "type": {
                           "type": "named",
