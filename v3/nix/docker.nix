@@ -3,6 +3,7 @@
 , lib
 , package
 , image-name
+, pkgs
 , port
 , architecture ? null
 , tag ? null # defaults to the output hash
@@ -14,7 +15,7 @@ let
   args = {
     name = image-name;
     created = "now";
-    contents = [ package ];
+    contents = [ pkgs.cacert package ];
     config = {
       Entrypoint = [
         "/bin/${package.pname}"
