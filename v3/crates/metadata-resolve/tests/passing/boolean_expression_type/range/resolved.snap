@@ -746,6 +746,9 @@ Metadata {
                         ),
                     ),
                 },
+                representation: Inbuilt(
+                    Int,
+                ),
                 comparison_operators: {},
                 data_connector_operator_mappings: {
                     Qualified {
@@ -786,6 +789,9 @@ Metadata {
                         ),
                     ),
                 },
+                representation: Inbuilt(
+                    Int,
+                ),
                 comparison_operators: {
                     OperatorName(
                         "within",
@@ -851,6 +857,9 @@ Metadata {
                         ),
                     ),
                 },
+                representation: Inbuilt(
+                    String,
+                ),
                 comparison_operators: {},
                 data_connector_operator_mappings: {
                     Qualified {

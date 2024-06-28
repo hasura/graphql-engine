@@ -14,6 +14,7 @@ pub mod object_boolean_expressions;
 pub mod object_types;
 pub mod relationships;
 pub mod roles;
+pub mod scalar_boolean_expressions;
 pub mod scalar_types;
 pub mod type_permissions;
 mod types;
@@ -53,6 +54,17 @@ pub fn resolve(
         graphql_types,
     } = scalar_types::resolve(&metadata_accessor, &graphql_types)?;
 
+    // Validate scalar `BooleanExpressionType`s
+    let scalar_boolean_expressions::ScalarBooleanExpressionsOutput {
+        graphql_types,
+        boolean_expression_scalar_types,
+    } = scalar_boolean_expressions::resolve(
+        &metadata_accessor,
+        configuration,
+        &graphql_types,
+        &data_connectors,
+    )?;
+
     // Validate `DataConnectorScalarType` metadata. This will soon be deprecated and subsumed by
     // `BooleanExpressionType`
     let data_connector_scalar_types::DataConnectorWithScalarsOutput {
@@ -62,12 +74,26 @@ pub fn resolve(
         &metadata_accessor,
         &data_connectors,
         &scalar_types,
+        &boolean_expression_scalar_types,
         &graphql_types,
     )?;
 
     // Fetch and validate permissions, and attach them to the relevant object types
     let object_types_with_permissions =
         type_permissions::resolve(&metadata_accessor, &object_types)?;
+
+    // Resolve fancy new boolean expression types
+    let boolean_expressions::BooleanExpressionsOutput {
+        boolean_expression_types,
+        graphql_types,
+    } = boolean_expressions::resolve(
+        &metadata_accessor,
+        configuration,
+        &boolean_expression_scalar_types,
+        &graphql_types,
+        &graphql_config,
+        &object_types_with_permissions,
+    )?;
 
     // Check aggregate expressions
     let aggregates::AggregateExpressionsOutput {
@@ -95,19 +121,6 @@ pub fn resolve(
         &object_types_with_permissions,
         &graphql_types,
         &graphql_config,
-    )?;
-
-    // Resolve fancy new boolean expression types
-    let boolean_expressions::BooleanExpressionsOutput {
-        boolean_expression_types,
-        graphql_types,
-    } = boolean_expressions::resolve(
-        &metadata_accessor,
-        configuration,
-        &graphql_types,
-        &graphql_config,
-        &data_connectors,
-        &object_types_with_permissions,
     )?;
 
     // Resolve models and their sources

@@ -475,6 +475,9 @@ Metadata {
                         ),
                     ),
                 },
+                representation: Inbuilt(
+                    Int,
+                ),
                 comparison_operators: {
                     OperatorName(
                         "_in",
@@ -551,6 +554,9 @@ Metadata {
                         ),
                     ),
                 },
+                representation: Inbuilt(
+                    String,
+                ),
                 comparison_operators: {
                     OperatorName(
                         "_in",

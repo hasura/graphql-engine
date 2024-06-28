@@ -1,4 +1,7 @@
-use crate::stages::{boolean_expressions, object_boolean_expressions, relationships, scalar_types};
+use crate::stages::{
+    boolean_expressions, object_boolean_expressions, relationships, scalar_boolean_expressions,
+    scalar_types,
+};
 use crate::types::error::{BooleanExpressionError, Error};
 
 use crate::types::subgraph::{
@@ -45,7 +48,7 @@ pub enum TypeRepresentation<'a, ObjectType> {
     /// New object boolean expression type
     BooleanExpressionObject(&'a boolean_expressions::ResolvedObjectBooleanExpressionType),
     /// New scalar boolean expression type
-    BooleanExpressionScalar(&'a boolean_expressions::ResolvedScalarBooleanExpressionType),
+    BooleanExpressionScalar(&'a scalar_boolean_expressions::ResolvedScalarBooleanExpressionType),
 }
 
 /// validate whether a given CustomTypeName exists within `object_types`, `scalar_types` or

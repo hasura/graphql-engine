@@ -1,18 +1,21 @@
+use crate::stages::scalar_boolean_expressions;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use lang_graphql::ast::common as ast;
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorOperatorName},
     relationships::RelationshipName,
-    types::{CustomTypeName, FieldName, GraphQlTypeName, OperatorName, TypeReference},
+    types::{CustomTypeName, FieldName, OperatorName},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-use lang_graphql::ast::common as ast;
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionTypes {
     pub objects: BTreeMap<Qualified<CustomTypeName>, ResolvedObjectBooleanExpressionType>,
-    pub scalars: BTreeMap<Qualified<CustomTypeName>, ResolvedScalarBooleanExpressionType>,
+    pub scalars: BTreeMap<
+        Qualified<CustomTypeName>,
+        scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
+    >,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -29,33 +32,6 @@ pub struct ResolvedObjectBooleanExpressionType {
     pub graphql: Option<BooleanExpressionGraphqlConfig>,
     // do we allow _and, _or, etc for this type?
     pub include_logical_operators: IncludeLogicalOperators,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ResolvedScalarBooleanExpressionType {
-    pub name: Qualified<CustomTypeName>,
-
-    /// The list of comparison operators that can used on this scalar type
-    pub comparison_operators: BTreeMap<OperatorName, TypeReference>,
-
-    /// The list of mappings between OpenDD operator names and the names used in the data
-    /// connector schema
-    pub data_connector_operator_mappings: BTreeMap<
-        Qualified<open_dds::data_connector::DataConnectorName>,
-        open_dds::boolean_expression::DataConnectorOperatorMapping,
-    >,
-
-    // optional name for exposing this in the GraphQL schema
-    pub graphql_name: Option<GraphQlTypeName>,
-
-    // do we allow _is_null comparisons for this type?
-    pub include_is_null: IncludeIsNull,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum IncludeIsNull {
-    Yes,
-    No,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

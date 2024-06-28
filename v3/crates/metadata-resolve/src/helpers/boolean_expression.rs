@@ -1,6 +1,8 @@
 use crate::types::error::{BooleanExpressionError, Error, TypePredicateError};
 
-use crate::stages::{boolean_expressions, data_connectors, models, relationships};
+use crate::stages::{
+    boolean_expressions, data_connectors, models, relationships, scalar_boolean_expressions,
+};
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use open_dds::{
@@ -170,7 +172,7 @@ fn validate_data_connector_with_comparable_relationship(
 
 // check that a scalar BooleanExpressionType has info for whichever data connector we are using
 fn validate_data_connector_with_scalar_boolean_expression_type(
-    scalar_boolean_expression_type: &boolean_expressions::ResolvedScalarBooleanExpressionType,
+    scalar_boolean_expression_type: &scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     parent_boolean_expression_type_name: &Qualified<CustomTypeName>,
     data_connector: &data_connectors::DataConnectorLink,
     field_name: &FieldName,

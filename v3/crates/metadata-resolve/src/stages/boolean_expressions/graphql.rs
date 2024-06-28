@@ -1,11 +1,10 @@
 use super::helpers;
 pub use super::{
     BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
-    BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo, IncludeIsNull,
-    ObjectComparisonExpressionInfo, ResolvedScalarBooleanExpressionType,
+    BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo, ObjectComparisonExpressionInfo,
 };
 use crate::helpers::types::mk_name;
-use crate::stages::graphql_config;
+use crate::stages::{graphql_config, scalar_boolean_expressions};
 use crate::types::error::{Error, GraphqlConfigError};
 use crate::types::subgraph::mk_qualified_type_reference;
 use crate::Qualified;
@@ -29,7 +28,7 @@ pub(crate) fn resolve_object_boolean_graphql(
     comparable_relationships: &BTreeMap<FieldName, BooleanExpressionComparableRelationship>,
     scalar_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        ResolvedScalarBooleanExpressionType,
+        scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
     raw_boolean_expression_types: &super::object::RawBooleanExpressionTypes,
     subgraph: &str,
@@ -72,7 +71,8 @@ pub(crate) fn resolve_object_boolean_graphql(
 
                 // Register scalar comparison field only if it contains non-zero operators.
                 if !operators.is_empty()
-                    || scalar_boolean_expression_type.include_is_null == IncludeIsNull::Yes
+                    || scalar_boolean_expression_type.include_is_null
+                        == scalar_boolean_expressions::IncludeIsNull::Yes
                 {
                     scalar_fields.insert(
                         comparable_field_name.clone(),
@@ -84,10 +84,10 @@ pub(crate) fn resolve_object_boolean_graphql(
                             is_null_operator_name: match scalar_boolean_expression_type
                                 .include_is_null
                             {
-                                IncludeIsNull::Yes => {
+                                scalar_boolean_expressions::IncludeIsNull::Yes => {
                                     Some(filter_graphql_config.operator_names.is_null.clone())
                                 }
-                                IncludeIsNull::No => None,
+                                scalar_boolean_expressions::IncludeIsNull::No => None,
                             },
                         },
                     );

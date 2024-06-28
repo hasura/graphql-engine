@@ -1,36 +1,26 @@
-mod graphql;
-mod helpers;
-mod object;
+mod scalar;
 mod types;
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common as ast;
-use open_dds::{boolean_expression::BooleanExpressionOperand, types::CustomTypeName};
+use open_dds::boolean_expression::BooleanExpressionOperand;
 
-use crate::stages::{graphql_config, scalar_boolean_expressions, type_permissions};
+use crate::stages::data_connectors;
 use crate::types::configuration::Configuration;
 use crate::types::error::{BooleanExpressionError, Error};
 use crate::Qualified;
 
 pub use types::{
-    BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
-    BooleanExpressionGraphqlFieldConfig, BooleanExpressionTypes, BooleanExpressionsOutput,
-    ComparisonExpressionInfo, IncludeLogicalOperators, ObjectComparisonExpressionInfo,
-    ResolvedObjectBooleanExpressionType,
+    IncludeIsNull, ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionsOutput,
 };
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     configuration: Configuration,
-    boolean_expression_scalar_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
-    >,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
-    graphql_config: &graphql_config::GraphqlConfig,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-) -> Result<BooleanExpressionsOutput, Error> {
+    data_connectors: &data_connectors::DataConnectors,
+) -> Result<ScalarBooleanExpressionsOutput, Error> {
     if !configuration
         .unstable_features
         .enable_boolean_expression_types
@@ -59,38 +49,34 @@ pub fn resolve(
         );
     }
 
-    let mut boolean_expression_object_types = BTreeMap::new();
+    // let's resolve scalar types first
+
+    let mut boolean_expression_scalar_types = BTreeMap::new();
 
     for (boolean_expression_type_name, (subgraph, boolean_expression_type)) in
         &raw_boolean_expression_types
     {
-        if let BooleanExpressionOperand::Object(boolean_expression_object_operand) =
+        if let BooleanExpressionOperand::Scalar(boolean_expression_scalar_operand) =
             &boolean_expression_type.operand
         {
-            let object_boolean_expression_type = object::resolve_object_boolean_expression_type(
+            let scalar_boolean_expression_type = scalar::resolve_scalar_boolean_expression_type(
                 boolean_expression_type_name,
-                boolean_expression_object_operand,
-                &boolean_expression_type.logical_operators,
+                boolean_expression_scalar_operand,
+                &boolean_expression_type.is_null,
                 subgraph,
+                data_connectors,
                 &boolean_expression_type.graphql,
-                object_types,
-                boolean_expression_scalar_types,
-                &raw_boolean_expression_types,
-                graphql_config,
             )?;
 
-            boolean_expression_object_types.insert(
+            boolean_expression_scalar_types.insert(
                 boolean_expression_type_name.clone(),
-                object_boolean_expression_type,
+                scalar_boolean_expression_type,
             );
         }
     }
 
-    Ok(BooleanExpressionsOutput {
-        boolean_expression_types: BooleanExpressionTypes {
-            objects: boolean_expression_object_types,
-            scalars: boolean_expression_scalar_types.clone(),
-        },
+    Ok(ScalarBooleanExpressionsOutput {
+        boolean_expression_scalar_types,
         graphql_types,
     })
 }

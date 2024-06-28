@@ -1,5 +1,4 @@
-use super::helpers;
-use super::types::ResolvedScalarBooleanExpressionType;
+use super::types::{IncludeIsNull, ResolvedScalarBooleanExpressionType};
 use crate::stages::data_connectors;
 use crate::types::error::Error;
 use crate::Qualified;
@@ -74,8 +73,17 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     Ok(ResolvedScalarBooleanExpressionType {
         name: boolean_expression_type_name.clone(),
         comparison_operators: resolved_comparison_operators,
+        representation: scalar_boolean_expression_operand.r#type.clone(),
         data_connector_operator_mappings,
-        include_is_null: helpers::resolve_is_null(is_null),
+        include_is_null: resolve_is_null(is_null),
         graphql_name,
     })
+}
+
+pub fn resolve_is_null(is_null: &BooleanExpressionIsNull) -> IncludeIsNull {
+    if is_null.enable {
+        IncludeIsNull::Yes
+    } else {
+        IncludeIsNull::No
+    }
 }

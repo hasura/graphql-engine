@@ -15,7 +15,7 @@ use crate::helpers::types::mk_name;
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
-use crate::stages::{data_connectors, scalar_types};
+use crate::stages::{data_connectors, scalar_boolean_expressions, scalar_types};
 
 pub struct DataConnectorWithScalarsOutput<'a> {
     pub data_connector_scalars:
@@ -24,10 +24,15 @@ pub struct DataConnectorWithScalarsOutput<'a> {
 }
 
 /// resolve data connector scalar representations
+/// also use scalar `BooleanExpressionType`s
 pub fn resolve<'a>(
     metadata_accessor: &'a open_dds::accessor::MetadataAccessor,
     data_connectors: &'a data_connectors::DataConnectors,
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    scalar_boolean_expression_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
+    >,
     existing_graphql_types: &'a BTreeSet<ast::TypeName>,
 ) -> Result<DataConnectorWithScalarsOutput<'a>, Error> {
     let mut graphql_types = existing_graphql_types.clone();
@@ -65,20 +70,13 @@ pub fn resolve<'a>(
             })?;
 
         if scalar_type.representation.is_none() {
-            match &scalar_type_representation.representation {
-                TypeName::Inbuilt(_) => {} // TODO: Validate Nullable and Array types in Inbuilt
-                TypeName::Custom(type_name) => {
-                    let qualified_type_name =
-                        Qualified::new(subgraph.to_string(), type_name.to_owned());
-                    let _representation =
-                        scalar_types.get(&qualified_type_name).ok_or_else(|| {
-                            Error::ScalarTypeUnknownRepresentation {
-                                scalar_type: scalar_type_name.clone(),
-                                type_name: qualified_type_name,
-                            }
-                        })?;
-                }
-            }
+            validate_type_name(
+                &scalar_type_representation.representation,
+                subgraph,
+                scalar_types,
+                scalar_type_name,
+            )?;
+
             scalar_type.representation = Some(scalar_type_representation.representation.clone());
         } else {
             return Err(Error::DuplicateDataConnectorScalarRepresentation {
@@ -105,10 +103,73 @@ pub fn resolve<'a>(
         };
     }
 
+    for scalar_boolean_expression in scalar_boolean_expression_types.values() {
+        for (data_connector_name, operator_mapping) in
+            &scalar_boolean_expression.data_connector_operator_mappings
+        {
+            let scalar_type_name = &operator_mapping.data_connector_scalar_type;
+
+            let scalars = data_connector_scalars
+                .get_mut(data_connector_name)
+                .ok_or_else(|| Error::ScalarTypeFromUnknownDataConnector {
+                    scalar_type: scalar_type_name.clone(),
+                    data_connector: data_connector_name.clone(),
+                })?;
+
+            let scalar_type = scalars.0.get_mut(scalar_type_name).ok_or_else(|| {
+                Error::UnknownScalarTypeInDataConnector {
+                    scalar_type: scalar_type_name.clone(),
+                    data_connector: data_connector_name.clone(),
+                }
+            })?;
+
+            validate_type_name(
+                &scalar_boolean_expression.representation,
+                &scalar_boolean_expression.name.subgraph,
+                scalar_types,
+                scalar_type_name,
+            )?;
+
+            // we may have multiple `BooleanExpressionType` for the same type,
+            // we allow it but check their OpenDD types don't conflict
+            if let Some(existing_representation) = &scalar_type.representation {
+                if *existing_representation != scalar_boolean_expression.representation {
+                    return Err(Error::DataConnectorScalarRepresentationMismatch {
+                        data_connector: data_connector_name.clone(),
+                        old_representation: existing_representation.clone(),
+                        new_representation: scalar_boolean_expression.representation.clone(),
+                    });
+                }
+            }
+            scalar_type.representation = Some(scalar_boolean_expression.representation.clone());
+        }
+    }
+
     Ok(DataConnectorWithScalarsOutput {
         data_connector_scalars,
         graphql_types,
     })
+}
+
+fn validate_type_name(
+    type_name: &TypeName,
+    subgraph: &str,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    scalar_type_name: &DataConnectorScalarType,
+) -> Result<(), Error> {
+    match type_name {
+        TypeName::Inbuilt(_) => {} // TODO: Validate Nullable and Array types in Inbuilt
+        TypeName::Custom(type_name) => {
+            let qualified_type_name = Qualified::new(subgraph.to_string(), type_name.to_owned());
+            let _representation = scalar_types.get(&qualified_type_name).ok_or_else(|| {
+                Error::ScalarTypeUnknownRepresentation {
+                    scalar_type: scalar_type_name.clone(),
+                    type_name: qualified_type_name,
+                }
+            })?;
+        }
+    }
+    Ok(())
 }
 
 // convert from types in previous stage to this stage

@@ -1,11 +1,8 @@
 use super::graphql;
 use super::helpers;
-pub use super::{
-    BooleanExpressionComparableRelationship, ResolvedObjectBooleanExpressionType,
-    ResolvedScalarBooleanExpressionType,
-};
+pub use super::{BooleanExpressionComparableRelationship, ResolvedObjectBooleanExpressionType};
 use crate::helpers::ndc_validation::get_underlying_type_name;
-use crate::stages::{graphql_config, object_types, type_permissions};
+use crate::stages::{graphql_config, object_types, scalar_boolean_expressions, type_permissions};
 use crate::types::error::{BooleanExpressionError, Error};
 use crate::types::subgraph::mk_qualified_type_name;
 use crate::Qualified;
@@ -37,7 +34,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        ResolvedScalarBooleanExpressionType,
+        scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
     graphql_config: &graphql_config::GraphqlConfig,
