@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use crate::identifier::SubgraphIdentifier;
 use crate::{
     aggregates, boolean_expression, commands, data_connector, flags, graphql_config, models,
-    permissions, relationships, types, Metadata, MetadataWithVersion, OpenDdSubgraphObject,
-    OpenDdSupergraphObject,
+    order_by_expression, permissions, relationships, types, Metadata, MetadataWithVersion,
+    OpenDdSubgraphObject, OpenDdSupergraphObject,
 };
 
 const GLOBALS_SUBGRAPH: SubgraphIdentifier = SubgraphIdentifier::new_inline_static("__globals");
@@ -34,6 +34,7 @@ pub struct MetadataAccessor {
     pub object_boolean_expression_types: Vec<QualifiedObject<types::ObjectBooleanExpressionTypeV1>>,
     pub scalar_types: Vec<QualifiedObject<types::ScalarTypeV1>>,
     pub boolean_expression_types: Vec<QualifiedObject<boolean_expression::BooleanExpressionTypeV1>>,
+    pub order_by_expressions: Vec<QualifiedObject<order_by_expression::OrderByExpressionV1>>,
     pub data_connector_scalar_representations:
         Vec<QualifiedObject<types::DataConnectorScalarRepresentationV1>>,
     pub aggregate_expressions: Vec<QualifiedObject<aggregates::AggregateExpressionV1>>,
@@ -88,6 +89,12 @@ fn load_metadata_objects(
                 accessor.boolean_expression_types.push(QualifiedObject::new(
                     subgraph,
                     boolean_expression_type.upgrade(),
+                ));
+            }
+            OpenDdSubgraphObject::OrderByExpression(order_by_expression) => {
+                accessor.order_by_expressions.push(QualifiedObject::new(
+                    subgraph,
+                    order_by_expression.upgrade(),
                 ));
             }
             OpenDdSubgraphObject::DataConnectorScalarRepresentation(scalar_representation) => {
@@ -199,6 +206,7 @@ impl MetadataAccessor {
             scalar_types: vec![],
             object_boolean_expression_types: vec![],
             boolean_expression_types: vec![],
+            order_by_expressions: vec![],
             data_connector_scalar_representations: vec![],
             aggregate_expressions: vec![],
             models: vec![],

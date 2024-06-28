@@ -13,6 +13,7 @@ pub mod flags;
 pub mod graphql_config;
 pub mod identifier;
 pub mod models;
+pub mod order_by_expression;
 pub mod permissions;
 pub mod relationships;
 pub mod session_variables;
@@ -90,6 +91,10 @@ pub enum OpenDdSubgraphObject {
     ObjectBooleanExpressionType(types::ObjectBooleanExpressionType),
     #[opendd(hidden = true)]
     BooleanExpressionType(boolean_expression::BooleanExpressionType),
+
+    // OrderBy Expressions
+    #[opendd(hidden = true)]
+    OrderByExpression(order_by_expression::OrderByExpression),
 
     // Data Connector Scalar Representation
     DataConnectorScalarRepresentation(types::DataConnectorScalarRepresentation),

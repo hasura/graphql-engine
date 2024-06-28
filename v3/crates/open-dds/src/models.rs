@@ -8,6 +8,7 @@ use crate::{
     data_connector::DataConnectorName,
     identifier::Identifier,
     impl_JsonSchema_with_OpenDd_for,
+    order_by_expression::OrderByExpressionName,
     traits::{OpenDd, OpenDdDeserializeError},
     types::{CustomTypeName, Deprecated, FieldName, GraphQlFieldName, GraphQlTypeName},
 };
@@ -39,6 +40,8 @@ impl_JsonSchema_with_OpenDd_for!(ModelName);
 )]
 pub enum Model {
     V1(ModelV1),
+    #[opendd(hidden = true)]
+    V2(ModelV2),
 }
 
 impl Model {
@@ -104,8 +107,21 @@ impl Model {
     pub fn upgrade(self) -> ModelV1 {
         match self {
             Model::V1(v1) => v1,
+            Model::V2(_) => todo!("ModelV2 not yet supported"), // TODO(dmoverton) see comment below
         }
     }
+
+    // TODO(dmoverton):
+    // Upgrading from ModelV1 to ModelV2 requires creating a new OrderByExpression
+    // We don't want to confuse the user by generating the new types and then validating against them
+    // instead of the original types.
+    // Therefore, we want to defer the upgrade until the metadata resolve step.
+    // To do this, the input to metadata resolve will need to be `Model` rather than `ModelV1` or `ModelV2`.
+    // The `upgrade` function should change to the below, and the
+    // type of `MetadataAccessor.models` should become `Vec<QualifiedObject<models::Model>>`
+    // pub fn upgrade(self) -> Model {
+    //     self
+    // }
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
@@ -134,6 +150,38 @@ pub struct ModelV1 {
     pub aggregate_expression: Option<AggregateExpressionName>,
     /// Configuration for how this model should appear in the GraphQL schema.
     pub graphql: Option<ModelGraphQlDefinition>,
+    /// The description of the model.
+    /// Gets added to the description of the model in the graphql schema.
+    pub description: Option<String>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(title = "ModelV2"))]
+/// The definition of a data model.
+/// A data model is a collection of objects of a particular type. Models can support one or more CRUD operations.
+/// ModelV2 implements the changes described in rfcs/open-dd-expression-type-changes.md.
+pub struct ModelV2 {
+    /// The name of the data model.
+    pub name: ModelName,
+    /// The type of the objects of which this model is a collection.
+    pub object_type: CustomTypeName,
+    /// Whether this model should be used as the global ID source for all objects of its type.
+    #[opendd(default)]
+    pub global_id_source: bool,
+    /// A list of arguments accepted by this model. Defaults to no arguments.
+    #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
+    pub arguments: Vec<ArgumentDefinition>,
+    /// The source configuration for this model.
+    pub source: Option<ModelSource>,
+    /// The boolean expression type that should be used to perform filtering on this model.
+    pub filter_expression_type: Option<CustomTypeName>,
+    /// The order by expression to use for this model.
+    pub order_by_expression: Option<OrderByExpressionName>,
+    /// The name of the AggregateExpression that defines how to aggregate over this model
+    pub aggregate_expression: Option<AggregateExpressionName>,
+    /// Configuration for how this model should appear in the GraphQL schema.
+    pub graphql: Option<ModelGraphQlDefinitionV2>,
     /// The description of the model.
     /// Gets added to the description of the model in the graphql schema.
     pub description: Option<String>,
@@ -211,6 +259,58 @@ impl ModelGraphQlDefinition {
                 "description": "Description for the select many ArticleMany"
             },
             "orderByExpressionType": "Article_Order_By",
+            "aggregate": {
+                "queryRootField": "ArticleAggregate",
+                "description": "Aggregate over Articles"
+            }
+        })
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(
+    title = "ModelGraphQlDefinitionV2",
+    example = "ModelGraphQlDefinitionV2::example"
+))]
+/// The definition of how a model appears in the GraphQL API.
+/// Note: ModelGraphQlDefinitionV2 removed the `order_by_expression_type` property.
+/// See rfcs/open-dd-expression-type-changes.md.
+pub struct ModelGraphQlDefinitionV2 {
+    /// For each select unique defined here, a query root field is added to the GraphQL API that
+    /// can be used to select a unique object from the model.
+    pub select_uniques: Vec<SelectUniqueGraphQlDefinition>,
+    /// Select many configuration for a model adds a query root field to the GraphQl API that
+    /// can be used to retrieve multiple objects from the model.
+    pub select_many: Option<SelectManyGraphQlDefinition>,
+    /// The type name of the input type used to hold the arguments of the model.
+    pub arguments_input_type: Option<GraphQlTypeName>,
+    /// Apollo Federation configuration
+    pub apollo_federation: Option<ModelApolloFederationConfiguration>,
+    /// The type name of the input type used to hold the filtering settings used by
+    /// aggregates (etc) to filter their input before processing
+    pub filter_input_type_name: Option<GraphQlTypeName>,
+    /// Configures the query root field added to the GraphQL API that can be used to
+    /// aggregate over the model
+    pub aggregate: Option<ModelAggregateGraphQlDefinition>,
+}
+
+impl ModelGraphQlDefinitionV2 {
+    fn example() -> serde_json::Value {
+        serde_json::json!({
+            "selectUniques": [
+                {
+                    "queryRootField": "ArticleByID",
+                    "uniqueIdentifier": [
+                        "article_id"
+                    ],
+                    "description": "Description for the select unique ArticleByID"
+                }
+            ],
+            "selectMany": {
+                "queryRootField": "ArticleMany",
+                "description": "Description for the select many ArticleMany"
+            },
             "aggregate": {
                 "queryRootField": "ArticleAggregate",
                 "description": "Aggregate over Articles"

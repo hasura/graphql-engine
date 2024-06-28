@@ -319,7 +319,11 @@ fn impl_json_schema_tagged(
             let mut count = 0;
             let variant_schemas = variants
                 .iter()
-                .map(|variant| {
+                .filter_map(|variant| {
+                    if variant.hidden {
+                        return None;
+                    }
+
                     unique_names.insert(variant.renamed_variant.to_string());
                     count += 1;
 
@@ -332,7 +336,7 @@ fn impl_json_schema_tagged(
                     let content_schema = quote! {
                         open_dds::traits::gen_subschema_for::<#ty>(gen)
                     };
-                    helpers::schema_object(&quote! {
+                    Some(helpers::schema_object(&quote! {
                         instance_type: Some(schemars::schema::InstanceType::Object.into()),
                         object: Some(Box::new(schemars::schema::ObjectValidation {
                             properties: {
@@ -350,7 +354,7 @@ fn impl_json_schema_tagged(
                             additional_properties: Some(Box::new(false.into())),
                             ..Default::default()
                         })),
-                    })
+                    }))
                 })
                 .collect::<Vec<_>>();
 

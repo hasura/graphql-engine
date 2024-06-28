@@ -9,6 +9,7 @@
 #[serde(rename_all = "snake_case")]
 pub enum UnstableFeature {
     EnableBooleanExpressionTypes,
+    EnableOrderByExpressions,
 }
 
 pub fn resolve_unstable_features(
@@ -20,6 +21,9 @@ pub fn resolve_unstable_features(
         match unstable_feature {
             UnstableFeature::EnableBooleanExpressionTypes => {
                 features.enable_boolean_expression_types = true;
+            }
+            UnstableFeature::EnableOrderByExpressions => {
+                features.enable_order_by_expressions = true;
             }
         }
     }
