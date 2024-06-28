@@ -1,7 +1,9 @@
 pub mod types;
 use ref_cast::RefCast;
 use std::collections::{BTreeMap, BTreeSet};
-pub use types::{ScalarTypeWithRepresentationInfo, ScalarTypeWithRepresentationInfoMap};
+pub use types::{
+    ComparisonOperators, ScalarTypeWithRepresentationInfo, ScalarTypeWithRepresentationInfoMap,
+};
 
 use lang_graphql::ast::common as ast;
 
@@ -111,23 +113,22 @@ pub fn resolve<'a>(
 
 // convert from types in previous stage to this stage
 fn convert_data_connectors_contexts<'a>(
-    old_data_connectors: &data_connectors::DataConnectors<'a>,
+    old_data_connectors: &'a data_connectors::DataConnectors<'a>,
 ) -> BTreeMap<Qualified<DataConnectorName>, ScalarTypeWithRepresentationInfoMap<'a>> {
     let mut data_connector_scalars = BTreeMap::new();
 
-    for (data_connector_name, data_connectors::DataConnectorContext { scalars, .. }) in
-        &old_data_connectors.0
-    {
+    for (data_connector_name, context) in &old_data_connectors.0 {
         let mut new_scalars = BTreeMap::new();
-        for (scalar_name, scalar) in scalars {
+        for (name, scalar) in &context.schema.scalar_types {
+            let scalar_name = DataConnectorScalarType(name.clone());
             new_scalars.insert(
                 scalar_name.clone(),
                 ScalarTypeWithRepresentationInfo {
-                    scalar_type: scalar.scalar_type,
+                    scalar_type: scalar,
                     comparison_expression_name: None,
-                    comparison_operators: scalar.comparison_operators.clone(),
+                    comparison_operators: get_comparison_operators(scalar),
                     representation: None,
-                    aggregate_functions: scalar.aggregate_functions,
+                    aggregate_functions: &scalar.aggregate_functions,
                 },
             );
         }
@@ -138,6 +139,26 @@ fn convert_data_connectors_contexts<'a>(
         );
     }
     data_connector_scalars
+}
+
+fn get_comparison_operators(scalar_type: &ndc_models::ScalarType) -> ComparisonOperators {
+    let mut comparison_operators = ComparisonOperators::default();
+    for (operator_name, operator_definition) in &scalar_type.comparison_operators {
+        match operator_definition {
+            ndc_models::ComparisonOperatorDefinition::Equal => {
+                comparison_operators
+                    .equal_operators
+                    .push(operator_name.clone());
+            }
+            ndc_models::ComparisonOperatorDefinition::In => {
+                comparison_operators
+                    .in_operators
+                    .push(operator_name.clone());
+            }
+            ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {}
+        };
+    }
+    comparison_operators
 }
 
 // helper function to determine whether a ndc type is a simple scalar

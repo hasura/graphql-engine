@@ -86,7 +86,7 @@ fn resolve_model_predicate_with_model(
 
     let data_connector_link = data_connectors::DataConnectorLink::new(
         data_connector_name.clone(),
-        &data_connector_core_info.inner,
+        data_connector_core_info,
     )?;
 
     resolve_model_predicate_with_type(
@@ -189,7 +189,7 @@ pub fn resolve_model_select_permissions(
                 let data_connector_core_info = data_connectors.0.get(data_connector_name).unwrap();
                 let data_connector_link = data_connectors::DataConnectorLink::new(
                     data_connector_name.clone(),
-                    &data_connector_core_info.inner,
+                    data_connector_core_info,
                 )?;
 
                 match model.arguments.get(&argument_preset.argument) {

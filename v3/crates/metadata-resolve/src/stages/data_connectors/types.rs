@@ -9,12 +9,10 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common::OperationType;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
-use open_dds::data_connector::SchemaAndCapabilitiesV01;
 use open_dds::{
     commands::{FunctionName, ProcedureName},
     data_connector::{
-        self, DataConnectorName, DataConnectorScalarType, DataConnectorUrl, ReadWriteUrls,
-        VersionedSchemaAndCapabilities,
+        self, DataConnectorName, DataConnectorUrl, ReadWriteUrls, VersionedSchemaAndCapabilities,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -26,39 +24,7 @@ use std::collections::BTreeMap;
 pub struct DataConnectors<'a>(pub BTreeMap<Qualified<DataConnectorName>, DataConnectorContext<'a>>);
 
 /// information about a data connector
-/// currently this contains partial ScalarTypeInfo, which we add to later
 pub struct DataConnectorContext<'a> {
-    pub inner: DataConnectorCoreInfo<'a>,
-    // resolved scalar types
-    pub scalars: BTreeMap<DataConnectorScalarType, ScalarTypeInfo<'a>>,
-}
-
-impl<'a> DataConnectorContext<'a> {
-    pub fn new(
-        data_connector: &'a data_connector::DataConnectorLinkV1,
-        data_connector_name: &Qualified<DataConnectorName>,
-    ) -> Result<Self, Error> {
-        let VersionedSchemaAndCapabilities::V01(schema_and_capabilities) = &data_connector.schema;
-        let data_connector_core_info = DataConnectorCoreInfo::new(
-            data_connector,
-            schema_and_capabilities,
-            data_connector_name,
-        )?;
-        Ok(DataConnectorContext {
-            inner: data_connector_core_info,
-            scalars: schema_and_capabilities
-                .schema
-                .scalar_types
-                .iter()
-                .map(|(k, v)| (DataConnectorScalarType(k.clone()), ScalarTypeInfo::new(v)))
-                .collect(),
-        })
-    }
-}
-
-/// information that does not change between resolver stages
-#[derive(Clone)]
-pub struct DataConnectorCoreInfo<'a> {
     pub url: &'a data_connector::DataConnectorUrl,
     pub headers: IndexMap<String, String>,
     pub schema: DataConnectorSchema,
@@ -67,12 +33,13 @@ pub struct DataConnectorCoreInfo<'a> {
     pub response_headers: Option<CommandsResponseConfig>,
 }
 
-impl<'a> DataConnectorCoreInfo<'a> {
+impl<'a> DataConnectorContext<'a> {
     pub fn new(
         data_connector: &'a data_connector::DataConnectorLinkV1,
-        schema_and_capabilities: &'a SchemaAndCapabilitiesV01,
         data_connector_name: &Qualified<DataConnectorName>,
     ) -> Result<Self, Error> {
+        let VersionedSchemaAndCapabilities::V01(schema_and_capabilities) = &data_connector.schema;
+
         let resolved_schema = DataConnectorSchema::new(&schema_and_capabilities.schema);
 
         let argument_presets = data_connector
@@ -101,7 +68,7 @@ impl<'a> DataConnectorCoreInfo<'a> {
             None
         };
 
-        Ok(DataConnectorCoreInfo {
+        Ok(DataConnectorContext {
             url: &data_connector.url,
             headers: data_connector
                 .headers
@@ -167,46 +134,6 @@ impl DataConnectorSchema {
     }
 }
 
-// basic scalar type info
-#[derive(Debug)]
-pub struct ScalarTypeInfo<'a> {
-    pub scalar_type: &'a ndc_models::ScalarType,
-    pub comparison_operators: ComparisonOperators,
-    pub aggregate_functions: &'a BTreeMap<String, ndc_models::AggregateFunctionDefinition>,
-}
-
-impl<'a> ScalarTypeInfo<'a> {
-    pub(crate) fn new(source_scalar: &'a ndc_models::ScalarType) -> Self {
-        let mut comparison_operators = ComparisonOperators::default();
-        for (operator_name, operator_definition) in &source_scalar.comparison_operators {
-            match operator_definition {
-                ndc_models::ComparisonOperatorDefinition::Equal => {
-                    comparison_operators
-                        .equal_operators
-                        .push(operator_name.clone());
-                }
-                ndc_models::ComparisonOperatorDefinition::In => {
-                    comparison_operators
-                        .in_operators
-                        .push(operator_name.clone());
-                }
-                ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {}
-            };
-        }
-        ScalarTypeInfo {
-            scalar_type: source_scalar,
-            comparison_operators,
-            aggregate_functions: &source_scalar.aggregate_functions,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
-pub struct ComparisonOperators {
-    pub equal_operators: Vec<String>,
-    pub in_operators: Vec<String>,
-}
-
 /// This represents part of resolved data connector info that is eventually kept
 /// in the resolved metadata. This is used inside model/command sources, and
 /// this info is required only during execution.
@@ -239,9 +166,9 @@ impl std::hash::Hash for DataConnectorLink {
 impl DataConnectorLink {
     pub(crate) fn new(
         name: Qualified<DataConnectorName>,
-        info: &DataConnectorCoreInfo<'_>,
+        context: &DataConnectorContext<'_>,
     ) -> Result<Self, Error> {
-        let url = match info.url {
+        let url = match context.url {
             DataConnectorUrl::SingleUrl(url) => ResolvedDataConnectorUrl::SingleUrl(
                 SerializableUrl::new(&url.value).map_err(|e| Error::InvalidDataConnectorUrl {
                     data_connector_name: name.clone(),
@@ -265,7 +192,7 @@ impl DataConnectorLink {
                 })
             }
         };
-        let headers = SerializableHeaderMap::new(&info.headers).map_err(|e| match e {
+        let headers = SerializableHeaderMap::new(&context.headers).map_err(|e| match e {
             HeaderError::InvalidHeaderName { header_name } => Error::InvalidHeaderName {
                 data_connector: name.clone(),
                 header_name,
@@ -276,21 +203,21 @@ impl DataConnectorLink {
             },
         })?;
         let capabilities = DataConnectorCapabilities {
-            supports_explaining_queries: info.capabilities.capabilities.query.explain.is_some(),
-            supports_explaining_mutations: info
+            supports_explaining_queries: context.capabilities.capabilities.query.explain.is_some(),
+            supports_explaining_mutations: context
                 .capabilities
                 .capabilities
                 .mutation
                 .explain
                 .is_some(),
-            supports_nested_object_filtering: info
+            supports_nested_object_filtering: context
                 .capabilities
                 .capabilities
                 .query
                 .nested_fields
                 .filter_by
                 .is_some(),
-            supports_nested_object_aggregations: info
+            supports_nested_object_aggregations: context
                 .capabilities
                 .capabilities
                 .query
@@ -303,8 +230,8 @@ impl DataConnectorLink {
             url,
             headers,
             capabilities,
-            argument_presets: info.argument_presets.clone(),
-            response_config: info.response_headers.clone(),
+            argument_presets: context.argument_presets.clone(),
+            response_config: context.response_headers.clone(),
         })
     }
 }
@@ -514,7 +441,6 @@ mod tests {
         assert_eq!(
             DataConnectorContext::new(&data_connector_with_capabilities, &dc_name)
                 .unwrap()
-                .inner
                 .capabilities,
             &explicit_capabilities
         );

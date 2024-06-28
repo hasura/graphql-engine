@@ -292,7 +292,6 @@ pub fn resolve_data_connector_type_mapping(
         })?;
 
     let ndc_object_type = data_connector_context
-        .inner
         .schema
         .object_types
         .get(&data_connector_type_mapping.data_connector_object_type.0)
@@ -334,7 +333,6 @@ pub fn resolve_data_connector_type_mapping(
             get_column(ndc_object_type, field_name, &resolved_field_mapping_column)?;
         let underlying_column_type = get_underlying_named_type(&source_column.r#type);
         let column_type_representation = data_connector_context
-            .inner
             .schema
             .scalar_types
             .get(underlying_column_type)

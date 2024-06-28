@@ -62,7 +62,6 @@ pub fn resolve_command_source(
     let command_source_response = match &command_source.data_connector_command {
         DataConnectorCommand::Procedure(procedure) => {
             let source_procedure = data_connector_context
-                .inner
                 .schema
                 .procedures
                 .get(procedure)
@@ -88,7 +87,6 @@ pub fn resolve_command_source(
         }
         DataConnectorCommand::Function(function) => {
             let source_function = data_connector_context
-                .inner
                 .schema
                 .functions
                 .get(function)
@@ -172,7 +170,6 @@ pub fn resolve_command_source(
         .map(|type_mapping_to_resolve| {
             let ndc_type_name = &type_mapping_to_resolve.ndc_object_type_name.0;
             data_connector_context
-                .inner
                 .schema
                 .object_types
                 .get(ndc_type_name)
@@ -186,7 +183,6 @@ pub fn resolve_command_source(
         .transpose()?;
 
     let special_case = data_connector_context
-        .inner
         .response_headers
         .as_ref()
         .zip(ndc_object_type)
@@ -218,7 +214,7 @@ pub fn resolve_command_source(
     let mut command_source = CommandSource {
         data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
-            &data_connector_context.inner,
+            data_connector_context,
         )?,
         source: command_source.data_connector_command.clone(),
         ndc_type_opendd_type_same: true,
@@ -232,7 +228,7 @@ pub fn resolve_command_source(
         &command.name,
         &command_source,
         &command.output_type,
-        &data_connector_context.inner.schema,
+        &data_connector_context.schema,
         commands_response_config,
     )?;
 

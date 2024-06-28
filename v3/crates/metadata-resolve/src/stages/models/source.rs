@@ -57,7 +57,6 @@ pub(crate) fn resolve_model_source(
         })?;
 
     let source_collection = data_connector_context
-        .inner
         .schema
         .collections
         .get(&model_source.collection)
@@ -118,7 +117,7 @@ pub(crate) fn resolve_model_source(
     let resolved_model_source = ModelSource {
         data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
-            &data_connector_context.inner,
+            data_connector_context,
         )?,
         collection: model_source.collection.clone(),
         collection_type: source_collection_type,
@@ -173,7 +172,7 @@ pub(crate) fn resolve_model_source(
         }
     }
 
-    ndc_validation::validate_ndc(&model.name, model, &data_connector_context.inner.schema)?;
+    ndc_validation::validate_ndc(&model.name, model, &data_connector_context.schema)?;
     Ok(resolved_model_source)
 }
 

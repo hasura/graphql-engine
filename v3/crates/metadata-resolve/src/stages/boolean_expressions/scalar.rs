@@ -36,7 +36,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
         );
 
         // lookup the data connector we are referring to
-        let data_connector_info = data_connectors
+        let data_connector_context = data_connectors
             .0
             .get(&qualified_data_connector_name)
             .ok_or_else(|| Error::ScalarTypeFromUnknownDataConnector {
@@ -45,9 +45,10 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
             })?;
 
         // check that this scalar type actually exists for this data connector
-        let _data_connector_scalar_type = data_connector_info
-            .scalars
-            .get(&data_connector_operator_mapping.data_connector_scalar_type)
+        let _data_connector_scalar_type = data_connector_context
+            .schema
+            .scalar_types
+            .get(&data_connector_operator_mapping.data_connector_scalar_type.0)
             .ok_or_else(|| Error::UnknownScalarTypeInDataConnector {
                 scalar_type: scalar_type_name.clone(),
                 data_connector: qualified_data_connector_name.clone(),

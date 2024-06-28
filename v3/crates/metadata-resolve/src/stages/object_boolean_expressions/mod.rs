@@ -119,7 +119,6 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
     // validate data connector object type
     if !data_connector_context
-        .inner
         .schema
         .object_types
         .contains_key(&object_boolean_expression.data_connector_object_type.0)
@@ -235,10 +234,8 @@ pub(crate) fn resolve_object_boolean_expression_type(
         })
         .transpose()?;
 
-    let data_connector_link = data_connectors::DataConnectorLink::new(
-        data_connector_name,
-        &data_connector_context.inner,
-    )?;
+    let data_connector_link =
+        data_connectors::DataConnectorLink::new(data_connector_name, data_connector_context)?;
 
     let resolved_boolean_expression = ObjectBooleanExpressionType {
         name: qualified_name.clone(),

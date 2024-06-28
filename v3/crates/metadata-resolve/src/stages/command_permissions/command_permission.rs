@@ -77,7 +77,7 @@ pub fn resolve_command_permissions(
                     command_name: command.name.clone(),
                 })?;
 
-            let data_connector_core_info =
+            let data_connector_context =
                 data_connectors.0.get(data_connector_name).ok_or_else(|| {
                     Error::UnknownCommandDataConnector {
                         command_name: command.name.clone(),
@@ -87,7 +87,7 @@ pub fn resolve_command_permissions(
 
             let data_connector_link = data_connectors::DataConnectorLink::new(
                 data_connector_name.clone(),
-                &data_connector_core_info.inner,
+                data_connector_context,
             )?;
 
             match command.arguments.get(&argument_preset.argument) {

@@ -4,8 +4,8 @@ use crate::types::subgraph::Qualified;
 mod types;
 use std::collections::BTreeMap;
 pub use types::{
-    ArgumentPreset, CommandsResponseConfig, ComparisonOperators, DataConnectorCapabilities,
-    DataConnectorContext, DataConnectorLink, DataConnectorSchema, DataConnectors,
+    ArgumentPreset, CommandsResponseConfig, DataConnectorCapabilities, DataConnectorContext,
+    DataConnectorLink, DataConnectorSchema, DataConnectors,
 };
 
 /// Resolve data connectors.
