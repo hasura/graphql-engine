@@ -83,6 +83,7 @@ fn read_test_configuration(
     let unstable_features = configuration::UnstableFeatures {
         enable_boolean_expression_types: true,
         enable_order_by_expressions: false,
+        enable_ndc_v02_support: false,
     };
 
     let configuration_path = directory.join("configuration.json");

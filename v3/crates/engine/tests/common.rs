@@ -489,6 +489,7 @@ fn test_metadata_resolve_configuration() -> metadata_resolve::configuration::Con
         unstable_features: metadata_resolve::configuration::UnstableFeatures {
             enable_boolean_expression_types: true,
             enable_order_by_expressions: false,
+            enable_ndc_v02_support: true,
         },
     }
 }

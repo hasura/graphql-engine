@@ -1,4 +1,5 @@
 use ndc_models;
+use ndc_models_v01;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -172,6 +173,18 @@ fn ndc_schema_response_v01_schema_reference(
     schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.4/ndc-models/tests/json_schema/schema_response.jsonschema".into())
 }
 
+fn ndc_capabilities_response_v02_schema_reference(
+    _gen: &mut schemars::gen::SchemaGenerator,
+) -> schemars::schema::Schema {
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/main/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
+}
+
+fn ndc_schema_response_v02_schema_reference(
+    _gen: &mut schemars::gen::SchemaGenerator,
+) -> schemars::schema::Schema {
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/main/ndc-models/tests/json_schema/schema_response.jsonschema".into())
+}
+
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version")]
 #[serde(rename_all = "camelCase")]
@@ -183,6 +196,9 @@ pub enum VersionedSchemaAndCapabilities {
     #[serde(rename = "v0.1")]
     #[opendd(rename = "v0.1")]
     V01(SchemaAndCapabilitiesV01),
+    #[serde(rename = "v0.2")]
+    #[opendd(rename = "v0.2", hidden)]
+    V02(SchemaAndCapabilitiesV02),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -191,13 +207,27 @@ pub enum VersionedSchemaAndCapabilities {
 #[schemars(title = "SchemaAndCapabilitiesV01")]
 pub struct SchemaAndCapabilitiesV01 {
     #[schemars(schema_with = "ndc_schema_response_v01_schema_reference")]
-    pub schema: ndc_models::SchemaResponse,
+    pub schema: ndc_models_v01::SchemaResponse,
     #[schemars(schema_with = "ndc_capabilities_response_v01_schema_reference")]
-    pub capabilities: ndc_models::CapabilitiesResponse,
+    pub capabilities: ndc_models_v01::CapabilitiesResponse,
 }
 
 // Derive OpenDd for `SchemaAdnCapabilitiesV01` by serde Deserialize and schemars JsonSchema implementations.
 impl_OpenDd_default_for!(SchemaAndCapabilitiesV01);
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "SchemaAndCapabilitiesV01")]
+pub struct SchemaAndCapabilitiesV02 {
+    #[schemars(schema_with = "ndc_schema_response_v02_schema_reference")]
+    pub schema: ndc_models::SchemaResponse,
+    #[schemars(schema_with = "ndc_capabilities_response_v02_schema_reference")]
+    pub capabilities: ndc_models::CapabilitiesResponse,
+}
+
+// Derive OpenDd for `SchemaAdnCapabilitiesV02` by serde Deserialize and schemars JsonSchema implementations.
+impl_OpenDd_default_for!(SchemaAndCapabilitiesV02);
 
 #[cfg(test)]
 mod tests {

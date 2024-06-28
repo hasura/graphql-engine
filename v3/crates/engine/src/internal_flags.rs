@@ -10,6 +10,7 @@
 pub enum UnstableFeature {
     EnableBooleanExpressionTypes,
     EnableOrderByExpressions,
+    EnableNdcV02Support,
 }
 
 pub fn resolve_unstable_features(
@@ -24,6 +25,9 @@ pub fn resolve_unstable_features(
             }
             UnstableFeature::EnableOrderByExpressions => {
                 features.enable_order_by_expressions = true;
+            }
+            UnstableFeature::EnableNdcV02Support => {
+                features.enable_ndc_v02_support = true;
             }
         }
     }

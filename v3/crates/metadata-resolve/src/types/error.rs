@@ -608,6 +608,11 @@ pub enum Error {
         argument_name: ArgumentName,
         type_name: Qualified<CustomTypeName>,
     },
+
+    #[error("The data connector {data_connector} uses ndc-spec v0.2.* and is not yet supported")]
+    NdcV02DataConnectorNotSupported {
+        data_connector: Qualified<DataConnectorName>,
+    },
 }
 
 #[derive(Debug, Error)]

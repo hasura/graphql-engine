@@ -8,6 +8,7 @@
 // No modules outside this should know about its internal structure.
 
 mod helpers;
+mod ndc_migration;
 mod stages;
 mod types;
 

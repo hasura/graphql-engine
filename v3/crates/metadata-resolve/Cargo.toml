@@ -15,6 +15,7 @@ open-dds = { path = "../open-dds" }
 derive_more = { workspace = true }
 indexmap = { workspace = true, features = ["serde"] }
 ndc-models = { workspace = true }
+ndc-models-v01 = { workspace = true }
 nonempty = { workspace = true }
 ref-cast = { workspace = true }
 reqwest = { workspace = true, features = ["json", "multipart"] }

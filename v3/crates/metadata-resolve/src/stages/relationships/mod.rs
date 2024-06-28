@@ -394,7 +394,7 @@ fn get_relationship_capabilities(
                 }
             })?;
 
-    let capabilities = &resolved_data_connector.capabilities.capabilities;
+    let capabilities = &resolved_data_connector.capabilities;
 
     if capabilities.query.variables.is_none() {
         return Err(Error::RelationshipError {

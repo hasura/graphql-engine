@@ -16,4 +16,5 @@ pub struct Configuration {
 pub struct UnstableFeatures {
     pub enable_boolean_expression_types: bool,
     pub enable_order_by_expressions: bool,
+    pub enable_ndc_v02_support: bool,
 }

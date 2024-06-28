@@ -38,7 +38,7 @@ pub fn resolve(
         graphql_config::resolve(&metadata_accessor.graphql_config, metadata_accessor.flags)?;
 
     // Fetch and check schema information for all our data connectors
-    let data_connectors = data_connectors::resolve(&metadata_accessor)?;
+    let data_connectors = data_connectors::resolve(&metadata_accessor, &configuration)?;
 
     // Validate object types defined in metadata
     let object_types::DataConnectorTypeMappingsOutput {
