@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "RawConfiguration",
+  "title": "ParsedConfiguration",
   "description": "Initial configuration, just enough to connect to a database and elaborate a full 'Configuration'.",
   "type": "object",
   "required": ["version"],
@@ -38,11 +38,9 @@
       "description": "Connector metadata.",
       "default": {
         "tables": {},
+        "scalarTypes": {},
         "compositeTypes": {},
-        "nativeQueries": {},
-        "aggregateFunctions": {},
-        "comparisonOperators": {},
-        "typeRepresentations": {}
+        "nativeQueries": {}
       },
       "allOf": [
         {
@@ -65,9 +63,7 @@
         "unqualifiedSchemasForTypesAndProcedures": [
           "public",
           "pg_catalog",
-          "tiger",
-          "auth",
-          "pgsodium"
+          "tiger"
         ],
         "comparisonOperatorMapping": [
           {
@@ -128,11 +124,6 @@
           {
             "operatorName": "NOT SIMILAR TO",
             "exposedName": "_nsimilar",
-            "operatorKind": "custom"
-          },
-          {
-            "operatorName": "<>",
-            "exposedName": "_neq",
             "operatorKind": "custom"
           },
           {
@@ -303,7 +294,27 @@
           "xmlexists",
           "xmlvalidate",
           "xpath_exists"
-        ]
+        ],
+        "typeRepresentations": {
+          "bit": "string",
+          "bool": "boolean",
+          "bpchar": "string",
+          "char": "string",
+          "date": "date",
+          "float4": "float32",
+          "float8": "float64",
+          "int2": "int16",
+          "int4": "int32",
+          "int8": "int64AsString",
+          "numeric": "bigDecimalAsString",
+          "text": "string",
+          "time": "time",
+          "timestamp": "timestamp",
+          "timestamptz": "timestamptz",
+          "timetz": "timetz",
+          "uuid": "uUID",
+          "varchar": "string"
+        }
       },
       "allOf": [
         {
@@ -327,7 +338,7 @@
   "definitions": {
     "Version": {
       "type": "string",
-      "enum": ["3"]
+      "enum": ["4"]
     },
     "DatabaseConnectionSettings": {
       "description": "Database connection settings.",
@@ -464,6 +475,14 @@
             }
           ]
         },
+        "scalarTypes": {
+          "default": {},
+          "allOf": [
+            {
+              "$ref": "#/definitions/ScalarTypes"
+            }
+          ]
+        },
         "compositeTypes": {
           "default": {},
           "allOf": [
@@ -477,30 +496,6 @@
           "allOf": [
             {
               "$ref": "#/definitions/NativeQueries"
-            }
-          ]
-        },
-        "aggregateFunctions": {
-          "default": {},
-          "allOf": [
-            {
-              "$ref": "#/definitions/AggregateFunctions"
-            }
-          ]
-        },
-        "comparisonOperators": {
-          "default": {},
-          "allOf": [
-            {
-              "$ref": "#/definitions/ComparisonOperators"
-            }
-          ]
-        },
-        "typeRepresentations": {
-          "default": {},
-          "allOf": [
-            {
-              "$ref": "#/definitions/TypeRepresentations"
             }
           ]
         }
@@ -594,7 +589,7 @@
           "required": ["scalarType"],
           "properties": {
             "scalarType": {
-              "$ref": "#/definitions/ScalarType"
+              "$ref": "#/definitions/ScalarTypeName"
             }
           },
           "additionalProperties": false
@@ -604,7 +599,7 @@
           "required": ["compositeType"],
           "properties": {
             "compositeType": {
-              "type": "string"
+              "$ref": "#/definitions/CompositeTypeName"
             }
           },
           "additionalProperties": false
@@ -621,8 +616,12 @@
         }
       ]
     },
-    "ScalarType": {
-      "description": "A Scalar Type.",
+    "ScalarTypeName": {
+      "description": "A name of a Scalar Type, as it appears in the NDC scheme.",
+      "type": "string"
+    },
+    "CompositeTypeName": {
+      "description": "The name of a Composite Type, as it appears in the NDC schema",
       "type": "string"
     },
     "Nullable": {
@@ -686,164 +685,53 @@
         }
       }
     },
-    "CompositeTypes": {
-      "description": "Map of all known composite types.",
+    "ScalarTypes": {
+      "description": "Map of all known/occurring scalar types.",
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/definitions/CompositeType"
+        "$ref": "#/definitions/ScalarType"
       }
     },
-    "CompositeType": {
-      "description": "Information about a composite type. These are very similar to tables, but with the crucial difference that composite types do not support constraints (such as NOT NULL).",
+    "ScalarType": {
+      "description": "Information about a scalar type. A scalar type is completely characterized by its name and the operations you can do on it.",
       "type": "object",
-      "required": ["fields", "name"],
+      "required": [
+        "aggregateFunctions",
+        "comparisonOperators",
+        "schemaName",
+        "typeName"
+      ],
       "properties": {
-        "name": {
+        "typeName": {
           "type": "string"
         },
-        "fields": {
+        "schemaName": {
+          "type": "string"
+        },
+        "description": {
+          "type": ["string", "null"]
+        },
+        "aggregateFunctions": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/FieldInfo"
+            "$ref": "#/definitions/AggregateFunction"
           }
         },
-        "description": {
-          "default": null,
-          "type": ["string", "null"]
-        }
-      }
-    },
-    "FieldInfo": {
-      "description": "Information about a composite type field.",
-      "type": "object",
-      "required": ["name", "type"],
-      "properties": {
-        "name": {
-          "type": "string"
+        "comparisonOperators": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ComparisonOperator"
+          }
         },
-        "type": {
-          "$ref": "#/definitions/Type"
-        },
-        "description": {
-          "default": null,
-          "type": ["string", "null"]
-        }
-      }
-    },
-    "NativeQueries": {
-      "description": "Metadata information of native queries.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/NativeQueryInfo"
-      }
-    },
-    "NativeQueryInfo": {
-      "description": "Information about a Native Query",
-      "type": "object",
-      "required": ["columns", "sql"],
-      "properties": {
-        "sql": {
-          "description": "SQL expression to use for the Native Query. We can interpolate values using `{{variable_name}}` syntax, such as `SELECT * FROM authors WHERE name = {{author_name}}`",
-          "allOf": [
+        "typeRepresentation": {
+          "anyOf": [
             {
-              "$ref": "#/definitions/NativeQuerySql"
+              "$ref": "#/definitions/TypeRepresentation"
+            },
+            {
+              "type": "null"
             }
           ]
-        },
-        "columns": {
-          "description": "Columns returned by the Native Query",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/ReadOnlyColumnInfo"
-          }
-        },
-        "arguments": {
-          "description": "Names and types of arguments that can be passed to this Native Query",
-          "default": {},
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/ReadOnlyColumnInfo"
-          }
-        },
-        "description": {
-          "default": null,
-          "type": ["string", "null"]
-        },
-        "isProcedure": {
-          "description": "True if this native query mutates the database",
-          "type": "boolean"
-        }
-      }
-    },
-    "NativeQuerySql": {
-      "description": "Native Query SQL location.",
-      "anyOf": [
-        {
-          "description": "Refer to an external Native Query SQL file.",
-          "type": "object",
-          "required": ["file"],
-          "properties": {
-            "file": {
-              "description": "Relative path to a sql file.",
-              "type": "string"
-            }
-          }
-        },
-        {
-          "description": "Inline Native Query SQL string.",
-          "type": "object",
-          "required": ["inline"],
-          "properties": {
-            "inline": {
-              "description": "An inline Native Query SQL string.",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/InlineNativeQuerySql"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "$ref": "#/definitions/InlineNativeQuerySql"
-        }
-      ]
-    },
-    "InlineNativeQuerySql": {
-      "type": "string"
-    },
-    "ReadOnlyColumnInfo": {
-      "description": "Information about a native query column.",
-      "type": "object",
-      "required": ["name", "type"],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/Type"
-        },
-        "nullable": {
-          "default": "nullable",
-          "allOf": [
-            {
-              "$ref": "#/definitions/Nullable"
-            }
-          ]
-        },
-        "description": {
-          "default": null,
-          "type": ["string", "null"]
-        }
-      }
-    },
-    "AggregateFunctions": {
-      "description": "All supported aggregate functions, grouped by type.",
-      "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "additionalProperties": {
-          "$ref": "#/definitions/AggregateFunction"
         }
       }
     },
@@ -852,17 +740,7 @@
       "required": ["returnType"],
       "properties": {
         "returnType": {
-          "$ref": "#/definitions/ScalarType"
-        }
-      }
-    },
-    "ComparisonOperators": {
-      "description": "The complete list of supported binary operators for scalar types. Not all of these are supported for every type.",
-      "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "additionalProperties": {
-          "$ref": "#/definitions/ComparisonOperator"
+          "$ref": "#/definitions/ScalarTypeName"
         }
       }
     },
@@ -878,7 +756,7 @@
           "$ref": "#/definitions/OperatorKind"
         },
         "argumentType": {
-          "$ref": "#/definitions/ScalarType"
+          "$ref": "#/definitions/ScalarTypeName"
         },
         "isInfix": {
           "default": true,
@@ -890,13 +768,6 @@
       "description": "Is it a built-in operator, or a custom operator.",
       "type": "string",
       "enum": ["equal", "in", "custom"]
-    },
-    "TypeRepresentations": {
-      "description": "Type representation of scalar types, grouped by type.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/TypeRepresentation"
-      }
     },
     "TypeRepresentation": {
       "description": "Type representation of a scalar type.",
@@ -1022,6 +893,160 @@
         }
       ]
     },
+    "CompositeTypes": {
+      "description": "Map of all known composite types.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/CompositeType"
+      }
+    },
+    "CompositeType": {
+      "description": "Information about a composite type. These are very similar to tables, but with the crucial difference that composite types do not support constraints (such as NOT NULL).",
+      "type": "object",
+      "required": ["fields", "schemaName", "typeName"],
+      "properties": {
+        "typeName": {
+          "type": "string"
+        },
+        "schemaName": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/FieldInfo"
+          }
+        },
+        "description": {
+          "default": null,
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "FieldInfo": {
+      "description": "Information about a composite type field.",
+      "type": "object",
+      "required": ["fieldName", "type"],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/Type"
+        },
+        "description": {
+          "default": null,
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "NativeQueries": {
+      "description": "Metadata information of native queries.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/NativeQueryInfo"
+      }
+    },
+    "NativeQueryInfo": {
+      "description": "Information about a Native Query",
+      "type": "object",
+      "required": ["columns", "sql"],
+      "properties": {
+        "sql": {
+          "description": "SQL expression to use for the Native Query. We can interpolate values using `{{variable_name}}` syntax, such as `SELECT * FROM authors WHERE name = {{author_name}}`",
+          "allOf": [
+            {
+              "$ref": "#/definitions/NativeQuerySql"
+            }
+          ]
+        },
+        "columns": {
+          "description": "Columns returned by the Native Query",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ReadOnlyColumnInfo"
+          }
+        },
+        "arguments": {
+          "description": "Names and types of arguments that can be passed to this Native Query",
+          "default": {},
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ReadOnlyColumnInfo"
+          }
+        },
+        "description": {
+          "default": null,
+          "type": ["string", "null"]
+        },
+        "isProcedure": {
+          "description": "True if this native query mutates the database",
+          "type": "boolean"
+        }
+      }
+    },
+    "NativeQuerySql": {
+      "description": "Native Query SQL location.",
+      "anyOf": [
+        {
+          "description": "Refer to an external Native Query SQL file.",
+          "type": "object",
+          "required": ["file"],
+          "properties": {
+            "file": {
+              "description": "Relative path to a sql file.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "description": "Inline Native Query SQL string.",
+          "type": "object",
+          "required": ["inline"],
+          "properties": {
+            "inline": {
+              "description": "An inline Native Query SQL string.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/InlineNativeQuerySql"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$ref": "#/definitions/InlineNativeQuerySql"
+        }
+      ]
+    },
+    "InlineNativeQuerySql": {
+      "type": "string"
+    },
+    "ReadOnlyColumnInfo": {
+      "description": "Information about a native query column.",
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/Type"
+        },
+        "nullable": {
+          "default": "nullable",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Nullable"
+            }
+          ]
+        },
+        "description": {
+          "default": null,
+          "type": ["string", "null"]
+        }
+      }
+    },
     "IntrospectionOptions": {
       "description": "Options which only influence how the configuration is updated.",
       "type": "object",
@@ -1051,7 +1076,7 @@
         },
         "unqualifiedSchemasForTypesAndProcedures": {
           "description": "The types and procedures in these schemas will be returned unqualified.",
-          "default": ["public", "pg_catalog", "tiger", "auth", "pgsodium"],
+          "default": ["public", "pg_catalog", "tiger"],
           "type": "array",
           "items": {
             "type": "string"
@@ -1118,11 +1143,6 @@
             {
               "operatorName": "NOT SIMILAR TO",
               "exposedName": "_nsimilar",
-              "operatorKind": "custom"
-            },
-            {
-              "operatorName": "<>",
-              "exposedName": "_neq",
               "operatorKind": "custom"
             },
             {
@@ -1305,6 +1325,34 @@
           "items": {
             "type": "string"
           }
+        },
+        "typeRepresentations": {
+          "description": "The type representations to pick for base scalar types.",
+          "default": {
+            "bit": "string",
+            "bool": "boolean",
+            "bpchar": "string",
+            "char": "string",
+            "date": "date",
+            "float4": "float32",
+            "float8": "float64",
+            "int2": "int16",
+            "int4": "int32",
+            "int8": "int64AsString",
+            "numeric": "bigDecimalAsString",
+            "text": "string",
+            "time": "time",
+            "timestamp": "timestamp",
+            "timestamptz": "timestamptz",
+            "timetz": "timetz",
+            "uuid": "uUID",
+            "varchar": "string"
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/TypeRepresentations"
+            }
+          ]
         }
       }
     },
@@ -1331,10 +1379,17 @@
         }
       }
     },
+    "TypeRepresentations": {
+      "description": "The type representations that guide introspection.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/TypeRepresentation"
+      }
+    },
     "MutationsVersion": {
       "description": "Which version of the generated mutations will be included in the schema",
       "type": "string",
-      "enum": ["v1", "veryExperimentalWip"]
+      "enum": ["v1", "v2"]
     }
   }
 }
