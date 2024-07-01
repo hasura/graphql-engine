@@ -9,8 +9,7 @@ use lang_graphql::ast::common as ast;
 use open_dds::{boolean_expression::BooleanExpressionOperand, types::CustomTypeName};
 
 use crate::stages::{graphql_config, scalar_boolean_expressions, type_permissions};
-use crate::types::configuration::Configuration;
-use crate::types::error::{BooleanExpressionError, Error};
+use crate::types::error::Error;
 use crate::Qualified;
 
 pub use types::{
@@ -22,7 +21,6 @@ pub use types::{
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    configuration: Configuration,
     boolean_expression_scalar_types: &BTreeMap<
         Qualified<CustomTypeName>,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
@@ -31,16 +29,6 @@ pub fn resolve(
     graphql_config: &graphql_config::GraphqlConfig,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
 ) -> Result<BooleanExpressionsOutput, Error> {
-    if !configuration
-        .unstable_features
-        .enable_boolean_expression_types
-        && !metadata_accessor.boolean_expression_types.is_empty()
-    {
-        return Err(Error::BooleanExpressionError {
-            boolean_expression_error: BooleanExpressionError::NewBooleanExpressionTypesAreDisabled,
-        });
-    };
-
     let mut raw_boolean_expression_types = BTreeMap::new();
 
     // TODO: make sure we are adding new types here, we are almost certainly not doing this atm

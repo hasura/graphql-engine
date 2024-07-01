@@ -670,8 +670,6 @@ impl From<BooleanExpressionError> for Error {
 
 #[derive(Debug, Error)]
 pub enum BooleanExpressionError {
-    #[error("new boolean expression types are not enabled")]
-    NewBooleanExpressionTypesAreDisabled,
     #[error("unknown type used in object boolean expression: {type_name:}")]
     UnknownTypeInObjectBooleanExpressionType {
         type_name: Qualified<CustomTypeName>,

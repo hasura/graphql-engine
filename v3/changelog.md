@@ -6,6 +6,66 @@
 
 - Query Usage Analytics - usage analytics JSON data is attached to `execute`
   span using `internal.query_usage_analytics` attribute
+
+#### Boolean Expression Types
+
+A new metadata kind `BooleanExpressionType` can now be defined. These can be
+used in place of `ObjectBooleanExpressionType` and
+`DataConnectorScalarRepresentation`, and allow more granular control of
+comparison operators and how they are used.
+
+```yaml
+kind: BooleanExpressionType
+version: v1
+definition:
+  name: album_bool_exp
+  operand:
+    object:
+      type: Album
+      comparableFields:
+        - fieldName: AlbumId
+          booleanExpressionType: pg_int_comparison_exp
+        - fieldName: ArtistId
+          booleanExpressionType: pg_int_comparison_exp_with_is_null
+        - field: Address
+          booleanExpressionType: address_bool_exp
+      comparableRelationships:
+        - relationshipName: Artist
+          booleanExpressionType: artist_bool_exp
+  logicalOperators:
+    enable: true
+  isNull:
+    enable: true
+  graphql:
+    typeName: app_album_bool_exp
+```
+
+```yaml
+kind: BooleanExpressionType
+version: v1
+definition:
+  name: pg_int_comparison_exp
+  operand:
+    scalar:
+      type: Int
+      comparisonOperators:
+        - name: equals
+          argumentType: String!
+        - name: _in
+          argumentType: [String!]!
+      dataConnectorOperatorMapping:
+        - dataConnectorName: postgres_db
+          dataConnectorScalarType: String
+          operatorMapping:
+            equals: _eq
+  logicalOperators:
+    enable: true
+  isNull:
+    enable: true
+  graphql:
+    typeName: app_postgres_int_bool_exp
+```
+
 - Add flag to (`--expose-internal-errors`) toggle whether to expose internal
   errors. ([#759](https://github.com/hasura/v3-engine/pull/759))
 

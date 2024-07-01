@@ -337,6 +337,82 @@
           ]
         },
         {
+          "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionType",
+          "title": "BooleanExpressionType",
+          "description": "Definition of a type representing a boolean expression on an OpenDD type.",
+          "examples": [
+            {
+              "kind": "BooleanExpressionType",
+              "version": "v1",
+              "definition": {
+                "name": "Album_bool_exp",
+                "operand": {
+                  "object": {
+                    "type": "Album",
+                    "comparableFields": [
+                      {
+                        "fieldName": "AlbumId",
+                        "booleanExpressionType": "pg_Int_Comparison_exp"
+                      },
+                      {
+                        "fieldName": "ArtistId",
+                        "booleanExpressionType": "pg_Int_Comparison_exp_with_is_null"
+                      },
+                      {
+                        "fieldName": "Address",
+                        "booleanExpressionType": "Address_bool_exp"
+                      }
+                    ],
+                    "comparableRelationships": [
+                      {
+                        "relationshipName": "artist",
+                        "booleanExpressionType": "Artist_bool_exp"
+                      }
+                    ]
+                  }
+                },
+                "logicalOperators": {
+                  "enable": true
+                },
+                "isNull": {
+                  "enable": true
+                },
+                "graphql": {
+                  "typeName": "App_Album_bool_exp"
+                }
+              }
+            }
+          ],
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "BooleanExpressionType"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v1"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/BooleanExpressionTypeV1"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
           "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorScalarRepresentation",
           "title": "DataConnectorScalarRepresentation",
           "description": "The representation of a data connector scalar in terms of Open DD types",
@@ -2344,6 +2420,407 @@
       },
       "additionalProperties": false
     },
+    "BooleanExpressionTypeV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionTypeV1",
+      "title": "BooleanExpressionTypeV1",
+      "description": "Definition of a type representing a boolean expression on an OpenDD object type.",
+      "type": "object",
+      "required": [
+        "isNull",
+        "logicalOperators",
+        "name",
+        "operand"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name to give this boolean expression type, used to refer to it elsewhere in the metadata. Must be unique across all types defined in this subgraph.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            }
+          ]
+        },
+        "operand": {
+          "description": "The type that this boolean expression applies to.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/BooleanExpressionOperand"
+            }
+          ]
+        },
+        "logicalOperators": {
+          "description": "Whether to enable _and / _or / _not",
+          "allOf": [
+            {
+              "$ref": "#/definitions/BooleanExpressionLogicalOperators"
+            }
+          ]
+        },
+        "isNull": {
+          "description": "Whether to enable _is_null",
+          "allOf": [
+            {
+              "$ref": "#/definitions/BooleanExpressionIsNull"
+            }
+          ]
+        },
+        "graphql": {
+          "description": "Configuration for how this object type should appear in the GraphQL schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BooleanExpressionTypeGraphQlConfiguration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "BooleanExpressionOperand": {
+      "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionOperand",
+      "title": "BooleanExpressionOperand",
+      "description": "Configuration for object or scalar boolean expression",
+      "oneOf": [
+        {
+          "title": "Object",
+          "description": "Definition of a boolean expression on an OpenDD object type",
+          "type": "object",
+          "required": [
+            "object"
+          ],
+          "properties": {
+            "object": {
+              "$ref": "#/definitions/BooleanExpressionObjectOperand"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "Scalar",
+          "description": "Definition of a boolean expression on a scalar tyoe",
+          "type": "object",
+          "required": [
+            "scalar"
+          ],
+          "properties": {
+            "scalar": {
+              "$ref": "#/definitions/BooleanExpressionScalarOperand"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "BooleanExpressionObjectOperand": {
+      "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionObjectOperand",
+      "title": "BooleanExpressionObjectOperand",
+      "description": "Definition of an object type representing a boolean expression on an OpenDD object type.",
+      "type": "object",
+      "required": [
+        "comparableFields",
+        "comparableRelationships",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "description": "The name of the object type that this boolean expression applies to.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            }
+          ]
+        },
+        "comparableFields": {
+          "description": "The list of fields of the object type that can be used for comparison when evaluating this boolean expression.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BooleanExpressionComparableField"
+          }
+        },
+        "comparableRelationships": {
+          "description": "The list of relationships of the object type that can be used for comparison when evaluating this boolean expression.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BooleanExpressionComparableRelationship"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "BooleanExpressionComparableField": {
+      "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionComparableField",
+      "title": "BooleanExpressionComparableField",
+      "type": "object",
+      "required": [
+        "booleanExpressionType",
+        "fieldName"
+      ],
+      "properties": {
+        "fieldName": {
+          "$ref": "#/definitions/FieldName"
+        },
+        "booleanExpressionType": {
+          "$ref": "#/definitions/CustomTypeName"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BooleanExpressionComparableRelationship": {
+      "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionComparableRelationship",
+      "title": "BooleanExpressionComparableRelationship",
+      "description": "Definition of a relationship that can be used for a comparison",
+      "type": "object",
+      "required": [
+        "relationshipName"
+      ],
+      "properties": {
+        "relationshipName": {
+          "description": "The name of the relationship to use for comparison",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RelationshipName"
+            }
+          ]
+        },
+        "booleanExpressionType": {
+          "description": "The boolean expression type to use for comparison. This is optional for relationships to models, and defaults to the filterExpressionType of the model",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "BooleanExpressionScalarOperand": {
+      "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionScalarOperand",
+      "title": "BooleanExpressionScalarOperand",
+      "description": "Definition of a scalar type representing a boolean expression on an OpenDD object type.",
+      "type": "object",
+      "required": [
+        "comparisonOperators",
+        "dataConnectorOperatorMapping",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "description": "The OpenDD type name of the scalar type that this boolean expression applies to.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/TypeName"
+            }
+          ]
+        },
+        "comparisonOperators": {
+          "description": "The list of comparison operators that can used on this scalar type",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ComparisonOperator"
+          }
+        },
+        "dataConnectorOperatorMapping": {
+          "description": "The list of mappings between OpenDD operator names and the names used in the data connector schema",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataConnectorOperatorMapping"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "TypeName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/TypeName",
+      "title": "TypeName",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/InbuiltType"
+        },
+        {
+          "$ref": "#/definitions/CustomTypeName"
+        }
+      ]
+    },
+    "InbuiltType": {
+      "$id": "https://hasura.io/jsonschemas/metadata/InbuiltType",
+      "title": "InbuiltType",
+      "description": "An inbuilt primitive OpenDD type.",
+      "type": "string",
+      "enum": [
+        "ID",
+        "Int",
+        "Float",
+        "Boolean",
+        "String"
+      ]
+    },
+    "ComparisonOperator": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ComparisonOperator",
+      "title": "ComparisonOperator",
+      "type": "object",
+      "required": [
+        "argumentType",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "Name you want to give the operator in OpenDD / GraphQL",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OperatorName"
+            }
+          ]
+        },
+        "argumentType": {
+          "description": "An OpenDD type",
+          "allOf": [
+            {
+              "$ref": "#/definitions/TypeReference"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "DataConnectorOperatorMapping": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorOperatorMapping",
+      "title": "DataConnectorOperatorMapping",
+      "type": "object",
+      "required": [
+        "dataConnectorName",
+        "dataConnectorScalarType",
+        "operatorMapping"
+      ],
+      "properties": {
+        "dataConnectorName": {
+          "description": "Name of the data connector this mapping applies to",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorName"
+            }
+          ]
+        },
+        "dataConnectorScalarType": {
+          "description": "Name of the scalar type according to the data connector's schema",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorScalarType"
+            }
+          ]
+        },
+        "operatorMapping": {
+          "title": "operator_mapping",
+          "description": "Mapping between OpenDD operator names and the data connector's operator names Defaults to the same operator name (e.g. \"_eq: _eq\") if no explicit mapping is present.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/DataConnectorOperatorName"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "OpenDdSupergraphObject": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSupergraphObject",
+      "title": "OpenDdSupergraphObject",
+      "oneOf": [
+        {
+          "$id": "https://hasura.io/jsonschemas/metadata/GraphqlConfig",
+          "title": "GraphqlConfig",
+          "description": "GraphqlConfig object tells us two things:\n\n1. How the Graphql schema should look like for the features (`where`, `order_by` etc) Hasura provides 2. What features should be enabled/disabled across the subgraphs",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "GraphqlConfig"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v1"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/GraphqlConfigV1"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      ]
+    },
+    "DataConnectorScalarType": {
+      "description": "The name of a scalar type in a data connector.",
+      "type": "string"
+    },
+    "DataConnectorOperatorName": {
+      "description": "The name of an operator in a data connector.",
+      "type": "string"
+    },
+    "BooleanExpressionLogicalOperators": {
+      "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionLogicalOperators",
+      "title": "BooleanExpressionLogicalOperators",
+      "description": "Configuration for logical operators in boolean expressions",
+      "type": "object",
+      "required": [
+        "enable"
+      ],
+      "properties": {
+        "enable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BooleanExpressionIsNull": {
+      "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionIsNull",
+      "title": "BooleanExpressionIsNull",
+      "description": "Configuration for is_null in boolean expressions",
+      "type": "object",
+      "required": [
+        "enable"
+      ],
+      "properties": {
+        "enable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BooleanExpressionTypeGraphQlConfiguration": {
+      "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionTypeGraphQlConfiguration",
+      "title": "BooleanExpressionTypeGraphQlConfiguration",
+      "description": "GraphQL configuration of an OpenDD boolean expression type.",
+      "type": "object",
+      "required": [
+        "typeName"
+      ],
+      "properties": {
+        "typeName": {
+          "description": "The name to use for the GraphQL type representation of this boolean expression type.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/GraphQlTypeName"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "DataConnectorScalarRepresentationV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorScalarRepresentationV1",
       "title": "DataConnectorScalarRepresentationV1",
@@ -2403,36 +2880,32 @@
       },
       "additionalProperties": false
     },
-    "DataConnectorScalarType": {
-      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorScalarType",
-      "title": "DataConnectorScalarType",
-      "description": "The name of a scalar type in a data connector.",
-      "type": "string"
-    },
-    "TypeName": {
-      "$id": "https://hasura.io/jsonschemas/metadata/TypeName",
-      "title": "TypeName",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/InbuiltType"
-        },
-        {
-          "$ref": "#/definitions/CustomTypeName"
+    "OpenDdSupergraph": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSupergraph",
+      "title": "OpenDdSupergraph",
+      "type": "object",
+      "properties": {
+        "objects": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OpenDdSupergraphObject"
+          }
         }
-      ]
+      },
+      "additionalProperties": false
     },
-    "InbuiltType": {
-      "$id": "https://hasura.io/jsonschemas/metadata/InbuiltType",
-      "title": "InbuiltType",
-      "description": "An inbuilt primitive OpenDD type.",
-      "type": "string",
-      "enum": [
-        "ID",
-        "Int",
-        "Float",
-        "Boolean",
-        "String"
-      ]
+    "OpenDdFlags": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdFlags",
+      "title": "OpenDdFlags",
+      "type": "object",
+      "properties": {
+        "require_graphql_config": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
     },
     "DataConnectorScalarGraphQLConfiguration": {
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorScalarGraphQLConfiguration",
@@ -2664,18 +3137,6 @@
       },
       "additionalProperties": false
     },
-    "OpenDdFlags": {
-      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdFlags",
-      "title": "OpenDdFlags",
-      "type": "object",
-      "properties": {
-        "require_graphql_config": {
-          "default": false,
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false
-    },
     "AggregationFunctionDefinition": {
       "$id": "https://hasura.io/jsonschemas/metadata/AggregationFunctionDefinition",
       "title": "AggregationFunctionDefinition",
@@ -2748,60 +3209,6 @@
               "$ref": "#/definitions/AggregationFunctionMappings"
             }
           ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "OpenDdSupergraphObject": {
-      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSupergraphObject",
-      "title": "OpenDdSupergraphObject",
-      "oneOf": [
-        {
-          "$id": "https://hasura.io/jsonschemas/metadata/GraphqlConfig",
-          "title": "GraphqlConfig",
-          "description": "GraphqlConfig object tells us two things:\n\n1. How the Graphql schema should look like for the features (`where`, `order_by` etc) Hasura provides 2. What features should be enabled/disabled across the subgraphs",
-          "oneOf": [
-            {
-              "type": "object",
-              "required": [
-                "definition",
-                "kind",
-                "version"
-              ],
-              "properties": {
-                "kind": {
-                  "type": "string",
-                  "enum": [
-                    "GraphqlConfig"
-                  ]
-                },
-                "version": {
-                  "type": "string",
-                  "enum": [
-                    "v1"
-                  ]
-                },
-                "definition": {
-                  "$ref": "#/definitions/GraphqlConfigV1"
-                }
-              },
-              "additionalProperties": false
-            }
-          ]
-        }
-      ]
-    },
-    "OpenDdSupergraph": {
-      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSupergraph",
-      "title": "OpenDdSupergraph",
-      "type": "object",
-      "properties": {
-        "objects": {
-          "default": [],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/OpenDdSupergraphObject"
-          }
         }
       },
       "additionalProperties": false

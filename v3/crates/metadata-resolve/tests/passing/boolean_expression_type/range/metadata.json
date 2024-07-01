@@ -57,8 +57,7 @@
           "comparisonOperators": [
             {
               "name": "within",
-              "argumentType": "int_range",
-              "argumentMapping": {}
+              "argumentType": "int_range"
             }
           ],
           "dataConnectorOperatorMapping": [

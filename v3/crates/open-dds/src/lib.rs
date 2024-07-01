@@ -89,7 +89,6 @@ pub enum OpenDdSubgraphObject {
     ObjectType(types::ObjectType),
     ScalarType(types::ScalarType),
     ObjectBooleanExpressionType(types::ObjectBooleanExpressionType),
-    #[opendd(hidden = true)]
     BooleanExpressionType(boolean_expression::BooleanExpressionType),
 
     // OrderBy Expressions

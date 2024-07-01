@@ -11,7 +11,7 @@ use crate::{
 /// Definition of a type representing a boolean expression on an OpenDD type.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[opendd(
     as_versioned_with_definition,
     json_schema(
@@ -78,7 +78,7 @@ impl BooleanExpressionType {
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[opendd(json_schema(title = "BooleanExpressionTypeV1",))]
 /// Definition of a type representing a boolean expression on an OpenDD object type.
 pub struct BooleanExpressionTypeV1 {
@@ -101,7 +101,7 @@ pub struct BooleanExpressionTypeV1 {
 
 /// Configuration for is_null in boolean expressions
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[opendd(json_schema(title = "BooleanExpressionIsNull"))]
 pub struct BooleanExpressionIsNull {
     pub enable: bool,
@@ -109,7 +109,7 @@ pub struct BooleanExpressionIsNull {
 
 /// Configuration for logical operators in boolean expressions
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[opendd(json_schema(title = "BooleanExpressionLogicalOperators"))]
 pub struct BooleanExpressionLogicalOperators {
     pub enable: bool,
@@ -117,7 +117,7 @@ pub struct BooleanExpressionLogicalOperators {
 
 /// GraphQL configuration of an OpenDD boolean expression type.
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[opendd(json_schema(title = "BooleanExpressionTypeGraphQlConfiguration"))]
 pub struct BooleanExpressionTypeGraphQlConfiguration {
     /// The name to use for the GraphQL type representation of this boolean expression type.
@@ -125,21 +125,21 @@ pub struct BooleanExpressionTypeGraphQlConfiguration {
 }
 
 /// Configuration for object or scalar boolean expression
-#[derive(Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[opendd(json_schema(title = "BooleanExpressionOperand"))]
+#[schemars(title = "BooleanExpressionOperand")]
 pub enum BooleanExpressionOperand {
-    #[serde(rename = "object")]
     /// Definition of a boolean expression on an OpenDD object type
+    #[schemars(title = "Object")]
     Object(BooleanExpressionObjectOperand),
-    #[serde(rename = "scalar")]
     /// Definition of a boolean expression on a scalar tyoe
+    #[schemars(title = "Scalar")]
     Scalar(BooleanExpressionScalarOperand),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
-#[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "ComparisonOperator"))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[schemars(title = "ComparisonOperator")]
 pub struct ComparisonOperator {
     /// Name you want to give the operator in OpenDD / GraphQL
     pub name: OperatorName,
@@ -151,8 +151,8 @@ pub struct ComparisonOperator {
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
 )]
-#[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "DataConnectorOperatorMapping"))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[schemars(title = "DataConnectorOperatorMapping")]
 pub struct DataConnectorOperatorMapping {
     /// Name of the data connector this mapping applies to
     pub data_connector_name: DataConnectorName,
@@ -162,13 +162,14 @@ pub struct DataConnectorOperatorMapping {
 
     /// Mapping between OpenDD operator names and the data connector's operator names
     /// Defaults to the same operator name (e.g. "_eq: _eq") if no explicit mapping is present.
+    #[schemars(title = "operator_mapping")]
     pub operator_mapping: BTreeMap<OperatorName, DataConnectorOperatorName>,
 }
 
 /// Definition of a scalar type representing a boolean expression on an OpenDD object type.
-#[derive(Serialize, Deserialize, Clone, JsonSchema, Debug, PartialEq, opendds_derive::OpenDd)]
-#[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "BooleanExpressionScalarOperand"))]
+#[derive(Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[schemars(title = "BooleanExpressionScalarOperand")]
 pub struct BooleanExpressionScalarOperand {
     /// The OpenDD type name of the scalar type that this boolean expression applies to.
     #[opendd(rename = "type")]
@@ -184,8 +185,8 @@ pub struct BooleanExpressionScalarOperand {
 
 /// Definition of an object type representing a boolean expression on an OpenDD object type.
 #[derive(Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
-#[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "BooleanExpressionObjectOperand"))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[schemars(title = "BooleanExpressionObjectOperand")]
 pub struct BooleanExpressionObjectOperand {
     /// The name of the object type that this boolean expression applies to.
     #[opendd(rename = "type")]
@@ -200,8 +201,8 @@ pub struct BooleanExpressionObjectOperand {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
-#[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "BooleanExpressionComparableField"))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[schemars(title = "BooleanExpressionComparableField")]
 pub struct BooleanExpressionComparableField {
     pub field_name: FieldName,
     pub boolean_expression_type: CustomTypeName,
@@ -211,8 +212,8 @@ pub struct BooleanExpressionComparableField {
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
 )]
-#[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "BooleanExpressionComparableRelationship"))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[schemars(title = "BooleanExpressionComparableRelationship")]
 pub struct BooleanExpressionComparableRelationship {
     /// The name of the relationship to use for comparison
     pub relationship_name: RelationshipName,

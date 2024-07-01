@@ -16,19 +16,19 @@ fn test_passing_metadata() {
             prepend_module_to_snapshot => false,
         }, {
             let configuration = read_test_configuration(directory)
-                .unwrap_or_else(|error| panic!("Could not read configuration: {error}"));
+                .unwrap_or_else(|error| panic!("{}: Could not read configuration: {error}",directory.display()));
 
             let metadata_json_text = std::fs::read_to_string(path)
-                .unwrap_or_else(|error| panic!("Could not read file {path:?}: {error}"));
+                .unwrap_or_else(|error| panic!("{}: Could not read file {path:?}: {error}", directory.display()));
 
             let metadata_json_value = serde_json::from_str(&metadata_json_text)
-                .unwrap_or_else(|error| panic!("Could not parse JSON: {error}"));
+                .unwrap_or_else(|error| panic!("{}: Could not parse JSON: {error}",directory.display()));
 
             let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)
-                .unwrap_or_else(|error| panic!("Could not deserialize metadata: {error}"));
+                .unwrap_or_else(|error| panic!("{}: Could not deserialize metadata: {error}", directory.display()));
 
             let resolved = metadata_resolve::resolve(metadata, configuration)
-                .unwrap_or_else(|error| panic!("Could not resolve metadata: {error}"));
+                .unwrap_or_else(|error| panic!("{}: Could not resolve metadata: {error}",directory.display()));
 
             insta::assert_debug_snapshot!("resolved", resolved);
         });
@@ -45,10 +45,10 @@ fn test_failing_metadata() {
             prepend_module_to_snapshot => false,
         }, {
             let configuration = read_test_configuration(directory)
-                .unwrap_or_else(|error| panic!("Could not read configuration: {error}"));
+                .unwrap_or_else(|error| panic!("{}: Could not read configuration: {error}", directory.display()));
 
             let metadata_json_text = std::fs::read_to_string(path)
-                .unwrap_or_else(|error| panic!("Could not read file {path:?}: {error}"));
+                .unwrap_or_else(|error| panic!("{}: Could not read file {path:?}: {error}", directory.display()));
 
             match serde_json::from_str(&metadata_json_text) {
                 Ok(metadata_json_value) => {
@@ -56,7 +56,7 @@ fn test_failing_metadata() {
                         Ok(metadata) => {
                             match metadata_resolve::resolve(metadata, configuration) {
                                 Ok(_) => {
-                                    panic!("Unexpected success when resolving {path:?}.");
+                                    panic!("{}: Unexpected success when resolving {path:?}.", directory.display());
                                 }
                                 Err(msg) => {
                                     insta::assert_snapshot!("resolve_error", msg);
@@ -81,7 +81,6 @@ fn read_test_configuration(
     directory: &Path,
 ) -> Result<configuration::Configuration, Box<dyn std::error::Error>> {
     let unstable_features = configuration::UnstableFeatures {
-        enable_boolean_expression_types: true,
         enable_order_by_expressions: false,
         enable_ndc_v02_support: false,
     };
