@@ -135,6 +135,8 @@ pub fn build_model_order_by_input_schema(
                     None,
                     Annotation::Input(types::InputAnnotation::Model(
                         types::ModelInputAnnotation::ModelOrderByArgument {
+                            field_name: field_name.clone(),
+                            parent_type: model.model.data_type.clone(),
                             ndc_column: order_by_expression.ndc_column.clone(),
                         },
                     )),

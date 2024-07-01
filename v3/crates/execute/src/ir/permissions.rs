@@ -34,7 +34,8 @@ pub(crate) fn get_select_filter_predicate<'s>(
             schema::NamespaceAnnotation::Model { filter, .. } => Some(filter),
             schema::NamespaceAnnotation::NodeFieldTypeMappings(_)
             | schema::NamespaceAnnotation::EntityTypeMappings(_)
-            | schema::NamespaceAnnotation::Command(_) => None,
+            | schema::NamespaceAnnotation::Command(_)
+            | schema::NamespaceAnnotation::InputFieldPresets { .. } => None,
         })
         // If we're hitting this case, it means that the caller of this
         // function expects a filter predicate, but it was not annotated
@@ -84,6 +85,7 @@ pub fn process_model_predicate<'s>(
     match model_predicate {
         metadata_resolve::ModelPredicate::UnaryFieldComparison {
             field: _,
+            field_parent_type: _,
             ndc_column,
             operator,
         } => Ok(make_permission_unary_boolean_expression(
@@ -92,6 +94,7 @@ pub fn process_model_predicate<'s>(
         )),
         metadata_resolve::ModelPredicate::BinaryFieldComparison {
             field: _,
+            field_parent_type: _,
             ndc_column,
             argument_type,
             operator,

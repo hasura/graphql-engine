@@ -228,6 +228,7 @@ fn object_type_fields(
                     name: field_name.clone(),
                     field_type: field_definition.field_type.clone(),
                     field_base_type_kind: get_type_kind(gds, &field_definition.field_type)?,
+                    parent_type: type_name.to_owned(),
                     argument_types: field_argument_types,
                 }),
                 get_output_type(gds, builder, &field_definition.field_type)?,

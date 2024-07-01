@@ -14,6 +14,7 @@ use open_dds::commands::DataConnectorCommand;
 
 use std::collections::{BTreeMap, HashMap};
 
+use super::types::input_type::build_input_field_presets_annotation;
 use super::types::output_type::get_type_kind;
 
 // look at the permissions and remove arguments with presets for this role
@@ -51,7 +52,9 @@ pub(crate) fn generate_command_argument(
         // if there is a preset for this argument, remove it from the schema
         // so the user cannot provide one
         if !permission.argument_presets.contains_key(argument_name) {
-            namespaced_annotations.insert(namespace.clone(), None);
+            let annotation =
+                build_input_field_presets_annotation(gds, namespace, &argument_type.argument_type);
+            namespaced_annotations.insert(namespace.clone(), annotation);
         }
     }
 

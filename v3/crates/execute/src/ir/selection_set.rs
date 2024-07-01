@@ -231,6 +231,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                     name,
                     field_type,
                     field_base_type_kind,
+                    parent_type: _,
                     argument_types,
                 } => {
                     let field_mapping = &field_mappings.get(name).ok_or_else(|| {

@@ -14,8 +14,7 @@ use open_dds::{
     arguments::ArgumentName,
     commands,
     data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorOperatorName},
-    models,
-    types::{self},
+    models, types,
 };
 
 use metadata_resolve::{
@@ -171,6 +170,9 @@ pub enum OutputAnnotation {
         name: types::FieldName,
         field_type: QualifiedTypeReference,
         field_base_type_kind: TypeKind,
+        /// The parent type is required to report field usage while analyzing query usage.
+        /// Field usage is reported with the name of object type where the field is defined.
+        parent_type: Qualified<types::CustomTypeName>,
         argument_types: BTreeMap<ast::Name, QualifiedTypeReference>,
     },
     GlobalIDField {
@@ -212,6 +214,10 @@ pub enum ModelInputAnnotation {
     IsNullOperation,
     ModelOrderByExpression,
     ModelOrderByArgument {
+        field_name: types::FieldName,
+        /// The parent type is required to report field usage while analyzing query usage.
+        /// Field usage is reported with the name of object type where the field is defined.
+        parent_type: Qualified<types::CustomTypeName>,
         ndc_column: DataConnectorColumnName,
     },
     ModelOrderByRelationshipArgument(OrderByRelationshipAnnotation),
@@ -254,6 +260,7 @@ pub enum InputAnnotation {
     InputObjectField {
         field_name: types::FieldName,
         field_type: QualifiedTypeReference,
+        parent_type: Qualified<types::CustomTypeName>,
     },
     BooleanExpression(BooleanExpressionAnnotation),
     CommandArgument {
@@ -317,6 +324,16 @@ pub enum NamespaceAnnotation {
     Model {
         filter: metadata_resolve::FilterPermission,
         argument_presets: ArgumentPresets,
+    },
+    /// Field presets for an input field.
+    ///
+    /// These presets are available in the model permissions context and are injected
+    /// while building the input object value during IR generation. Only the normalized
+    /// AST is used to analyze query usage, and additional context is not available.
+    /// Therefore, the field presets are annotated to track their usage.
+    InputFieldPresets {
+        presets_fields: Vec<types::FieldName>,
+        type_name: Qualified<types::CustomTypeName>,
     },
     /// The `NodeFieldTypeMappings` contains a Hashmap of typename to the filter permission.
     /// While executing the `node` field, the `id` field is supposed to be decoded and after

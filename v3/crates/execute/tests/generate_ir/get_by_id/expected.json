@@ -25,6 +25,10 @@
                               "nullable": false
                             },
                             "field_base_type_kind": "Scalar",
+                            "parent_type": {
+                              "subgraph": "default",
+                              "name": "article"
+                            },
                             "argument_types": {}
                           }
                         }
@@ -67,6 +71,10 @@
                               "nullable": false
                             },
                             "field_base_type_kind": "Scalar",
+                            "parent_type": {
+                              "subgraph": "default",
+                              "name": "article"
+                            },
                             "argument_types": {}
                           }
                         }

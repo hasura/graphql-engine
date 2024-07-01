@@ -63,6 +63,14 @@ impl QualifiedTypeReference {
         }
         Ok(qualifier)
     }
+
+    /// Get the base type of the underlying type
+    pub fn get_base_type(&self) -> &QualifiedTypeName {
+        match &self.underlying_type {
+            QualifiedBaseType::List(list_type) => list_type.get_base_type(),
+            QualifiedBaseType::Named(type_name) => type_name,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

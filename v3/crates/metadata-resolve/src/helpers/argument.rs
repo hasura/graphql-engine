@@ -424,6 +424,7 @@ pub(crate) fn resolve_model_predicate_with_type(
 
             Ok(model_permissions::ModelPredicate::BinaryFieldComparison {
                 field: field.clone(),
+                field_parent_type: type_name.to_owned(),
                 ndc_column: field_mapping.column.clone(),
                 operator: resolved_operator.clone(),
                 argument_type,
@@ -443,6 +444,7 @@ pub(crate) fn resolve_model_predicate_with_type(
 
             Ok(model_permissions::ModelPredicate::UnaryFieldComparison {
                 field: field.clone(),
+                field_parent_type: type_name.to_owned(),
                 ndc_column: field_mapping.column.clone(),
                 operator: ndc_models::UnaryComparisonOperator::IsNull,
             })

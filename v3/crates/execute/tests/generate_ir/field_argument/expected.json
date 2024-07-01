@@ -28,6 +28,10 @@
                               "nullable": false
                             },
                             "field_base_type_kind": "Scalar",
+                            "parent_type": {
+                              "subgraph": "default",
+                              "name": "Artist"
+                            },
                             "argument_types": {}
                           }
                         }
@@ -73,6 +77,10 @@
                               "nullable": true
                             },
                             "field_base_type_kind": "Scalar",
+                            "parent_type": {
+                              "subgraph": "default",
+                              "name": "Artist"
+                            },
                             "argument_types": {
                               "hash": {
                                 "underlying_type": {

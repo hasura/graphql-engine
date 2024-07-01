@@ -42,11 +42,13 @@ pub struct SelectPermission {
 pub enum ModelPredicate {
     UnaryFieldComparison {
         field: FieldName,
+        field_parent_type: Qualified<CustomTypeName>,
         ndc_column: DataConnectorColumnName,
         operator: ndc_models::UnaryComparisonOperator,
     },
     BinaryFieldComparison {
         field: FieldName,
+        field_parent_type: Qualified<CustomTypeName>,
         ndc_column: DataConnectorColumnName,
         operator: DataConnectorOperatorName,
         argument_type: QualifiedTypeReference,

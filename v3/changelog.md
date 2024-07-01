@@ -4,6 +4,8 @@
 
 ### Added
 
+- Query Usage Analytics - usage analytics JSON data is attached to `execute`
+  span using `internal.query_usage_analytics` attribute
 - Add flag to (`--expose-internal-errors`) toggle whether to expose internal
   errors. ([#759](https://github.com/hasura/v3-engine/pull/759))
 

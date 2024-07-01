@@ -221,3 +221,15 @@ impl From<ndc_client::Error> for FieldError {
         ))
     }
 }
+
+#[derive(Error, Debug)]
+#[error("Query usage analytics encoding failed: {0}")]
+/// Error occurs while generating query usage analytics JSON.
+/// Wraps JSON encoding error, the only error currently encountered.
+pub struct QueryUsageAnalyzeError(#[from] serde_json::Error);
+
+impl TraceableError for QueryUsageAnalyzeError {
+    fn visibility(&self) -> ErrorVisibility {
+        ErrorVisibility::Internal
+    }
+}

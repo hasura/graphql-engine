@@ -1804,6 +1804,7 @@ dependencies = [
  "nonempty",
  "open-dds",
  "pretty_assertions",
+ "query-usage-analytics",
  "reqwest",
  "schema",
  "schemars",

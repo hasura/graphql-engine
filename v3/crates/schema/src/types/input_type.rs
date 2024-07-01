@@ -3,7 +3,7 @@ use metadata_resolve::{
     QualifiedTypeReference, TypeRepresentation,
 };
 
-use crate::{types, Role, GDS};
+use crate::{types, NamespaceAnnotation, Role, GDS};
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use open_dds::types::CustomTypeName;
@@ -139,6 +139,7 @@ fn get_custom_input_type(
 fn input_object_type_input_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
+    type_name: &Qualified<CustomTypeName>,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
     object_type_representation
@@ -154,6 +155,7 @@ fn input_object_type_input_fields(
                 types::Annotation::Input(types::InputAnnotation::InputObjectField {
                     field_name: field_name.clone(),
                     field_type: field_definition.field_type.clone(),
+                    parent_type: type_name.to_owned(),
                 }),
                 get_input_type(gds, builder, &field_definition.field_type)?,
                 None, // Default value
@@ -168,11 +170,17 @@ fn input_object_type_input_fields(
                 // if input permissions are defined, include the field conditionally
                 } else {
                     let mut role_map = HashMap::new();
+
                     for (role, permission) in &object_type_representation.type_input_permissions {
                         // add the field only if there is no field preset defined
                         // for this role
                         if !permission.field_presets.contains_key(field_name) {
-                            role_map.insert(Role(role.0.clone()), None);
+                            let annotation = build_input_field_presets_annotation(
+                                gds,
+                                role,
+                                &field_definition.field_type,
+                            );
+                            role_map.insert(Role(role.0.clone()), annotation);
                         }
                     }
                     // for roles present in the metadata, but does not have any
@@ -189,7 +197,12 @@ fn input_object_type_input_fields(
                         .filter(|role| !roles_in_this_permission.contains(role))
                         .collect();
                     for role in roles_not_in_this_permission {
-                        role_map.insert(Role(role.0.clone()), None);
+                        let annotation = build_input_field_presets_annotation(
+                            gds,
+                            role,
+                            &field_definition.field_type,
+                        );
+                        role_map.insert(Role(role.0.clone()), annotation);
                     }
 
                     builder.conditional_namespaced(input_field, role_map)
@@ -198,6 +211,36 @@ fn input_object_type_input_fields(
             Ok((graphql_field_name, namespaced_input_field))
         })
         .collect::<Result<BTreeMap<_, _>, _>>()
+}
+
+pub(crate) fn build_input_field_presets_annotation(
+    gds: &GDS,
+    role: &Role,
+    field_type: &QualifiedTypeReference,
+) -> Option<NamespaceAnnotation> {
+    let mut annotation = None;
+    // If the field type is a custom object type, build the field presets annotation
+    if let QualifiedTypeName::Custom(field_type_name) = field_type.get_base_type() {
+        if let Some(field_object_type_representation) =
+            gds.metadata.object_types.get(field_type_name)
+        {
+            annotation = field_object_type_representation
+                .type_input_permissions
+                .get(role)
+                .map(|input_permissions| {
+                    let presets_fields = input_permissions
+                        .field_presets
+                        .clone()
+                        .into_keys()
+                        .collect();
+                    NamespaceAnnotation::InputFieldPresets {
+                        presets_fields,
+                        type_name: field_type_name.clone(),
+                    }
+                });
+        }
+    }
+    annotation
 }
 
 pub fn input_object_type_schema(
@@ -216,7 +259,8 @@ pub fn input_object_type_schema(
 
     let graphql_type_name = graphql_type_name.clone();
 
-    let input_fields = input_object_type_input_fields(gds, builder, object_type_representation)?;
+    let input_fields =
+        input_object_type_input_fields(gds, builder, type_name, object_type_representation)?;
 
     Ok(gql_schema::TypeInfo::InputObject(
         gql_schema::InputObject::new(

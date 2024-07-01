@@ -6,6 +6,7 @@ pub mod model_tracking;
 pub mod ndc;
 mod plan;
 mod process_response;
+mod query_usage;
 mod remote_joins;
 
 pub use plan::process_model_relationship_definition;
@@ -209,13 +210,14 @@ pub async fn execute_query_internal(
                             let all_usage_counts =
                                 model_tracking::get_all_usage_counts_in_query(&ir);
                             let serialized_data = serde_json::to_string(&all_usage_counts).unwrap();
+
                             set_attribute_on_active_span(
                                 AttributeVisibility::Default,
                                 "usage_counts",
                                 serialized_data,
                             );
 
-                            Box::pin(async {
+                            let execute_response = Box::pin(async {
                                 let execute_query_result = match request_plan {
                                     plan::RequestPlan::MutationPlan(mutation_plan) => {
                                         plan::execute_mutation_plan(
@@ -234,11 +236,35 @@ pub async fn execute_query_internal(
                                         .await
                                     }
                                 };
+
                                 GraphQLResponse::from_result(
                                     execute_query_result,
                                     expose_internal_errors,
                                 )
-                            })
+                            });
+
+                            // Analyze the query usage
+                            // It is attached to this span as an attribute
+                            match analyze_query_usage(&normalized_request) {
+                                Err(analyze_error) => {
+                                    // Set query usage analytics error as a span attribute
+                                    set_attribute_on_active_span(
+                                        AttributeVisibility::Internal,
+                                        "query_usage_analytics_error",
+                                        analyze_error.to_string(),
+                                    );
+                                }
+                                Ok(query_usage_analytics) => {
+                                    // Set query usage analytics as a span attribute
+                                    set_attribute_on_active_span(
+                                        AttributeVisibility::Internal,
+                                        "query_usage_analytics",
+                                        query_usage_analytics,
+                                    );
+                                }
+                            }
+
+                            execute_response
                         })
                         .await;
                     Ok(response)
@@ -458,6 +484,21 @@ pub fn generate_ir<'n, 's>(
     }
 }
 
+fn analyze_query_usage<'s>(
+    normalized_request: &'s Operation<'s, GDS>,
+) -> Result<String, error::QueryUsageAnalyzeError> {
+    let tracer = tracing_util::global_tracer();
+    tracer.in_span(
+        "analyze_query_usage",
+        "Analyze query usage",
+        SpanVisibility::Internal,
+        || {
+            let query_usage_analytics = query_usage::analyze_query_usage(normalized_request);
+            Ok(serde_json::to_string(&query_usage_analytics)?)
+        },
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use goldenfile::{differs::text_diff, Mint};
@@ -474,6 +515,7 @@ mod tests {
     };
 
     use super::generate_ir;
+    use super::query_usage::analyze_query_usage;
     use schema::GDS;
 
     #[test]
@@ -534,6 +576,68 @@ mod tests {
             write!(expected, "{}", serde_json::to_string_pretty(&ir)?)?;
         }
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_query_usage_analytics() -> Result<(), Box<dyn std::error::Error>> {
+        let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("query_usage_analytics");
+        let mut mint = Mint::new(&test_dir);
+
+        let schema = fs::read_to_string(test_dir.join("schema.json"))?;
+
+        let gds = GDS::new_with_default_flags(open_dds::Metadata::from_json_str(&schema)?)?;
+        let schema = GDS::build_schema(&gds)?;
+
+        for test_dir in fs::read_dir(test_dir)? {
+            let path = test_dir?.path();
+
+            if !path.is_dir() {
+                continue;
+            }
+
+            let test_name = path
+                .file_name()
+                .ok_or_else(|| format!("{path:?} is not a normal file or directory"))?;
+
+            let raw_request = fs::read_to_string(path.join("request.gql"))?;
+            let expected_path = PathBuf::from(test_name).join("expected.json");
+
+            let session_vars_path = path.join("session_variables.json");
+            let session = resolve_session(session_vars_path);
+            let query = Parser::new(&raw_request).parse_executable_document()?;
+
+            let request = Request {
+                operation_name: None,
+                query,
+                variables: HashMap::new(),
+            };
+
+            let normalized_request = normalize_request(
+                &schema::GDSRoleNamespaceGetter {
+                    scope: session.role.clone(),
+                },
+                &schema,
+                &request,
+            )?;
+
+            let query_usage = analyze_query_usage(&normalized_request);
+            let mut expected = mint.new_goldenfile_with_differ(
+                expected_path,
+                Box::new(|file1, file2| {
+                    let json1: serde_json::Value =
+                        serde_json::from_reader(File::open(file1).unwrap()).unwrap();
+                    let json2: serde_json::Value =
+                        serde_json::from_reader(File::open(file2).unwrap()).unwrap();
+                    if json1 != json2 {
+                        text_diff(file1, file2);
+                    }
+                }),
+            )?;
+            write!(expected, "{}", serde_json::to_string_pretty(&query_usage)?)?;
+        }
         Ok(())
     }
 

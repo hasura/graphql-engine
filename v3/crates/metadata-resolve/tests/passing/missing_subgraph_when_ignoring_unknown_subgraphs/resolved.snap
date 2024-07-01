@@ -1,7 +1,7 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: resolved
-input_file: crates/metadata-resolve/tests/passing/missing_subgraph/metadata.json
+input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring_unknown_subgraphs/metadata.json
 ---
 Metadata {
     object_types: {
@@ -497,6 +497,14 @@ Metadata {
                                     "author_id",
                                 ),
                             ),
+                            field_parent_type: Qualified {
+                                subgraph: "article_namespace",
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "article",
+                                    ),
+                                ),
+                            },
                             ndc_column: DataConnectorColumnName(
                                 "author_id",
                             ),

@@ -20,6 +20,7 @@ schema = { path = "../schema" }
 tracing-util = { path = "../utils/tracing-util" }
 metadata-resolve = {path = "../metadata-resolve" }
 futures-ext = { path = "../utils/futures-ext" }
+query-usage-analytics = { path = "../query-usage-analytics" }
 
 async-recursion = { workspace = true }
 axum = { workspace = true }

@@ -252,6 +252,7 @@ pub(crate) fn map_argument_value_to_ndc_type(
                                     Annotation::Input(InputAnnotation::InputObjectField {
                                         field_name,
                                         field_type,
+                                        parent_type: _,
                                     }) => Ok((field_name, field_type)),
                                     annotation => {
                                         Err(error::InternalEngineError::UnexpectedAnnotation {
