@@ -1,7 +1,6 @@
 use super::graphql;
 use super::helpers;
 pub use super::{BooleanExpressionComparableRelationship, ResolvedObjectBooleanExpressionType};
-use crate::helpers::ndc_validation::get_underlying_type_name;
 use crate::stages::{graphql_config, object_types, scalar_boolean_expressions, type_permissions};
 use crate::types::error::{BooleanExpressionError, Error};
 use crate::types::subgraph::mk_qualified_type_name;
@@ -190,7 +189,7 @@ fn resolve_comparable_fields(
         )?;
 
         // get type of field
-        let field_type = get_underlying_type_name(&field.field_type);
+        let field_type = field.field_type.get_underlying_type_name();
 
         // get type underlying boolean expression
         let boolean_expression_underlying_type = match &raw_boolean_expression_type.operand {

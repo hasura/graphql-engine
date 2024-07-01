@@ -13,9 +13,7 @@ use open_dds::{
 };
 use thiserror::Error;
 
-use crate::types::subgraph::{
-    Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
-};
+use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 
 #[derive(Debug, Error)]
 pub enum NDCValidationError {
@@ -156,14 +154,6 @@ pub enum NDCValidationError {
 
     #[error("Internal error while serializing error message. Error: {err:}")]
     InternalSerializationError { err: serde_json::Error },
-}
-
-// Get the underlying type name by resolving Array and Nullable container types
-pub fn get_underlying_type_name(output_type: &QualifiedTypeReference) -> &QualifiedTypeName {
-    match &output_type.underlying_type {
-        QualifiedBaseType::List(output_type) => get_underlying_type_name(output_type),
-        QualifiedBaseType::Named(type_name) => type_name,
-    }
 }
 
 pub fn validate_ndc(
@@ -375,7 +365,7 @@ pub fn validate_ndc_command(
 
     // Check if the result_type of function/procedure actually has a scalar type or an object type.
     // If it is an object type, then validate the type mapping.
-    match get_underlying_type_name(command_output_type) {
+    match command_output_type.get_underlying_type_name() {
         QualifiedTypeName::Inbuilt(_command_output_type) => {
             // TODO: Validate that the type of command.output_type is
             // same as the &command_source_ndc.result_type
