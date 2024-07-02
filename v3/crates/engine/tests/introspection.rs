@@ -185,3 +185,24 @@ fn test_introspect_aggregates_relationship_field_filtering() -> anyhow::Result<(
         ],
     )
 }
+
+#[test]
+fn test_introspect_relationship_comparison_capabilities_with_object_boolean_expression_types(
+) -> anyhow::Result<()> {
+    let test_path_string = "execute/relationships/no_relationship_comparison_capability/with_object_boolean_expression_type";
+    common::test_introspection_expectation(
+        test_path_string,
+        &["execute/relationships/no_relationship_comparison_capability/metadata.json"],
+    )
+}
+
+#[test]
+fn test_introspect_relationship_comparison_capabilities_with_boolean_expression_types(
+) -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/relationships/no_relationship_comparison_capability/with_boolean_expression_type";
+    common::test_introspection_expectation(
+        test_path_string,
+        &["execute/relationships/no_relationship_comparison_capability/metadata.json"],
+    )
+}

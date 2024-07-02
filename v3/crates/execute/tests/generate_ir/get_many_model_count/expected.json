@@ -87,7 +87,8 @@
                               },
                               "capabilities": {
                                 "foreach": null,
-                                "relationships": true
+                                "relationships": true,
+                                "relationship_comparison": true
                               }
                             },
                             "target_type": {
@@ -210,7 +211,8 @@
                                     },
                                     "capabilities": {
                                       "foreach": null,
-                                      "relationships": true
+                                      "relationships": true,
+                                      "relationship_comparison": true
                                     }
                                   },
                                   "target_type": {
@@ -333,7 +335,8 @@
                                           },
                                           "capabilities": {
                                             "foreach": null,
-                                            "relationships": true
+                                            "relationships": true,
+                                            "relationship_comparison": true
                                           }
                                         },
                                         "target_type": {
@@ -757,7 +760,8 @@
                                               },
                                               "capabilities": {
                                                 "foreach": null,
-                                                "relationships": true
+                                                "relationships": true,
+                                                "relationship_comparison": true
                                               }
                                             },
                                             "target_type": {
@@ -910,7 +914,8 @@
                                     },
                                     "capabilities": {
                                       "foreach": null,
-                                      "relationships": true
+                                      "relationships": true,
+                                      "relationship_comparison": true
                                     }
                                   },
                                   "target_type": {
@@ -1063,7 +1068,8 @@
                           },
                           "capabilities": {
                             "foreach": null,
-                            "relationships": true
+                            "relationships": true,
+                            "relationship_comparison": true
                           }
                         },
                         "target_type": {

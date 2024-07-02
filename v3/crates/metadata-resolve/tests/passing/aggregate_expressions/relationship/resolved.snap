@@ -323,6 +323,7 @@ Metadata {
                         RelationshipCapabilities {
                             foreach: (),
                             relationships: true,
+                            relationship_comparison: true,
                         },
                     ),
                     description: None,
@@ -408,6 +409,7 @@ Metadata {
                         RelationshipCapabilities {
                             foreach: (),
                             relationships: true,
+                            relationship_comparison: true,
                         },
                     ),
                     description: None,

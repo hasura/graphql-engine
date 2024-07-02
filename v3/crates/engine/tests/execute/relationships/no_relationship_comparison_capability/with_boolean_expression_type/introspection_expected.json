@@ -1,0 +1,44 @@
+[
+  {
+    "data": {
+      "__type": {
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "_and"
+          },
+          {
+            "name": "_not"
+          },
+          {
+            "name": "_or"
+          },
+          {
+            "name": "title"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "__type": {
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "_and"
+          },
+          {
+            "name": "_not"
+          },
+          {
+            "name": "_or"
+          },
+          {
+            "name": "title"
+          }
+        ]
+      }
+    }
+  }
+]

@@ -407,10 +407,15 @@ fn get_relationship_capabilities(
     };
 
     let relationships = capabilities.relationships.is_some();
+    let relationship_comparison = capabilities
+        .relationships
+        .as_ref()
+        .is_some_and(|r| r.relation_comparisons.is_some());
 
     Ok(Some(RelationshipCapabilities {
         foreach: (),
         relationships,
+        relationship_comparison,
     }))
 }
 

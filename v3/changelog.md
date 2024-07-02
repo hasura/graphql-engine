@@ -104,7 +104,9 @@ definition:
 
 ### Fixed
 
-- The Open DD schema for `DataConnectorLink` now references the correct version
+- Engine now respects `relation_comparisons` capability, when generating GraphQL
+  schema for relationship fields in model filter.
+- The OpenDD schema for `DataConnectorLink` now references the correct version
   (v0.1.4) of the NDC schema when using the NDC `CapabilitiesResponse` and
   `SchemaResponse` types
 

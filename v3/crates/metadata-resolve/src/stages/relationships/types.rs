@@ -100,6 +100,7 @@ pub struct RelationshipCapabilities {
     // Change this to a bool, when we support that
     pub foreach: (),
     pub relationships: bool,
+    pub relationship_comparison: bool,
 }
 
 pub enum RelationshipExecutionCategory {
