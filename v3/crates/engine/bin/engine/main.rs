@@ -14,6 +14,9 @@ use axum::{
 };
 
 use clap::Parser;
+use pre_execution_plugin::{
+    configuration::PrePluginConfig, execute::pre_execution_plugins_handler,
+};
 use reqwest::header::CONTENT_TYPE;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
@@ -23,9 +26,15 @@ use tracing_util::{
 };
 
 use base64::engine::Engine;
-use engine::authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig};
 use engine::internal_flags::{resolve_unstable_features, UnstableFeature};
 use engine::VERSION;
+use engine::{
+    authentication::{
+        AuthConfig::{self, V1 as V1AuthConfig},
+        AuthModeConfig,
+    },
+    plugins::read_pre_execution_plugins_config,
+};
 use execute::HttpContext;
 use hasura_authn_core::Session;
 use hasura_authn_jwt::auth as jwt_auth;
@@ -92,6 +101,9 @@ struct ServerOptions {
         value_delimiter = ','
     )]
     unstable_features: Vec<UnstableFeature>,
+    /// The configuration file used for authentication.
+    #[arg(long, value_name = "PATH", env = "pre_execution_plugins_path")]
+    pre_execution_plugins_path: Option<PathBuf>,
 
     /// Whether internal errors should be shown or censored.
     /// It is recommended to only show errors while developing since internal errors may contain
@@ -105,6 +117,7 @@ struct EngineState {
     http_context: HttpContext,
     schema: gql::schema::Schema<GDS>,
     auth_config: AuthConfig,
+    pre_execution_plugins_config: Vec<PrePluginConfig>,
     sql_context: sql::catalog::Context,
 }
 
@@ -171,11 +184,14 @@ async fn shutdown_signal() {
 }
 
 #[derive(thiserror::Error, Debug)]
+#[allow(clippy::enum_variant_names)]
 enum StartupError {
     #[error("could not read the auth config - {0}")]
     ReadAuth(anyhow::Error),
     #[error("failed to build engine state - {0}")]
     ReadSchema(anyhow::Error),
+    #[error("could not read the pre-execution plugins config - {0}")]
+    ReadPrePlugin(anyhow::Error),
 }
 
 impl TraceableError for StartupError {
@@ -202,6 +218,10 @@ impl EngineRouter {
     fn new(state: Arc<EngineState>) -> Self {
         let graphql_route = Router::new()
             .route("/graphql", post(handle_request))
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                pre_execution_plugins_middleware,
+            ))
             .layer(axum::middleware::from_fn(
                 hasura_authn_core::resolve_session,
             ))
@@ -338,6 +358,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         expose_internal_errors,
         &server.authn_config_path,
         &server.metadata_path,
+        &server.pre_execution_plugins_path,
         metadata_resolve_configuration,
     )
     .map_err(StartupError::ReadSchema)?;
@@ -618,6 +639,32 @@ async fn handle_explain_request(
     response
 }
 
+async fn pre_execution_plugins_middleware<'a, B>(
+    State(engine_state): State<Arc<EngineState>>,
+    Extension(session): Extension<Session>,
+    headers_map: HeaderMap,
+    request: Request<B>,
+    next: Next<axum::body::Body>,
+) -> axum::response::Result<axum::response::Response>
+where
+    B: HttpBody,
+    B::Error: Display,
+{
+    let (request, response) = pre_execution_plugins_handler(
+        &engine_state.pre_execution_plugins_config,
+        &engine_state.http_context.client,
+        session,
+        request,
+        headers_map,
+    )
+    .await?;
+
+    match response {
+        Some(response) => Ok(response),
+        None => Ok(next.run(request).await),
+    }
+}
+
 /// Handle a SQL request and execute it.
 async fn handle_sql_request(
     State(state): State<Arc<EngineState>>,
@@ -669,9 +716,13 @@ fn build_state(
     expose_internal_errors: execute::ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
+    pre_execution_plugins_path: &Option<PathBuf>,
     metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
 ) -> Result<Arc<EngineState>, anyhow::Error> {
     let auth_config = read_auth_config(authn_config_path).map_err(StartupError::ReadAuth)?;
+    let pre_execution_plugins_config =
+        read_pre_execution_plugins_config(pre_execution_plugins_path)
+            .map_err(StartupError::ReadPrePlugin)?;
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
     let resolved_metadata = metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
@@ -689,6 +740,7 @@ fn build_state(
         http_context,
         schema,
         auth_config,
+        pre_execution_plugins_config,
         sql_context,
     });
     Ok(state)

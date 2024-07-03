@@ -34,7 +34,7 @@ impl SessionVariableValue {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub struct SessionVariables(HashMap<SessionVariable, SessionVariableValue>);
 
 impl SessionVariables {
@@ -44,7 +44,7 @@ impl SessionVariables {
 }
 
 // The privilege with which a request is executed
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub struct Session {
     pub role: Role,
     pub variables: SessionVariables,

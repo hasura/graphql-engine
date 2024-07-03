@@ -133,6 +133,23 @@ impl Response {
         }
     }
 
+    pub fn error_message_with_status_and_details(
+        status_code: http::status::StatusCode,
+        message: String,
+        details: serde_json::Value,
+    ) -> Self {
+        Self {
+            status_code,
+            headers: http::HeaderMap::default(),
+            data: None,
+            errors: Some(nonempty![GraphQLError {
+                message,
+                path: None,
+                extensions: Some(Extensions { details }),
+            }]),
+        }
+    }
+
     pub fn error(error: GraphQLError, headers: http::HeaderMap) -> Self {
         Self {
             status_code: http::status::StatusCode::OK,
