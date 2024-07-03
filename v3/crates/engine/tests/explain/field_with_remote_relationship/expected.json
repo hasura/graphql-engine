@@ -9,6 +9,7 @@
           "ndcRequest": {
             "type": "query",
             "value": {
+              "version": "v0.1.x",
               "collection": "author",
               "query": {
                 "fields": {
@@ -31,6 +32,7 @@
           "ndcExplain": {
             "type": "response",
             "value": {
+              "version": "v0.1.x",
               "details": {
                 "explain": "<redacted>"
               }
@@ -47,6 +49,7 @@
             "ndcRequest": {
               "type": "query",
               "value": {
+                "version": "v0.1.x",
                 "collection": "article",
                 "query": {
                   "fields": {
@@ -78,6 +81,7 @@
             "ndcExplain": {
               "type": "response",
               "value": {
+                "version": "v0.1.x",
                 "details": {
                   "explain": "<redacted>"
                 }

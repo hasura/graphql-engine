@@ -6,7 +6,7 @@ mod types;
 use std::collections::BTreeMap;
 pub use types::{
     ArgumentPreset, CommandsResponseConfig, DataConnectorCapabilities, DataConnectorContext,
-    DataConnectorLink, DataConnectorSchema, DataConnectors,
+    DataConnectorLink, DataConnectorSchema, DataConnectors, NdcVersion,
 };
 
 /// Resolve data connectors.

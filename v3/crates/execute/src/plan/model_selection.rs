@@ -4,11 +4,11 @@ use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 
-use super::error;
 use super::relationships;
 use super::selection_set;
 use crate::ir::aggregates::{AggregateFieldSelection, AggregateSelectionSet};
 use crate::ir::model_selection::ModelSelection;
+use crate::plan::error;
 use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings

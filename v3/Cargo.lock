@@ -1800,6 +1800,7 @@ dependencies = [
  "lang-graphql",
  "metadata-resolve",
  "mockito",
+ "ndc-models 0.1.4 (git+https://github.com/hasura/ndc-spec.git?tag=v0.1.4)",
  "ndc-models 0.1.4 (git+https://github.com/hasura/ndc-spec.git?rev=002923d5c337930b9c9007f05c768fe9a0575612)",
  "nonempty",
  "open-dds",

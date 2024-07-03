@@ -1,4 +1,7 @@
-pub mod response;
+pub mod client;
+pub mod migration;
+pub mod types;
+pub use types::*;
 
 use std::borrow::Cow;
 
@@ -7,10 +10,8 @@ use axum::http::HeaderMap;
 use lang_graphql::ast::common as ast;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
-use super::error;
-use super::{HttpContext, ProjectId};
-
-pub mod client;
+use crate::error;
+use crate::{HttpContext, ProjectId};
 
 /// The column name used by NDC query response of functions
 /// <https://github.com/hasura/ndc-spec/blob/main/specification/src/specification/queries/functions.md?plain=1#L3>
@@ -19,12 +20,12 @@ pub const FUNCTION_IR_VALUE_COLUMN_NAME: &str = "__value";
 /// Executes a NDC operation
 pub async fn execute_ndc_query<'n, 's>(
     http_context: &HttpContext,
-    query: &ndc_models::QueryRequest,
+    query: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     execution_span_attribute: &'static str,
     field_span_attribute: String,
     project_id: Option<&ProjectId>,
-) -> Result<Vec<ndc_models::RowSet>, error::FieldError> {
+) -> Result<NdcQueryResponse, error::FieldError> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -49,7 +50,7 @@ pub async fn execute_ndc_query<'n, 's>(
                     let connector_response =
                         fetch_from_data_connector(http_context, query, data_connector, project_id)
                             .await?;
-                    Ok(connector_response.0)
+                    Ok(connector_response)
                 })
             },
         )
@@ -58,10 +59,10 @@ pub async fn execute_ndc_query<'n, 's>(
 
 pub async fn fetch_from_data_connector<'s>(
     http_context: &HttpContext,
-    query_request: &ndc_models::QueryRequest,
+    query_request: &NdcQueryRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
-) -> Result<ndc_models::QueryResponse, client::Error> {
+) -> Result<NdcQueryResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -108,12 +109,12 @@ pub fn append_project_id_to_headers<'a>(
 /// Executes a NDC mutation
 pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     http_context: &HttpContext,
-    query: &ndc_models::MutationRequest,
+    query: &NdcMutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     execution_span_attribute: String,
     field_span_attribute: String,
     project_id: Option<&ProjectId>,
-) -> Result<ndc_models::MutationResponse, error::FieldError> {
+) -> Result<NdcMutationResponse, error::FieldError> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -151,10 +152,10 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
 
 pub(crate) async fn fetch_from_data_connector_mutation<'s>(
     http_context: &HttpContext,
-    query_request: &ndc_models::MutationRequest,
+    query_request: &NdcMutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
-) -> Result<ndc_models::MutationResponse, client::Error> {
+) -> Result<NdcMutationResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(

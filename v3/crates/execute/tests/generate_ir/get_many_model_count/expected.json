@@ -38,6 +38,7 @@
                                     "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                                   },
                                   "capabilities": {
+                                    "supported_ndc_version": "V01",
                                     "supports_explaining_queries": true,
                                     "supports_explaining_mutations": false,
                                     "supports_nested_object_filtering": true,
@@ -162,6 +163,7 @@
                                           "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                                         },
                                         "capabilities": {
+                                          "supported_ndc_version": "V01",
                                           "supports_explaining_queries": true,
                                           "supports_explaining_mutations": false,
                                           "supports_nested_object_filtering": true,
@@ -286,6 +288,7 @@
                                                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                                               },
                                               "capabilities": {
+                                                "supported_ndc_version": "V01",
                                                 "supports_explaining_queries": true,
                                                 "supports_explaining_mutations": false,
                                                 "supports_nested_object_filtering": true,
@@ -511,6 +514,7 @@
                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
               },
               "capabilities": {
+                "supported_ndc_version": "V01",
                 "supports_explaining_queries": true,
                 "supports_explaining_mutations": false,
                 "supports_nested_object_filtering": true,
@@ -536,6 +540,7 @@
                             "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                           },
                           "capabilities": {
+                            "supported_ndc_version": "V01",
                             "supports_explaining_queries": true,
                             "supports_explaining_mutations": false,
                             "supports_nested_object_filtering": true,
@@ -568,6 +573,7 @@
                                       "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                                     },
                                     "capabilities": {
+                                      "supported_ndc_version": "V01",
                                       "supports_explaining_queries": true,
                                       "supports_explaining_mutations": false,
                                       "supports_nested_object_filtering": true,
@@ -600,6 +606,7 @@
                                                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                                               },
                                               "capabilities": {
+                                                "supported_ndc_version": "V01",
                                                 "supports_explaining_queries": true,
                                                 "supports_explaining_mutations": false,
                                                 "supports_nested_object_filtering": true,
@@ -655,6 +662,7 @@
                                                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                                               },
                                               "capabilities": {
+                                                "supported_ndc_version": "V01",
                                                 "supports_explaining_queries": true,
                                                 "supports_explaining_mutations": false,
                                                 "supports_nested_object_filtering": true,
@@ -711,6 +719,7 @@
                                                     "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                                                   },
                                                   "capabilities": {
+                                                    "supported_ndc_version": "V01",
                                                     "supports_explaining_queries": true,
                                                     "supports_explaining_mutations": false,
                                                     "supports_nested_object_filtering": true,
@@ -809,6 +818,7 @@
                                       "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                                     },
                                     "capabilities": {
+                                      "supported_ndc_version": "V01",
                                       "supports_explaining_queries": true,
                                       "supports_explaining_mutations": false,
                                       "supports_nested_object_filtering": true,
@@ -865,6 +875,7 @@
                                           "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                                         },
                                         "capabilities": {
+                                          "supported_ndc_version": "V01",
                                           "supports_explaining_queries": true,
                                           "supports_explaining_mutations": false,
                                           "supports_nested_object_filtering": true,
@@ -963,6 +974,7 @@
                             "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                           },
                           "capabilities": {
+                            "supported_ndc_version": "V01",
                             "supports_explaining_queries": true,
                             "supports_explaining_mutations": false,
                             "supports_nested_object_filtering": true,
@@ -1019,6 +1031,7 @@
                                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                               },
                               "capabilities": {
+                                "supported_ndc_version": "V01",
                                 "supports_explaining_queries": true,
                                 "supports_explaining_mutations": false,
                                 "supports_nested_object_filtering": true,

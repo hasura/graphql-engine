@@ -1,6 +1,7 @@
 mod commands;
 pub(crate) mod error;
 mod model_selection;
+mod ndc_request;
 mod relationships;
 pub(crate) mod selection_set;
 
@@ -103,7 +104,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 
 #[derive(Debug)]
 pub struct NDCMutationExecution<'n, 's, 'ir> {
-    pub query: ndc_models::MutationRequest,
+    pub query: ndc::NdcMutationRequest,
     pub join_locations: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
     pub execution_span_attribute: String,
@@ -120,7 +121,7 @@ pub struct ExecutionTree<'s, 'ir> {
 
 #[derive(Debug)]
 pub struct ExecutionNode<'s> {
-    pub query: ndc_models::QueryRequest,
+    pub query: ndc::NdcQueryRequest,
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
 }
 
@@ -200,7 +201,7 @@ fn plan_mutation<'n, 's, 'ir>(
 ) -> Result<NDCMutationExecution<'n, 's, 'ir>, error::Error> {
     let mut join_id_counter = MonotonicCounter::new();
     let (ndc_ir, join_locations) =
-        commands::ndc_mutation_ir(ir.procedure_name, ir, &mut join_id_counter)?;
+        ndc_request::ndc_procedure_mutation_request(ir.procedure_name, ir, &mut join_id_counter)?;
     let join_locations_ids = assign_with_join_ids(join_locations)?;
     Ok(NDCMutationExecution {
         query: ndc_ir,
@@ -295,7 +296,8 @@ fn plan_query<'n, 's, 'ir>(
             None => NodeQueryPlan::RelayNodeSelect(None),
         },
         root_field::QueryRootField::FunctionBasedCommand { ir, selection_set } => {
-            let (ndc_ir, join_locations) = commands::ndc_query_ir(ir, &mut counter)?;
+            let (ndc_ir, join_locations) =
+                ndc_request::make_ndc_function_query_request(ir, &mut counter)?;
             let join_locations_ids = assign_with_join_ids(join_locations)?;
             let execution_tree = ExecutionTree {
                 root_node: ExecutionNode {
@@ -357,7 +359,7 @@ fn generate_execution_tree<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
 ) -> Result<ExecutionTree<'s, 'ir>, error::Error> {
     let mut counter = MonotonicCounter::new();
-    let (ndc_ir, join_locations) = model_selection::ndc_ir(ir, &mut counter)?;
+    let (ndc_ir, join_locations) = ndc_request::make_ndc_model_query_request(ir, &mut counter)?;
     let join_locations_with_ids = assign_with_join_ids(join_locations)?;
     Ok(ExecutionTree {
         root_node: ExecutionNode {
@@ -890,7 +892,7 @@ async fn resolve_ndc_query_execution(
         process_response_as,
     } = ndc_query;
 
-    let mut response = ndc::execute_ndc_query(
+    let response = ndc::execute_ndc_query(
         http_context,
         &execution_tree.root_node.query,
         execution_tree.root_node.data_connector,
@@ -900,19 +902,21 @@ async fn resolve_ndc_query_execution(
     )
     .await?;
 
+    let mut response_rowsets = response.as_latest_rowsets();
+
     // TODO: Failures in remote joins should result in partial response
     // https://github.com/hasura/v3-engine/issues/229
     execute_join_locations(
         http_context,
         execution_span_attribute,
-        &mut response,
+        &mut response_rowsets,
         process_response_as,
         &execution_tree.remote_executions,
         project_id,
     )
     .await?;
 
-    process_response(selection_set, response, process_response_as)
+    process_response(selection_set, response_rowsets, process_response_as)
 }
 
 async fn resolve_ndc_mutation_execution(
@@ -939,7 +943,8 @@ async fn resolve_ndc_mutation_execution(
         field_span_attribute,
         project_id,
     )
-    .await?;
+    .await?
+    .as_latest();
 
     process_mutation_response(selection_set, response, &process_response_as)
 }

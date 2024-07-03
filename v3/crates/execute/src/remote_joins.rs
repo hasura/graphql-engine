@@ -148,7 +148,9 @@ where
                     .collect()
             })
             .collect();
-        join_node.target_ndc_ir.variables = Some(foreach_variables);
+        join_node
+            .target_ndc_ir
+            .set_variables(Some(foreach_variables));
 
         // execute the remote query
         let mut target_response = tracer
@@ -167,7 +169,8 @@ where
                     ))
                 },
             )
-            .await?;
+            .await?
+            .as_latest_rowsets();
 
         // if the sub-tree is not empty, recursively process the sub-tree; which
         // will modify the `target_response` with all joins down the tree

@@ -2,6 +2,8 @@ use open_dds::{relationships::RelationshipName, types::FieldName};
 use thiserror::Error;
 use tracing_util::TraceableError;
 
+use crate::ndc;
+
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("internal: {0}")]
@@ -29,4 +31,7 @@ pub enum InternalError {
 
     #[error("generic error: {description}")]
     InternalGeneric { description: String },
+
+    #[error("error when downgrading ndc request: {0}")]
+    NdcRequestDowngradeError(ndc::migration::NdcDowngradeError),
 }

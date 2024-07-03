@@ -1,9 +1,10 @@
 use super::commands;
-use super::error;
 use super::model_selection;
 use super::relationships;
-use super::ProcessResponseAs;
 use crate::ir::selection_set::{FieldSelection, NestedSelection, ResultSelectionSet};
+use crate::plan::error;
+use crate::plan::ndc_request;
+use crate::plan::ProcessResponseAs;
 use crate::remote_joins::types::SourceFieldAlias;
 use crate::remote_joins::types::{
     JoinLocations, JoinNode, LocationKind, MonotonicCounter, RemoteJoinType, TargetField,
@@ -173,7 +174,8 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     );
                 }
                 // Construct the `JoinLocations` tree
-                let (ndc_ir, sub_join_locations) = model_selection::ndc_ir(ir, join_id_counter)?;
+                let (ndc_ir, sub_join_locations) =
+                    ndc_request::make_ndc_model_query_request(ir, join_id_counter)?;
                 let rj_info = RemoteJoin {
                     target_ndc_ir: ndc_ir,
                     target_data_connector: ir.data_connector,
@@ -211,7 +213,8 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     );
                 }
                 // Construct the `JoinLocations` tree
-                let (ndc_ir, sub_join_locations) = commands::ndc_query_ir(ir, join_id_counter)?;
+                let (ndc_ir, sub_join_locations) =
+                    ndc_request::make_ndc_function_query_request(ir, join_id_counter)?;
                 let rj_info = RemoteJoin {
                     target_ndc_ir: ndc_ir,
                     target_data_connector: ir.command_info.data_connector,

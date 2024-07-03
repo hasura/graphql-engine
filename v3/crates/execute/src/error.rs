@@ -76,7 +76,7 @@ impl TraceableError for RequestError {
 #[transitive(from(gql::normalized_ast::Error, FieldInternalError))]
 #[transitive(from(gql::introspection::Error, FieldInternalError))]
 pub enum FieldError {
-    #[error("error from data source: {}", connector_error.error_response.message)]
+    #[error("error from data source: {}", connector_error.error_response.message())]
     NDCExpected {
         connector_error: ndc_client::ConnectorError,
     },
@@ -92,7 +92,7 @@ impl FieldError {
     fn get_details(&self) -> Option<serde_json::Value> {
         match self {
             Self::NDCExpected { connector_error } => {
-                Some(connector_error.error_response.details.clone())
+                Some(connector_error.error_response.details().clone())
             }
             Self::InternalError(internal) => internal.get_details(),
             Self::FieldNotFoundInService { .. } => None,
@@ -192,7 +192,7 @@ impl NDCUnexpectedError {
     pub fn get_details(&self) -> Option<serde_json::Value> {
         match self {
             Self::NDCClientError(ndc_client::Error::Connector(ce)) => {
-                Some(ce.error_response.details.clone())
+                Some(ce.error_response.details().clone())
             }
             _ => None,
         }

@@ -3,11 +3,11 @@
 use open_dds::relationships::RelationshipType;
 use std::collections::BTreeMap;
 
-use super::error;
 use super::selection_set;
 use crate::ir::model_selection::ModelSelection;
 use crate::ir::relationship::{self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo};
 use crate::ir::selection_set::FieldSelection;
+use crate::plan::error;
 
 /// collect relationships recursively from IR components containing relationships,
 /// and create NDC relationship definitions which will be added to the `relationships`

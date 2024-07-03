@@ -9,6 +9,7 @@
           "ndcRequest": {
             "type": "query",
             "value": {
+              "version": "v0.1.x",
               "collection": "Album",
               "query": {
                 "fields": {
@@ -31,6 +32,7 @@
           "ndcExplain": {
             "type": "response",
             "value": {
+              "version": "v0.1.x",
               "details": {
                 "explain": "<redacted>"
               }
@@ -50,6 +52,7 @@
                 "ndcRequest": {
                   "type": "query",
                   "value": {
+                    "version": "v0.1.x",
                     "collection": "Artist",
                     "query": {
                       "fields": {
@@ -86,6 +89,7 @@
                 "ndcExplain": {
                   "type": "response",
                   "value": {
+                    "version": "v0.1.x",
                     "details": {
                       "explain": "<redacted>"
                     }
@@ -103,6 +107,7 @@
                 "ndcRequest": {
                   "type": "query",
                   "value": {
+                    "version": "v0.1.x",
                     "collection": "Track",
                     "query": {
                       "fields": {
@@ -134,6 +139,7 @@
                 "ndcExplain": {
                   "type": "response",
                   "value": {
+                    "version": "v0.1.x",
                     "details": {
                       "explain": "<redacted>"
                     }

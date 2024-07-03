@@ -1190,6 +1190,7 @@ Metadata {
                             argument_presets: [],
                             response_config: None,
                             capabilities: DataConnectorCapabilities {
+                                supported_ndc_version: V01,
                                 supports_explaining_queries: true,
                                 supports_explaining_mutations: true,
                                 supports_nested_object_filtering: false,
@@ -1834,6 +1835,7 @@ Metadata {
                             argument_presets: [],
                             response_config: None,
                             capabilities: DataConnectorCapabilities {
+                                supported_ndc_version: V01,
                                 supports_explaining_queries: true,
                                 supports_explaining_mutations: true,
                                 supports_nested_object_filtering: false,

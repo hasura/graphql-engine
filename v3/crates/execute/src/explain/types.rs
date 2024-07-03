@@ -1,13 +1,15 @@
 use std::collections::BTreeMap;
 
-use ndc_models;
 use nonempty::NonEmpty;
 use serde::Serialize;
 
 use lang_graphql::http::GraphQLError;
+use ndc_models as ndc_models_v02;
+use ndc_models_v01;
 use tracing_util::Traceable;
 
 use crate::error;
+use crate::ndc;
 use crate::GraphQLErrors;
 
 #[derive(Debug, Serialize)]
@@ -94,7 +96,7 @@ pub(crate) enum ForEachStep {
 #[serde(tag = "type", content = "value")]
 pub(crate) enum NDCExplainResponse {
     NotSupported,
-    Response(ndc_models::ExplainResponse),
+    Response(ndc::NdcExplainResponse),
     Error(GraphQLError),
 }
 
@@ -102,8 +104,8 @@ pub(crate) enum NDCExplainResponse {
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 pub(crate) enum NDCRequest {
-    Query(ndc_models::QueryRequest),
-    Mutation(ndc_models::MutationRequest),
+    Query(ndc::NdcQueryRequest),
+    Mutation(ndc::NdcMutationRequest),
 }
 
 impl NDCExplainResponse {
@@ -113,7 +115,7 @@ impl NDCExplainResponse {
     ) -> Self {
         Self::Error(error.to_graphql_error(expose_internal_errors, None))
     }
-    pub(crate) fn success(response: ndc_models::ExplainResponse) -> Self {
+    pub(crate) fn success(response: ndc::NdcExplainResponse) -> Self {
         Self::Response(response)
     }
     pub(crate) fn not_supported() -> Self {
@@ -175,12 +177,22 @@ fn redact_ndc_explain_response(ndc_explain: NDCExplainResponse) -> NDCExplainRes
     match ndc_explain {
         NDCExplainResponse::NotSupported => NDCExplainResponse::NotSupported,
         NDCExplainResponse::Error(error) => NDCExplainResponse::Error(error),
-        NDCExplainResponse::Response(_response) => {
+        NDCExplainResponse::Response(response) => {
             let mut redacted_details = BTreeMap::new();
             redacted_details.insert("explain".to_string(), "<redacted>".to_string());
-            NDCExplainResponse::Response(ndc_models::ExplainResponse {
-                details: redacted_details,
-            })
+            let ndc_response = match response {
+                ndc::NdcExplainResponse::V01(_) => {
+                    ndc::NdcExplainResponse::V01(ndc_models_v01::ExplainResponse {
+                        details: redacted_details,
+                    })
+                }
+                ndc::NdcExplainResponse::V02(_) => {
+                    ndc::NdcExplainResponse::V02(ndc_models_v02::ExplainResponse {
+                        details: redacted_details,
+                    })
+                }
+            };
+            NDCExplainResponse::Response(ndc_response)
         }
     }
 }

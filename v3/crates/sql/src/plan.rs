@@ -24,6 +24,9 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum ExecutionPlanError {
     #[error("{0}")]
+    NDCDowngradeError(#[from] execute::ndc::migration::NdcDowngradeError),
+
+    #[error("{0}")]
     NDCExecutionError(#[from] execute::ndc::client::Error),
 
     #[error("NDC Response not as expected: {0}")]
@@ -224,7 +227,17 @@ pub async fn fetch_from_data_connector(
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let tracer = tracing_util::global_tracer();
-    let mut ndc_response =
+    let query_request = match data_connector.capabilities.supported_ndc_version {
+        metadata_resolve::data_connectors::NdcVersion::V01 => execute::ndc::NdcQueryRequest::V01(
+            execute::ndc::migration::v01::downgrade_v02_query_request(
+                query_request.as_ref().clone(),
+            )?,
+        ),
+        metadata_resolve::data_connectors::NdcVersion::V02 => {
+            execute::ndc::NdcQueryRequest::V02(query_request.as_ref().clone())
+        }
+    };
+    let ndc_response =
         execute::fetch_from_data_connector(&http_context, &query_request, &data_connector, None)
             .await?;
     let batch = tracer.in_span(
@@ -233,7 +246,7 @@ pub async fn fetch_from_data_connector(
         SpanVisibility::Internal,
         || {
             let rows = ndc_response
-                .0
+                .as_latest_rowsets()
                 .pop()
                 .ok_or_else(|| {
                     ExecutionPlanError::NDCResponseFormat("no row sets found".to_string())

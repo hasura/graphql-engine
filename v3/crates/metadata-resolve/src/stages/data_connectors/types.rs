@@ -20,7 +20,7 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Serialize, Deserialize)]
 pub enum NdcVersion {
     V01,
     V02,
@@ -224,6 +224,7 @@ impl DataConnectorLink {
             },
         })?;
         let capabilities = DataConnectorCapabilities {
+            supported_ndc_version: context.supported_ndc_version,
             supports_explaining_queries: context.capabilities.query.explain.is_some(),
             supports_explaining_mutations: context.capabilities.mutation.explain.is_some(),
             supports_nested_object_filtering: context
@@ -392,6 +393,7 @@ impl CommandsResponseConfig {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct DataConnectorCapabilities {
+    pub supported_ndc_version: NdcVersion,
     pub supports_explaining_queries: bool,
     pub supports_explaining_mutations: bool,
     pub supports_nested_object_filtering: bool,

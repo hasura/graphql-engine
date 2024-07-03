@@ -228,7 +228,7 @@ async fn get_join_steps(
         let mut sequence_steps = vec![];
         if let JoinNode::Remote((remote_join, _join_id)) = location.join_node {
             let mut query_request = remote_join.target_ndc_ir;
-            query_request.variables = Some(vec![]);
+            query_request.set_variables(Some(vec![]));
             let ndc_request = types::NDCRequest::Query(query_request);
             let data_connector_explain = fetch_explain_from_data_connector(
                 expose_internal_errors,

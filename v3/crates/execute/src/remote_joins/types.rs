@@ -7,6 +7,7 @@ use json_ext::ValueExt;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;
 
+use crate::ndc;
 use crate::plan::ProcessResponseAs;
 
 /// This tree structure captures all the locations (in the selection set IR) where
@@ -108,7 +109,7 @@ pub struct RemoteJoin<'s, 'ir> {
     /// target data connector to execute query on
     pub target_data_connector: &'s metadata_resolve::DataConnectorLink,
     /// NDC IR to execute on a data connector
-    pub target_ndc_ir: ndc_models::QueryRequest,
+    pub target_ndc_ir: ndc::NdcQueryRequest,
     /// Mapping of the fields in source to fields in target.
     /// The HashMap has the following info -
     ///   - key: is the field name in the source
