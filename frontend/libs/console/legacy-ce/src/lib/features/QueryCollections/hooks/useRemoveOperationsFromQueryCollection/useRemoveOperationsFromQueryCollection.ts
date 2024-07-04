@@ -18,7 +18,6 @@ export const removeOperationsFromQueryCollectionMetadataArgs = (
 
 export const useRemoveOperationsFromQueryCollection = () => {
   const { mutate, ...rest } = useMetadataMigration();
-
   const { data: metadata } = useMetadata();
 
   const removeOperationsFromQueryCollection = useCallback(
@@ -33,6 +32,29 @@ export const useRemoveOperationsFromQueryCollection = () => {
             queryCollection && 'queryCollection'
           } ${queries && 'queries'}`
         );
+
+      const restEndpoints = metadata?.metadata?.rest_endpoints || [];
+
+      const args = [];
+
+      queries.forEach(endpoint => {
+        if (restEndpoints.some(e => e.name === endpoint.name)) {
+          args.push({
+            type: 'drop_rest_endpoint',
+            args: {
+              name: endpoint.name,
+            },
+          });
+        }
+      });
+
+      args.push(
+        ...removeOperationsFromQueryCollectionMetadataArgs(
+          queryCollection,
+          queries.map(query => query.name)
+        )
+      );
+
       return mutate(
         {
           query: {
@@ -40,10 +62,7 @@ export const useRemoveOperationsFromQueryCollection = () => {
             ...(metadata?.resource_version && {
               resource_version: metadata.resource_version,
             }),
-            args: removeOperationsFromQueryCollectionMetadataArgs(
-              queryCollection,
-              queries.map(query => query.name)
-            ),
+            args,
           },
         },
         {
