@@ -36,9 +36,16 @@ export const useRemoveOperationsFromQueryCollection = () => {
       const restEndpoints = metadata?.metadata?.rest_endpoints || [];
 
       const args = [];
+      console.log('>>>>', queryCollection, queries, options);
 
       queries.forEach(endpoint => {
-        if (restEndpoints.some(e => e.name === endpoint.name)) {
+        if (
+          restEndpoints.some(
+            e =>
+              e.name === endpoint.name &&
+              e.definition.query.collection_name === queryCollection
+          )
+        ) {
           args.push({
             type: 'drop_rest_endpoint',
             args: {
