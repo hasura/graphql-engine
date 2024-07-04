@@ -355,6 +355,21 @@ headers on any request.
 | **Default**         | `false`                       |
 | **Supported in**    | CE, Enterprise Edition        |
 
+
+### Disable Native Query validation
+
+Disable validation of Native Queries against the database.
+
+|                     |                                                     |
+| ------------------- | --------------------------------------------------- |
+| **Flag**            | `--disable-native-query-validation`                 |
+| **Env var**         | `HASURA_GRAPHQL_DISABLE_NATIVE_QUERY_VALIDATION`    |
+| **Accepted values** | Boolean                                             |
+| **Options**         | `true` or `false`                                   |
+| **Default**         | `false`                                             |
+| **Supported in**    | CE, Enterprise Edition, Cloud                       |
+
+
 ### Dynamic Secrets Allowed Path Prefix
 
 Enables the ability to source Postgres connection strings from files on disk using
@@ -1117,7 +1132,7 @@ List of third-party identity providers to enable Single Sign-on authentication f
 | **Accepted values** | JSON array of objects (containing identity provider configs and the JWK used for verification)                                                                                                                                                                                                                       |
 | **Default**         | `null`                                                                                                                                                                                                                                                                                                               |
 | **Example**         | `[{\"client_id\": \"<client-id-from-idp>\", \"name\": \"<display-name>\", \"scope\": \"openid\", \"authorization_url\": \"<login-url>\", \"request_token_url\": \"<request-token-url>\", \"admin_roles\": [\"admin\"], \"jwt_secret\": {\"type\": \"RS256\", \"jwk_url\": \"https://...\", \"issuer\": \"myapp\"}}]` |
-| **Supported in**    | EE                                                                                                                                                                                                                                                                                                                   |
+| **Supported in**    | Enterprise Edition                                                                                                                                                                                                                                                                                                   |
 
 ### Skip Arguments with `null` Values for Remote Schema
 
@@ -1240,7 +1255,7 @@ Add SQL and GraphQL queries to the OTLP traces.
 | **Accepted values** | Boolean                                  |
 | **Options**         | `true` or `false`                        |
 | **Default**         | `false`                                  |
-| **Supported in**    | CE, Enterprise Edition                   |
+| **Supported in**    | Enterprise Edition, Cloud                |
 
 ### Unauthorized Role
 
