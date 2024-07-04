@@ -33,7 +33,7 @@ fn are_base_types_compatible(variable_type: &ast::BaseType, location_type: &ast:
 
 fn are_types_compatible(variable_type: &ast::Type, location_type: &ast::Type) -> bool {
     fn check_nullability(variable_nullability: bool, location_nullability: bool) -> bool {
-        !matches!((variable_nullability, location_nullability), (false, true))
+        location_nullability || !variable_nullability
     }
     are_base_types_compatible(&variable_type.base, &location_type.base)
         && check_nullability(variable_type.nullable, location_type.nullable)
