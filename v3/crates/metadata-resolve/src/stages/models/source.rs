@@ -59,19 +59,20 @@ pub(crate) fn resolve_model_source(
     let source_collection = data_connector_context
         .schema
         .collections
-        .get(&model_source.collection)
+        .get(model_source.collection.as_str())
         .ok_or_else(|| Error::UnknownModelCollection {
             model_name: model.name.clone(),
             data_connector: qualified_data_connector_name.clone(),
             collection: model_source.collection.clone(),
         })?;
-    let source_collection_type = DataConnectorObjectType(source_collection.collection_type.clone());
+    let source_collection_type =
+        DataConnectorObjectType(source_collection.collection_type.as_str().to_owned());
 
     let source_arguments = source_collection
         .clone()
         .arguments
         .into_iter()
-        .map(|(k, v)| (ConnectorArgumentName(k), v.argument_type))
+        .map(|(k, v)| (ConnectorArgumentName(k.into()), v.argument_type))
         .collect();
 
     // Get the mappings of arguments and any type mappings that need resolving from the arguments
@@ -95,7 +96,7 @@ pub(crate) fn resolve_model_source(
     let mut type_mappings = BTreeMap::new();
     let source_collection_type_mapping_to_collect = type_mappings::TypeMappingToCollect {
         type_name: &model.data_type,
-        ndc_object_type_name: &source_collection_type,
+        ndc_object_type_name: source_collection.collection_type.as_ref(),
     };
     for type_mapping_to_collect in iter::once(&source_collection_type_mapping_to_collect)
         .chain(argument_type_mappings_to_collect.iter())

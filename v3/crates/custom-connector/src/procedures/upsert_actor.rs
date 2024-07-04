@@ -30,9 +30,9 @@ pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
 }
 
 pub(crate) fn execute(
-    arguments: &BTreeMap<String, serde_json::Value>,
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     fields: &Option<ndc_models::NestedField>,
-    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
+    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
     let actor = arguments.get("actor").ok_or((
@@ -77,7 +77,7 @@ pub(crate) fn execute(
         })?;
     let new_row = actor_obj
         .iter()
-        .map(|(k, v)| (k.clone(), v.clone()))
+        .map(|(k, v)| (ndc_models::FieldName::from(k.as_str()), v.clone()))
         .collect::<BTreeMap<_, _>>();
     let old_row = state.actors.insert(id_int, new_row);
     old_row.map_or(Ok(serde_json::Value::Null), |old_row| {

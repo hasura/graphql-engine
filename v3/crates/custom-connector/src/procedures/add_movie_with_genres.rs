@@ -28,9 +28,9 @@ pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
 }
 
 pub(crate) fn execute(
-    arguments: &BTreeMap<String, serde_json::Value>,
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     fields: &Option<ndc_models::NestedField>,
-    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
+    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
     let movie = arguments.get("movie").ok_or((
@@ -76,7 +76,7 @@ pub(crate) fn execute(
         })?;
     let movie_row = movie_obj
         .iter()
-        .map(|(k, v)| (k.clone(), v.clone()))
+        .map(|(k, v)| (ndc_models::FieldName::from(k.as_str()), v.clone()))
         .collect::<BTreeMap<_, _>>();
 
     if state.movies.insert(id_int, movie_row).is_some() {

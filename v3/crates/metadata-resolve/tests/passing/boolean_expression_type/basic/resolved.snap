@@ -151,7 +151,9 @@ Metadata {
                                         "id",
                                     ),
                                     column_type: Named {
-                                        name: "int4",
+                                        name: TypeName(
+                                            "int4",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -165,7 +167,9 @@ Metadata {
                                         "first_name",
                                     ),
                                     column_type: Named {
-                                        name: "String",
+                                        name: TypeName(
+                                            "String",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -179,7 +183,9 @@ Metadata {
                                         "last_name",
                                     ),
                                     column_type: Named {
-                                        name: "String",
+                                        name: TypeName(
+                                            "String",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},

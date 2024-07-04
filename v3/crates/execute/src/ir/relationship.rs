@@ -433,13 +433,13 @@ pub(crate) fn build_remote_relationship<'s>(
         let target_value_variable = format!("${}", &target_column.column);
         let comparison_exp = ndc_models::Expression::BinaryComparisonOperator {
             column: ndc_models::ComparisonTarget::Column {
-                name: target_column.column.0.clone(),
+                name: ndc_models::FieldName::from(target_column.column.0.as_str()),
                 path: vec![],
                 field_path: None,
             },
             operator: target_column.equal_operator.clone(),
             value: ndc_models::ComparisonValue::Variable {
-                name: target_value_variable,
+                name: ndc_models::VariableName::from(target_value_variable),
             },
         };
         remote_relationships_ir.filter_clause.expression =

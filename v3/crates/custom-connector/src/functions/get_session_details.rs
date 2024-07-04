@@ -38,7 +38,9 @@ pub(crate) fn function_info() -> ndc_models::FunctionInfo {
     }
 }
 
-pub(crate) fn rows(arguments: &BTreeMap<String, serde_json::Value>) -> Result<Vec<Row>> {
+pub(crate) fn rows(
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
+) -> Result<Vec<Row>> {
     let _headers = arguments.get("_headers").ok_or((
         StatusCode::BAD_REQUEST,
         Json(ndc_models::ErrorResponse {

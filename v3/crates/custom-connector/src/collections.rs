@@ -24,11 +24,11 @@ pub(crate) fn get_collections() -> Vec<ndc_models::CollectionInfo> {
 }
 
 pub(crate) fn get_collection_by_name(
-    collection_name: &str,
-    arguments: &BTreeMap<String, serde_json::Value>,
+    collection_name: &ndc_models::CollectionName,
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,
 ) -> Result<Vec<Row>> {
-    match collection_name {
+    match collection_name.as_str() {
         "actors" => Ok(actors::rows(state)),
         "movies" => Ok(movies::rows(state)),
         "institutions" => Ok(institutions::rows(state)),

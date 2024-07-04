@@ -10,7 +10,7 @@ use crate::{
 
 pub(crate) fn execute(
     fields: &Option<ndc_models::NestedField>,
-    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
+    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
     let mut actors_list = vec![];

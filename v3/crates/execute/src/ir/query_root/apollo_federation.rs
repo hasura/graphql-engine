@@ -148,7 +148,7 @@ pub(crate) fn entities_ir<'n, 's>(
                     )?;
                     Ok(ndc_models::Expression::BinaryComparisonOperator {
                         column: ndc_models::ComparisonTarget::Column {
-                            name: field_mapping.column.0.clone(),
+                            name: ndc_models::FieldName::from(field_mapping.column.0.as_str()),
                             path: vec![], // We don't support nested fields in the key fields, so the path is empty
                             field_path: None,
                         },

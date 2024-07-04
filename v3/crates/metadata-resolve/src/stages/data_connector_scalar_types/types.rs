@@ -12,7 +12,8 @@ pub struct ScalarTypeWithRepresentationInfo<'a> {
     pub representation: Option<TypeName>,
     pub comparison_expression_name: Option<ast::TypeName>,
     pub comparison_operators: ComparisonOperators,
-    pub aggregate_functions: &'a BTreeMap<String, ndc_models::AggregateFunctionDefinition>,
+    pub aggregate_functions:
+        &'a BTreeMap<ndc_models::AggregateFunctionName, ndc_models::AggregateFunctionDefinition>,
 }
 
 #[derive(Debug)]
@@ -22,6 +23,6 @@ pub struct ScalarTypeWithRepresentationInfoMap<'a>(
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Default)]
 pub struct ComparisonOperators {
-    pub equal_operators: Vec<String>,
-    pub in_operators: Vec<String>,
+    pub equal_operators: Vec<ndc_models::ComparisonOperatorName>,
+    pub in_operators: Vec<ndc_models::ComparisonOperatorName>,
 }

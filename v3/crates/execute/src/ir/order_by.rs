@@ -141,7 +141,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
             // ["UserPosts", "PostsComments"]
             for path in &relationship_paths {
                 order_by_element_path.push(ndc_models::PathElement {
-                    relationship: path.0.clone(),
+                    relationship: ndc_models::RelationshipName::from(path.0.as_str()),
                     arguments: BTreeMap::new(),
                     // 'AND' predicate indicates that the column can be accessed
                     // by joining all the relationships paths provided
@@ -169,7 +169,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
                 order_direction,
                 // TODO(naveen): When aggregates are supported, extend this to support other ndc_models::OrderByTarget
                 target: ndc_models::OrderByTarget::Column {
-                    name: ndc_column.0.clone(),
+                    name: ndc_models::FieldName::from(ndc_column.0.as_str()),
                     path: order_by_element_path,
                     field_path: None,
                 },

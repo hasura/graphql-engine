@@ -8,13 +8,12 @@ use crate::types::subgraph::Qualified;
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::types::{CustomTypeName, FieldName};
 
-use ref_cast::RefCast;
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub struct TypeMappingToCollect<'a> {
     pub type_name: &'a Qualified<CustomTypeName>,
-    pub ndc_object_type_name: &'a DataConnectorObjectType,
+    pub ndc_object_type_name: &'a ndc_models::TypeName,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -64,10 +63,10 @@ pub(crate) fn collect_type_mapping_for_source(
 ) -> Result<(), TypeMappingCollectionError> {
     match object_types.get(mapping_to_collect.type_name) {
         Some(object_type_representation) => {
-            let type_mapping = match object_type_representation
-                .type_mappings
-                .get(data_connector_name, mapping_to_collect.ndc_object_type_name)
-            {
+            let type_mapping = match object_type_representation.type_mappings.get(
+                data_connector_name,
+                mapping_to_collect.ndc_object_type_name.as_str(),
+            ) {
                 Some(v) => Ok(v),
                 None => handle_special_case_type_mapping(
                     mapping_to_collect,
@@ -85,7 +84,9 @@ pub(crate) fn collect_type_mapping_for_source(
                     ndc_object_type_name,
                     ..
                 } = inserted_mapping;
-                return if ndc_object_type_name == *mapping_to_collect.ndc_object_type_name {
+                return if ndc_object_type_name.0.as_str()
+                    == mapping_to_collect.ndc_object_type_name.as_str()
+                {
                     Ok(())
                 } else {
                     Err(
@@ -109,7 +110,9 @@ pub(crate) fn collect_type_mapping_for_source(
                         type_name: mapping_to_collect.type_name.clone(),
                         field_name: field_name.clone(),
                         data_connector: data_connector_name.clone(),
-                        ndc_type_name: mapping_to_collect.ndc_object_type_name.clone(),
+                        ndc_type_name: DataConnectorObjectType(
+                            mapping_to_collect.ndc_object_type_name.as_str().to_owned(),
+                        ),
                     }
                 })?;
 
@@ -122,9 +125,7 @@ pub(crate) fn collect_type_mapping_for_source(
 
                         let field_type_mapping_to_collect = TypeMappingToCollect {
                             type_name: object_type_name,
-                            ndc_object_type_name: DataConnectorObjectType::ref_cast(
-                                underlying_ndc_field_named_type,
-                            ),
+                            ndc_object_type_name: underlying_ndc_field_named_type,
                         };
 
                         collect_type_mapping_for_source(
@@ -177,31 +178,37 @@ fn handle_special_case_type_mapping<'a>(
             let ndc_object_type_name = unwrap_ndc_object_type_name(ndc_object_type);
             object_type_representation
                 .type_mappings
-                .get(data_connector_name, &ndc_object_type_name)
+                .get(data_connector_name, ndc_object_type_name.as_str())
                 .ok_or_else(|| TypeMappingCollectionError::MappingNotDefined {
                     type_name: mapping_to_collect.type_name.clone(),
                     data_connector: data_connector_name.clone(),
-                    ndc_type_name: mapping_to_collect.ndc_object_type_name.clone(),
+                    ndc_type_name: DataConnectorObjectType(
+                        mapping_to_collect.ndc_object_type_name.as_str().to_owned(),
+                    ),
                 })
         } else {
             Err(TypeMappingCollectionError::MappingNotDefined {
                 type_name: mapping_to_collect.type_name.clone(),
                 data_connector: data_connector_name.clone(),
-                ndc_type_name: mapping_to_collect.ndc_object_type_name.clone(),
+                ndc_type_name: DataConnectorObjectType(
+                    mapping_to_collect.ndc_object_type_name.as_str().to_owned(),
+                ),
             })
         }
     } else {
         Err(TypeMappingCollectionError::MappingNotDefined {
             type_name: mapping_to_collect.type_name.clone(),
             data_connector: data_connector_name.clone(),
-            ndc_type_name: mapping_to_collect.ndc_object_type_name.clone(),
+            ndc_type_name: DataConnectorObjectType(
+                mapping_to_collect.ndc_object_type_name.as_str().to_owned(),
+            ),
         })
     }
 }
 
-fn unwrap_ndc_object_type_name(ndc_type: &ndc_models::Type) -> DataConnectorObjectType {
+fn unwrap_ndc_object_type_name(ndc_type: &ndc_models::Type) -> &ndc_models::TypeName {
     match ndc_type {
-        ndc_models::Type::Named { name } => DataConnectorObjectType(name.clone()),
+        ndc_models::Type::Named { name } => name,
         ndc_models::Type::Nullable { underlying_type } => {
             unwrap_ndc_object_type_name(underlying_type)
         }

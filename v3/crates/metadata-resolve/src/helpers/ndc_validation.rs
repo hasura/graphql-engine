@@ -7,7 +7,7 @@ use crate::{
 use ndc_models;
 use open_dds::{
     commands::{CommandName, DataConnectorCommand, FunctionName, ProcedureName},
-    data_connector::{DataConnectorColumnName, DataConnectorName},
+    data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorScalarType},
     models::ModelName,
     types::{CustomTypeName, FieldName},
 };
@@ -126,7 +126,7 @@ pub enum NDCValidationError {
     #[error("Unsupported type representation {representation:} in scalar type {scalar_type:}, for argument preset name {argument_name:}. Only 'json' representation is supported.")]
     UnsupportedTypeInDataConnectorLinkArgumentPreset {
         representation: String,
-        scalar_type: String,
+        scalar_type: DataConnectorScalarType,
         argument_name: open_dds::arguments::ArgumentName,
     },
 
@@ -168,16 +168,20 @@ pub fn validate_ndc(
 
     let collection_name = &model_source.collection;
 
-    let collection = schema.collections.get(collection_name).ok_or_else(|| {
-        NDCValidationError::NoSuchCollection {
+    let collection = schema
+        .collections
+        .get(collection_name.as_str())
+        .ok_or_else(|| NDCValidationError::NoSuchCollection {
             db_name: db.name.clone(),
             model_name: model_name.clone(),
             collection_name: collection_name.clone(),
-        }
-    })?;
+        })?;
 
     for mapped_argument_name in model_source.argument_mappings.values() {
-        if !collection.arguments.contains_key(&mapped_argument_name.0) {
+        if !collection
+            .arguments
+            .contains_key(mapped_argument_name.0.as_str())
+        {
             return Err(NDCValidationError::NoSuchArgument {
                 db_name: db.name.clone(),
                 collection_name: collection_name.clone(),
@@ -187,9 +191,12 @@ pub fn validate_ndc(
         // TODO: Add type validation for arguments
     }
 
-    let collection_type = schema.object_types.get(&collection.collection_type).ok_or(
-        NDCValidationError::NoSuchType(collection.collection_type.clone()),
-    )?;
+    let collection_type = schema
+        .object_types
+        .get(&collection.collection_type)
+        .ok_or_else(|| {
+            NDCValidationError::NoSuchType(collection.collection_type.as_str().to_owned())
+        })?;
 
     let object_types::TypeMapping::Object { field_mappings, .. } = model_source
         .type_mappings
@@ -200,20 +207,19 @@ pub fn validate_ndc(
         })?;
     for (field_name, field_mapping) in field_mappings {
         let column_name = &field_mapping.column;
-        let column =
-            collection_type
-                .fields
-                .get(&column_name.0)
-                .ok_or(NDCValidationError::NoSuchColumn {
-                    db_name: db.name.clone(),
-                    model_name: model_name.clone(),
-                    field_name: field_name.clone(),
-                    collection_name: collection_name.clone(),
-                    column_name: column_name.clone(),
-                })?;
+        let column = collection_type
+            .fields
+            .get(column_name.0.as_str())
+            .ok_or_else(|| NDCValidationError::NoSuchColumn {
+                db_name: db.name.clone(),
+                model_name: model_name.clone(),
+                field_name: field_name.clone(),
+                collection_name: collection_name.clone(),
+                column_name: column_name.clone(),
+            })?;
         // Check if the arguments in the mapping are valid
         for (open_dd_argument_name, dc_argument_name) in &field_mapping.argument_mappings {
-            if !column.arguments.contains_key(&dc_argument_name.0) {
+            if !column.arguments.contains_key(dc_argument_name.0.as_str()) {
                 return Err(NDCValidationError::NoSuchArgumentInNDCArgumentMapping {
                     argument_name: open_dd_argument_name.clone(),
                     field_name: field_name.clone(),
@@ -236,7 +242,7 @@ pub fn validate_ndc(
         // let gdc_type = schema
         //     .scalar_types
         //     .get(column.r#type.as_str())
-        //     .ok_or(NDCValidationError::TypeCapabilityNotDefined {
+        //     .ok_or_else(|| NDCValidationError::TypeCapabilityNotDefined {
         //         model_name: model_name.clone(),
         //         field_name: field_name.clone(),
         //         r#type: column.r#type.clone(),
@@ -339,7 +345,7 @@ pub fn validate_ndc_command(
             );
         }
 
-        if !command_source_ndc_arguments.contains_key(&ndc_argument_name.0) {
+        if !command_source_ndc_arguments.contains_key(ndc_argument_name.0.as_str()) {
             return Err(NDCValidationError::NoSuchArgumentForCommand {
                 db_name: db.name.clone(),
                 func_proc_name: command_source_func_proc_name.clone(),
@@ -353,10 +359,10 @@ pub fn validate_ndc_command(
         get_underlying_named_type(command_source_ndc_result_type);
     if !(schema
         .scalar_types
-        .contains_key(command_source_ndc_result_type_name)
+        .contains_key(command_source_ndc_result_type_name.as_str())
         || schema
             .object_types
-            .contains_key(command_source_ndc_result_type_name))
+            .contains_key(command_source_ndc_result_type_name.as_str()))
     {
         return Err(NDCValidationError::NoSuchType(
             command_source_ndc_result_type_name.to_string(),
@@ -371,7 +377,10 @@ pub fn validate_ndc_command(
             // same as the &command_source_ndc.result_type
         }
         QualifiedTypeName::Custom(custom_type) => {
-            match schema.object_types.get(command_source_ndc_result_type_name) {
+            match schema
+                .object_types
+                .get(command_source_ndc_result_type_name.as_str())
+            {
                 // Check if the command.output_type is available in schema.object_types
                 Some(command_source_ndc_type) => {
                     let actual_command_source_type = resolve_actual_command_source_type(
@@ -396,7 +405,7 @@ pub fn validate_ndc_command(
                         let column_name = &field_mapping.column;
                         if !actual_command_source_type
                             .fields
-                            .contains_key(&column_name.0)
+                            .contains_key(column_name.0.as_str())
                         {
                             return Err(NDCValidationError::NoSuchColumnForCommand {
                                 db_name: db.name.clone(),
@@ -410,7 +419,10 @@ pub fn validate_ndc_command(
                 }
                 // If the command.output_type is not available in schema.object_types, then check if it is available in the schema.scalar_types
                 // else raise an NDCValidationError error
-                None => match schema.scalar_types.get(command_source_ndc_result_type_name) {
+                None => match schema
+                    .scalar_types
+                    .get(command_source_ndc_result_type_name.as_str())
+                {
                     Some(_command_source_ndc_type) => (),
                     None => Err(NDCValidationError::NoSuchType(
                         command_source_ndc_result_type_name.to_string(),
@@ -431,7 +443,7 @@ pub fn resolve_actual_command_source_type<'a>(
     commands_response_config: Option<&CommandsResponseConfig>,
     command_source_ndc_type: &'a ndc_models::ObjectType,
     schema: &'a data_connectors::DataConnectorSchema,
-    command_source_ndc_type_name: &str,
+    command_source_ndc_type_name: &ndc_models::TypeName,
     db_name: &Qualified<DataConnectorName>,
 ) -> Result<&'a ndc_models::ObjectType, NDCValidationError> {
     match commands_response_config {
@@ -439,25 +451,25 @@ pub fn resolve_actual_command_source_type<'a>(
         Some(response_config) => {
             if command_source_ndc_type
                 .fields
-                .contains_key(&response_config.headers_field)
+                .contains_key(response_config.headers_field.as_str())
                 && command_source_ndc_type
                     .fields
-                    .contains_key(&response_config.result_field)
+                    .contains_key(response_config.result_field.as_str())
             {
                 let result_field = command_source_ndc_type
                     .fields
-                    .get(&response_config.result_field)
+                    .get(response_config.result_field.as_str())
                     .ok_or_else(|| NDCValidationError::NoSuchFieldInObjectType {
                         data_connector_name: db_name.clone(),
-                        field_name: response_config.result_field.clone(),
+                        field_name: response_config.result_field.as_str().to_owned(),
                         object_type: command_source_ndc_type_name.to_string(),
                     })?;
 
                 let type_name = get_underlying_named_type(&result_field.r#type);
                 schema
                     .object_types
-                    .get(type_name)
-                    .ok_or_else(|| NDCValidationError::NoSuchType(type_name.clone()))
+                    .get(type_name.as_str())
+                    .ok_or_else(|| NDCValidationError::NoSuchType(type_name.as_str().to_owned()))
             } else {
                 Ok(command_source_ndc_type)
             }
@@ -495,7 +507,7 @@ pub(crate) fn validate_ndc_argument_presets(
 // "map" and "json".
 fn validate_argument_preset_type(
     preset_argument_name: &open_dds::arguments::ArgumentName,
-    arguments: &BTreeMap<String, ndc_models::ArgumentInfo>,
+    arguments: &BTreeMap<ndc_models::ArgumentName, ndc_models::ArgumentInfo>,
     schema: &data_connectors::DataConnectorSchema,
 ) -> Result<(), NDCValidationError> {
     for (arg_name, arg_info) in arguments {
@@ -503,8 +515,8 @@ fn validate_argument_preset_type(
             let type_name = get_underlying_named_type(&arg_info.argument_type);
             let scalar_type = schema
                 .scalar_types
-                .get(type_name)
-                .ok_or_else(|| NDCValidationError::NoSuchType(type_name.clone()))?;
+                .get(type_name.as_str())
+                .ok_or_else(|| NDCValidationError::NoSuchType(type_name.as_str().to_owned()))?;
 
             // if there is no representation default is assumed to be JSON
             // (https://github.com/hasura/ndc-spec/blob/main/ndc-models/src/lib.rs#L130),
@@ -517,7 +529,7 @@ fn validate_argument_preset_type(
                                 .map_err(|e| NDCValidationError::InternalSerializationError {
                                     err: e,
                                 })?,
-                            scalar_type: type_name.clone(),
+                            scalar_type: DataConnectorScalarType(type_name.as_str().to_owned()),
                             argument_name: preset_argument_name.clone(),
                         },
                     );
@@ -528,13 +540,13 @@ fn validate_argument_preset_type(
     Ok(())
 }
 
-pub fn get_underlying_named_type(result_type: &ndc_models::Type) -> &String {
+pub fn get_underlying_named_type(result_type: &ndc_models::Type) -> &ndc_models::TypeName {
     match result_type {
         ndc_models::Type::Named { name } => name,
         ndc_models::Type::Array { element_type } => get_underlying_named_type(element_type),
         ndc_models::Type::Nullable { underlying_type } => {
             get_underlying_named_type(underlying_type)
         }
-        ndc_models::Type::Predicate { object_type_name } => object_type_name,
+        ndc_models::Type::Predicate { object_type_name } => object_type_name.as_ref(),
     }
 }

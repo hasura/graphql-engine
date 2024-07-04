@@ -168,7 +168,9 @@ Metadata {
                                         "id",
                                     ),
                                     column_type: Named {
-                                        name: "int4",
+                                        name: TypeName(
+                                            "int4",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -182,7 +184,9 @@ Metadata {
                                         "author_id",
                                     ),
                                     column_type: Named {
-                                        name: "int4",
+                                        name: TypeName(
+                                            "int4",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -196,7 +200,9 @@ Metadata {
                                         "title",
                                     ),
                                     column_type: Named {
-                                        name: "varchar",
+                                        name: TypeName(
+                                            "varchar",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -367,7 +373,9 @@ Metadata {
                                             "id",
                                         ),
                                         column_type: Named {
-                                            name: "int4",
+                                            name: TypeName(
+                                                "int4",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -381,7 +389,9 @@ Metadata {
                                             "author_id",
                                         ),
                                         column_type: Named {
-                                            name: "int4",
+                                            name: TypeName(
+                                                "int4",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -395,7 +405,9 @@ Metadata {
                                             "title",
                                         ),
                                         column_type: Named {
-                                            name: "varchar",
+                                            name: TypeName(
+                                                "varchar",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -418,7 +430,9 @@ Metadata {
                                 column: DataConnectorColumnName(
                                     "id",
                                 ),
-                                equal_operator: "_eq",
+                                equal_operator: ComparisonOperatorName(
+                                    "_eq",
+                                ),
                             },
                         },
                     },

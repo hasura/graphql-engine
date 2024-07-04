@@ -139,7 +139,7 @@ pub fn build_ndc_command_arguments_as_value(
     command_field: &Name,
     argument: &InputField<GDS>,
     command_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-) -> Result<(String, serde_json::Value), error::Error> {
+) -> Result<(ConnectorArgumentName, serde_json::Value), error::Error> {
     match argument.info.generic {
         Annotation::Input(InputAnnotation::CommandArgument {
             argument_type,
@@ -156,7 +156,7 @@ pub fn build_ndc_command_arguments_as_value(
                 &argument.value,
                 command_type_mappings,
             )?;
-            return Ok((ndc_func_proc_argument.to_string(), mapped_argument_value));
+            return Ok((ndc_func_proc_argument, mapped_argument_value));
         }
         annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
             annotation: annotation.clone(),

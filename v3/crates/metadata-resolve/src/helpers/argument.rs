@@ -144,9 +144,7 @@ pub fn get_argument_mappings<'a>(
 
                     type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
                         type_name: object_type_name,
-                        ndc_object_type_name: DataConnectorObjectType::ref_cast(
-                            underlying_ndc_argument_named_type,
-                        ),
+                        ndc_object_type_name: underlying_ndc_argument_named_type,
                     });
                 }
                 TypeRepresentation::Scalar(_) | TypeRepresentation::BooleanExpressionScalar(_) => {}
@@ -157,9 +155,7 @@ pub fn get_argument_mappings<'a>(
                     // resolve the object type the boolean expression refers to
                     type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
                         type_name: &boolean_expression_type.object_type,
-                        ndc_object_type_name: DataConnectorObjectType::ref_cast(
-                            underlying_ndc_argument_named_type,
-                        ),
+                        ndc_object_type_name: underlying_ndc_argument_named_type,
                     });
                 }
                 TypeRepresentation::BooleanExpression(object_boolean_expression_type) => {
@@ -169,9 +165,7 @@ pub fn get_argument_mappings<'a>(
                     // resolve the object type the boolean expression refers to
                     type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
                         type_name: &object_boolean_expression_type.object_type,
-                        ndc_object_type_name: DataConnectorObjectType::ref_cast(
-                            underlying_ndc_argument_named_type,
-                        ),
+                        ndc_object_type_name: underlying_ndc_argument_named_type,
                     });
                 }
             }
@@ -261,9 +255,9 @@ pub(crate) fn resolve_value_expression_for_argument(
             // get the data_connector_object_type from the NDC command argument type
             // or explode
             let data_connector_object_type = match &source_argument_type {
-                Some(ndc_models::Type::Predicate { object_type_name }) => {
-                    Some(DataConnectorObjectType(object_type_name.clone()))
-                }
+                Some(ndc_models::Type::Predicate { object_type_name }) => Some(
+                    DataConnectorObjectType(object_type_name.as_str().to_owned()),
+                ),
                 _ => None,
             }
             .ok_or_else(|| Error::DataConnectorTypeMappingValidationError {
@@ -553,19 +547,20 @@ pub(crate) fn resolve_model_predicate_with_type(
                                 // get names of collections we want to lookup
                                 let collection_types = object_type_representation
                                     .type_mappings
-                                    .object_types_for_data_connector(&data_connector_link.name);
-
-                                let type_mappings_to_collect: Vec<
-                                    type_mappings::TypeMappingToCollect,
-                                > = collection_types
+                                    .object_types_for_data_connector(&data_connector_link.name)
                                     .iter()
-                                    .map(|collection_type| type_mappings::TypeMappingToCollect {
-                                        type_name,
-                                        ndc_object_type_name: collection_type,
+                                    .map(|collection_type| {
+                                        ndc_models::TypeName::from(collection_type.0.as_str())
                                     })
-                                    .collect();
+                                    .collect::<Vec<_>>();
 
-                                for type_mapping_to_collect in type_mappings_to_collect {
+                                for collection_type in &collection_types {
+                                    let type_mapping_to_collect =
+                                        type_mappings::TypeMappingToCollect {
+                                            type_name,
+                                            ndc_object_type_name: collection_type,
+                                        };
+
                                     type_mappings::collect_type_mapping_for_source(
                                         &type_mapping_to_collect,
                                         &data_connector_link.name,
@@ -765,7 +760,7 @@ fn resolve_binary_operator_for_type<'a>(
 
     let comparison_operator_definition = &ndc_scalar_type
         .comparison_operators
-        .get(&ndc_operator_name.0)
+        .get(ndc_operator_name.0.as_str())
         .ok_or_else(|| Error::TypePredicateError {
             type_predicate_error: TypePredicateError::InvalidOperatorInTypePredicate {
                 type_name: type_name.clone(),

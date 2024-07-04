@@ -44,7 +44,7 @@ pub(crate) fn ndc_query<'s, 'ir>(
 /// Translates the internal IR 'AggregateSelectionSet' into an NDC query aggregates selection
 fn ndc_aggregates(
     aggregate_selection_set: &AggregateSelectionSet,
-) -> IndexMap<String, ndc_models::Aggregate> {
+) -> IndexMap<ndc_models::FieldName, ndc_models::Aggregate> {
     aggregate_selection_set
         .fields
         .iter()
@@ -67,20 +67,20 @@ fn ndc_aggregates(
                     } = column_path;
                     let nested_field_path = field_path
                         .iter()
-                        .map(std::string::ToString::to_string)
+                        .map(|p| ndc_models::FieldName::from(*p))
                         .collect::<Vec<_>>();
                     ndc_models::Aggregate::SingleColumn {
-                        column: (*column).to_string(),
+                        column: ndc_models::FieldName::from(*column),
                         field_path: if nested_field_path.is_empty() {
                             None
                         } else {
                             Some(nested_field_path)
                         },
-                        function: function_name.0.clone(),
+                        function: ndc_models::AggregateFunctionName::from(function_name.0.as_str()),
                     }
                 }
             };
-            (field_name.clone(), aggregate)
+            (ndc_models::FieldName::from(field_name.as_str()), aggregate)
         })
         .collect()
 }
@@ -91,7 +91,7 @@ fn ndc_count_aggregate(column_path: &[&str], distinct: bool) -> ndc_models::Aggr
     let mut column_path_iter = column_path.iter();
     if let Some(first_path_element) = column_path_iter.next() {
         let remaining_path = column_path_iter
-            .map(std::string::ToString::to_string)
+            .map(|p| ndc_models::FieldName::from(*p))
             .collect::<Vec<_>>();
         let nested_field_path = if remaining_path.is_empty() {
             None
@@ -99,7 +99,7 @@ fn ndc_count_aggregate(column_path: &[&str], distinct: bool) -> ndc_models::Aggr
             Some(remaining_path)
         };
         ndc_models::Aggregate::ColumnCount {
-            column: (*first_path_element).to_string(),
+            column: ndc_models::FieldName::from(*first_path_element),
             field_path: nested_field_path,
             distinct,
         }
@@ -119,11 +119,11 @@ pub(crate) fn ndc_ir<'s, 'ir>(
     let (query, join_locations) = ndc_query(ir, join_id_counter)?;
     let query_request = ndc_models::QueryRequest {
         query,
-        collection: ir.collection.clone(),
+        collection: ndc_models::CollectionName::from(ir.collection.as_str()),
         arguments: ir
             .arguments
             .iter()
-            .map(|(k, v)| (k.to_string(), v.clone()))
+            .map(|(k, v)| (ndc_models::ArgumentName::from(k.0.as_str()), v.clone()))
             .collect(),
         collection_relationships,
         variables: None,

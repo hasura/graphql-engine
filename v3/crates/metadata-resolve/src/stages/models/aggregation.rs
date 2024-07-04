@@ -189,7 +189,7 @@ fn resolve_aggregate_expression_data_connector_mapping(
                 model_name,
                 field_object_type_name,
                 data_connector_name,
-                &DataConnectorObjectType(data_connector_field_type.clone()),
+                &DataConnectorObjectType(data_connector_field_type.as_str().to_owned()),
                 data_connector_capabilities,
                 aggregate_expressions,
                 object_types,
@@ -206,7 +206,8 @@ fn resolve_aggregate_expression_data_connector_mapping(
                 .all(|agg_fn| {
                     agg_fn.data_connector_functions.iter().any(|dc_fn| {
                         dc_fn.data_connector_name == *data_connector_name
-                            && dc_fn.operand_scalar_type.0 == *data_connector_field_type
+                            && dc_fn.operand_scalar_type.0.as_str()
+                                == data_connector_field_type.as_str()
                     })
                 });
             if !all_functions_have_a_data_connector_mapping {
@@ -215,7 +216,7 @@ fn resolve_aggregate_expression_data_connector_mapping(
                     aggregate_expression: field_aggregate_expression.name.clone(),
                     data_connector_name: data_connector_name.clone(),
                     data_connector_operand_type: DataConnectorScalarType(
-                        data_connector_field_type.clone(),
+                        data_connector_field_type.as_str().to_owned(),
                     ),
                 });
             }

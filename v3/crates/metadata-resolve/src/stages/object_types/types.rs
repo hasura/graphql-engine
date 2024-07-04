@@ -5,6 +5,7 @@ use indexmap::IndexMap;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated, FieldName};
 use serde::{Deserialize, Serialize};
+use std::borrow::Borrow;
 use std::collections::{BTreeMap, BTreeSet};
 
 use open_dds::models::ModelName;
@@ -33,11 +34,15 @@ impl DataConnectorTypeMappingsForObject {
         Self(BTreeMap::new())
     }
 
-    pub fn get(
+    pub fn get<TObjectTypeName>(
         &self,
         data_connector_name: &Qualified<DataConnectorName>,
-        data_connector_object_type: &DataConnectorObjectType,
-    ) -> Option<&TypeMapping> {
+        data_connector_object_type: &TObjectTypeName,
+    ) -> Option<&TypeMapping>
+    where
+        DataConnectorObjectType: Borrow<TObjectTypeName>,
+        TObjectTypeName: Ord + ?Sized,
+    {
         self.0
             .get(data_connector_name)
             .and_then(|data_connector_object_types| {

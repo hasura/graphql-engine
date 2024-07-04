@@ -9,13 +9,18 @@ pub fn migrate_schema_response_from_v01(
             .into_iter()
             .map(|(name, old_scalar_type)| {
                 let scalar_type = migrate_scalar_type_from_v01(old_scalar_type);
-                (name, scalar_type)
+                (ndc_models_v02::ScalarTypeName::from(name), scalar_type)
             })
             .collect(),
         object_types: old_schema
             .object_types
             .into_iter()
-            .map(|(name, old_object_type)| (name, migrate_object_type_from_v01(old_object_type)))
+            .map(|(name, old_object_type)| {
+                (
+                    ndc_models_v02::ObjectTypeName::from(name),
+                    migrate_object_type_from_v01(old_object_type),
+                )
+            })
             .collect(),
         collections: old_schema
             .collections
@@ -44,7 +49,7 @@ pub fn migrate_scalar_type_from_v01(
             .into_iter()
             .map(|(name, old_aggregate_fn)| {
                 (
-                    name,
+                    ndc_models_v02::AggregateFunctionName::from(name),
                     migrate_aggregate_function_definition_from_v01(old_aggregate_fn),
                 )
             })
@@ -57,7 +62,7 @@ pub fn migrate_scalar_type_from_v01(
             .into_iter()
             .map(|(name, old_comparison)| {
                 (
-                    name,
+                    ndc_models_v02::ComparisonOperatorName::from(name),
                     migrate_comparison_operation_definition_from_v01(old_comparison),
                 )
             })
@@ -142,7 +147,12 @@ pub fn migrate_object_type_from_v01(
         fields: old_object_type
             .fields
             .into_iter()
-            .map(|(name, old_field)| (name, map_object_field_from_v01(old_field)))
+            .map(|(name, old_field)| {
+                (
+                    ndc_models_v02::FieldName::from(name),
+                    map_object_field_from_v01(old_field),
+                )
+            })
             .collect(),
     }
 }
@@ -154,7 +164,12 @@ pub fn map_object_field_from_v01(
         arguments: old_field
             .arguments
             .into_iter()
-            .map(|(name, old_argument)| (name, migrate_argument_info_from_v01(old_argument)))
+            .map(|(name, old_argument)| {
+                (
+                    ndc_models_v02::ArgumentName::from(name),
+                    migrate_argument_info_from_v01(old_argument),
+                )
+            })
             .collect(),
         description: old_field.description,
         r#type: migrate_type_from_v01(old_field.r#type),
@@ -172,16 +187,18 @@ fn migrate_argument_info_from_v01(
 
 pub fn migrate_type_from_v01(old_type: ndc_models_v01::Type) -> ndc_models_v02::Type {
     match old_type {
-        ndc_models_v01::Type::Named { name } => ndc_models_v02::Type::Named { name },
+        ndc_models_v01::Type::Named { name } => ndc_models_v02::Type::Named {
+            name: ndc_models_v02::TypeName::from(name),
+        },
         ndc_models_v01::Type::Nullable { underlying_type } => ndc_models_v02::Type::Nullable {
             underlying_type: Box::new(migrate_type_from_v01(*underlying_type)),
         },
         ndc_models_v01::Type::Array { element_type } => ndc_models_v02::Type::Array {
             element_type: Box::new(migrate_type_from_v01(*element_type)),
         },
-        ndc_models_v01::Type::Predicate { object_type_name } => {
-            ndc_models_v02::Type::Predicate { object_type_name }
-        }
+        ndc_models_v01::Type::Predicate { object_type_name } => ndc_models_v02::Type::Predicate {
+            object_type_name: ndc_models_v02::ObjectTypeName::from(object_type_name),
+        },
     }
 }
 
@@ -192,11 +209,16 @@ fn migrate_collection_info_from_v01(
         arguments: old_collection
             .arguments
             .into_iter()
-            .map(|(name, old_argument)| (name, migrate_argument_info_from_v01(old_argument)))
+            .map(|(name, old_argument)| {
+                (
+                    ndc_models_v02::ArgumentName::from(name),
+                    migrate_argument_info_from_v01(old_argument),
+                )
+            })
             .collect(),
-        name: old_collection.name,
+        name: ndc_models_v02::CollectionName::from(old_collection.name),
         description: old_collection.description,
-        collection_type: old_collection.collection_type,
+        collection_type: ndc_models_v02::ObjectTypeName::from(old_collection.collection_type),
         uniqueness_constraints: old_collection
             .uniqueness_constraints
             .into_iter()
@@ -221,7 +243,11 @@ fn migrate_uniqueness_constraint_from_v01(
     old_constraint: ndc_models_v01::UniquenessConstraint,
 ) -> ndc_models_v02::UniquenessConstraint {
     ndc_models_v02::UniquenessConstraint {
-        unique_columns: old_constraint.unique_columns,
+        unique_columns: old_constraint
+            .unique_columns
+            .into_iter()
+            .map(ndc_models_v02::FieldName::from)
+            .collect(),
     }
 }
 
@@ -229,8 +255,17 @@ fn migrate_foreign_key_constraint_from_v01(
     old_constraint: ndc_models_v01::ForeignKeyConstraint,
 ) -> ndc_models_v02::ForeignKeyConstraint {
     ndc_models_v02::ForeignKeyConstraint {
-        column_mapping: old_constraint.column_mapping,
-        foreign_collection: old_constraint.foreign_collection,
+        column_mapping: old_constraint
+            .column_mapping
+            .into_iter()
+            .map(|(k, v)| {
+                (
+                    ndc_models_v02::FieldName::from(k),
+                    ndc_models_v02::FieldName::from(v),
+                )
+            })
+            .collect(),
+        foreign_collection: ndc_models_v02::CollectionName::from(old_constraint.foreign_collection),
     }
 }
 
@@ -241,9 +276,14 @@ fn migrate_function_info_from_v01(
         arguments: old_function
             .arguments
             .into_iter()
-            .map(|(name, old_argument)| (name, migrate_argument_info_from_v01(old_argument)))
+            .map(|(name, old_argument)| {
+                (
+                    ndc_models_v02::ArgumentName::from(name),
+                    migrate_argument_info_from_v01(old_argument),
+                )
+            })
             .collect(),
-        name: old_function.name,
+        name: ndc_models_v02::FunctionName::from(old_function.name),
         description: old_function.description,
         result_type: migrate_type_from_v01(old_function.result_type),
     }
@@ -256,9 +296,14 @@ fn migrate_procedure_info_from_v01(
         arguments: old_procedure
             .arguments
             .into_iter()
-            .map(|(name, old_argument)| (name, migrate_argument_info_from_v01(old_argument)))
+            .map(|(name, old_argument)| {
+                (
+                    ndc_models_v02::ArgumentName::from(name),
+                    migrate_argument_info_from_v01(old_argument),
+                )
+            })
             .collect(),
-        name: old_procedure.name,
+        name: ndc_models_v02::ProcedureName::from(old_procedure.name),
         description: old_procedure.description,
         result_type: migrate_type_from_v01(old_procedure.result_type),
     }

@@ -7,11 +7,9 @@ use crate::stages::{
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
-use ref_cast::RefCast;
 
 pub use super::types::{Command, CommandSource};
 use open_dds::commands::{self, DataConnectorCommand};
-use open_dds::data_connector::DataConnectorObjectType;
 
 use open_dds::types::CustomTypeName;
 
@@ -78,7 +76,7 @@ pub fn resolve_command_source(
                     .iter()
                     .map(|(k, v)| {
                         (
-                            models::ConnectorArgumentName(k.clone()),
+                            models::ConnectorArgumentName(k.as_str().to_owned()),
                             v.argument_type.clone(),
                         )
                     })
@@ -103,7 +101,7 @@ pub fn resolve_command_source(
                     .iter()
                     .map(|(k, v)| {
                         (
-                            models::ConnectorArgumentName(k.clone()),
+                            models::ConnectorArgumentName(k.as_str().to_owned()),
                             v.argument_type.clone(),
                         )
                     })
@@ -157,7 +155,7 @@ pub fn resolve_command_source(
 
             let source_result_type_mapping_to_resolve = type_mappings::TypeMappingToCollect {
                 type_name: custom_type_name,
-                ndc_object_type_name: DataConnectorObjectType::ref_cast(source_result_type_name),
+                ndc_object_type_name: source_result_type_name,
             };
 
             Ok::<_, Error>(source_result_type_mapping_to_resolve)
@@ -168,7 +166,7 @@ pub fn resolve_command_source(
     let ndc_object_type = source_result_type_mapping_to_resolve
         .as_ref()
         .map(|type_mapping_to_resolve| {
-            let ndc_type_name = &type_mapping_to_resolve.ndc_object_type_name.0;
+            let ndc_type_name = type_mapping_to_resolve.ndc_object_type_name;
             data_connector_context
                 .schema
                 .object_types
@@ -176,7 +174,7 @@ pub fn resolve_command_source(
                 .ok_or_else(|| Error::CommandTypeMappingCollectionError {
                     command_name: command.name.clone(),
                     error: type_mappings::TypeMappingCollectionError::NDCValidationError(
-                        crate::NDCValidationError::NoSuchType(ndc_type_name.clone()),
+                        crate::NDCValidationError::NoSuchType(ndc_type_name.as_str().to_owned()),
                     ),
                 })
         })

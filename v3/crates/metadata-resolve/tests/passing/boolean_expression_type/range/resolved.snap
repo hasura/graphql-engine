@@ -91,7 +91,9 @@ Metadata {
                                         "lte",
                                     ),
                                     column_type: Named {
-                                        name: "Int",
+                                        name: TypeName(
+                                            "Int",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -105,7 +107,9 @@ Metadata {
                                         "gte",
                                     ),
                                     column_type: Named {
-                                        name: "Int",
+                                        name: TypeName(
+                                            "Int",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -241,7 +245,9 @@ Metadata {
                                         "id",
                                     ),
                                     column_type: Named {
-                                        name: "Int",
+                                        name: TypeName(
+                                            "Int",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -255,7 +261,9 @@ Metadata {
                                         "rating",
                                     ),
                                     column_type: Named {
-                                        name: "Int",
+                                        name: TypeName(
+                                            "Int",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -269,7 +277,9 @@ Metadata {
                                         "title",
                                     ),
                                     column_type: Named {
-                                        name: "String",
+                                        name: TypeName(
+                                            "String",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -434,7 +444,9 @@ Metadata {
                                             "id",
                                         ),
                                         column_type: Named {
-                                            name: "Int",
+                                            name: TypeName(
+                                                "Int",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -448,7 +460,9 @@ Metadata {
                                             "rating",
                                         ),
                                         column_type: Named {
-                                            name: "Int",
+                                            name: TypeName(
+                                                "Int",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -462,7 +476,9 @@ Metadata {
                                             "title",
                                         ),
                                         column_type: Named {
-                                            name: "String",
+                                            name: TypeName(
+                                                "String",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},

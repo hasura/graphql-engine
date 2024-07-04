@@ -14,7 +14,7 @@ use crate::plan::error;
 /// variable.
 pub(crate) fn collect_relationships(
     ir: &ModelSelection<'_>,
-    relationships: &mut BTreeMap<String, ndc_models::Relationship>,
+    relationships: &mut BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
 ) -> Result<(), error::Error> {
     // from selection fields
     if let Some(selection) = &ir.selection {
@@ -26,7 +26,7 @@ pub(crate) fn collect_relationships(
                     relationship_info,
                 } => {
                     relationships.insert(
-                        name.to_string(),
+                        ndc_models::RelationshipName::from(name.0.as_str()),
                         process_model_relationship_definition(relationship_info)?,
                     );
                     collect_relationships(query, relationships)?;
@@ -37,7 +37,7 @@ pub(crate) fn collect_relationships(
                     relationship_info,
                 } => {
                     relationships.insert(
-                        name.to_string(),
+                        ndc_models::RelationshipName::from(name.0.as_str()),
                         process_command_relationship_definition(relationship_info)?,
                     );
                     if let Some(nested_selection) = &ir.command_info.selection {
@@ -59,14 +59,14 @@ pub(crate) fn collect_relationships(
     // from filter clause
     for (name, relationship) in &ir.filter_clause.relationships {
         let result = process_model_relationship_definition(relationship)?;
-        relationships.insert(name.to_string(), result);
+        relationships.insert(ndc_models::RelationshipName::from(name.0.as_str()), result);
     }
 
     // from order by clause
     if let Some(order_by) = &ir.order_by {
         for (name, relationship) in &order_by.relationships {
             let result = process_model_relationship_definition(relationship)?;
-            relationships.insert(name.to_string(), result);
+            relationships.insert(ndc_models::RelationshipName::from(name.0.as_str()), result);
         }
     };
 
@@ -121,7 +121,10 @@ pub fn process_model_relationship_definition(
             })?;
 
             if column_mapping
-                .insert(source_column.column.0, target_column.column.0.clone())
+                .insert(
+                    ndc_models::FieldName::from(source_column.column.0.as_str()),
+                    ndc_models::FieldName::from(target_column.column.0.as_str()),
+                )
                 .is_some()
             {
                 Err(error::InternalError::MappingExistsInRelationship {
@@ -141,7 +144,9 @@ pub fn process_model_relationship_definition(
                 RelationshipType::Array => ndc_models::RelationshipType::Array,
             }
         },
-        target_collection: target_source.model.collection.to_string(),
+        target_collection: ndc_models::CollectionName::from(
+            target_source.model.collection.as_str(),
+        ),
         arguments: BTreeMap::new(),
     };
     Ok(ndc_relationship)
@@ -182,11 +187,14 @@ pub(crate) fn process_command_relationship_definition(
             })?;
 
             let relationship_argument = ndc_models::RelationshipArgument::Column {
-                name: source_column.column.0,
+                name: ndc_models::FieldName::from(source_column.column.0.as_str()),
             };
 
             if arguments
-                .insert(target_argument.to_string(), relationship_argument)
+                .insert(
+                    ndc_models::ArgumentName::from(target_argument.0.as_str()),
+                    relationship_argument,
+                )
                 .is_some()
             {
                 Err(error::InternalError::MappingExistsInRelationship {
@@ -202,7 +210,7 @@ pub(crate) fn process_command_relationship_definition(
     let ndc_relationship = ndc_models::Relationship {
         column_mapping: BTreeMap::new(),
         relationship_type: ndc_models::RelationshipType::Object,
-        target_collection: target_source.function_name.to_string(),
+        target_collection: ndc_models::CollectionName::from(target_source.function_name.0.as_str()),
         arguments,
     };
     Ok(ndc_relationship)

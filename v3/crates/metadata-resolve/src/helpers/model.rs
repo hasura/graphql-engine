@@ -1,6 +1,5 @@
 use crate::stages::data_connector_scalar_types;
 use crate::types::error::Error;
-use ref_cast::RefCast;
 
 use crate::types::subgraph::{
     mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeReference,
@@ -19,21 +18,20 @@ pub(crate) fn resolve_ndc_type(
 ) -> Result<QualifiedTypeReference, Error> {
     match source_type {
         ndc_models::Type::Named { name } => {
-            let scalar_type_name = DataConnectorScalarType::ref_cast(name);
             let scalar_type =
                 scalars
                     .0
-                    .get(scalar_type_name)
+                    .get(name.as_str())
                     .ok_or(Error::UnknownScalarTypeInDataConnector {
                         data_connector: data_connector.clone(),
-                        scalar_type: scalar_type_name.clone(),
+                        scalar_type: DataConnectorScalarType(name.as_str().to_owned()),
                     })?;
             scalar_type
                 .representation
                 .clone()
                 .ok_or(Error::DataConnectorScalarRepresentationRequired {
                     data_connector: data_connector.clone(),
-                    scalar_type: name.clone(),
+                    scalar_type: DataConnectorScalarType(name.as_str().to_owned()),
                 })
                 .map(|ty| QualifiedTypeReference {
                     underlying_type: QualifiedBaseType::Named(mk_qualified_type_name(

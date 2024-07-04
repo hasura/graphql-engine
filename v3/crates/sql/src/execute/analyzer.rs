@@ -148,9 +148,9 @@ fn analyze_internal(
                         .map(|field_mapping| field_mapping.column.clone())
                 }?;
                 ndc_fields.insert(
-                    field.name().clone(),
+                    ndc_models::FieldName::from(field.name().as_str()),
                     ndc_models::Field::Column {
-                        column: ndc_field.to_string(),
+                        column: ndc_models::FieldName::from(ndc_field.0.as_str()),
                         fields: None,
                         arguments: BTreeMap::new(),
                     },
@@ -168,7 +168,7 @@ fn analyze_internal(
 
             let query_request = ndc_models::QueryRequest {
                 query: ndc_query,
-                collection: model_source.collection.clone(),
+                collection: ndc_models::CollectionName::from(model_source.collection.as_str()),
                 arguments: BTreeMap::new(),
                 collection_relationships: BTreeMap::new(),
                 variables: None,

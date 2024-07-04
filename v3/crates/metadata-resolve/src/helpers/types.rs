@@ -17,7 +17,7 @@ use std::str::FromStr;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct NdcColumnForComparison {
     pub column: DataConnectorColumnName,
-    pub equal_operator: String,
+    pub equal_operator: ndc_models::ComparisonOperatorName,
 }
 
 /// try to add `new_graphql_type` to `existing_graphql_types`, returning an error

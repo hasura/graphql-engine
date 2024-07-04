@@ -48,7 +48,7 @@ pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
 }
 
 pub(crate) fn execute(
-    arguments: &BTreeMap<String, serde_json::Value>,
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
 ) -> Result<serde_json::Value> {
     let _headers = arguments.get("_headers").ok_or((
         StatusCode::BAD_REQUEST,

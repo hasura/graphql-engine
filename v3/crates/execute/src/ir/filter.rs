@@ -257,7 +257,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
                     // Using exists clause to build the filter expression for relationship fields.
                     let exists_filter_clause = ndc_models::Expression::And { expressions };
                     let exists_in_relationship = ndc_models::ExistsInCollection::Related {
-                        relationship: ndc_relationship_name.0,
+                        relationship: ndc_models::RelationshipName::from(ndc_relationship_name.0),
                         arguments: BTreeMap::new(),
                     };
 
@@ -403,11 +403,18 @@ fn resolve_filter_object<'s>(
 }
 
 /// Only pass a path if there are items in it
-fn to_ndc_field_path(field_path: Vec<DataConnectorColumnName>) -> Option<Vec<String>> {
+fn to_ndc_field_path(
+    field_path: Vec<DataConnectorColumnName>,
+) -> Option<Vec<ndc_models::FieldName>> {
     if field_path.is_empty() {
         None
     } else {
-        Some(field_path.into_iter().map(|s| s.0).collect())
+        Some(
+            field_path
+                .into_iter()
+                .map(|s| ndc_models::FieldName::from(s.0))
+                .collect(),
+        )
     }
 }
 
@@ -420,11 +427,11 @@ fn build_binary_comparison_expression(
 ) -> ndc_models::Expression {
     ndc_models::Expression::BinaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
-            name: column.0,
+            name: ndc_models::FieldName::from(column.0),
             path: Vec::new(),
             field_path: to_ndc_field_path(field_path),
         },
-        operator: operator.0.clone(),
+        operator: ndc_models::ComparisonOperatorName::from(operator.0.as_str()),
         value: ndc_models::ComparisonValue::Scalar {
             value: value.as_json(),
         },
@@ -440,7 +447,7 @@ fn build_is_null_expression(
     // Build an 'IsNull' unary comparison expression
     let unary_comparison_expression = ndc_models::Expression::UnaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
-            name: column.0,
+            name: ndc_models::FieldName::from(column.0),
             path: Vec::new(),
             field_path: to_ndc_field_path(field_path),
         },

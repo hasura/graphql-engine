@@ -1,5 +1,4 @@
 pub mod types;
-use ref_cast::RefCast;
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
     ComparisonOperators, ScalarTypeWithRepresentationInfo, ScalarTypeWithRepresentationInfoMap,
@@ -181,7 +180,7 @@ fn convert_data_connectors_contexts<'a>(
     for (data_connector_name, context) in &old_data_connectors.0 {
         let mut new_scalars = BTreeMap::new();
         for (name, scalar) in &context.schema.scalar_types {
-            let scalar_name = DataConnectorScalarType(name.clone());
+            let scalar_name = DataConnectorScalarType(name.as_str().to_owned());
             new_scalars.insert(
                 scalar_name.clone(),
                 ScalarTypeWithRepresentationInfo {
@@ -228,7 +227,7 @@ pub fn get_simple_scalar<'a>(
     scalars: &'a ScalarTypeWithRepresentationInfoMap<'a>,
 ) -> Option<&'a ScalarTypeWithRepresentationInfo<'a>> {
     match t {
-        ndc_models::Type::Named { name } => scalars.0.get(DataConnectorScalarType::ref_cast(&name)),
+        ndc_models::Type::Named { name } => scalars.0.get(name.as_str()),
         ndc_models::Type::Nullable { underlying_type } => {
             get_simple_scalar(*underlying_type, scalars)
         }

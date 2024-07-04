@@ -51,12 +51,12 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
-        IndexMap<String, ndc_models::Field>,
+        IndexMap<ndc_models::FieldName, ndc_models::Field>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
 > {
-    let mut ndc_fields = IndexMap::new();
+    let mut ndc_fields = IndexMap::<ndc_models::FieldName, ndc_models::Field>::new();
     let mut join_locations = JoinLocations::new();
     for (alias, field) in &model_selection.fields {
         match field {
@@ -73,11 +73,16 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     .transpose()?
                     .unzip();
                 ndc_fields.insert(
-                    alias.to_string(),
+                    ndc_models::FieldName::from(alias.as_str()),
                     ndc_models::Field::Column {
-                        column: column.clone(),
+                        column: ndc_models::FieldName::from(column.as_str()),
                         fields: nested_field,
-                        arguments: arguments.clone(),
+                        arguments: arguments
+                            .iter()
+                            .map(|(name, arg)| {
+                                (ndc_models::ArgumentName::from(name.0.as_str()), arg.clone())
+                            })
+                            .collect(),
                     },
                 );
                 if let Some(jl) = nested_join_locations {
@@ -100,7 +105,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 let (relationship_query, jl) = model_selection::ndc_query(query, join_id_counter)?;
                 let ndc_field = ndc_models::Field::Relationship {
                     query: Box::new(relationship_query),
-                    relationship: name.to_string(),
+                    relationship: ndc_models::RelationshipName::from(name.0.as_str()),
                     arguments: BTreeMap::new(),
                 };
                 if !jl.locations.is_empty() {
@@ -112,7 +117,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                         },
                     );
                 }
-                ndc_fields.insert(alias.to_string(), ndc_field);
+                ndc_fields.insert(ndc_models::FieldName::from(alias.as_str()), ndc_field);
             }
             FieldSelection::CommandRelationshipLocal {
                 ir,
@@ -128,7 +133,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     .iter()
                     .map(|(argument_name, argument_value)| {
                         (
-                            argument_name.clone(),
+                            ndc_models::ArgumentName::from(argument_name.0.as_str()),
                             ndc_models::RelationshipArgument::Literal {
                                 value: argument_value.clone(),
                             },
@@ -138,7 +143,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
 
                 let ndc_field = ndc_models::Field::Relationship {
                     query: Box::new(relationship_query),
-                    relationship: name.to_string(),
+                    relationship: ndc_models::RelationshipName::from(name.0.as_str()),
                     arguments: relationship_arguments,
                 };
 
@@ -151,7 +156,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                         },
                     );
                 }
-                ndc_fields.insert(alias.to_string(), ndc_field);
+                ndc_fields.insert(ndc_models::FieldName::from(alias.as_str()), ndc_field);
             }
             FieldSelection::ModelRelationshipRemote {
                 ir,
@@ -249,15 +254,15 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
 fn process_remote_relationship_field_mapping(
     selection: &ResultSelectionSet<'_>,
     field: &FieldMapping,
-    ndc_fields: &mut IndexMap<String, ndc_models::Field>,
+    ndc_fields: &mut IndexMap<ndc_models::FieldName, ndc_models::Field>,
 ) -> SourceFieldAlias {
     match selection.contains(field) {
         None => {
             let internal_alias = make_hasura_phantom_field(&field.column);
             ndc_fields.insert(
-                internal_alias.clone(),
+                ndc_models::FieldName::from(internal_alias.as_str()),
                 ndc_models::Field::Column {
-                    column: field.column.0.clone(),
+                    column: ndc_models::FieldName::from(field.column.0.as_str()),
                     fields: None,
                     arguments: BTreeMap::new(),
                 },
@@ -274,7 +279,7 @@ fn make_hasura_phantom_field(field_name: &DataConnectorColumnName) -> String {
 
 pub(crate) fn collect_relationships_from_nested_selection(
     selection: &NestedSelection,
-    relationships: &mut BTreeMap<String, ndc_models::Relationship>,
+    relationships: &mut BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
 ) -> Result<(), error::Error> {
     match selection {
         NestedSelection::Object(selection_set) => {
@@ -290,7 +295,7 @@ pub(crate) fn collect_relationships_from_nested_selection(
 /// and create NDC relationship definitions
 pub(crate) fn collect_relationships_from_selection(
     selection: &ResultSelectionSet,
-    relationships: &mut BTreeMap<String, ndc_models::Relationship>,
+    relationships: &mut BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
 ) -> Result<(), error::Error> {
     for field in selection.fields.values() {
         match field {
@@ -307,7 +312,7 @@ pub(crate) fn collect_relationships_from_selection(
                 relationship_info,
             } => {
                 relationships.insert(
-                    name.to_string(),
+                    ndc_models::RelationshipName::from(name.0.as_str()),
                     relationships::process_model_relationship_definition(relationship_info)?,
                 );
                 relationships::collect_relationships(query, relationships)?;
@@ -318,7 +323,7 @@ pub(crate) fn collect_relationships_from_selection(
                 relationship_info,
             } => {
                 relationships.insert(
-                    name.to_string(),
+                    ndc_models::RelationshipName::from(name.0.as_str()),
                     relationships::process_command_relationship_definition(relationship_info)?,
                 );
                 if let Some(nested_selection) = &ir.command_info.selection {

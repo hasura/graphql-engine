@@ -48,7 +48,7 @@ pub struct Staff<'a> {
 pub(crate) fn filter_by_institution_object_input<'a>(
     state: &'a AppState,
     institution_query: Institution<'a>,
-) -> impl std::iter::Iterator<Item = Result<&'a BTreeMap<String, serde_json::Value>>> {
+) -> impl std::iter::Iterator<Item = Result<&'a Row>> {
     state
         .institutions
         .values()
@@ -121,9 +121,7 @@ fn check_institution_query<'a>(
     false
 }
 
-pub fn parse_institution(
-    institution: &BTreeMap<String, serde_json::Value>,
-) -> Result<Institution<'_>> {
+pub fn parse_institution(institution: &Row) -> Result<Institution<'_>> {
     let name = institution.get("name").and_then(|name| name.as_str());
 
     let staff = institution

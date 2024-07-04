@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use ndc_models;
 use ndc_models_v01;
 use schemars::JsonSchema;
@@ -29,6 +31,12 @@ use crate::{identifier::Identifier, impl_OpenDd_default_for};
 )]
 pub struct DataConnectorName(pub Identifier);
 
+impl Borrow<str> for DataConnectorName {
+    fn borrow(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
 /// The name of an object type in a data connector.
 #[repr(transparent)]
 #[derive(
@@ -47,6 +55,12 @@ pub struct DataConnectorName(pub Identifier);
     opendds_derive::OpenDd,
 )]
 pub struct DataConnectorObjectType(pub String);
+
+impl Borrow<str> for DataConnectorObjectType {
+    fn borrow(&self) -> &str {
+        self.0.as_str()
+    }
+}
 
 /// The name of a scalar type in a data connector.
 #[repr(transparent)]
@@ -67,6 +81,12 @@ pub struct DataConnectorObjectType(pub String);
 )]
 pub struct DataConnectorScalarType(pub String);
 
+impl Borrow<str> for DataConnectorScalarType {
+    fn borrow(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
 /// The name of an operator in a data connector.
 #[repr(transparent)]
 #[derive(
@@ -86,6 +106,12 @@ pub struct DataConnectorScalarType(pub String);
 )]
 pub struct DataConnectorOperatorName(pub String);
 
+impl Borrow<str> for DataConnectorOperatorName {
+    fn borrow(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
 /// The name of a column in a data connector.
 #[repr(transparent)]
 #[derive(
@@ -104,6 +130,12 @@ pub struct DataConnectorOperatorName(pub String);
     opendds_derive::OpenDd,
 )]
 pub struct DataConnectorColumnName(pub String);
+
+impl Borrow<str> for DataConnectorColumnName {
+    fn borrow(&self) -> &str {
+        self.0.as_str()
+    }
+}
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]

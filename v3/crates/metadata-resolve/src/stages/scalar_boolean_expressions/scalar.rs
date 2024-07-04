@@ -47,7 +47,12 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
         let _data_connector_scalar_type = data_connector_context
             .schema
             .scalar_types
-            .get(&data_connector_operator_mapping.data_connector_scalar_type.0)
+            .get(
+                data_connector_operator_mapping
+                    .data_connector_scalar_type
+                    .0
+                    .as_str(),
+            )
             .ok_or_else(|| Error::UnknownScalarTypeInDataConnector {
                 scalar_type: scalar_type_name.clone(),
                 data_connector: qualified_data_connector_name.clone(),

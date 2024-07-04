@@ -32,7 +32,7 @@ pub(crate) fn filter_actors_by_name<'a>(
     state: &'a AppState,
     filter_first_name: Option<&'a str>,
     filter_last_name: Option<&'a str>,
-) -> impl std::iter::Iterator<Item = Result<&'a BTreeMap<String, serde_json::Value>>> {
+) -> impl std::iter::Iterator<Item = Result<&'a Row>> {
     state
         .actors
         .values()

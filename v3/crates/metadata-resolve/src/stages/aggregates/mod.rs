@@ -3,9 +3,7 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use lang_graphql::ast::common as ast;
 use open_dds::aggregates::{AggregateExpressionName, AggregationFunctionName};
-use open_dds::data_connector::{
-    DataConnectorName, DataConnectorObjectType, DataConnectorScalarType,
-};
+use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::types::{CustomTypeName, TypeName};
 
 use crate::helpers::types::{store_new_graphql_type, unwrap_qualified_type_name};
@@ -433,7 +431,7 @@ fn resolve_aggregation_function(
                 })?;
 
             // Check that the mapped data connector aggregate function actually exists
-            let data_connector_fn = data_connector_scalar_type.aggregate_functions.get(&fn_mapping.name.0)
+            let data_connector_fn = data_connector_scalar_type.aggregate_functions.get(fn_mapping.name.0.as_str())
                 .ok_or_else(|| -> Error {
                     AggregateExpressionError::AggregateOperandDataConnectorFunctionNotFound {
                         name: aggregate_expression_name.clone(),
@@ -502,7 +500,7 @@ fn check_aggregation_function_return_type(
     )?;
 
     let validate_scalar_representation = || -> Result<(), Error> {
-        let type_name = data_connector_scalars.0.get(&DataConnectorScalarType(ndc_named_return_type.clone()))
+        let type_name = data_connector_scalars.0.get(ndc_named_return_type.as_str())
             .ok_or_else(||
                 mk_error(format!("The data connector's return type ({ndc_named_return_type}) isn't a scalar type").as_str())
             )?
@@ -532,7 +530,8 @@ fn check_aggregation_function_return_type(
                 let return_object_type = object_types.get(custom_type_name).ok_or_else(|| {
                     mk_error("The Open DD return type is not a scalar type or an object type")
                 })?;
-                let ndc_object_type_name = DataConnectorObjectType(ndc_named_return_type.clone());
+                let ndc_object_type_name =
+                    DataConnectorObjectType(ndc_named_return_type.as_str().to_owned());
                 return_object_type.type_mappings.get(data_connector_name, &ndc_object_type_name)
                     .ok_or_else(||
                         mk_error(format!("There is no type mapping defined from the Open DD return object type to the data connector's object type '{ndc_named_return_type}'").as_str())
@@ -550,7 +549,7 @@ fn unwrap_aggregation_function_return_type<'a>(
     aggregate_expression_name: &'a Qualified<AggregateExpressionName>,
     aggregation_function_name: &'a AggregationFunctionName,
     data_connector_name: &'a Qualified<DataConnectorName>,
-) -> Result<(&'a QualifiedTypeName, &'a String), Error> {
+) -> Result<(&'a QualifiedTypeName, &'a ndc_models::TypeName), Error> {
     let mk_error = |reason: &str| -> Error {
         AggregateExpressionError::AggregateOperandDataConnectorFunctionReturnTypeIncompatible {
             name: aggregate_expression_name.clone(),

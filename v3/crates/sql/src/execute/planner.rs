@@ -114,7 +114,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                 .unwrap_or(&IndexMap::new())
             {
                 let field_name = {
-                    let field_name = Identifier::new(field_name.clone()).map_err(|e| {
+                    let field_name = Identifier::new(field_name.as_str()).map_err(|e| {
                         DataFusionError::Internal(format!(
                             "field name conversion failed {field_name}: {e}"
                         ))
@@ -157,14 +157,22 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                 .into_values()
                 .map(|v| {
                     process_model_relationship_definition(&v)
-                        .map(|r| (v.relationship_name.to_string(), r))
+                        .map(|r| {
+                            (
+                                ndc_models::RelationshipName::from(v.relationship_name.0.as_str()),
+                                r,
+                            )
+                        })
                         .map_err(|e| {
                             DataFusionError::Internal(format!(
                                 "error constructing ndc relationship definition: {e}"
                             ))
                         })
                 })
-                .collect::<Result<BTreeMap<String, ndc_models::Relationship>, DataFusionError>>()?;
+                .collect::<Result<
+                    BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
+                    DataFusionError,
+                >>()?;
             let mut query = ndc_node.query.clone();
             query.query.predicate = Some(permission_filter);
             query.collection_relationships = relationships;

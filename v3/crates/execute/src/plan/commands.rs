@@ -25,9 +25,9 @@ pub(crate) fn ndc_query<'s, 'ir>(
     let query = ndc_models::Query {
         aggregates: None,
         fields: Some(IndexMap::from([(
-            FUNCTION_IR_VALUE_COLUMN_NAME.to_string(),
+            ndc_models::FieldName::from(FUNCTION_IR_VALUE_COLUMN_NAME),
             ndc_models::Field::Column {
-                column: FUNCTION_IR_VALUE_COLUMN_NAME.to_string(),
+                column: ndc_models::FieldName::from(FUNCTION_IR_VALUE_COLUMN_NAME),
                 fields: ndc_nested_field,
                 arguments: BTreeMap::new(),
             },
@@ -44,13 +44,13 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
     ir: &'ir FunctionBasedCommand<'s>,
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<(ndc_models::QueryRequest, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
-    let mut arguments: BTreeMap<String, ndc_models::Argument> = ir
+    let mut arguments: BTreeMap<ndc_models::ArgumentName, ndc_models::Argument> = ir
         .command_info
         .arguments
         .iter()
         .map(|(argument_name, argument_value)| {
             (
-                argument_name.clone(),
+                ndc_models::ArgumentName::from(argument_name.0.as_str()),
                 ndc_models::Argument::Literal {
                     value: argument_value.clone(),
                 },
@@ -61,9 +61,9 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
     // Add the variable arguments which are used for remote joins
     for (variable_name, variable_argument) in &ir.variable_arguments {
         arguments.insert(
-            variable_name.to_string(),
+            ndc_models::ArgumentName::from(variable_name.0.as_str()),
             ndc_models::Argument::Variable {
-                name: variable_argument.clone(),
+                name: ndc_models::VariableName::from(variable_argument.as_str()),
             },
         );
     }
@@ -78,7 +78,7 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
     }
     let query_request = ndc_models::QueryRequest {
         query,
-        collection: ir.function_name.to_string(),
+        collection: ndc_models::CollectionName::from(ir.function_name.0.as_str()),
         arguments,
         collection_relationships,
         variables: None,
@@ -107,8 +107,18 @@ pub(crate) fn ndc_mutation_ir<'s, 'ir>(
         .transpose()?
         .unzip();
     let mutation_operation = ndc_models::MutationOperation::Procedure {
-        name: procedure_name.to_string(),
-        arguments: ir.command_info.arguments.clone(),
+        name: ndc_models::ProcedureName::from(procedure_name.0.as_str()),
+        arguments: ir
+            .command_info
+            .arguments
+            .iter()
+            .map(|(name, value)| {
+                (
+                    ndc_models::ArgumentName::from(name.0.as_str()),
+                    value.clone(),
+                )
+            })
+            .collect(),
         fields: ndc_nested_field,
     };
     let mut collection_relationships = BTreeMap::new();

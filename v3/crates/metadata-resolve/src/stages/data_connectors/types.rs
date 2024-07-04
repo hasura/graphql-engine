@@ -119,12 +119,12 @@ impl<'a> DataConnectorContext<'a> {
 #[derive(Clone)]
 pub struct DataConnectorSchema {
     /// A list of scalar types which will be used as the types of collection columns
-    pub scalar_types: BTreeMap<String, ndc_models::ScalarType>,
+    pub scalar_types: BTreeMap<ndc_models::ScalarTypeName, ndc_models::ScalarType>,
     /// A list of object types which can be used as the types of arguments, or return types of procedures.
     /// Names should not overlap with scalar type names.
-    pub object_types: BTreeMap<String, ndc_models::ObjectType>,
+    pub object_types: BTreeMap<ndc_models::ObjectTypeName, ndc_models::ObjectType>,
     /// Collections which are available for queries
-    pub collections: BTreeMap<String, ndc_models::CollectionInfo>,
+    pub collections: BTreeMap<ndc_models::CollectionName, ndc_models::CollectionInfo>,
     /// Functions (i.e. collections which return a single column and row)
     pub functions: BTreeMap<FunctionName, ndc_models::FunctionInfo>,
     /// Procedures which are available for execution as part of mutations
@@ -144,12 +144,22 @@ impl DataConnectorSchema {
             functions: schema
                 .functions
                 .into_iter()
-                .map(|function_info| (FunctionName(function_info.name.clone()), function_info))
+                .map(|function_info| {
+                    (
+                        FunctionName(function_info.name.as_str().to_owned()),
+                        function_info,
+                    )
+                })
                 .collect(),
             procedures: schema
                 .procedures
                 .into_iter()
-                .map(|procedure_info| (ProcedureName(procedure_info.name.clone()), procedure_info))
+                .map(|procedure_info| {
+                    (
+                        ProcedureName(procedure_info.name.as_str().to_owned()),
+                        procedure_info,
+                    )
+                })
                 .collect(),
         }
     }
@@ -364,8 +374,8 @@ fn to_error(err: HeaderError, data_connector_name: &Qualified<DataConnectorName>
 /// Configure how NDC functions/procedures should be processed to extract
 /// headers and result
 pub struct CommandsResponseConfig {
-    pub headers_field: String,
-    pub result_field: String,
+    pub headers_field: ndc_models::FieldName,
+    pub result_field: ndc_models::FieldName,
     pub forward_headers: Vec<SerializableHeaderName>,
 }
 
@@ -383,8 +393,8 @@ impl CommandsResponseConfig {
             })
             .collect::<Result<Vec<_>, Error>>()?;
         Ok(Self {
-            headers_field: response_headers.headers_field.clone(),
-            result_field: response_headers.result_field.clone(),
+            headers_field: ndc_models::FieldName::from(response_headers.headers_field.as_str()),
+            result_field: ndc_models::FieldName::from(response_headers.result_field.as_str()),
             forward_headers,
         })
     }

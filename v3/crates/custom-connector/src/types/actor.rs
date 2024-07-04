@@ -50,7 +50,9 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
     }
 }
 
-pub(crate) fn get_actor_movie_id(actor: &BTreeMap<String, serde_json::Value>) -> Result<i32> {
+pub(crate) fn get_actor_movie_id(
+    actor: &BTreeMap<ndc_models::FieldName, serde_json::Value>,
+) -> Result<i32> {
     let actor_movie_id = actor.get("movie_id").ok_or((
         StatusCode::INTERNAL_SERVER_ERROR,
         Json(ndc_models::ErrorResponse {

@@ -9,9 +9,9 @@ use crate::{
 };
 
 pub(crate) fn execute(
-    arguments: &BTreeMap<String, serde_json::Value>,
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     fields: &Option<ndc_models::NestedField>,
-    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
+    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
     let id = arguments.get("id").ok_or((

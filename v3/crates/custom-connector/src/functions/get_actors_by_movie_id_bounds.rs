@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub(crate) fn rows(
-    arguments: &BTreeMap<String, serde_json::Value>,
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,
 ) -> Result<Vec<Row>> {
     let lower_bound_value = arguments.get("lower_bound").ok_or((

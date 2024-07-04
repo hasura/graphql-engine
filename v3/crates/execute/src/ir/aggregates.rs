@@ -123,7 +123,7 @@ fn add_aggregate_selections<'s>(
                         .iter()
                         .find(|fn_info| {
                             fn_info.data_connector_name == *data_connector_name &&
-                            fn_info.operand_scalar_type.0 == *column_scalar_type
+                            fn_info.operand_scalar_type.0.as_str() == column_scalar_type.as_str()
                         })
                         .ok_or_else(|| {
                             error::InternalDeveloperError::DataConnectorAggregationFunctionNotFound {
@@ -205,13 +205,13 @@ pub fn mk_alias_from_graphql_field_path(graphql_field_path: &[&Alias]) -> String
         .join("_")
 }
 
-fn get_ndc_underlying_type_name(result_type: &ndc_models::Type) -> &String {
+fn get_ndc_underlying_type_name(result_type: &ndc_models::Type) -> &ndc_models::TypeName {
     match result_type {
         ndc_models::Type::Named { name } => name,
         ndc_models::Type::Array { element_type } => get_ndc_underlying_type_name(element_type),
         ndc_models::Type::Nullable { underlying_type } => {
             get_ndc_underlying_type_name(underlying_type)
         }
-        ndc_models::Type::Predicate { object_type_name } => object_type_name,
+        ndc_models::Type::Predicate { object_type_name } => object_type_name.as_ref(),
     }
 }

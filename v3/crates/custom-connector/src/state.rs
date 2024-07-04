@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-pub type Row = BTreeMap<String, serde_json::Value>;
+pub type Row = BTreeMap<ndc_models::FieldName, serde_json::Value>;
 
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -17,7 +17,7 @@ fn read_json_lines(json: &str) -> anyhow::Result<BTreeMap<i32, Row>> {
     let lines = json.lines();
     let mut records: BTreeMap<i32, Row> = BTreeMap::new();
     for line in lines {
-        let row: BTreeMap<String, serde_json::Value> = serde_json::from_str(line)?;
+        let row: BTreeMap<ndc_models::FieldName, serde_json::Value> = serde_json::from_str(line)?;
         let id = row
             .get("id")
             .ok_or(anyhow::anyhow!("'id' field not found in json file"))?

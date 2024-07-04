@@ -18,9 +18,14 @@ pub enum NdcQueryRequest {
 }
 
 impl NdcQueryRequest {
-    pub fn set_variables(&mut self, variables: Option<Vec<BTreeMap<String, serde_json::Value>>>) {
+    pub fn set_variables(
+        &mut self,
+        variables: Option<Vec<BTreeMap<ndc_models::VariableName, serde_json::Value>>>,
+    ) {
         match self {
-            NdcQueryRequest::V01(request) => request.variables = variables,
+            NdcQueryRequest::V01(request) => {
+                request.variables = migration::v01::downgrade_v02_variables(variables);
+            }
             NdcQueryRequest::V02(request) => request.variables = variables,
         }
     }

@@ -140,11 +140,11 @@ where
             continue;
         }
         // patch the target/RHS IR with variable values
-        let foreach_variables: Vec<BTreeMap<String, json::Value>> = arguments
+        let foreach_variables: Vec<BTreeMap<ndc_models::VariableName, json::Value>> = arguments
             .iter()
             .map(|bmap| {
                 bmap.iter()
-                    .map(|(k, v)| (k.0.clone(), v.0.clone()))
+                    .map(|(k, v)| (ndc_models::VariableName::from(k.0.as_str()), v.0.clone()))
                     .collect()
             })
             .collect();

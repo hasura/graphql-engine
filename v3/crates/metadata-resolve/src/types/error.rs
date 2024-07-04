@@ -463,7 +463,7 @@ pub enum Error {
     )]
     DataConnectorScalarRepresentationRequired {
         data_connector: Qualified<DataConnectorName>,
-        scalar_type: String,
+        scalar_type: DataConnectorScalarType,
     },
     #[error("type mapping required for type {type_name:} in model source {model_name:} backed by data connector {data_connector:}")]
     TypeMappingRequired {

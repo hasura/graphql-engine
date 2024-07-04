@@ -47,7 +47,7 @@ pub struct CommandInfo<'s> {
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
 
     /// Arguments for the NDC table
-    pub(crate) arguments: BTreeMap<String, json::Value>,
+    pub(crate) arguments: BTreeMap<ConnectorArgumentName, json::Value>,
 
     /// IR for the command result selection set
     pub(crate) selection: Option<selection_set::NestedSelection<'s>>,
@@ -137,12 +137,11 @@ pub(crate) fn generate_command_info<'n, 's>(
             match NonEmpty::from_slice(field_path) {
                 // if field path is empty, then the entire argument has to preset
                 None => {
-                    command_arguments.insert(argument_name.to_string(), actual_value);
+                    command_arguments.insert(argument_name.clone(), actual_value);
                 }
                 // if there is some field path, preset the argument partially based on the field path
                 Some(field_path) => {
-                    if let Some(current_arg) = command_arguments.get_mut(&argument_name.to_string())
-                    {
+                    if let Some(current_arg) = command_arguments.get_mut(argument_name) {
                         if let Some(current_arg_object) = current_arg.as_object_mut() {
                             arguments::follow_field_path_and_insert_value(
                                 &field_path,
@@ -193,7 +192,7 @@ pub(crate) fn generate_command_info<'n, 's>(
         }
 
         command_arguments.insert(
-            dc_argument_preset.name.to_string(),
+            ConnectorArgumentName(dc_argument_preset.name.0.as_str().to_owned()),
             serde_json::to_value(SerializableHeaderMap(headers_argument))?,
         );
     }
@@ -244,13 +243,13 @@ fn wrap_selection_in_response_config<'a>(
             if command_source.ndc_type_opendd_type_same {
                 original_selection
             } else {
-                let headers_field_name = response_config.headers_field.clone();
+                let headers_field_name = response_config.headers_field.as_str().to_owned();
                 let headers_field = FieldSelection::Column {
                     column: headers_field_name.clone(),
                     nested_selection: None,
                     arguments: BTreeMap::new(),
                 };
-                let result_field_name = response_config.result_field.clone();
+                let result_field_name = response_config.result_field.as_str().to_owned();
                 let result_field = FieldSelection::Column {
                     column: result_field_name.clone(),
                     nested_selection: original_selection,

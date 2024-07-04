@@ -24,7 +24,7 @@ pub fn execute_mutation_request(
 
 fn execute_mutation_operation(
     state: &AppState,
-    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
+    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     operation: &ndc_models::MutationOperation,
 ) -> Result<ndc_models::MutationOperationResults> {
     // We don't actually want to mutate the app state since the connector is used in tests.

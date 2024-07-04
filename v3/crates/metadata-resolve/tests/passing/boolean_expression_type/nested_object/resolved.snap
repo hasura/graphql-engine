@@ -199,7 +199,9 @@ Metadata {
                                     ),
                                     column_type: Array {
                                         element_type: Named {
-                                            name: "String",
+                                            name: TypeName(
+                                                "String",
+                                            ),
                                         },
                                     },
                                     column_type_representation: None,
@@ -214,7 +216,9 @@ Metadata {
                                         "id",
                                     ),
                                     column_type: Named {
-                                        name: "Int",
+                                        name: TypeName(
+                                            "Int",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -228,7 +232,9 @@ Metadata {
                                         "location",
                                     ),
                                     column_type: Named {
-                                        name: "location",
+                                        name: TypeName(
+                                            "location",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -242,7 +248,9 @@ Metadata {
                                         "name",
                                     ),
                                     column_type: Named {
-                                        name: "String",
+                                        name: TypeName(
+                                            "String",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -257,7 +265,9 @@ Metadata {
                                     ),
                                     column_type: Array {
                                         element_type: Named {
-                                            name: "staff_member",
+                                            name: TypeName(
+                                                "staff_member",
+                                            ),
                                         },
                                     },
                                     column_type_representation: None,
@@ -400,7 +410,9 @@ Metadata {
                                     ),
                                     column_type: Array {
                                         element_type: Named {
-                                            name: "String",
+                                            name: TypeName(
+                                                "String",
+                                            ),
                                         },
                                     },
                                     column_type_representation: None,
@@ -415,7 +427,9 @@ Metadata {
                                         "city",
                                     ),
                                     column_type: Named {
-                                        name: "String",
+                                        name: TypeName(
+                                            "String",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -429,7 +443,9 @@ Metadata {
                                         "country",
                                     ),
                                     column_type: Named {
-                                        name: "String",
+                                        name: TypeName(
+                                            "String",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -570,7 +586,9 @@ Metadata {
                                         "first_name",
                                     ),
                                     column_type: Named {
-                                        name: "String",
+                                        name: TypeName(
+                                            "String",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -584,7 +602,9 @@ Metadata {
                                         "last_name",
                                     ),
                                     column_type: Named {
-                                        name: "String",
+                                        name: TypeName(
+                                            "String",
+                                        ),
                                     },
                                     column_type_representation: None,
                                     argument_mappings: {},
@@ -599,7 +619,9 @@ Metadata {
                                     ),
                                     column_type: Array {
                                         element_type: Named {
-                                            name: "String",
+                                            name: TypeName(
+                                                "String",
+                                            ),
                                         },
                                     },
                                     column_type_representation: None,
@@ -824,7 +846,9 @@ Metadata {
                                         ),
                                         column_type: Array {
                                             element_type: Named {
-                                                name: "String",
+                                                name: TypeName(
+                                                    "String",
+                                                ),
                                             },
                                         },
                                         column_type_representation: None,
@@ -839,7 +863,9 @@ Metadata {
                                             "id",
                                         ),
                                         column_type: Named {
-                                            name: "Int",
+                                            name: TypeName(
+                                                "Int",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -853,7 +879,9 @@ Metadata {
                                             "location",
                                         ),
                                         column_type: Named {
-                                            name: "location",
+                                            name: TypeName(
+                                                "location",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -867,7 +895,9 @@ Metadata {
                                             "name",
                                         ),
                                         column_type: Named {
-                                            name: "String",
+                                            name: TypeName(
+                                                "String",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -882,7 +912,9 @@ Metadata {
                                         ),
                                         column_type: Array {
                                             element_type: Named {
-                                                name: "staff_member",
+                                                name: TypeName(
+                                                    "staff_member",
+                                                ),
                                             },
                                         },
                                         column_type_representation: None,
@@ -912,7 +944,9 @@ Metadata {
                                         ),
                                         column_type: Array {
                                             element_type: Named {
-                                                name: "String",
+                                                name: TypeName(
+                                                    "String",
+                                                ),
                                             },
                                         },
                                         column_type_representation: None,
@@ -927,7 +961,9 @@ Metadata {
                                             "city",
                                         ),
                                         column_type: Named {
-                                            name: "String",
+                                            name: TypeName(
+                                                "String",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -941,7 +977,9 @@ Metadata {
                                             "country",
                                         ),
                                         column_type: Named {
-                                            name: "String",
+                                            name: TypeName(
+                                                "String",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -969,7 +1007,9 @@ Metadata {
                                             "first_name",
                                         ),
                                         column_type: Named {
-                                            name: "String",
+                                            name: TypeName(
+                                                "String",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -983,7 +1023,9 @@ Metadata {
                                             "last_name",
                                         ),
                                         column_type: Named {
-                                            name: "String",
+                                            name: TypeName(
+                                                "String",
+                                            ),
                                         },
                                         column_type_representation: None,
                                         argument_mappings: {},
@@ -998,7 +1040,9 @@ Metadata {
                                         ),
                                         column_type: Array {
                                             element_type: Named {
-                                                name: "String",
+                                                name: TypeName(
+                                                    "String",
+                                                ),
                                             },
                                         },
                                         column_type_representation: None,

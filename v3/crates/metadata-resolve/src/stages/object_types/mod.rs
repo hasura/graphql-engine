@@ -294,7 +294,12 @@ pub fn resolve_data_connector_type_mapping(
     let ndc_object_type = data_connector_context
         .schema
         .object_types
-        .get(&data_connector_type_mapping.data_connector_object_type.0)
+        .get(
+            data_connector_type_mapping
+                .data_connector_object_type
+                .0
+                .as_str(),
+        )
         .ok_or_else(|| TypeMappingValidationError::UnknownNdcType {
             type_name: qualified_type_name.clone(),
             unknown_ndc_type: data_connector_type_mapping
@@ -335,7 +340,7 @@ pub fn resolve_data_connector_type_mapping(
         let column_type_representation = data_connector_context
             .schema
             .scalar_types
-            .get(underlying_column_type)
+            .get(underlying_column_type.as_str())
             .and_then(|scalar_type| scalar_type.representation.clone());
         let resolved_field_mapping = FieldMapping {
             column: resolved_field_mapping_column.into_owned(),
@@ -383,7 +388,7 @@ fn get_column<'a>(
 ) -> Result<&'a ndc_models::ObjectField, TypeMappingValidationError> {
     ndc_type
         .fields
-        .get(&column.0)
+        .get(column.0.as_str())
         .ok_or(TypeMappingValidationError::UnknownTargetColumn {
             field_name: field_name.clone(),
             column_name: column.to_string(),

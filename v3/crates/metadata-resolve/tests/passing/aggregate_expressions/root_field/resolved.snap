@@ -280,7 +280,9 @@ Metadata {
                                     ),
                                     column_type: Nullable {
                                         underlying_type: Named {
-                                            name: "varchar",
+                                            name: TypeName(
+                                                "varchar",
+                                            ),
                                         },
                                     },
                                     column_type_representation: Some(
@@ -298,7 +300,9 @@ Metadata {
                                     ),
                                     column_type: Nullable {
                                         underlying_type: Named {
-                                            name: "varchar",
+                                            name: TypeName(
+                                                "varchar",
+                                            ),
                                         },
                                     },
                                     column_type_representation: Some(
@@ -316,7 +320,9 @@ Metadata {
                                     ),
                                     column_type: Nullable {
                                         underlying_type: Named {
-                                            name: "varchar",
+                                            name: TypeName(
+                                                "varchar",
+                                            ),
                                         },
                                     },
                                     column_type_representation: Some(
@@ -334,7 +340,9 @@ Metadata {
                                     ),
                                     column_type: Nullable {
                                         underlying_type: Named {
-                                            name: "varchar",
+                                            name: TypeName(
+                                                "varchar",
+                                            ),
                                         },
                                     },
                                     column_type_representation: Some(
@@ -352,7 +360,9 @@ Metadata {
                                     ),
                                     column_type: Nullable {
                                         underlying_type: Named {
-                                            name: "varchar",
+                                            name: TypeName(
+                                                "varchar",
+                                            ),
                                         },
                                     },
                                     column_type_representation: Some(
@@ -369,7 +379,9 @@ Metadata {
                                         "CustomerId",
                                     ),
                                     column_type: Named {
-                                        name: "int4",
+                                        name: TypeName(
+                                            "int4",
+                                        ),
                                     },
                                     column_type_representation: Some(
                                         Int32,
@@ -385,7 +397,9 @@ Metadata {
                                         "InvoiceDate",
                                     ),
                                     column_type: Named {
-                                        name: "timestamp",
+                                        name: TypeName(
+                                            "timestamp",
+                                        ),
                                     },
                                     column_type_representation: Some(
                                         Timestamp,
@@ -401,7 +415,9 @@ Metadata {
                                         "InvoiceId",
                                     ),
                                     column_type: Named {
-                                        name: "int4",
+                                        name: TypeName(
+                                            "int4",
+                                        ),
                                     },
                                     column_type_representation: Some(
                                         Int32,
@@ -417,7 +433,9 @@ Metadata {
                                         "Total",
                                     ),
                                     column_type: Named {
-                                        name: "numeric",
+                                        name: TypeName(
+                                            "numeric",
+                                        ),
                                     },
                                     column_type_representation: Some(
                                         BigDecimal,
@@ -806,7 +824,9 @@ Metadata {
                                         ),
                                         column_type: Nullable {
                                             underlying_type: Named {
-                                                name: "varchar",
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
                                             },
                                         },
                                         column_type_representation: Some(
@@ -824,7 +844,9 @@ Metadata {
                                         ),
                                         column_type: Nullable {
                                             underlying_type: Named {
-                                                name: "varchar",
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
                                             },
                                         },
                                         column_type_representation: Some(
@@ -842,7 +864,9 @@ Metadata {
                                         ),
                                         column_type: Nullable {
                                             underlying_type: Named {
-                                                name: "varchar",
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
                                             },
                                         },
                                         column_type_representation: Some(
@@ -860,7 +884,9 @@ Metadata {
                                         ),
                                         column_type: Nullable {
                                             underlying_type: Named {
-                                                name: "varchar",
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
                                             },
                                         },
                                         column_type_representation: Some(
@@ -878,7 +904,9 @@ Metadata {
                                         ),
                                         column_type: Nullable {
                                             underlying_type: Named {
-                                                name: "varchar",
+                                                name: TypeName(
+                                                    "varchar",
+                                                ),
                                             },
                                         },
                                         column_type_representation: Some(
@@ -895,7 +923,9 @@ Metadata {
                                             "CustomerId",
                                         ),
                                         column_type: Named {
-                                            name: "int4",
+                                            name: TypeName(
+                                                "int4",
+                                            ),
                                         },
                                         column_type_representation: Some(
                                             Int32,
@@ -911,7 +941,9 @@ Metadata {
                                             "InvoiceDate",
                                         ),
                                         column_type: Named {
-                                            name: "timestamp",
+                                            name: TypeName(
+                                                "timestamp",
+                                            ),
                                         },
                                         column_type_representation: Some(
                                             Timestamp,
@@ -927,7 +959,9 @@ Metadata {
                                             "InvoiceId",
                                         ),
                                         column_type: Named {
-                                            name: "int4",
+                                            name: TypeName(
+                                                "int4",
+                                            ),
                                         },
                                         column_type_representation: Some(
                                             Int32,
@@ -943,7 +977,9 @@ Metadata {
                                             "Total",
                                         ),
                                         column_type: Named {
-                                            name: "numeric",
+                                            name: TypeName(
+                                                "numeric",
+                                            ),
                                         },
                                         column_type_representation: Some(
                                             BigDecimal,
@@ -1147,7 +1183,9 @@ Metadata {
                                         column: DataConnectorColumnName(
                                             "InvoiceId",
                                         ),
-                                        equal_operator: "_eq",
+                                        equal_operator: ComparisonOperatorName(
+                                            "_eq",
+                                        ),
                                     },
                                 ),
                             },

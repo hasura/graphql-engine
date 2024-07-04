@@ -79,8 +79,8 @@ impl NDCQuery {
             .iter()
             .map(|projected_field| {
                 current_fields
-                    .swap_remove(projected_field)
-                    .map(|field| (projected_field.clone(), field))
+                    .swap_remove(projected_field.as_str())
+                    .map(|field| (ndc_models::FieldName::from(projected_field.as_str()), field))
                     .ok_or_else(|| {
                         DataFusionError::Internal(
                             "failed to lookup projectd field in ndcscan".to_string(),

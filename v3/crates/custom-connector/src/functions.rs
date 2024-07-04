@@ -41,11 +41,11 @@ pub(crate) fn get_functions() -> Vec<ndc_models::FunctionInfo> {
 }
 
 pub(crate) fn get_function_by_name(
-    collection_name: &str,
-    arguments: &BTreeMap<String, serde_json::Value>,
+    collection_name: &ndc_models::CollectionName,
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,
 ) -> Result<Vec<Row>> {
-    match collection_name {
+    match collection_name.as_str() {
         "latest_actor_id" => latest_actor_id::rows(state),
         "latest_actor_name" => latest_actor_name::rows(state),
         "latest_actor" => latest_actor::rows(state),

@@ -6,7 +6,7 @@ use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
 
 use crate::query::Result;
 
-pub fn argument_string() -> BTreeMap<String, ndc_models::ArgumentInfo> {
+pub fn argument_string() -> BTreeMap<ndc_models::ArgumentName, ndc_models::ArgumentInfo> {
     BTreeMap::from_iter([
         (
             "change_case".into(),
@@ -43,7 +43,7 @@ pub fn argument_string() -> BTreeMap<String, ndc_models::ArgumentInfo> {
     ])
 }
 
-pub fn argument_any() -> BTreeMap<String, ndc_models::ArgumentInfo> {
+pub fn argument_any() -> BTreeMap<ndc_models::ArgumentName, ndc_models::ArgumentInfo> {
     BTreeMap::from_iter([(
         "hash".into(),
         ndc_models::ArgumentInfo {
@@ -57,8 +57,8 @@ pub fn argument_any() -> BTreeMap<String, ndc_models::ArgumentInfo> {
 
 pub fn apply_arguments(
     result: ndc_models::RowFieldValue,
-    arguments: &BTreeMap<String, ndc_models::Argument>,
-    variables: &BTreeMap<String, serde_json::Value>,
+    arguments: &BTreeMap<ndc_models::ArgumentName, ndc_models::Argument>,
+    variables: &BTreeMap<ndc_models::VariableName, serde_json::Value>,
 ) -> Result<ndc_models::RowFieldValue> {
     let mut json_result = result.0;
     for (argument_name, argument) in arguments {
@@ -78,11 +78,11 @@ pub fn apply_arguments(
 }
 
 fn apply_argument(
-    argument_name: &str,
+    argument_name: &ndc_models::ArgumentName,
     argument_value: &serde_json::Value,
     previous_result: &serde_json::Value,
 ) -> Result<serde_json::Value> {
-    match argument_name {
+    match argument_name.as_str() {
         "change_case" => change_case(argument_value, previous_result),
         "limit" => limit_string_length(argument_value, previous_result),
         "offset" => offset_string_length(argument_value, previous_result),

@@ -138,7 +138,7 @@ fn collect_argument_from_rows(
 
 /// From each row gather arguments based on join fields
 fn collect_argument_from_row(
-    row: &IndexMap<String, ndc_models::RowFieldValue>,
+    row: &IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
     join_fields: &Vec<(&SourceFieldAlias, VariableName)>,
     path: &[LocationInfo],
     arguments: &mut HashSet<Argument>,
@@ -157,12 +157,12 @@ fn collect_argument_from_row(
                 },
                 path_tail,
             ) = nonempty_path.split_first();
-            let nested_val = row
-                .get(alias)
-                .ok_or(error::FieldInternalError::InternalGeneric {
-                    description: "invalid NDC response; could not find {key} in response"
-                        .to_string(),
-                })?;
+            let nested_val =
+                row.get(alias.as_str())
+                    .ok_or(error::FieldInternalError::InternalGeneric {
+                        description: "invalid NDC response; could not find {key} in response"
+                            .to_string(),
+                    })?;
             if let Some(parsed_rows) = rows_from_row_field_value(*location_kind, nested_val)? {
                 for inner_row in parsed_rows {
                     collect_argument_from_row(&inner_row, join_fields, path_tail, arguments)?;
@@ -202,7 +202,7 @@ pub(crate) fn get_join_fields<'ir>(
 /// return them as 'Argument'
 pub(crate) fn create_argument(
     join_fields: &Vec<(&SourceFieldAlias, VariableName)>,
-    row: &IndexMap<String, ndc_models::RowFieldValue>,
+    row: &IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
 ) -> Argument {
     let mut argument = BTreeMap::new();
     for (src_alias, variable_name) in join_fields {
@@ -214,9 +214,9 @@ pub(crate) fn create_argument(
 
 pub(crate) fn get_value<'n>(
     pick_alias: &SourceFieldAlias,
-    row: &'n IndexMap<String, ndc_models::RowFieldValue>,
+    row: &'n IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
 ) -> &'n json::Value {
-    match row.get(&pick_alias.0) {
+    match row.get(pick_alias.0.as_str()) {
         Some(v) => &v.0,
         None => &json::Value::Null,
     }
@@ -225,49 +225,54 @@ pub(crate) fn get_value<'n>(
 fn rows_from_row_field_value(
     location_kind: LocationKind,
     nested_val: &ndc_models::RowFieldValue,
-) -> Result<Option<Vec<IndexMap<String, ndc_models::RowFieldValue>>>, error::FieldError> {
-    let rows: Option<Vec<IndexMap<String, ndc_models::RowFieldValue>>> = match location_kind {
-        LocationKind::NestedData => Some(
-            {
-                let this = nested_val.clone();
-                match this.0 {
-                    serde_json::Value::Array(_) => serde_json::from_value(this.0).ok(),
-                    serde_json::Value::Object(_) => {
-                        serde_json::from_value(this.0).ok().map(|v| vec![v])
+) -> Result<
+    Option<Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>>>,
+    error::FieldError,
+> {
+    let rows: Option<Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>>> =
+        match location_kind {
+            LocationKind::NestedData => Some(
+                {
+                    let this = nested_val.clone();
+                    match this.0 {
+                        serde_json::Value::Array(_) => serde_json::from_value(this.0).ok(),
+                        serde_json::Value::Object(_) => {
+                            serde_json::from_value(this.0).ok().map(|v| vec![v])
+                        }
+                        serde_json::Value::Null => Some(vec![]),
+                        _ => None,
                     }
-                    serde_json::Value::Null => Some(vec![]),
-                    _ => None,
                 }
-            }
-            .ok_or(error::FieldInternalError::InternalGeneric {
-                description: "unexpected: could not find rows in NDC nested response: ".to_string()
-                    + &nested_val.0.to_string(),
-            }),
-        )
-        .transpose(),
-        LocationKind::LocalRelationship => {
-            // Get the NDC response with nested selection (i.e. in case of
-            // relationships) as a RowSet
-            let row_set = nested_val
-                // TODO: remove clone -> depends on ndc-client providing an API e.g. as_mut_rowset()
-                .clone()
-                .as_rowset()
-                .ok_or(error::FieldInternalError::InternalGeneric {
-                    description: "unexpected: could not find RowSet in NDC nested response: "
+                .ok_or_else(|| error::FieldInternalError::InternalGeneric {
+                    description: "unexpected: could not find rows in NDC nested response: "
                         .to_string()
                         + &nested_val.0.to_string(),
-                })?;
-            Ok(row_set.rows)
-        }
-    }?;
+                }),
+            )
+            .transpose(),
+            LocationKind::LocalRelationship => {
+                // Get the NDC response with nested selection (i.e. in case of
+                // relationships) as a RowSet
+                let row_set = nested_val
+                    // TODO: remove clone -> depends on ndc-client providing an API e.g. as_mut_rowset()
+                    .clone()
+                    .as_rowset()
+                    .ok_or_else(|| error::FieldInternalError::InternalGeneric {
+                        description: "unexpected: could not find RowSet in NDC nested response: "
+                            .to_string()
+                            + &nested_val.0.to_string(),
+                    })?;
+                Ok(row_set.rows)
+            }
+        }?;
     Ok(rows)
 }
 
 /// resolve/process the command response for remote join execution
 fn resolve_command_response_row(
-    row: &IndexMap<String, ndc_models::RowFieldValue>,
+    row: &IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
     type_container: &ast::TypeContainer<ast::TypeName>,
-) -> Result<Vec<IndexMap<String, ndc_models::RowFieldValue>>, error::FieldError> {
+) -> Result<Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>>, error::FieldError> {
     let field_value_result = row.get(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
         error::NDCUnexpectedError::BadNDCResponse {
             summary: format!("missing field: {FUNCTION_IR_VALUE_COLUMN_NAME}"),
@@ -299,7 +304,7 @@ fn resolve_command_response_row(
                     summary: "Unable to parse response from NDC, object value expected".into(),
                 })?
             } else {
-                let index_map: IndexMap<String, ndc_models::RowFieldValue> =
+                let index_map: IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue> =
                     json::from_value(json::Value::Object(result_map.clone()))?;
                 Ok(vec![index_map])
             }
@@ -313,7 +318,7 @@ fn resolve_command_response_row(
             // In case the container is not a list, we take the first object from
             // the array and use that as the value for the relationship otherwise
             // we return the array of objects.
-            let array_values: Vec<IndexMap<String, ndc_models::RowFieldValue>> =
+            let array_values: Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>> =
                     json::from_value(json::Value::Array(values.clone()))?;
 
             if type_container.is_list(){

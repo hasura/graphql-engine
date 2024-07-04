@@ -29,7 +29,7 @@ pub(crate) fn function_info() -> ndc_models::FunctionInfo {
 }
 
 pub(crate) fn rows(
-    arguments: &BTreeMap<String, serde_json::Value>,
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,
 ) -> Result<Vec<Row>> {
     let movie_id = arguments.get("movie_id").ok_or((

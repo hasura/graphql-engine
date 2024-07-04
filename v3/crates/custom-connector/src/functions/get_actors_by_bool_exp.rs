@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub(crate) fn rows(
-    arguments: &BTreeMap<String, serde_json::Value>,
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,
 ) -> Result<Vec<Row>> {
     let actor_bool_exp_value = arguments.get("actor_bool_exp").ok_or((
@@ -51,7 +51,7 @@ pub(crate) fn rows(
     let mut actors = vec![];
 
     // this is very limited, we can only compare id columns with "_eq"
-    if column == "id" && operator == "_eq" {
+    if column.as_str() == "id" && operator.as_str() == "_eq" {
         for actor in state.actors.values() {
             let actor_value = serde_json::to_value(actor).map_err(|_| {
                 (

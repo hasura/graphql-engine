@@ -18,7 +18,7 @@ use super::relationship::{
 use crate::global_id;
 use crate::ir::error;
 use crate::model_tracking::UsagesCounts;
-use metadata_resolve;
+use metadata_resolve::{self, ConnectorArgumentName};
 use schema::TypeKind;
 use schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
 
@@ -33,7 +33,7 @@ pub(crate) enum FieldSelection<'s> {
     Column {
         column: String,
         nested_selection: Option<NestedSelection<'s>>,
-        arguments: BTreeMap<String, ndc_models::Argument>,
+        arguments: BTreeMap<ConnectorArgumentName, ndc_models::Argument>,
     },
     ModelRelationshipLocal {
         query: ModelSelection<'s>,
@@ -277,8 +277,10 @@ pub(crate) fn generate_selection_set_ir<'s>(
                             let ndc_argument_name = field_mapping
                                 .argument_mappings
                                 .get(argument_name.as_str())
-                                .map(|n| n.0.clone())
-                                .unwrap_or(argument_name.to_string());
+                                .map_or_else(
+                                    || ConnectorArgumentName(argument_name.as_str().to_owned()),
+                                    |n| ConnectorArgumentName(n.0.clone()),
+                                );
                             field_arguments.insert(ndc_argument_name, argument);
                         }
                     }

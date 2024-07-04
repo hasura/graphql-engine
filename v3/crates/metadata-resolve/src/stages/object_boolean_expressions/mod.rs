@@ -118,11 +118,12 @@ pub(crate) fn resolve_object_boolean_expression_type(
         })?;
 
     // validate data connector object type
-    if !data_connector_context
-        .schema
-        .object_types
-        .contains_key(&object_boolean_expression.data_connector_object_type.0)
-    {
+    if !data_connector_context.schema.object_types.contains_key(
+        object_boolean_expression
+            .data_connector_object_type
+            .0
+            .as_str(),
+    ) {
         return Err(Error::from(
             BooleanExpressionError::UnknownDataConnectorTypeInObjectBooleanExpressionType {
                 data_connector: qualified_data_connector_name.clone(),
@@ -287,7 +288,7 @@ pub fn resolve_boolean_expression_graphql_config(
             if let Some(graphql_type_name) = &scalar_type_info.comparison_expression_name.clone() {
                 let mut operators = BTreeMap::new();
                 for (op_name, op_definition) in &scalar_type_info.scalar_type.comparison_operators {
-                    let operator_name = OperatorName(op_name.clone());
+                    let operator_name = OperatorName(op_name.as_str().to_owned());
                     operators.insert(
                         operator_name,
                         resolve_ndc_type(

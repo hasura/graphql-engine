@@ -10,7 +10,7 @@ pub mod movie;
 pub mod name_query;
 pub mod staff_member;
 
-pub(crate) fn scalar_types() -> BTreeMap<String, ndc_models::ScalarType> {
+pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models::ScalarType> {
     BTreeMap::from_iter([
         (
             "String".into(),
@@ -111,7 +111,7 @@ pub(crate) fn scalar_types() -> BTreeMap<String, ndc_models::ScalarType> {
     ])
 }
 
-pub(crate) fn object_types() -> BTreeMap<String, ndc_models::ObjectType> {
+pub(crate) fn object_types() -> BTreeMap<ndc_models::ObjectTypeName, ndc_models::ObjectType> {
     BTreeMap::from_iter([
         ("actor".into(), actor::definition()),
         ("movie".into(), movie::definition()),

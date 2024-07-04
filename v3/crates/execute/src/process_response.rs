@@ -24,12 +24,12 @@ use schema::{AggregateOutputAnnotation, Annotation, GlobalID, OutputAnnotation, 
 trait KeyValueResponse {
     fn remove(&mut self, key: &str) -> Option<json::Value>;
 }
-impl KeyValueResponse for IndexMap<String, json::Value> {
+impl KeyValueResponse for IndexMap<ndc_models::FieldName, json::Value> {
     fn remove(&mut self, key: &str) -> Option<json::Value> {
         self.swap_remove(key)
     }
 }
-impl KeyValueResponse for IndexMap<String, ndc_models::RowFieldValue> {
+impl KeyValueResponse for IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue> {
     fn remove(&mut self, key: &str) -> Option<json::Value> {
         // Convert a ndc_models::RowFieldValue to json::Value if exits
         self.swap_remove(key).map(|row_field| row_field.0)
@@ -273,7 +273,8 @@ pub fn process_field_selection_as_list(
         // If the value is null we have nothing to process so we return null.
         Ok(value)
     } else {
-        let rows: Vec<IndexMap<String, ndc_models::RowFieldValue>> = json::from_value(value)?;
+        let rows: Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>> =
+            json::from_value(value)?;
         let processed_rows: Vec<IndexMap<Alias, json::Value>> = rows
             .into_iter()
             .map(|row| process_single_query_response_row(row, selection_set, response_config))
@@ -292,7 +293,8 @@ pub fn process_field_selection_as_object(
         // If the value is null we have nothing to process so we return null.
         Ok(value)
     } else {
-        let row: IndexMap<String, ndc_models::RowFieldValue> = json::from_value(value)?;
+        let row: IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue> =
+            json::from_value(value)?;
         let processed_row = process_single_query_response_row(row, selection_set, response_config)?;
         Ok(json::to_value(processed_row)?)
     }
@@ -300,7 +302,7 @@ pub fn process_field_selection_as_object(
 
 pub fn process_command_rows(
     command_name: &Qualified<CommandName>,
-    rows: Option<Vec<IndexMap<String, ndc_models::RowFieldValue, RandomState>>>,
+    rows: Option<Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue, RandomState>>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
     response_config: &Option<data_connectors::CommandsResponseConfig>,
@@ -338,7 +340,7 @@ pub fn process_command_rows(
 }
 
 fn process_command_response_row(
-    mut row: IndexMap<String, ndc_models::RowFieldValue>,
+    mut row: IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
     response_config: &Option<data_connectors::CommandsResponseConfig>,
@@ -393,7 +395,7 @@ fn process_command_field_value(
                         summary: "Unable to parse response from NDC, object value expected".into(),
                     })?
                 } else {
-                    let index_map: IndexMap<String, json::Value> =
+                    let index_map: IndexMap<ndc_models::FieldName, json::Value> =
                         json::from_value(json::Value::Object(result_map))?;
                     let value = process_single_query_response_row(
                         index_map,
@@ -405,7 +407,7 @@ fn process_command_field_value(
             }
             json::Value::Array(values) => {
                 if type_container.is_list() {
-                    let array_values: Vec<IndexMap<String, json::Value>> =
+                    let array_values: Vec<IndexMap<ndc_models::FieldName, json::Value>> =
                         json::from_value(json::Value::Array(values))?;
 
                     let r: Vec<IndexMap<Alias, json::Value>> = array_values
@@ -446,7 +448,7 @@ fn process_aggregate_requested_fields(
 }
 
 fn reshape_aggregate_fields(
-    aggregate_results: &mut IndexMap<String, json::Value>,
+    aggregate_results: &mut IndexMap<ndc_models::FieldName, json::Value>,
     graphql_field_path: &[&Alias],
     aggregate_output_selection_set: &normalized_ast::SelectionSet<'_, GDS>,
 ) -> Result<json::Value, error::FieldError> {
@@ -469,11 +471,10 @@ fn reshape_aggregate_fields(
                     let field_name = ir::aggregates::mk_alias_from_graphql_field_path(
                         graphql_field_path.as_slice(),
                     );
-                    let aggregate_value =
-                        aggregate_results.swap_remove(&field_name).ok_or_else(|| {
-                            error::NDCUnexpectedError::BadNDCResponse {
-                                summary: format!("missing aggregate field: {field_name}"),
-                            }
+                    let aggregate_value = aggregate_results
+                        .swap_remove(field_name.as_str())
+                        .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                            summary: format!("missing aggregate field: {field_name}"),
                         })?;
                     Ok((field.alias.to_string(), aggregate_value))
                 }
@@ -652,8 +653,8 @@ fn extract_response_headers_and_result(
                 // configured headers/result field exist in a JSON object
                 // response, if it does we extract, otherwise we skip extracting
                 // response headers from it.
-                if !result_map.contains_key(&response_config.headers_field)
-                    && !result_map.contains_key(&response_config.result_field)
+                if !result_map.contains_key(response_config.headers_field.as_str())
+                    && !result_map.contains_key(response_config.result_field.as_str())
                 {
                     return Ok(ProcessedResponse {
                         response_headers: None,
@@ -663,7 +664,7 @@ fn extract_response_headers_and_result(
 
                 // get the headers JSON from the response object
                 let response_headers_value = result_map
-                    .remove(&response_config.headers_field)
+                    .remove(response_config.headers_field.as_str())
                     .ok_or(error::NDCUnexpectedError::BadNDCResponse {
                         summary: "Unable to find configured response headers field in NDC response"
                             .to_string(),
@@ -688,12 +689,12 @@ fn extract_response_headers_and_result(
                     }
                 }
 
-                let result_value = result_map.remove(&response_config.result_field).ok_or(
-                    error::NDCUnexpectedError::BadNDCResponse {
+                let result_value = result_map
+                    .remove(response_config.result_field.as_str())
+                    .ok_or(error::NDCUnexpectedError::BadNDCResponse {
                         summary: "Unable to find configured result field in NDC response"
                             .to_string(),
-                    },
-                )?;
+                    })?;
 
                 Ok(ProcessedResponse {
                     response_headers: Some(SerializableHeaderMap(response_headers)),
