@@ -2,10 +2,15 @@
 
 ## [Unreleased]
 
+## [v2024.07.04]
+
 ### Added
 
 - Query Usage Analytics - usage analytics JSON data is attached to `execute`
   span using `internal.query_usage_analytics` attribute
+
+- Added a flag, `--partial-supergraph`, which instructs the metadata resolver to
+  prune relationships to unknown subgraphs rather than failing to resolve
 
 #### Boolean Expression Types
 
@@ -100,12 +105,54 @@ definition:
     aggregateFieldName: invoicesAggregate
 ```
 
+- One can now configure the engine to set response headers for GraphQL requests,
+  if NDC function/procedures returns headers in its result
+
+#### Field arguments
+
+Add field arguments to the OpenDD `ObjectType`:
+
+```yaml
+kind: ObjectType
+version: v1
+definition:
+  name: institution
+  fields:
+    - name: id
+      type: Int!
+    - name: name
+      type: String!
+      arguments:
+        - name: hash
+          argumentType: String
+        - name: limit
+          argumentType: Int
+        - name: offset
+          argumentType: Int
+  graphql:
+    typeName: Institution
+  dataConnectorTypeMapping:
+    - dataConnectorName: custom
+      dataConnectorObjectType: institution
+      fieldMapping:
+        id:
+          column:
+            name: id
+        name:
+          column:
+            name: name
+            argumentMapping:
+              hash: hash
+              offset: offset
+              limit: limit
+```
+
 ### Changed
 
 ### Fixed
 
 - Engine now respects `relation_comparisons` capability, when generating GraphQL
-  schema for relationship fields in model filter.
+  schema for relationship fields in model filter
 - The OpenDD schema for `DataConnectorLink` now references the correct version
   (v0.1.4) of the NDC schema when using the NDC `CapabilitiesResponse` and
   `SchemaResponse` types
@@ -118,3 +165,4 @@ Initial release.
 
 [Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.06.13...HEAD
 [v2024.06.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.06.13
+[v2024.07.04]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.04
