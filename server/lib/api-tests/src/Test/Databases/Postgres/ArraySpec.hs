@@ -105,7 +105,9 @@ cockroachFixture =
     }
 
 setup :: Text
-setup = "create type \"_made_up_type\" as enum ('a', 'b', 'c');"
+setup =
+  "create type \"_made_up_type\" as enum ('a', 'b', 'c');\n"
+    <> "create type \"TypeWithInterestingCapitalization\" as enum ('a', 'b', 'c');"
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -146,6 +148,15 @@ enumArrayType =
         Schema.bstCockroach = Just "_made_up_type[]"
       }
 
+interestingArrayType :: Schema.ScalarType
+interestingArrayType =
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
+      { Schema.bstPostgres = Just "\"TypeWithInterestingCapitalization\"[]",
+        Schema.bstCitus = Just "\"TypeWithInterestingCapitalization\"[]",
+        Schema.bstCockroach = Just "\"TypeWithInterestingCapitalization\"[]"
+      }
+
 schema :: [Schema.Table]
 schema =
   [ (Schema.table "author")
@@ -155,7 +166,10 @@ schema =
             Schema.column "emails" textArrayType,
             Schema.column "grid" nestedIntArrayType,
             Schema.column "jsons" jsonArrayType,
-            Schema.column "made_up" enumArrayType
+            Schema.column "made_up" enumArrayType,
+            (Schema.column "interesting" interestingArrayType)
+              { Schema.columnNullable = True
+              }
           ],
         Schema.tablePrimaryKey = ["id"]
       }
@@ -192,7 +206,8 @@ singleArrayTests = do
                         emails: "{ash@ash.com, ash123@ash.com}",
                         grid: "{}",
                         jsons: "{}",
-                        made_up: "{}"
+                        made_up: "{}",
+                        interesting: "{}"
                       }
                     ]
                   ) {
@@ -611,6 +626,22 @@ introspectionTests = do
                           }
                         },
                         {
+                          "name": "interesting",
+                          "type": {
+                            "kind": "LIST",
+                            "name": null,
+                            "ofType": {
+                              "kind": "NON_NULL",
+                              "name": null,
+                              "ofType": {
+                                "kind": "SCALAR",
+                                "name": "TypeWithInterestingCapitalization",
+                                "ofType": null
+                              }
+                            }
+                          }
+                        },
+                        {
                           "name": "jsons",
                           "type": {
                             "kind": "NON_NULL",
@@ -736,9 +767,8 @@ introspectionWithDisabledFeatureTests = do
                             }
                           }
                         },
-                        {
-                          "name": "id",
-                          "type": {
+                        {"name": "id",
+                         "type": {
                             "kind": "NON_NULL",
                             "name": null,
                             "ofType": {
@@ -747,6 +777,13 @@ introspectionWithDisabledFeatureTests = do
                               "ofType": null
                             }
                           }
+                        },
+                        {"name": "interesting",
+                         "type" : {
+                              "kind": "SCALAR",
+                              "name": "_TypeWithInterestingCapitalization",
+                              "ofType": null
+                         }
                         },
                         {
                           "name": "jsons",
