@@ -89,7 +89,7 @@ fn add_aggregate_selections<'s>(
                     let selection_field_name =
                         mk_alias_from_graphql_field_path(&graphql_field_path);
                     let selection = AggregateFieldSelection::Count {
-                        column_path: column_path.iter().map(|m| m.column.0.as_str()).collect(),
+                        column_path: column_path.iter().map(|m| m.column.as_str()).collect(),
                     };
                     aggregate_field_selections.insert(selection_field_name, selection);
                 }
@@ -98,7 +98,7 @@ fn add_aggregate_selections<'s>(
                     let selection_field_name =
                         mk_alias_from_graphql_field_path(&graphql_field_path);
                     let selection = AggregateFieldSelection::CountDistinct {
-                        column_path: column_path.iter().map(|m| m.column.0.as_str()).collect(),
+                        column_path: column_path.iter().map(|m| m.column.as_str()).collect(),
                     };
                     aggregate_field_selections.insert(selection_field_name, selection);
                 }
@@ -123,7 +123,7 @@ fn add_aggregate_selections<'s>(
                         .iter()
                         .find(|fn_info| {
                             fn_info.data_connector_name == *data_connector_name &&
-                            fn_info.operand_scalar_type.0.as_str() == column_scalar_type.as_str()
+                            fn_info.operand_scalar_type.as_str() == column_scalar_type.as_str()
                         })
                         .ok_or_else(|| {
                             error::InternalDeveloperError::DataConnectorAggregationFunctionNotFound {
@@ -135,7 +135,7 @@ fn add_aggregate_selections<'s>(
 
                     let selection = AggregateFieldSelection::AggregationFunction {
                         function_name: &data_connector_function_info.function_name,
-                        column_path: column_path.map(|m| m.column.0.as_str()),
+                        column_path: column_path.map(|m| m.column.as_str()),
                     };
                     aggregate_field_selections.insert(selection_field_name, selection);
                 }

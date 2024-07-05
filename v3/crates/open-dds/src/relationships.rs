@@ -9,24 +9,11 @@ use crate::{
     impl_JsonSchema_with_OpenDd_for,
     models::ModelName,
     permissions::ValueExpression,
+    str_newtype,
     types::{CustomTypeName, Deprecated, FieldName},
 };
 
-/// The name of the GraphQL relationship field.
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    derive_more::Display,
-    Hash,
-    opendds_derive::OpenDd,
-)]
-pub struct RelationshipName(pub Identifier);
-
-impl_JsonSchema_with_OpenDd_for!(RelationshipName);
+str_newtype!(RelationshipName over Identifier | doc "The name of the GraphQL relationship field.");
 
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,

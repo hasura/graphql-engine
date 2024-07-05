@@ -62,7 +62,7 @@ pub fn build_model_argument_fields(
         .arguments
         .iter()
         .map(|(argument_name, argument_type)| {
-            let field_name = ast::Name::new(argument_name.0.as_str())?;
+            let field_name = ast::Name::new(argument_name.as_str())?;
             let input_type = get_input_type(gds, builder, &argument_type.argument_type)?;
 
             let input_field = gql_schema::InputField::new(

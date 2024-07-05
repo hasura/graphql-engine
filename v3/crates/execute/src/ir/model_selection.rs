@@ -6,7 +6,10 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
 use metadata_resolve::QualifiedTypeName;
 use ndc_models;
-use open_dds::types::CustomTypeName;
+use open_dds::{
+    data_connector::CollectionName,
+    types::{CustomTypeName, DataConnectorArgumentName},
+};
 use schema::{Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation};
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -20,7 +23,7 @@ use super::{
 use crate::ir::error;
 use crate::model_tracking::{count_model, UsagesCounts};
 use metadata_resolve;
-use metadata_resolve::{ConnectorArgumentName, Qualified};
+use metadata_resolve::Qualified;
 use schema::GDS;
 
 /// IR fragment for any 'select' operation on a model
@@ -30,10 +33,10 @@ pub struct ModelSelection<'s> {
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
 
     // Source collection in the data connector for this model
-    pub(crate) collection: &'s String,
+    pub(crate) collection: &'s CollectionName,
 
     // Arguments for the NDC collection
-    pub(crate) arguments: BTreeMap<ConnectorArgumentName, ndc_models::Argument>,
+    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
 
     // The boolean expression that would fetch a single row from this model
     pub(crate) filter_clause: ResolvedFilterExpression<'s>,
@@ -55,7 +58,7 @@ pub struct ModelSelection<'s> {
 }
 
 struct ModelSelectAggregateArguments<'s> {
-    model_arguments: BTreeMap<metadata_resolve::ConnectorArgumentName, ndc_models::Argument>,
+    model_arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
     filter_input_arguments: FilterInputArguments<'s>,
 }
 
@@ -72,7 +75,7 @@ pub(crate) fn model_selection_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
-    arguments: BTreeMap<ConnectorArgumentName, ndc_models::Argument>,
+    arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
     filter_clauses: ResolvedFilterExpression<'s>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     limit: Option<u32>,
@@ -361,7 +364,7 @@ fn model_aggregate_selection_ir<'s>(
     aggregate_selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
-    arguments: BTreeMap<ConnectorArgumentName, ndc_models::Argument>,
+    arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
     filter_clauses: ResolvedFilterExpression<'s>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     limit: Option<u32>,

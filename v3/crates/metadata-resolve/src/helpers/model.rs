@@ -24,14 +24,14 @@ pub(crate) fn resolve_ndc_type(
                     .get(name.as_str())
                     .ok_or(Error::UnknownScalarTypeInDataConnector {
                         data_connector: data_connector.clone(),
-                        scalar_type: DataConnectorScalarType(name.as_str().to_owned()),
+                        scalar_type: DataConnectorScalarType::from(name.as_str()),
                     })?;
             scalar_type
                 .representation
                 .clone()
                 .ok_or(Error::DataConnectorScalarRepresentationRequired {
                     data_connector: data_connector.clone(),
-                    scalar_type: DataConnectorScalarType(name.as_str().to_owned()),
+                    scalar_type: DataConnectorScalarType::from(name.as_str()),
                 })
                 .map(|ty| QualifiedTypeReference {
                     underlying_type: QualifiedBaseType::Named(mk_qualified_type_name(

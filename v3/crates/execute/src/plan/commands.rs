@@ -50,7 +50,7 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
         .iter()
         .map(|(argument_name, argument_value)| {
             (
-                ndc_models::ArgumentName::from(argument_name.0.as_str()),
+                ndc_models::ArgumentName::from(argument_name.as_str()),
                 ndc_models::Argument::Literal {
                     value: argument_value.clone(),
                 },
@@ -61,7 +61,7 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
     // Add the variable arguments which are used for remote joins
     for (variable_name, variable_argument) in &ir.variable_arguments {
         arguments.insert(
-            ndc_models::ArgumentName::from(variable_name.0.as_str()),
+            ndc_models::ArgumentName::from(variable_name.as_str()),
             ndc_models::Argument::Variable {
                 name: ndc_models::VariableName::from(variable_argument.as_str()),
             },
@@ -78,7 +78,7 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
     }
     let query_request = ndc_models::QueryRequest {
         query,
-        collection: ndc_models::CollectionName::from(ir.function_name.0.as_str()),
+        collection: ndc_models::CollectionName::from(ir.function_name.as_str()),
         arguments,
         collection_relationships,
         variables: None,
@@ -107,17 +107,12 @@ pub(crate) fn ndc_mutation_ir<'s, 'ir>(
         .transpose()?
         .unzip();
     let mutation_operation = ndc_models::MutationOperation::Procedure {
-        name: ndc_models::ProcedureName::from(procedure_name.0.as_str()),
+        name: ndc_models::ProcedureName::from(procedure_name.as_str()),
         arguments: ir
             .command_info
             .arguments
             .iter()
-            .map(|(name, value)| {
-                (
-                    ndc_models::ArgumentName::from(name.0.as_str()),
-                    value.clone(),
-                )
-            })
+            .map(|(name, value)| (ndc_models::ArgumentName::from(name.as_str()), value.clone()))
             .collect(),
         fields: ndc_nested_field,
     };

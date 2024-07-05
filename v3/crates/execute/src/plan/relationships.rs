@@ -122,8 +122,8 @@ pub fn process_model_relationship_definition(
 
             if column_mapping
                 .insert(
-                    ndc_models::FieldName::from(source_column.column.0.as_str()),
-                    ndc_models::FieldName::from(target_column.column.0.as_str()),
+                    ndc_models::FieldName::from(source_column.column.as_str()),
+                    ndc_models::FieldName::from(target_column.column.as_str()),
                 )
                 .is_some()
             {
@@ -187,12 +187,12 @@ pub(crate) fn process_command_relationship_definition(
             })?;
 
             let relationship_argument = ndc_models::RelationshipArgument::Column {
-                name: ndc_models::FieldName::from(source_column.column.0.as_str()),
+                name: ndc_models::FieldName::from(source_column.column.as_str()),
             };
 
             if arguments
                 .insert(
-                    ndc_models::ArgumentName::from(target_argument.0.as_str()),
+                    ndc_models::ArgumentName::from(target_argument.as_str()),
                     relationship_argument,
                 )
                 .is_some()
@@ -210,7 +210,7 @@ pub(crate) fn process_command_relationship_definition(
     let ndc_relationship = ndc_models::Relationship {
         column_mapping: BTreeMap::new(),
         relationship_type: ndc_models::RelationshipType::Object,
-        target_collection: ndc_models::CollectionName::from(target_source.function_name.0.as_str()),
+        target_collection: ndc_models::CollectionName::from(target_source.function_name.as_str()),
         arguments,
     };
     Ok(ndc_relationship)

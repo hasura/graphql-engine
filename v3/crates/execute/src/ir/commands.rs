@@ -12,6 +12,8 @@ use nonempty::NonEmpty;
 use open_dds::commands;
 use open_dds::commands::FunctionName;
 use open_dds::commands::ProcedureName;
+use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::types::DataConnectorArgumentName;
 use serde::Serialize;
 use serde_json as json;
 use std::collections::BTreeMap;
@@ -27,7 +29,7 @@ use crate::ir::permissions;
 use crate::model_tracking::{count_command, UsagesCounts};
 use metadata_resolve;
 use metadata_resolve::http::SerializableHeaderMap;
-use metadata_resolve::{ConnectorArgumentName, Qualified, QualifiedTypeReference};
+use metadata_resolve::{Qualified, QualifiedTypeReference};
 use schema::ArgumentNameAndPath;
 use schema::ArgumentPresets;
 use schema::CommandSourceDetail;
@@ -47,7 +49,7 @@ pub struct CommandInfo<'s> {
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
 
     /// Arguments for the NDC table
-    pub(crate) arguments: BTreeMap<ConnectorArgumentName, json::Value>,
+    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, json::Value>,
 
     /// IR for the command result selection set
     pub(crate) selection: Option<selection_set::NestedSelection<'s>>,
@@ -70,7 +72,7 @@ pub struct FunctionBasedCommand<'s> {
     pub function_name: &'s FunctionName,
 
     /// Variable arguments to be used for remote joins
-    pub variable_arguments: BTreeMap<ConnectorArgumentName, String>,
+    pub variable_arguments: BTreeMap<DataConnectorArgumentName, String>,
 }
 
 /// IR for the 'procedure based command' operations
@@ -192,7 +194,7 @@ pub(crate) fn generate_command_info<'n, 's>(
         }
 
         command_arguments.insert(
-            ConnectorArgumentName(dc_argument_preset.name.0.as_str().to_owned()),
+            DataConnectorArgumentName::from(dc_argument_preset.name.as_str()),
             serde_json::to_value(SerializableHeaderMap(headers_argument))?,
         );
     }
@@ -245,13 +247,13 @@ fn wrap_selection_in_response_config<'a>(
             } else {
                 let headers_field_name = response_config.headers_field.as_str().to_owned();
                 let headers_field = FieldSelection::Column {
-                    column: headers_field_name.clone(),
+                    column: DataConnectorColumnName::from(headers_field_name.as_str()),
                     nested_selection: None,
                     arguments: BTreeMap::new(),
                 };
                 let result_field_name = response_config.result_field.as_str().to_owned();
                 let result_field = FieldSelection::Column {
-                    column: result_field_name.clone(),
+                    column: DataConnectorColumnName::from(result_field_name.as_str()),
                     nested_selection: original_selection,
                     arguments: BTreeMap::new(),
                 };

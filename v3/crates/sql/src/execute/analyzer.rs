@@ -134,7 +134,7 @@ fn analyze_internal(
                             e
                         ))
                     })?;
-                    FieldName(field_name)
+                    FieldName::new(field_name)
                 };
                 let ndc_field = {
                     base_type_fields
@@ -150,7 +150,7 @@ fn analyze_internal(
                 ndc_fields.insert(
                     ndc_models::FieldName::from(field.name().as_str()),
                     ndc_models::Field::Column {
-                        column: ndc_models::FieldName::from(ndc_field.0.as_str()),
+                        column: ndc_models::FieldName::from(ndc_field.as_str()),
                         fields: None,
                         arguments: BTreeMap::new(),
                     },
@@ -176,7 +176,9 @@ fn analyze_internal(
             let ndc_query_node = NDCQuery {
                 table: table_name.clone(),
                 query: query_request,
-                data_source_name: Arc::new(model_source.collection.clone()),
+                data_source_name: Arc::new(ndc_models::CollectionName::from(
+                    model_source.collection.as_str(),
+                )),
                 schema: projected_schema,
             };
             Ok(Transformed::yes(LogicalPlan::Extension(Extension {

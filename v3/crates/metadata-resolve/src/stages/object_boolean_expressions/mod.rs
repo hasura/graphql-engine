@@ -121,7 +121,6 @@ pub(crate) fn resolve_object_boolean_expression_type(
     if !data_connector_context.schema.object_types.contains_key(
         object_boolean_expression
             .data_connector_object_type
-            .0
             .as_str(),
     ) {
         return Err(Error::from(
@@ -200,7 +199,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         .as_ref()
         .map(|object_boolean_graphql_config| {
             let graphql_type_name =
-                mk_name(object_boolean_graphql_config.type_name.0.as_ref()).map(ast::TypeName)?;
+                mk_name(object_boolean_graphql_config.type_name.as_ref()).map(ast::TypeName)?;
 
             store_new_graphql_type(existing_graphql_types, Some(&graphql_type_name))?;
 
@@ -288,7 +287,7 @@ pub fn resolve_boolean_expression_graphql_config(
             if let Some(graphql_type_name) = &scalar_type_info.comparison_expression_name.clone() {
                 let mut operators = BTreeMap::new();
                 for (op_name, op_definition) in &scalar_type_info.scalar_type.comparison_operators {
-                    let operator_name = OperatorName(op_name.as_str().to_owned());
+                    let operator_name = OperatorName::from(op_name.as_str());
                     operators.insert(
                         operator_name,
                         resolve_ndc_type(

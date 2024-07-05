@@ -1,6 +1,4 @@
-pub use types::{
-    ConnectorArgumentName, Model, ModelRaw, ModelSource, ModelsOutput, NDCFieldSourceMapping,
-};
+pub use types::{Model, ModelRaw, ModelSource, ModelsOutput, NDCFieldSourceMapping};
 mod aggregation;
 mod helpers;
 mod ordering;

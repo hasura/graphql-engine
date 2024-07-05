@@ -52,7 +52,7 @@ impl TraceableError for ExecutionPlanError {
 pub(crate) struct NDCQuery {
     pub(crate) table: TableReference,
     pub(crate) query: ndc_models::QueryRequest,
-    pub(crate) data_source_name: Arc<String>,
+    pub(crate) data_source_name: Arc<ndc_models::CollectionName>,
     pub(crate) schema: DFSchemaRef,
 }
 

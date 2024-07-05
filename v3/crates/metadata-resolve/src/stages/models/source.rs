@@ -1,5 +1,6 @@
-use super::types::{ConnectorArgumentName, Model, ModelSource};
+use super::types::{Model, ModelSource};
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
+use open_dds::types::DataConnectorArgumentName;
 
 use crate::helpers::argument::get_argument_mappings;
 use crate::helpers::ndc_validation;
@@ -66,13 +67,13 @@ pub(crate) fn resolve_model_source(
             collection: model_source.collection.clone(),
         })?;
     let source_collection_type =
-        DataConnectorObjectType(source_collection.collection_type.as_str().to_owned());
+        DataConnectorObjectType::from(source_collection.collection_type.as_str());
 
     let source_arguments = source_collection
         .clone()
         .arguments
         .into_iter()
-        .map(|(k, v)| (ConnectorArgumentName(k.into()), v.argument_type))
+        .map(|(k, v)| (DataConnectorArgumentName::from(k.as_str()), v.argument_type))
         .collect();
 
     // Get the mappings of arguments and any type mappings that need resolving from the arguments

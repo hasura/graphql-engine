@@ -5,29 +5,15 @@ use crate::{
     aggregates::AggregateExpressionName,
     arguments::ArgumentDefinition,
     commands::ArgumentMapping,
-    data_connector::DataConnectorName,
+    data_connector::{CollectionName, DataConnectorName},
     identifier::Identifier,
-    impl_JsonSchema_with_OpenDd_for,
     order_by_expression::OrderByExpressionName,
+    str_newtype,
     traits::{OpenDd, OpenDdDeserializeError},
     types::{CustomTypeName, Deprecated, FieldName, GraphQlFieldName, GraphQlTypeName},
 };
 
-/// The name of data model.
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    derive_more::Display,
-    opendds_derive::OpenDd,
-)]
-pub struct ModelName(pub Identifier);
-
-impl_JsonSchema_with_OpenDd_for!(ModelName);
+str_newtype!(ModelName over Identifier | doc "The name of data model.");
 
 /// The definition of a data model.
 /// A data model is a collection of objects of a particular type. Models can support one or more CRUD operations.
@@ -196,7 +182,7 @@ pub struct ModelSource {
     pub data_connector_name: DataConnectorName,
 
     /// The collection in the data connector that backs this model.
-    pub collection: String,
+    pub collection: CollectionName,
 
     /// Mapping from model argument names to data connector collection argument names.
     #[opendd(default)]

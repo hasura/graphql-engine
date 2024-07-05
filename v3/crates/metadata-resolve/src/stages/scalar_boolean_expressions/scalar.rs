@@ -50,7 +50,6 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
             .get(
                 data_connector_operator_mapping
                     .data_connector_scalar_type
-                    .0
                     .as_str(),
             )
             .ok_or_else(|| Error::UnknownScalarTypeInDataConnector {

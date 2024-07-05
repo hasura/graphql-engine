@@ -14,14 +14,14 @@ use open_dds::{
     arguments::ArgumentName,
     commands,
     data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorOperatorName},
-    models, types,
+    models,
+    types::{self, DataConnectorArgumentName},
 };
 
 use metadata_resolve::{
     self, deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
-    serialize_non_string_key_btreemap, serialize_qualified_btreemap, ConnectorArgumentName,
-    DataConnectorLink, NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping,
-    ValueExpression,
+    serialize_non_string_key_btreemap, serialize_qualified_btreemap, DataConnectorLink,
+    NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping, ValueExpression,
 };
 
 use json_ext::HashMapWithJsonKey;
@@ -104,7 +104,7 @@ pub struct CommandSourceDetail {
         deserialize_with = "deserialize_qualified_btreemap"
     )]
     pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
-    pub argument_mappings: BTreeMap<ArgumentName, ConnectorArgumentName>,
+    pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
     pub ndc_type_opendd_type_same: bool,
 }
 
@@ -202,7 +202,7 @@ pub enum ModelInputAnnotation {
     ModelArgumentsExpression,
     ModelArgument {
         argument_type: QualifiedTypeReference,
-        ndc_table_argument: Option<ConnectorArgumentName>,
+        ndc_table_argument: Option<DataConnectorArgumentName>,
     },
     ComparisonOperation {
         #[serde(
@@ -265,7 +265,7 @@ pub enum InputAnnotation {
     BooleanExpression(BooleanExpressionAnnotation),
     CommandArgument {
         argument_type: QualifiedTypeReference,
-        ndc_func_proc_argument: Option<ConnectorArgumentName>,
+        ndc_func_proc_argument: Option<DataConnectorArgumentName>,
     },
     Relay(RelayInputAnnotation),
     ApolloFederationRepresentationsInput(ApolloFederationInputAnnotation),
@@ -310,7 +310,7 @@ impl Display for ArgumentPresets {
 /// preset
 pub struct ArgumentNameAndPath {
     /// Name of the ndc function/procedure argument
-    pub ndc_argument_name: Option<metadata_resolve::ConnectorArgumentName>,
+    pub ndc_argument_name: Option<DataConnectorArgumentName>,
     /// Optional path of field names to traverse to get to a field, in case of
     /// complex input object types
     pub field_path: Vec<DataConnectorColumnName>,

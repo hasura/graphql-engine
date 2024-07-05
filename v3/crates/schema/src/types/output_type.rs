@@ -4,7 +4,7 @@ use lang_graphql::schema::{self as gql_schema, Directive, RegisteredType};
 use open_dds::commands::DataConnectorCommand;
 use open_dds::{
     relationships,
-    types::{CustomTypeName, InbuiltType},
+    types::{CustomTypeName, FieldName, InbuiltType},
 };
 use relationship::ModelAggregateRelationshipAnnotation;
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -201,7 +201,7 @@ fn object_type_fields(
         .fields
         .iter()
         .map(|(field_name, field_definition)| -> Result<_, Error> {
-            let graphql_field_name = mk_name(field_name.0.as_str())?;
+            let graphql_field_name = mk_name(field_name.as_str())?;
             let field_arguments = field_definition
                 .field_arguments
                 .iter()
@@ -214,7 +214,7 @@ fn object_type_fields(
                     .field_arguments
                     .iter()
                     .map(|(argument_name, argument_type)| {
-                        let name = ast::Name::new(argument_name.0.as_str())?;
+                        let name = ast::Name::new(argument_name.as_str())?;
                         Ok((name, argument_type.argument_type.clone()))
                     })
                     .collect::<Result<
@@ -558,7 +558,7 @@ fn generate_apollo_federation_directives(
         let fields = key
             .fields
             .iter()
-            .map(|f| f.0.to_string())
+            .map(FieldName::as_str)
             .collect::<Vec<_>>()
             .join(" ");
         let key_directive = gql_schema::Directive {

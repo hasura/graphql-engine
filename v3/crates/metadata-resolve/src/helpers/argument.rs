@@ -6,7 +6,7 @@ use crate::helpers::types::{
     get_type_representation, mk_name, unwrap_custom_type_name, TypeRepresentation,
 };
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connectors, model_permissions, models,
+    boolean_expressions, data_connector_scalar_types, data_connectors, model_permissions,
     models_graphql, object_boolean_expressions, object_types, relationships, scalar_types,
     type_permissions,
 };
@@ -43,7 +43,7 @@ pub enum ArgumentMappingError {
     #[error("argument {argument_name:} is mapped to an unknown argument {ndc_argument_name:}")]
     UnknownNdcArgument {
         argument_name: ArgumentName,
-        ndc_argument_name: models::ConnectorArgumentName,
+        ndc_argument_name: DataConnectorArgumentName,
     },
     #[error("the mapping for argument {argument_name:} has been defined more than once")]
     DuplicateCommandArgumentMapping { argument_name: ArgumentName },
@@ -57,7 +57,7 @@ pub enum ArgumentMappingError {
     )]
     UnknownNdcType {
         argument_name: ArgumentName,
-        ndc_argument_name: models::ConnectorArgumentName,
+        ndc_argument_name: DataConnectorArgumentName,
         type_name: Qualified<CustomTypeName>,
         unknown_ndc_type: String,
     },
@@ -68,7 +68,7 @@ pub enum ArgumentMappingError {
 pub fn get_argument_mappings<'a>(
     arguments: &'a IndexMap<ArgumentName, ArgumentInfo>,
     argument_mapping: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
-    ndc_arguments_types: &'a BTreeMap<models::ConnectorArgumentName, ndc_models::Type>,
+    ndc_arguments_types: &'a BTreeMap<DataConnectorArgumentName, ndc_models::Type>,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,
@@ -81,19 +81,15 @@ pub fn get_argument_mappings<'a>(
     boolean_expression_types: &'a boolean_expressions::BooleanExpressionTypes,
 ) -> Result<
     (
-        BTreeMap<ArgumentName, models::ConnectorArgumentName>,
+        BTreeMap<ArgumentName, DataConnectorArgumentName>,
         Vec<type_mappings::TypeMappingToCollect<'a>>,
     ),
     ArgumentMappingError,
 > {
-    let mut unconsumed_argument_mappings: BTreeMap<&ArgumentName, &models::ConnectorArgumentName> =
-        argument_mapping
-            .iter()
-            .map(|(k, v)| (k, models::ConnectorArgumentName::ref_cast(&v.0)))
-            .collect();
+    let mut unconsumed_argument_mappings: BTreeMap<&ArgumentName, &DataConnectorArgumentName> =
+        argument_mapping.iter().collect();
 
-    let mut resolved_argument_mappings =
-        BTreeMap::<ArgumentName, models::ConnectorArgumentName>::new();
+    let mut resolved_argument_mappings = BTreeMap::<ArgumentName, DataConnectorArgumentName>::new();
 
     let mut type_mappings_to_collect = Vec::<type_mappings::TypeMappingToCollect>::new();
 
@@ -105,8 +101,7 @@ pub fn get_argument_mappings<'a>(
         } else {
             // If there's no mapping defined for an argument, assume that it
             // implicitly maps to the same name
-            let ArgumentName(inner) = argument_name;
-            models::ConnectorArgumentName(inner.to_string())
+            DataConnectorArgumentName::from(argument_name.as_str())
         };
 
         let ndc_argument_type = ndc_arguments_types
@@ -255,9 +250,9 @@ pub(crate) fn resolve_value_expression_for_argument(
             // get the data_connector_object_type from the NDC command argument type
             // or explode
             let data_connector_object_type = match &source_argument_type {
-                Some(ndc_models::Type::Predicate { object_type_name }) => Some(
-                    DataConnectorObjectType(object_type_name.as_str().to_owned()),
-                ),
+                Some(ndc_models::Type::Predicate { object_type_name }) => {
+                    Some(DataConnectorObjectType::from(object_type_name.as_str()))
+                }
                 _ => None,
             }
             .ok_or_else(|| Error::DataConnectorTypeMappingValidationError {
@@ -449,7 +444,7 @@ pub(crate) fn resolve_model_predicate_with_type(
             predicate,
         }) => {
             if let Some(nested_predicate) = predicate {
-                let relationship_field_name = mk_name(&name.0)?;
+                let relationship_field_name = mk_name(name.as_str())?;
 
                 let relationship = &object_type_representation
                     .relationship_fields
@@ -524,7 +519,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                                 // so that we use the correct column names for the data source
                                 let data_connector_field_mappings = target_object_type_representation.type_mappings.get(
                                     &target_source.model.data_connector.name,
-                                    DataConnectorObjectType::ref_cast(&target_source.model.collection)
+                                    DataConnectorObjectType::ref_cast(target_source.model.collection.inner())
                                 )
                                 .map(|type_mapping| match type_mapping {
                                     object_types::TypeMapping::Object {
@@ -536,8 +531,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     error: TypeMappingValidationError::DataConnectorTypeMappingNotFound {
                                         object_type_name: target_typename.clone(),
                                         data_connector_name: target_source.model.data_connector.name.clone(),
-                                        data_connector_object_type: DataConnectorObjectType(target_source.model.collection
-                                            .clone())
+                                        data_connector_object_type: DataConnectorObjectType::from(target_source.model.collection.as_str())
                                     },
                                 })?;
 
@@ -550,7 +544,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     .object_types_for_data_connector(&data_connector_link.name)
                                     .iter()
                                     .map(|collection_type| {
-                                        ndc_models::TypeName::from(collection_type.0.as_str())
+                                        ndc_models::TypeName::from(collection_type.as_str())
                                     })
                                     .collect::<Vec<_>>();
 
@@ -606,7 +600,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     .and_then(|graphql| {
                                         graphql
                                             .relationship_fields
-                                            .get(&FieldName(relationship.relationship_name.0.clone()))
+                                            .get(relationship.relationship_name.as_str())
                                     })
                                     .and_then(|comparable_relationship| {
                                         match &comparable_relationship.boolean_expression_type {
@@ -756,11 +750,11 @@ fn resolve_binary_operator_for_type<'a>(
     // lookup ndc operator name in mappings, falling back to using OperatorName
     let ndc_operator_name = operator_mappings
         .get(operator)
-        .unwrap_or_else(|| DataConnectorOperatorName::ref_cast(&operator.0));
+        .unwrap_or_else(|| DataConnectorOperatorName::ref_cast(operator.inner()));
 
     let comparison_operator_definition = &ndc_scalar_type
         .comparison_operators
-        .get(ndc_operator_name.0.as_str())
+        .get(ndc_operator_name.as_str())
         .ok_or_else(|| Error::TypePredicateError {
             type_predicate_error: TypePredicateError::InvalidOperatorInTypePredicate {
                 type_name: type_name.clone(),

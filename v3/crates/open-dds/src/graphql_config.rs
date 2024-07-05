@@ -5,7 +5,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::types::GraphQlFieldName;
+use crate::types::{GraphQlFieldName, GraphQlTypeName};
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
@@ -40,7 +40,7 @@ pub struct GraphqlConfigV1 {
 #[opendd(json_schema(title = "QueryGraphqlConfig"))]
 pub struct QueryGraphqlConfig {
     /// The name of the root operation type name for queries. Usually `query`.
-    pub root_operation_type_name: String,
+    pub root_operation_type_name: GraphQlTypeName,
     /// Configuration for the arguments input.
     pub arguments_input: Option<ArgumentsInputGraphqlConfig>,
     /// Configuration for the limit operation.
@@ -61,7 +61,7 @@ pub struct QueryGraphqlConfig {
 #[opendd(json_schema(title = "ArgumentsInputGraphqlConfig"))]
 pub struct ArgumentsInputGraphqlConfig {
     /// The name of arguments passing field. Usually `args`.
-    pub field_name: String,
+    pub field_name: GraphQlFieldName,
 }
 
 /// Configuration for the limit operation.
@@ -70,7 +70,7 @@ pub struct ArgumentsInputGraphqlConfig {
 #[opendd(json_schema(title = "LimitInputGraphqlConfig"))]
 pub struct LimitInputGraphqlConfig {
     /// The name of the limit operation field. Usually `limit`.
-    pub field_name: String,
+    pub field_name: GraphQlFieldName,
 }
 
 /// Configuration for the offset operation.
@@ -79,7 +79,7 @@ pub struct LimitInputGraphqlConfig {
 #[opendd(json_schema(title = "OffsetInputGraphqlConfig"))]
 pub struct OffsetInputGraphqlConfig {
     /// The name of the offset operation field. Usually `offset`.
-    pub field_name: String,
+    pub field_name: GraphQlFieldName,
 }
 
 /// Configuration for the filter operation.
@@ -88,7 +88,7 @@ pub struct OffsetInputGraphqlConfig {
 #[opendd(json_schema(title = "FilterInputGraphqlConfig"))]
 pub struct FilterInputGraphqlConfig {
     /// The name of the filter operation field. Usually `where`.
-    pub field_name: String,
+    pub field_name: GraphQlFieldName,
     /// The names of built-in filter operators.
     pub operator_names: FilterInputOperatorNames,
 }
@@ -99,13 +99,13 @@ pub struct FilterInputGraphqlConfig {
 #[opendd(json_schema(title = "FilterInputOperatorNames"))]
 pub struct FilterInputOperatorNames {
     /// The name of the `and` operator. Usually `_and`.
-    pub and: String,
+    pub and: GraphQlFieldName,
     /// The name of the `or` operator. Usually `_or`.
-    pub or: String,
+    pub or: GraphQlFieldName,
     /// The name of the `not` operator. Usually `_not`.
-    pub not: String,
+    pub not: GraphQlFieldName,
     /// The name of the `is null` operator. Usually `_is_null`.
-    pub is_null: String,
+    pub is_null: GraphQlFieldName,
 }
 
 /// Configuration for the sort operation.
@@ -114,7 +114,7 @@ pub struct FilterInputOperatorNames {
 #[opendd(json_schema(title = "OrderByInputGraphqlConfig"))]
 pub struct OrderByInputGraphqlConfig {
     /// The name of the filter operation field. Usually `order_by`.
-    pub field_name: String,
+    pub field_name: GraphQlFieldName,
     /// The names of the direction parameters.
     pub enum_direction_values: OrderByDirectionValues,
     pub enum_type_names: Vec<OrderByEnumTypeName>,
@@ -126,9 +126,9 @@ pub struct OrderByInputGraphqlConfig {
 #[opendd(json_schema(title = "OrderByDirectionValues"))]
 pub struct OrderByDirectionValues {
     /// The name of the ascending parameter. Usually `Asc`.
-    pub asc: String,
+    pub asc: GraphQlFieldName,
     /// The name of the descending parameter. Usually `Desc`.
-    pub desc: String,
+    pub desc: GraphQlFieldName,
 }
 
 /// Sort direction.
@@ -159,7 +159,7 @@ pub enum OrderByDirection {
 #[opendd(json_schema(title = "OrderByEnumTypeName"))]
 pub struct OrderByEnumTypeName {
     pub directions: Vec<OrderByDirection>,
-    pub type_name: String,
+    pub type_name: GraphQlTypeName,
 }
 
 /// Configuration for the GraphQL schema of Hasura features for mutations.
@@ -168,7 +168,7 @@ pub struct OrderByEnumTypeName {
 #[opendd(json_schema(title = "MutationGraphqlConfig"))]
 pub struct MutationGraphqlConfig {
     /// The name of the root operation type name for mutations. Usually `mutation`.
-    pub root_operation_type_name: String,
+    pub root_operation_type_name: GraphQlTypeName,
 }
 
 /// Configuration for the GraphQL schema of Hasura features for Apollo Federation.

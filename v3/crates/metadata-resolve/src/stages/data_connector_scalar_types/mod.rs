@@ -87,7 +87,7 @@ pub fn resolve<'a>(
             None => Ok(None),
             Some(graphql) => match &graphql.comparison_expression_type_name {
                 None => Ok(None),
-                Some(type_name) => mk_name(type_name.0.as_ref()).map(ast::TypeName).map(Some),
+                Some(type_name) => mk_name(type_name.as_ref()).map(ast::TypeName).map(Some),
             },
         }?;
 
@@ -180,7 +180,7 @@ fn convert_data_connectors_contexts<'a>(
     for (data_connector_name, context) in &old_data_connectors.0 {
         let mut new_scalars = BTreeMap::new();
         for (name, scalar) in &context.schema.scalar_types {
-            let scalar_name = DataConnectorScalarType(name.as_str().to_owned());
+            let scalar_name = DataConnectorScalarType::from(name.as_str());
             new_scalars.insert(
                 scalar_name.clone(),
                 ScalarTypeWithRepresentationInfo {

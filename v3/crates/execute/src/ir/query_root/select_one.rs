@@ -65,7 +65,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
                         description: format!("Missing NDC column mapping for unique identifier argument {} on field {}", argument.name, field_call.name)})?;
                     let ndc_expression = ndc_models::Expression::BinaryComparisonOperator {
                         column: ndc_models::ComparisonTarget::Column {
-                            name: ndc_models::FieldName::from(ndc_column.column.0.as_str()),
+                            name: ndc_models::FieldName::from(ndc_column.column.as_str()),
                             path: vec![],
                             field_path: None,
                         },

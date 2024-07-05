@@ -25,7 +25,7 @@ pub(crate) fn generate_command_argument(
     argument_name: &ArgumentName,
     argument_type: &metadata_resolve::ArgumentInfo,
 ) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::Error> {
-    let field_name = ast::Name::new(argument_name.0.as_str())?;
+    let field_name = ast::Name::new(argument_name.as_str())?;
     let input_type = types::input_type::get_input_type(gds, builder, &argument_type.argument_type)?;
 
     let input_field = gql_schema::InputField::new(

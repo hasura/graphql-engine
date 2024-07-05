@@ -120,7 +120,7 @@ pub fn build_model_order_by_input_schema(
 
     if let Some(model_order_by_expression) = model.graphql_api.order_by_expression.as_ref() {
         for (field_name, order_by_expression) in &model_order_by_expression.order_by_fields {
-            let graphql_field_name = mk_name(field_name.clone().0.as_str())?;
+            let graphql_field_name = mk_name(field_name.as_str())?;
             let input_type =
                 ast::TypeContainer::named_null(builder.register_type(TypeId::OrderByEnumType {
                     graphql_type_name: order_by_input_config.enum_type_name.clone(),

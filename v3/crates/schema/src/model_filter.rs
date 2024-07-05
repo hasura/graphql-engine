@@ -87,21 +87,21 @@ pub fn build_scalar_comparison_input(
 
         // this feels a bit loose, we're depending on the fact the ast::Name and
         // OperatorName should be the same
-        let operator_name = OperatorName(op_name.to_string());
+        let operator_name = op_name.as_str();
 
         // for each set of mappings, only return the mapping we actually need
         // default to existing mapping where one is missing
         let this_operator_mapping = operator_mapping
             .iter()
             .map(
-                |(data_connector_name, mappings)| match mappings.get(&operator_name) {
+                |(data_connector_name, mappings)| match mappings.get(operator_name) {
                     Some(data_connector_operator_name) => (
                         data_connector_name.clone(),
                         data_connector_operator_name.clone(),
                     ),
                     None => (
                         data_connector_name.clone(),
-                        DataConnectorOperatorName(operator_name.0.clone()),
+                        DataConnectorOperatorName::from(operator_name),
                     ),
                 },
             )

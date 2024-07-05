@@ -24,7 +24,7 @@ pub fn resolve(
     {
         let graphql_type_name = match scalar_type.graphql.as_ref() {
             None => Ok(None),
-            Some(type_name) => mk_name(type_name.type_name.0.as_ref())
+            Some(type_name) => mk_name(type_name.type_name.as_ref())
                 .map(ast::TypeName)
                 .map(Some),
         }?;

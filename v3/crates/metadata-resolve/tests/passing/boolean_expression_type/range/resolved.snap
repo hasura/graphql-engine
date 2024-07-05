@@ -418,7 +418,9 @@ Metadata {
                                 supports_nested_object_aggregations: false,
                             },
                         },
-                        collection: "movies",
+                        collection: CollectionName(
+                            "movies",
+                        ),
                         collection_type: DataConnectorObjectType(
                             "movie",
                         ),

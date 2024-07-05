@@ -3,7 +3,9 @@ use std::collections::{BTreeMap, HashMap};
 use hasura_authn_core::SessionVariables;
 use lang_graphql::{ast::common as ast, normalized_ast};
 use ndc_models;
+use open_dds::identifier;
 use open_dds::types::CustomTypeName;
+use open_dds::types::FieldName;
 use serde::Serialize;
 
 use crate::ir::error;
@@ -98,7 +100,7 @@ pub(crate) fn entities_ir<'n, 's>(
         // The __typename field is used to determine the type of the entity
         let typename_value = representation.get("__typename").ok_or(
             error::Error::FieldNotFoundInEntityRepresentation {
-                field_name: "__typename".to_string(),
+                field_name: FieldName::new(identifier!("__typename")),
             },
         )?;
         let typename_str = typename_value.as_str().ok_or(
@@ -141,14 +143,14 @@ pub(crate) fn entities_ir<'n, 's>(
                 .iter()
                 .map(|(field_name, field_mapping)| {
                     // Get the value of the field from the representation
-                    let val = representation.get(field_name.0.as_str()).ok_or(
+                    let val = representation.get(field_name.as_str()).ok_or(
                         error::Error::FieldNotFoundInEntityRepresentation {
-                            field_name: field_name.0.to_string(),
+                            field_name: field_name.clone(),
                         },
                     )?;
                     Ok(ndc_models::Expression::BinaryComparisonOperator {
                         column: ndc_models::ComparisonTarget::Column {
-                            name: ndc_models::FieldName::from(field_mapping.column.0.as_str()),
+                            name: ndc_models::FieldName::from(field_mapping.column.as_str()),
                             path: vec![], // We don't support nested fields in the key fields, so the path is empty
                             field_path: None,
                         },

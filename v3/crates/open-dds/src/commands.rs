@@ -7,57 +7,13 @@ use crate::{
     arguments::{ArgumentDefinition, ArgumentName},
     data_connector::DataConnectorName,
     identifier::Identifier,
-    impl_JsonSchema_with_OpenDd_for,
+    str_newtype,
     types::{DataConnectorArgumentName, Deprecated, GraphQlFieldName, TypeReference},
 };
 
-/// The name of a command.
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    derive_more::Display,
-    opendds_derive::OpenDd,
-)]
-pub struct CommandName(pub Identifier);
-
-impl_JsonSchema_with_OpenDd_for!(CommandName);
-
-/// The name of a function backing the command.
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    derive_more::Display,
-    JsonSchema,
-)]
-pub struct FunctionName(pub String);
-
-/// The name of a procedure backing the command.
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    derive_more::Display,
-    JsonSchema,
-)]
-pub struct ProcedureName(pub String);
+str_newtype!(CommandName over Identifier | doc "The name of a command.");
+str_newtype!(FunctionName | doc "The name of a function backing the command.");
+str_newtype!(ProcedureName | doc "The name of a procedure backing the command.");
 
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema, opendds_derive::OpenDd,

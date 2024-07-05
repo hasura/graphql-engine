@@ -155,3 +155,98 @@ macro_rules! impl_JsonSchema_with_OpenDd_for {
         }
     };
 }
+
+/// Macro to implement newtype wrappers for string identifiers
+#[macro_export]
+macro_rules! str_newtype {
+    ($name:ident over $oldtype:ty | doc $doc:expr) => {
+        #[derive(
+            Clone,
+            Debug,
+            Hash,
+            Eq,
+            Ord,
+            PartialEq,
+            PartialOrd,
+            serde::Serialize,
+            serde::Deserialize,
+            ref_cast::RefCast,
+            derive_more::Display,
+            opendds_derive::OpenDd,
+        )]
+        #[repr(transparent)]
+        #[doc = $doc]
+        pub struct $name($oldtype);
+
+        impl AsRef<$oldtype> for $name {
+            fn as_ref(&self) -> &$oldtype {
+                &self.0
+            }
+        }
+
+        impl From<$oldtype> for $name {
+            fn from(value: $oldtype) -> Self {
+                $name(value)
+            }
+        }
+
+        impl From<$name> for $oldtype {
+            fn from(value: $name) -> Self {
+                value.0
+            }
+        }
+
+        impl core::borrow::Borrow<str> for $name {
+            fn borrow(&self) -> &str {
+                self.0.as_str()
+            }
+        }
+
+        impl core::borrow::Borrow<$oldtype> for $name {
+            fn borrow(&self) -> &$oldtype {
+                &self.0
+            }
+        }
+
+        impl From<$name> for String {
+            fn from(value: $name) -> Self {
+                value.0.into()
+            }
+        }
+
+        impl $name {
+            pub fn new(value: $oldtype) -> Self {
+                $name(value)
+            }
+
+            pub fn as_str(&self) -> &str {
+                self.0.as_str()
+            }
+
+            pub fn into_inner(self) -> $oldtype {
+                self.0
+            }
+
+            pub fn inner(&self) -> &$oldtype {
+                &self.0
+            }
+        }
+
+        $crate::impl_JsonSchema_with_OpenDd_for!($name);
+    };
+    ($name:ident | doc $doc:expr) => {
+        str_newtype! {$name over smol_str::SmolStr | doc $doc}
+
+        impl From<&str> for $name {
+            fn from(value: &str) -> Self {
+                $name(value.into())
+            }
+        }
+
+        impl From<String> for $name {
+            fn from(value: String) -> Self {
+                $name(value.into())
+            }
+        }
+    };
+}

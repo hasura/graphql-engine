@@ -119,7 +119,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                             "field name conversion failed {field_name}: {e}"
                         ))
                     })?;
-                    FieldName(field_name)
+                    FieldName::new(field_name)
                 };
                 if base_type_allowed_fields.contains(&field_name) {
                     Ok(())
@@ -159,7 +159,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                     process_model_relationship_definition(&v)
                         .map(|r| {
                             (
-                                ndc_models::RelationshipName::from(v.relationship_name.0.as_str()),
+                                ndc_models::RelationshipName::from(v.relationship_name.as_str()),
                                 r,
                             )
                         })

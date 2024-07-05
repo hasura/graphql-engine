@@ -5,6 +5,7 @@ use schemars::schema::{
 use schemars::schema::{InstanceType, SingleOrVec};
 use serde_json;
 use serde_path_to_error;
+use smol_str::SmolStr;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::hash::Hash;
 
@@ -33,6 +34,7 @@ pub trait OpenDd: Sized {
 }
 
 impl_OpenDd_default_for!(String);
+impl_OpenDd_default_for!(SmolStr);
 impl_OpenDd_default_for!(bool);
 impl_OpenDd_default_for!(i32);
 impl_OpenDd_default_for!(u32);

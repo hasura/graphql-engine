@@ -1,11 +1,11 @@
 //! Usage analytics, like model, command, field usage analytics, from a GraphQL query
 
-use metadata_resolve::{ConnectorArgumentName, Qualified};
+use metadata_resolve::Qualified;
 use open_dds::{
     commands::CommandName,
     models::ModelName,
     relationships::{RelationshipName, RelationshipType},
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use schemars::JsonSchema;
 use serde::Serialize;
@@ -93,7 +93,7 @@ pub struct FilterPredicateUsage {
 
 #[derive(Serialize, JsonSchema, Clone)]
 pub struct ArgumentPresetsUsage {
-    pub arguments: Vec<ConnectorArgumentName>,
+    pub arguments: Vec<DataConnectorArgumentName>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -162,10 +162,13 @@ mod tests {
            }
         */
         let product_relationship = OpenddObject::Relationship(RelationshipUsage {
-            name: RelationshipName(identifier!("product")),
+            name: RelationshipName::new(identifier!("product")),
             source: Qualified::new("app".to_string(), CustomTypeName(identifier!("Order"))),
             target: RelationshipTarget::Model {
-                model_name: Qualified::new("app".to_string(), ModelName(identifier!("Products"))),
+                model_name: Qualified::new(
+                    "app".to_string(),
+                    ModelName::new(identifier!("Products")),
+                ),
                 relationship_type: RelationshipType::Object,
             },
         });
@@ -174,7 +177,7 @@ mod tests {
         let product_id_filter = GqlInputField {
             name: "id".to_string(),
             used: vec![OpenddObject::Field(FieldUsage {
-                name: FieldName(identifier!("id")),
+                name: FieldName::new(identifier!("id")),
                 opendd_type: Qualified::new(
                     "app".to_string(),
                     CustomTypeName(identifier!("Order")),
@@ -192,7 +195,7 @@ mod tests {
             fields: vec![GqlInputField {
                 name: "price".to_string(),
                 used: vec![OpenddObject::Field(FieldUsage {
-                    name: FieldName(identifier!("price")),
+                    name: FieldName::new(identifier!("price")),
                     opendd_type: Qualified::new(
                         "app".to_string(),
                         CustomTypeName(identifier!("Product")),
@@ -222,7 +225,7 @@ mod tests {
                     name: "price".to_string(),
                     fields: vec![],
                     used: vec![OpenddObject::Field(FieldUsage {
-                        name: FieldName(identifier!("price")),
+                        name: FieldName::new(identifier!("price")),
                         opendd_type: Qualified::new(
                             "app".to_string(),
                             CustomTypeName(identifier!("Product")),
@@ -238,7 +241,7 @@ mod tests {
         let products_quantity_filter = GqlInputField {
             name: "quantity".to_string(),
             used: vec![OpenddObject::Field(FieldUsage {
-                name: FieldName(identifier!("quantity")),
+                name: FieldName::new(identifier!("quantity")),
                 opendd_type: Qualified::new(
                     "app".to_string(),
                     CustomTypeName(identifier!("Product")),
@@ -263,7 +266,7 @@ mod tests {
                 name: "quantity".to_string(),
                 fields: vec![],
                 used: vec![OpenddObject::Field(FieldUsage {
-                    name: FieldName(identifier!("quantity")),
+                    name: FieldName::new(identifier!("quantity")),
                     opendd_type: Qualified::new(
                         "app".to_string(),
                         CustomTypeName(identifier!("Product")),
@@ -281,12 +284,15 @@ mod tests {
                 arguments: vec![where_argument, order_by_argument],
                 used: vec![
                     OpenddObject::Model {
-                        name: Qualified::new("app".to_string(), ModelName(identifier!("Orders"))),
+                        name: Qualified::new(
+                            "app".to_string(),
+                            ModelName::new(identifier!("Orders")),
+                        ),
                     },
                     OpenddObject::Permission(PermissionUsage::FilterPredicate(
                         FilterPredicateUsage {
                             fields: vec![FieldUsage {
-                                name: FieldName(identifier!("id")),
+                                name: FieldName::new(identifier!("id")),
                                 opendd_type: Qualified::new(
                                     "app".to_string(),
                                     CustomTypeName(identifier!("Order")),
@@ -301,7 +307,7 @@ mod tests {
                         name: "date".to_string(),
                         alias: "date".to_string(),
                         used: vec![OpenddObject::Field(FieldUsage {
-                            name: FieldName(identifier!("date")),
+                            name: FieldName::new(identifier!("date")),
                             opendd_type: Qualified::new(
                                 "app".to_string(),
                                 CustomTypeName(identifier!("Order")),
@@ -321,7 +327,7 @@ mod tests {
                                 arguments: vec![],
                                 fields: vec![],
                                 used: vec![OpenddObject::Field(FieldUsage {
-                                    name: FieldName(identifier!("address_line_1")),
+                                    name: FieldName::new(identifier!("address_line_1")),
                                     opendd_type: Qualified::new(
                                         "app".to_string(),
                                         CustomTypeName(identifier!("Address")),
@@ -334,7 +340,7 @@ mod tests {
                                 arguments: vec![],
                                 fields: vec![],
                                 used: vec![OpenddObject::Field(FieldUsage {
-                                    name: FieldName(identifier!("address_line_2")),
+                                    name: FieldName::new(identifier!("address_line_2")),
                                     opendd_type: Qualified::new(
                                         "app".to_string(),
                                         CustomTypeName(identifier!("Address")),
@@ -343,7 +349,7 @@ mod tests {
                             },
                         ],
                         used: vec![OpenddObject::Field(FieldUsage {
-                            name: FieldName(identifier!("address")),
+                            name: FieldName::new(identifier!("address")),
                             opendd_type: Qualified::new(
                                 "app".to_string(),
                                 CustomTypeName(identifier!("Order")),
@@ -359,7 +365,7 @@ mod tests {
                             name: "name".to_string(),
                             alias: "name".to_string(),
                             used: vec![OpenddObject::Field(FieldUsage {
-                                name: FieldName(identifier!("name")),
+                                name: FieldName::new(identifier!("name")),
                                 opendd_type: Qualified::new(
                                     "app".to_string(),
                                     CustomTypeName(identifier!("Product")),

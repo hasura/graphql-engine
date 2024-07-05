@@ -148,7 +148,7 @@ fn build_comparable_fields_schema(
 
     // scalar column fields
     for (field_name, comparison_expression) in scalar_fields {
-        let field_graphql_name = mk_name(field_name.clone().0.as_str())?;
+        let field_graphql_name = mk_name(field_name.as_str())?;
         let registered_type_name =
             get_scalar_comparison_input_type(builder, comparison_expression)?;
         let field_type = ast::TypeContainer::named_null(registered_type_name);
@@ -187,7 +187,7 @@ fn build_comparable_fields_schema(
 
     // object column fields
     for (field_name, object_comparison_expression) in object_fields {
-        let field_graphql_name = mk_name(field_name.clone().0.as_str())?;
+        let field_graphql_name = mk_name(field_name.as_str())?;
 
         let registered_type_name =
             builder.register_type(TypeId::InputObjectBooleanExpressionType {
@@ -247,7 +247,7 @@ fn build_new_comparable_relationships_schema(
     let mut input_fields = BTreeMap::new();
 
     for (relationship_name, comparable_relationship) in relationship_fields {
-        let field_name = mk_name(&relationship_name.0)?;
+        let field_name = mk_name(relationship_name.as_str())?;
 
         // lookup the relationship used in the underlying object type
         let relationship = object_type_representation
@@ -587,7 +587,7 @@ fn get_scalar_comparison_input_type(
     let graphql_type_name = comparison_expression.type_name.clone();
     let mut operators = Vec::new();
     for (op_name, input_type) in &comparison_expression.operators {
-        let op_name = mk_name(op_name.0.as_str())?;
+        let op_name = mk_name(op_name.as_str())?;
         operators.push((op_name, input_type.clone()));
     }
     Ok(

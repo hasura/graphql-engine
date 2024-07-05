@@ -531,7 +531,7 @@ fn check_aggregation_function_return_type(
                     mk_error("The Open DD return type is not a scalar type or an object type")
                 })?;
                 let ndc_object_type_name =
-                    DataConnectorObjectType(ndc_named_return_type.as_str().to_owned());
+                    DataConnectorObjectType::from(ndc_named_return_type.as_str());
                 return_object_type.type_mappings.get(data_connector_name, &ndc_object_type_name)
                     .ok_or_else(||
                         mk_error(format!("There is no type mapping defined from the Open DD return object type to the data connector's object type '{ndc_named_return_type}'").as_str())
@@ -639,7 +639,7 @@ fn resolve_aggregate_expression_graphql_config(
 ) -> Result<Option<AggregateExpressionGraphqlConfig>, Error> {
     let select_type_name = aggregate_expression_graphql_definition
         .as_ref()
-        .map(|def| mk_name(def.select_type_name.0.as_ref()).map(ast::TypeName))
+        .map(|def| mk_name(def.select_type_name.as_ref()).map(ast::TypeName))
         .transpose()?;
 
     store_new_graphql_type(existing_graphql_types, select_type_name.as_ref())?;
@@ -661,7 +661,7 @@ fn resolve_aggregate_expression_graphql_config(
 
             // Check that no aggregatable field conflicts with the _count field
             if let Some(field) = aggregate_operand.aggregatable_fields.iter().find(|field| {
-                field.field_name.0.as_str() == aggregate_config.count_field_name.as_str()
+                field.field_name.as_str() == aggregate_config.count_field_name.as_str()
             }) {
                 return Err(AggregateExpressionError::AggregatableFieldNameConflict {
                     name: aggregate_expression_name.clone(),
@@ -690,7 +690,7 @@ fn resolve_aggregate_expression_graphql_config(
 
             // Check that no aggregatable field conflicts with the _count_distinct field
             if let Some(field) = aggregate_operand.aggregatable_fields.iter().find(|field| {
-                field.field_name.0.as_str() == aggregate_config.count_distinct_field_name.as_str()
+                field.field_name.as_str() == aggregate_config.count_distinct_field_name.as_str()
             }) {
                 return Err(AggregateExpressionError::AggregatableFieldNameConflict {
                     name: aggregate_expression_name.clone(),

@@ -2,8 +2,9 @@ use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::Alias;
 use lang_graphql::normalized_ast;
+use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::relationships::RelationshipName;
-use open_dds::types::{CustomTypeName, FieldName};
+use open_dds::types::{CustomTypeName, DataConnectorArgumentName, FieldName};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -18,7 +19,7 @@ use super::relationship::{
 use crate::global_id;
 use crate::ir::error;
 use crate::model_tracking::UsagesCounts;
-use metadata_resolve::{self, ConnectorArgumentName};
+use metadata_resolve;
 use schema::TypeKind;
 use schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
 
@@ -31,9 +32,9 @@ pub(crate) enum NestedSelection<'s> {
 #[derive(Debug, Serialize)]
 pub(crate) enum FieldSelection<'s> {
     Column {
-        column: String,
+        column: DataConnectorColumnName,
         nested_selection: Option<NestedSelection<'s>>,
-        arguments: BTreeMap<ConnectorArgumentName, ndc_models::Argument>,
+        arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
     },
     ModelRelationshipLocal {
         query: ModelSelection<'s>,
@@ -88,6 +89,10 @@ impl NDCRelationshipName {
         let name = serde_json::to_string(&(source_type, relationship_name))?;
         Ok(NDCRelationshipName(name))
     }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
 }
 
 /// IR that represents the selected fields of an output type.
@@ -105,7 +110,7 @@ impl<'s> ResultSelectionSet<'s> {
     pub(crate) fn contains(&self, other_field: &metadata_resolve::FieldMapping) -> Option<String> {
         self.fields.iter().find_map(|(alias, field)| match field {
             FieldSelection::Column { column, .. } => {
-                if *column == other_field.column.0 {
+                if column.as_str() == other_field.column.as_str() {
                     Some(alias.clone())
                 } else {
                     None
@@ -137,7 +142,7 @@ fn build_global_id_fields(
         fields.insert(
             global_col_id_alias,
             FieldSelection::Column {
-                column: field_mapping.column.0.clone(),
+                column: field_mapping.column.clone(),
                 nested_selection: None,
                 arguments: BTreeMap::new(),
             },
@@ -278,8 +283,8 @@ pub(crate) fn generate_selection_set_ir<'s>(
                                 .argument_mappings
                                 .get(argument_name.as_str())
                                 .map_or_else(
-                                    || ConnectorArgumentName(argument_name.as_str().to_owned()),
-                                    |n| ConnectorArgumentName(n.0.clone()),
+                                    || DataConnectorArgumentName::from(argument_name.as_str()),
+                                    Clone::clone,
                                 );
                             field_arguments.insert(ndc_argument_name, argument);
                         }
@@ -288,7 +293,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                     fields.insert(
                         field.alias.to_string(),
                         FieldSelection::Column {
-                            column: field_mapping.column.0.clone(),
+                            column: field_mapping.column.clone(),
                             nested_selection,
                             arguments: field_arguments,
                         },

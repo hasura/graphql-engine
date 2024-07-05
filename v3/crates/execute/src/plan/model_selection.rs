@@ -123,7 +123,7 @@ pub(crate) fn ndc_ir<'s, 'ir>(
         arguments: ir
             .arguments
             .iter()
-            .map(|(k, v)| (ndc_models::ArgumentName::from(k.0.as_str()), v.clone()))
+            .map(|(k, v)| (ndc_models::ArgumentName::from(k.as_str()), v.clone()))
             .collect(),
         collection_relationships,
         variables: None,

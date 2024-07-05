@@ -819,7 +819,9 @@ Metadata {
                                 supports_nested_object_aggregations: false,
                             },
                         },
-                        collection: "institutions",
+                        collection: CollectionName(
+                            "institutions",
+                        ),
                         collection_type: DataConnectorObjectType(
                             "institution",
                         ),

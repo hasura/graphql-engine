@@ -347,7 +347,9 @@ Metadata {
                                 supports_nested_object_aggregations: false,
                             },
                         },
-                        collection: "article",
+                        collection: CollectionName(
+                            "article",
+                        ),
                         collection_type: DataConnectorObjectType(
                             "article",
                         ),

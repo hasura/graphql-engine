@@ -433,7 +433,7 @@ pub(crate) fn build_remote_relationship<'s>(
         let target_value_variable = format!("${}", &target_column.column);
         let comparison_exp = ndc_models::Expression::BinaryComparisonOperator {
             column: ndc_models::ComparisonTarget::Column {
-                name: ndc_models::FieldName::from(target_column.column.0.as_str()),
+                name: ndc_models::FieldName::from(target_column.column.as_str()),
                 path: vec![],
                 field_path: None,
             },

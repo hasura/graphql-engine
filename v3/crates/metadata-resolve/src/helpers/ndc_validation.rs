@@ -7,9 +7,11 @@ use crate::{
 use ndc_models;
 use open_dds::{
     commands::{CommandName, DataConnectorCommand, FunctionName, ProcedureName},
-    data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorScalarType},
+    data_connector::{
+        CollectionName, DataConnectorColumnName, DataConnectorName, DataConnectorScalarType,
+    },
     models::ModelName,
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use thiserror::Error;
 
@@ -21,15 +23,15 @@ pub enum NDCValidationError {
     NoSuchCollection {
         db_name: Qualified<DataConnectorName>,
         model_name: Qualified<ModelName>,
-        collection_name: String,
+        collection_name: CollectionName,
     },
     #[error(
         "argument {argument_name} is not defined for collection {collection_name} in data connector {db_name}"
     )]
     NoSuchArgument {
         db_name: Qualified<DataConnectorName>,
-        collection_name: String,
-        argument_name: models::ConnectorArgumentName,
+        collection_name: CollectionName,
+        argument_name: DataConnectorArgumentName,
     },
     #[error(
         "argument {argument_name} is not defined for function/procedure {func_proc_name} in data connector {db_name}"
@@ -37,7 +39,7 @@ pub enum NDCValidationError {
     NoSuchArgumentForCommand {
         db_name: Qualified<DataConnectorName>,
         func_proc_name: String,
-        argument_name: models::ConnectorArgumentName,
+        argument_name: DataConnectorArgumentName,
     },
     #[error(
         "column {column_name} is not defined in collection {collection_name} in data connector {db_name}"
@@ -46,7 +48,7 @@ pub enum NDCValidationError {
         db_name: Qualified<DataConnectorName>,
         model_name: Qualified<ModelName>,
         field_name: FieldName,
-        collection_name: String,
+        collection_name: CollectionName,
         column_name: DataConnectorColumnName,
     },
     #[error("procedure {procedure_name} is not defined in data connector {db_name}")]
@@ -74,7 +76,7 @@ pub enum NDCValidationError {
         db_name: DataConnectorName,
         model_name: ModelName,
         field_name: FieldName,
-        collection_name: String,
+        collection_name: CollectionName,
         column_name: DataConnectorColumnName,
         field_type: String,
         column_type: String,
@@ -180,7 +182,7 @@ pub fn validate_ndc(
     for mapped_argument_name in model_source.argument_mappings.values() {
         if !collection
             .arguments
-            .contains_key(mapped_argument_name.0.as_str())
+            .contains_key(mapped_argument_name.as_str())
         {
             return Err(NDCValidationError::NoSuchArgument {
                 db_name: db.name.clone(),
@@ -209,7 +211,7 @@ pub fn validate_ndc(
         let column_name = &field_mapping.column;
         let column = collection_type
             .fields
-            .get(column_name.0.as_str())
+            .get(column_name.as_str())
             .ok_or_else(|| NDCValidationError::NoSuchColumn {
                 db_name: db.name.clone(),
                 model_name: model_name.clone(),
@@ -219,7 +221,7 @@ pub fn validate_ndc(
             })?;
         // Check if the arguments in the mapping are valid
         for (open_dd_argument_name, dc_argument_name) in &field_mapping.argument_mappings {
-            if !column.arguments.contains_key(dc_argument_name.0.as_str()) {
+            if !column.arguments.contains_key(dc_argument_name.as_str()) {
                 return Err(NDCValidationError::NoSuchArgumentInNDCArgumentMapping {
                     argument_name: open_dd_argument_name.clone(),
                     field_name: field_name.clone(),
@@ -302,7 +304,7 @@ pub fn validate_ndc_command(
             })?;
 
             (
-                &procedure.0,
+                procedure.as_str(),
                 command_source_ndc.arguments.clone(),
                 &command_source_ndc.result_type,
             )
@@ -318,7 +320,7 @@ pub fn validate_ndc_command(
             })?;
 
             (
-                &function.0,
+                function.as_str(),
                 command_source_ndc.arguments.clone(),
                 &command_source_ndc.result_type,
             )
@@ -345,10 +347,10 @@ pub fn validate_ndc_command(
             );
         }
 
-        if !command_source_ndc_arguments.contains_key(ndc_argument_name.0.as_str()) {
+        if !command_source_ndc_arguments.contains_key(ndc_argument_name.as_str()) {
             return Err(NDCValidationError::NoSuchArgumentForCommand {
                 db_name: db.name.clone(),
-                func_proc_name: command_source_func_proc_name.clone(),
+                func_proc_name: command_source_func_proc_name.to_owned(),
                 argument_name: ndc_argument_name.clone(),
             });
         }
@@ -405,13 +407,13 @@ pub fn validate_ndc_command(
                         let column_name = &field_mapping.column;
                         if !actual_command_source_type
                             .fields
-                            .contains_key(column_name.0.as_str())
+                            .contains_key(column_name.as_str())
                         {
                             return Err(NDCValidationError::NoSuchColumnForCommand {
                                 db_name: db.name.clone(),
                                 command_name: command_name.clone(),
                                 field_name: field_name.clone(),
-                                func_proc_name: command_source_func_proc_name.clone(),
+                                func_proc_name: command_source_func_proc_name.to_owned(),
                                 column_name: column_name.clone(),
                             });
                         }
@@ -511,7 +513,7 @@ fn validate_argument_preset_type(
     schema: &data_connectors::DataConnectorSchema,
 ) -> Result<(), NDCValidationError> {
     for (arg_name, arg_info) in arguments {
-        if arg_name.as_str() == preset_argument_name.0.as_str() {
+        if arg_name.as_str() == preset_argument_name.as_str() {
             let type_name = get_underlying_named_type(&arg_info.argument_type);
             let scalar_type = schema
                 .scalar_types
@@ -529,7 +531,7 @@ fn validate_argument_preset_type(
                                 .map_err(|e| NDCValidationError::InternalSerializationError {
                                     err: e,
                                 })?,
-                            scalar_type: DataConnectorScalarType(type_name.as_str().to_owned()),
+                            scalar_type: DataConnectorScalarType::from(type_name.as_str()),
                             argument_name: preset_argument_name.clone(),
                         },
                     );

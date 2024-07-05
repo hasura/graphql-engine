@@ -75,7 +75,7 @@ pub(crate) fn resolve_model_graphql_api(
                 });
             }
         }
-        let select_unique_field_name = mk_name(&select_unique.query_root_field.0)?;
+        let select_unique_field_name = mk_name(select_unique.query_root_field.as_str())?;
         let select_unique_description = if select_unique.description.is_some() {
             select_unique.description.clone()
         } else {
@@ -99,12 +99,11 @@ pub(crate) fn resolve_model_graphql_api(
         .as_ref()
         .map(
             |model_source: &models::ModelSource| -> Result<Option<ModelOrderByExpression>, Error> {
-                let order_by_expression_type_name = match &model_graphql_definition
-                    .order_by_expression_type
-                {
-                    None => Ok(None),
-                    Some(type_name) => mk_name(type_name.0.as_str()).map(ast::TypeName).map(Some),
-                }?;
+                let order_by_expression_type_name =
+                    match &model_graphql_definition.order_by_expression_type {
+                        None => Ok(None),
+                        Some(type_name) => mk_name(type_name.as_str()).map(ast::TypeName).map(Some),
+                    }?;
                 // TODO: (paritosh) should we check for conflicting graphql types for default order_by type name as well?
                 store_new_graphql_type(
                     existing_graphql_types,
@@ -156,29 +155,31 @@ pub(crate) fn resolve_model_graphql_api(
     // record select_many root field
     graphql_api.select_many = match &model_graphql_definition.select_many {
         None => Ok(None),
-        Some(gql_definition) => mk_name(&gql_definition.query_root_field.0).map(|f: ast::Name| {
-            let select_many_description = if gql_definition.description.is_some() {
-                gql_definition.description.clone()
-            } else {
-                model_description.as_ref().map(|description| {
-                    format!(
+        Some(gql_definition) => {
+            mk_name(gql_definition.query_root_field.as_str()).map(|f: ast::Name| {
+                let select_many_description = if gql_definition.description.is_some() {
+                    gql_definition.description.clone()
+                } else {
+                    model_description.as_ref().map(|description| {
+                        format!(
                         "Selects multiple objects from the model. Model description: {description}"
                     )
+                    })
+                };
+                Some(SelectManyGraphQlDefinition {
+                    query_root_field: f,
+                    description: select_many_description,
+                    deprecated: gql_definition.deprecated.clone(),
                 })
-            };
-            Some(SelectManyGraphQlDefinition {
-                query_root_field: f,
-                description: select_many_description,
-                deprecated: gql_definition.deprecated.clone(),
             })
-        }),
+        }
     }?;
 
     // record the filter input type name, if set
     let filter_input_type_name = model_graphql_definition
         .filter_input_type_name
         .as_ref()
-        .map(|filter_input_type_name| mk_name(filter_input_type_name.0.as_str()).map(ast::TypeName))
+        .map(|filter_input_type_name| mk_name(filter_input_type_name.as_str()).map(ast::TypeName))
         .transpose()?;
     store_new_graphql_type(existing_graphql_types, filter_input_type_name.as_ref())?;
     graphql_api.filter_input_type_name = filter_input_type_name;
@@ -221,7 +222,7 @@ pub(crate) fn resolve_model_graphql_api(
                     })?;
 
                 Ok(SelectAggregateGraphQlDefinition {
-                    query_root_field: mk_name(&graphql_aggregate.query_root_field.0)?,
+                    query_root_field: mk_name(graphql_aggregate.query_root_field.as_str())?,
                     description: graphql_aggregate.description.clone(),
                     deprecated: graphql_aggregate.deprecated.clone(),
                     aggregate_expression_name: aggregate_expression_name.clone(),
@@ -258,7 +259,7 @@ pub(crate) fn resolve_model_graphql_api(
     } else {
         let arguments_input_type_name = match &model_graphql_definition.arguments_input_type {
             None => Ok(None),
-            Some(type_name) => mk_name(type_name.0.as_str()).map(ast::TypeName).map(Some),
+            Some(type_name) => mk_name(type_name.as_str()).map(ast::TypeName).map(Some),
         }?;
         store_new_graphql_type(existing_graphql_types, arguments_input_type_name.as_ref())?;
 

@@ -134,7 +134,7 @@ fn resolve_comparable_relationships(
                 .map(|bool_exp| Qualified::new(subgraph.to_string(), bool_exp.clone())),
         };
         resolved_comparable_relationships.insert(
-            FieldName(comparable_relationship.relationship_name.0.clone()),
+            FieldName::new(comparable_relationship.relationship_name.inner().clone()),
             resolved_comparable_relationship,
         );
     }

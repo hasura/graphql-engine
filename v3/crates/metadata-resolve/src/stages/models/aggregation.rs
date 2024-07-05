@@ -2,6 +2,7 @@ use open_dds::aggregates::AggregateExpressionName;
 use open_dds::data_connector::{
     DataConnectorName, DataConnectorObjectType, DataConnectorScalarType,
 };
+use ref_cast::RefCast;
 
 use crate::types::error::{Error, ModelAggregateExpressionError};
 
@@ -189,7 +190,7 @@ fn resolve_aggregate_expression_data_connector_mapping(
                 model_name,
                 field_object_type_name,
                 data_connector_name,
-                &DataConnectorObjectType(data_connector_field_type.as_str().to_owned()),
+                DataConnectorObjectType::ref_cast(data_connector_field_type.inner()),
                 data_connector_capabilities,
                 aggregate_expressions,
                 object_types,
@@ -206,7 +207,7 @@ fn resolve_aggregate_expression_data_connector_mapping(
                 .all(|agg_fn| {
                     agg_fn.data_connector_functions.iter().any(|dc_fn| {
                         dc_fn.data_connector_name == *data_connector_name
-                            && dc_fn.operand_scalar_type.0.as_str()
+                            && dc_fn.operand_scalar_type.as_str()
                                 == data_connector_field_type.as_str()
                     })
                 });
@@ -215,8 +216,8 @@ fn resolve_aggregate_expression_data_connector_mapping(
                     model_name: model_name.clone(),
                     aggregate_expression: field_aggregate_expression.name.clone(),
                     data_connector_name: data_connector_name.clone(),
-                    data_connector_operand_type: DataConnectorScalarType(
-                        data_connector_field_type.as_str().to_owned(),
+                    data_connector_operand_type: DataConnectorScalarType::from(
+                        data_connector_field_type.as_str(),
                     ),
                 });
             }

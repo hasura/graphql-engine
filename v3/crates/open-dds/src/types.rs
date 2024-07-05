@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::ops::Deref;
 
 use indexmap::IndexMap;
@@ -18,6 +17,7 @@ use crate::{
     identifier::Identifier,
     impl_JsonSchema_with_OpenDd_for, impl_OpenDd_default_for,
     models::EnableAllOrSpecific,
+    str_newtype,
 };
 
 #[derive(
@@ -222,34 +222,8 @@ pub enum InbuiltType {
     String,
 }
 
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    derive_more::Display,
-    JsonSchema,
-    opendds_derive::OpenDd,
-)]
-pub struct GraphQlTypeName(pub String);
-
-/// The name of a GraphQL object field.
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    derive_more::Display,
-    JsonSchema,
-    opendds_derive::OpenDd,
-)]
-pub struct GraphQlFieldName(pub String);
+str_newtype!(GraphQlTypeName | doc "The name of a GraphQL type.");
+str_newtype!(GraphQlFieldName | doc "The name of a GraphQL object field.");
 
 /// GraphQL configuration of an Open DD object type.
 #[derive(Serialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
@@ -437,47 +411,8 @@ pub struct ColumnFieldMapping {
     pub argument_mapping: Option<ArgumentMapping>,
 }
 
-#[repr(transparent)]
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    JsonSchema,
-    opendds_derive::OpenDd,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-)]
-#[schemars(title = "DataConnectorArgumentName")]
-pub struct DataConnectorArgumentName(pub String);
-
-/// The name of a field in a user-defined object type.
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    derive_more::Display,
-    PartialOrd,
-    Ord,
-    opendds_derive::OpenDd,
-)]
-pub struct FieldName(pub Identifier);
-
-// Used for joining slices.
-impl Borrow<str> for FieldName {
-    fn borrow(&self) -> &str {
-        &self.0
-    }
-}
-
-impl_JsonSchema_with_OpenDd_for!(FieldName);
+str_newtype!(DataConnectorArgumentName | doc "The name of an argument as defined by a data connector.");
+str_newtype!(FieldName over Identifier | doc "The name of a field in a user-defined object type.");
 
 /// The definition of a field in a user-defined object type.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
@@ -696,21 +631,7 @@ pub struct ComparableField {
     pub operators: EnableAllOrSpecific<OperatorName>,
 }
 
-#[derive(
-    derive_more::Display,
-    opendds_derive::OpenDd,
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    Eq,
-    PartialEq,
-    JsonSchema,
-    PartialOrd,
-    Ord,
-    Hash,
-)]
-pub struct OperatorName(pub String);
+str_newtype!(OperatorName | doc "The name of an operator");
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]

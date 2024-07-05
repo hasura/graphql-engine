@@ -1229,7 +1229,9 @@ Metadata {
                                 supports_nested_object_aggregations: false,
                             },
                         },
-                        collection: "Invoice",
+                        collection: CollectionName(
+                            "Invoice",
+                        ),
                         collection_type: DataConnectorObjectType(
                             "Invoice",
                         ),
@@ -1894,7 +1896,9 @@ Metadata {
                                 supports_nested_object_aggregations: false,
                             },
                         },
-                        collection: "InvoiceLine",
+                        collection: CollectionName(
+                            "InvoiceLine",
+                        ),
                         collection_type: DataConnectorObjectType(
                             "InvoiceLine",
                         ),

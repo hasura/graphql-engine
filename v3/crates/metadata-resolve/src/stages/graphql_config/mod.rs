@@ -8,7 +8,7 @@ use crate::types::error::{Error, GraphqlConfigError};
 use lang_graphql::ast::common as ast;
 use open_dds::accessor::QualifiedObject;
 use open_dds::graphql_config::{self, OrderByDirection};
-use open_dds::types::GraphQlFieldName;
+use open_dds::types::{GraphQlFieldName, GraphQlTypeName};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -185,7 +185,7 @@ pub fn resolve_graphql_config(
                             if input_directions
                                 == HashSet::from([OrderByDirection::Asc, OrderByDirection::Desc])
                             {
-                                mk_name(&order_by_enum_type.type_name)
+                                mk_name(order_by_enum_type.type_name.as_str())
                             } else {
                                 let invalid_directions = order_by_enum_type
                                     .directions
@@ -209,10 +209,10 @@ pub fn resolve_graphql_config(
 
                     Some(OrderByInputGraphqlConfig {
                         asc_direction_field_value: mk_name(
-                            &order_by_input.enum_direction_values.asc,
+                            order_by_input.enum_direction_values.asc.as_str(),
                         )?,
                         desc_direction_field_value: mk_name(
-                            &order_by_input.enum_direction_values.desc,
+                            order_by_input.enum_direction_values.desc.as_str(),
                         )?,
                         enum_type_name: ast::TypeName(order_by_enum_type_name?),
                     })
@@ -226,11 +226,11 @@ pub fn resolve_graphql_config(
                 .map(|aggregate_config| -> Result<_, Error> {
                     Ok(AggregateGraphqlConfig {
                         filter_input_field_name: mk_name(
-                            aggregate_config.filter_input_field_name.0.as_str(),
+                            aggregate_config.filter_input_field_name.as_str(),
                         )?,
-                        count_field_name: mk_name(aggregate_config.count_field_name.0.as_str())?,
+                        count_field_name: mk_name(aggregate_config.count_field_name.as_str())?,
                         count_distinct_field_name: mk_name(
-                            aggregate_config.count_distinct_field_name.0.as_str(),
+                            aggregate_config.count_distinct_field_name.as_str(),
                         )?,
                     })
                 })
@@ -266,33 +266,33 @@ fn fallback_graphql_config() -> &'static graphql_config::GraphqlConfig {
     CELL.get_or_init(|| {
         graphql_config::GraphqlConfig::V1(graphql_config::GraphqlConfigV1 {
             query: graphql_config::QueryGraphqlConfig {
-                root_operation_type_name: "Query".to_string(),
+                root_operation_type_name: GraphQlTypeName::from("Query"),
                 arguments_input: Some(graphql_config::ArgumentsInputGraphqlConfig {
-                    field_name: "args".to_string(),
+                    field_name: GraphQlFieldName::from("args"),
                 }),
                 limit_input: Some(graphql_config::LimitInputGraphqlConfig {
-                    field_name: "limit".to_string(),
+                    field_name: GraphQlFieldName::from("limit"),
                 }),
                 offset_input: Some(graphql_config::OffsetInputGraphqlConfig {
-                    field_name: "offset".to_string(),
+                    field_name: GraphQlFieldName::from("offset"),
                 }),
                 filter_input: Some(graphql_config::FilterInputGraphqlConfig {
-                    field_name: "where".to_string(),
+                    field_name: GraphQlFieldName::from("where"),
                     operator_names: graphql_config::FilterInputOperatorNames {
-                        and: "_and".to_string(),
-                        or: "_or".to_string(),
-                        not: "_not".to_string(),
-                        is_null: "_is_null".to_string(),
+                        and: GraphQlFieldName::from("_and"),
+                        or: GraphQlFieldName::from("_or"),
+                        not: GraphQlFieldName::from("_not"),
+                        is_null: GraphQlFieldName::from("_is_null"),
                     },
                 }),
                 order_by_input: Some(graphql_config::OrderByInputGraphqlConfig {
-                    field_name: "order_by".to_string(),
+                    field_name: GraphQlFieldName::from("order_by"),
                     enum_direction_values: graphql_config::OrderByDirectionValues {
-                        asc: "Asc".to_string(),
-                        desc: "Desc".to_string(),
+                        asc: GraphQlFieldName::from("Asc"),
+                        desc: GraphQlFieldName::from("Desc"),
                     },
                     enum_type_names: vec![graphql_config::OrderByEnumTypeName {
-                        type_name: "order_by".to_string(),
+                        type_name: GraphQlTypeName::from("order_by"),
                         directions: vec![
                             graphql_config::OrderByDirection::Asc,
                             graphql_config::OrderByDirection::Desc,
@@ -300,13 +300,13 @@ fn fallback_graphql_config() -> &'static graphql_config::GraphqlConfig {
                     }],
                 }),
                 aggregate: Some(graphql_config::AggregateGraphqlConfig {
-                    filter_input_field_name: GraphQlFieldName("filter_input".to_string()),
-                    count_field_name: GraphQlFieldName("_count".to_string()),
-                    count_distinct_field_name: GraphQlFieldName("_count_distinct".to_string()),
+                    filter_input_field_name: GraphQlFieldName::from("filter_input"),
+                    count_field_name: GraphQlFieldName::from("_count"),
+                    count_distinct_field_name: GraphQlFieldName::from("_count_distinct"),
                 }),
             },
             mutation: graphql_config::MutationGraphqlConfig {
-                root_operation_type_name: "Mutation".to_string(),
+                root_operation_type_name: GraphQlTypeName::from("Mutation"),
             },
             apollo_federation: None,
         })

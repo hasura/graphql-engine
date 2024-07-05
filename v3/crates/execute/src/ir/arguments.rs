@@ -7,14 +7,12 @@ use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
 use metadata_resolve::TypeMapping;
-use metadata_resolve::{
-    ConnectorArgumentName, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
-};
+use metadata_resolve::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 use ndc_models;
 use nonempty::NonEmpty;
 use open_dds::{
     data_connector::DataConnectorColumnName,
-    types::{CustomTypeName, InbuiltType},
+    types::{CustomTypeName, DataConnectorArgumentName, InbuiltType},
 };
 use schema::GDS;
 use schema::{
@@ -46,7 +44,7 @@ pub(crate) fn follow_field_path_and_insert_value(
         // if rest is *not* empty, pick the field from the current object, and
         // recursively process with the rest
         Some(tail) => {
-            match object_slice.get_mut(&field_name.0) {
+            match object_slice.get_mut(field_name.as_str()) {
                 None => {
                     // object should have this field; if it doesn't then all the fields are preset
                     object_slice.insert(
@@ -74,7 +72,7 @@ pub(crate) fn follow_field_path_and_insert_value(
 pub(crate) fn process_model_arguments_presets(
     argument_presets: &ArgumentPresets,
     session_variables: &SessionVariables,
-    model_arguments: &mut BTreeMap<ConnectorArgumentName, ndc_models::Argument>,
+    model_arguments: &mut BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<(), error::Error> {
     let ArgumentPresets { argument_presets } = argument_presets;
@@ -139,7 +137,7 @@ pub fn build_ndc_command_arguments_as_value(
     command_field: &Name,
     argument: &InputField<GDS>,
     command_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-) -> Result<(ConnectorArgumentName, serde_json::Value), error::Error> {
+) -> Result<(DataConnectorArgumentName, serde_json::Value), error::Error> {
     match argument.info.generic {
         Annotation::Input(InputAnnotation::CommandArgument {
             argument_type,
@@ -168,7 +166,7 @@ pub fn build_ndc_model_arguments<'a, TInputFieldIter: Iterator<Item = &'a InputF
     model_operation_field: &Name,
     arguments: TInputFieldIter,
     model_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-) -> Result<BTreeMap<ConnectorArgumentName, ndc_models::Argument>, error::Error> {
+) -> Result<BTreeMap<DataConnectorArgumentName, ndc_models::Argument>, error::Error> {
     let mut ndc_arguments = BTreeMap::new();
     for argument in arguments {
         match argument.info.generic {

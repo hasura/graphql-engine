@@ -35,7 +35,7 @@ pub(crate) fn resolve_object_boolean_graphql(
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<BooleanExpressionGraphqlConfig, Error> {
     let boolean_expression_graphql_name =
-        mk_name(boolean_expression_graphql_config.type_name.0.as_ref()).map(ast::TypeName)?;
+        mk_name(boolean_expression_graphql_config.type_name.as_ref()).map(ast::TypeName)?;
 
     let mut scalar_fields = BTreeMap::new();
 
@@ -63,7 +63,7 @@ pub(crate) fn resolve_object_boolean_graphql(
                         mk_qualified_type_reference(op_definition, subgraph),
                     );
                 }
-                let graphql_type_name = mk_name(&graphql_name.0).map(ast::TypeName)?;
+                let graphql_type_name = mk_name(graphql_name.as_str()).map(ast::TypeName)?;
 
                 let operator_mapping = resolve_operator_mapping_for_scalar_type(
                     &scalar_boolean_expression_type.data_connector_operator_mappings,
@@ -109,7 +109,7 @@ pub(crate) fn resolve_object_boolean_graphql(
                     .map(|gql| gql.type_name.clone()),
                 &raw_boolean_expression_type.operand,
             ) {
-                let graphql_type_name = mk_name(&graphql_name.0).map(ast::TypeName)?;
+                let graphql_type_name = mk_name(graphql_name.as_str()).map(ast::TypeName)?;
 
                 object_fields.insert(
                     comparable_field_name.clone(),

@@ -192,7 +192,7 @@ fn resolve_relationship_mappings_model(
     >,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
-    let mut field_mapping_btree_set_for_validation: BTreeSet<&str> = BTreeSet::new();
+    let mut field_mapping_btree_set_for_validation = BTreeSet::new();
     for relationship_mapping in &relationship.mapping {
         let resolved_relationship_source_mapping = resolve_relationship_source_mapping(
             &relationship.name,
@@ -246,7 +246,7 @@ fn resolve_relationship_mappings_model(
         // Check if the source field is already mapped to a target field
         let resolved_relationship_mapping = {
             if field_mapping_btree_set_for_validation
-                .insert(&resolved_relationship_source_mapping.field_name.0)
+                .insert(&resolved_relationship_source_mapping.field_name)
             {
                 let target_ndc_column = target_model
                     .source
@@ -295,8 +295,8 @@ fn resolve_relationship_mappings_command(
     target_command: &commands::Command,
 ) -> Result<Vec<RelationshipCommandMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
-    let mut field_mapping_btree_set_for_validation: BTreeSet<&str> = BTreeSet::new();
-    let mut target_command_arguments_btree_set_for_validation: BTreeSet<&str> = BTreeSet::new();
+    let mut field_mapping_btree_set_for_validation = BTreeSet::new();
+    let mut target_command_arguments_btree_set_for_validation = BTreeSet::new();
 
     for relationship_mapping in &relationship.mapping {
         let resolved_relationship_source_mapping = resolve_relationship_source_mapping(
@@ -330,7 +330,7 @@ fn resolve_relationship_mappings_command(
         }
 
         // Check if the target argument is already mapped to a field in the source type.
-        if !target_command_arguments_btree_set_for_validation.insert(&target_argument_name.0) {
+        if !target_command_arguments_btree_set_for_validation.insert(target_argument_name) {
             return Err(Error::RelationshipError {
                 relationship_error: RelationshipError::ArgumentMappingExistsInRelationship {
                     argument_name: target_argument_name.clone(),
@@ -344,7 +344,7 @@ fn resolve_relationship_mappings_command(
         // Check if the source field is already mapped to a target argument
         let resolved_relationship_mapping = {
             if field_mapping_btree_set_for_validation
-                .insert(&resolved_relationship_source_mapping.field_name.0)
+                .insert(&resolved_relationship_source_mapping.field_name)
             {
                 Ok(RelationshipCommandMapping {
                     source_field: resolved_relationship_source_mapping.clone(),
@@ -475,7 +475,7 @@ fn resolve_aggregate_relationship_field(
         .graphql
         .as_ref()
         .and_then(|g| g.aggregate_field_name.as_ref())
-        .map(|f| mk_name(f.0.as_str()))
+        .map(|f| mk_name(f.as_str()))
         .transpose()?;
 
     // We only get an aggregate if both the expression and a field name has been specified.
@@ -601,7 +601,7 @@ fn resolve_model_relationship_fields(
 pub fn make_relationship_field_name(
     relationship_name: &RelationshipName,
 ) -> Result<ast::Name, Error> {
-    mk_name(&relationship_name.0)
+    mk_name(relationship_name.as_str())
 }
 
 fn resolve_command_relationship_field(
@@ -649,7 +649,7 @@ fn resolve_command_relationship_field(
         data_connectors,
     )?;
 
-    let field_name = mk_name(&relationship.name.0)?;
+    let field_name = mk_name(relationship.name.as_str())?;
     Ok(RelationshipField {
         field_name,
         relationship_name: relationship.name.clone(),

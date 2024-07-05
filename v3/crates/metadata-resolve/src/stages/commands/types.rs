@@ -1,4 +1,4 @@
-use crate::stages::{data_connectors, models, object_types};
+use crate::stages::{data_connectors, object_types};
 use crate::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
     QualifiedTypeReference,
@@ -9,7 +9,7 @@ use lang_graphql::ast::common as ast;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::{CommandName, DataConnectorCommand, GraphQlRootFieldKind};
 
-use open_dds::types::{CustomTypeName, Deprecated};
+use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -32,8 +32,8 @@ pub struct CommandSource {
         deserialize_with = "deserialize_qualified_btreemap"
     )]
     pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
-    pub argument_mappings: BTreeMap<ArgumentName, models::ConnectorArgumentName>,
-    pub source_arguments: BTreeMap<models::ConnectorArgumentName, ndc_models::Type>,
+    pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    pub source_arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Type>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]

@@ -504,13 +504,15 @@
         "arguments": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ConnectorArgumentName"
+            "$ref": "#/definitions/DataConnectorArgumentName"
           }
         }
       }
     },
-    "ConnectorArgumentName": {
-      "description": "The name of an argument as defined by a data connector",
+    "DataConnectorArgumentName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorArgumentName",
+      "title": "DataConnectorArgumentName",
+      "description": "The name of an argument as defined by a data connector.",
       "type": "string"
     }
   }

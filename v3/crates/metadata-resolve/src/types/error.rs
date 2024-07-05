@@ -1,5 +1,5 @@
 use open_dds::aggregates::AggregateExpressionName;
-use open_dds::data_connector::DataConnectorObjectType;
+use open_dds::data_connector::{CollectionName, DataConnectorObjectType};
 use thiserror::Error;
 
 use crate::helpers::argument::ArgumentMappingError;
@@ -190,7 +190,7 @@ pub enum Error {
     UnknownModelCollection {
         model_name: Qualified<ModelName>,
         data_connector: Qualified<DataConnectorName>,
-        collection: String,
+        collection: CollectionName,
     },
     #[error(
         "unknown argument {argument_name:} referenced in argument mappings for model {model_name:}"
@@ -533,7 +533,7 @@ pub enum Error {
     ModelCollectionArgumentMappingError {
         data_connector_name: Qualified<DataConnectorName>,
         model_name: Qualified<ModelName>,
-        collection_name: String,
+        collection_name: CollectionName,
         error: ArgumentMappingError,
     },
     #[error("An error occurred while mapping arguments in the command {command_name:} to the function {function_name:} in the data connector {data_connector_name:}: {error:}")]

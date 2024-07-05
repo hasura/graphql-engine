@@ -146,7 +146,7 @@ impl DataConnectorSchema {
                 .into_iter()
                 .map(|function_info| {
                     (
-                        FunctionName(function_info.name.as_str().to_owned()),
+                        FunctionName::from(function_info.name.as_str()),
                         function_info,
                     )
                 })
@@ -156,7 +156,7 @@ impl DataConnectorSchema {
                 .into_iter()
                 .map(|procedure_info| {
                     (
-                        ProcedureName(procedure_info.name.as_str().to_owned()),
+                        ProcedureName::from(procedure_info.name.as_str()),
                         procedure_info,
                     )
                 })

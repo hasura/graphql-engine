@@ -63,6 +63,12 @@ impl std::borrow::Borrow<str> for Identifier {
     }
 }
 
+impl From<Identifier> for String {
+    fn from(value: Identifier) -> Self {
+        value.0.into()
+    }
+}
+
 impl OpenDd for Identifier {
     fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
         let string: String =

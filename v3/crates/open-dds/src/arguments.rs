@@ -1,32 +1,8 @@
-use std::borrow::Borrow;
+use serde::Serialize;
 
-use serde::{Deserialize, Serialize};
+use crate::{identifier::Identifier, str_newtype, types::TypeReference};
 
-use crate::{identifier::Identifier, impl_JsonSchema_with_OpenDd_for, types::TypeReference};
-
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    derive_more::Display,
-    opendds_derive::OpenDd,
-)]
-pub struct ArgumentName(pub Identifier);
-
-// Used for joining slices.
-impl Borrow<str> for ArgumentName {
-    fn borrow(&self) -> &str {
-        &self.0
-    }
-}
-
-impl_JsonSchema_with_OpenDd_for!(ArgumentName);
+str_newtype!(ArgumentName over Identifier | doc "The name of an argument.");
 
 /// The definition of an argument for a field, command, or model.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]

@@ -2,7 +2,7 @@ use crate::helpers::argument::get_argument_mappings;
 use crate::helpers::ndc_validation::{self};
 use crate::helpers::types::{object_type_exists, unwrap_custom_type_name};
 use crate::stages::{
-    boolean_expressions, data_connectors, models, object_boolean_expressions, scalar_types,
+    boolean_expressions, data_connectors, object_boolean_expressions, scalar_types,
     type_permissions,
 };
 use crate::types::error::Error;
@@ -11,7 +11,7 @@ use crate::types::subgraph::Qualified;
 pub use super::types::{Command, CommandSource};
 use open_dds::commands::{self, DataConnectorCommand};
 
-use open_dds::types::CustomTypeName;
+use open_dds::types::{CustomTypeName, DataConnectorArgumentName};
 
 use std::collections::BTreeMap;
 
@@ -19,7 +19,7 @@ use crate::helpers::type_mappings::{self, SpecialCaseTypeMapping};
 
 struct CommandSourceResponse {
     result_type: ndc_models::Type,
-    arguments: BTreeMap<models::ConnectorArgumentName, ndc_models::Type>,
+    arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Type>,
 }
 
 pub fn resolve_command_source(
@@ -76,7 +76,7 @@ pub fn resolve_command_source(
                     .iter()
                     .map(|(k, v)| {
                         (
-                            models::ConnectorArgumentName(k.as_str().to_owned()),
+                            DataConnectorArgumentName::from(k.as_str()),
                             v.argument_type.clone(),
                         )
                     })
@@ -101,7 +101,7 @@ pub fn resolve_command_source(
                     .iter()
                     .map(|(k, v)| {
                         (
-                            models::ConnectorArgumentName(k.as_str().to_owned()),
+                            DataConnectorArgumentName::from(k.as_str()),
                             v.argument_type.clone(),
                         )
                     })

@@ -186,11 +186,11 @@ fn make_permission_binary_boolean_expression(
     )?;
     Ok(ndc_models::Expression::BinaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
-            name: ndc_models::FieldName::from(ndc_column.0),
+            name: ndc_models::FieldName::new(ndc_column.into_inner()),
             path: Vec::new(),
             field_path: None,
         },
-        operator: ndc_models::ComparisonOperatorName::from(operator.0.as_str()),
+        operator: ndc_models::ComparisonOperatorName::from(operator.as_str()),
         value: ndc_models::ComparisonValue::Scalar {
             value: ndc_expression_value,
         },
@@ -203,7 +203,7 @@ fn make_permission_unary_boolean_expression(
 ) -> ndc_models::Expression {
     ndc_models::Expression::UnaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
-            name: ndc_models::FieldName::from(ndc_column.0),
+            name: ndc_models::FieldName::new(ndc_column.into_inner()),
             path: Vec::new(),
             field_path: None,
         },

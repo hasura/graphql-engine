@@ -80,7 +80,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                         arguments: arguments
                             .iter()
                             .map(|(name, arg)| {
-                                (ndc_models::ArgumentName::from(name.0.as_str()), arg.clone())
+                                (ndc_models::ArgumentName::from(name.as_str()), arg.clone())
                             })
                             .collect(),
                     },
@@ -133,7 +133,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     .iter()
                     .map(|(argument_name, argument_value)| {
                         (
-                            ndc_models::ArgumentName::from(argument_name.0.as_str()),
+                            ndc_models::ArgumentName::from(argument_name.as_str()),
                             ndc_models::RelationshipArgument::Literal {
                                 value: argument_value.clone(),
                             },
@@ -143,7 +143,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
 
                 let ndc_field = ndc_models::Field::Relationship {
                     query: Box::new(relationship_query),
-                    relationship: ndc_models::RelationshipName::from(name.0.as_str()),
+                    relationship: ndc_models::RelationshipName::from(name.as_str()),
                     arguments: relationship_arguments,
                 };
 
@@ -262,7 +262,7 @@ fn process_remote_relationship_field_mapping(
             ndc_fields.insert(
                 ndc_models::FieldName::from(internal_alias.as_str()),
                 ndc_models::Field::Column {
-                    column: ndc_models::FieldName::from(field.column.0.as_str()),
+                    column: ndc_models::FieldName::from(field.column.as_str()),
                     fields: None,
                     arguments: BTreeMap::new(),
                 },
@@ -274,7 +274,7 @@ fn process_remote_relationship_field_mapping(
 }
 
 fn make_hasura_phantom_field(field_name: &DataConnectorColumnName) -> String {
-    format!("__hasura_phantom_field__{}", field_name.0)
+    format!("__hasura_phantom_field__{}", field_name.as_str())
 }
 
 pub(crate) fn collect_relationships_from_nested_selection(

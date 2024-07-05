@@ -66,15 +66,13 @@ pub fn resolve_command(
 
     let graphql_api = match &command.graphql {
         None => Ok(None),
-        Some(graphql_definition) => {
-            mk_name(graphql_definition.root_field_name.0.as_ref()).map(|f| {
-                Some(CommandGraphQlApi {
-                    root_field_kind: graphql_definition.root_field_kind.clone(),
-                    root_field_name: f,
-                    deprecated: graphql_definition.deprecated.clone(),
-                })
+        Some(graphql_definition) => mk_name(graphql_definition.root_field_name.as_ref()).map(|f| {
+            Some(CommandGraphQlApi {
+                root_field_kind: graphql_definition.root_field_kind.clone(),
+                root_field_name: f,
+                deprecated: graphql_definition.deprecated.clone(),
             })
-        }
+        }),
     }?;
 
     Ok(Command {

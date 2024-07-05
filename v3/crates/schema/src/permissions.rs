@@ -1,6 +1,6 @@
 use open_dds::{
     data_connector::DataConnectorColumnName,
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use std::collections::{BTreeMap, HashMap};
 
@@ -9,7 +9,7 @@ use crate::Role;
 use metadata_resolve::ValueExpression;
 use metadata_resolve::{self};
 use metadata_resolve::{object_type_exists, unwrap_custom_type_name};
-use metadata_resolve::{ConnectorArgumentName, Qualified, QualifiedTypeReference};
+use metadata_resolve::{Qualified, QualifiedTypeReference};
 
 use super::types::ArgumentNameAndPath;
 
@@ -235,7 +235,7 @@ pub(crate) fn get_command_namespace_annotations(
 fn build_annotations_from_input_object_type_permissions<'a>(
     field_path: &mut [DataConnectorColumnName],
     type_reference: &'a QualifiedTypeReference,
-    ndc_argument_name: &Option<ConnectorArgumentName>,
+    ndc_argument_name: &Option<DataConnectorArgumentName>,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
@@ -333,7 +333,7 @@ fn build_preset_map_from_input_object_type_permission(
     field_mappings: Option<&BTreeMap<FieldName, metadata_resolve::FieldMapping>>,
     type_reference: &QualifiedTypeReference,
     field_path: &[DataConnectorColumnName],
-    ndc_argument_name: &Option<ConnectorArgumentName>,
+    ndc_argument_name: &Option<DataConnectorArgumentName>,
     object_type: &Qualified<CustomTypeName>,
 ) -> Result<
     BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, metadata_resolve::ValueExpression)>,

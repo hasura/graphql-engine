@@ -20,7 +20,6 @@ use crate::types::subgraph::{mk_qualified_type_reference, Qualified};
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
-use open_dds::identifier;
 
 /// resolve object types, matching them to that in the data connectors
 pub(crate) fn resolve(
@@ -169,7 +168,7 @@ pub fn resolve_object_type(
             if !global_id_fields.is_empty() {
                 // Throw error if the object type has a field called id" and has global fields configured.
                 // Because, when the global id fields are configured, the `id` field will be auto-generated.
-                if resolved_fields.contains_key(&open_dds::types::FieldName(identifier!("id"))) {
+                if resolved_fields.contains_key("id") {
                     return Err(Error::IdFieldConflictingGlobalId {
                         type_name: qualified_type_name.clone(),
                     });
@@ -200,12 +199,12 @@ pub fn resolve_object_type(
                 let graphql_type_name = graphql
                     .type_name
                     .as_ref()
-                    .map(|type_name| mk_name(type_name.0.as_ref()).map(ast::TypeName))
+                    .map(|type_name| mk_name(type_name.as_ref()).map(ast::TypeName))
                     .transpose()?;
                 let graphql_input_type_name = graphql
                     .input_type_name
                     .as_ref()
-                    .map(|input_type_name| mk_name(input_type_name.0.as_ref()).map(ast::TypeName))
+                    .map(|input_type_name| mk_name(input_type_name.as_ref()).map(ast::TypeName))
                     .transpose()?;
                 // To check if apolloFederation.keys are defined in object type but no model has
                 // apollo_federation_entity_source set to true:
@@ -297,7 +296,6 @@ pub fn resolve_data_connector_type_mapping(
         .get(
             data_connector_type_mapping
                 .data_connector_object_type
-                .0
                 .as_str(),
         )
         .ok_or_else(|| TypeMappingValidationError::UnknownNdcType {
@@ -330,7 +328,7 @@ pub fn resolve_data_connector_type_mapping(
                 // If no mapping is defined for a field, implicitly create a mapping
                 // with the same column name as the field.
                 (
-                    Cow::Owned(DataConnectorColumnName(field_name.0.to_string())),
+                    Cow::Owned(DataConnectorColumnName::from(field_name.as_str())),
                     ArgumentMapping::default(),
                 )
             };
@@ -388,7 +386,7 @@ fn get_column<'a>(
 ) -> Result<&'a ndc_models::ObjectField, TypeMappingValidationError> {
     ndc_type
         .fields
-        .get(column.0.as_str())
+        .get(column.as_str())
         .ok_or(TypeMappingValidationError::UnknownTargetColumn {
             field_name: field_name.clone(),
             column_name: column.to_string(),

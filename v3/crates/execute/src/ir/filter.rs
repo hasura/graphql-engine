@@ -412,7 +412,7 @@ fn to_ndc_field_path(
         Some(
             field_path
                 .into_iter()
-                .map(|s| ndc_models::FieldName::from(s.0))
+                .map(|s| ndc_models::FieldName::new(s.into_inner()))
                 .collect(),
         )
     }
@@ -427,11 +427,11 @@ fn build_binary_comparison_expression(
 ) -> ndc_models::Expression {
     ndc_models::Expression::BinaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
-            name: ndc_models::FieldName::from(column.0),
+            name: ndc_models::FieldName::new(column.into_inner()),
             path: Vec::new(),
             field_path: to_ndc_field_path(field_path),
         },
-        operator: ndc_models::ComparisonOperatorName::from(operator.0.as_str()),
+        operator: ndc_models::ComparisonOperatorName::from(operator.as_str()),
         value: ndc_models::ComparisonValue::Scalar {
             value: value.as_json(),
         },
@@ -447,7 +447,7 @@ fn build_is_null_expression(
     // Build an 'IsNull' unary comparison expression
     let unary_comparison_expression = ndc_models::Expression::UnaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
-            name: ndc_models::FieldName::from(column.0),
+            name: ndc_models::FieldName::new(column.into_inner()),
             path: Vec::new(),
             field_path: to_ndc_field_path(field_path),
         },

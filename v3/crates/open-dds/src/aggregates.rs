@@ -7,29 +7,11 @@ use serde::{Deserialize, Serialize};
 use crate::{
     data_connector::{DataConnectorName, DataConnectorScalarType},
     identifier::Identifier,
-    impl_JsonSchema_with_OpenDd_for,
+    impl_JsonSchema_with_OpenDd_for, str_newtype,
     types::{CustomTypeName, Deprecated, FieldName, GraphQlTypeName, TypeName, TypeReference},
 };
 
-#[repr(transparent)]
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    ref_cast::RefCast,
-    derive_more::Display,
-    opendds_derive::OpenDd,
-)]
-/// The name of an aggregate expression.
-pub struct AggregateExpressionName(pub Identifier);
-
-impl_JsonSchema_with_OpenDd_for!(AggregateExpressionName);
+str_newtype!(AggregateExpressionName over Identifier | doc "The name of an aggregate expression.");
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]

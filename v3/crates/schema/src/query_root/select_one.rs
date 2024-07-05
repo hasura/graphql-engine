@@ -35,7 +35,7 @@ pub(crate) fn select_one_field(
 
     let mut arguments = BTreeMap::new();
     for (field_name, field) in &select_unique.unique_identifier {
-        let graphql_field_name = mk_name(field_name.0.as_str())?;
+        let graphql_field_name = mk_name(field_name.as_str())?;
         let argument = gql_schema::InputField::new(
             graphql_field_name,
             None,

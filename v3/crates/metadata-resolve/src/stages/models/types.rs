@@ -5,29 +5,29 @@ use crate::types::subgraph::{
 };
 
 use indexmap::IndexMap;
-use open_dds::aggregates::AggregateExpressionName;
-use open_dds::data_connector::DataConnectorObjectType;
+use open_dds::data_connector::CollectionName;
 use open_dds::{
+    aggregates::AggregateExpressionName,
     arguments::ArgumentName,
+    data_connector::DataConnectorObjectType,
     models::{ModelGraphQlDefinition, ModelName, OrderableField},
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ModelSource {
     pub data_connector: data_connectors::DataConnectorLink,
-    pub collection: String,
+    pub collection: CollectionName,
     pub collection_type: DataConnectorObjectType,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
     )]
     pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
-    pub argument_mappings: BTreeMap<ArgumentName, ConnectorArgumentName>,
-    pub source_arguments: BTreeMap<ConnectorArgumentName, ndc_models::Type>,
+    pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    pub source_arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Type>,
 }
 
 pub struct ModelsOutput {
@@ -51,24 +51,6 @@ pub struct Model {
     pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
     pub raw: ModelRaw,
 }
-
-#[derive(
-    Serialize,
-    Deserialize,
-    JsonSchema,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    derive_more::Display,
-    ref_cast::RefCast,
-)]
-/// The name of an argument as defined by a data connector
-#[repr(transparent)]
-pub struct ConnectorArgumentName(pub String);
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelRaw {

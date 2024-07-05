@@ -34,7 +34,7 @@ pub use stages::data_connectors::DataConnectorLink;
 pub use stages::model_permissions::{
     FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions, SelectPermission,
 };
-pub use stages::models::{ConnectorArgumentName, Model, ModelSource};
+pub use stages::models::{Model, ModelSource};
 pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;
 
 pub use stages::models_graphql::{

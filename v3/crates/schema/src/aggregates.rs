@@ -136,7 +136,7 @@ fn add_aggregatable_fields(
                 aggregate_expression: aggregatable_field_info.aggregate_expression.clone(),
             })?;
 
-        let field_graphql_name = mk_name(aggregatable_field_info.field_name.0.as_str())?;
+        let field_graphql_name = mk_name(aggregatable_field_info.field_name.as_str())?;
         let field = gql_schema::Field::<GDS>::new(
             field_graphql_name.clone(),
             aggregatable_field_info.description.clone(),

@@ -9,6 +9,6 @@ pub fn global_id_col_format(alias: &Alias, field_name: &FieldName) -> String {
         "{}_{}_{}",
         GLOBAL_ID_NDC_PREFIX.to_owned(),
         alias,
-        &field_name.0
+        field_name.as_str()
     )
 }
