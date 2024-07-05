@@ -297,8 +297,9 @@ pub mod tests {
     fn test_metadata_schema() {
         let mut mint = Mint::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
         let mut expected = mint.new_goldenfile("metadata.jsonschema").unwrap();
-        let schema =
+        let mut schema =
             gen_root_schema_for::<super::Metadata>(&mut schemars::gen::SchemaGenerator::default());
+        schema.definitions.sort_keys();
         write!(
             expected,
             "{}",
