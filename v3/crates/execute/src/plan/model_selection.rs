@@ -7,7 +7,9 @@ use indexmap::IndexMap;
 use super::relationships;
 use super::selection_set;
 use crate::ir::aggregates::{AggregateFieldSelection, AggregateSelectionSet};
+use crate::ir::arguments;
 use crate::ir::model_selection::ModelSelection;
+use crate::ir::order_by;
 use crate::plan::error;
 use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
 
@@ -34,7 +36,10 @@ pub(crate) fn ndc_query<'s, 'ir>(
         fields: ndc_fields,
         limit: ir.limit,
         offset: ir.offset,
-        order_by: ir.order_by.as_ref().map(|x| x.order_by.clone()),
+        order_by: ir
+            .order_by
+            .as_ref()
+            .map(|x| ndc_order_by(&x.order_by_elements)),
         predicate: ir.filter_clause.expression.clone(),
     };
 
@@ -123,10 +128,85 @@ pub(crate) fn ndc_ir<'s, 'ir>(
         arguments: ir
             .arguments
             .iter()
-            .map(|(k, v)| (ndc_models::ArgumentName::from(k.as_str()), v.clone()))
+            .map(|(k, v)| {
+                let literal_value = match v {
+                    arguments::Argument::Literal { value } => value,
+                };
+                (
+                    ndc_models::ArgumentName::from(k.as_str()),
+                    ndc_models::Argument::Literal {
+                        value: literal_value.clone(),
+                    },
+                )
+            })
             .collect(),
         collection_relationships,
         variables: None,
     };
     Ok((query_request, join_locations))
+}
+
+fn ndc_order_by(order_by_elements: &[order_by::OrderByElement]) -> ndc_models::OrderBy {
+    ndc_models::OrderBy {
+        elements: order_by_elements
+            .iter()
+            .map(|element| ndc_models::OrderByElement {
+                order_direction: match element.order_direction {
+                    schema::ModelOrderByDirection::Asc => ndc_models::OrderDirection::Asc,
+                    schema::ModelOrderByDirection::Desc => ndc_models::OrderDirection::Desc,
+                },
+                target: ndc_order_by_target(&element.target),
+            })
+            .collect(),
+    }
+}
+
+fn ndc_order_by_target(target: &order_by::OrderByTarget) -> ndc_models::OrderByTarget {
+    match target {
+        order_by::OrderByTarget::Column {
+            name,
+            relationship_path,
+        } => {
+            let mut order_by_element_path = Vec::new();
+            // When using a nested relationship column, you'll have to provide all the relationships(paths)
+            // NDC has to traverse to access the column. The ordering of that paths is important.
+            // The order decides how to access the column.
+            //
+            // For example, if you have a model called `User` with a relationship column called `Posts`
+            // which has a relationship column called `Comments` which has a non-relationship column
+            // called `text`, you'll have to provide the following paths to access the `text` column:
+            // ["UserPosts", "PostsComments"]
+            for path in relationship_path {
+                order_by_element_path.push(ndc_models::PathElement {
+                    relationship: ndc_models::RelationshipName::from(path.0.as_str()),
+                    arguments: BTreeMap::new(),
+                    // 'AND' predicate indicates that the column can be accessed
+                    // by joining all the relationships paths provided
+                    predicate: Some(Box::new(ndc_models::Expression::And {
+                        // TODO(naveen): Add expressions here, when we support sorting with predicates.
+                        //
+                        // There are two types of sorting:
+                        //     1. Sorting without predicates
+                        //     2. Sorting with predicates
+                        //
+                        // In the 1st sort, we sort all the elements of the results either in ascending
+                        // or descing order based on the order_by argument.
+                        //
+                        // In the 2nd sort, we want fetch the entire result but only sort a subset
+                        // of result and put those sorted set either at the beginning or at the end of the
+                        // result.
+                        //
+                        // Currently we only support the 1st type of sort. Hence we don't have any expressions/predicate.
+                        expressions: Vec::new(),
+                    })),
+                });
+            }
+
+            ndc_models::OrderByTarget::Column {
+                name: ndc_models::FieldName::from(name.as_str()),
+                path: order_by_element_path,
+                field_path: None,
+            }
+        }
+    }
 }

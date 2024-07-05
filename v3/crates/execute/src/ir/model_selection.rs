@@ -36,7 +36,7 @@ pub struct ModelSelection<'s> {
     pub(crate) collection: &'s CollectionName,
 
     // Arguments for the NDC collection
-    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
+    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
 
     // The boolean expression that would fetch a single row from this model
     pub(crate) filter_clause: ResolvedFilterExpression<'s>,
@@ -58,7 +58,7 @@ pub struct ModelSelection<'s> {
 }
 
 struct ModelSelectAggregateArguments<'s> {
-    model_arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
+    model_arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
     filter_input_arguments: FilterInputArguments<'s>,
 }
 
@@ -75,7 +75,7 @@ pub(crate) fn model_selection_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
-    arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
+    arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
     filter_clauses: ResolvedFilterExpression<'s>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     limit: Option<u32>,
@@ -364,7 +364,7 @@ fn model_aggregate_selection_ir<'s>(
     aggregate_selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
-    arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
+    arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
     filter_clauses: ResolvedFilterExpression<'s>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     limit: Option<u32>,

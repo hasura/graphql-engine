@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::model_tracking::{count_model, UsagesCounts};
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField};
-use ndc_models;
+use open_dds::data_connector::DataConnectorColumnName;
 use schema::OrderByRelationshipAnnotation;
 use schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use serde::Serialize;
@@ -16,10 +16,24 @@ use schema::GDS;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ResolvedOrderBy<'s> {
-    pub(crate) order_by: ndc_models::OrderBy,
+    pub(crate) order_by_elements: Vec<OrderByElement>,
     // relationships that were used in the order_by expression. This is helpful
     // for collecting relatinships and sending collection_relationships
     pub(crate) relationships: BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct OrderByElement {
+    pub order_direction: schema::ModelOrderByDirection,
+    pub target: OrderByTarget,
+}
+
+#[derive(Debug, Serialize)]
+pub enum OrderByTarget {
+    Column {
+        name: DataConnectorColumnName,
+        relationship_path: Vec<NDCRelationshipName>,
+    },
 }
 
 pub(crate) fn build_ndc_order_by<'s>(
@@ -28,7 +42,7 @@ pub(crate) fn build_ndc_order_by<'s>(
 ) -> Result<ResolvedOrderBy<'s>, error::Error> {
     match &args_field.value {
         normalized_ast::Value::List(arguments) => {
-            let mut ndc_order_elements = Vec::new();
+            let mut order_by_elements = Vec::new();
             let mut relationships = BTreeMap::new();
 
             for v in arguments {
@@ -53,7 +67,7 @@ pub(crate) fn build_ndc_order_by<'s>(
                                 &mut relationships,
                                 usage_counts,
                             )?;
-                            ndc_order_elements.extend(order_by_element);
+                            order_by_elements.extend(order_by_element);
                         } else {
                             Err(error::Error::OrderByObjectShouldExactlyHaveOneKeyValuePair)?;
                         }
@@ -64,9 +78,7 @@ pub(crate) fn build_ndc_order_by<'s>(
                 }
             }
             Ok(ResolvedOrderBy {
-                order_by: ndc_models::OrderBy {
-                    elements: ndc_order_elements,
-                },
+                order_by_elements,
                 relationships,
             })
         }
@@ -107,7 +119,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
     mut relationship_paths: Vec<NDCRelationshipName>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
-) -> Result<Vec<ndc_models::OrderByElement>, error::Error> {
+) -> Result<Vec<OrderByElement>, error::Error> {
     match argument.info.generic {
         // The column that we want to use for ordering. If the column happens to be
         // a relationship column, we'll have to join all the paths to specify NDC,
@@ -119,10 +131,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
             let order_direction = match &order_by_value.info.generic {
                 Annotation::Input(InputAnnotation::Model(
                     ModelInputAnnotation::ModelOrderByDirection { direction },
-                )) => match &direction {
-                    schema::ModelOrderByDirection::Asc => ndc_models::OrderDirection::Asc,
-                    schema::ModelOrderByDirection::Desc => ndc_models::OrderDirection::Desc,
-                },
+                )) => direction,
                 &annotation => {
                     return Err(error::InternalEngineError::UnexpectedAnnotation {
                         annotation: annotation.clone(),
@@ -130,48 +139,12 @@ pub(crate) fn build_ndc_order_by_element<'s>(
                 }
             };
 
-            let mut order_by_element_path = Vec::new();
-            // When using a nested relationship column, you'll have to provide all the relationships(paths)
-            // NDC has to traverse to access the column. The ordering of that paths is important.
-            // The order decides how to access the column.
-            //
-            // For example, if you have a model called `User` with a relationship column called `Posts`
-            // which has a relationship column called `Comments` which has a non-relationship column
-            // called `text`, you'll have to provide the following paths to access the `text` column:
-            // ["UserPosts", "PostsComments"]
-            for path in &relationship_paths {
-                order_by_element_path.push(ndc_models::PathElement {
-                    relationship: ndc_models::RelationshipName::from(path.0.as_str()),
-                    arguments: BTreeMap::new(),
-                    // 'AND' predicate indicates that the column can be accessed
-                    // by joining all the relationships paths provided
-                    predicate: Some(Box::new(ndc_models::Expression::And {
-                        // TODO(naveen): Add expressions here, when we support sorting with predicates.
-                        //
-                        // There are two types of sorting:
-                        //     1. Sorting without predicates
-                        //     2. Sorting with predicates
-                        //
-                        // In the 1st sort, we sort all the elements of the results either in ascending
-                        // or descing order based on the order_by argument.
-                        //
-                        // In the 2nd sort, we want fetch the entire result but only sort a subset
-                        // of result and put those sorted set either at the beginning or at the end of the
-                        // result.
-                        //
-                        // Currently we only support the 1st type of sort. Hence we don't have any expressions/predicate.
-                        expressions: Vec::new(),
-                    })),
-                });
-            }
-
-            let order_element = ndc_models::OrderByElement {
-                order_direction,
+            let order_element = OrderByElement {
+                order_direction: order_direction.clone(),
                 // TODO(naveen): When aggregates are supported, extend this to support other ndc_models::OrderByTarget
-                target: ndc_models::OrderByTarget::Column {
-                    name: ndc_models::FieldName::from(ndc_column.as_str()),
-                    path: order_by_element_path,
-                    field_path: None,
+                target: OrderByTarget::Column {
+                    name: ndc_column.clone(),
+                    relationship_path: relationship_paths,
                 },
             };
 
