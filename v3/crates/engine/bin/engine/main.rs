@@ -18,11 +18,12 @@ use pre_execution_plugin::{
     configuration::PrePluginConfig, execute::pre_execution_plugins_handler,
 };
 use reqwest::header::CONTENT_TYPE;
+use serde::Serialize;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use tracing_util::{
-    add_event_on_active_span, set_status_on_current_span, ErrorVisibility, SpanVisibility,
-    TraceableError, TraceableHttpResponse,
+    add_event_on_active_span, set_attribute_on_active_span, set_status_on_current_span,
+    ErrorVisibility, SpanVisibility, TraceableError, TraceableHttpResponse,
 };
 
 use base64::engine::Engine;
@@ -52,7 +53,7 @@ const DEFAULT_PORT: u16 = 3000;
 const MB: usize = 1_048_576;
 
 #[allow(clippy::struct_excessive_bools)] // booleans are pretty useful here
-#[derive(Parser)]
+#[derive(Parser, Serialize)]
 #[command(version = VERSION)]
 struct ServerOptions {
     /// The path to the metadata file, used to construct the schema.g
@@ -384,6 +385,12 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let log = format!("starting server on {address}");
     println!("{log}");
     add_event_on_active_span(log);
+
+    set_attribute_on_active_span(
+        tracing_util::AttributeVisibility::Internal,
+        "server_options",
+        serde_json::to_string_pretty(server).unwrap_or_else(|err| err.to_string()),
+    );
 
     // run it with hyper on `addr`
     axum::Server::bind(&address)

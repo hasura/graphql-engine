@@ -4,7 +4,16 @@
 /// If we want to start offering user control of these, they should move out of here and into the
 /// flags in Metadata, nothing here should be depended on.
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, clap::ValueEnum, serde::Deserialize,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    clap::ValueEnum,
+    serde::Deserialize,
+    serde::Serialize,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum UnstableFeature {
