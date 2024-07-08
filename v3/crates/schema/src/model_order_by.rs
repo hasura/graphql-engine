@@ -180,6 +180,7 @@ pub fn build_model_order_by_input_schema(
                             target_source,
                             relationship,
                         )?;
+
                     // order_by expression with relationships is currently only supported for local relationships
                     if let metadata_resolve::RelationshipExecutionCategory::Local =
                         metadata_resolve::relationship_execution_category(

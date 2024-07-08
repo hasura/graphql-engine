@@ -372,6 +372,8 @@ fn get_relationship_capabilities(
     source_data_connector: Option<&data_connectors::DataConnectorLink>,
     target_name: &RelationshipTargetName,
     data_connectors: &data_connectors::DataConnectors,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    commands: &IndexMap<Qualified<CommandName>, commands::Command>,
 ) -> Result<Option<RelationshipCapabilities>, Error> {
     let Some(data_connector) = source_data_connector else {
         return Ok(None);
@@ -394,9 +396,25 @@ fn get_relationship_capabilities(
                 }
             })?;
 
+    // which data connector is the target using?
+    let target_data_connector = match target_name {
+        RelationshipTargetName::Model(model_name) => models
+            .get(model_name)
+            .as_ref()
+            .and_then(|model| model.source.as_ref())
+            .map(|source| source.data_connector.name.clone()),
+        RelationshipTargetName::Command(command_name) => commands
+            .get(command_name)
+            .and_then(|command| command.source.as_ref())
+            .map(|source| source.data_connector.name.clone()),
+    };
+
     let capabilities = &resolved_data_connector.capabilities;
 
-    if capabilities.query.variables.is_none() {
+    // if relationship is remote, error if `foreach` capability is not available
+    if capabilities.query.variables.is_none()
+        && Some(&data_connector.name) != target_data_connector.as_ref()
+    {
         return Err(Error::RelationshipError {
             relationship_error: RelationshipError::RelationshipTargetDoesNotSupportForEach {
                 type_name: type_name.clone(),
@@ -555,6 +573,8 @@ fn resolve_model_relationship_fields(
         source_data_connector,
         &RelationshipTargetName::Model(resolved_target_model.name.clone()),
         data_connectors,
+        models,
+        &IndexMap::new(),
     )?;
 
     let mappings = resolve_relationship_mappings_model(
@@ -647,6 +667,8 @@ fn resolve_command_relationship_field(
         source_data_connector,
         &RelationshipTargetName::Command(resolved_target_command.name.clone()),
         data_connectors,
+        &IndexMap::new(),
+        commands,
     )?;
 
     let field_name = mk_name(relationship.name.as_str())?;

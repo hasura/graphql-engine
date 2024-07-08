@@ -980,7 +980,6 @@
                   "query": {
                     "explain": {},
                     "aggregates": {},
-                    "variables": {},
                     "nested_fields": {
                       "filter_by": {},
                       "order_by": {}
