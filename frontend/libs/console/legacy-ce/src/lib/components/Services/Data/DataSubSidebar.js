@@ -106,15 +106,15 @@ const DataSubSidebar = props => {
 
   const onSchemaChange = value => {
     if (value === currentSchema) {
-      dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
-      return;
+      // Clicking the same schema again should collapse the treeview node
+      value = undefined;
     }
 
     setSchemaLoading(true);
     dispatch(updateCurrentSchema(value, currentDataSource))
       .then(() => {
-        if (value === currentSchema) {
-          dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+        if (!value) {
+          dispatch(_push(`/data/${currentDataSource}`));
         }
       })
       .finally(() => {
