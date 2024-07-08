@@ -1316,7 +1316,7 @@
     "DataConnectorScalarRepresentationV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorScalarRepresentationV1",
       "title": "DataConnectorScalarRepresentationV1",
-      "description": "The representation of a data connector scalar in terms of Open DD types",
+      "description": "The representation of a data connector scalar in terms of Open DD types. Deprecated in favour of `BooleanExpressionType`.",
       "examples": [
         {
           "dataConnectorName": "data_connector",
@@ -2672,7 +2672,7 @@
     "ObjectBooleanExpressionTypeV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ObjectBooleanExpressionTypeV1",
       "title": "ObjectBooleanExpressionTypeV1",
-      "description": "Definition of a type representing a boolean expression on an Open DD object type.",
+      "description": "Definition of a type representing a boolean expression on an Open DD object type. Deprecated in favour of `BooleanExpressionType`.",
       "type": "object",
       "required": [
         "comparableFields",

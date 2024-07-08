@@ -535,7 +535,8 @@ impl DataConnectorScalarRepresentation {
     title = "DataConnectorScalarRepresentationV1",
     example = "DataConnectorScalarRepresentationV1::example"
 ))]
-/// The representation of a data connector scalar in terms of Open DD types
+/// The representation of a data connector scalar in terms of Open DD types. Deprecated in favour
+/// of `BooleanExpressionType`.
 pub struct DataConnectorScalarRepresentationV1 {
     /// The name of the data connector that this scalar type comes from.
     pub data_connector_name: DataConnectorName,
@@ -636,7 +637,8 @@ str_newtype!(OperatorName | doc "The name of an operator");
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "ObjectBooleanExpressionTypeV1",))]
-/// Definition of a type representing a boolean expression on an Open DD object type.
+/// Definition of a type representing a boolean expression on an Open DD object type. Deprecated in
+/// favour of `BooleanExpressionType`.
 pub struct ObjectBooleanExpressionTypeV1 {
     /// The name to give this object boolean expression type, used to refer to it elsewhere in the metadata.
     /// Must be unique across all types defined in this subgraph.
