@@ -15,7 +15,7 @@ hasura-authn-core = { path = "../auth/hasura-authn-core" }
 ndc-models = { workspace = true }
 indexmap = { workspace = true }
 datafusion = { version = "39.0.0", features = ["serde"] }
-async-trait = "0.1.80"
+async-trait = "0.1.81"
 futures = "0.3.30"
 serde = { workspace = true, features = ["rc"] }
 thiserror = { workspace = true }
