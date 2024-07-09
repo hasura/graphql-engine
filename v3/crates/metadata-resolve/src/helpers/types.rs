@@ -1,6 +1,6 @@
 use crate::stages::{
-    boolean_expressions, object_boolean_expressions, relationships, scalar_boolean_expressions,
-    scalar_types,
+    boolean_expressions, graphql_config, object_boolean_expressions, relationships,
+    scalar_boolean_expressions, scalar_types,
 };
 use crate::types::error::{BooleanExpressionError, Error};
 
@@ -172,8 +172,8 @@ pub fn unwrap_qualified_type_name(type_reference: &QualifiedTypeReference) -> &Q
 }
 
 /// Helper function to create GraphQL compliant name
-pub fn mk_name(name: &str) -> Result<ast::Name, Error> {
-    ast::Name::from_str(name).map_err(|_| Error::InvalidGraphQlName {
+pub fn mk_name(name: &str) -> Result<ast::Name, graphql_config::GraphqlConfigError> {
+    ast::Name::from_str(name).map_err(|_| graphql_config::GraphqlConfigError::InvalidGraphQlName {
         name: name.to_string(),
     })
 }

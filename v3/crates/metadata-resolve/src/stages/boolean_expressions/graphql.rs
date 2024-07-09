@@ -5,7 +5,7 @@ pub use super::{
 };
 use crate::helpers::types::mk_name;
 use crate::stages::{graphql_config, scalar_boolean_expressions};
-use crate::types::error::{Error, GraphqlConfigError};
+use crate::types::error::Error;
 use crate::types::subgraph::mk_qualified_type_reference;
 use crate::Qualified;
 use lang_graphql::ast::common::{self as ast};
@@ -46,7 +46,8 @@ pub(crate) fn resolve_object_boolean_graphql(
         .filter_input_config
         .as_ref()
         .ok_or_else(|| Error::GraphqlConfigError {
-            graphql_config_error: GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig,
+            graphql_config_error:
+                graphql_config::GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig,
         })?;
 
     for (comparable_field_name, comparable_field_type_name) in comparable_fields {

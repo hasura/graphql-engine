@@ -147,7 +147,8 @@ fn input_object_type_input_fields(
         .fields
         .iter()
         .map(|(field_name, field_definition)| {
-            let graphql_field_name = mk_name(field_name.as_str())?;
+            let graphql_field_name =
+                mk_name(field_name.as_str()).map_err(metadata_resolve::Error::from)?;
 
             let input_field = gql_schema::InputField::new(
                 graphql_field_name.clone(),

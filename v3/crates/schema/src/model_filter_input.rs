@@ -222,7 +222,9 @@ fn generate_int_input_argument(
     name: &str,
     annotation: Annotation,
 ) -> Result<gql_schema::InputField<GDS>, crate::Error> {
-    let input_field_name = metadata_resolve::mk_name(name)?;
+    let input_field_name =
+        metadata_resolve::mk_name(name).map_err(metadata_resolve::Error::from)?;
+
     Ok(gql_schema::InputField::new(
         input_field_name,
         None,

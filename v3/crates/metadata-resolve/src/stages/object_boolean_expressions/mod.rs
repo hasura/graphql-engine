@@ -3,7 +3,7 @@ use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
     object_types, type_permissions,
 };
-use crate::types::error::{BooleanExpressionError, Error, GraphqlConfigError};
+use crate::types::error::{BooleanExpressionError, Error};
 
 use crate::helpers::model::resolve_ndc_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
@@ -269,7 +269,8 @@ pub fn resolve_boolean_expression_graphql_config(
         .filter_input_config
         .as_ref()
         .ok_or_else(|| Error::GraphqlConfigError {
-            graphql_config_error: GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig,
+            graphql_config_error:
+                graphql_config::GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig,
         })?;
 
     for (field_name, field_mapping) in field_mappings {

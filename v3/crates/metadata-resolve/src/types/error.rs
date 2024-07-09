@@ -1,23 +1,25 @@
-use open_dds::aggregates::AggregateExpressionName;
-use open_dds::data_connector::{CollectionName, DataConnectorObjectType};
 use thiserror::Error;
 
-use crate::helpers::argument::ArgumentMappingError;
-use crate::stages::aggregates::AggregateExpressionError;
-use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
 use open_dds::{
+    aggregates::AggregateExpressionName,
     arguments::ArgumentName,
     commands::{CommandName, FunctionName, ProcedureName},
-    data_connector::{DataConnectorName, DataConnectorScalarType},
+    data_connector::{
+        CollectionName, DataConnectorName, DataConnectorObjectType, DataConnectorScalarType,
+    },
     models::ModelName,
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName, OperatorName, TypeName, TypeReference},
 };
 
 use crate::helpers::{
-    ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
+    argument::ArgumentMappingError, ndc_validation::NDCValidationError,
+    type_mappings::TypeMappingCollectionError, typecheck,
 };
+use crate::stages::aggregates::AggregateExpressionError;
+use crate::stages::graphql_config;
+use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 
 // TODO: This enum really needs structuring
 #[derive(Error, Debug)]
@@ -496,8 +498,6 @@ pub enum Error {
         model_2: Qualified<ModelName>,
         object_type: Qualified<CustomTypeName>,
     },
-    #[error("\"{name:}\" is not a valid GraphQL name.")]
-    InvalidGraphQlName { name: String },
     #[error("Invalid header name {header_name} specified for data connector: {data_connector}.")]
     InvalidHeaderName {
         data_connector: Qualified<DataConnectorName>,
@@ -575,7 +575,8 @@ pub enum Error {
     },
     #[error("{graphql_config_error:}")]
     GraphqlConfigError {
-        graphql_config_error: GraphqlConfigError,
+        #[from]
+        graphql_config_error: graphql_config::GraphqlConfigError,
     },
     #[error("{relationship_error:}")]
     RelationshipError {
@@ -894,34 +895,6 @@ impl From<TypePredicateError> for Error {
             type_predicate_error: val,
         }
     }
-}
-
-#[derive(Debug, Error)]
-pub enum GraphqlConfigError {
-    #[error("graphql configuration is not defined in supergraph")]
-    MissingGraphqlConfig,
-    #[error("graphql configuration should be defined only once in supergraph")]
-    MultipleGraphqlConfigDefinition,
-    #[error("the fieldName for limitInput needs to be defined in GraphqlConfig, when models have a selectMany graphql API")]
-    MissingLimitFieldInGraphqlConfig,
-    #[error("the fieldName for offsetInput needs to be defined in GraphqlConfig, when models have a selectMany graphql API")]
-    MissingOffsetFieldInGraphqlConfig,
-    #[error("the filterInput needs to be defined in GraphqlConfig, when models have filterExpressionType")]
-    MissingFilterInputFieldInGraphqlConfig,
-    #[error("the orderByInput needs to be defined in GraphqlConfig, when models have orderByExpressionType")]
-    MissingOrderByInputFieldInGraphqlConfig,
-    #[error("the orderByInput.enumTypeNames needs to be defined in GraphqlConfig, when models have orderByExpressionType")]
-    MissingOrderByEnumTypeNamesInGraphqlConfig,
-    #[error("only one enumTypeNames can be defined in GraphqlConfig, whose direction values are both 'asc' and 'desc'.")]
-    MultipleOrderByEnumTypeNamesInGraphqlConfig,
-    #[error(
-            "invalid directions: {directions} defined in orderByInput of GraphqlConfig , currently there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
-        )]
-    InvalidOrderByDirection { directions: String },
-    #[error("the fieldName for argumentsInput needs to be defined in GraphqlConfig, when models have argumentsInputType")]
-    MissingArgumentsInputFieldInGraphqlConfig,
-    #[error("the filterInputFieldName for aggregate needs to be defined in GraphqlConfig, when models have a selectAggregate graphql API")]
-    MissingAggregateFilterInputFieldNameInGraphqlConfig,
 }
 
 #[derive(Error, Debug)]

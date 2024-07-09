@@ -201,7 +201,9 @@ fn object_type_fields(
         .fields
         .iter()
         .map(|(field_name, field_definition)| -> Result<_, Error> {
-            let graphql_field_name = mk_name(field_name.as_str())?;
+            let graphql_field_name =
+                mk_name(field_name.as_str()).map_err(metadata_resolve::Error::from)?;
+
             let field_arguments = field_definition
                 .field_arguments
                 .iter()

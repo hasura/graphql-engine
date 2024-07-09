@@ -11,7 +11,7 @@ use super::types::{
 };
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::stages::{data_connector_scalar_types, graphql_config, models, object_types};
-use crate::types::error::{Error, GraphqlConfigError};
+use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
@@ -136,7 +136,7 @@ pub(crate) fn resolve_model_graphql_api(
                         match &graphql_config.query.order_by_field_name {
                             None => Err(Error::GraphqlConfigError {
                                 graphql_config_error:
-                                    GraphqlConfigError::MissingOrderByInputFieldInGraphqlConfig,
+                                    graphql_config::GraphqlConfigError::MissingOrderByInputFieldInGraphqlConfig,
                             }),
                             Some(order_by_field_name) => Ok(ModelOrderByExpression {
                                 data_connector_name: model_source.data_connector.name.clone(),
@@ -218,7 +218,7 @@ pub(crate) fn resolve_model_graphql_api(
                     .map(|agg| agg.filter_input_field_name.clone())
                     .ok_or_else::<Error, _>(|| Error::GraphqlConfigError {
                         graphql_config_error:
-                            GraphqlConfigError::MissingAggregateFilterInputFieldNameInGraphqlConfig,
+                            graphql_config::GraphqlConfigError::MissingAggregateFilterInputFieldNameInGraphqlConfig,
                     })?;
 
                 Ok(SelectAggregateGraphQlDefinition {
@@ -270,7 +270,7 @@ pub(crate) fn resolve_model_graphql_api(
                 .as_ref()
                 .ok_or_else(|| Error::GraphqlConfigError {
                     graphql_config_error:
-                        GraphqlConfigError::MissingArgumentsInputFieldInGraphqlConfig,
+                        graphql_config::GraphqlConfigError::MissingArgumentsInputFieldInGraphqlConfig,
                 })?;
             graphql_api.arguments_input_config = Some(ModelGraphqlApiArgumentsConfig {
                 field_name: argument_input_field_name.clone(),

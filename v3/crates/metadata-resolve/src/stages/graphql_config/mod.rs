@@ -1,23 +1,22 @@
 //! This is where we will resolve graphql configuration
 
+mod error;
+mod types;
+
 use std::collections::HashSet;
 use std::sync::OnceLock;
 
-use crate::helpers::types::mk_name;
-use crate::types::error::{Error, GraphqlConfigError};
 use lang_graphql::ast::common as ast;
 use open_dds::accessor::QualifiedObject;
 use open_dds::graphql_config::{self, OrderByDirection};
 use open_dds::types::{GraphQlFieldName, GraphQlTypeName};
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct GraphqlConfig {
-    // The graphql configuration that needs to be applied to each model, depending on it's conditions
-    pub query: QueryGraphqlConfig,
-    // The grapqhl configuration that is global across the schema
-    pub global: GlobalGraphqlConfig,
-}
+use crate::helpers::types::mk_name;
+pub use error::GraphqlConfigError;
+pub use types::{
+    AggregateGraphqlConfig, FilterInputGraphqlConfig, FilterInputOperatorNames,
+    GlobalGraphqlConfig, GraphqlConfig, OrderByInputGraphqlConfig, QueryGraphqlConfig,
+};
 
 /// Resolve and validate the GraphQL configuration.
 /// For example, make sure all names are valid GraphQL names.
@@ -36,12 +35,10 @@ pub struct GraphqlConfig {
 pub fn resolve(
     graphql_configs: &Vec<QualifiedObject<graphql_config::GraphqlConfig>>,
     flags: open_dds::flags::Flags,
-) -> Result<GraphqlConfig, Error> {
+) -> Result<GraphqlConfig, GraphqlConfigError> {
     if graphql_configs.is_empty() {
         if flags.require_graphql_config {
-            return Err(Error::GraphqlConfigError {
-                graphql_config_error: GraphqlConfigError::MissingGraphqlConfig,
-            });
+            return Err(GraphqlConfigError::MissingGraphqlConfig);
         }
         resolve_graphql_config(fallback_graphql_config())
     } else {
@@ -50,65 +47,16 @@ pub fn resolve(
             // Because this config can only be defined in once in a supergraph, it doesn't actually
             // matter which subgraph defines it: the outcome will be the same.
             [graphql_config] => resolve_graphql_config(&graphql_config.object),
-            _ => Err(Error::GraphqlConfigError {
-                graphql_config_error: GraphqlConfigError::MultipleGraphqlConfigDefinition,
-            }),
+            _ => Err(GraphqlConfigError::MultipleGraphqlConfigDefinition),
         }
     }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct GlobalGraphqlConfig {
-    pub query_root_type_name: ast::TypeName,
-    pub mutation_root_type_name: ast::TypeName,
-    pub order_by_input: Option<OrderByInputGraphqlConfig>,
-    pub enable_apollo_federation_fields: bool,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct OrderByInputGraphqlConfig {
-    pub asc_direction_field_value: ast::Name,
-    pub desc_direction_field_value: ast::Name,
-    pub enum_type_name: ast::TypeName,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct QueryGraphqlConfig {
-    pub arguments_field_name: Option<ast::Name>,
-    pub limit_field_name: Option<ast::Name>,
-    pub offset_field_name: Option<ast::Name>,
-    pub filter_input_config: Option<FilterInputGraphqlConfig>,
-    pub order_by_field_name: Option<ast::Name>,
-    pub aggregate_config: Option<AggregateGraphqlConfig>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-
-pub struct FilterInputGraphqlConfig {
-    pub where_field_name: ast::Name,
-    pub operator_names: FilterInputOperatorNames,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct FilterInputOperatorNames {
-    pub and: ast::Name,
-    pub or: ast::Name,
-    pub not: ast::Name,
-    pub is_null: ast::Name,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct AggregateGraphqlConfig {
-    pub filter_input_field_name: ast::Name,
-    pub count_field_name: ast::Name,
-    pub count_distinct_field_name: ast::Name,
 }
 
 /// Resolve and validate the GraphQL configuration.
 /// For example, make sure all names are valid GraphQL names.
 pub fn resolve_graphql_config(
     graphql_config: &open_dds::graphql_config::GraphqlConfig,
-) -> Result<GraphqlConfig, Error> {
+) -> Result<GraphqlConfig, GraphqlConfigError> {
     match graphql_config {
         open_dds::graphql_config::GraphqlConfig::V1(graphql_config_metadata) => {
             let arguments_field_name = graphql_config_metadata
@@ -169,10 +117,7 @@ pub fn resolve_graphql_config(
                 None => None,
                 Some(order_by_input) => {
                     let order_by_enum_type_name = match order_by_input.enum_type_names.as_slice() {
-                        [] => Err(Error::GraphqlConfigError {
-                            graphql_config_error:
-                                GraphqlConfigError::MissingOrderByEnumTypeNamesInGraphqlConfig,
-                        }),
+                        [] => Err(GraphqlConfigError::MissingOrderByEnumTypeNamesInGraphqlConfig),
                         [order_by_enum_type] => Ok({
                             // TODO: Naveen: Currently we do not allow enabling a specific direction
                             // for orderableField. In future when we support this, we would like to
@@ -193,18 +138,12 @@ pub fn resolve_graphql_config(
                                     .map(std::string::ToString::to_string)
                                     .collect::<Vec<_>>()
                                     .join(",");
-                                Err(Error::GraphqlConfigError {
-                                    graphql_config_error:
-                                        GraphqlConfigError::InvalidOrderByDirection {
-                                            directions: invalid_directions,
-                                        },
+                                Err(GraphqlConfigError::InvalidOrderByDirection {
+                                    directions: invalid_directions,
                                 })
                             }
                         }),
-                        _ => Err(Error::GraphqlConfigError {
-                            graphql_config_error:
-                                GraphqlConfigError::MultipleOrderByEnumTypeNamesInGraphqlConfig,
-                        }),
+                        _ => Err(GraphqlConfigError::MultipleOrderByEnumTypeNamesInGraphqlConfig),
                     }?;
 
                     Some(OrderByInputGraphqlConfig {
@@ -223,7 +162,7 @@ pub fn resolve_graphql_config(
                 .query
                 .aggregate
                 .as_ref()
-                .map(|aggregate_config| -> Result<_, Error> {
+                .map(|aggregate_config| -> Result<_, GraphqlConfigError> {
                     Ok(AggregateGraphqlConfig {
                         filter_input_field_name: mk_name(
                             aggregate_config.filter_input_field_name.as_str(),
