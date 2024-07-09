@@ -1,3 +1,5 @@
+use lang_graphql::ast::common as ast;
+
 #[derive(Debug, thiserror::Error)]
 pub enum GraphqlConfigError {
     #[error("graphql configuration is not defined in supergraph")]
@@ -26,4 +28,6 @@ pub enum GraphqlConfigError {
     MissingAggregateFilterInputFieldNameInGraphqlConfig,
     #[error("\"{name:}\" is not a valid GraphQL name.")]
     InvalidGraphQlName { name: String },
+    #[error("multiple graphql types found with the same name: {graphql_type_name:}")]
+    ConflictingGraphQlType { graphql_type_name: ast::TypeName },
 }

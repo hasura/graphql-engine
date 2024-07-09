@@ -1,8 +1,7 @@
+use super::error::ObjectTypesError;
 use crate::types::subgraph::QualifiedTypeReference;
-use crate::{types::error::Error, ArgumentInfo};
+use crate::ArgumentInfo;
 use indexmap::IndexMap;
-use thiserror::Error;
-
 use open_dds::arguments::ArgumentName;
 use open_dds::models::ModelName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated, FieldName};
@@ -56,7 +55,7 @@ impl DataConnectorTypeMappingsForObject {
         data_connector_name: &Qualified<DataConnectorName>,
         data_connector_object_type: &DataConnectorObjectType,
         type_mapping: TypeMapping,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ObjectTypesError> {
         if self
             .0
             .entry(data_connector_name.clone())
@@ -64,7 +63,7 @@ impl DataConnectorTypeMappingsForObject {
             .insert(data_connector_object_type.clone(), type_mapping)
             .is_some()
         {
-            return Err(Error::DuplicateDataConnectorObjectTypeMapping {
+            return Err(ObjectTypesError::DuplicateDataConnectorObjectTypeMapping {
                 data_connector: data_connector_name.clone(),
                 data_connector_object_type: data_connector_object_type.to_string(),
             });
@@ -158,13 +157,5 @@ pub enum TypeMapping {
     Object {
         ndc_object_type_name: DataConnectorObjectType,
         field_mappings: BTreeMap<FieldName, FieldMapping>,
-    },
-}
-
-#[derive(Debug, Error)]
-pub enum ObjectTypeError {
-    #[error("object type {type_name} could not be found")]
-    ObjectTypeNotFound {
-        type_name: Qualified<CustomTypeName>,
     },
 }

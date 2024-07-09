@@ -10,9 +10,7 @@ use crate::stages::{
     models_graphql, object_boolean_expressions, object_types, relationships, scalar_types,
     type_permissions,
 };
-use crate::types::error::{
-    Error, RelationshipError, TypeError, TypeMappingValidationError, TypePredicateError,
-};
+use crate::types::error::{Error, RelationshipError, TypeError, TypePredicateError};
 use crate::types::permission::ValueExpression;
 use crate::types::subgraph::{ArgumentInfo, Qualified, QualifiedBaseType, QualifiedTypeReference};
 
@@ -255,11 +253,15 @@ pub(crate) fn resolve_value_expression_for_argument(
                 }
                 _ => None,
             }
-            .ok_or_else(|| Error::DataConnectorTypeMappingValidationError {
-                type_name: base_type.clone(),
-                error: TypeMappingValidationError::PredicateTypeNotFound {
-                    argument_name: argument_name.clone(),
-                },
+            .ok_or_else(|| {
+                Error::from(
+                    object_types::ObjectTypesError::DataConnectorTypeMappingValidationError {
+                        type_name: base_type.clone(),
+                        error: object_types::TypeMappingValidationError::PredicateTypeNotFound {
+                            argument_name: argument_name.clone(),
+                        },
+                    },
+                )
             })?;
 
             let data_connector_field_mappings = object_type_representation
@@ -268,14 +270,15 @@ pub(crate) fn resolve_value_expression_for_argument(
                 .map(|type_mapping| match type_mapping {
                     object_types::TypeMapping::Object { field_mappings, .. } => field_mappings,
                 })
-                .ok_or(Error::DataConnectorTypeMappingValidationError {
+                .ok_or_else(||Error::from(object_types::ObjectTypesError::DataConnectorTypeMappingValidationError {
                     type_name: base_type.clone(),
-                    error: TypeMappingValidationError::DataConnectorTypeMappingNotFound {
-                        object_type_name: base_type.clone(),
-                        data_connector_name: data_connector_link.name.clone(),
-                        data_connector_object_type: data_connector_object_type.clone(),
-                    },
-                })?;
+                    error:
+                        object_types::TypeMappingValidationError::DataConnectorTypeMappingNotFound {
+                            object_type_name: base_type.clone(),
+                            data_connector_name: data_connector_link.name.clone(),
+                            data_connector_object_type: data_connector_object_type.clone(),
+                        },
+                }))?;
 
             // Get available scalars defined for this data connector
             let specific_data_connector_scalars = data_connector_scalars
@@ -526,14 +529,14 @@ pub(crate) fn resolve_model_predicate_with_type(
                                         field_mappings, ..
                                     } => field_mappings,
                                 })
-                                .ok_or(Error::DataConnectorTypeMappingValidationError {
+                                .ok_or_else(||Error::from(object_types::ObjectTypesError::DataConnectorTypeMappingValidationError {
                                     type_name: target_typename.clone(),
-                                    error: TypeMappingValidationError::DataConnectorTypeMappingNotFound {
+                                    error: object_types::TypeMappingValidationError::DataConnectorTypeMappingNotFound {
                                         object_type_name: target_typename.clone(),
                                         data_connector_name: target_source.model.data_connector.name.clone(),
                                         data_connector_object_type: DataConnectorObjectType::from(target_source.model.collection.as_str())
                                     },
-                                })?;
+                                }))?;
 
                                 // Collect type mappings.
                                 let mut source_type_mappings = BTreeMap::new();

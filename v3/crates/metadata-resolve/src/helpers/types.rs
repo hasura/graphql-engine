@@ -28,11 +28,11 @@ pub struct NdcColumnForComparison {
 pub fn store_new_graphql_type(
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     new_graphql_type: Option<&ast::TypeName>,
-) -> Result<(), Error> {
+) -> Result<(), graphql_config::GraphqlConfigError> {
     if let Some(new_graphql_type) = new_graphql_type {
         // Fail on conflicting graphql type names
         if !(existing_graphql_types.insert(new_graphql_type.clone())) {
-            return Err(Error::ConflictingGraphQlType {
+            return Err(graphql_config::GraphqlConfigError::ConflictingGraphQlType {
                 graphql_type_name: new_graphql_type.clone(),
             });
         }

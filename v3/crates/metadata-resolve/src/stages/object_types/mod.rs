@@ -1,22 +1,22 @@
+mod error;
 pub mod types;
 
+pub use error::{ObjectTypesError, TypeMappingValidationError};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 
 use open_dds::commands::ArgumentMapping;
 use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
 pub use types::{
-    DataConnectorTypeMappingsForObject, FieldDefinition, FieldMapping, ObjectTypeError,
-    ObjectTypeRepresentation, ObjectTypeWithTypeMappings, ObjectTypesOutput,
-    ObjectTypesWithTypeMappings, ResolvedApolloFederationObjectKey,
-    ResolvedObjectApolloFederationConfig, TypeMapping,
+    DataConnectorTypeMappingsForObject, FieldDefinition, FieldMapping, ObjectTypeRepresentation,
+    ObjectTypeWithTypeMappings, ObjectTypesOutput, ObjectTypesWithTypeMappings,
+    ResolvedApolloFederationObjectKey, ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
 use crate::helpers::ndc_validation::get_underlying_named_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::stages::data_connectors;
 
-use crate::types::error::{Error, TypeMappingValidationError};
 use crate::types::subgraph::{mk_qualified_type_reference, Qualified};
 
 use indexmap::IndexMap;
@@ -26,7 +26,7 @@ use lang_graphql::ast::common as ast;
 pub(crate) fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
-) -> Result<ObjectTypesOutput, Error> {
+) -> Result<ObjectTypesOutput, ObjectTypesError> {
     let mut object_types = BTreeMap::new();
     let mut graphql_types = BTreeSet::new();
     let mut global_id_enabled_types = BTreeMap::new();
@@ -65,7 +65,7 @@ pub(crate) fn resolve(
                 data_connectors,
             )
             .map_err(|type_validation_error| {
-                Error::DataConnectorTypeMappingValidationError {
+                ObjectTypesError::DataConnectorTypeMappingValidationError {
                     type_name: qualified_object_type_name.clone(),
                     error: type_validation_error,
                 }
@@ -89,7 +89,7 @@ pub(crate) fn resolve(
             )
             .is_some()
         {
-            return Err(Error::DuplicateTypeDefinition {
+            return Err(ObjectTypesError::DuplicateTypeDefinition {
                 name: qualified_object_type_name,
             });
         }
@@ -107,7 +107,7 @@ fn resolve_field(
     field: &open_dds::types::FieldDefinition,
     subgraph: &str,
     qualified_type_name: &Qualified<CustomTypeName>,
-) -> Result<FieldDefinition, Error> {
+) -> Result<FieldDefinition, ObjectTypesError> {
     let mut field_arguments = IndexMap::new();
     for argument in &field.arguments {
         let field_argument_definition = crate::ArgumentInfo {
@@ -118,7 +118,7 @@ fn resolve_field(
             .insert(argument.name.clone(), field_argument_definition)
             .is_some()
         {
-            return Err(Error::DuplicateArgumentDefinition {
+            return Err(ObjectTypesError::DuplicateArgumentDefinition {
                 field_name: field.name.clone(),
                 argument_name: argument.name.clone(),
                 type_name: qualified_type_name.clone(),
@@ -146,7 +146,7 @@ pub fn resolve_object_type(
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,
-) -> Result<ObjectTypeRepresentation, Error> {
+) -> Result<ObjectTypeRepresentation, ObjectTypesError> {
     let mut resolved_fields = IndexMap::new();
     let mut resolved_global_id_fields = Vec::new();
 
@@ -158,7 +158,7 @@ pub fn resolve_object_type(
             )
             .is_some()
         {
-            return Err(Error::DuplicateFieldDefinition {
+            return Err(ObjectTypesError::DuplicateFieldDefinition {
                 type_name: qualified_type_name.clone(),
                 field_name: field.name.clone(),
             });
@@ -170,7 +170,7 @@ pub fn resolve_object_type(
                 // Throw error if the object type has a field called id" and has global fields configured.
                 // Because, when the global id fields are configured, the `id` field will be auto-generated.
                 if resolved_fields.contains_key("id") {
-                    return Err(Error::IdFieldConflictingGlobalId {
+                    return Err(ObjectTypesError::IdFieldConflictingGlobalId {
                         type_name: qualified_type_name.clone(),
                     });
                 }
@@ -184,7 +184,7 @@ pub fn resolve_object_type(
                 if resolved_fields.contains_key(global_id_field) {
                     resolved_global_id_fields.push(global_id_field.clone());
                 } else {
-                    return Err(Error::UnknownFieldInGlobalId {
+                    return Err(ObjectTypesError::UnknownFieldInGlobalId {
                         field_name: global_id_field.clone(),
                         type_name: qualified_type_name.clone(),
                     });
@@ -195,7 +195,7 @@ pub fn resolve_object_type(
     }
     let (graphql_type_name, graphql_input_type_name, apollo_federation_config) =
         match object_type_definition.graphql.as_ref() {
-            None => Ok::<_, Error>((None, None, None)),
+            None => Ok::<_, ObjectTypesError>((None, None, None)),
             Some(graphql) => {
                 let graphql_type_name = graphql
                     .type_name
@@ -220,10 +220,12 @@ pub fn resolve_object_type(
                             let mut resolved_key_fields = Vec::new();
                             for field in &key.fields {
                                 if !resolved_fields.contains_key(field) {
-                                    return Err(Error::UnknownFieldInApolloFederationKey {
-                                        field_name: field.clone(),
-                                        object_type: qualified_type_name.clone(),
-                                    });
+                                    return Err(
+                                        ObjectTypesError::UnknownFieldInApolloFederationKey {
+                                            field_name: field.clone(),
+                                            object_type: qualified_type_name.clone(),
+                                        },
+                                    );
                                 }
                                 resolved_key_fields.push(field.clone());
                             }
@@ -231,7 +233,7 @@ pub fn resolve_object_type(
                                 match nonempty::NonEmpty::from_vec(resolved_key_fields) {
                                     None => {
                                         return Err(
-                                            Error::EmptyFieldsInApolloFederationConfigForObject {
+                                            ObjectTypesError::EmptyFieldsInApolloFederationConfigForObject {
                                                 object_type: qualified_type_name.clone(),
                                             },
                                         )
@@ -243,9 +245,11 @@ pub fn resolve_object_type(
                         apollo_federation_entity_enabled_types
                             .insert(qualified_type_name.clone(), None);
                         match nonempty::NonEmpty::from_vec(resolved_keys) {
-                            None => Err(Error::EmptyKeysInApolloFederationConfigForObject {
-                                object_type: qualified_type_name.clone(),
-                            }),
+                            None => Err(
+                                ObjectTypesError::EmptyKeysInApolloFederationConfigForObject {
+                                    object_type: qualified_type_name.clone(),
+                                },
+                            ),
                             Some(keys) => Ok(Some(ResolvedObjectApolloFederationConfig { keys })),
                         }
                     }
@@ -257,6 +261,7 @@ pub fn resolve_object_type(
                 ))
             }
         }?;
+
     store_new_graphql_type(existing_graphql_types, graphql_type_name.as_ref())?;
     store_new_graphql_type(existing_graphql_types, graphql_input_type_name.as_ref())?;
 

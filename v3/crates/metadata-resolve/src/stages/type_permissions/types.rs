@@ -24,10 +24,10 @@ impl ObjectTypesWithPermissions {
     pub fn get(
         &self,
         type_name: &Qualified<CustomTypeName>,
-    ) -> Result<&ObjectTypeWithPermissions, object_types::ObjectTypeError> {
+    ) -> Result<&ObjectTypeWithPermissions, object_types::ObjectTypesError> {
         self.0
             .get(type_name)
-            .ok_or_else(|| object_types::ObjectTypeError::ObjectTypeNotFound {
+            .ok_or_else(|| object_types::ObjectTypesError::ObjectTypeNotFound {
                 type_name: type_name.clone(),
             })
     }

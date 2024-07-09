@@ -1,10 +1,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use lang_graphql::ast::common as ast;
-
 use crate::helpers::types::{mk_name, store_new_graphql_type};
+use crate::stages::object_types;
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
+use lang_graphql::ast::common as ast;
 
 pub mod types;
 pub use types::{ScalarTypeRepresentation, ScalarTypesOutput};
@@ -42,9 +42,11 @@ pub fn resolve(
             )
             .is_some()
         {
-            return Err(Error::DuplicateTypeDefinition {
-                name: qualified_scalar_type_name,
-            });
+            return Err(Error::from(
+                object_types::ObjectTypesError::DuplicateTypeDefinition {
+                    name: qualified_scalar_type_name,
+                },
+            ));
         }
         store_new_graphql_type(&mut graphql_types, graphql_type_name.as_ref())?;
     }
