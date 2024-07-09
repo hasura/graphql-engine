@@ -1,6 +1,7 @@
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
 
+use super::common;
 use super::error;
 use super::selection_set;
 use crate::ir::commands::CommandInfo;
@@ -44,19 +45,7 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
     ir: &'ir FunctionBasedCommand<'s>,
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<(ndc_models::QueryRequest, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
-    let mut arguments: BTreeMap<ndc_models::ArgumentName, ndc_models::Argument> = ir
-        .command_info
-        .arguments
-        .iter()
-        .map(|(argument_name, argument_value)| {
-            (
-                ndc_models::ArgumentName::from(argument_name.as_str()),
-                ndc_models::Argument::Literal {
-                    value: argument_value.clone(),
-                },
-            )
-        })
-        .collect();
+    let mut arguments = common::ndc_arguments(&ir.command_info.arguments)?;
 
     // Add the variable arguments which are used for remote joins
     for (variable_name, variable_argument) in &ir.variable_arguments {
@@ -108,12 +97,7 @@ pub(crate) fn ndc_mutation_ir<'s, 'ir>(
         .unzip();
     let mutation_operation = ndc_models::MutationOperation::Procedure {
         name: ndc_models::ProcedureName::from(procedure_name.as_str()),
-        arguments: ir
-            .command_info
-            .arguments
-            .iter()
-            .map(|(name, value)| (ndc_models::ArgumentName::from(name.as_str()), value.clone()))
-            .collect(),
+        arguments: common::ndc_raw_arguments(&ir.command_info.arguments)?,
         fields: ndc_nested_field,
     };
     let mut collection_relationships = BTreeMap::new();

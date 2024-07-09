@@ -8,20 +8,25 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 
-use ndc_models;
 use serde::Serialize;
 
 use super::{
     commands::generate_function_based_command,
-    filter::{resolve_filter_expression, ResolvedFilterExpression},
+    filter::{
+        resolve_filter_expression, ComparisonTarget, ComparisonValue, FilterExpression,
+        ResolvedFilterExpression,
+    },
     model_selection::{self, model_selection_ir},
     order_by::build_ndc_order_by,
     permissions,
     selection_set::{FieldSelection, NDCRelationshipName},
 };
 
-use crate::model_tracking::{count_model, UsagesCounts};
 use crate::{ir::error, model_tracking::count_command};
+use crate::{
+    model_tracking::{count_model, UsagesCounts},
+    remote_joins::types::VariableName,
+};
 use metadata_resolve::{self, serialize_qualified_btreemap, Qualified, RelationshipModelMapping};
 use schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, CommandTargetSource,
@@ -431,22 +436,19 @@ pub(crate) fn build_remote_relationship<'s>(
     // modify `ModelSelection` to include the join condition in `where` with a variable
     for (_source, (_field_name, target_column)) in &join_mapping {
         let target_value_variable = format!("${}", &target_column.column);
-        let comparison_exp = ndc_models::Expression::BinaryComparisonOperator {
-            column: ndc_models::ComparisonTarget::Column {
-                name: ndc_models::FieldName::from(target_column.column.as_str()),
-                path: vec![],
-                field_path: None,
+        let comparison_exp = FilterExpression::BinaryComparisonOperator {
+            target: ComparisonTarget::Column {
+                name: target_column.column.clone(),
+                field_path: vec![],
             },
             operator: target_column.equal_operator.clone(),
-            value: ndc_models::ComparisonValue::Variable {
-                name: ndc_models::VariableName::from(target_value_variable),
+            value: ComparisonValue::Variable {
+                name: VariableName(target_value_variable),
             },
         };
         remote_relationships_ir.filter_clause.expression =
             match remote_relationships_ir.filter_clause.expression {
-                Some(existing) => Some(ndc_models::Expression::And {
-                    expressions: vec![existing, comparison_exp],
-                }),
+                Some(existing) => Some(FilterExpression::mk_and(vec![existing, comparison_exp])),
                 None => Some(comparison_exp),
             };
     }

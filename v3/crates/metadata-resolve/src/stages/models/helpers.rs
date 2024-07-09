@@ -1,5 +1,5 @@
 use super::types::ModelSource;
-use open_dds::data_connector::DataConnectorName;
+use open_dds::data_connector::{DataConnectorName, DataConnectorOperatorName};
 
 use crate::types::error::Error;
 
@@ -89,6 +89,6 @@ pub fn get_ndc_column_for_comparison<F: Fn() -> String>(
 
     Ok(NdcColumnForComparison {
         column: field_mapping.column.clone(),
-        equal_operator: equal_operator.clone(),
+        equal_operator: DataConnectorOperatorName::from(equal_operator.as_str()),
     })
 }

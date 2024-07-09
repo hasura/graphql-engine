@@ -181,6 +181,9 @@ pub enum InternalDeveloperError {
         aggregation_function: AggregationFunctionName,
     },
 
+    #[error("The value expression contains a boolean expression that is unsupported for use in this location")]
+    BooleanExpressionNotSupportedInValueExpression,
+
     // we'll be adding them shortly, and not advertising the feature until they are complete
     // however temporarily emitting the error allows merging the work in chunks
     #[error("boolean expressions not implemented")]

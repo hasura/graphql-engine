@@ -9,7 +9,10 @@ use crate::types::subgraph::{
 };
 use lang_graphql::ast::common as ast;
 
-use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
+use open_dds::{
+    data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
+    types::CustomTypeName,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
@@ -17,7 +20,7 @@ use std::str::FromStr;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct NdcColumnForComparison {
     pub column: DataConnectorColumnName,
-    pub equal_operator: ndc_models::ComparisonOperatorName,
+    pub equal_operator: DataConnectorOperatorName,
 }
 
 /// try to add `new_graphql_type` to `existing_graphql_types`, returning an error

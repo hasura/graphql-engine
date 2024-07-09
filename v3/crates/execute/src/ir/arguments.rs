@@ -19,12 +19,18 @@ use schema::{
 };
 use serde::Serialize;
 
+use super::filter;
 use super::permissions;
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Debug, Serialize)]
 pub enum Argument {
     /// The argument is provided as a literal value
-    Literal { value: serde_json::Value },
+    Literal {
+        value: serde_json::Value,
+    },
+    BooleanExpression {
+        predicate: filter::FilterExpression,
+    },
 }
 
 /// Takes a field path and a serde_json object, and insert a serde_json value
@@ -96,7 +102,7 @@ pub(crate) fn process_model_arguments_presets(
             }
         })?;
 
-        let actual_value = permissions::make_value_from_value_expression(
+        let actual_value = permissions::make_argument_from_value_expression(
             argument_value,
             field_type,
             session_variables,
@@ -106,24 +112,35 @@ pub(crate) fn process_model_arguments_presets(
         match NonEmpty::from_slice(field_path) {
             // if field path is empty, then the entire argument has to preset
             None => {
-                model_arguments.insert(
-                    argument_name.clone(),
-                    arguments::Argument::Literal {
-                        value: actual_value,
-                    },
-                );
+                model_arguments.insert(argument_name.clone(), actual_value);
             }
             // if there is some field path, preset the argument partially based on the field path
             Some(field_path) => {
                 if let Some(current_arg) = model_arguments.get_mut(&argument_name.clone()) {
                     let current_arg = match current_arg {
-                        arguments::Argument::Literal { value } => value,
-                    };
+                        arguments::Argument::Literal { value } => Ok(value),
+                        arguments::Argument::BooleanExpression { predicate: _ } => {
+                            Err(error::InternalEngineError::ArgumentPresetExecution {
+                                description: "unexpected; can't merge an argument preset into an argument that has a boolean expression value"
+                                    .to_owned(),
+                            })
+                        }
+                    }?;
+                    let preset_value = match actual_value {
+                        Argument::Literal { value } => Ok(value),
+                        Argument::BooleanExpression { predicate: _ } => {
+                            // See schema::Error::BooleanExpressionInTypePresetArgument
+                            Err(error::InternalEngineError::ArgumentPresetExecution {
+                                description: "unexpected; type input presets cannot contain a boolean expression preset value"
+                                    .to_owned(),
+                            })
+                        }
+                    }?;
                     if let Some(current_arg_object) = current_arg.as_object_mut() {
                         arguments::follow_field_path_and_insert_value(
                             &field_path,
                             current_arg_object,
-                            actual_value,
+                            preset_value,
                         )?;
                     }
                 }

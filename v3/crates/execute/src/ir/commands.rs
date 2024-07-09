@@ -15,7 +15,6 @@ use open_dds::commands::ProcedureName;
 use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::types::DataConnectorArgumentName;
 use serde::Serialize;
-use serde_json as json;
 use std::collections::BTreeMap;
 
 use super::arguments;
@@ -49,7 +48,7 @@ pub struct CommandInfo<'s> {
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
 
     /// Arguments for the NDC table
-    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, json::Value>,
+    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
 
     /// IR for the command result selection set
     pub(crate) selection: Option<selection_set::NestedSelection<'s>>,
@@ -106,7 +105,10 @@ pub(crate) fn generate_command_info<'n, 's>(
             argument,
             &command_source.type_mappings,
         )?;
-        command_arguments.insert(ndc_arg_name, ndc_val);
+        command_arguments.insert(
+            ndc_arg_name,
+            arguments::Argument::Literal { value: ndc_val },
+        );
     }
 
     // preset arguments from permissions presets (both command permission argument
@@ -129,7 +131,7 @@ pub(crate) fn generate_command_info<'n, 's>(
                 }
             })?;
 
-            let actual_value = permissions::make_value_from_value_expression(
+            let actual_value = permissions::make_argument_from_value_expression(
                 argument_value,
                 field_type,
                 session_variables,
@@ -144,11 +146,30 @@ pub(crate) fn generate_command_info<'n, 's>(
                 // if there is some field path, preset the argument partially based on the field path
                 Some(field_path) => {
                     if let Some(current_arg) = command_arguments.get_mut(argument_name) {
+                        let current_arg = match current_arg {
+                            arguments::Argument::Literal { value } => Ok(value),
+                            arguments::Argument::BooleanExpression { predicate: _ } => {
+                                Err(error::InternalEngineError::ArgumentPresetExecution {
+                                    description: "unexpected; can't merge an argument preset into an argument that has a boolean expression value"
+                                        .to_owned(),
+                                })
+                            }
+                        }?;
+                        let preset_value = match actual_value {
+                            arguments::Argument::Literal { value } => Ok(value),
+                            arguments::Argument::BooleanExpression { predicate: _ } => {
+                                // See schema::Error::BooleanExpressionInTypePresetArgument
+                                Err(error::InternalEngineError::ArgumentPresetExecution {
+                                    description: "unexpected; type input presets cannot contain a boolean expression preset value"
+                                        .to_owned(),
+                                })
+                            }
+                        }?;
                         if let Some(current_arg_object) = current_arg.as_object_mut() {
                             arguments::follow_field_path_and_insert_value(
                                 &field_path,
                                 current_arg_object,
-                                actual_value,
+                                preset_value,
                             )?;
                         }
                     }
@@ -183,7 +204,6 @@ pub(crate) fn generate_command_info<'n, 's>(
                 value_expression,
                 &string_type,
                 session_variables,
-                usage_counts,
             )?;
             let header_value =
                 reqwest::header::HeaderValue::from_str(serde_json::to_string(&value)?.as_str())
@@ -195,7 +215,9 @@ pub(crate) fn generate_command_info<'n, 's>(
 
         command_arguments.insert(
             DataConnectorArgumentName::from(dc_argument_preset.name.as_str()),
-            serde_json::to_value(SerializableHeaderMap(headers_argument))?,
+            arguments::Argument::Literal {
+                value: serde_json::to_value(SerializableHeaderMap(headers_argument))?,
+            },
         );
     }
 

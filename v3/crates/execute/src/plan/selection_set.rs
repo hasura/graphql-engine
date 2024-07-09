@@ -1,4 +1,5 @@
 use super::commands;
+use super::common;
 use super::model_selection;
 use super::relationships;
 use crate::ir::selection_set::{FieldSelection, NestedSelection, ResultSelectionSet};
@@ -127,19 +128,8 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 let (relationship_query, jl) =
                     commands::ndc_query(&ir.command_info, join_id_counter)?;
 
-                let relationship_arguments: BTreeMap<_, _> = ir
-                    .command_info
-                    .arguments
-                    .iter()
-                    .map(|(argument_name, argument_value)| {
-                        (
-                            ndc_models::ArgumentName::from(argument_name.as_str()),
-                            ndc_models::RelationshipArgument::Literal {
-                                value: argument_value.clone(),
-                            },
-                        )
-                    })
-                    .collect();
+                let relationship_arguments: BTreeMap<_, _> =
+                    common::ndc_relationship_arguments(&ir.command_info.arguments)?;
 
                 let ndc_field = ndc_models::Field::Relationship {
                     query: Box::new(relationship_query),

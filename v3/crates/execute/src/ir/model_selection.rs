@@ -5,7 +5,6 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
 use metadata_resolve::QualifiedTypeName;
-use ndc_models;
 use open_dds::{
     data_connector::CollectionName,
     types::{CustomTypeName, DataConnectorArgumentName},
@@ -16,7 +15,7 @@ use std::collections::BTreeMap;
 
 use super::{
     aggregates, arguments,
-    filter::{self, ResolvedFilterExpression},
+    filter::{self, FilterExpression, ResolvedFilterExpression},
     order_by::{self, ResolvedOrderBy},
     permissions, selection_set,
 };
@@ -133,9 +132,10 @@ fn apply_permissions_predicate<'s>(
                 usage_counts,
             )?;
             filter_clauses.expression = match filter_clauses.expression {
-                Some(existing) => Some(ndc_models::Expression::And {
-                    expressions: vec![existing, processed_model_predicate],
-                }),
+                Some(existing) => Some(FilterExpression::mk_and(vec![
+                    existing,
+                    processed_model_predicate,
+                ])),
                 None => Some(processed_model_predicate),
             };
             for (rel_name, rel_info) in permissions_predicate_relationships {

@@ -435,7 +435,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                 field: field.clone(),
                 field_parent_type: type_name.to_owned(),
                 ndc_column: field_mapping.column.clone(),
-                operator: ndc_models::UnaryComparisonOperator::IsNull,
+                operator: model_permissions::UnaryComparisonOperator::IsNull,
             })
         }
 

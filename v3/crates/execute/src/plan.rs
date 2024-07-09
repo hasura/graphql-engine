@@ -1,10 +1,12 @@
 mod commands;
+mod common;
 pub(crate) mod error;
 mod model_selection;
 mod ndc_request;
 mod relationships;
 pub(crate) mod selection_set;
 
+pub use common::ndc_expression;
 pub use relationships::process_model_relationship_definition;
 
 use gql::normalized_ast;

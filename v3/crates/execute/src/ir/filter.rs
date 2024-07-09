@@ -3,12 +3,13 @@ use std::collections::BTreeMap;
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
-use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified};
-use ndc_models;
+use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified, UnaryComparisonOperator};
 use serde::Serialize;
+use serde_json;
 
 use crate::ir::error;
 use crate::model_tracking::{count_model, UsagesCounts};
+use crate::remote_joins::types::VariableName;
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     types::{CustomTypeName, FieldName},
@@ -23,10 +24,141 @@ use crate::ir::selection_set::NDCRelationshipName;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ResolvedFilterExpression<'s> {
-    pub expression: Option<ndc_models::Expression>,
+    pub expression: Option<FilterExpression>,
     // relationships that were used in the filter expression. This is helpful
     // for collecting relatinships and sending collection_relationships
     pub relationships: BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+}
+
+#[derive(Debug, Serialize)]
+pub enum FilterExpression {
+    And {
+        expressions: Vec<FilterExpression>,
+    },
+    Or {
+        expressions: Vec<FilterExpression>,
+    },
+    Not {
+        expression: Box<FilterExpression>,
+    },
+    UnaryComparisonOperator {
+        target: ComparisonTarget,
+        operator: UnaryComparisonOperator,
+    },
+    BinaryComparisonOperator {
+        target: ComparisonTarget,
+        operator: DataConnectorOperatorName,
+        value: ComparisonValue,
+    },
+    Exists {
+        in_collection: ExistsInCollection,
+        predicate: Box<FilterExpression>,
+    },
+}
+
+impl FilterExpression {
+    pub fn remove_always_true_expression(self) -> Option<FilterExpression> {
+        match &self {
+            FilterExpression::And { expressions } if expressions.is_empty() => None,
+            FilterExpression::Not { expression } => match expression.as_ref() {
+                FilterExpression::Or { expressions } if expressions.is_empty() => None,
+                _ => Some(self),
+            },
+            _ => Some(self),
+        }
+    }
+
+    /// Creates a 'FilterExpression::And' and applies some basic expression simplification logic
+    /// to remove redundant boolean logic operators
+    pub fn mk_and(expressions: Vec<FilterExpression>) -> FilterExpression {
+        // If the `and` only contains one expression, we can unwrap it and get rid of the `and`
+        // ie. and([x]) == x
+        if expressions.len() == 1 {
+            expressions.into_iter().next().unwrap()
+        }
+        // If all subexpressions are also `and`, we can flatten into a single `and`
+        // ie. and([and([x,y]), and([a,b])]) == and([x,y,a,b])
+        else if expressions
+            .iter()
+            .all(|expr| matches!(expr, FilterExpression::And { .. }))
+        {
+            let subexprs = expressions
+                .into_iter()
+                .flat_map(|expr| match expr {
+                    FilterExpression::And { expressions } => expressions,
+                    _ => vec![],
+                })
+                .collect();
+            FilterExpression::And {
+                expressions: subexprs,
+            }
+        } else {
+            FilterExpression::And { expressions }
+        }
+    }
+
+    /// Creates a 'FilterExpression::Or' and applies some basic expression simplification logic
+    /// to remove redundant boolean logic operators
+    pub fn mk_or(expressions: Vec<FilterExpression>) -> FilterExpression {
+        // If the `or` only contains one expression, we can unwrap it and get rid of the `or`
+        // ie. or([x]) == x
+        if expressions.len() == 1 {
+            expressions.into_iter().next().unwrap()
+        }
+        // If all subexpressions are also `or`, we can flatten into a single `or`
+        // ie. or([or([x,y]), or([a,b])]) == or([x,y,a,b])
+        else if expressions
+            .iter()
+            .all(|expr| matches!(expr, FilterExpression::Or { .. }))
+        {
+            let subexprs = expressions
+                .into_iter()
+                .flat_map(|expr| match expr {
+                    FilterExpression::Or { expressions } => expressions,
+                    _ => vec![],
+                })
+                .collect();
+            FilterExpression::Or {
+                expressions: subexprs,
+            }
+        } else {
+            FilterExpression::Or { expressions }
+        }
+    }
+
+    /// Creates a 'FilterExpression::Not' and applies some basic expression simplification logic
+    /// to remove redundant boolean logic operators
+    pub fn mk_not(expression: FilterExpression) -> FilterExpression {
+        match expression {
+            // Double negations can be removed
+            // ie. not(not(x))) == x
+            FilterExpression::Not { expression } => *expression,
+            _ => FilterExpression::Not {
+                expression: Box::new(expression),
+            },
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub enum ComparisonTarget {
+    Column {
+        /// The name of the column
+        name: DataConnectorColumnName,
+        /// Path to a nested field within an object column
+        field_path: Vec<DataConnectorColumnName>,
+    },
+}
+
+#[derive(Debug, Serialize)]
+pub enum ComparisonValue {
+    Scalar { value: serde_json::Value },
+    Variable { name: VariableName },
+}
+
+#[derive(Debug, Serialize)]
+pub enum ExistsInCollection {
+    Related { relationship: NDCRelationshipName },
 }
 
 /// Generates the IR for GraphQL 'where' boolean expression
@@ -36,21 +168,23 @@ pub(crate) fn resolve_filter_expression<'s>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ResolvedFilterExpression<'s>, error::Error> {
-    let mut expressions = Vec::new();
     let mut relationships = BTreeMap::new();
-    for field in fields.values() {
-        let field_filter_expression = build_filter_expression(
-            field,
-            &mut relationships,
-            data_connector_link,
-            type_mappings,
-            usage_counts,
-        )?;
-        expressions.push(field_filter_expression);
-    }
-    let expression = ndc_models::Expression::And { expressions };
+    let expressions = fields
+        .values()
+        .map(|field| {
+            build_filter_expression(
+                field,
+                &mut relationships,
+                data_connector_link,
+                type_mappings,
+                usage_counts,
+            )
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let expression = FilterExpression::mk_and(expressions);
     let resolved_filter_expression = ResolvedFilterExpression {
-        expression: Some(expression),
+        expression: expression.remove_always_true_expression(),
         relationships,
     };
     Ok(resolved_filter_expression)
@@ -77,7 +211,7 @@ fn build_filter_expression<'s>(
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
-) -> Result<ndc_models::Expression, error::Error> {
+) -> Result<FilterExpression, error::Error> {
     let boolean_expression_annotation = get_boolean_expression_annotation(field.info.generic)?;
     build_filter_expression_from_boolean_expression(
         boolean_expression_annotation,
@@ -99,53 +233,53 @@ fn build_filter_expression_from_boolean_expression<'s>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     field_path: &mut Vec<DataConnectorColumnName>,
     usage_counts: &mut UsagesCounts,
-) -> Result<ndc_models::Expression, error::Error> {
+) -> Result<FilterExpression, error::Error> {
     match boolean_expression_annotation {
         // "_and"
         BooleanExpressionAnnotation::BooleanExpressionArgument {
             field: schema::ModelFilterArgument::AndOp,
         } => {
-            let mut and_expressions = Vec::new();
             // The "_and" field value should be a list
             let and_values = field.value.as_list()?;
 
-            for value in and_values {
-                // Each value in the list should be an object
-                let value_object = value.as_object()?;
-                and_expressions.push(resolve_filter_object(
-                    value_object,
-                    relationships,
-                    data_connector_link,
-                    type_mappings,
-                    usage_counts,
-                )?);
-            }
-            Ok(ndc_models::Expression::And {
-                expressions: and_expressions,
-            })
+            let and_expressions = and_values
+                .iter()
+                .map(|value| {
+                    let value_object = value.as_object()?;
+                    resolve_filter_object(
+                        value_object,
+                        relationships,
+                        data_connector_link,
+                        type_mappings,
+                        usage_counts,
+                    )
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+
+            Ok(FilterExpression::mk_and(and_expressions))
         }
         // "_or"
         BooleanExpressionAnnotation::BooleanExpressionArgument {
             field: schema::ModelFilterArgument::OrOp,
         } => {
-            let mut or_expressions = Vec::new();
             // The "_or" field value should be a list
             let or_values = field.value.as_list()?;
 
-            for value in or_values {
-                let value_object = value.as_object()?;
-                or_expressions.push(resolve_filter_object(
-                    value_object,
-                    relationships,
-                    data_connector_link,
-                    type_mappings,
-                    usage_counts,
-                )?);
-            }
+            let or_expressions = or_values
+                .iter()
+                .map(|value| {
+                    let value_object = value.as_object()?;
+                    resolve_filter_object(
+                        value_object,
+                        relationships,
+                        data_connector_link,
+                        type_mappings,
+                        usage_counts,
+                    )
+                })
+                .collect::<Result<Vec<_>, _>>()?;
 
-            Ok(ndc_models::Expression::Or {
-                expressions: or_expressions,
-            })
+            Ok(FilterExpression::mk_or(or_expressions))
         }
         // "_not"
         BooleanExpressionAnnotation::BooleanExpressionArgument {
@@ -161,9 +295,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
                 type_mappings,
                 usage_counts,
             )?;
-            Ok(ndc_models::Expression::Not {
-                expression: Box::new(not_filter_expression),
-            })
+            Ok(FilterExpression::mk_not(not_filter_expression))
         }
         // The column that we want to use for filtering.
         BooleanExpressionAnnotation::BooleanExpressionArgument {
@@ -241,29 +373,28 @@ fn build_filter_expression_from_boolean_expression<'s>(
                     // relationship that needs to be used for ordering.
                     let filter_object = field.value.as_object()?;
 
-                    let mut expressions = Vec::new();
-
-                    for field in filter_object.values() {
-                        let field_filter_expression = build_filter_expression(
-                            field,
-                            relationships,
-                            &target_source.model.data_connector,
-                            &target_source.model.type_mappings,
-                            usage_counts,
-                        )?;
-                        expressions.push(field_filter_expression);
-                    }
+                    let expressions = filter_object
+                        .values()
+                        .map(|field| {
+                            build_filter_expression(
+                                field,
+                                relationships,
+                                &target_source.model.data_connector,
+                                &target_source.model.type_mappings,
+                                usage_counts,
+                            )
+                        })
+                        .collect::<Result<Vec<_>, _>>()?;
 
                     // Using exists clause to build the filter expression for relationship fields.
-                    let exists_filter_clause = ndc_models::Expression::And { expressions };
-                    let exists_in_relationship = ndc_models::ExistsInCollection::Related {
-                        relationship: ndc_models::RelationshipName::from(ndc_relationship_name.0),
-                        arguments: BTreeMap::new(),
+                    let exists_filter_clause = FilterExpression::mk_and(expressions);
+                    let exists_in_relationship = ExistsInCollection::Related {
+                        relationship: ndc_relationship_name,
                     };
 
-                    Ok(ndc_models::Expression::Exists {
+                    Ok(FilterExpression::Exists {
                         in_collection: exists_in_relationship,
-                        predicate: Some(Box::new(exists_filter_clause)),
+                        predicate: Box::new(exists_filter_clause),
                     })
                 }
             }
@@ -282,7 +413,7 @@ fn build_comparison_expression<'s>(
     column: &DataConnectorColumnName,
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-) -> Result<ndc_models::Expression, error::Error> {
+) -> Result<FilterExpression, error::Error> {
     let mut expressions = Vec::new();
 
     for (_op_name, op_value) in field.value.as_object()? {
@@ -290,8 +421,7 @@ fn build_comparison_expression<'s>(
             schema::Annotation::Input(InputAnnotation::Model(
                 ModelInputAnnotation::IsNullOperation,
             )) => {
-                let expression =
-                    build_is_null_expression(column.clone(), &op_value.value, field_path.clone())?;
+                let expression = build_is_null_expression(column, &op_value.value, field_path)?;
                 expressions.push(expression);
             }
             schema::Annotation::Input(InputAnnotation::Model(
@@ -311,9 +441,9 @@ fn build_comparison_expression<'s>(
 
                 let expression = build_binary_comparison_expression(
                     operator,
-                    column.clone(),
+                    column,
                     &op_value.value,
-                    field_path.clone(),
+                    field_path,
                 );
                 expressions.push(expression);
             }
@@ -355,7 +485,7 @@ fn build_comparison_expression<'s>(
             })?,
         }
     }
-    Ok(ndc_models::Expression::And { expressions })
+    Ok(FilterExpression::mk_and(expressions))
 }
 
 /// get column name for field name
@@ -387,7 +517,7 @@ fn resolve_filter_object<'s>(
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
-) -> Result<ndc_models::Expression, error::Error> {
+) -> Result<FilterExpression, error::Error> {
     let mut expressions = Vec::new();
 
     for field in fields.values() {
@@ -399,40 +529,23 @@ fn resolve_filter_object<'s>(
             usage_counts,
         )?);
     }
-    Ok(ndc_models::Expression::And { expressions })
-}
-
-/// Only pass a path if there are items in it
-fn to_ndc_field_path(
-    field_path: Vec<DataConnectorColumnName>,
-) -> Option<Vec<ndc_models::FieldName>> {
-    if field_path.is_empty() {
-        None
-    } else {
-        Some(
-            field_path
-                .into_iter()
-                .map(|s| ndc_models::FieldName::new(s.into_inner()))
-                .collect(),
-        )
-    }
+    Ok(FilterExpression::mk_and(expressions))
 }
 
 /// Generate a binary comparison operator
 fn build_binary_comparison_expression(
     operator: &DataConnectorOperatorName,
-    column: DataConnectorColumnName,
+    column: &DataConnectorColumnName,
     value: &normalized_ast::Value<'_, GDS>,
-    field_path: Vec<DataConnectorColumnName>,
-) -> ndc_models::Expression {
-    ndc_models::Expression::BinaryComparisonOperator {
-        column: ndc_models::ComparisonTarget::Column {
-            name: ndc_models::FieldName::new(column.into_inner()),
-            path: Vec::new(),
-            field_path: to_ndc_field_path(field_path),
+    field_path: &[DataConnectorColumnName],
+) -> FilterExpression {
+    FilterExpression::BinaryComparisonOperator {
+        target: ComparisonTarget::Column {
+            name: column.clone(),
+            field_path: field_path.to_vec(),
         },
-        operator: ndc_models::ComparisonOperatorName::from(operator.as_str()),
-        value: ndc_models::ComparisonValue::Scalar {
+        operator: operator.clone(),
+        value: ComparisonValue::Scalar {
             value: value.as_json(),
         },
     }
@@ -440,18 +553,17 @@ fn build_binary_comparison_expression(
 
 /// Resolve `_is_null` GraphQL boolean operator
 fn build_is_null_expression(
-    column: DataConnectorColumnName,
+    column: &DataConnectorColumnName,
     value: &normalized_ast::Value<'_, GDS>,
-    field_path: Vec<DataConnectorColumnName>,
-) -> Result<ndc_models::Expression, error::Error> {
+    field_path: &[DataConnectorColumnName],
+) -> Result<FilterExpression, error::Error> {
     // Build an 'IsNull' unary comparison expression
-    let unary_comparison_expression = ndc_models::Expression::UnaryComparisonOperator {
-        column: ndc_models::ComparisonTarget::Column {
-            name: ndc_models::FieldName::new(column.into_inner()),
-            path: Vec::new(),
-            field_path: to_ndc_field_path(field_path),
+    let unary_comparison_expression = FilterExpression::UnaryComparisonOperator {
+        target: ComparisonTarget::Column {
+            name: column.clone(),
+            field_path: field_path.to_vec(),
         },
-        operator: ndc_models::UnaryComparisonOperator::IsNull,
+        operator: UnaryComparisonOperator::IsNull,
     };
     // Get `_is_null` input value as boolean
     let is_null = value.as_boolean()?;
@@ -460,8 +572,6 @@ fn build_is_null_expression(
         Ok(unary_comparison_expression)
     } else {
         // When _is_null: false. Return negated 'IsNull' unary comparison expression by wrapping it in 'Not'.
-        Ok(ndc_models::Expression::Not {
-            expression: Box::new(unary_comparison_expression),
-        })
+        Ok(FilterExpression::mk_not(unary_comparison_expression))
     }
 }

@@ -44,7 +44,7 @@ pub enum ModelPredicate {
         field: FieldName,
         field_parent_type: Qualified<CustomTypeName>,
         ndc_column: DataConnectorColumnName,
-        operator: ndc_models::UnaryComparisonOperator,
+        operator: UnaryComparisonOperator,
     },
     BinaryFieldComparison {
         field: FieldName,
@@ -61,6 +61,11 @@ pub enum ModelPredicate {
     And(Vec<ModelPredicate>),
     Or(Vec<ModelPredicate>),
     Not(Box<ModelPredicate>),
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UnaryComparisonOperator {
+    IsNull,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

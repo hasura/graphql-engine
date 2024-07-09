@@ -5,12 +5,13 @@ use std::collections::{BTreeMap, HashMap};
 use base64::{engine::general_purpose, Engine};
 use hasura_authn_core::SessionVariables;
 use lang_graphql::{ast::common as ast, normalized_ast};
-use ndc_models;
 use open_dds::types::CustomTypeName;
 use serde::Serialize;
 
 use crate::ir::error;
-use crate::ir::filter::ResolvedFilterExpression;
+use crate::ir::filter::{
+    ComparisonTarget, ComparisonValue, FilterExpression, ResolvedFilterExpression,
+};
 use crate::ir::model_selection;
 use crate::model_tracking::UsagesCounts;
 use json_ext::HashMapWithJsonKey;
@@ -126,14 +127,13 @@ pub(crate) fn relay_node_ir<'n, 's>(
                                 global_id.typename, field_name
                             ),
                         })?;
-                    Ok(ndc_models::Expression::BinaryComparisonOperator {
-                        column: ndc_models::ComparisonTarget::Column {
-                            name: ndc_models::FieldName::from(field_mapping.column.as_str()),
-                            path: vec![],
-                            field_path: None,
+                    Ok(FilterExpression::BinaryComparisonOperator {
+                        target: ComparisonTarget::Column {
+                            name: field_mapping.column.clone(),
+                            field_path: vec![],
                         },
                         operator: field_mapping.equal_operator.clone(),
-                        value: ndc_models::ComparisonValue::Scalar { value: val.clone() },
+                        value: ComparisonValue::Scalar { value: val.clone() },
                     })
                 })
                 .collect::<Result<_, error::Error>>()?;
@@ -145,9 +145,8 @@ pub(crate) fn relay_node_ir<'n, 's>(
             let mut usage_counts = UsagesCounts::new();
 
             let filter_clauses = ResolvedFilterExpression {
-                expression: Some(ndc_models::Expression::And {
-                    expressions: filter_clause_expressions,
-                }),
+                expression: FilterExpression::mk_and(filter_clause_expressions)
+                    .remove_always_true_expression(),
                 relationships: BTreeMap::new(),
             };
 

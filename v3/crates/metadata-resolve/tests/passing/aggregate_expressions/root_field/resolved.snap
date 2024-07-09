@@ -1185,7 +1185,7 @@ Metadata {
                                         column: DataConnectorColumnName(
                                             "InvoiceId",
                                         ),
-                                        equal_operator: ComparisonOperatorName(
+                                        equal_operator: DataConnectorOperatorName(
                                             "_eq",
                                         ),
                                     },

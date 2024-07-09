@@ -312,7 +312,7 @@ Metadata {
                                             column: DataConnectorColumnName(
                                                 "InvoiceId",
                                             ),
-                                            equal_operator: ComparisonOperatorName(
+                                            equal_operator: DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         },
@@ -389,7 +389,7 @@ Metadata {
                                             column: DataConnectorColumnName(
                                                 "InvoiceId",
                                             ),
-                                            equal_operator: ComparisonOperatorName(
+                                            equal_operator: DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         },
@@ -1617,7 +1617,7 @@ Metadata {
                                         column: DataConnectorColumnName(
                                             "InvoiceId",
                                         ),
-                                        equal_operator: ComparisonOperatorName(
+                                        equal_operator: DataConnectorOperatorName(
                                             "_eq",
                                         ),
                                     },
@@ -2162,7 +2162,7 @@ Metadata {
                                         column: DataConnectorColumnName(
                                             "InvoiceLineId",
                                         ),
-                                        equal_operator: ComparisonOperatorName(
+                                        equal_operator: DataConnectorOperatorName(
                                             "_eq",
                                         ),
                                     },

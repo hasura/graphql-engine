@@ -4,13 +4,13 @@ use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 
+use super::common;
+use super::error;
 use super::relationships;
 use super::selection_set;
 use crate::ir::aggregates::{AggregateFieldSelection, AggregateSelectionSet};
-use crate::ir::arguments;
 use crate::ir::model_selection::ModelSelection;
 use crate::ir::order_by;
-use crate::plan::error;
 use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings
@@ -40,7 +40,11 @@ pub(crate) fn ndc_query<'s, 'ir>(
             .order_by
             .as_ref()
             .map(|x| ndc_order_by(&x.order_by_elements)),
-        predicate: ir.filter_clause.expression.clone(),
+        predicate: ir
+            .filter_clause
+            .expression
+            .as_ref()
+            .map(common::ndc_expression),
     };
 
     Ok((ndc_query, join_locations))
@@ -125,21 +129,7 @@ pub(crate) fn ndc_ir<'s, 'ir>(
     let query_request = ndc_models::QueryRequest {
         query,
         collection: ndc_models::CollectionName::from(ir.collection.as_str()),
-        arguments: ir
-            .arguments
-            .iter()
-            .map(|(k, v)| {
-                let literal_value = match v {
-                    arguments::Argument::Literal { value } => value,
-                };
-                (
-                    ndc_models::ArgumentName::from(k.as_str()),
-                    ndc_models::Argument::Literal {
-                        value: literal_value.clone(),
-                    },
-                )
-            })
-            .collect(),
+        arguments: common::ndc_arguments(&ir.arguments)?,
         collection_relationships,
         variables: None,
     };

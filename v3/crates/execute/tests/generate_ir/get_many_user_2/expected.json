@@ -125,34 +125,41 @@
             "arguments": {},
             "filter_clause": {
               "expression": {
-                "type": "and",
-                "expressions": [
-                  {
-                    "type": "binary_comparison_operator",
-                    "column": {
-                      "type": "column",
-                      "name": "title",
-                      "path": []
+                "And": {
+                  "expressions": [
+                    {
+                      "BinaryComparisonOperator": {
+                        "target": {
+                          "Column": {
+                            "name": "title",
+                            "field_path": []
+                          }
+                        },
+                        "operator": "_like",
+                        "value": {
+                          "Scalar": {
+                            "value": "%Functional%"
+                          }
+                        }
+                      }
                     },
-                    "operator": "_like",
-                    "value": {
-                      "type": "scalar",
-                      "value": "%Functional%"
+                    {
+                      "Not": {
+                        "expression": {
+                          "UnaryComparisonOperator": {
+                            "target": {
+                              "Column": {
+                                "name": "author_id",
+                                "field_path": []
+                              }
+                            },
+                            "operator": "IsNull"
+                          }
+                        }
+                      }
                     }
-                  },
-                  {
-                    "type": "not",
-                    "expression": {
-                      "type": "unary_comparison_operator",
-                      "column": {
-                        "type": "column",
-                        "name": "author_id",
-                        "path": []
-                      },
-                      "operator": "is_null"
-                    }
-                  }
-                ]
+                  ]
+                }
               },
               "relationships": {}
             },

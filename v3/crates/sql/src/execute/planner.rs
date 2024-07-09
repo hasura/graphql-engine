@@ -8,7 +8,7 @@ use datafusion::{
     physical_planner::{DefaultPhysicalPlanner, ExtensionPlanner, PhysicalPlanner},
 };
 
-use execute::process_model_relationship_definition;
+use execute::{ndc_expression, process_model_relationship_definition};
 use indexmap::IndexMap;
 use metadata_resolve::FilterPermission;
 use open_dds::identifier::Identifier;
@@ -135,9 +135,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
             let mut relationships = BTreeMap::new();
 
             let permission_filter = match &select_permission.filter {
-                FilterPermission::AllowAll => Ok(ndc_models::Expression::And {
-                    expressions: vec![],
-                }),
+                FilterPermission::AllowAll => Ok(None),
                 FilterPermission::Filter(filter) => {
                     execute::ir::permissions::process_model_predicate(
                         filter,
@@ -145,6 +143,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                         &mut relationships,
                         &mut usage_counts,
                     )
+                    .map(Some)
                     .map_err(|e| {
                         DataFusionError::Internal(format!(
                             "error when processing model predicate: {e}"
@@ -174,7 +173,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                     DataFusionError,
                 >>()?;
             let mut query = ndc_node.query.clone();
-            query.query.predicate = Some(permission_filter);
+            query.query.predicate = permission_filter.map(|expr| ndc_expression(&expr));
             query.collection_relationships = relationships;
             let ndc_pushdown = NDCPushDown::new(
                 table.http_context.clone(),

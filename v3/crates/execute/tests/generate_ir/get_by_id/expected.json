@@ -125,22 +125,20 @@
             "arguments": {},
             "filter_clause": {
               "expression": {
-                "type": "and",
-                "expressions": [
-                  {
-                    "type": "binary_comparison_operator",
-                    "column": {
-                      "type": "column",
+                "BinaryComparisonOperator": {
+                  "target": {
+                    "Column": {
                       "name": "id",
-                      "path": []
-                    },
-                    "operator": "_eq",
-                    "value": {
-                      "type": "scalar",
+                      "field_path": []
+                    }
+                  },
+                  "operator": "_eq",
+                  "value": {
+                    "Scalar": {
                       "value": 1
                     }
                   }
-                ]
+                }
               },
               "relationships": {}
             },

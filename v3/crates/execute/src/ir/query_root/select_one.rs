@@ -8,13 +8,14 @@ use std::collections::BTreeMap;
 // TODO: Remove once TypeMapping has more than one variant
 use hasura_authn_core::SessionVariables;
 use lang_graphql::{ast::common as ast, normalized_ast};
-use ndc_models;
 use open_dds;
 use serde::Serialize;
 
 use crate::ir::arguments;
 use crate::ir::error;
-use crate::ir::filter::ResolvedFilterExpression;
+use crate::ir::filter::{
+    ComparisonTarget, ComparisonValue, FilterExpression, ResolvedFilterExpression,
+};
 use crate::ir::model_selection;
 use crate::ir::permissions;
 use crate::model_tracking::{count_model, UsagesCounts};
@@ -63,14 +64,13 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
                 ModelInputAnnotation::ModelUniqueIdentifierArgument { ndc_column } => {
                     let ndc_column = ndc_column.as_ref().ok_or_else(|| error::InternalEngineError::InternalGeneric {
                         description: format!("Missing NDC column mapping for unique identifier argument {} on field {}", argument.name, field_call.name)})?;
-                    let ndc_expression = ndc_models::Expression::BinaryComparisonOperator {
-                        column: ndc_models::ComparisonTarget::Column {
-                            name: ndc_models::FieldName::from(ndc_column.column.as_str()),
-                            path: vec![],
-                            field_path: None,
+                    let ndc_expression = FilterExpression::BinaryComparisonOperator {
+                        target: ComparisonTarget::Column {
+                            name: ndc_column.column.clone(),
+                            field_path: vec![],
                         },
                         operator: ndc_column.equal_operator.clone(),
-                        value: ndc_models::ComparisonValue::Scalar {
+                        value: ComparisonValue::Scalar {
                             value: argument.value.as_json(),
                         },
                     };
@@ -106,9 +106,8 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
     }
 
     let filter_clause = ResolvedFilterExpression {
-        expression: Some(ndc_models::Expression::And {
-            expressions: filter_clause_expressions,
-        }),
+        expression: FilterExpression::mk_and(filter_clause_expressions)
+            .remove_always_true_expression(),
         relationships: BTreeMap::new(),
     };
 

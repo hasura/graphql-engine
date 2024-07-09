@@ -1,6 +1,7 @@
 //! Join tree and related types for remote joins.
 //!
 use indexmap::IndexMap;
+use serde::Serialize;
 use std::collections::{BTreeMap, HashMap};
 
 use json_ext::ValueExt;
@@ -153,8 +154,14 @@ pub enum RemoteJoinType {
 pub struct JoinId(pub i16);
 
 /// Name of the variable used in the IR
-#[derive(Debug, PartialEq, Eq, Hash, Ord, PartialOrd, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Ord, PartialOrd, Clone, Serialize)]
 pub struct VariableName(pub String);
+
+impl VariableName {
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
 
 /// An 'Argument' is a map of variable name to it's value.
 /// For example, `{"first_name": "John", "last_name": "Doe"}`

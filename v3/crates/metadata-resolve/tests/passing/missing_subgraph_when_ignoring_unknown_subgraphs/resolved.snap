@@ -432,7 +432,7 @@ Metadata {
                                 column: DataConnectorColumnName(
                                     "id",
                                 ),
-                                equal_operator: ComparisonOperatorName(
+                                equal_operator: DataConnectorOperatorName(
                                     "_eq",
                                 ),
                             },

@@ -8,7 +8,7 @@ use open_dds::{data_connector::DataConnectorName, models::ModelName, types::Cust
 use std::collections::BTreeMap;
 pub use types::{
     FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
-    PredicateRelationshipInfo, SelectPermission,
+    PredicateRelationshipInfo, SelectPermission, UnaryComparisonOperator,
 };
 mod model_permission;
 
