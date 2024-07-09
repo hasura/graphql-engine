@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+use crate::stages::{aggregates::AggregateExpressionError, graphql_config, type_permissions};
+use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
 use open_dds::{
     aggregates::AggregateExpressionName,
@@ -17,9 +19,6 @@ use crate::helpers::{
     argument::ArgumentMappingError, ndc_validation::NDCValidationError,
     type_mappings::TypeMappingCollectionError, typecheck,
 };
-use crate::stages::aggregates::AggregateExpressionError;
-use crate::stages::graphql_config;
-use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 
 // TODO: This enum really needs structuring
 #[derive(Error, Debug)]
@@ -289,39 +288,6 @@ pub enum Error {
         model_data_connector_object_type: DataConnectorObjectType,
         filter_expression_type: Qualified<CustomTypeName>,
         filter_expression_data_connector_object_type: DataConnectorObjectType,
-    },
-    // Permission errors
-    // Type Output Permissions
-    #[error("unsupported type in output type permissions definition: {type_name:}; only object types are supported")]
-    UnsupportedTypeInOutputPermissions { type_name: CustomTypeName },
-    #[error("multiple output type permissions have been defined for type: {type_name:}")]
-    DuplicateOutputTypePermissions { type_name: CustomTypeName },
-    #[error("unknown type used in output permissions: {type_name:}")]
-    UnknownTypeInOutputPermissionsDefinition {
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("unknown field '{field_name:}' used in output permissions of type '{type_name:}'")]
-    UnknownFieldInOutputPermissionsDefinition {
-        field_name: FieldName,
-        type_name: CustomTypeName,
-    },
-    // Type Input Permissions
-    #[error("unsupported type in input type permissions definition: {type_name:}; only object types are supported")]
-    UnsupportedTypeInInputPermissions { type_name: CustomTypeName },
-    #[error("unknown field '{field_name:}' used in output permissions of type '{type_name:}'")]
-    UnknownFieldInInputPermissionsDefinition {
-        field_name: FieldName,
-        type_name: CustomTypeName,
-    },
-    #[error("multiple input type permissions have been defined for type: {type_name:}")]
-    DuplicateInputTypePermissions { type_name: CustomTypeName },
-    #[error(
-        "Type error in field preset of {field_name:}, for input type permissions definition of type {type_name:}: {type_error:}"
-    )]
-    FieldPresetTypeError {
-        field_name: FieldName,
-        type_name: CustomTypeName,
-        type_error: typecheck::TypecheckError,
     },
     #[error("Type error in argument {argument_name:}: {type_error:}")]
     ArgumentTypeError {
@@ -614,6 +580,8 @@ pub enum Error {
     NdcV02DataConnectorNotSupported {
         data_connector: Qualified<DataConnectorName>,
     },
+    #[error("{0}")]
+    TypePermissionError(type_permissions::TypePermissionError),
 }
 
 #[derive(Debug, Error)]
