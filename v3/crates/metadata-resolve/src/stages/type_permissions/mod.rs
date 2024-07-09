@@ -1,11 +1,10 @@
 use std::collections::BTreeMap;
 
-use open_dds::permissions::{FieldPreset, Role, TypeOutputPermission, TypePermissionsV1};
 mod error;
 mod types;
 pub use error::{TypeInputPermissionError, TypeOutputPermissionError, TypePermissionError};
-use open_dds::types::CustomTypeName;
-pub use types::{ObjectTypeWithPermissions, TypeInputPermission};
+use open_dds::permissions::{FieldPreset, Role, TypeOutputPermission, TypePermissionsV1};
+pub use types::{ObjectTypeWithPermissions, ObjectTypesWithPermissions, TypeInputPermission};
 
 use crate::types::subgraph::Qualified;
 
@@ -15,10 +14,10 @@ use crate::stages::object_types;
 /// resolve type permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, object_types::ObjectTypeWithTypeMappings>,
-) -> Result<BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithPermissions>, TypePermissionError> {
+    object_types: &object_types::ObjectTypesWithTypeMappings,
+) -> Result<ObjectTypesWithPermissions, TypePermissionError> {
     let mut object_types_with_permissions = BTreeMap::new();
-    for (object_type_name, object_type) in object_types {
+    for (object_type_name, object_type) in object_types.iter() {
         object_types_with_permissions.insert(
             object_type_name.clone(),
             ObjectTypeWithPermissions {
@@ -60,7 +59,7 @@ pub fn resolve(
             }
         }
     }
-    Ok(object_types_with_permissions)
+    Ok(ObjectTypesWithPermissions(object_types_with_permissions))
 }
 
 pub fn resolve_output_type_permission(

@@ -31,7 +31,7 @@ pub(crate) fn resolve_model_source(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -182,18 +182,14 @@ pub(crate) fn resolve_model_source(
 /// `data_type`, it will throw an error if the type is not found to be an object
 /// or if the model has an unknown data type.
 pub(crate) fn get_model_object_type_representation<'s>(
-    object_types: &'s BTreeMap<
-        Qualified<CustomTypeName>,
-        type_permissions::ObjectTypeWithPermissions,
-    >,
+    object_types: &'s type_permissions::ObjectTypesWithPermissions,
     data_type: &Qualified<CustomTypeName>,
     model_name: &Qualified<ModelName>,
 ) -> Result<&'s type_permissions::ObjectTypeWithPermissions, crate::Error> {
-    match object_types.get(data_type) {
-        Some(object_type_representation) => Ok(object_type_representation),
-        None => Err(Error::UnknownModelDataType {
+    object_types
+        .get(data_type)
+        .map_err(|_| Error::UnknownModelDataType {
             model_name: model_name.clone(),
             data_type: data_type.clone(),
-        }),
-    }
+        })
 }

@@ -22,7 +22,7 @@ pub fn resolve_aggregate_expression(
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
 ) -> Result<Qualified<AggregateExpressionName>, ModelAggregateExpressionError> {
     let model_object_type = QualifiedTypeName::Custom(model_object_type_name.clone());
 
@@ -92,14 +92,18 @@ fn resolve_aggregate_expression_data_connector_mapping(
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
 ) -> Result<(), ModelAggregateExpressionError> {
     // Find the object type being aggregated and its field mapping
-    let object_type = object_types.get(object_type_name).ok_or_else(|| {
-        ModelAggregateExpressionError::OtherError(Box::new(Error::UnknownObjectType {
-            data_type: object_type_name.clone(),
-        }))
-    })?;
+    let object_type = object_types
+        .get(object_type_name)
+        .map_err(|object_type_error| {
+            ModelAggregateExpressionError::ModelAggregateObjectTypeError {
+                aggregate_expression: aggregate_expression.name.clone(),
+                model_name: model_name.clone(),
+                object_type_error,
+            }
+        })?;
     let object_type_mapping = object_type
         .type_mappings
         .get(data_connector_name, data_connector_object_type)

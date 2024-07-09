@@ -6,9 +6,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use open_dds::commands::ArgumentMapping;
 use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
 pub use types::{
-    DataConnectorTypeMappingsForObject, DataConnectorTypeMappingsOutput, FieldDefinition,
-    FieldMapping, ObjectTypeRepresentation, ObjectTypeWithTypeMappings,
-    ResolvedApolloFederationObjectKey, ResolvedObjectApolloFederationConfig, TypeMapping,
+    DataConnectorTypeMappingsForObject, FieldDefinition, FieldMapping, ObjectTypeError,
+    ObjectTypeRepresentation, ObjectTypeWithTypeMappings, ObjectTypesOutput,
+    ObjectTypesWithTypeMappings, ResolvedApolloFederationObjectKey,
+    ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
 use crate::helpers::ndc_validation::get_underlying_named_type;
@@ -25,7 +26,7 @@ use lang_graphql::ast::common as ast;
 pub(crate) fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
-) -> Result<DataConnectorTypeMappingsOutput, Error> {
+) -> Result<ObjectTypesOutput, Error> {
     let mut object_types = BTreeMap::new();
     let mut graphql_types = BTreeSet::new();
     let mut global_id_enabled_types = BTreeMap::new();
@@ -94,11 +95,11 @@ pub(crate) fn resolve(
         }
     }
 
-    Ok(DataConnectorTypeMappingsOutput {
+    Ok(ObjectTypesOutput {
         graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
-        object_types,
+        object_types: ObjectTypesWithTypeMappings(object_types),
     })
 }
 

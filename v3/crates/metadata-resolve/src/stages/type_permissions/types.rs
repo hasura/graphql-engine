@@ -2,10 +2,36 @@ use std::collections::BTreeMap;
 
 use open_dds::permissions::{Role, TypeOutputPermission, ValueExpression};
 
-use open_dds::types::FieldName;
-
 use crate::stages::object_types;
+use crate::Qualified;
+use open_dds::types::{CustomTypeName, FieldName};
 use serde::{Deserialize, Serialize};
+use std::ops::Deref;
+
+pub struct ObjectTypesWithPermissions(
+    pub BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithPermissions>,
+);
+
+impl Deref for ObjectTypesWithPermissions {
+    type Target = BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithPermissions>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl ObjectTypesWithPermissions {
+    pub fn get(
+        &self,
+        type_name: &Qualified<CustomTypeName>,
+    ) -> Result<&ObjectTypeWithPermissions, object_types::ObjectTypeError> {
+        self.0
+            .get(type_name)
+            .ok_or_else(|| object_types::ObjectTypeError::ObjectTypeNotFound {
+                type_name: type_name.clone(),
+            })
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct TypeInputPermission {

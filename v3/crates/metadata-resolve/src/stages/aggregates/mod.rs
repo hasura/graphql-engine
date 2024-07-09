@@ -28,7 +28,7 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     mut existing_graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -84,7 +84,7 @@ fn resolve_aggregate_expression(
         Qualified<DataConnectorName>,
         ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -128,7 +128,7 @@ fn resolve_aggregate_expression(
 
 fn resolve_object_operand(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     object_operand: &open_dds::aggregates::ObjectAggregateOperand,
 ) -> Result<AggregateOperand, Error> {
@@ -141,7 +141,7 @@ fn resolve_object_operand(
     let operand_object_type =
         object_types
             .get(&operand_object_type_name)
-            .ok_or_else(|| -> Error {
+            .map_err(|_| -> Error {
                 AggregateExpressionError::AggregateOperandObjectTypeNotFound {
                     name: aggregate_expression_name.clone(),
                     type_name: operand_object_type_name.clone(),
@@ -279,7 +279,7 @@ fn resolve_scalar_operand(
         Qualified<DataConnectorName>,
         ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     scalar_operand: &open_dds::aggregates::ScalarAggregateOperand,
@@ -349,7 +349,7 @@ fn resolve_aggregation_function(
     aggregation_function_def: &open_dds::aggregates::AggregationFunctionDefinition,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_operand: &open_dds::aggregates::ScalarAggregateOperand,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
@@ -477,7 +477,7 @@ fn check_aggregation_function_return_type(
     data_connector_name: &Qualified<DataConnectorName>,
     data_connector_scalars: &ScalarTypeWithRepresentationInfoMap,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
 ) -> Result<(), Error> {
     let mk_error = |reason: &str| -> Error {
         AggregateExpressionError::AggregateOperandDataConnectorFunctionReturnTypeIncompatible {
@@ -527,7 +527,7 @@ fn check_aggregation_function_return_type(
             }
             // If the Open DD type is an object type, check that there is a mapping from that object type to the NDC object type
             else {
-                let return_object_type = object_types.get(custom_type_name).ok_or_else(|| {
+                let return_object_type = object_types.get(custom_type_name).map_err(|_| {
                     mk_error("The Open DD return type is not a scalar type or an object type")
                 })?;
                 let ndc_object_type_name =

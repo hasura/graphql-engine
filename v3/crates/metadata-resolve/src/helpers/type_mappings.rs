@@ -56,12 +56,12 @@ pub(crate) struct SpecialCaseTypeMapping<'a> {
 pub(crate) fn collect_type_mapping_for_source(
     mapping_to_collect: &TypeMappingToCollect,
     data_connector_name: &Qualified<DataConnectorName>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     special_case: &Option<SpecialCaseTypeMapping>,
 ) -> Result<(), TypeMappingCollectionError> {
-    match object_types.get(mapping_to_collect.type_name) {
+    match object_types.get(mapping_to_collect.type_name).ok() {
         Some(object_type_representation) => {
             let type_mapping = match object_type_representation.type_mappings.get(
                 data_connector_name,

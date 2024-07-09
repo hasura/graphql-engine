@@ -40,10 +40,7 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types_with_permissions: &BTreeMap<
-        Qualified<CustomTypeName>,
-        type_permissions::ObjectTypeWithPermissions,
-    >,
+    object_types_with_permissions: &type_permissions::ObjectTypesWithPermissions,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     aggregate_expressions: &BTreeMap<
@@ -61,7 +58,7 @@ pub fn resolve(
             object_type,
             type_mappings,
         },
-    ) in object_types_with_permissions
+    ) in object_types_with_permissions.iter()
     {
         object_types_with_relationships.insert(
             object_type_name.clone(),
@@ -448,7 +445,7 @@ fn resolve_aggregate_relationship_field(
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<Option<RelationshipField>, Error> {
     // If an aggregate has been specified
@@ -547,7 +544,7 @@ fn resolve_model_relationship_fields(
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<Vec<RelationshipField>, Error> {
     let qualified_target_model_name = Qualified::new(
@@ -699,7 +696,7 @@ fn resolve_relationships(
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     graphql_config: &graphql_config::GraphqlConfig,
     source_type: &object_types::ObjectTypeRepresentation,
 ) -> Result<Vec<RelationshipField>, Error> {

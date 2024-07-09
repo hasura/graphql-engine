@@ -40,7 +40,7 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -139,7 +139,7 @@ pub fn resolve(
 fn resolve_model(
     subgraph: &str,
     model: &ModelV1,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     global_id_enabled_types: &mut BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &mut BTreeMap<
         Qualified<CustomTypeName>,

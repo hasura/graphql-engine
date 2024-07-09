@@ -1,7 +1,8 @@
 use thiserror::Error;
 
 use crate::stages::{
-    aggregates::AggregateExpressionError, data_connectors, graphql_config, type_permissions,
+    aggregates::AggregateExpressionError, data_connectors, graphql_config, object_types,
+    type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
@@ -593,6 +594,12 @@ pub enum ModelAggregateExpressionError {
         aggregate_expression: Qualified<AggregateExpressionName>,
         data_connector_name: Qualified<DataConnectorName>,
         data_connector_operand_type: DataConnectorScalarType,
+    },
+    #[error("error in aggregate expression {aggregate_expression} used with the model {model_name}: {object_type_error}")]
+    ModelAggregateObjectTypeError {
+        model_name: Qualified<ModelName>,
+        aggregate_expression: Qualified<AggregateExpressionName>,
+        object_type_error: object_types::ObjectTypeError,
     },
     #[error("{0}")]
     OtherError(Box<Error>),

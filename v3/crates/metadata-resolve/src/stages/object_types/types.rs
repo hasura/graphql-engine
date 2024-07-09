@@ -1,14 +1,15 @@
 use crate::types::subgraph::QualifiedTypeReference;
 use crate::{types::error::Error, ArgumentInfo};
 use indexmap::IndexMap;
+use thiserror::Error;
 
 use open_dds::arguments::ArgumentName;
+use open_dds::models::ModelName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated, FieldName};
 use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::collections::{BTreeMap, BTreeSet};
-
-use open_dds::models::ModelName;
+use std::ops::Deref;
 
 use crate::types::subgraph::Qualified;
 
@@ -86,13 +87,25 @@ impl DataConnectorTypeMappingsForObject {
     }
 }
 
+pub struct ObjectTypesWithTypeMappings(
+    pub BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithTypeMappings>,
+);
+
+impl Deref for ObjectTypesWithTypeMappings {
+    type Target = BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithTypeMappings>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 /// output of `object_types` step
-pub struct DataConnectorTypeMappingsOutput {
+pub struct ObjectTypesOutput {
     pub graphql_types: BTreeSet<ast::TypeName>,
     pub global_id_enabled_types: BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     pub apollo_federation_entity_enabled_types:
         BTreeMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
-    pub object_types: BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithTypeMappings>,
+    pub object_types: ObjectTypesWithTypeMappings,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -145,5 +158,13 @@ pub enum TypeMapping {
     Object {
         ndc_object_type_name: DataConnectorObjectType,
         field_mappings: BTreeMap<FieldName, FieldMapping>,
+    },
+}
+
+#[derive(Debug, Error)]
+pub enum ObjectTypeError {
+    #[error("object type {type_name} could not be found")]
+    ObjectTypeNotFound {
+        type_name: Qualified<CustomTypeName>,
     },
 }

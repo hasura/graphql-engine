@@ -27,7 +27,7 @@ pub fn resolve(
     >,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
 ) -> Result<BooleanExpressionsOutput, Error> {
     let mut raw_boolean_expression_types = BTreeMap::new();
 

@@ -11,10 +11,7 @@ use crate::types::subgraph::Qualified;
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
-use open_dds::{
-    data_connector::DataConnectorName,
-    types::{CustomTypeName, OperatorName},
-};
+use open_dds::{data_connector::DataConnectorName, types::OperatorName};
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
@@ -29,7 +26,7 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionsOutput, Error> {
@@ -76,7 +73,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionType, Error> {
@@ -89,15 +86,13 @@ pub(crate) fn resolve_object_boolean_expression_type(
         object_boolean_expression.object_type.clone(),
     );
     let object_type_representation =
-        object_types
-            .get(&qualified_object_type_name)
-            .ok_or_else(|| {
-                Error::from(
-                    BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
-                        type_name: qualified_object_type_name.clone(),
-                    },
-                )
-            })?;
+        object_types.get(&qualified_object_type_name).map_err(|_| {
+            Error::from(
+                BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
+                    type_name: qualified_object_type_name.clone(),
+                },
+            )
+        })?;
 
     let qualified_data_connector_name = Qualified::new(
         subgraph.to_string(),

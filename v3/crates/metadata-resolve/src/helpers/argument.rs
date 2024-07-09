@@ -787,30 +787,32 @@ fn remove_object_relationships(
         Qualified<CustomTypeName>,
         relationships::ObjectTypeWithRelationships,
     >,
-) -> BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions> {
-    object_types_with_relationships
-        .iter()
-        .map(
-            |(
-                object_name,
-                relationships::ObjectTypeWithRelationships {
-                    object_type,
-                    type_mappings,
-                    type_input_permissions,
-                    type_output_permissions,
-                    ..
-                },
-            )| {
-                (
-                    object_name.clone(),
-                    type_permissions::ObjectTypeWithPermissions {
-                        object_type: object_type.clone(),
-                        type_mappings: type_mappings.clone(),
-                        type_input_permissions: type_input_permissions.clone(),
-                        type_output_permissions: type_output_permissions.clone(),
+) -> type_permissions::ObjectTypesWithPermissions {
+    type_permissions::ObjectTypesWithPermissions(
+        object_types_with_relationships
+            .iter()
+            .map(
+                |(
+                    object_name,
+                    relationships::ObjectTypeWithRelationships {
+                        object_type,
+                        type_mappings,
+                        type_input_permissions,
+                        type_output_permissions,
+                        ..
                     },
-                )
-            },
-        )
-        .collect()
+                )| {
+                    (
+                        object_name.clone(),
+                        type_permissions::ObjectTypeWithPermissions {
+                            object_type: object_type.clone(),
+                            type_mappings: type_mappings.clone(),
+                            type_input_permissions: type_input_permissions.clone(),
+                            type_output_permissions: type_output_permissions.clone(),
+                        },
+                    )
+                },
+            )
+            .collect(),
+    )
 }

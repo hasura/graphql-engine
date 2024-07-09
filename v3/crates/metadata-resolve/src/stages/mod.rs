@@ -43,7 +43,7 @@ pub fn resolve(
         data_connectors::resolve(&metadata_accessor, &configuration).map_err(Error::from)?;
 
     // Validate object types defined in metadata
-    let object_types::DataConnectorTypeMappingsOutput {
+    let object_types::ObjectTypesOutput {
         graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
