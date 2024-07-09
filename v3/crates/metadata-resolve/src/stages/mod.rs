@@ -13,6 +13,7 @@ pub mod models_graphql;
 pub mod object_boolean_expressions;
 pub mod object_types;
 pub mod relationships;
+mod relay;
 pub mod roles;
 pub mod scalar_boolean_expressions;
 pub mod scalar_types;
@@ -146,10 +147,9 @@ pub fn resolve(
         &boolean_expression_types,
     )?;
 
-    apollo::resolve(
-        &global_id_enabled_types,
-        &apollo_federation_entity_enabled_types,
-    )?;
+    apollo::resolve(&apollo_federation_entity_enabled_types)?;
+
+    relay::resolve(&global_id_enabled_types)?;
 
     let object_types_with_relationships = relationships::resolve(
         &metadata_accessor,
