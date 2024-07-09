@@ -114,7 +114,8 @@ const createTransform = (
       'preferredName' in definition &&
       typeof definition.preferredName === 'string'
     ) {
-      const newPrefix = prefix.match(/\['(.*?)'\]/)?.[1] || '';
+      const newPrefix =
+        prefix === '$body' ? 'item' : prefix.match(/\['(.*?)'\]/)?.[1] || '';
       const { transform, needTransform } = createTransform(
         definition.subDefinitions,
         newPrefix,
