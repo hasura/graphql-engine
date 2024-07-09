@@ -32,192 +32,344 @@ Our systems leverage permissive dependencies with licenses such as MIT, Apache 2
 
 | Name                                                  | Version                                                                       | License                 |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------- |
-| aeson                                                 | 2.1.2.1                                                                       | BSD-3-Clause            |
-| aeson-casing                                          | 0.2.0.0                                                                       | MIT                     |
-| aeson-pretty                                          | 0.8.9                                                                         | BSD-3-Clause            |
-| ansi-wl-pprint                                        | 0.6.9                                                                         | BSD-3-Clause            |
-| asn1-encoding                                         | 0.9.6                                                                         | BSD-3-Clause            |
-| asn1-types                                            | 0.3.4                                                                         | BSD-3-Clause            |
-| async                                                 | 2.2.4                                                                         | BSD-3-Clause            |
-| atomic-primops                                        | 0.8.4                                                                         | BSD-3-Clause            |
-| base                                                  | 4.17.1.0                                                                      | BSD-3-Clause            |
-| base16-bytestring                                     | 1.0.2.0                                                                       | BSD-3-Clause            |
-| base64-bytestring                                     | 1.2.1.0                                                                       | BSD-3-Clause            |
-| bytestring                                            | 0.11.4.0                                                                      | BSD-3-Clause            |
-| case-insensitive                                      | 1.2.1.0                                                                       | BSD-3-Clause            |
-| cereal                                                | 0.5.8.3                                                                       | BSD-3-Clause            |
-| containers                                            | 0.6.7                                                                         | BSD-3-Clause            |
-| cron                                                  | 0.7.0                                                                         | MIT                     |
-| cryptonite                                            | 0.3                                                                           | BSD-3-Clause            |
-| data-default                                          | 0.7.1.1                                                                       | BSD-3-Clause            |
-| data-has                                              | 0.4.0.0                                                                       | BSD-3-Clause            |
-| deepseq                                               | 1.4.8.0                                                                       | BSD-3-Clause            |
-| directory                                             | 1.3.7.1                                                                       | BSD-3-Clause            |
-| ekg-core                                              | 0.1.1.7                                                                       | BSD-3-Clause            |
-| ekg-json                                              | 0.1.0.7                                                                       | BSD-3-Clause            |
-| exceptions                                            | 0.10.5                                                                        | BSD-3-Clause            |
-| extra                                                 | 1.7.12                                                                        | BSD-3-Clause            |
-| fast-logger                                           | 3.1.2                                                                         | BSD-3-Clause            |
-| file-embed                                            | 0.0.15.0                                                                      | BSD-2-Clause            |
-| filepath                                              | 1.4.2.2                                                                       | BSD-3-Clause            |
-| flush-queue                                           | 1.0.0                                                                         | BSD-3-Clause            |
-| fold-debounce                                         | 0.2.0.11                                                                      | BSD-3-Clause            |
-| hashable                                              | 1.4.1.0                                                                       | BSD-3-Clause            |
-| hedis                                                 | 0.15.2                                                                        | BSD-3-Clause            |
-| hostname                                              | 1                                                                             | BSD-3-Clause            |
-| hs-opentelemetry-otlp                                 | 0.0.1.0                                                                       | BSD-3-Clause            |
-| http-client                                           | 0.7.13.1                                                                      | MIT                     |
-| http-client-tls                                       | 0.3.6.1                                                                       | MIT                     |
-| http-types                                            | 0.12.3                                                                        | BSD-3-Clause            |
-| immortal                                              | 0.2.2.1                                                                       | MIT                     |
-| insert-ordered-containers                             | 0.2.5.1                                                                       | BSD-3-Clause            |
-| jose                                                  | 0.9                                                                           | Apache-2.0              |
-| jwt                                                   | 0.11.0                                                                        | MIT                     |
-| kan-extensions                                        | 5.2.5                                                                         | BSD-3-Clause            |
-| launchdarkly-server-sdk                               | 4.0.0                                                                         | Apache-2.0              |
-| lens                                                  | 5.2.2                                                                         | BSD-2-Clause            |
-| lens-aeson                                            | 1.2.2                                                                         | MIT                     |
-| lifted-async                                          | 0.10.2.3                                                                      | BSD-3-Clause            |
-| lifted-base                                           | 0.2.3.12                                                                      | BSD-3-Clause            |
-| memory                                                | 0.18.0                                                                        | BSD-3-Clause            |
-| mmorph                                                | 1.2.0                                                                         | BSD-3-Clause            |
-| monad-control                                         | 1.0.3.1                                                                       | BSD-3-Clause            |
-| monad-loops                                           | 0.4.3                                                                         | LicenseRef-PublicDomain |
-| mustache                                              | 2.4.1                                                                         | BSD-3-Clause            |
-| network                                               | 3.1.2.7                                                                       | BSD-3-Clause            |
-| network-uri                                           | 2.6.4.1                                                                       | BSD-3-Clause            |
-| odbc                                                  | 0.2.7                                                                         | BSD-3-Clause            |
-| optparse-applicative                                  | 0.16.1.0                                                                      | BSD-3-Clause            |
-| optparse-generic                                      | 1.4.8                                                                         | BSD-3-Clause            |
-| postgresql-libpq                                      | 0.9.4.3                                                                       | BSD-3-Clause            |
-| proto-lens                                            | 0.7.1.2                                                                       | BSD-3-Clause            |
-| random                                                | 1.2.1.1                                                                       | BSD-3-Clause            |
-| refined                                               | 0.8                                                                           | MIT                     |
-| retry                                                 | 0.9.3.0                                                                       | BSD-3-Clause            |
-| scientific                                            | 0.3.7.0                                                                       | BSD-3-Clause            |
-| semialign                                             | 1.2.0.1                                                                       | BSD-3-Clause            |
-| semigroupoids                                         | 5.3.7                                                                         | BSD-2-Clause            |
-| stm                                                   | 2.5.1.0                                                                       | BSD-3-Clause            |
-| streaming-commons                                     | 0.2.2.5                                                                       | MIT                     |
-| tagged                                                | 0.8.6.1                                                                       | BSD-3-Clause            |
-| template-haskell                                      | 2.19.0.0                                                                      | BSD-3-Clause            |
-| text                                                  | 2.0.1                                                                         | BSD-2-Clause            |
-| text-builder                                          | 0.6.7                                                                         | MIT                     |
-| text-conversions                                      | 0.3.1.1                                                                       | ISC                     |
-| these                                                 | 1.1.1.1                                                                       | BSD-3-Clause            |
-| time                                                  | 1.12.2                                                                        | BSD-2-Clause            |
-| tls                                                   | 1.6.0                                                                         | BSD-3-Clause            |
-| transformers                                          | 0.5.6.2                                                                       | BSD-3-Clause            |
-| transformers-base                                     | 0.4.6                                                                         | BSD-3-Clause            |
-| unagi-chan                                            | 0.4.1.4                                                                       | BSD-3-Clause            |
-| unix                                                  | 2.7.3                                                                         | BSD-3-Clause            |
-| unordered-containers                                  | 0.2.19.1                                                                      | BSD-3-Clause            |
-| utf8-string                                           | 1.0.2                                                                         | BSD-3-Clause            |
-| uuid                                                  | 1.3.15                                                                        | BSD-3-Clause            |
-| vector                                                | 0.12.3.1                                                                      | BSD-3-Clause            |
-| wai                                                   | 3.2.3                                                                         | MIT                     |
-| warp                                                  | 3.3.23                                                                        | MIT                     |
-| websockets                                            | 0.12.7.3                                                                      | BSD-3-Clause            |
-| witch                                                 | 1.1.2.0                                                                       | MIT                     |
-| wreq                                                  | 0.5.3.3                                                                       | BSD-3-Clause            |
-| x509-store                                            | 1.6.9                                                                         | BSD-3-Clause            |
-| x509-system                                           | 1.6.7                                                                         | BSD-3-Clause            |
-| yaml                                                  | 0.11.10.0                                                                     | BSD-3-Clause            |
-| zlib                                                  | 0.6.3.0                                                                       | BSD-3-Clause            |
-| cuelang.org/go                                        | https://github.com/cue-lang/cue/blob/v0.4.3/LICENSE                           | Apache-2.0              |
-| cuelang.org/go/internal/third_party/yaml              | https://github.com/cue-lang/cue/blob/v0.4.3/internal/third_party/yaml/LICENSE | Apache-2.0              |
-| github.com/AlecAivazis/survey/v2                      | https://github.com/AlecAivazis/survey/blob/v2.3.1/LICENSE                     | MIT                     |
-| github.com/AlecAivazis/survey/v2/terminal             | https://github.com/AlecAivazis/survey/blob/v2.3.1/terminal/LICENSE.txt        | MIT                     |
-| github.com/BurntSushi/toml                            | https://github.com/BurntSushi/toml/blob/v0.4.1/COPYING                        | MIT                     |
-| github.com/Masterminds/semver                         | https://github.com/Masterminds/semver/blob/v1.5.0/LICENSE.txt                 | MIT                     |
-| github.com/VividCortex/ewma                           | https://github.com/VividCortex/ewma/blob/v1.1.1/LICENSE                       | MIT                     |
-| github.com/ahmetb/go-linq                             | https://github.com/ahmetb/go-linq/blob/v3.0.0/LICENSE                         | Apache-2.0              |
-| github.com/aryann/difflib                             | https://github.com/aryann/difflib/blob/e206f873d14a/LICENSE                   | MIT                     |
-| github.com/briandowns/spinner                         | https://github.com/briandowns/spinner/blob/v1.8.0/LICENSE                     | Apache-2.0              |
-| github.com/buger/jsonparser                           | https://github.com/buger/jsonparser/blob/v1.1.1/LICENSE                       | MIT                     |
-| github.com/cheggaaa/pb/v3                             | https://github.com/cheggaaa/pb/blob/v3.0.8/v3/LICENSE                         | BSD-3-Clause            |
-| github.com/cockroachdb/apd/v2                         | https://github.com/cockroachdb/apd/blob/v2.0.1/LICENSE                        | Apache-2.0              |
-| github.com/cockroachdb/redact                         | https://github.com/cockroachdb/redact/blob/v1.1.3/LICENSE                     | Apache-2.0              |
-| github.com/cpuguy83/go-md2man/v2/md2man               | https://github.com/cpuguy83/go-md2man/blob/v2.0.1/LICENSE.md                  | MIT                     |
-| github.com/emirpasic/gods                             | https://github.com/emirpasic/gods/blob/v1.12.0/LICENSE                        | BSD-2-Clause            |
-| github.com/emirpasic/gods                             | https://github.com/emirpasic/gods/blob/v1.12.0/LICENSE                        | ISC                     |
-| github.com/fatih/color                                | https://github.com/fatih/color/blob/v1.13.0/LICENSE.md                        | MIT                     |
-| github.com/fsnotify/fsnotify                          | https://github.com/fsnotify/fsnotify/blob/v1.5.1/LICENSE                      | BSD-3-Clause            |
-| github.com/gin-contrib/cors                           | https://github.com/gin-contrib/cors/blob/v1.3.0/LICENSE                       | MIT                     |
-| github.com/gin-contrib/sse                            | https://github.com/gin-contrib/sse/blob/v0.1.0/LICENSE                        | MIT                     |
-| github.com/gin-contrib/static                         | https://github.com/gin-contrib/static/blob/f81c604d8ac2/LICENSE               | MIT                     |
-| github.com/gin-gonic/contrib/renders/multitemplate    | https://github.com/gin-gonic/contrib/blob/d6e26eeaa607/LICENSE                | MIT                     |
-| github.com/gin-gonic/gin                              | https://github.com/gin-gonic/gin/blob/v1.5.0/LICENSE                          | MIT                     |
-| github.com/go-playground/locales                      | https://github.com/go-playground/locales/blob/v0.13.0/LICENSE                 | MIT                     |
-| github.com/go-playground/universal-translator         | https://github.com/go-playground/universal-translator/blob/v0.17.0/LICENSE    | MIT                     |
-| github.com/goccy/go-yaml                              | https://github.com/goccy/go-yaml/blob/v1.9.5/LICENSE                          | MIT                     |
-| github.com/gofrs/uuid                                 | https://github.com/gofrs/uuid/blob/v3.2.0/LICENSE                             | MIT                     |
-| github.com/golang/protobuf/proto                      | https://github.com/golang/protobuf/blob/v1.5.2/LICENSE                        | BSD-3-Clause            |
-| github.com/gonvenience/bunt                           | https://github.com/gonvenience/bunt/blob/v1.3.2/LICENSE                       | MIT                     |
-| github.com/gonvenience/neat                           | https://github.com/gonvenience/neat/blob/v1.3.7/LICENSE                       | MIT                     |
-| github.com/gonvenience/term                           | https://github.com/gonvenience/term/blob/v1.0.1/LICENSE                       | MIT                     |
-| github.com/gonvenience/text                           | https://github.com/gonvenience/text/blob/v1.0.6/LICENSE                       | MIT                     |
-| github.com/gonvenience/wrap                           | https://github.com/gonvenience/wrap/blob/v1.1.0/LICENSE                       | MIT                     |
-| github.com/gonvenience/ytbx                           | https://github.com/gonvenience/ytbx/blob/v1.4.2/LICENSE                       | MIT                     |
-| github.com/google/uuid                                | https://github.com/google/uuid/blob/v1.2.0/LICENSE                            | BSD-3-Clause            |
-| github.com/hashicorp/errwrap                          | https://github.com/hashicorp/errwrap/blob/v1.0.0/LICENSE                      | MPL-2.0                 |
-| github.com/hashicorp/go-multierror                    | https://github.com/hashicorp/go-multierror/blob/v1.1.1/LICENSE                | MPL-2.0                 |
-| github.com/hashicorp/hcl                              | https://github.com/hashicorp/hcl/blob/v1.0.0/LICENSE                          | MPL-2.0                 |
-| github.com/hexops/gotextdiff                          | https://github.com/hexops/gotextdiff/blob/v1.0.3/LICENSE                      | BSD-3-Clause            |
-| github.com/homeport/dyff/pkg/dyff                     | https://github.com/homeport/dyff/blob/v1.4.5/LICENSE                          | MIT                     |
-| github.com/jbenet/go-context/io                       | https://github.com/jbenet/go-context/blob/d14ea06fba99/LICENSE                | MIT                     |
-| github.com/kardianos/osext                            | https://github.com/kardianos/osext/blob/2bc1f35cddc0/LICENSE                  | BSD-3-Clause            |
-| github.com/kballard/go-shellquote                     | https://github.com/kballard/go-shellquote/blob/95032a82bc51/LICENSE           | MIT                     |
-| github.com/kevinburke/ssh_config                      | https://github.com/kevinburke/ssh_config/blob/01f96b0aa0cd/LICENSE            | MIT                     |
-| github.com/leodido/go-urn                             | https://github.com/leodido/go-urn/blob/v1.2.0/LICENSE                         | MIT                     |
-| github.com/lucasb-eyer/go-colorful                    | https://github.com/lucasb-eyer/go-colorful/blob/v1.2.0/LICENSE                | MIT                     |
-| github.com/magiconair/properties                      | https://github.com/magiconair/properties/blob/v1.8.6/LICENSE.md               | BSD-2-Clause            |
-| github.com/mattn/go-ciede2000                         | https://github.com/mattn/go-ciede2000/blob/782e8c62fec3/LICENSE               | MIT                     |
-| github.com/mattn/go-colorable                         | https://github.com/mattn/go-colorable/blob/v0.1.12/LICENSE                    | MIT                     |
-| github.com/mattn/go-isatty                            | https://github.com/mattn/go-isatty/blob/v0.0.14/LICENSE                       | MIT                     |
-| github.com/mattn/go-runewidth                         | https://github.com/mattn/go-runewidth/blob/v0.0.12/LICENSE                    | MIT                     |
-| github.com/mgutz/ansi                                 | https://github.com/mgutz/ansi/blob/9520e82c474b/LICENSE                       | MIT                     |
-| github.com/mitchellh/go-homedir                       | https://github.com/mitchellh/go-homedir/blob/v1.1.0/LICENSE                   | MIT                     |
-| github.com/mitchellh/go-ps                            | https://github.com/mitchellh/go-ps/blob/v1.0.0/LICENSE.md                     | MIT                     |
-| github.com/mitchellh/hashstructure                    | https://github.com/mitchellh/hashstructure/blob/v1.1.0/LICENSE                | MIT                     |
-| github.com/mitchellh/mapstructure                     | https://github.com/mitchellh/mapstructure/blob/v1.4.3/LICENSE                 | MIT                     |
-| github.com/mpvl/unique                                | https://github.com/mpvl/unique/blob/cbe035fff7de/LICENSE                      | MIT                     |
-| github.com/olekukonko/tablewriter                     | https://github.com/olekukonko/tablewriter/blob/v0.0.5/LICENSE.md              | MIT                     |
-| github.com/parnurzeal/gorequest                       | https://github.com/parnurzeal/gorequest/blob/v0.2.16/LICENSE                  | MIT                     |
-| github.com/pelletier/go-toml                          | https://github.com/pelletier/go-toml/blob/v1.9.4/LICENSE                      | MIT                     |
-| github.com/pelletier/go-toml                          | https://github.com/pelletier/go-toml/blob/v1.9.4/LICENSE                      | Apache-2.0              |
-| github.com/pkg/errors                                 | https://github.com/pkg/errors/blob/v0.9.1/LICENSE                             | BSD-2-Clause            |
-| github.com/rivo/uniseg                                | https://github.com/rivo/uniseg/blob/v0.2.0/LICENSE.txt                        | MIT                     |
-| github.com/russross/blackfriday/v2                    | https://github.com/russross/blackfriday/blob/v2.1.0/LICENSE.txt               | BSD-2-Clause            |
-| github.com/sergi/go-diff/diffmatchpatch               | https://github.com/sergi/go-diff/blob/v1.2.0/LICENSE                          | MIT                     |
-| github.com/sirupsen/logrus                            | https://github.com/sirupsen/logrus/blob/v1.8.1/LICENSE                        | MIT                     |
-| github.com/skratchdot/open-golang/open                | https://github.com/skratchdot/open-golang/blob/79abb63cd66e/LICENSE-MIT       | MIT                     |
-| github.com/spf13/afero                                | https://github.com/spf13/afero/blob/v1.6.0/LICENSE.txt                        | Apache-2.0              |
-| github.com/spf13/cast                                 | https://github.com/spf13/cast/blob/v1.4.1/LICENSE                             | MIT                     |
-| github.com/spf13/cobra                                | https://github.com/spf13/cobra/blob/v1.4.0/LICENSE.txt                        | Apache-2.0              |
-| github.com/spf13/jwalterweatherman                    | https://github.com/spf13/jwalterweatherman/blob/v1.1.0/LICENSE                | MIT                     |
-| github.com/spf13/pflag                                | https://github.com/spf13/pflag/blob/v1.0.5/LICENSE                            | BSD-3-Clause            |
-| github.com/spf13/viper                                | https://github.com/spf13/viper/blob/v1.10.0/LICENSE                           | MIT                     |
-| github.com/src-d/gcfg                                 | https://github.com/src-d/gcfg/blob/v1.4.0/LICENSE                             | BSD-3-Clause            |
-| github.com/subosito/gotenv                            | https://github.com/subosito/gotenv/blob/v1.2.0/LICENSE                        | MIT                     |
-| github.com/texttheater/golang-levenshtein/levenshtein | https://github.com/texttheater/golang-levenshtein/blob/v1.0.1/LICENSE         | MIT                     |
-| github.com/ugorji/go/codec                            | https://github.com/ugorji/go/blob/codec/v1.1.7/codec/LICENSE                  | MIT                     |
-| github.com/vektah/gqlparser/v2                        | https://github.com/vektah/gqlparser/blob/v2.4.3/LICENSE                       | MIT                     |
-| github.com/virtuald/go-ordered-json                   | https://github.com/virtuald/go-ordered-json/blob/b18e6e673d74/LICENSE         | BSD-3-Clause            |
-| github.com/xanzy/ssh-agent                            | https://github.com/xanzy/ssh-agent/blob/v0.2.1/LICENSE                        | Apache-2.0              |
-| golang.org/x/crypto                                   | https://cs.opensource.google/go/x/crypto/+/32db7946:LICENSE                   | BSD-3-Clause            |
-| golang.org/x/net                                      | https://cs.opensource.google/go/x/net/+/4f30a5c0:LICENSE                      | BSD-3-Clause            |
-| golang.org/x/sync/syncmap                             | https://cs.opensource.google/go/x/sync/+/036812b2:LICENSE                     | BSD-3-Clause            |
-| golang.org/x/sys                                      | https://cs.opensource.google/go/x/sys/+/33da011f:LICENSE                      | BSD-3-Clause            |
-| golang.org/x/term                                     | https://cs.opensource.google/go/x/term/+/140adaaa:LICENSE                     | BSD-3-Clause            |
-| golang.org/x/text                                     | https://cs.opensource.google/go/x/text/+/v0.3.7:LICENSE                       | BSD-3-Clause            |
-| golang.org/x/xerrors                                  | https://cs.opensource.google/go/x/xerrors/+/5ec99f83:LICENSE                  | BSD-3-Clause            |
-| google.golang.org/protobuf                            | https://github.com/protocolbuffers/protobuf-go/blob/v1.27.1/LICENSE           | BSD-3-Clause            |
-| gopkg.in/go-playground/validator.v9                   | https://github.com/go-playground/validator/blob/v9.29.1/LICENSE               | MIT                     |
-| gopkg.in/ini.v1                                       | https://github.com/go-ini/ini/blob/v1.66.2/LICENSE                            | Apache-2.0              |
-| gopkg.in/src-d/go-billy.v4                            | https://github.com/src-d/go-billy/blob/v4.3.2/LICENSE                         | Apache-2.0              |
-| gopkg.in/src-d/go-git.v4                              | https://github.com/src-d/go-git/blob/v4.13.1/LICENSE                          | Apache-2.0              |
-| gopkg.in/warnings.v0                                  | https://github.com/go-warnings/warnings/blob/v0.1.2/LICENSE                   | BSD-2-Clause            |
-| gopkg.in/yaml.v2                                      | https://github.com/go-yaml/yaml/blob/v2.4.0/LICENSE                           | Apache-2.0              |
-| gopkg.in/yaml.v3                                      | https://github.com/go-yaml/yaml/blob/496545a6307b/LICENSE                     | MIT                     |
-| moul.io/http2curl                                     | https://github.com/moul/http2curl/blob/v1.0.0/LICENSE                         | MIT                     |
+|aeson                                                |2.1.2.1                                                                      |BSD-3-Clause                                             |
+|aeson-casing                                         |0.2.0.0                                                                      |MIT                                                      |
+|aeson-pretty                                         |0.8.9                                                                        |BSD-3-Clause                                             |
+|ansi-wl-pprint                                       |0.6.9                                                                        |BSD-3-Clause                                             |
+|asn1-encoding                                        |0.9.6                                                                        |BSD-3-Clause                                             |
+|asn1-types                                           |0.3.4                                                                        |BSD-3-Clause                                             |
+|async                                                |2.2.4                                                                        |BSD-3-Clause                                             |
+|atomic-primops                                       |0.8.4                                                                        |BSD-3-Clause                                             |
+|base                                                 |4.17.1.0                                                                     |BSD-3-Clause                                             |
+|base16-bytestring                                    |1.0.2.0                                                                      |BSD-3-Clause                                             |
+|base64-bytestring                                    |1.2.1.0                                                                      |BSD-3-Clause                                             |
+|bytestring                                           |0.11.4.0                                                                     |BSD-3-Clause                                             |
+|case-insensitive                                     |1.2.1.0                                                                      |BSD-3-Clause                                             |
+|cereal                                               |0.5.8.3                                                                      |BSD-3-Clause                                             |
+|containers                                           |0.6.7                                                                        |BSD-3-Clause                                             |
+|cron                                                 |0.7.0                                                                        |MIT                                                      |
+|cryptonite                                           |0.3                                                                          |BSD-3-Clause                                             |
+|data-default                                         |0.7.1.1                                                                      |BSD-3-Clause                                             |
+|data-has                                             |0.4.0.0                                                                      |BSD-3-Clause                                             |
+|deepseq                                              |1.4.8.0                                                                      |BSD-3-Clause                                             |
+|directory                                            |1.3.7.1                                                                      |BSD-3-Clause                                             |
+|ekg-core                                             |0.1.1.7                                                                      |BSD-3-Clause                                             |
+|ekg-json                                             |0.1.0.7                                                                      |BSD-3-Clause                                             |
+|exceptions                                           |0.10.5                                                                       |BSD-3-Clause                                             |
+|extra                                                |1.7.12                                                                       |BSD-3-Clause                                             |
+|fast-logger                                          |3.1.2                                                                        |BSD-3-Clause                                             |
+|file-embed                                           |0.0.15.0                                                                     |BSD-2-Clause                                             |
+|filepath                                             |1.4.2.2                                                                      |BSD-3-Clause                                             |
+|flush-queue                                          |1.0.0                                                                        |BSD-3-Clause                                             |
+|fold-debounce                                        |0.2.0.11                                                                     |BSD-3-Clause                                             |
+|hashable                                             |1.4.1.0                                                                      |BSD-3-Clause                                             |
+|hedis                                                |0.15.2                                                                       |BSD-3-Clause                                             |
+|hostname                                             |1                                                                            |BSD-3-Clause                                             |
+|hs-opentelemetry-otlp                                |0.0.1.0                                                                      |BSD-3-Clause                                             |
+|http-client                                          |0.7.13.1                                                                     |MIT                                                      |
+|http-client-tls                                      |0.3.6.1                                                                      |MIT                                                      |
+|http-types                                           |0.12.3                                                                       |BSD-3-Clause                                             |
+|immortal                                             |0.2.2.1                                                                      |MIT                                                      |
+|insert-ordered-containers                            |0.2.5.1                                                                      |BSD-3-Clause                                             |
+|jose                                                 |0.9                                                                          |Apache-2.0                                               |
+|jwt                                                  |0.11.0                                                                       |MIT                                                      |
+|kan-extensions                                       |5.2.5                                                                        |BSD-3-Clause                                             |
+|launchdarkly-server-sdk                              |4.0.0                                                                        |Apache-2.0                                               |
+|lens                                                 |5.2.2                                                                        |BSD-2-Clause                                             |
+|lens-aeson                                           |1.2.2                                                                        |MIT                                                      |
+|lifted-async                                         |0.10.2.3                                                                     |BSD-3-Clause                                             |
+|lifted-base                                          |0.2.3.12                                                                     |BSD-3-Clause                                             |
+|memory                                               |0.18.0                                                                       |BSD-3-Clause                                             |
+|mmorph                                               |1.2.0                                                                        |BSD-3-Clause                                             |
+|monad-control                                        |1.0.3.1                                                                      |BSD-3-Clause                                             |
+|monad-loops                                          |0.4.3                                                                        |LicenseRef-PublicDomain                                  |
+|mustache                                             |2.4.1                                                                        |BSD-3-Clause                                             |
+|network                                              |3.1.2.7                                                                      |BSD-3-Clause                                             |
+|network-uri                                          |2.6.4.1                                                                      |BSD-3-Clause                                             |
+|odbc                                                 |0.2.7                                                                        |BSD-3-Clause                                             |
+|optparse-applicative                                 |0.16.1.0                                                                     |BSD-3-Clause                                             |
+|optparse-generic                                     |1.4.8                                                                        |BSD-3-Clause                                             |
+|postgresql-libpq                                     |0.9.4.3                                                                      |BSD-3-Clause                                             |
+|proto-lens                                           |0.7.1.2                                                                      |BSD-3-Clause                                             |
+|random                                               |1.2.1.1                                                                      |BSD-3-Clause                                             |
+|refined                                              |0.8                                                                          |MIT                                                      |
+|retry                                                |0.9.3.0                                                                      |BSD-3-Clause                                             |
+|scientific                                           |0.3.7.0                                                                      |BSD-3-Clause                                             |
+|semialign                                            |1.2.0.1                                                                      |BSD-3-Clause                                             |
+|semigroupoids                                        |5.3.7                                                                        |BSD-2-Clause                                             |
+|stm                                                  |2.5.1.0                                                                      |BSD-3-Clause                                             |
+|streaming-commons                                    |0.2.2.5                                                                      |MIT                                                      |
+|tagged                                               |0.8.6.1                                                                      |BSD-3-Clause                                             |
+|template-haskell                                     |2.19.0.0                                                                     |BSD-3-Clause                                             |
+|text                                                 |2.0.1                                                                        |BSD-2-Clause                                             |
+|text-builder                                         |0.6.7                                                                        |MIT                                                      |
+|text-conversions                                     |0.3.1.1                                                                      |ISC                                                      |
+|these                                                |1.1.1.1                                                                      |BSD-3-Clause                                             |
+|time                                                 |1.12.2                                                                       |BSD-2-Clause                                             |
+|tls                                                  |1.6.0                                                                        |BSD-3-Clause                                             |
+|transformers                                         |0.5.6.2                                                                      |BSD-3-Clause                                             |
+|transformers-base                                    |0.4.6                                                                        |BSD-3-Clause                                             |
+|unagi-chan                                           |0.4.1.4                                                                      |BSD-3-Clause                                             |
+|unix                                                 |2.7.3                                                                        |BSD-3-Clause                                             |
+|unordered-containers                                 |0.2.19.1                                                                     |BSD-3-Clause                                             |
+|utf8-string                                          |1.0.2                                                                        |BSD-3-Clause                                             |
+|uuid                                                 |1.3.15                                                                       |BSD-3-Clause                                             |
+|vector                                               |0.12.3.1                                                                     |BSD-3-Clause                                             |
+|wai                                                  |3.2.3                                                                        |MIT                                                      |
+|warp                                                 |3.3.23                                                                       |MIT                                                      |
+|websockets                                           |0.12.7.3                                                                     |BSD-3-Clause                                             |
+|witch                                                |1.1.2.0                                                                      |MIT                                                      |
+|wreq                                                 |0.5.3.3                                                                      |BSD-3-Clause                                             |
+|x509-store                                           |1.6.9                                                                        |BSD-3-Clause                                             |
+|x509-system                                          |1.6.7                                                                        |BSD-3-Clause                                             |
+|yaml                                                 |0.11.10.0                                                                    |BSD-3-Clause                                             |
+|zlib                                                 |0.6.3.0                                                                      |BSD-3-Clause                                             |
+|cuelang.org/go                                       |https://github.com/cue-lang/cue/blob/v0.4.3/LICENSE                          |Apache-2.0                                               |
+|cuelang.org/go/internal/third_party/yaml             |https://github.com/cue-lang/cue/blob/v0.4.3/internal/third_party/yaml/LICENSE|Apache-2.0                                               |
+|github.com/AlecAivazis/survey/v2                     |https://github.com/AlecAivazis/survey/blob/v2.3.1/LICENSE                    |MIT                                                      |
+|github.com/AlecAivazis/survey/v2/terminal            |https://github.com/AlecAivazis/survey/blob/v2.3.1/terminal/LICENSE.txt       |MIT                                                      |
+|github.com/BurntSushi/toml                           |https://github.com/BurntSushi/toml/blob/v0.4.1/COPYING                       |MIT                                                      |
+|github.com/Masterminds/semver                        |https://github.com/Masterminds/semver/blob/v1.5.0/LICENSE.txt                |MIT                                                      |
+|github.com/VividCortex/ewma                          |https://github.com/VividCortex/ewma/blob/v1.1.1/LICENSE                      |MIT                                                      |
+|github.com/ahmetb/go-linq                            |https://github.com/ahmetb/go-linq/blob/v3.0.0/LICENSE                        |Apache-2.0                                               |
+|github.com/aryann/difflib                            |https://github.com/aryann/difflib/blob/e206f873d14a/LICENSE                  |MIT                                                      |
+|github.com/briandowns/spinner                        |https://github.com/briandowns/spinner/blob/v1.8.0/LICENSE                    |Apache-2.0                                               |
+|github.com/buger/jsonparser                          |https://github.com/buger/jsonparser/blob/v1.1.1/LICENSE                      |MIT                                                      |
+|github.com/cheggaaa/pb/v3                            |https://github.com/cheggaaa/pb/blob/v3.0.8/v3/LICENSE                        |BSD-3-Clause                                             |
+|github.com/cockroachdb/apd/v2                        |https://github.com/cockroachdb/apd/blob/v2.0.1/LICENSE                       |Apache-2.0                                               |
+|github.com/cockroachdb/redact                        |https://github.com/cockroachdb/redact/blob/v1.1.3/LICENSE                    |Apache-2.0                                               |
+|github.com/cpuguy83/go-md2man/v2/md2man              |https://github.com/cpuguy83/go-md2man/blob/v2.0.1/LICENSE.md                 |MIT                                                      |
+|github.com/emirpasic/gods                            |https://github.com/emirpasic/gods/blob/v1.12.0/LICENSE                       |BSD-2-Clause                                             |
+|github.com/emirpasic/gods                            |https://github.com/emirpasic/gods/blob/v1.12.0/LICENSE                       |ISC                                                      |
+|github.com/fatih/color                               |https://github.com/fatih/color/blob/v1.13.0/LICENSE.md                       |MIT                                                      |
+|github.com/fsnotify/fsnotify                         |https://github.com/fsnotify/fsnotify/blob/v1.5.1/LICENSE                     |BSD-3-Clause                                             |
+|github.com/gin-contrib/cors                          |https://github.com/gin-contrib/cors/blob/v1.3.0/LICENSE                      |MIT                                                      |
+|github.com/gin-contrib/sse                           |https://github.com/gin-contrib/sse/blob/v0.1.0/LICENSE                       |MIT                                                      |
+|github.com/gin-contrib/static                        |https://github.com/gin-contrib/static/blob/f81c604d8ac2/LICENSE              |MIT                                                      |
+|github.com/gin-gonic/contrib/renders/multitemplate   |https://github.com/gin-gonic/contrib/blob/d6e26eeaa607/LICENSE               |MIT                                                      |
+|github.com/gin-gonic/gin                             |https://github.com/gin-gonic/gin/blob/v1.5.0/LICENSE                         |MIT                                                      |
+|github.com/go-playground/locales                     |https://github.com/go-playground/locales/blob/v0.13.0/LICENSE                |MIT                                                      |
+|github.com/go-playground/universal-translator        |https://github.com/go-playground/universal-translator/blob/v0.17.0/LICENSE   |MIT                                                      |
+|github.com/goccy/go-yaml                             |https://github.com/goccy/go-yaml/blob/v1.9.5/LICENSE                         |MIT                                                      |
+|github.com/gofrs/uuid                                |https://github.com/gofrs/uuid/blob/v3.2.0/LICENSE                            |MIT                                                      |
+|github.com/golang/protobuf/proto                     |https://github.com/golang/protobuf/blob/v1.5.2/LICENSE                       |BSD-3-Clause                                             |
+|github.com/gonvenience/bunt                          |https://github.com/gonvenience/bunt/blob/v1.3.2/LICENSE                      |MIT                                                      |
+|github.com/gonvenience/neat                          |https://github.com/gonvenience/neat/blob/v1.3.7/LICENSE                      |MIT                                                      |
+|github.com/gonvenience/term                          |https://github.com/gonvenience/term/blob/v1.0.1/LICENSE                      |MIT                                                      |
+|github.com/gonvenience/text                          |https://github.com/gonvenience/text/blob/v1.0.6/LICENSE                      |MIT                                                      |
+|github.com/gonvenience/wrap                          |https://github.com/gonvenience/wrap/blob/v1.1.0/LICENSE                      |MIT                                                      |
+|github.com/gonvenience/ytbx                          |https://github.com/gonvenience/ytbx/blob/v1.4.2/LICENSE                      |MIT                                                      |
+|github.com/google/uuid                               |https://github.com/google/uuid/blob/v1.2.0/LICENSE                           |BSD-3-Clause                                             |
+|github.com/hashicorp/errwrap                         |https://github.com/hashicorp/errwrap/blob/v1.0.0/LICENSE                     |MPL-2.0                                                  |
+|github.com/hashicorp/go-multierror                   |https://github.com/hashicorp/go-multierror/blob/v1.1.1/LICENSE               |MPL-2.0                                                  |
+|github.com/hashicorp/hcl                             |https://github.com/hashicorp/hcl/blob/v1.0.0/LICENSE                         |MPL-2.0                                                  |
+|github.com/hexops/gotextdiff                         |https://github.com/hexops/gotextdiff/blob/v1.0.3/LICENSE                     |BSD-3-Clause                                             |
+|github.com/homeport/dyff/pkg/dyff                    |https://github.com/homeport/dyff/blob/v1.4.5/LICENSE                         |MIT                                                      |
+|github.com/jbenet/go-context/io                      |https://github.com/jbenet/go-context/blob/d14ea06fba99/LICENSE               |MIT                                                      |
+|github.com/kardianos/osext                           |https://github.com/kardianos/osext/blob/2bc1f35cddc0/LICENSE                 |BSD-3-Clause                                             |
+|github.com/kballard/go-shellquote                    |https://github.com/kballard/go-shellquote/blob/95032a82bc51/LICENSE          |MIT                                                      |
+|github.com/kevinburke/ssh_config                     |https://github.com/kevinburke/ssh_config/blob/01f96b0aa0cd/LICENSE           |MIT                                                      |
+|github.com/leodido/go-urn                            |https://github.com/leodido/go-urn/blob/v1.2.0/LICENSE                        |MIT                                                      |
+|github.com/lucasb-eyer/go-colorful                   |https://github.com/lucasb-eyer/go-colorful/blob/v1.2.0/LICENSE               |MIT                                                      |
+|github.com/magiconair/properties                     |https://github.com/magiconair/properties/blob/v1.8.6/LICENSE.md              |BSD-2-Clause                                             |
+|github.com/mattn/go-ciede2000                        |https://github.com/mattn/go-ciede2000/blob/782e8c62fec3/LICENSE              |MIT                                                      |
+|github.com/mattn/go-colorable                        |https://github.com/mattn/go-colorable/blob/v0.1.12/LICENSE                   |MIT                                                      |
+|github.com/mattn/go-isatty                           |https://github.com/mattn/go-isatty/blob/v0.0.14/LICENSE                      |MIT                                                      |
+|github.com/mattn/go-runewidth                        |https://github.com/mattn/go-runewidth/blob/v0.0.12/LICENSE                   |MIT                                                      |
+|github.com/mgutz/ansi                                |https://github.com/mgutz/ansi/blob/9520e82c474b/LICENSE                      |MIT                                                      |
+|github.com/mitchellh/go-homedir                      |https://github.com/mitchellh/go-homedir/blob/v1.1.0/LICENSE                  |MIT                                                      |
+|github.com/mitchellh/go-ps                           |https://github.com/mitchellh/go-ps/blob/v1.0.0/LICENSE.md                    |MIT                                                      |
+|github.com/mitchellh/hashstructure                   |https://github.com/mitchellh/hashstructure/blob/v1.1.0/LICENSE               |MIT                                                      |
+|github.com/mitchellh/mapstructure                    |https://github.com/mitchellh/mapstructure/blob/v1.4.3/LICENSE                |MIT                                                      |
+|github.com/mpvl/unique                               |https://github.com/mpvl/unique/blob/cbe035fff7de/LICENSE                     |MIT                                                      |
+|github.com/olekukonko/tablewriter                    |https://github.com/olekukonko/tablewriter/blob/v0.0.5/LICENSE.md             |MIT                                                      |
+|github.com/parnurzeal/gorequest                      |https://github.com/parnurzeal/gorequest/blob/v0.2.16/LICENSE                 |MIT                                                      |
+|github.com/pelletier/go-toml                         |https://github.com/pelletier/go-toml/blob/v1.9.4/LICENSE                     |MIT                                                      |
+|github.com/pelletier/go-toml                         |https://github.com/pelletier/go-toml/blob/v1.9.4/LICENSE                     |Apache-2.0                                               |
+|github.com/pkg/errors                                |https://github.com/pkg/errors/blob/v0.9.1/LICENSE                            |BSD-2-Clause                                             |
+|github.com/rivo/uniseg                               |https://github.com/rivo/uniseg/blob/v0.2.0/LICENSE.txt                       |MIT                                                      |
+|github.com/russross/blackfriday/v2                   |https://github.com/russross/blackfriday/blob/v2.1.0/LICENSE.txt              |BSD-2-Clause                                             |
+|github.com/sergi/go-diff/diffmatchpatch              |https://github.com/sergi/go-diff/blob/v1.2.0/LICENSE                         |MIT                                                      |
+|github.com/sirupsen/logrus                           |https://github.com/sirupsen/logrus/blob/v1.8.1/LICENSE                       |MIT                                                      |
+|github.com/skratchdot/open-golang/open               |https://github.com/skratchdot/open-golang/blob/79abb63cd66e/LICENSE-MIT      |MIT                                                      |
+|github.com/spf13/afero                               |https://github.com/spf13/afero/blob/v1.6.0/LICENSE.txt                       |Apache-2.0                                               |
+|github.com/spf13/cast                                |https://github.com/spf13/cast/blob/v1.4.1/LICENSE                            |MIT                                                      |
+|github.com/spf13/cobra                               |https://github.com/spf13/cobra/blob/v1.4.0/LICENSE.txt                       |Apache-2.0                                               |
+|github.com/spf13/jwalterweatherman                   |https://github.com/spf13/jwalterweatherman/blob/v1.1.0/LICENSE               |MIT                                                      |
+|github.com/spf13/pflag                               |https://github.com/spf13/pflag/blob/v1.0.5/LICENSE                           |BSD-3-Clause                                             |
+|github.com/spf13/viper                               |https://github.com/spf13/viper/blob/v1.10.0/LICENSE                          |MIT                                                      |
+|github.com/src-d/gcfg                                |https://github.com/src-d/gcfg/blob/v1.4.0/LICENSE                            |BSD-3-Clause                                             |
+|github.com/subosito/gotenv                           |https://github.com/subosito/gotenv/blob/v1.2.0/LICENSE                       |MIT                                                      |
+|github.com/texttheater/golang-levenshtein/levenshtein|https://github.com/texttheater/golang-levenshtein/blob/v1.0.1/LICENSE        |MIT                                                      |
+|github.com/ugorji/go/codec                           |https://github.com/ugorji/go/blob/codec/v1.1.7/codec/LICENSE                 |MIT                                                      |
+|github.com/vektah/gqlparser/v2                       |https://github.com/vektah/gqlparser/blob/v2.4.3/LICENSE                      |MIT                                                      |
+|github.com/virtuald/go-ordered-json                  |https://github.com/virtuald/go-ordered-json/blob/b18e6e673d74/LICENSE        |BSD-3-Clause                                             |
+|github.com/xanzy/ssh-agent                           |https://github.com/xanzy/ssh-agent/blob/v0.2.1/LICENSE                       |Apache-2.0                                               |
+|golang.org/x/crypto                                  |https://cs.opensource.google/go/x/crypto/+/32db7946:LICENSE                  |BSD-3-Clause                                             |
+|golang.org/x/net                                     |https://cs.opensource.google/go/x/net/+/4f30a5c0:LICENSE                     |BSD-3-Clause                                             |
+|golang.org/x/sync/syncmap                            |https://cs.opensource.google/go/x/sync/+/036812b2:LICENSE                    |BSD-3-Clause                                             |
+|golang.org/x/sys                                     |https://cs.opensource.google/go/x/sys/+/33da011f:LICENSE                     |BSD-3-Clause                                             |
+|golang.org/x/term                                    |https://cs.opensource.google/go/x/term/+/140adaaa:LICENSE                    |BSD-3-Clause                                             |
+|golang.org/x/text                                    |https://cs.opensource.google/go/x/text/+/v0.3.7:LICENSE                      |BSD-3-Clause                                             |
+|golang.org/x/xerrors                                 |https://cs.opensource.google/go/x/xerrors/+/5ec99f83:LICENSE                 |BSD-3-Clause                                             |
+|google.golang.org/protobuf                           |https://github.com/protocolbuffers/protobuf-go/blob/v1.27.1/LICENSE          |BSD-3-Clause                                             |
+|gopkg.in/go-playground/validator.v9                  |https://github.com/go-playground/validator/blob/v9.29.1/LICENSE              |MIT                                                      |
+|gopkg.in/ini.v1                                      |https://github.com/go-ini/ini/blob/v1.66.2/LICENSE                           |Apache-2.0                                               |
+|gopkg.in/src-d/go-billy.v4                           |https://github.com/src-d/go-billy/blob/v4.3.2/LICENSE                        |Apache-2.0                                               |
+|gopkg.in/src-d/go-git.v4                             |https://github.com/src-d/go-git/blob/v4.13.1/LICENSE                         |Apache-2.0                                               |
+|gopkg.in/warnings.v0                                 |https://github.com/go-warnings/warnings/blob/v0.1.2/LICENSE                  |BSD-2-Clause                                             |
+|gopkg.in/yaml.v2                                     |https://github.com/go-yaml/yaml/blob/v2.4.0/LICENSE                          |Apache-2.0                                               |
+|gopkg.in/yaml.v3                                     |https://github.com/go-yaml/yaml/blob/496545a6307b/LICENSE                    |MIT                                                      |
+|moul.io/http2curl                                    |https://github.com/moul/http2curl/blob/v1.0.0/LICENSE                        |MIT                                                      |
+|ace-builds                                           |1.22.1                                                                       |BSD-3-Clause                                             |
+|antd                                                 |4.18.6                                                                       |MIT                                                      |
+|@ant-design/icons                                    |4.7.0                                                                        |MIT                                                      |
+|apollo-cache-inmemory                                |1.6.6                                                                        |MIT                                                      |
+|apollo-client                                        |2.6.10                                                                       |MIT                                                      |
+|apollo-link                                          |1.2.14                                                                       |MIT                                                      |
+|apollo-link-http                                     |1.5.17                                                                       |MIT                                                      |
+|apollo-link-ws                                       |1.0.20                                                                       |MIT                                                      |
+|@apollo/react-hooks                                  |3.1.5                                                                        |MIT                                                      |
+|await-to-js                                          |3.0.0                                                                        |MIT                                                      |
+|axios                                                |1.6.0                                                                        |MIT                                                      |
+|@babel/plugin-transform-runtime                      |7.22.5                                                                       |MIT                                                      |
+|babel-plugin-transform-runtime                       |6.23.0                                                                       |MIT                                                      |
+|brace                                                |0.11.1                                                                       |MIT                                                      |
+|browser-hrtime                                       |1.1.8                                                                        |MIT                                                      |
+|case-sensitive-paths-webpack-plugin                  |2.4.0                                                                        |MIT                                                      |
+|chart.js                                             |2.9.4                                                                        |MIT                                                      |
+|clsx                                                 |1.1.1                                                                        |MIT                                                      |
+|codemirror                                           |5.51.0                                                                       |MIT                                                      |
+|core-js                                              |3.31.0                                                                       |MIT                                                      |
+|date-fns                                             |2.30.0                                                                       |MIT                                                      |
+|dayjs                                                |1.11.8                                                                       |MIT                                                      |
+|deep-equal                                           |1.1.1                                                                        |MIT                                                      |
+|deepmerge-ts                                         |4.2.2                                                                        |BSD-3-Clause                                             |
+|dom-parser                                           |0.1.6                                                                        |ISC                                                      |
+|format-graphql                                       |1.4.0                                                                        |BSD-3-Clause                                             |
+|form-urlencoded                                      |6.1.0                                                                        |MIT                                                      |
+|graphiql                                             |1.0.0-alpha.0                                                                |MIT                                                      |
+|graphiql-code-exporter                               |2.0.8                                                                        |MIT                                                      |
+|graphiql-explorer                                    |0.6.2                                                                        |Multi-license: MIT OR See-file; MIT                      |
+|graphql                                              |14.5.8                                                                       |MIT                                                      |
+|@graphql-codegen/core                                |1.17.10                                                                      |MIT                                                      |
+|@graphql-codegen/typescript                          |1.23.0                                                                       |MIT                                                      |
+|graphql-scalars                                      |1.22.2                                                                       |MIT                                                      |
+|graphql-subscriptions                                |2.0.0                                                                        |MIT                                                      |
+|graphql-tag                                          |2.12.6                                                                       |MIT                                                      |
+|graphql-upload                                       |15.0.2                                                                       |MIT                                                      |
+|graphql-voyager                                      |1.0.0-rc.29                                                                  |MIT                                                      |
+|@hasura/dc-api-types                                 |0.40.0                                                                       |Apache-2.0                                               |
+|highlight.js                                         |9.15.8                                                                       |Multi-license: BSD-2-Clause OR BSD-3-Clause; BSD-3-Clause|
+|history                                              |3.3.0                                                                        |MIT                                                      |
+|hoist-non-react-statics                              |1.2.0                                                                        |BSD-3-Clause                                             |
+|@hookform/resolvers                                  |2.8.10                                                                       |MIT                                                      |
+|immer                                                |9.0.12                                                                       |MIT                                                      |
+|inflection                                           |1.12.0                                                                       |MIT                                                      |
+|invariant                                            |2.2.4                                                                        |MIT                                                      |
+|isomorphic-fetch                                     |2.2.1                                                                        |MIT                                                      |
+|@jsonhero/schema-infer                               |0.1.5                                                                        |MIT                                                      |
+|jsonpath-plus                                        |7.2.0                                                                        |MIT                                                      |
+|json-ptr                                             |3.1.1                                                                        |MIT                                                      |
+|jsonwebtoken                                         |8.5.1                                                                        |MIT                                                      |
+|js-yaml                                              |4.1.0                                                                        |MIT                                                      |
+|jwt-decode                                           |3.1.2                                                                        |MIT                                                      |
+|launchdarkly-react-client-sdk                        |3.0.6                                                                        |Apache-2.0                                               |
+|less                                                 |3.11.1                                                                       |Apache-2.0                                               |
+|lodash                                               |4.17.21                                                                      |MIT; CC0-1.0                                             |
+|lru-memoize                                          |1.0.0                                                                        |MIT                                                      |
+|luxon                                                |1.28.1                                                                       |MIT                                                      |
+|lz-string                                            |1.5.0                                                                        |MIT                                                      |
+|map-props                                            |1.0.0                                                                        |MIT                                                      |
+|match-sorter                                         |2.3.0                                                                        |MIT                                                      |
+|microfiber                                           |1.3.2                                                                        |MIT                                                      |
+|moment                                               |2.29.4                                                                       |MIT                                                      |
+|moment-timezone                                      |0.5.43                                                                       |MIT                                                      |
+|oas-validator                                        |5.0.8                                                                        |Multi-license: BSD-2-Clause OR BSD-3-Clause; BSD-3-Clause|
+|piping                                               |0.3.2                                                                        |MIT                                                      |
+|pluralize                                            |8.0.0                                                                        |MIT                                                      |
+|posthog-js                                           |1.68.2                                                                       |MIT; Apache-2.0                                          |
+|pretty-error                                         |1.2.0                                                                        |MIT                                                      |
+|prop-types                                           |15.7.2                                                                       |MIT                                                      |
+|query-string                                         |6.11.1                                                                       |MIT                                                      |
+|@radix-ui/colors                                     |0.1.9                                                                        |MIT                                                      |
+|@radix-ui/react-alert-dialog                         |1.0.4                                                                        |MIT                                                      |
+|@radix-ui/react-checkbox                             |1.0.1                                                                        |MIT                                                      |
+|@radix-ui/react-collapsible                          |1.0.3                                                                        |MIT                                                      |
+|@radix-ui/react-dialog                               |1.0.4                                                                        |MIT                                                      |
+|@radix-ui/react-dropdown-menu                        |1.0.0                                                                        |MIT                                                      |
+|@radix-ui/react-radio-group                          |1.1.3                                                                        |MIT                                                      |
+|@radix-ui/react-scroll-area                          |1.0.4                                                                        |MIT                                                      |
+|@radix-ui/react-switch                               |1.0.3                                                                        |MIT                                                      |
+|@radix-ui/react-tabs                                 |1.0.4                                                                        |MIT                                                      |
+|@radix-ui/react-tooltip                              |1.0.6                                                                        |MIT                                                      |
+|react                                                |17.0.2                                                                       |MIT                                                      |
+|react-ace                                            |8.0.0                                                                        |MIT                                                      |
+|react-apollo                                         |3.1.5                                                                        |MIT                                                      |
+|react-arborist                                       |3.1.0                                                                        |MIT                                                      |
+|react-autosize-textarea                              |7.1.0                                                                        |MIT                                                      |
+|react-autosuggest                                    |10.0.2                                                                       |MIT                                                      |
+|react-bootstrap                                      |0.32.4                                                                       |MIT                                                      |
+|react-chartjs-2                                      |2.11.2                                                                       |MIT                                                      |
+|react-color                                          |2.19.3                                                                       |MIT                                                      |
+|react-copy-to-clipboard                              |5.0.2                                                                        |MIT                                                      |
+|react-datepicker                                     |2.16.0                                                                       |MIT                                                      |
+|react-date-range                                     |1.4.0                                                                        |MIT                                                      |
+|react-datetime                                       |2.16.3                                                                       |MIT                                                      |
+|react-dom                                            |17.0.2                                                                       |MIT                                                      |
+|react-flame-graph                                    |1.4.0                                                                        |MIT                                                      |
+|react-helmet                                         |5.2.1                                                                        |MIT                                                      |
+|react-hook-form                                      |7.15.4                                                                       |MIT                                                      |
+|react-hot-toast                                      |2.4.0                                                                        |MIT                                                      |
+|react-icons                                          |4.9.0                                                                        |MIT; CC-BY-SA-3.0; CC-BY-4.0; CC-BY-3.0                  |
+|react-json-view                                      |1.21.3                                                                       |MIT                                                      |
+|react-loading-skeleton                               |3.3.1                                                                        |MIT                                                      |
+|react-lottie                                         |1.2.3                                                                        |MIT                                                      |
+|react-modal                                          |3.11.2                                                                       |MIT                                                      |
+|react-notification-system                            |0.2.17                                                                       |MIT                                                      |
+|react-notification-system-redux                      |2.0.1                                                                        |MIT                                                      |
+|react-progress-bar-plus                              |1.3.1                                                                        |MIT                                                      |
+|react-query                                          |3.39.3                                                                       |MIT                                                      |
+|react-redux                                          |7.2.4                                                                        |MIT                                                      |
+|react-router                                         |3.2.6                                                                        |MIT                                                      |
+|react-router-redux                                   |4.0.8                                                                        |MIT                                                      |
+|react-select                                         |5.7.3                                                                        |MIT                                                      |
+|react-table                                          |6.11.5                                                                       |MIT                                                      |
+|react-tabs                                           |3.1.0                                                                        |MIT                                                      |
+|react-toggle                                         |4.1.1                                                                        |MIT                                                      |
+|react-truncate                                       |2.4.0                                                                        |ISC                                                      |
+|react-window                                         |1.8.9                                                                        |MIT                                                      |
+|react-youtube                                        |7.14.0                                                                       |MIT                                                      |
+|@readme/openapi-parser                               |2.5.0                                                                        |MIT                                                      |
+|redux                                                |4.1.0                                                                        |MIT                                                      |
+|@reduxjs/toolkit                                     |1.9.5                                                                        |MIT                                                      |
+|redux-thunk                                          |2.3.0                                                                        |MIT                                                      |
+|regenerator-runtime                                  |0.13.7                                                                       |MIT                                                      |
+|reselect                                             |4.1.8                                                                        |MIT                                                      |
+|sanitize-filename                                    |1.6.3                                                                        |Multi-license: ISC OR WTFPL                              |
+|semver                                               |5.5.1                                                                        |ISC                                                      |
+|@sentry/react                                        |7.11.1                                                                       |BSD-3-Clause                                             |
+|@sentry/tracing                                      |7.11.1                                                                       |MIT                                                      |
+|sql-formatter                                        |2.3.3                                                                        |MIT                                                      |
+|styled-components                                    |5.0.1                                                                        |MIT                                                      |
+|styled-system                                        |5.1.5                                                                        |MIT                                                      |
+|subscriptions-transport-ws                           |0.9.16                                                                       |MIT                                                      |
+|swagger2openapi                                      |7.0.8                                                                        |Multi-license: BSD-2-Clause OR BSD-3-Clause; BSD-3-Clause|
+|@swc/helpers                                         |0.5.1                                                                        |Apache-2.0                                               |
+|tailwindcss-radix                                    |2.8.0                                                                        |MIT                                                      |
+|@tanstack/react-table                                |8.5.13                                                                       |MIT                                                      |
+|ts-essentials                                        |7.0.3                                                                        |MIT                                                      |
+|tslib                                                |2.5.3                                                                        |0BSD                                                     |
+|@types/react                                         |17.0.39                                                                      |MIT                                                      |
+|@types/react-color                                   |3.0.6                                                                        |MIT                                                      |
+|unplugin                                             |1.3.1                                                                        |MIT                                                      |
+|url                                                  |0.11.1                                                                       |MIT                                                      |
+|use-async-effect                                     |2.2.7                                                                        |MIT                                                      |
+|uuid                                                 |8.3.2                                                                        |MIT                                                      |
+|valid-url                                            |1.0.9                                                                        |MIT                                                      |
+|@walmartlabs/json-to-simple-graphql-schema           |3.0.1                                                                        |Apache-2.0; CC-BY-4.0                                    |
+|whatwg-fetch                                         |3.6.2                                                                        |MIT                                                      |
+|xstate                                               |4.37.2                                                                       |MIT                                                      |
+|@xstate/react                                        |2.0.1                                                                        |MIT                                                      |
+|zod                                                  |3.22.3                                                                       |MIT                                                      |
+|zustand                                              |4.3.8                                                                        |MIT                                                      |
