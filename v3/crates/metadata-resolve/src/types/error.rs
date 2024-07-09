@@ -1,6 +1,8 @@
 use thiserror::Error;
 
-use crate::stages::{aggregates::AggregateExpressionError, graphql_config, type_permissions};
+use crate::stages::{
+    aggregates::AggregateExpressionError, data_connectors, graphql_config, type_permissions,
+};
 use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
 use open_dds::{
@@ -23,8 +25,6 @@ use crate::helpers::{
 // TODO: This enum really needs structuring
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("the following data connector is defined more than once: {name:}")]
-    DuplicateDataConnectorDefinition { name: Qualified<DataConnectorName> },
     #[error("the following type is defined more than once: {name:}")]
     DuplicateTypeDefinition { name: Qualified<CustomTypeName> },
     #[error("the following field in type {type_name:} is defined more than once: {field_name:}")]
@@ -464,18 +464,6 @@ pub enum Error {
         model_2: Qualified<ModelName>,
         object_type: Qualified<CustomTypeName>,
     },
-    #[error("Invalid header name {header_name} specified for data connector: {data_connector}.")]
-    InvalidHeaderName {
-        data_connector: Qualified<DataConnectorName>,
-        header_name: String,
-    },
-    #[error(
-        "Invalid value specified for header {header_name} for data connector: {data_connector}."
-    )]
-    InvalidHeaderValue {
-        data_connector: Qualified<DataConnectorName>,
-        header_name: String,
-    },
     #[error("the data type {data_type:} has not been defined")]
     UnknownType {
         data_type: Qualified<CustomTypeName>,
@@ -515,11 +503,6 @@ pub enum Error {
         command_name: Qualified<CommandName>,
         procedure_name: ProcedureName,
         error: ArgumentMappingError,
-    },
-    #[error("The url for the data connector {data_connector_name:} is invalid: {error:}")]
-    InvalidDataConnectorUrl {
-        data_connector_name: Qualified<DataConnectorName>,
-        error: url::ParseError,
     },
     #[error("Predicate types in data connectors are unsupported")]
     PredicateTypesUnsupported,
@@ -563,12 +546,6 @@ pub enum Error {
     #[error("{0}")]
     ModelAggregateExpressionError(ModelAggregateExpressionError),
 
-    // TODO: (anon) refactor the data connector error types
-    #[error(
-        "Boolean Expression in ValueExpression for Data Connector headers preset is not supported."
-    )]
-    BooleanExpressionInValueExpressionForHeaderPresetsNotSupported,
-
     #[error("the following argument for field {field_name:} in type {type_name:} is defined more than once: {argument_name:}")]
     DuplicateArgumentDefinition {
         field_name: FieldName,
@@ -576,12 +553,10 @@ pub enum Error {
         type_name: Qualified<CustomTypeName>,
     },
 
-    #[error("The data connector {data_connector} uses ndc-spec v0.2.* and is not yet supported")]
-    NdcV02DataConnectorNotSupported {
-        data_connector: Qualified<DataConnectorName>,
-    },
     #[error("{0}")]
     TypePermissionError(type_permissions::TypePermissionError),
+    #[error("{0}")]
+    DataConnectorError(#[from] data_connectors::DataConnectorError),
 }
 
 #[derive(Debug, Error)]

@@ -39,7 +39,8 @@ pub fn resolve(
             .map_err(Error::from)?;
 
     // Fetch and check schema information for all our data connectors
-    let data_connectors = data_connectors::resolve(&metadata_accessor, &configuration)?;
+    let data_connectors =
+        data_connectors::resolve(&metadata_accessor, &configuration).map_err(Error::from)?;
 
     // Validate object types defined in metadata
     let object_types::DataConnectorTypeMappingsOutput {

@@ -1,10 +1,10 @@
+use super::error::DataConnectorError;
 use crate::configuration::UnstableFeatures;
 use crate::helpers::http::{
     HeaderError, SerializableHeaderMap, SerializableHeaderName, SerializableUrl,
 };
 use crate::helpers::ndc_validation::validate_ndc_argument_presets;
 use crate::ndc_migration;
-use crate::types::error::Error;
 use crate::types::permission::ValueExpression;
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
@@ -47,7 +47,7 @@ impl<'a> DataConnectorContext<'a> {
         data_connector: &'a data_connector::DataConnectorLinkV1,
         data_connector_name: &Qualified<DataConnectorName>,
         unstable_features: &UnstableFeatures,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, DataConnectorError> {
         let (resolved_schema, capabilities, supported_ndc_version) = match &data_connector.schema {
             VersionedSchemaAndCapabilities::V01(schema_and_capabilities) => {
                 let schema =
@@ -67,7 +67,7 @@ impl<'a> DataConnectorContext<'a> {
         };
 
         if !unstable_features.enable_ndc_v02_support && supported_ndc_version == NdcVersion::V02 {
-            return Err(Error::NdcV02DataConnectorNotSupported {
+            return Err(DataConnectorError::NdcV02DataConnectorNotSupported {
                 data_connector: data_connector_name.clone(),
             });
         }
@@ -75,7 +75,7 @@ impl<'a> DataConnectorContext<'a> {
         let argument_presets = data_connector
             .argument_presets
             .iter()
-            .map(|argument_preset| -> Result<_, Error> {
+            .map(|argument_preset| -> Result<_, DataConnectorError> {
                 let header_presets = HttpHeadersPreset::new(
                     &argument_preset.value.http_headers,
                     data_connector_name,
@@ -90,7 +90,8 @@ impl<'a> DataConnectorContext<'a> {
             .collect::<Result<Vec<_>, _>>()?;
 
         // validate the argument presets with NDC schema
-        validate_ndc_argument_presets(&argument_presets, &resolved_schema)?;
+        validate_ndc_argument_presets(&argument_presets, &resolved_schema)
+            .map_err(DataConnectorError::NdcValidationError)?;
 
         let response_headers = if let Some(headers) = &data_connector.response_headers {
             Some(CommandsResponseConfig::new(headers, data_connector_name)?)
@@ -198,24 +199,26 @@ impl DataConnectorLink {
     pub(crate) fn new(
         name: Qualified<DataConnectorName>,
         context: &DataConnectorContext<'_>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, DataConnectorError> {
         let url = match context.url {
-            DataConnectorUrl::SingleUrl(url) => ResolvedDataConnectorUrl::SingleUrl(
-                SerializableUrl::new(&url.value).map_err(|e| Error::InvalidDataConnectorUrl {
-                    data_connector_name: name.clone(),
-                    error: e,
-                })?,
-            ),
+            DataConnectorUrl::SingleUrl(url) => {
+                ResolvedDataConnectorUrl::SingleUrl(SerializableUrl::new(&url.value).map_err(
+                    |e| DataConnectorError::InvalidDataConnectorUrl {
+                        data_connector_name: name.clone(),
+                        error: e,
+                    },
+                )?)
+            }
             DataConnectorUrl::ReadWriteUrls(ReadWriteUrls { read, write }) => {
                 ResolvedDataConnectorUrl::ReadWriteUrls(ResolvedReadWriteUrls {
                     read: SerializableUrl::new(&read.value).map_err(|e| {
-                        Error::InvalidDataConnectorUrl {
+                        DataConnectorError::InvalidDataConnectorUrl {
                             data_connector_name: name.clone(),
                             error: e,
                         }
                     })?,
                     write: SerializableUrl::new(&write.value).map_err(|e| {
-                        Error::InvalidDataConnectorUrl {
+                        DataConnectorError::InvalidDataConnectorUrl {
                             data_connector_name: name.clone(),
                             error: e,
                         }
@@ -224,14 +227,18 @@ impl DataConnectorLink {
             }
         };
         let headers = SerializableHeaderMap::new(&context.headers).map_err(|e| match e {
-            HeaderError::InvalidHeaderName { header_name } => Error::InvalidHeaderName {
-                data_connector: name.clone(),
-                header_name,
-            },
-            HeaderError::InvalidHeaderValue { header_name } => Error::InvalidHeaderValue {
-                data_connector: name.clone(),
-                header_name,
-            },
+            HeaderError::InvalidHeaderName { header_name } => {
+                DataConnectorError::InvalidHeaderName {
+                    data_connector: name.clone(),
+                    header_name,
+                }
+            }
+            HeaderError::InvalidHeaderValue { header_name } => {
+                DataConnectorError::InvalidHeaderValue {
+                    data_connector: name.clone(),
+                    header_name,
+                }
+            }
         })?;
         let capabilities = DataConnectorCapabilities {
             supported_ndc_version: context.supported_ndc_version,
@@ -313,7 +320,7 @@ impl HttpHeadersPreset {
     fn new(
         headers_preset: &open_dds::data_connector::HttpHeadersPreset,
         data_connector_name: &Qualified<DataConnectorName>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, DataConnectorError> {
         let forward = headers_preset
             .forward
             .iter()
@@ -321,7 +328,7 @@ impl HttpHeadersPreset {
                 SerializableHeaderName::new(header.to_string())
                     .map_err(|err| to_error(err, data_connector_name))
             })
-            .collect::<Result<Vec<_>, Error>>()?;
+            .collect::<Result<Vec<_>, DataConnectorError>>()?;
 
         let additional = headers_preset
             .additional
@@ -332,7 +339,7 @@ impl HttpHeadersPreset {
                 let val = resolve_value_expression(header_val.clone())?;
                 Ok((key, val))
             })
-            .collect::<Result<IndexMap<_, _>, Error>>()?;
+            .collect::<Result<IndexMap<_, _>, DataConnectorError>>()?;
 
         Ok(Self {
             forward,
@@ -343,27 +350,30 @@ impl HttpHeadersPreset {
 
 fn resolve_value_expression(
     value_expression_input: open_dds::permissions::ValueExpression,
-) -> Result<ValueExpression, Error> {
+) -> Result<ValueExpression, DataConnectorError> {
     match value_expression_input {
         open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-            Ok::<ValueExpression, Error>(ValueExpression::SessionVariable(session_variable))
+            Ok(ValueExpression::SessionVariable(session_variable))
         }
         open_dds::permissions::ValueExpression::Literal(json_value) => {
             Ok(ValueExpression::Literal(json_value))
         }
         open_dds::permissions::ValueExpression::BooleanExpression(_) => {
-            Err(Error::BooleanExpressionInValueExpressionForHeaderPresetsNotSupported)
+            Err(DataConnectorError::BooleanExpressionInValueExpressionForHeaderPresetsNotSupported)
         }
     }
 }
 
-fn to_error(err: HeaderError, data_connector_name: &Qualified<DataConnectorName>) -> Error {
+fn to_error(
+    err: HeaderError,
+    data_connector_name: &Qualified<DataConnectorName>,
+) -> DataConnectorError {
     match err {
-        HeaderError::InvalidHeaderName { header_name } => Error::InvalidHeaderName {
+        HeaderError::InvalidHeaderName { header_name } => DataConnectorError::InvalidHeaderName {
             data_connector: data_connector_name.clone(),
             header_name,
         },
-        HeaderError::InvalidHeaderValue { header_name } => Error::InvalidHeaderValue {
+        HeaderError::InvalidHeaderValue { header_name } => DataConnectorError::InvalidHeaderValue {
             data_connector: data_connector_name.clone(),
             header_name,
         },
@@ -383,7 +393,7 @@ impl CommandsResponseConfig {
     fn new(
         response_headers: &open_dds::data_connector::ResponseHeaders,
         data_connector_name: &Qualified<DataConnectorName>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, DataConnectorError> {
         let forward_headers = response_headers
             .forward_headers
             .iter()
@@ -391,7 +401,7 @@ impl CommandsResponseConfig {
                 SerializableHeaderName::new(header.to_string())
                     .map_err(|err| to_error(err, data_connector_name))
             })
-            .collect::<Result<Vec<_>, Error>>()?;
+            .collect::<Result<Vec<_>, DataConnectorError>>()?;
         Ok(Self {
             headers_field: ndc_models::FieldName::from(response_headers.headers_field.as_str()),
             result_field: ndc_models::FieldName::from(response_headers.result_field.as_str()),
