@@ -27,6 +27,7 @@ import Control.Concurrent.MVar
 import Control.Lens
 import Control.Monad.Managed
 import Data.Aeson qualified as J
+import Data.Aeson.Parser qualified as J
 import Data.Attoparsec.ByteString as Atto
 import Data.ByteString qualified as BS
 import Data.Has

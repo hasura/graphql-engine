@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-x-partial #-} -- for tail below; might be worth refactoring
 -- | Postgres DDL ComputedField
 --
 -- How to build the 'ComputedFieldInfo' for a field.

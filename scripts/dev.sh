@@ -561,7 +561,7 @@ if [ "$MODE" = "graphql-engine" ] || [ "$MODE" = "graphql-engine-pro" ]; then
   echo_pretty ""
 
   RUN_INVOCATION=(cabal new-run --project-file="$CABAL_PROJECT_FILE" --RTS --
-    "exe:$EDITION_NAME" +RTS -N -T -s -RTS serve
+    "exe:$EDITION_NAME" +RTS -N -T -S --nonmoving-gc --nonmoving-dense-allocator-count=16 -A64M  -RTS serve
     --enable-console --console-assets-dir "$PROJECT_ROOT/frontend/dist/apps/server-assets-console-$EDITION_ABBREV"
     "${GRAPHQL_ENGINE_EXTRA_ARGS[@]}"
     )

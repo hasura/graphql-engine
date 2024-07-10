@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# OPTIONS_GHC -Wno-x-partial #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Test.Data

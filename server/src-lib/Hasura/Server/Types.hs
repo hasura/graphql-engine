@@ -38,7 +38,7 @@ module Hasura.Server.Types
 where
 
 import Control.Lens qualified as Lens
-import Data.Aeson hiding (json)
+import Data.Aeson
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Lens
 import Data.Aeson.TH qualified as J

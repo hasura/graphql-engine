@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-x-partial #-} -- for head/tail below
 
 module Hasura.RQL.Types.BackendType
   ( PostgresKind (..),

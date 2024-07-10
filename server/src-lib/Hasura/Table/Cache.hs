@@ -1126,7 +1126,7 @@ instance (Backend b) => FromJSON (ForeignKeyMetadata b) where
 
 instance (Backend b) => ToJSON (ForeignKeyMetadata b) where
   toJSON (ForeignKeyMetadata (ForeignKey constraint foreignTable columnMapping)) =
-    let (columns, foreignColumns) = NE.unzip $ NEHashMap.toList columnMapping
+    let (columns, foreignColumns) = unzip $ NEHashMap.toList columnMapping
      in object
           [ "constraint" .= constraint,
             "foreign_table" .= foreignTable,

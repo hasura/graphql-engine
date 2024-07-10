@@ -7,6 +7,7 @@ where
 import Control.Lens ((^?))
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Functor qualified as Functor
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
   ( IsIdentifier (toIdentifier),
@@ -232,7 +233,7 @@ processOrderByItems userInfo sourcePrefix' selectSourceQual fieldAlias' similarA
                in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias) obTyM obNullsM
             orderByExp = S.OrderByExp $ toOrderByExp <$> orderByExps
         distinctOnExps <- traverse (applyDistinctOnAtNode sourcePrefix' userInfo) distOnCols
-        let (maybeDistOn, distOnExtrs) = NE.unzip $ distinctOnExps
+        let (maybeDistOn, distOnExtrs) = Functor.unzip $ distinctOnExps
         pure (orderByExp, maybeDistOn, fromMaybe [] distOnExtrs)
       let sortOnlyAtNode =
             (Sorting $ ASorting (nodeOrderBy, nodeDistinctOn) Nothing, nodeDistinctOnExtractors)
