@@ -4932,19 +4932,6 @@
             }
           },
           "additionalProperties": false
-        },
-        {
-          "title": "BooleanExpression",
-          "type": "object",
-          "required": [
-            "booleanExpression"
-          ],
-          "properties": {
-            "booleanExpression": {
-              "$ref": "#/definitions/ModelPredicate"
-            }
-          },
-          "additionalProperties": false
         }
       ]
     },

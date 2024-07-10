@@ -21,7 +21,8 @@ use open_dds::{
 use metadata_resolve::{
     self, deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
     serialize_non_string_key_btreemap, serialize_qualified_btreemap, DataConnectorLink,
-    NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping, ValueExpression,
+    NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping,
+    ValueExpressionOrPredicate,
 };
 
 use json_ext::HashMapWithJsonKey;
@@ -296,7 +297,8 @@ pub struct ArgumentPresets {
         serialize_with = "serialize_non_string_key_btreemap",
         deserialize_with = "deserialize_non_string_key_btreemap"
     )]
-    pub argument_presets: BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, ValueExpression)>,
+    pub argument_presets:
+        BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, ValueExpressionOrPredicate)>,
 }
 
 impl Display for ArgumentPresets {

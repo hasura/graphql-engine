@@ -177,7 +177,7 @@ fn make_permission_binary_boolean_expression(
     session_variables: &SessionVariables,
 ) -> Result<FilterExpression, error::Error> {
     let ndc_expression_value =
-        make_value_from_value_expression(value_expression, argument_type, session_variables)?;
+        make_argument_from_value_expression(value_expression, argument_type, session_variables)?;
     Ok(FilterExpression::BinaryComparisonOperator {
         target: ComparisonTarget::Column {
             name: ndc_column.clone(),
@@ -203,7 +203,7 @@ fn make_permission_unary_boolean_expression(
     }
 }
 
-pub(crate) fn make_value_from_value_expression(
+pub(crate) fn make_argument_from_value_expression(
     val_expr: &metadata_resolve::ValueExpression,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
@@ -219,23 +219,20 @@ pub(crate) fn make_value_from_value_expression(
 
             typecast_session_variable(value, value_type)
         }
-        metadata_resolve::ValueExpression::BooleanExpression(_model_predicate) => Err(
-            error::InternalDeveloperError::BooleanExpressionNotSupportedInValueExpression.into(),
-        ),
     }
 }
 
-pub(crate) fn make_argument_from_value_expression(
-    val_expr: &metadata_resolve::ValueExpression,
+pub(crate) fn make_argument_from_value_expression_or_predicate(
+    val_expr: &metadata_resolve::ValueExpressionOrPredicate,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Argument, error::Error> {
     match val_expr {
-        metadata_resolve::ValueExpression::Literal(val) => {
+        metadata_resolve::ValueExpressionOrPredicate::Literal(val) => {
             Ok(Argument::Literal { value: val.clone() })
         }
-        metadata_resolve::ValueExpression::SessionVariable(session_var) => {
+        metadata_resolve::ValueExpressionOrPredicate::SessionVariable(session_var) => {
             let value = session_variables.get(session_var).ok_or_else(|| {
                 error::InternalDeveloperError::MissingSessionVariable {
                     session_variable: session_var.clone(),
@@ -246,7 +243,7 @@ pub(crate) fn make_argument_from_value_expression(
                 value: typecast_session_variable(value, value_type)?,
             })
         }
-        metadata_resolve::ValueExpression::BooleanExpression(model_predicate) => {
+        metadata_resolve::ValueExpressionOrPredicate::BooleanExpression(model_predicate) => {
             let mut relationships = BTreeMap::new();
 
             let filter_expression = process_model_predicate(

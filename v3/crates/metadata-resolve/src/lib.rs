@@ -59,7 +59,7 @@ pub use stages::type_permissions::TypeInputPermission;
 pub use stages::{resolve, Metadata};
 pub use types::configuration;
 pub use types::error::{BooleanExpressionError, Error};
-pub use types::permission::ValueExpression;
+pub use types::permission::{ValueExpression, ValueExpressionOrPredicate};
 pub use types::subgraph::{
     deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
     serialize_non_string_key_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,

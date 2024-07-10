@@ -336,7 +336,7 @@ impl HttpHeadersPreset {
             .map(|(header_name, header_val)| {
                 let key = SerializableHeaderName::new(header_name.to_string())
                     .map_err(|err| to_error(err, data_connector_name))?;
-                let val = resolve_value_expression(header_val.clone())?;
+                let val = resolve_value_expression(header_val.clone());
                 Ok((key, val))
             })
             .collect::<Result<IndexMap<_, _>, DataConnectorError>>()?;
@@ -350,16 +350,13 @@ impl HttpHeadersPreset {
 
 fn resolve_value_expression(
     value_expression_input: open_dds::permissions::ValueExpression,
-) -> Result<ValueExpression, DataConnectorError> {
+) -> ValueExpression {
     match value_expression_input {
         open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-            Ok(ValueExpression::SessionVariable(session_variable))
+            ValueExpression::SessionVariable(session_variable)
         }
         open_dds::permissions::ValueExpression::Literal(json_value) => {
-            Ok(ValueExpression::Literal(json_value))
-        }
-        open_dds::permissions::ValueExpression::BooleanExpression(_) => {
-            Err(DataConnectorError::BooleanExpressionInValueExpressionForHeaderPresetsNotSupported)
+            ValueExpression::Literal(json_value)
         }
     }
 }

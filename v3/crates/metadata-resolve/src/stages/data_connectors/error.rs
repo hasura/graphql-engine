@@ -28,11 +28,6 @@ pub enum DataConnectorError {
         data_connector: Qualified<DataConnectorName>,
         header_name: String,
     },
-    #[error(
-        "Boolean Expression in ValueExpression for Data Connector headers preset is not supported."
-    )]
-    BooleanExpressionInValueExpressionForHeaderPresetsNotSupported,
-
     #[error("{0}")]
     NdcValidationError(NDCValidationError),
 }

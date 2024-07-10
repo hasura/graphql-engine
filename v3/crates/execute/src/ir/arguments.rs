@@ -102,7 +102,7 @@ pub(crate) fn process_model_arguments_presets(
             }
         })?;
 
-        let actual_value = permissions::make_argument_from_value_expression(
+        let actual_value = permissions::make_argument_from_value_expression_or_predicate(
             argument_value,
             field_type,
             session_variables,

@@ -400,9 +400,6 @@ pub enum Error {
 
     #[error("internal error: boolean expressions cannot be used as output types")]
     BooleanExpressionUsedAsOutputType,
-
-    #[error("internal error: boolean expressions cannot be used as presets for types")]
-    BooleanExpressionInTypePresetArgument,
 }
 
 impl From<ast::InvalidGraphQlName> for Error {

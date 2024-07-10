@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use crate::types;
 use crate::Role;
-use metadata_resolve::ValueExpression;
+use metadata_resolve::ValueExpressionOrPredicate;
 use metadata_resolve::{self};
 use metadata_resolve::{object_type_exists, unwrap_custom_type_name};
 use metadata_resolve::{Qualified, QualifiedTypeReference};
@@ -336,7 +336,13 @@ fn build_preset_map_from_input_object_type_permission(
     ndc_argument_name: &Option<DataConnectorArgumentName>,
     object_type: &Qualified<CustomTypeName>,
 ) -> Result<
-    BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, metadata_resolve::ValueExpression)>,
+    BTreeMap<
+        ArgumentNameAndPath,
+        (
+            QualifiedTypeReference,
+            metadata_resolve::ValueExpressionOrPredicate,
+        ),
+    >,
     crate::Error,
 > {
     let preset_map = permission
@@ -367,15 +373,12 @@ fn build_preset_map_from_input_object_type_permission(
                 type_reference.clone(),
                 match preset {
                     open_dds::permissions::ValueExpression::Literal(literal) => {
-                        Ok(ValueExpression::Literal(literal.clone()))
+                        ValueExpressionOrPredicate::Literal(literal.clone())
                     }
                     open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-                        Ok(ValueExpression::SessionVariable(session_variable.clone()))
+                        ValueExpressionOrPredicate::SessionVariable(session_variable.clone())
                     }
-                    open_dds::permissions::ValueExpression::BooleanExpression(_) => {
-                        Err(crate::Error::BooleanExpressionInTypePresetArgument)
-                    }
-                }?,
+                },
             );
 
             Ok((key, value))

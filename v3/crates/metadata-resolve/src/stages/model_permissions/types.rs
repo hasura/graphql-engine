@@ -13,7 +13,7 @@ use open_dds::{
 
 use crate::stages::{data_connectors, models, models_graphql, object_types, relationships};
 use crate::types::error::{Error, RelationshipError};
-use crate::types::permission::ValueExpression;
+use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 
@@ -35,7 +35,8 @@ pub enum FilterPermission {
 pub struct SelectPermission {
     pub filter: FilterPermission,
     // pub allow_aggregations: bool,
-    pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
+    pub argument_presets:
+        BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

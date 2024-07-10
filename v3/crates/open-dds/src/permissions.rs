@@ -42,7 +42,7 @@ pub struct ArgumentPreset {
     /// Argument name for preset
     pub argument: ArgumentName,
     /// Value for preset
-    pub value: ValueExpression,
+    pub value: ValueExpressionOrPredicate,
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
@@ -529,11 +529,20 @@ pub enum ValueExpression {
     Literal(JsonValue),
     #[schemars(title = "SessionVariable")]
     SessionVariable(SessionVariable),
+}
+
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[schemars(title = "ValueExpressionOrPredicate")]
+/// An expression which evaluates to a value that can be used in permissions and
+/// various presets.
+pub enum ValueExpressionOrPredicate {
+    #[schemars(title = "Literal")]
+    Literal(JsonValue),
+    #[schemars(title = "SessionVariable")]
+    SessionVariable(SessionVariable),
     #[schemars(title = "BooleanExpression")]
     BooleanExpression(Box<ModelPredicate>),
-    // TODO: Uncomment the below, once commands are supported.
-    // Command {
-    //     name: CommandName,
-    //     arguments: HashMap<ArgumentName, ValueExpression>,
-    // },
 }

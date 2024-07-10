@@ -131,7 +131,7 @@ pub(crate) fn generate_command_info<'n, 's>(
                 }
             })?;
 
-            let actual_value = permissions::make_argument_from_value_expression(
+            let actual_value = permissions::make_argument_from_value_expression_or_predicate(
                 argument_value,
                 field_type,
                 session_variables,
@@ -200,7 +200,7 @@ pub(crate) fn generate_command_info<'n, 's>(
                     ),
                 ),
             };
-            let value = permissions::make_value_from_value_expression(
+            let value = permissions::make_argument_from_value_expression(
                 value_expression,
                 &string_type,
                 session_variables,

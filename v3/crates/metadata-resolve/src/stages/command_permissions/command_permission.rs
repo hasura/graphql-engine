@@ -110,7 +110,7 @@ pub fn resolve_command_permissions(
                     // additionally typecheck literals
                     // we do this outside the argument resolve so that we can emit a command-specific error
                     // on typechecking failure
-                    typecheck::typecheck_value_expression(
+                    typecheck::typecheck_value_expression_or_predicate(
                         &argument.argument_type,
                         &argument_preset.value,
                     )

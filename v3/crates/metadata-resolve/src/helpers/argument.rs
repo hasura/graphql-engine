@@ -11,7 +11,7 @@ use crate::stages::{
     type_permissions,
 };
 use crate::types::error::{Error, RelationshipError, TypeError, TypePredicateError};
-use crate::types::permission::ValueExpression;
+use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
 use crate::types::subgraph::{ArgumentInfo, Qualified, QualifiedBaseType, QualifiedTypeReference};
 
 use indexmap::IndexMap;
@@ -185,7 +185,7 @@ pub fn get_argument_mappings<'a>(
 /// exist etc
 pub(crate) fn resolve_value_expression_for_argument(
     argument_name: &open_dds::arguments::ArgumentName,
-    value_expression: &open_dds::permissions::ValueExpression,
+    value_expression: &open_dds::permissions::ValueExpressionOrPredicate,
     argument_type: &QualifiedTypeReference,
     source_argument_type: Option<&ndc_models::Type>,
     data_connector_link: &data_connectors::DataConnectorLink,
@@ -202,15 +202,17 @@ pub(crate) fn resolve_value_expression_for_argument(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-) -> Result<ValueExpression, Error> {
+) -> Result<ValueExpressionOrPredicate, Error> {
     match value_expression {
-        open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-            Ok::<ValueExpression, Error>(ValueExpression::SessionVariable(session_variable.clone()))
+        open_dds::permissions::ValueExpressionOrPredicate::SessionVariable(session_variable) => {
+            Ok::<ValueExpressionOrPredicate, Error>(ValueExpressionOrPredicate::SessionVariable(
+                session_variable.clone(),
+            ))
         }
-        open_dds::permissions::ValueExpression::Literal(json_value) => {
-            Ok(ValueExpression::Literal(json_value.clone()))
+        open_dds::permissions::ValueExpressionOrPredicate::Literal(json_value) => {
+            Ok(ValueExpressionOrPredicate::Literal(json_value.clone()))
         }
-        open_dds::permissions::ValueExpression::BooleanExpression(bool_exp) => {
+        open_dds::permissions::ValueExpressionOrPredicate::BooleanExpression(bool_exp) => {
             // get underlying object type name from argument type (ie, unwrap
             // array, nullability etc)
             let base_type =
@@ -306,7 +308,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                 &object_type_representation.object_type.fields,
             )?;
 
-            Ok(ValueExpression::BooleanExpression(Box::new(
+            Ok(ValueExpressionOrPredicate::BooleanExpression(Box::new(
                 resolved_model_predicate,
             )))
         }
@@ -400,19 +402,12 @@ pub(crate) fn resolve_model_predicate_with_type(
 
             let value_expression = match value {
                 open_dds::permissions::ValueExpression::Literal(json_value) => {
-                    Ok(ValueExpression::Literal(json_value.clone()))
+                    ValueExpression::Literal(json_value.clone())
                 }
                 open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-                    Ok(ValueExpression::SessionVariable(session_variable.clone()))
+                    ValueExpression::SessionVariable(session_variable.clone())
                 }
-                open_dds::permissions::ValueExpression::BooleanExpression(
-                    _inner_model_predicate,
-                ) => Err(Error::TypePredicateError {
-                    type_predicate_error: TypePredicateError::NestedPredicateInTypePredicate {
-                        type_name: type_name.clone(),
-                    },
-                }),
-            }?;
+            };
 
             Ok(model_permissions::ModelPredicate::BinaryFieldComparison {
                 field: field.clone(),
