@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [v2024.07.10]
+
+### Fixed
+
+- Fixes a bug with variable nullability coercion. Specifically, providing a
+  non-null variable for a nullable field should work, as all non-nullable
+  variables can be used as nullable variables via "coercion".
+
+- Fixes a bug where data connectors without the `foreach` capability were not
+  allowed to create local relationships
+
 ## [v2024.07.04]
 
 ### Added
@@ -166,3 +177,4 @@ Initial release.
 [Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.06.13...HEAD
 [v2024.06.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.06.13
 [v2024.07.04]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.04
+[v2024.07.10]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.10
