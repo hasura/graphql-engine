@@ -78,12 +78,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     ndc_models::Field::Column {
                         column: ndc_models::FieldName::from(column.as_str()),
                         fields: nested_field,
-                        arguments: arguments
-                            .iter()
-                            .map(|(name, arg)| {
-                                (ndc_models::ArgumentName::from(name.as_str()), arg.clone())
-                            })
-                            .collect(),
+                        arguments: common::ndc_arguments(arguments)?,
                     },
                 );
                 if let Some(jl) = nested_join_locations {

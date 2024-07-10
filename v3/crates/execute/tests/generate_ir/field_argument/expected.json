@@ -176,8 +176,9 @@
                     "nested_selection": null,
                     "arguments": {
                       "hash": {
-                        "type": "literal",
-                        "value": "sha256"
+                        "Literal": {
+                          "value": "sha256"
+                        }
                       }
                     }
                   }

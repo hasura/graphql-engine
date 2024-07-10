@@ -9,7 +9,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use super::arguments::map_argument_value_to_ndc_type;
+use super::arguments;
 use super::commands::FunctionBasedCommand;
 use super::model_selection::ModelSelection;
 use super::relationship::{
@@ -34,7 +34,7 @@ pub(crate) enum FieldSelection<'s> {
     Column {
         column: DataConnectorColumnName,
         nested_selection: Option<NestedSelection<'s>>,
-        arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Argument>,
+        arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
     },
     ModelRelationshipLocal {
         query: ModelSelection<'s>,
@@ -267,7 +267,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                                     })
                                 }
                             }
-                            Some(val) => map_argument_value_to_ndc_type(
+                            Some(val) => arguments::map_argument_value_to_ndc_type(
                                 argument_type,
                                 &val.value,
                                 type_mappings,
@@ -275,7 +275,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                             .map(Some),
                         }?;
                         if let Some(argument_value) = argument_value {
-                            let argument = ndc_models::Argument::Literal {
+                            let argument = arguments::Argument::Literal {
                                 value: argument_value,
                             };
                             // If argument name is not found in the mapping, use the open_dd argument name as the ndc argument name
