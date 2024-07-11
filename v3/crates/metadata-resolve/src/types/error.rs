@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::stages::{
-    aggregates::AggregateExpressionError, data_connectors, graphql_config, object_types,
+    aggregates::AggregateExpressionError, apollo, data_connectors, graphql_config, object_types,
     type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
@@ -29,10 +29,6 @@ pub enum Error {
     DuplicateModelDefinition { name: Qualified<ModelName> },
     #[error("'globalIdFields' for type {object_type:} found, but no model found with 'globalIdSource: true' for type {object_type:}")]
     GlobalIdSourceNotDefined {
-        object_type: Qualified<CustomTypeName>,
-    },
-    #[error("'apolloFederation.keys' for type {object_type:} found, but no model found with 'apolloFederation.entitySource: true' for type {object_type:}")]
-    ApolloFederationEntitySourceNotDefined {
         object_type: Qualified<CustomTypeName>,
     },
     #[error("the data type {data_type:} for model {model_name:} has not been defined")]
@@ -200,15 +196,6 @@ pub enum Error {
     UnknownFieldInUniqueIdentifier {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
-    },
-    #[error("unknown field {field_name:} in apollo federation keys defined for the object type {object_type:}")]
-    UnknownFieldInApolloFederationKey {
-        field_name: FieldName,
-        object_type: Qualified<CustomTypeName>,
-    },
-    #[error("empty fields in apollo federation keys defined for the object type {object_type:}")]
-    EmptyFieldsInApolloFederationConfigForObject {
-        object_type: Qualified<CustomTypeName>,
     },
     #[error("multiple models are marked as entity source for the object type {type_name:}")]
     MultipleEntitySourcesForType {
@@ -419,11 +406,6 @@ pub enum Error {
         type_name: Qualified<CustomTypeName>,
         model_name: ModelName,
     },
-    #[error("Model {model_name:} is marked as an Apollo Federation entity source but there are no keys fields present in the related object type {type_name:}")]
-    NoKeysFieldsPresentInEntitySource {
-        type_name: Qualified<CustomTypeName>,
-        model_name: ModelName,
-    },
     #[error("Found multiple models  {model_1:}, {model_2:} that implement the same object type {object_type:} to be global ID sources.")]
     DuplicateModelGlobalIdSource {
         model_1: Qualified<ModelName>,
@@ -445,10 +427,6 @@ pub enum Error {
 
     #[error("model {model_name:} with arguments is unsupported as a global ID source")]
     ModelWithArgumentsAsGlobalIdSource { model_name: Qualified<ModelName> },
-    #[error(
-        "model {model_name:} with arguments is unsupported as an Apollo Federation entity source"
-    )]
-    ModelWithArgumentsAsApolloFederationEntitySource { model_name: Qualified<ModelName> },
     #[error("An error occurred while mapping arguments in the model {model_name:} to the collection {collection_name:} in the data connector {data_connector_name:}: {error:}")]
     ModelCollectionArgumentMappingError {
         data_connector_name: Qualified<DataConnectorName>,
@@ -517,6 +495,8 @@ pub enum Error {
     TypePermissionError(type_permissions::TypePermissionError),
     #[error("{0}")]
     ObjectTypesError(#[from] object_types::ObjectTypesError),
+    #[error("{0}")]
+    ApolloError(#[from] apollo::ApolloError),
 }
 
 #[derive(Debug, Error)]

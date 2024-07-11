@@ -15,7 +15,7 @@ pub use types::{
 
 use crate::helpers::ndc_validation::get_underlying_named_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
-use crate::stages::data_connectors;
+use crate::stages::{apollo, data_connectors};
 
 use crate::types::subgraph::{mk_qualified_type_reference, Qualified};
 
@@ -220,12 +220,12 @@ pub fn resolve_object_type(
                             let mut resolved_key_fields = Vec::new();
                             for field in &key.fields {
                                 if !resolved_fields.contains_key(field) {
-                                    return Err(
-                                        ObjectTypesError::UnknownFieldInApolloFederationKey {
+                                    return Err(ObjectTypesError::from(
+                                        apollo::ApolloError::UnknownFieldInApolloFederationKey {
                                             field_name: field.clone(),
                                             object_type: qualified_type_name.clone(),
                                         },
-                                    );
+                                    ));
                                 }
                                 resolved_key_fields.push(field.clone());
                             }
@@ -233,9 +233,9 @@ pub fn resolve_object_type(
                                 match nonempty::NonEmpty::from_vec(resolved_key_fields) {
                                     None => {
                                         return Err(
-                                            ObjectTypesError::EmptyFieldsInApolloFederationConfigForObject {
+                                            ObjectTypesError::from(apollo::ApolloError::EmptyFieldsInApolloFederationConfigForObject {
                                                 object_type: qualified_type_name.clone(),
-                                            },
+                                            }),
                                         )
                                     }
                                     Some(fields) => ResolvedApolloFederationObjectKey { fields },
@@ -245,11 +245,11 @@ pub fn resolve_object_type(
                         apollo_federation_entity_enabled_types
                             .insert(qualified_type_name.clone(), None);
                         match nonempty::NonEmpty::from_vec(resolved_keys) {
-                            None => Err(
-                                ObjectTypesError::EmptyKeysInApolloFederationConfigForObject {
+                            None => Err(ObjectTypesError::from(
+                                apollo::ApolloError::EmptyKeysInApolloFederationConfigForObject {
                                     object_type: qualified_type_name.clone(),
                                 },
-                            ),
+                            )),
                             Some(keys) => Ok(Some(ResolvedObjectApolloFederationConfig { keys })),
                         }
                     }

@@ -10,7 +10,7 @@ pub use helpers::get_ndc_column_for_comparison;
 use crate::types::error::Error;
 
 use crate::stages::{
-    aggregates, boolean_expressions, data_connector_scalar_types, data_connectors,
+    aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors,
     object_boolean_expressions, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
@@ -206,9 +206,11 @@ fn resolve_model(
             .is_some()
         {
             if !model.arguments.is_empty() {
-                return Err(Error::ModelWithArgumentsAsApolloFederationEntitySource {
-                    model_name: qualified_model_name,
-                });
+                return Err(Error::from(
+                    apollo::ApolloError::ModelWithArgumentsAsApolloFederationEntitySource {
+                        model_name: qualified_model_name,
+                    },
+                ));
             }
             // model has `apollo_federation_entity_source`; insert into the BTreeMap of
             // `apollo_federation_entity_enabled_types`
@@ -216,10 +218,12 @@ fn resolve_model(
                 None => {
                     // the model's graphql configuration has `apollo_federation.entitySource` but the object type
                     // of the model doesn't have any apollo federation keys
-                    return Err(Error::NoKeysFieldsPresentInEntitySource {
-                        type_name: qualified_object_type_name,
-                        model_name: model.name.clone(),
-                    });
+                    return Err(Error::from(
+                        apollo::ApolloError::NoKeysFieldsPresentInEntitySource {
+                            type_name: qualified_object_type_name,
+                            model_name: model.name.clone(),
+                        },
+                    ));
                 }
                 Some(type_name) => {
                     match type_name {

@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::stages::graphql_config;
+use crate::stages::{apollo, graphql_config};
 use crate::NDCValidationError;
 use open_dds::{
     arguments::ArgumentName,
@@ -49,24 +49,10 @@ pub enum ObjectTypesError {
         field_name: FieldName,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("empty fields in apollo federation keys defined for the object type {object_type:}")]
-    EmptyFieldsInApolloFederationConfigForObject {
-        object_type: Qualified<CustomTypeName>,
-    },
-
-    #[error("unknown field {field_name:} in apollo federation keys defined for the object type {object_type:}")]
-    UnknownFieldInApolloFederationKey {
-        field_name: FieldName,
-        object_type: Qualified<CustomTypeName>,
-    },
-    #[error(
-        "empty keys in apollo federation configuration defined for the object type {object_type:}"
-    )]
-    EmptyKeysInApolloFederationConfigForObject {
-        object_type: Qualified<CustomTypeName>,
-    },
     #[error("{0}")]
     GraphqlError(#[from] graphql_config::GraphqlConfigError),
+    #[error("{0}")]
+    ApolloError(#[from] apollo::ApolloError),
 }
 
 #[derive(Error, Debug)]
