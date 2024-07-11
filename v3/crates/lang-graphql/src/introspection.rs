@@ -11,9 +11,8 @@ use crate::schema::RegisteredTypeName;
 
 use indexmap::IndexMap;
 use serde_json as json;
-use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("internal introspection error: normalized introspection ast not as expected: {0}")]
     InternalNormalizationError(normalized::Error),

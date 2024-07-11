@@ -14,7 +14,7 @@ use schema::Annotation;
 
 /// Request errors are raised before execution of root fields begins.
 /// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Request-errors>
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum RequestError {
     #[error("parsing failed: {0}")]
     ParseFailure(#[from] gql::ast::spanning::Positioned<gql::parser::Error>),
@@ -131,7 +131,7 @@ impl TraceableError for FieldError {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum FieldInternalError {
     #[error("ndc_unexpected: {0}")]
     NDCUnexpected(#[from] NDCUnexpectedError),
@@ -179,7 +179,7 @@ impl TraceableError for FieldInternalError {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum NDCUnexpectedError {
     #[error("ndc_client error: {0}")]
     NDCClientError(ndc_client::Error),
@@ -222,7 +222,7 @@ impl From<ndc_client::Error> for FieldError {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 #[error("Query usage analytics encoding failed: {0}")]
 /// Error occurs while generating query usage analytics JSON.
 /// Wraps JSON encoding error, the only error currently encountered.

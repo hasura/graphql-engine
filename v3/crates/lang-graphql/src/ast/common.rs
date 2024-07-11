@@ -4,11 +4,10 @@ use smol_str::SmolStr;
 use std::fmt::{self, Display, Formatter, Write};
 use std::hash::Hash;
 use std::str::FromStr;
-use thiserror::Error;
 // use std::ops::Deref;
 // use std::borrow::Borrow;
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 #[error("{0}")]
 pub struct InvalidGraphQlName(pub String);
 

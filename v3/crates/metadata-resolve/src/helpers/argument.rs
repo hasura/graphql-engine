@@ -27,11 +27,9 @@ use open_dds::types::{CustomTypeName, FieldName, OperatorName};
 use ref_cast::RefCast;
 use std::collections::BTreeMap;
 
-use thiserror::Error;
-
 use super::ndc_validation::NDCValidationError;
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum ArgumentMappingError {
     #[error(
         "the following arguments referenced in argument mappings are unknown: {}",

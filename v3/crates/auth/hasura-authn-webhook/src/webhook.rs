@@ -14,10 +14,9 @@ use serde::{de::Error as SerdeDeError, Deserialize, Deserializer, Serialize, Ser
 use hasura_authn_core as auth_base;
 use open_dds::session_variables;
 use schemars::JsonSchema;
-use thiserror::Error;
 use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError};
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Error in converting the header value corresponding to the {header_name} to a String - {error}")]
     ErrorInConvertingHeaderValueToString {
@@ -37,7 +36,7 @@ impl TraceableError for Error {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum InternalError {
     #[error("Error while making the authentication HTTP request to the webhook - {0}")]
     ErrorWhileMakingHTTPRequestToTheAuthHook(reqwest::Error),

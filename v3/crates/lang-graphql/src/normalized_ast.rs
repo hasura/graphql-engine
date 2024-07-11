@@ -2,13 +2,12 @@ use serde::Serialize;
 use serde_json as json;
 use serde_with::serde_as;
 use std::collections::HashMap;
-use thiserror::Error;
 
 use crate::ast::common::{self as ast, TypeContainer, TypeName};
 use crate::schema::{NodeInfo, SchemaContext};
 use indexmap::IndexMap;
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     // TODO: uses 'Debug' trait
     #[error("expected argument '{argument_name}' not found on field: {field_call_name}, arguments found: {arguments:?}")]

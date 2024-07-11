@@ -1,9 +1,8 @@
 use crate::helpers::ndc_validation::NDCValidationError;
 use crate::types::subgraph::Qualified;
 use open_dds::data_connector::DataConnectorName;
-use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum DataConnectorError {
     #[error("The data connector {data_connector} uses ndc-spec v0.2.* and is not yet supported")]
     NdcV02DataConnectorNotSupported {

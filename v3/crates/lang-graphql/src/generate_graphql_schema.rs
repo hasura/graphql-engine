@@ -5,9 +5,7 @@ for each namespace from the schema.
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use thiserror::Error;
-
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("unable to parse introspection query: {0}")]
     ParseIntrospectionQuery(String),

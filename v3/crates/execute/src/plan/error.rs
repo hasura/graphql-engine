@@ -1,10 +1,9 @@
 use open_dds::{relationships::RelationshipName, types::FieldName};
-use thiserror::Error;
 use tracing_util::TraceableError;
 
 use crate::ndc;
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("internal: {0}")]
     Internal(#[from] InternalError),
@@ -18,7 +17,7 @@ impl TraceableError for Error {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum InternalError {
     #[error("Mapping for source column {source_column} already exists in the relationship {relationship_name}")]
     MappingExistsInRelationship {

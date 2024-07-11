@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-use thiserror::Error;
 
 use open_dds::{
     aggregates::{
@@ -73,7 +72,7 @@ pub struct AggregateExpressionGraphqlConfig {
     pub select_output_type_name: ast::TypeName,
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum AggregateExpressionError {
     #[error("the following aggregate expression is defined more than once: {name}")]
     DuplicateAggregateExpressionDefinition {

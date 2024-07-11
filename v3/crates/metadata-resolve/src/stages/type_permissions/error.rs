@@ -1,11 +1,10 @@
 use crate::helpers::typecheck;
 use crate::types::error::Error;
 use open_dds::types::{CustomTypeName, FieldName};
-use thiserror::Error;
 
 use crate::types::subgraph::Qualified;
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum TypeOutputPermissionError {
     #[error("unsupported type in output type permissions definition: {type_name:}; only object types are supported")]
     UnsupportedTypeInOutputPermissions { type_name: CustomTypeName },
@@ -28,7 +27,7 @@ impl From<TypeOutputPermissionError> for TypePermissionError {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum TypeInputPermissionError {
     #[error("unsupported type in input type permissions definition: {type_name:}; only object types are supported")]
     UnsupportedTypeInInputPermissions { type_name: CustomTypeName },
@@ -55,7 +54,7 @@ impl From<TypeInputPermissionError> for TypePermissionError {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum TypePermissionError {
     #[error("{0}")]
     TypeOutputPermissionError(TypeOutputPermissionError),

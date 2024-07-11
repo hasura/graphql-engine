@@ -1,16 +1,14 @@
-use thiserror::Error;
-
-use crate::stages::{apollo, graphql_config};
-use crate::NDCValidationError;
 use open_dds::{
     arguments::ArgumentName,
     data_connector::{DataConnectorName, DataConnectorObjectType},
     types::{CustomTypeName, FieldName},
 };
 
+use crate::stages::{apollo, graphql_config};
 use crate::types::subgraph::Qualified;
+use crate::NDCValidationError;
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum ObjectTypesError {
     #[error("object type {type_name} could not be found")]
     ObjectTypeNotFound {
@@ -55,7 +53,7 @@ pub enum ObjectTypesError {
     ApolloError(#[from] apollo::ApolloError),
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum TypeMappingValidationError {
     #[error("data connector {data_connector:} referenced in type mappings of type {type_name:} is not found")]
     UnknownDataConnector {

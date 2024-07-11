@@ -1,6 +1,4 @@
-use thiserror::Error;
-
 pub mod v01;
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum NdcDowngradeError {}

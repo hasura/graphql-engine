@@ -19,9 +19,7 @@ use execute::HttpContext;
 use futures::TryFutureExt;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
-use thiserror::Error;
-
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum ExecutionPlanError {
     #[error("{0}")]
     NDCDowngradeError(#[from] execute::ndc::migration::NdcDowngradeError),

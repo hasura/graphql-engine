@@ -13,11 +13,10 @@ use open_dds::{
     models::ModelName,
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
-use thiserror::Error;
 
 use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum NDCValidationError {
     #[error("collection {collection_name} is not defined in data connector {db_name}")]
     NoSuchCollection {

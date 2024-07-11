@@ -10,12 +10,11 @@ use serde::Serialize;
 use crate::configuration::PrePluginConfig;
 use hasura_authn_core::Session;
 use lang_graphql::{ast::common as ast, http::RawRequest};
-use thiserror::Error;
 use tracing_util::{
     set_attribute_on_active_span, ErrorVisibility, SpanVisibility, Traceable, TraceableError,
 };
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Error while making the HTTP request to the pre-execution plugin {0} - {1}")]
     ErrorWhileMakingHTTPRequestToTheHook(String, reqwest::Error),

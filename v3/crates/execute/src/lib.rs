@@ -11,7 +11,6 @@ mod remote_joins;
 
 use plan::ExecuteQueryResult;
 pub use plan::{ndc_expression, process_model_relationship_definition};
-use thiserror::Error;
 
 use gql::normalized_ast::Operation;
 use hasura_authn_core::Session;
@@ -133,7 +132,7 @@ pub async fn execute_query(
     .unwrap_or_else(|e| GraphQLResponse::from_error(&e, expose_internal_errors))
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 #[error("{0}")]
 struct GraphQlParseError(#[from] gql::ast::spanning::Positioned<gql::parser::Error>);
 
@@ -143,7 +142,7 @@ impl TraceableError for GraphQlParseError {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 #[error("{0}")]
 struct GraphQlValidationError(#[from] gql::validation::Error);
 impl TraceableError for GraphQlValidationError {

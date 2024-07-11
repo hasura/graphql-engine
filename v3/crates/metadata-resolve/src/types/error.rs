@@ -1,5 +1,3 @@
-use thiserror::Error;
-
 use crate::stages::{
     aggregates::AggregateExpressionError, apollo, data_connectors, graphql_config, object_types,
     type_permissions,
@@ -23,7 +21,7 @@ use crate::helpers::{
 };
 
 // TODO: This enum really needs structuring
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("the following model is defined more than once: {name:}")]
     DuplicateModelDefinition { name: Qualified<ModelName> },
@@ -499,7 +497,7 @@ pub enum Error {
     ApolloError(#[from] apollo::ApolloError),
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum ModelAggregateExpressionError {
     #[error("a source must be defined for model {model:} in order to use aggregate expressions")]
     CannotUseAggregateExpressionsWithoutSource { model: Qualified<ModelName> },
@@ -558,7 +556,7 @@ impl From<BooleanExpressionError> for Error {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum BooleanExpressionError {
     #[error("unknown type used in object boolean expression: {type_name:}")]
     UnknownTypeInObjectBooleanExpressionType {
@@ -636,7 +634,7 @@ pub enum BooleanExpressionError {
     },
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum RelationshipError {
     #[error("source field {field_name} in field mapping for relationship {relationship_name} on type {source_type} is unknown.")]
     UnknownSourceFieldInRelationshipMapping {
@@ -710,7 +708,7 @@ impl From<RelationshipError> for Error {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum TypePredicateError {
     #[error("unknown field '{field_name:}' used in predicate for type '{type_name:}'")]
     UnknownFieldInTypePredicate {
@@ -786,7 +784,7 @@ impl From<TypePredicateError> for Error {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum TypeError {
     #[error("expected to find a custom named type in {qualified_type_reference:} but none found")]
     NoNamedTypeFound {
