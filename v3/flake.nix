@@ -215,6 +215,7 @@
               nativeBuildInputs = [
                 # Development
                 pkgs.just
+                pkgs.moreutils
                 pkgs.nixpkgs-fmt
                 pkgs.nodePackages.prettier
 

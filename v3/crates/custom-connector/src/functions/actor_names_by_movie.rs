@@ -8,6 +8,27 @@ use crate::{
     state::{AppState, Row},
 };
 
+pub(crate) fn function_info() -> ndc_models::FunctionInfo {
+    ndc_models::FunctionInfo {
+        name: "actor_names_by_movie".into(),
+        description: Some("Get actor names by movie ID".into()),
+        arguments: BTreeMap::from_iter([(
+            "movie_id".into(),
+            ndc_models::ArgumentInfo {
+                description: Some("the id of the movie to fetch".into()),
+                argument_type: ndc_models::Type::Named { name: "Int".into() },
+            },
+        )]),
+        result_type: ndc_models::Type::Nullable {
+            underlying_type: Box::new(ndc_models::Type::Array {
+                element_type: Box::new(ndc_models::Type::Named {
+                    name: "String".into(),
+                }),
+            }),
+        },
+    }
+}
+
 pub(crate) fn rows(
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,

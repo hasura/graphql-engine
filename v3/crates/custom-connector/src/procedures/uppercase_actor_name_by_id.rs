@@ -8,6 +8,25 @@ use crate::{
     state::AppState,
 };
 
+pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
+    ndc_models::ProcedureInfo {
+        name: "uppercase_actor_name_by_id".into(),
+        description: Some("Uppercase an actor name given the ID".into()),
+        arguments: BTreeMap::from_iter([(
+            "id".into(),
+            ndc_models::ArgumentInfo {
+                description: Some("the id of the actor to update".into()),
+                argument_type: ndc_models::Type::Named { name: "Int".into() },
+            },
+        )]),
+        result_type: ndc_models::Type::Nullable {
+            underlying_type: Box::new(ndc_models::Type::Named {
+                name: "actor".into(),
+            }),
+        },
+    }
+}
+
 pub(crate) fn execute(
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     fields: &Option<ndc_models::NestedField>,

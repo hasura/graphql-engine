@@ -1,7 +1,26 @@
+use std::collections::BTreeMap;
+
 use axum::{http::StatusCode, Json};
 use ndc_models;
 
 use crate::{query::Result, state::AppState};
+
+pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
+    ndc_models::ProcedureInfo {
+        name: "uppercase_all_actor_names_return_names_list".into(),
+        description: Some(
+            "Uppercase all actor names and return a list of the updated names".into(),
+        ),
+        arguments: BTreeMap::new(),
+        result_type: ndc_models::Type::Nullable {
+            underlying_type: Box::new(ndc_models::Type::Array {
+                element_type: Box::new(ndc_models::Type::Named {
+                    name: "String".into(),
+                }),
+            }),
+        },
+    }
+}
 
 pub(crate) fn execute(state: &mut AppState) -> Result<serde_json::Value> {
     let mut actors_list = vec![];

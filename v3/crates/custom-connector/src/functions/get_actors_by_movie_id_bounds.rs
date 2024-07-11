@@ -8,6 +8,36 @@ use crate::{
     state::{AppState, Row},
 };
 
+pub(crate) fn function_info() -> ndc_models::FunctionInfo {
+    ndc_models::FunctionInfo {
+        name: "get_actors_by_movie_id_bounds".into(),
+        description: Some("Get all actors within a given lower and upper movie id bound".into()),
+        arguments: BTreeMap::from_iter([
+            (
+                "lower_bound".into(),
+                ndc_models::ArgumentInfo {
+                    description: Some("the lower bound for movie id".into()),
+                    argument_type: ndc_models::Type::Named { name: "Int".into() },
+                },
+            ),
+            (
+                "upper_bound".into(),
+                ndc_models::ArgumentInfo {
+                    description: Some("the upper bound for movie id".into()),
+                    argument_type: ndc_models::Type::Named { name: "Int".into() },
+                },
+            ),
+        ]),
+        result_type: ndc_models::Type::Nullable {
+            underlying_type: Box::new(ndc_models::Type::Array {
+                element_type: Box::new(ndc_models::Type::Named {
+                    name: "actor".into(),
+                }),
+            }),
+        },
+    }
+}
+
 pub(crate) fn rows(
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,

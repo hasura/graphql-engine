@@ -18,10 +18,12 @@ pub(crate) fn get_procedures() -> Vec<ndc_models::ProcedureInfo> {
     vec![
         upsert_actor::procedure_info(),
         update_actor_name_by_id::procedure_info(),
+        uppercase_actor_name_by_id::procedure_info(),
+        uppercase_all_actor_names::procedure_info(),
+        uppercase_all_actor_names_return_names_list::procedure_info(),
         login::procedure_info(),
         noop_procedure::procedure_info(),
         add_movie_with_genres::procedure_info(),
-        // TODO: Looks like the other procedures where never added to the schema?
     ]
 }
 

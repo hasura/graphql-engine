@@ -69,7 +69,11 @@
                         }
                       }
                     },
-                    "comparison_operators": {}
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    }
                   },
                   "String": {
                     "representation": {
@@ -96,6 +100,9 @@
                       }
                     },
                     "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
                       "like": {
                         "type": "custom",
                         "argument_type": {
@@ -115,6 +122,15 @@
                         "type": {
                           "type": "named",
                           "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
                         }
                       },
                       "id": {
@@ -122,6 +138,15 @@
                         "type": {
                           "type": "named",
                           "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
                         }
                       },
                       "movie_id": {
@@ -129,6 +154,15 @@
                         "type": {
                           "type": "named",
                           "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
                         }
                       },
                       "name": {
@@ -136,6 +170,104 @@
                         "type": {
                           "type": "named",
                           "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "genre": {
+                    "description": "A movie genre",
+                    "fields": {
+                      "id": {
+                        "description": "The genre's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
+                        }
+                      },
+                      "movies": {
+                        "description": "Notable movies of this genre",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "movie"
+                          }
+                        }
+                      },
+                      "name": {
+                        "description": "The genre's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
                         }
                       }
                     }
@@ -158,6 +290,15 @@
                         "type": {
                           "type": "named",
                           "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
                         }
                       },
                       "location": {
@@ -172,6 +313,36 @@
                         "type": {
                           "type": "named",
                           "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
                         }
                       },
                       "staff": {
@@ -204,6 +375,36 @@
                         "type": {
                           "type": "named",
                           "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
                         }
                       },
                       "country": {
@@ -211,6 +412,36 @@
                         "type": {
                           "type": "named",
                           "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
                         }
                       }
                     }
@@ -237,11 +468,30 @@
                   "movie": {
                     "description": "A movie",
                     "fields": {
+                      "genres": {
+                        "description": "The movie's genres",
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "genre"
+                          }
+                        }
+                      },
                       "id": {
                         "description": "The movie's primary key",
                         "type": {
                           "type": "named",
                           "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
                         }
                       },
                       "rating": {
@@ -249,6 +499,15 @@
                         "type": {
                           "type": "named",
                           "name": "Int"
+                        },
+                        "arguments": {
+                          "hash": {
+                            "description": "Calculate hash",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          }
                         }
                       },
                       "title": {
@@ -256,6 +515,36 @@
                         "type": {
                           "type": "named",
                           "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
                         }
                       }
                     }
@@ -271,6 +560,36 @@
                             "type": "named",
                             "name": "String"
                           }
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
                         }
                       },
                       "last_name": {
@@ -281,6 +600,74 @@
                             "type": "named",
                             "name": "String"
                           }
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "session_info": {
+                    "description": "Session details",
+                    "fields": {
+                      "expiry": {
+                        "description": "Token expiry",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "token": {
+                        "description": "Session token",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "session_response": {
+                    "description": "Response of session details",
+                    "fields": {
+                      "headers": {
+                        "description": "Response headers to be forwarded",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "response": {
+                        "description": "Session details",
+                        "type": {
+                          "type": "named",
+                          "name": "session_info"
                         }
                       }
                     }
@@ -293,6 +680,36 @@
                         "type": {
                           "type": "named",
                           "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
                         }
                       },
                       "last_name": {
@@ -300,6 +717,36 @@
                         "type": {
                           "type": "named",
                           "name": "String"
+                        },
+                        "arguments": {
+                          "change_case": {
+                            "description": "Change the case of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "hash": {
+                            "description": "Hash a string",
+                            "type": {
+                              "type": "named",
+                              "name": "String"
+                            }
+                          },
+                          "limit": {
+                            "description": "Limit the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          },
+                          "offset": {
+                            "description": "Offset the length of a string",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
                         }
                       },
                       "specialities": {
@@ -482,11 +929,11 @@
                     }
                   },
                   {
-                    "name": "get_actors_by_movie_id",
-                    "description": "Get all actors from a movie by movie ID",
+                    "name": "actor_names_by_movie",
+                    "description": "Get actor names by movie ID",
                     "arguments": {
                       "movie_id": {
-                        "description": "the id of the movie to fetch the actors from",
+                        "description": "the id of the movie to fetch",
                         "type": {
                           "type": "named",
                           "name": "Int"
@@ -494,10 +941,13 @@
                       }
                     },
                     "result_type": {
-                      "type": "array",
-                      "element_type": {
-                        "type": "named",
-                        "name": "actor"
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
                       }
                     }
                   },
@@ -526,6 +976,79 @@
                     }
                   },
                   {
+                    "name": "get_actors_by_movie_id_bounds",
+                    "description": "Get all actors within a given lower and upper movie id bound",
+                    "arguments": {
+                      "lower_bound": {
+                        "description": "the lower bound for movie id",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "upper_bound": {
+                        "description": "the upper bound for movie id",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actors_by_bool_exp",
+                    "description": "Get all actors with a boolean expression",
+                    "arguments": {
+                      "actor_bool_exp": {
+                        "description": "boolean expression over actor",
+                        "type": {
+                          "type": "predicate",
+                          "object_type_name": "actor"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actors_by_movie_id",
+                    "description": "Get all actors from a movie by movie ID",
+                    "arguments": {
+                      "movie_id": {
+                        "description": "the id of the movie to fetch the actors from",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
                     "name": "get_institutions_by_institution_query",
                     "description": "Get institutions by specifying parts of institution object. For example by 'location.city'. All fields are optional.",
                     "arguments": {
@@ -543,6 +1066,30 @@
                         "type": "named",
                         "name": "institution"
                       }
+                    }
+                  },
+                  {
+                    "name": "get_session_details",
+                    "description": "Get session details of a user",
+                    "arguments": {
+                      "_headers": {
+                        "description": "headers required for session details",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
+                      "user_id": {
+                        "description": "user id of the user",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "session_response"
                     }
                   }
                 ],
@@ -595,10 +1142,60 @@
                     }
                   },
                   {
+                    "name": "uppercase_actor_name_by_id",
+                    "description": "Uppercase an actor name given the ID",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the actor to update",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "uppercase_all_actor_names",
+                    "description": "Uppercase all actor names",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "name": "uppercase_all_actor_names_return_names_list",
+                    "description": "Uppercase all actor names and return a list of the updated names",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  {
                     "name": "login",
                     "description": "Perform a user login",
                     "arguments": {
-                      "headers": {
+                      "_headers": {
                         "description": "headers required for authentication",
                         "type": {
                           "type": "named",
@@ -636,6 +1233,23 @@
                         "name": "String"
                       }
                     }
+                  },
+                  {
+                    "name": "add_movie_with_genres",
+                    "description": "Add a movie with genres",
+                    "arguments": {
+                      "movie": {
+                        "description": "The movie to add",
+                        "type": {
+                          "type": "named",
+                          "name": "movie"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "named",
+                      "name": "movie"
+                    }
                   }
                 ]
               },
@@ -646,6 +1260,8 @@
                     "aggregates": {},
                     "variables": {},
                     "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {},
                       "aggregates": {}
                     }
                   },

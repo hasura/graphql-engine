@@ -159,6 +159,40 @@ update-golden-files-local: start-docker-test-deps
   UPDATE_GOLDENFILES=1 cargo test
   just fix-format
 
+update-custom-connector-schema-in-test-metadata: && fix-format
+  #!/usr/bin/env bash
+  set -e
+  docker compose -f ci.docker-compose.yaml up --build --wait custom_connector
+
+  new_capabilities=$(curl http://localhost:8101/capabilities | jq)
+  new_schema=$(curl http://localhost:8101/schema | jq)
+  ndc_version="v0.1"
+
+  # Should only be tests that actually talk to the running connector and therefore must be up to date
+  test_directories=(./crates/engine/tests/execute)
+
+  find "${test_directories[@]}" -name '*.json' -print0 |
+  while IFS= read -r -d '' file; do
+    # Check if the file actually contains a custom connector DataConnectorLink
+    if jq -e '
+      (. | type == "object") and has("subgraphs") and (.subgraphs | length > 0) and (.subgraphs[] | has("objects") and (.objects | length > 0))
+      and any(.subgraphs[].objects[]; .kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://custom_connector:8101")' "$file" >/dev/null; then
+
+      # Update its schema, capabilities and version
+      jq --argjson newCapabilities "$new_capabilities" --argjson newSchema "$new_schema" --arg ndcVersion "$ndc_version" '
+        (.subgraphs[].objects[] | select(.kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://custom_connector:8101").definition.schema)
+        |= (.capabilities = $newCapabilities | .schema = $newSchema | .version = $ndcVersion)
+      ' $file \
+      | sponge $file
+
+      echo "Updated $file"
+    else
+      echo "Skipping $file: Does not appear to be a metadata file with a custom connector"
+    fi
+  done
+
+  docker compose -f ci.docker-compose.yaml down
+
 # run the engine using schema from tests
 run-local: start-docker-test-deps start-docker-run-deps
   RUST_LOG=DEBUG cargo run --bin engine -- \

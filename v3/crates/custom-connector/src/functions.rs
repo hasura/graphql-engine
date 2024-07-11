@@ -31,12 +31,14 @@ pub(crate) fn get_functions() -> Vec<ndc_models::FunctionInfo> {
         get_actor_by_id::function_info(),
         get_movie_by_id::function_info(),
         get_actors_by_name::function_info(),
-        get_actors_by_movie_id::function_info(),
+        actor_names_by_movie::function_info(),
         get_all_actors::function_info(),
         get_all_movies::function_info(),
+        get_actors_by_movie_id_bounds::function_info(),
+        get_actors_by_bool_exp::function_info(),
+        get_actors_by_movie_id::function_info(),
         get_institutions_by_institution_query::function_info(),
         get_session_details::function_info(),
-        // TODO: Looks like the other functions where never added to the schema?
     ]
 }
 

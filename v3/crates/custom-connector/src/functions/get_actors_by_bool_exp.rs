@@ -8,6 +8,29 @@ use crate::{
     state::{AppState, Row},
 };
 
+pub(crate) fn function_info() -> ndc_models::FunctionInfo {
+    ndc_models::FunctionInfo {
+        name: "get_actors_by_bool_exp".into(),
+        description: Some("Get all actors with a boolean expression".into()),
+        arguments: BTreeMap::from_iter([(
+            "actor_bool_exp".into(),
+            ndc_models::ArgumentInfo {
+                description: Some("boolean expression over actor".into()),
+                argument_type: ndc_models::Type::Predicate {
+                    object_type_name: "actor".into(),
+                },
+            },
+        )]),
+        result_type: ndc_models::Type::Nullable {
+            underlying_type: Box::new(ndc_models::Type::Array {
+                element_type: Box::new(ndc_models::Type::Named {
+                    name: "actor".into(),
+                }),
+            }),
+        },
+    }
+}
+
 pub(crate) fn rows(
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,
