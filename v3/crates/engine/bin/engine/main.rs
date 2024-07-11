@@ -130,7 +130,7 @@ async fn main() {
     tracing_util::initialize_tracing(
         server.otlp_endpoint.as_deref(),
         "graphql-engine",
-        env!("CARGO_PKG_VERSION"),
+        Some(VERSION),
     )
     .unwrap();
 

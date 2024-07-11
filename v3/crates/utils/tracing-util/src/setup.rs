@@ -8,7 +8,7 @@ use opentelemetry_semantic_conventions as semcov;
 pub fn initialize_tracing(
     endpoint: Option<&str>,
     service_name: &'static str,
-    service_version: &'static str,
+    service_version: Option<&'static str>,
 ) -> Result<(), TraceError> {
     // install global collector configured based on RUST_LOG env var.
     tracing_subscriber::fmt::init();
@@ -18,11 +18,15 @@ pub fn initialize_tracing(
         Box::new(opentelemetry_zipkin::Propagator::new()),
     ]));
 
-    let config =
-        opentelemetry_sdk::trace::config().with_resource(opentelemetry_sdk::Resource::new(vec![
-            KeyValue::new(semcov::resource::SERVICE_NAME, service_name),
-            KeyValue::new(semcov::resource::SERVICE_VERSION, service_version),
-        ]));
+    let mut resource_entries = vec![KeyValue::new(semcov::resource::SERVICE_NAME, service_name)];
+    if let Some(service_version) = service_version {
+        resource_entries.push(KeyValue::new(
+            semcov::resource::SERVICE_VERSION,
+            service_version,
+        ));
+    }
+    let config = opentelemetry_sdk::trace::config()
+        .with_resource(opentelemetry_sdk::Resource::new(resource_entries));
 
     let otlp_exporter = opentelemetry_otlp::SpanExporterBuilder::Tonic(
         opentelemetry_otlp::new_exporter()
