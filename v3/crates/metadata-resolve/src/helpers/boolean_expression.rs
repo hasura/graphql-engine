@@ -1,4 +1,4 @@
-use crate::types::error::{BooleanExpressionError, Error, TypePredicateError};
+use crate::types::error::{Error, TypePredicateError};
 
 use crate::stages::{
     boolean_expressions, data_connectors, models, relationships, scalar_boolean_expressions,
@@ -32,7 +32,7 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                 .objects
                 .get(&object_comparison_expression_info.object_type_name)
                 .ok_or_else(|| {
-                    Error::from(BooleanExpressionError::BooleanExpressionCouldNotBeFound {
+                    Error::from(boolean_expressions::BooleanExpressionError::BooleanExpressionCouldNotBeFound {
                         parent_boolean_expression: object_boolean_expression_type.name.clone(),
                         child_boolean_expression: object_comparison_expression_info
                             .object_type_name
@@ -43,15 +43,13 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
             // this must be a nested object, so let's check our data connector is ready for that
             if !data_connector.capabilities.supports_nested_object_filtering {
                 return Err(
-                    BooleanExpressionError::NoNestedObjectFilteringCapabilitiesDefined {
+                    Error::from(boolean_expressions::BooleanExpressionError::NoNestedObjectFilteringCapabilitiesDefined {
                         parent_type_name: object_boolean_expression_type.name.clone(),
                         nested_type_name: object_comparison_expression_info
                             .object_type_name
                             .clone(),
                         data_connector_name: data_connector.name.clone(),
-                    }
-                    .into(),
-                );
+                        }));
             }
 
             // continue checking the nested object...
@@ -73,7 +71,7 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                     .scalars
                     .get(object_type_name)
                     .ok_or_else(|| {
-                        Error::from(BooleanExpressionError::BooleanExpressionCouldNotBeFound {
+                        Error::from(boolean_expressions::BooleanExpressionError::BooleanExpressionCouldNotBeFound {
                             parent_boolean_expression: object_boolean_expression_type.name.clone(),
                             child_boolean_expression: object_type_name.clone(),
                         })
@@ -181,13 +179,13 @@ fn validate_data_connector_with_scalar_boolean_expression_type(
         .data_connector_operator_mappings
         .contains_key(&data_connector.name)
     {
-        return Err(Error::BooleanExpressionError {
-            boolean_expression_error: BooleanExpressionError::DataConnectorMappingMissingForField {
+        return Err(Error::from(
+            boolean_expressions::BooleanExpressionError::DataConnectorMappingMissingForField {
                 field: field_name.clone(),
                 boolean_expression_name: parent_boolean_expression_type_name.clone(),
                 data_connector_name: data_connector.name.clone(),
             },
-        });
+        ));
     };
     Ok(())
 }

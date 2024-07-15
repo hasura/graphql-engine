@@ -1,9 +1,8 @@
 use open_dds::{boolean_expression::BooleanExpressionLogicalOperators, types::CustomTypeName};
 
-use crate::types::error::{BooleanExpressionError, Error};
-use crate::Qualified;
-
+use super::error::BooleanExpressionError;
 use super::types::IncludeLogicalOperators;
+use crate::Qualified;
 
 pub(crate) fn lookup_raw_boolean_expression<'a>(
     parent_boolean_expression_name: &Qualified<CustomTypeName>,
@@ -14,17 +13,16 @@ pub(crate) fn lookup_raw_boolean_expression<'a>(
         &'a open_dds::identifier::SubgraphIdentifier,
         &'a open_dds::boolean_expression::BooleanExpressionTypeV1,
     ),
-    Error,
+    BooleanExpressionError,
 > {
     raw_boolean_expression_types
         .get(boolean_expression_name)
-        .ok_or_else(|| {
-            BooleanExpressionError::BooleanExpressionCouldNotBeFound {
+        .ok_or_else(
+            || BooleanExpressionError::BooleanExpressionCouldNotBeFound {
                 parent_boolean_expression: parent_boolean_expression_name.clone(),
                 child_boolean_expression: boolean_expression_name.clone(),
-            }
-            .into()
-        })
+            },
+        )
 }
 
 pub fn resolve_logical_operators(

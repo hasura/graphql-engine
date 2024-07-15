@@ -2,7 +2,7 @@ use crate::stages::{
     boolean_expressions, graphql_config, object_boolean_expressions, relationships,
     scalar_boolean_expressions, scalar_types,
 };
-use crate::types::error::{BooleanExpressionError, Error};
+use crate::types::error::Error;
 
 use crate::types::subgraph::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
@@ -114,10 +114,10 @@ pub(crate) fn get_object_type_for_boolean_expression<'a>(
     object_types
         .get(&boolean_expression_type.object_type)
         .ok_or(Error::from(
-            BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
-                type_name: boolean_expression_type.object_type.clone(),
-            },
-        ))
+        boolean_expressions::BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
+            type_name: boolean_expression_type.object_type.clone(),
+        },
+    ))
 }
 
 pub(crate) fn get_object_type_for_object_boolean_expression<'a>(
@@ -130,7 +130,7 @@ pub(crate) fn get_object_type_for_object_boolean_expression<'a>(
     object_types
         .get(&object_boolean_expression_type.object_type)
         .ok_or(Error::from(
-            BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
+            boolean_expressions::BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
                 type_name: object_boolean_expression_type.object_type.clone(),
             },
         ))

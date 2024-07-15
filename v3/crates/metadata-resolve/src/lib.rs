@@ -23,9 +23,9 @@ pub use stages::aggregates::{
     AggregationFunctionInfo, DataConnectorAggregationFunctionInfo,
 };
 pub use stages::boolean_expressions::{
-    BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
-    ComparisonExpressionInfo, IncludeLogicalOperators, ObjectComparisonExpressionInfo,
-    ResolvedObjectBooleanExpressionType,
+    BooleanExpressionComparableRelationship, BooleanExpressionError,
+    BooleanExpressionGraphqlConfig, ComparisonExpressionInfo, IncludeLogicalOperators,
+    ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
 };
 pub use stages::command_permissions::CommandWithPermissions;
 pub use stages::commands::Command;
@@ -58,7 +58,7 @@ pub use stages::scalar_types::ScalarTypeRepresentation;
 pub use stages::type_permissions::TypeInputPermission;
 pub use stages::{resolve, Metadata};
 pub use types::configuration;
-pub use types::error::{BooleanExpressionError, Error};
+pub use types::error::Error;
 pub use types::permission::{ValueExpression, ValueExpressionOrPredicate};
 pub use types::subgraph::{
     deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,

@@ -1,4 +1,4 @@
-use crate::types::error::{BooleanExpressionError, Error};
+use crate::types::error::Error;
 
 use super::types::ModelExpressionType;
 use crate::helpers::boolean_expression::validate_data_connector_with_object_boolean_expression_type;
@@ -30,7 +30,7 @@ pub(crate) fn resolve_filter_expression_type(
             // check that the model object type and boolean expression object type agree
             if object_boolean_expression_type.object_type != *model_data_type {
                 return Err(Error::from(
-                    BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel {
+                    boolean_expressions::BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel {
                         name: boolean_expression_type_name.clone(),
                         boolean_expression_object_type: object_boolean_expression_type
                             .object_type
@@ -92,7 +92,7 @@ pub(crate) fn resolve_filter_expression_type(
                     ))
                 }
                 None => Err(Error::from(
-                    BooleanExpressionError::UnknownBooleanExpressionTypeInModel {
+                    boolean_expressions::BooleanExpressionError::UnknownBooleanExpressionTypeInModel {
                         name: boolean_expression_type_name.clone(),
                         model: model_name.clone(),
                     },

@@ -1,6 +1,6 @@
 use crate::stages::{
-    aggregates::AggregateExpressionError, apollo, data_connectors, graphql_config, object_types,
-    type_permissions,
+    aggregates::AggregateExpressionError, apollo, boolean_expressions, data_connectors,
+    graphql_config, object_types, scalar_boolean_expressions, type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 use open_dds::{
@@ -360,16 +360,6 @@ pub enum Error {
         relationship_name: RelationshipName,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("unknown data connector {data_connector:} referenced in scalar type representation of {scalar_type:}")]
-    ScalarTypeFromUnknownDataConnector {
-        data_connector: Qualified<DataConnectorName>,
-        scalar_type: DataConnectorScalarType,
-    },
-    #[error("cannot find scalar type {scalar_type:} in data connector {data_connector:}")]
-    UnknownScalarTypeInDataConnector {
-        data_connector: Qualified<DataConnectorName>,
-        scalar_type: DataConnectorScalarType,
-    },
     #[error("unknown type represented for scalar type {scalar_type:}: {type_name:}")]
     ScalarTypeUnknownRepresentation {
         scalar_type: DataConnectorScalarType,
@@ -473,17 +463,19 @@ pub enum Error {
     RelationshipError {
         relationship_error: RelationshipError,
     },
-    #[error("{boolean_expression_error:}")]
-    BooleanExpressionError {
-        boolean_expression_error: BooleanExpressionError,
-    },
+    #[error("{0}")]
+    BooleanExpressionError(#[from] boolean_expressions::BooleanExpressionError),
+    #[error("{0}")]
+    ScalarBooleanExpressionTypeError(
+        #[from] scalar_boolean_expressions::ScalarBooleanExpressionTypeError,
+    ),
     #[error("{type_predicate_error:}")]
     TypePredicateError {
         type_predicate_error: TypePredicateError,
     },
     #[error("{type_error:}")]
     TypeError { type_error: TypeError },
-    #[error("{0:}")]
+    #[error("{0}")]
     AggregateExpressionError(AggregateExpressionError),
     #[error("{0}")]
     ModelAggregateExpressionError(ModelAggregateExpressionError),
@@ -546,92 +538,6 @@ impl From<ModelAggregateExpressionError> for Error {
     fn from(val: ModelAggregateExpressionError) -> Self {
         Error::ModelAggregateExpressionError(val)
     }
-}
-
-impl From<BooleanExpressionError> for Error {
-    fn from(val: BooleanExpressionError) -> Self {
-        Error::BooleanExpressionError {
-            boolean_expression_error: val,
-        }
-    }
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum BooleanExpressionError {
-    #[error("unknown type used in object boolean expression: {type_name:}")]
-    UnknownTypeInObjectBooleanExpressionType {
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("unsupported type used in object boolean expression: {type_name:}; only object types are supported")]
-    UnsupportedTypeInObjectBooleanExpressionType {
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("unknown data connector {data_connector:} referenced in object boolean expression type {object_boolean_expression_type:}")]
-    UnknownDataConnectorInObjectBooleanExpressionType {
-        data_connector: Qualified<DataConnectorName>,
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-    },
-    #[error("unknown data connector object type {data_connector_object_type:} (in data connector {data_connector:}) referenced in object boolean expression type {object_boolean_expression_type:}")]
-    UnknownDataConnectorTypeInObjectBooleanExpressionType {
-        data_connector: Qualified<DataConnectorName>,
-        data_connector_object_type: DataConnectorObjectType,
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-    },
-    #[error("unknown field '{field_name:}' used in object boolean expression type {object_boolean_expression_type:}")]
-    UnknownFieldInObjectBooleanExpressionType {
-        field_name: FieldName,
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-    },
-    #[error("the object type '{object_type:}' used in boolean expression type {object_boolean_expression_type:} does not have a mapping to object {data_connector_object_type:} of data connector {data_connector:}")]
-    NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
-        object_type: Qualified<CustomTypeName>,
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-        data_connector_object_type: DataConnectorObjectType,
-        data_connector: Qualified<DataConnectorName>,
-    },
-    #[error("{error:} in boolean expression type {object_boolean_expression_type:}")]
-    BooleanExpressionTypeMappingCollectionError {
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-        error: TypeMappingCollectionError,
-    },
-    #[error("the following object boolean expression type is defined more than once: {name:}")]
-    DuplicateObjectBooleanExpressionTypeDefinition { name: Qualified<CustomTypeName> },
-    #[error("unknown object boolean expression type {name:} is used in model {model:}")]
-    UnknownBooleanExpressionTypeInModel {
-        name: Qualified<CustomTypeName>,
-        model: Qualified<ModelName>,
-    },
-    #[error("could not find boolean expression type {child_boolean_expression:} referenced within boolean expression {parent_boolean_expression:}")]
-    BooleanExpressionCouldNotBeFound {
-        parent_boolean_expression: Qualified<CustomTypeName>,
-        child_boolean_expression: Qualified<CustomTypeName>,
-    },
-    #[error("the boolean expression type {name:} used in model {model:} corresponds to object type {boolean_expression_object_type:} whereas the model's object type is {model_object_type:}")]
-    BooleanExpressionTypeForInvalidObjectTypeInModel {
-        name: Qualified<CustomTypeName>,
-        boolean_expression_object_type: Qualified<CustomTypeName>,
-        model: Qualified<ModelName>,
-        model_object_type: Qualified<CustomTypeName>,
-    },
-    #[error("field {field:} is missing a mapping for data connector {data_connector_name:} in boolean expression {boolean_expression_name:}")]
-    DataConnectorMappingMissingForField {
-        boolean_expression_name: Qualified<CustomTypeName>,
-        field: FieldName,
-        data_connector_name: Qualified<DataConnectorName>,
-    },
-    #[error("The data connector {data_connector_name} cannot be used for filtering nested object {nested_type_name:} within {parent_type_name:} as it has not defined any capabilities for nested object filtering")]
-    NoNestedObjectFilteringCapabilitiesDefined {
-        parent_type_name: Qualified<CustomTypeName>,
-        nested_type_name: Qualified<CustomTypeName>,
-        data_connector_name: Qualified<DataConnectorName>,
-    },
-    #[error("The field {field_name:} has type {field_type:} but the field's boolean expression type {field_boolean_expression_type_name:} has type {underlying_type:}")]
-    FieldTypeMismatch {
-        field_name: FieldName,
-        field_type: QualifiedTypeName,
-        field_boolean_expression_type_name: Qualified<CustomTypeName>,
-        underlying_type: QualifiedTypeName,
-    },
 }
 
 #[derive(Debug, thiserror::Error)]

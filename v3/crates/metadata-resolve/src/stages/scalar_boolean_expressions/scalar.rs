@@ -1,6 +1,6 @@
+use super::error::ScalarBooleanExpressionTypeError;
 use super::types::{IncludeIsNull, ResolvedScalarBooleanExpressionType};
 use crate::stages::data_connectors;
-use crate::types::error::Error;
 use crate::Qualified;
 use open_dds::{
     boolean_expression::{
@@ -19,7 +19,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     subgraph: &str,
     data_connectors: &data_connectors::DataConnectors,
     graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
-) -> Result<ResolvedScalarBooleanExpressionType, Error> {
+) -> Result<ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionTypeError> {
     let mut data_connector_operator_mappings = BTreeMap::new();
 
     // this scalar boolean expression type can be mapped to one or more data connectors
@@ -38,9 +38,11 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
         let data_connector_context = data_connectors
             .0
             .get(&qualified_data_connector_name)
-            .ok_or_else(|| Error::ScalarTypeFromUnknownDataConnector {
-                scalar_type: scalar_type_name.clone(),
-                data_connector: qualified_data_connector_name.clone(),
+            .ok_or_else(|| {
+                ScalarBooleanExpressionTypeError::ScalarTypeFromUnknownDataConnector {
+                    scalar_type: scalar_type_name.clone(),
+                    data_connector: qualified_data_connector_name.clone(),
+                }
             })?;
 
         // check that this scalar type actually exists for this data connector
@@ -52,10 +54,12 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
                     .data_connector_scalar_type
                     .as_str(),
             )
-            .ok_or_else(|| Error::UnknownScalarTypeInDataConnector {
-                scalar_type: scalar_type_name.clone(),
-                data_connector: qualified_data_connector_name.clone(),
-            })?;
+            .ok_or_else(
+                || ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
+                    scalar_type: scalar_type_name.clone(),
+                    data_connector: qualified_data_connector_name.clone(),
+                },
+            )?;
 
         data_connector_operator_mappings.insert(
             qualified_data_connector_name,

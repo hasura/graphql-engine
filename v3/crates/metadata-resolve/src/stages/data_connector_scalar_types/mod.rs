@@ -55,7 +55,7 @@ pub fn resolve<'a>(
 
         let scalars = data_connector_scalars
             .get_mut(&qualified_data_connector_name)
-            .ok_or_else(|| Error::ScalarTypeFromUnknownDataConnector {
+            .ok_or_else(|| scalar_boolean_expressions::ScalarBooleanExpressionTypeError::ScalarTypeFromUnknownDataConnector {
                 scalar_type: scalar_type_name.clone(),
                 data_connector: qualified_data_connector_name.clone(),
             })?;
@@ -63,7 +63,7 @@ pub fn resolve<'a>(
         let scalar_type = scalars
             .0
             .get_mut(&scalar_type_representation.data_connector_scalar_type)
-            .ok_or_else(|| Error::UnknownScalarTypeInDataConnector {
+            .ok_or_else(|| scalar_boolean_expressions::ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
                 scalar_type: scalar_type_name.clone(),
                 data_connector: qualified_data_connector_name.clone(),
             })?;
@@ -110,13 +110,13 @@ pub fn resolve<'a>(
 
             let scalars = data_connector_scalars
                 .get_mut(data_connector_name)
-                .ok_or_else(|| Error::ScalarTypeFromUnknownDataConnector {
+                .ok_or_else(|| scalar_boolean_expressions::ScalarBooleanExpressionTypeError::ScalarTypeFromUnknownDataConnector {
                     scalar_type: scalar_type_name.clone(),
                     data_connector: data_connector_name.clone(),
                 })?;
 
             let scalar_type = scalars.0.get_mut(scalar_type_name).ok_or_else(|| {
-                Error::UnknownScalarTypeInDataConnector {
+                scalar_boolean_expressions::ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
                     scalar_type: scalar_type_name.clone(),
                     data_connector: data_connector_name.clone(),
                 }

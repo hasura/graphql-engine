@@ -3,7 +3,7 @@ use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
     object_types, type_permissions,
 };
-use crate::types::error::{BooleanExpressionError, Error};
+use crate::types::error::Error;
 
 use crate::helpers::model::resolve_ndc_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
@@ -52,7 +52,7 @@ pub fn resolve(
             resolved_boolean_expression,
         ) {
             return Err(Error::from(
-                BooleanExpressionError::DuplicateObjectBooleanExpressionTypeDefinition {
+                boolean_expressions::BooleanExpressionError::DuplicateObjectBooleanExpressionTypeDefinition {
                     name: existing.name,
                 },
             ));
@@ -88,7 +88,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     let object_type_representation =
         object_types.get(&qualified_object_type_name).map_err(|_| {
             Error::from(
-                BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
+                boolean_expressions::BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
                     type_name: qualified_object_type_name.clone(),
                 },
             )
@@ -105,7 +105,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         .get(&qualified_data_connector_name)
         .ok_or_else(|| {
             Error::from(
-                BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
+                boolean_expressions::BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
                     data_connector: qualified_data_connector_name.clone(),
                     object_boolean_expression_type: qualified_name.clone(),
                 },
@@ -119,7 +119,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
             .as_str(),
     ) {
         return Err(Error::from(
-            BooleanExpressionError::UnknownDataConnectorTypeInObjectBooleanExpressionType {
+            boolean_expressions::BooleanExpressionError::UnknownDataConnectorTypeInObjectBooleanExpressionType {
                 data_connector: qualified_data_connector_name.clone(),
                 object_boolean_expression_type: qualified_name.clone(),
                 data_connector_object_type: object_boolean_expression
@@ -135,7 +135,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
                     &object_boolean_expression.data_connector_object_type,
                 )
                 .ok_or_else(|| {
-                    Error::from(BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
+                    Error::from(boolean_expressions::BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
                         object_type: qualified_object_type_name.clone(),
                         object_boolean_expression_type: qualified_name.clone(),
                         data_connector_object_type: object_boolean_expression
@@ -152,7 +152,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
             .contains_key(&comparable_field.field_name)
         {
             return Err(
-                BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
+                boolean_expressions::BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
                     field_name: comparable_field.field_name.clone(),
                     object_boolean_expression_type: qualified_name.clone(),
                 }
@@ -209,13 +209,12 @@ pub(crate) fn resolve_object_boolean_expression_type(
             let scalars =
                 data_connector_scalars
                     .get(&data_connector_name)
-                    .ok_or(Error::BooleanExpressionError {
-                    boolean_expression_error:
-                        BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
+                    .ok_or(Error::from (
+                        boolean_expressions::BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
                             object_boolean_expression_type: object_boolean_expression_type.clone(),
                             data_connector: data_connector_name.clone(),
                         },
-                })?;
+                    ))?;
 
             resolve_boolean_expression_graphql_config(
                 &data_connector_name,

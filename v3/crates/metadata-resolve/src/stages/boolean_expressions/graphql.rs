@@ -1,3 +1,4 @@
+use super::error::BooleanExpressionError;
 use super::helpers;
 pub use super::{
     BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
@@ -5,7 +6,6 @@ pub use super::{
 };
 use crate::helpers::types::mk_name;
 use crate::stages::{graphql_config, scalar_boolean_expressions};
-use crate::types::error::Error;
 use crate::types::subgraph::mk_qualified_type_reference;
 use crate::Qualified;
 use lang_graphql::ast::common::{self as ast};
@@ -33,7 +33,7 @@ pub(crate) fn resolve_object_boolean_graphql(
     raw_boolean_expression_types: &super::object::RawBooleanExpressionTypes,
     subgraph: &str,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<BooleanExpressionGraphqlConfig, Error> {
+) -> Result<BooleanExpressionGraphqlConfig, BooleanExpressionError> {
     let boolean_expression_graphql_name =
         mk_name(boolean_expression_graphql_config.type_name.as_ref()).map(ast::TypeName)?;
 
@@ -45,9 +45,8 @@ pub(crate) fn resolve_object_boolean_graphql(
         .query
         .filter_input_config
         .as_ref()
-        .ok_or_else(|| Error::GraphqlConfigError {
-            graphql_config_error:
-                graphql_config::GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig,
+        .ok_or_else(|| {
+            graphql_config::GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig
         })?;
 
     for (comparable_field_name, comparable_field_type_name) in comparable_fields {

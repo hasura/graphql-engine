@@ -1,4 +1,4 @@
-use crate::stages::data_connector_scalar_types;
+use crate::stages::{data_connector_scalar_types, scalar_boolean_expressions};
 use crate::types::error::Error;
 
 use crate::types::subgraph::{
@@ -18,14 +18,12 @@ pub(crate) fn resolve_ndc_type(
 ) -> Result<QualifiedTypeReference, Error> {
     match source_type {
         ndc_models::Type::Named { name } => {
-            let scalar_type =
-                scalars
-                    .0
-                    .get(name.as_str())
-                    .ok_or(Error::UnknownScalarTypeInDataConnector {
-                        data_connector: data_connector.clone(),
-                        scalar_type: DataConnectorScalarType::from(name.as_str()),
-                    })?;
+            let scalar_type = scalars.0.get(name.as_str()).ok_or(
+                scalar_boolean_expressions::ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
+                    data_connector: data_connector.clone(),
+                    scalar_type: DataConnectorScalarType::from(name.as_str()),
+                },
+            )?;
             scalar_type
                 .representation
                 .clone()
