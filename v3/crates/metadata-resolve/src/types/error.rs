@@ -1,6 +1,6 @@
 use crate::stages::{
     aggregates::AggregateExpressionError, apollo, boolean_expressions, data_connectors,
-    graphql_config, object_types, scalar_boolean_expressions, type_permissions,
+    graphql_config, object_types, relay, scalar_boolean_expressions, type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 use open_dds::{
@@ -25,10 +25,6 @@ use crate::helpers::{
 pub enum Error {
     #[error("the following model is defined more than once: {name:}")]
     DuplicateModelDefinition { name: Qualified<ModelName> },
-    #[error("'globalIdFields' for type {object_type:} found, but no model found with 'globalIdSource: true' for type {object_type:}")]
-    GlobalIdSourceNotDefined {
-        object_type: Qualified<CustomTypeName>,
-    },
     #[error("the data type {data_type:} for model {model_name:} has not been defined")]
     UnknownModelDataType {
         model_name: Qualified<ModelName>,
@@ -389,17 +385,6 @@ pub enum Error {
         type_name: Qualified<CustomTypeName>,
         data_connector: Qualified<DataConnectorName>,
     },
-    #[error("Model {model_name:} is marked as a global ID source but there are no global id fields present in the related object type {type_name:}")]
-    NoGlobalFieldsPresentInGlobalIdSource {
-        type_name: Qualified<CustomTypeName>,
-        model_name: ModelName,
-    },
-    #[error("Found multiple models  {model_1:}, {model_2:} that implement the same object type {object_type:} to be global ID sources.")]
-    DuplicateModelGlobalIdSource {
-        model_1: Qualified<ModelName>,
-        model_2: Qualified<ModelName>,
-        object_type: Qualified<CustomTypeName>,
-    },
     #[error("the data type {data_type:} has not been defined")]
     UnknownType {
         data_type: Qualified<CustomTypeName>,
@@ -412,9 +397,6 @@ pub enum Error {
     UnknownScalarType {
         data_type: Qualified<CustomTypeName>,
     },
-
-    #[error("model {model_name:} with arguments is unsupported as a global ID source")]
-    ModelWithArgumentsAsGlobalIdSource { model_name: Qualified<ModelName> },
     #[error("An error occurred while mapping arguments in the model {model_name:} to the collection {collection_name:} in the data connector {data_connector_name:}: {error:}")]
     ModelCollectionArgumentMappingError {
         data_connector_name: Qualified<DataConnectorName>,
@@ -487,6 +469,8 @@ pub enum Error {
     ObjectTypesError(#[from] object_types::ObjectTypesError),
     #[error("{0}")]
     ApolloError(#[from] apollo::ApolloError),
+    #[error("{0}")]
+    RelayError(#[from] relay::RelayError),
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -11,7 +11,7 @@ use crate::types::error::Error;
 
 use crate::stages::{
     aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors,
-    object_boolean_expressions, scalar_types, type_permissions,
+    object_boolean_expressions, relay, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 
@@ -79,11 +79,13 @@ pub fn resolve(
             ) {
                 None => {}
                 Some(duplicate_model_name) => {
-                    return Err(Error::DuplicateModelGlobalIdSource {
-                        model_1: resolved_model.name,
-                        model_2: duplicate_model_name,
-                        object_type: resolved_model.data_type,
-                    })
+                    return Err(Error::from(
+                        relay::RelayError::DuplicateModelGlobalIdSource {
+                            model_1: resolved_model.name,
+                            model_2: duplicate_model_name,
+                            object_type: resolved_model.data_type,
+                        },
+                    ))
                 }
             }
         }
@@ -163,15 +165,19 @@ fn resolve_model(
             .global_id_fields
             .is_empty()
         {
-            return Err(Error::NoGlobalFieldsPresentInGlobalIdSource {
-                type_name: qualified_object_type_name,
-                model_name: model.name.clone(),
-            });
+            return Err(Error::from(
+                relay::RelayError::NoGlobalFieldsPresentInGlobalIdSource {
+                    type_name: qualified_object_type_name,
+                    model_name: model.name.clone(),
+                },
+            ));
         }
         if !model.arguments.is_empty() {
-            return Err(Error::ModelWithArgumentsAsGlobalIdSource {
-                model_name: qualified_model_name,
-            });
+            return Err(Error::from(
+                relay::RelayError::ModelWithArgumentsAsGlobalIdSource {
+                    model_name: qualified_model_name,
+                },
+            ));
         }
         // model has `global_id_source`; insert into the BTreeMap of `global_id_enabled_types`
         match global_id_enabled_types.get_mut(&qualified_object_type_name) {

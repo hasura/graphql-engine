@@ -13,7 +13,7 @@ pub mod models_graphql;
 pub mod object_boolean_expressions;
 pub mod object_types;
 pub mod relationships;
-mod relay;
+pub mod relay;
 pub mod roles;
 pub mod scalar_boolean_expressions;
 pub mod scalar_types;
