@@ -1,3 +1,4 @@
+use indexmap::IndexMap;
 use std::collections::BTreeMap;
 
 use ndc_models;
@@ -10,7 +11,7 @@ pub fn upgrade_rowset_to_v02(rowset: ndc_models_v01::RowSet) -> ndc_models::RowS
         aggregates: rowset.aggregates.map(|aggregates| {
             aggregates
                 .into_iter()
-                .map(|(name, value)| (ndc_models::FieldName::from(name), value))
+                .map(|(name, value)| (ndc_models::FieldName::new(name.into_inner()), value))
                 .collect()
         }),
         rows: rowset.rows.map(|rows| {
@@ -19,7 +20,7 @@ pub fn upgrade_rowset_to_v02(rowset: ndc_models_v01::RowSet) -> ndc_models::RowS
                     row.into_iter()
                         .map(|(name, ndc_models_v01::RowFieldValue(v))| {
                             (
-                                ndc_models::FieldName::from(name),
+                                ndc_models::FieldName::new(name.into_inner()),
                                 ndc_models::RowFieldValue(v),
                             )
                         })
@@ -27,6 +28,7 @@ pub fn upgrade_rowset_to_v02(rowset: ndc_models_v01::RowSet) -> ndc_models::RowS
                 })
                 .collect()
         }),
+        groups: None, // v0.1.x does not have groups
     }
 }
 
@@ -59,14 +61,19 @@ pub fn downgrade_v02_query_request(
         arguments: query_request
             .arguments
             .into_iter()
-            .map(|(name, argument)| (name.into(), downgrade_v02_argument(argument)))
+            .map(|(name, argument)| (name.into_inner().into(), downgrade_v02_argument(argument)))
             .collect(),
-        collection: query_request.collection.into(),
-        query: downgrade_v02_query(query_request.query),
+        collection: query_request.collection.into_inner().into(),
+        query: downgrade_v02_query(query_request.query)?,
         collection_relationships: query_request
             .collection_relationships
             .into_iter()
-            .map(|(name, relationship)| (name.into(), downgrade_v02_relationship(relationship)))
+            .map(|(name, relationship)| {
+                (
+                    name.into_inner().into(),
+                    downgrade_v02_relationship(relationship),
+                )
+            })
             .collect(),
         variables: downgrade_v02_variables(query_request.variables),
     })
@@ -74,14 +81,16 @@ pub fn downgrade_v02_query_request(
 
 pub fn downgrade_v02_variables(
     variables: Option<Vec<BTreeMap<ndc_models::VariableName, serde_json::Value>>>,
-) -> Option<Vec<BTreeMap<String, serde_json::Value>>> {
+) -> Option<Vec<BTreeMap<ndc_models_v01::VariableName, serde_json::Value>>> {
     variables.map(|variables| {
         variables
             .into_iter()
             .map(|variables| {
                 variables
                     .into_iter()
-                    .map(|(name, value)| (name.into(), value))
+                    .map(|(name, value)| {
+                        (ndc_models_v01::VariableName::new(name.into_inner()), value)
+                    })
                     .collect()
             })
             .collect()
@@ -90,32 +99,41 @@ pub fn downgrade_v02_variables(
 
 fn downgrade_v02_argument(argument: ndc_models::Argument) -> ndc_models_v01::Argument {
     match argument {
-        ndc_models::Argument::Variable { name } => {
-            ndc_models_v01::Argument::Variable { name: name.into() }
-        }
+        ndc_models::Argument::Variable { name } => ndc_models_v01::Argument::Variable {
+            name: name.into_inner().into(),
+        },
         ndc_models::Argument::Literal { value } => ndc_models_v01::Argument::Literal { value },
     }
 }
 
-fn downgrade_v02_query(query: ndc_models::Query) -> ndc_models_v01::Query {
-    ndc_models_v01::Query {
+fn downgrade_v02_query(
+    query: ndc_models::Query,
+) -> Result<ndc_models_v01::Query, NdcDowngradeError> {
+    Ok(ndc_models_v01::Query {
         aggregates: query.aggregates.map(|aggregates| {
             aggregates
                 .into_iter()
-                .map(|(name, aggregate)| (name.into(), downgrade_v02_aggregate(aggregate)))
+                .map(|(name, aggregate)| {
+                    (name.into_inner().into(), downgrade_v02_aggregate(aggregate))
+                })
                 .collect()
         }),
-        fields: query.fields.map(|fields| {
-            fields
-                .into_iter()
-                .map(|(name, field)| (name.into(), downgrade_v02_field(field)))
-                .collect()
-        }),
+        fields: query
+            .fields
+            .map(|fields| {
+                fields
+                    .into_iter()
+                    .map(|(name, field)| {
+                        Ok((name.into_inner().into(), downgrade_v02_field(field)?))
+                    })
+                    .collect::<Result<IndexMap<_, _>, _>>()
+            })
+            .transpose()?,
         limit: query.limit,
         offset: query.offset,
-        order_by: query.order_by.map(downgrade_v02_order_by),
-        predicate: query.predicate.map(downgrade_v02_predicate),
-    }
+        order_by: query.order_by.map(downgrade_v02_order_by).transpose()?,
+        predicate: query.predicate.map(downgrade_v02_expression).transpose()?,
+    })
 }
 
 fn downgrade_v02_aggregate(aggregate: ndc_models::Aggregate) -> ndc_models_v01::Aggregate {
@@ -125,8 +143,9 @@ fn downgrade_v02_aggregate(aggregate: ndc_models::Aggregate) -> ndc_models_v01::
             field_path,
             distinct,
         } => ndc_models_v01::Aggregate::ColumnCount {
-            column: column.into(),
-            field_path: field_path.map(|fp| fp.into_iter().map(Into::into).collect()),
+            column: column.into_inner().into(),
+            field_path: field_path
+                .map(|fp| fp.into_iter().map(|f| f.into_inner().into()).collect()),
             distinct,
         },
         ndc_models::Aggregate::SingleColumn {
@@ -134,76 +153,87 @@ fn downgrade_v02_aggregate(aggregate: ndc_models::Aggregate) -> ndc_models_v01::
             field_path,
             function,
         } => ndc_models_v01::Aggregate::SingleColumn {
-            column: column.into(),
-            field_path: field_path.map(|fp| fp.into_iter().map(Into::into).collect()),
-            function: function.into(),
+            column: column.into_inner().into(),
+            field_path: field_path
+                .map(|fp| fp.into_iter().map(|f| f.into_inner().into()).collect()),
+            function: function.into_inner().into(),
         },
         ndc_models::Aggregate::StarCount {} => ndc_models_v01::Aggregate::StarCount {},
     }
 }
 
-fn downgrade_v02_field(field: ndc_models::Field) -> ndc_models_v01::Field {
+fn downgrade_v02_field(
+    field: ndc_models::Field,
+) -> Result<ndc_models_v01::Field, NdcDowngradeError> {
     match field {
         ndc_models::Field::Column {
             column,
             fields,
             arguments,
-        } => ndc_models_v01::Field::Column {
-            column: column.into(),
-            fields: fields.map(downgrade_v02_nested_field),
+        } => Ok(ndc_models_v01::Field::Column {
+            column: column.into_inner().into(),
+            fields: fields.map(downgrade_v02_nested_field).transpose()?,
             arguments: arguments
                 .into_iter()
-                .map(|(name, argument)| (name.into(), downgrade_v02_argument(argument)))
+                .map(|(name, argument)| {
+                    (name.into_inner().into(), downgrade_v02_argument(argument))
+                })
                 .collect(),
-        },
+        }),
         ndc_models::Field::Relationship {
             query,
             relationship,
             arguments,
-        } => ndc_models_v01::Field::Relationship {
-            query: Box::new(downgrade_v02_query(*query)),
-            relationship: relationship.into(),
+        } => Ok(ndc_models_v01::Field::Relationship {
+            query: Box::new(downgrade_v02_query(*query)?),
+            relationship: relationship.into_inner().into(),
             arguments: arguments
                 .into_iter()
                 .map(|(name, argument)| {
-                    (name.into(), downgrade_v02_relationship_argument(argument))
+                    (
+                        name.into_inner().into(),
+                        downgrade_v02_relationship_argument(argument),
+                    )
                 })
                 .collect(),
-        },
+        }),
     }
 }
 
 fn downgrade_v02_nested_field(
     nested_field: ndc_models::NestedField,
-) -> ndc_models_v01::NestedField {
+) -> Result<ndc_models_v01::NestedField, NdcDowngradeError> {
     match nested_field {
-        ndc_models::NestedField::Object(nested_object) => {
-            ndc_models_v01::NestedField::Object(downgrade_v02_nested_object(nested_object))
-        }
-        ndc_models::NestedField::Array(nested_array) => {
-            ndc_models_v01::NestedField::Array(downgrade_v02_nested_array(nested_array))
+        ndc_models::NestedField::Object(nested_object) => Ok(ndc_models_v01::NestedField::Object(
+            downgrade_v02_nested_object(nested_object)?,
+        )),
+        ndc_models::NestedField::Array(nested_array) => Ok(ndc_models_v01::NestedField::Array(
+            downgrade_v02_nested_array(nested_array)?,
+        )),
+        ndc_models::NestedField::Collection(_) => {
+            Err(NdcDowngradeError::NestedFieldCollectionsNotSupportedInV01)
         }
     }
 }
 
 fn downgrade_v02_nested_object(
     nested_object: ndc_models::NestedObject,
-) -> ndc_models_v01::NestedObject {
-    ndc_models_v01::NestedObject {
+) -> Result<ndc_models_v01::NestedObject, NdcDowngradeError> {
+    Ok(ndc_models_v01::NestedObject {
         fields: nested_object
             .fields
             .into_iter()
-            .map(|(name, field)| (name.into(), downgrade_v02_field(field)))
-            .collect(),
-    }
+            .map(|(name, field)| Ok((name.into_inner().into(), downgrade_v02_field(field)?)))
+            .collect::<Result<IndexMap<_, _>, _>>()?,
+    })
 }
 
 fn downgrade_v02_nested_array(
     nested_array: ndc_models::NestedArray,
-) -> ndc_models_v01::NestedArray {
-    ndc_models_v01::NestedArray {
-        fields: Box::new(downgrade_v02_nested_field(*nested_array.fields)),
-    }
+) -> Result<ndc_models_v01::NestedArray, NdcDowngradeError> {
+    Ok(ndc_models_v01::NestedArray {
+        fields: Box::new(downgrade_v02_nested_field(*nested_array.fields)?),
+    })
 }
 
 fn downgrade_v02_relationship_argument(
@@ -211,34 +241,40 @@ fn downgrade_v02_relationship_argument(
 ) -> ndc_models_v01::RelationshipArgument {
     match relationship_argument {
         ndc_models::RelationshipArgument::Variable { name } => {
-            ndc_models_v01::RelationshipArgument::Variable { name: name.into() }
+            ndc_models_v01::RelationshipArgument::Variable {
+                name: name.into_inner().into(),
+            }
         }
         ndc_models::RelationshipArgument::Literal { value } => {
             ndc_models_v01::RelationshipArgument::Literal { value }
         }
         ndc_models::RelationshipArgument::Column { name } => {
-            ndc_models_v01::RelationshipArgument::Column { name: name.into() }
+            ndc_models_v01::RelationshipArgument::Column {
+                name: name.into_inner().into(),
+            }
         }
     }
 }
 
-fn downgrade_v02_order_by(order_by: ndc_models::OrderBy) -> ndc_models_v01::OrderBy {
-    ndc_models_v01::OrderBy {
+fn downgrade_v02_order_by(
+    order_by: ndc_models::OrderBy,
+) -> Result<ndc_models_v01::OrderBy, NdcDowngradeError> {
+    Ok(ndc_models_v01::OrderBy {
         elements: order_by
             .elements
             .into_iter()
             .map(downgrade_v02_order_by_element)
-            .collect(),
-    }
+            .collect::<Result<_, _>>()?,
+    })
 }
 
 fn downgrade_v02_order_by_element(
     order_by_element: ndc_models::OrderByElement,
-) -> ndc_models_v01::OrderByElement {
-    ndc_models_v01::OrderByElement {
+) -> Result<ndc_models_v01::OrderByElement, NdcDowngradeError> {
+    Ok(ndc_models_v01::OrderByElement {
         order_direction: downgrade_v02_order_direction(order_by_element.order_direction),
-        target: downgrade_v02_order_by_target(order_by_element.target),
-    }
+        target: downgrade_v02_order_by_target(order_by_element.target)?,
+    })
 }
 
 fn downgrade_v02_order_direction(
@@ -252,113 +288,137 @@ fn downgrade_v02_order_direction(
 
 fn downgrade_v02_order_by_target(
     target: ndc_models::OrderByTarget,
-) -> ndc_models_v01::OrderByTarget {
+) -> Result<ndc_models_v01::OrderByTarget, NdcDowngradeError> {
     match target {
         ndc_models::OrderByTarget::Column {
             name,
             field_path,
             path,
-        } => ndc_models_v01::OrderByTarget::Column {
-            name: name.into(),
-            field_path: field_path.map(|fp| fp.into_iter().map(Into::into).collect()),
-            path: path.into_iter().map(downgrade_v02_path_element).collect(),
-        },
-        ndc_models::OrderByTarget::SingleColumnAggregate {
-            column,
-            field_path,
-            function,
-            path,
-        } => ndc_models_v01::OrderByTarget::SingleColumnAggregate {
-            column: column.into(),
-            field_path: field_path.map(|fp| fp.into_iter().map(Into::into).collect()),
-            function: function.into(),
-            path: path.into_iter().map(downgrade_v02_path_element).collect(),
-        },
-        ndc_models::OrderByTarget::StarCountAggregate { path } => {
-            ndc_models_v01::OrderByTarget::StarCountAggregate {
-                path: path.into_iter().map(downgrade_v02_path_element).collect(),
+        } => Ok(ndc_models_v01::OrderByTarget::Column {
+            name: name.into_inner().into(),
+            field_path: field_path
+                .map(|fp| fp.into_iter().map(|f| f.into_inner().into()).collect()),
+            path: path
+                .into_iter()
+                .map(downgrade_v02_path_element)
+                .collect::<Result<_, _>>()?,
+        }),
+        ndc_models::OrderByTarget::Aggregate { aggregate, path } => match aggregate {
+            ndc_models::Aggregate::ColumnCount {
+                column: _,
+                field_path: _,
+                distinct: _,
+            } => Err(NdcDowngradeError::OrderByAggregateColumnCountNotSupportedInV01),
+            ndc_models::Aggregate::SingleColumn {
+                column,
+                field_path,
+                function,
+            } => Ok(ndc_models_v01::OrderByTarget::SingleColumnAggregate {
+                column: column.into_inner().into(),
+                field_path: field_path
+                    .map(|fp| fp.into_iter().map(|f| f.into_inner().into()).collect()),
+                function: function.into_inner().into(),
+                path: path
+                    .into_iter()
+                    .map(downgrade_v02_path_element)
+                    .collect::<Result<_, _>>()?,
+            }),
+            ndc_models::Aggregate::StarCount {} => {
+                Ok(ndc_models_v01::OrderByTarget::StarCountAggregate {
+                    path: path
+                        .into_iter()
+                        .map(downgrade_v02_path_element)
+                        .collect::<Result<_, _>>()?,
+                })
             }
-        }
+        },
     }
 }
 
 fn downgrade_v02_path_element(
     path_element: ndc_models::PathElement,
-) -> ndc_models_v01::PathElement {
-    ndc_models_v01::PathElement {
-        relationship: path_element.relationship.into(),
+) -> Result<ndc_models_v01::PathElement, NdcDowngradeError> {
+    Ok(ndc_models_v01::PathElement {
+        relationship: path_element.relationship.into_inner().into(),
         arguments: path_element
             .arguments
             .into_iter()
-            .map(|(name, argument)| (name.into(), downgrade_v02_relationship_argument(argument)))
+            .map(|(name, argument)| {
+                (
+                    name.into_inner().into(),
+                    downgrade_v02_relationship_argument(argument),
+                )
+            })
             .collect(),
         predicate: path_element
             .predicate
-            .map(|predicate| Box::new(downgrade_v02_predicate(*predicate))),
-    }
+            .map(|predicate| Ok(Box::new(downgrade_v02_expression(*predicate)?)))
+            .transpose()?,
+    })
 }
 
-fn downgrade_v02_predicate(predicate: ndc_models::Expression) -> ndc_models_v01::Expression {
+pub fn downgrade_v02_expression(
+    predicate: ndc_models::Expression,
+) -> Result<ndc_models_v01::Expression, NdcDowngradeError> {
     match predicate {
-        ndc_models::Expression::And { expressions } => ndc_models_v01::Expression::And {
+        ndc_models::Expression::And { expressions } => Ok(ndc_models_v01::Expression::And {
             expressions: expressions
                 .into_iter()
-                .map(downgrade_v02_predicate)
-                .collect(),
-        },
-        ndc_models::Expression::Or { expressions } => ndc_models_v01::Expression::Or {
+                .map(downgrade_v02_expression)
+                .collect::<Result<Vec<_>, _>>()?,
+        }),
+        ndc_models::Expression::Or { expressions } => Ok(ndc_models_v01::Expression::Or {
             expressions: expressions
                 .into_iter()
-                .map(downgrade_v02_predicate)
-                .collect(),
-        },
-        ndc_models::Expression::Not { expression } => ndc_models_v01::Expression::Not {
-            expression: Box::new(downgrade_v02_predicate(*expression)),
-        },
+                .map(downgrade_v02_expression)
+                .collect::<Result<Vec<_>, _>>()?,
+        }),
+        ndc_models::Expression::Not { expression } => Ok(ndc_models_v01::Expression::Not {
+            expression: Box::new(downgrade_v02_expression(*expression)?),
+        }),
         ndc_models::Expression::UnaryComparisonOperator { column, operator } => {
-            ndc_models_v01::Expression::UnaryComparisonOperator {
-                column: downgrade_v02_comparison_target(column),
+            Ok(ndc_models_v01::Expression::UnaryComparisonOperator {
+                column: downgrade_v02_comparison_target(column)?,
                 operator: downgrade_v02_unary_comparison_operator(operator),
-            }
+            })
         }
         ndc_models::Expression::BinaryComparisonOperator {
             column,
             operator,
             value,
-        } => ndc_models_v01::Expression::BinaryComparisonOperator {
-            column: downgrade_v02_comparison_target(column),
-            operator: operator.into(),
-            value: downgrade_v02_binary_comparison_value(value),
-        },
+        } => Ok(ndc_models_v01::Expression::BinaryComparisonOperator {
+            column: downgrade_v02_comparison_target(column)?,
+            operator: operator.into_inner().into(),
+            value: downgrade_v02_binary_comparison_value(value)?,
+        }),
         ndc_models::Expression::Exists {
             in_collection,
             predicate,
-        } => ndc_models_v01::Expression::Exists {
+        } => Ok(ndc_models_v01::Expression::Exists {
             in_collection: downgrade_v02_exists_in_collection(in_collection),
-            predicate: predicate.map(|predicate| Box::new(downgrade_v02_predicate(*predicate))),
-        },
+            predicate: predicate
+                .map(|predicate| Ok(Box::new(downgrade_v02_expression(*predicate)?)))
+                .transpose()?,
+        }),
     }
 }
 
 fn downgrade_v02_comparison_target(
     column: ndc_models::ComparisonTarget,
-) -> ndc_models_v01::ComparisonTarget {
+) -> Result<ndc_models_v01::ComparisonTarget, NdcDowngradeError> {
     match column {
-        ndc_models::ComparisonTarget::Column {
-            name,
-            field_path,
-            path,
-        } => ndc_models_v01::ComparisonTarget::Column {
-            name: name.into(),
-            field_path: field_path.map(|fp| fp.into_iter().map(Into::into).collect()),
-            path: path.into_iter().map(downgrade_v02_path_element).collect(),
-        },
-        ndc_models::ComparisonTarget::RootCollectionColumn { name, field_path } => {
-            ndc_models_v01::ComparisonTarget::RootCollectionColumn {
-                name: name.into(),
-                field_path: field_path.map(|fp| fp.into_iter().map(Into::into).collect()),
-            }
+        ndc_models::ComparisonTarget::Column { name, field_path } => {
+            Ok(ndc_models_v01::ComparisonTarget::Column {
+                name: name.into_inner().into(),
+                field_path: field_path
+                    .map(|fp| fp.into_iter().map(|f| f.into_inner().into()).collect()),
+                path: vec![], // This was removed in v0.2.x
+            })
         }
+        ndc_models::ComparisonTarget::Aggregate {
+            aggregate: _,
+            path: _,
+        } => Err(NdcDowngradeError::AggregateComparisonsNotSupportedInV01),
     }
 }
 
@@ -374,16 +434,37 @@ fn downgrade_v02_unary_comparison_operator(
 
 fn downgrade_v02_binary_comparison_value(
     value: ndc_models::ComparisonValue,
-) -> ndc_models_v01::ComparisonValue {
+) -> Result<ndc_models_v01::ComparisonValue, NdcDowngradeError> {
     match value {
-        ndc_models::ComparisonValue::Column { column } => ndc_models_v01::ComparisonValue::Column {
-            column: downgrade_v02_comparison_target(column),
-        },
+        ndc_models::ComparisonValue::Column {
+            name,
+            field_path,
+            path,
+            scope,
+        } => {
+            if scope.is_some() {
+                Err(NdcDowngradeError::ComparisonValueScopesNotSupportedInV01)
+            } else {
+                Ok(ndc_models_v01::ComparisonValue::Column {
+                    column: ndc_models_v01::ComparisonTarget::Column {
+                        name: name.into_inner().into(),
+                        field_path: field_path
+                            .map(|fp| fp.into_iter().map(|f| f.into_inner().into()).collect()),
+                        path: path
+                            .into_iter()
+                            .map(downgrade_v02_path_element)
+                            .collect::<Result<_, _>>()?,
+                    },
+                })
+            }
+        }
         ndc_models::ComparisonValue::Scalar { value } => {
-            ndc_models_v01::ComparisonValue::Scalar { value }
+            Ok(ndc_models_v01::ComparisonValue::Scalar { value })
         }
         ndc_models::ComparisonValue::Variable { name } => {
-            ndc_models_v01::ComparisonValue::Variable { name: name.into() }
+            Ok(ndc_models_v01::ComparisonValue::Variable {
+                name: name.into_inner().into(),
+            })
         }
     }
 }
@@ -396,11 +477,14 @@ fn downgrade_v02_exists_in_collection(
             relationship,
             arguments,
         } => ndc_models_v01::ExistsInCollection::Related {
-            relationship: relationship.into(),
+            relationship: relationship.into_inner().into(),
             arguments: arguments
                 .into_iter()
                 .map(|(name, argument)| {
-                    (name.into(), downgrade_v02_relationship_argument(argument))
+                    (
+                        name.into_inner().into(),
+                        downgrade_v02_relationship_argument(argument),
+                    )
                 })
                 .collect(),
         },
@@ -408,11 +492,14 @@ fn downgrade_v02_exists_in_collection(
             collection,
             arguments,
         } => ndc_models_v01::ExistsInCollection::Unrelated {
-            collection: collection.into(),
+            collection: collection.into_inner().into(),
             arguments: arguments
                 .into_iter()
                 .map(|(name, argument)| {
-                    (name.into(), downgrade_v02_relationship_argument(argument))
+                    (
+                        name.into_inner().into(),
+                        downgrade_v02_relationship_argument(argument),
+                    )
                 })
                 .collect(),
         },
@@ -426,14 +513,19 @@ fn downgrade_v02_relationship(
         column_mapping: relationship
             .column_mapping
             .into_iter()
-            .map(|(k, v)| (k.into(), v.into()))
+            .map(|(k, v)| (k.into_inner().into(), v.into_inner().into()))
             .collect(),
         relationship_type: downgrade_v02_relationship_type(relationship.relationship_type),
-        target_collection: relationship.target_collection.into(),
+        target_collection: relationship.target_collection.into_inner().into(),
         arguments: relationship
             .arguments
             .into_iter()
-            .map(|(name, argument)| (name.into(), downgrade_v02_relationship_argument(argument)))
+            .map(|(name, argument)| {
+                (
+                    name.into_inner().into(),
+                    downgrade_v02_relationship_argument(argument),
+                )
+            })
             .collect(),
     }
 }
@@ -455,30 +547,35 @@ pub fn downgrade_v02_mutation_request(
             .operations
             .into_iter()
             .map(downgrade_v02_mutation_operation)
-            .collect(),
+            .collect::<Result<_, _>>()?,
         collection_relationships: mutation_request
             .collection_relationships
             .into_iter()
-            .map(|(name, relationship)| (name.into(), downgrade_v02_relationship(relationship)))
+            .map(|(name, relationship)| {
+                (
+                    name.into_inner().into(),
+                    downgrade_v02_relationship(relationship),
+                )
+            })
             .collect(),
     })
 }
 
 fn downgrade_v02_mutation_operation(
     mutation_operation: ndc_models::MutationOperation,
-) -> ndc_models_v01::MutationOperation {
-    match mutation_operation {
+) -> Result<ndc_models_v01::MutationOperation, NdcDowngradeError> {
+    Ok(match mutation_operation {
         ndc_models::MutationOperation::Procedure {
             name,
             arguments,
             fields,
         } => ndc_models_v01::MutationOperation::Procedure {
-            name: name.into(),
+            name: name.into_inner().into(),
             arguments: arguments
                 .into_iter()
-                .map(|(name, arg)| (name.into(), arg))
+                .map(|(name, arg)| (name.into_inner().into(), arg))
                 .collect(),
-            fields: fields.map(downgrade_v02_nested_field),
+            fields: fields.map(downgrade_v02_nested_field).transpose()?,
         },
-    }
+    })
 }

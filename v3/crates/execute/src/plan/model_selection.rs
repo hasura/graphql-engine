@@ -22,8 +22,11 @@ pub(crate) fn ndc_query<'s, 'ir>(
         .selection
         .as_ref()
         .map(|selection| -> Result<_, error::Error> {
-            let (ndc_fields, join_locations) =
-                selection_set::process_selection_set_ir(selection, join_id_counter)?;
+            let (ndc_fields, join_locations) = selection_set::process_selection_set_ir(
+                selection,
+                join_id_counter,
+                ir.data_connector.capabilities.supported_ndc_version,
+            )?;
             Ok((Some(ndc_fields), join_locations))
         })
         .transpose()?
@@ -33,6 +36,7 @@ pub(crate) fn ndc_query<'s, 'ir>(
 
     let ndc_query = ndc_models::Query {
         aggregates,
+        groups: None,
         fields: ndc_fields,
         limit: ir.limit,
         offset: ir.offset,
@@ -129,7 +133,10 @@ pub(crate) fn ndc_ir<'s, 'ir>(
     let query_request = ndc_models::QueryRequest {
         query,
         collection: ndc_models::CollectionName::from(ir.collection.as_str()),
-        arguments: common::ndc_arguments(&ir.arguments)?,
+        arguments: common::ndc_arguments(
+            &ir.arguments,
+            ir.data_connector.capabilities.supported_ndc_version,
+        )?,
         collection_relationships,
         variables: None,
     };

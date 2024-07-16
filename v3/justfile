@@ -166,7 +166,7 @@ update-custom-connector-schema-in-test-metadata: && fix-format
 
   new_capabilities=$(curl http://localhost:8101/capabilities | jq)
   new_schema=$(curl http://localhost:8101/schema | jq)
-  ndc_version="v0.1"
+  ndc_version="v0.2"
 
   # Should only be tests that actually talk to the running connector and therefore must be up to date
   test_directories=(./crates/engine/tests/execute)

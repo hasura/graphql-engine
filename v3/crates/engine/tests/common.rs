@@ -435,7 +435,17 @@ pub fn test_execute_explain(
                 .map(|path| root_test_dir.join(path)),
         )?;
 
-        let gds = GDS::new_with_default_flags(open_dds::traits::OpenDd::deserialize(metadata)?)?;
+        let configuration = metadata_resolve::configuration::Configuration {
+            unstable_features: metadata_resolve::configuration::UnstableFeatures {
+                enable_order_by_expressions: false,
+                enable_ndc_v02_support: true,
+            },
+            ..Default::default()
+        };
+        let gds = GDS::new(
+            open_dds::traits::OpenDd::deserialize(metadata)?,
+            configuration,
+        )?;
 
         let schema = GDS::build_schema(&gds)?;
         let request_headers = reqwest::header::HeaderMap::new();

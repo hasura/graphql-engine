@@ -444,7 +444,7 @@ mod tests {
     }
 
     #[test]
-    fn test_data_connector_context_v01_capablities() {
+    fn test_data_connector_context_v01_capabilities() {
         let data_connector_with_capabilities: DataConnectorLinkV1 =
             open_dds::traits::OpenDd::deserialize(serde_json::json!(
                 {
@@ -467,7 +467,7 @@ mod tests {
 
         let explicit_capabilities: ndc_models::Capabilities =
             serde_json::from_value(serde_json::json!(
-                { "query": { "nested_fields": {} }, "mutation": {} }
+                { "query": { "nested_fields": {}, "exists": { "unrelated": {} } }, "mutation": {} }
             ))
             .unwrap();
 
@@ -491,7 +491,7 @@ mod tests {
     }
 
     #[test]
-    fn test_data_connector_context_v02_capablities() {
+    fn test_data_connector_context_v02_capabilities() {
         let data_connector_with_capabilities: DataConnectorLinkV1 =
             open_dds::traits::OpenDd::deserialize(serde_json::json!(
                 {
@@ -499,7 +499,7 @@ mod tests {
                     "url": { "singleUrl": { "value": "http://test.com" } },
                     "schema": {
                         "version": "v0.2",
-                        "capabilities": { "version": "0.2.0", "capabilities": { "query": { "nested_fields": {} }, "mutation": {} }},
+                        "capabilities": { "version": "0.2.0", "capabilities": { "query": { "nested_fields": {}, "exists": {} }, "mutation": {} }},
                         "schema": {
                             "scalar_types": {},
                             "object_types": {},
@@ -514,7 +514,7 @@ mod tests {
 
         let explicit_capabilities: ndc_models::Capabilities =
             serde_json::from_value(serde_json::json!(
-                { "query": { "nested_fields": {} }, "mutation": {} }
+                { "query": { "nested_fields": {}, "exists": {} }, "mutation": {} }
             ))
             .unwrap();
 

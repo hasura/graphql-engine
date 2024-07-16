@@ -19,12 +19,17 @@ pub(crate) fn ndc_query<'s, 'ir>(
         .selection
         .as_ref()
         .map(|nested_selection| {
-            selection_set::process_nested_selection(nested_selection, join_id_counter)
+            selection_set::process_nested_selection(
+                nested_selection,
+                join_id_counter,
+                ir.data_connector.capabilities.supported_ndc_version,
+            )
         })
         .transpose()?
         .unzip();
     let query = ndc_models::Query {
         aggregates: None,
+        groups: None,
         fields: Some(IndexMap::from([(
             ndc_models::FieldName::from(FUNCTION_IR_VALUE_COLUMN_NAME),
             ndc_models::Field::Column {
@@ -45,7 +50,13 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
     ir: &'ir FunctionBasedCommand<'s>,
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<(ndc_models::QueryRequest, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
-    let mut arguments = common::ndc_arguments(&ir.command_info.arguments)?;
+    let mut arguments = common::ndc_arguments(
+        &ir.command_info.arguments,
+        ir.command_info
+            .data_connector
+            .capabilities
+            .supported_ndc_version,
+    )?;
 
     // Add the variable arguments which are used for remote joins
     for (variable_name, variable_argument) in &ir.variable_arguments {
@@ -91,13 +102,26 @@ pub(crate) fn ndc_mutation_ir<'s, 'ir>(
         .selection
         .as_ref()
         .map(|nested_selection| {
-            selection_set::process_nested_selection(nested_selection, join_id_counter)
+            selection_set::process_nested_selection(
+                nested_selection,
+                join_id_counter,
+                ir.command_info
+                    .data_connector
+                    .capabilities
+                    .supported_ndc_version,
+            )
         })
         .transpose()?
         .unzip();
     let mutation_operation = ndc_models::MutationOperation::Procedure {
         name: ndc_models::ProcedureName::from(procedure_name.as_str()),
-        arguments: common::ndc_raw_arguments(&ir.command_info.arguments)?,
+        arguments: common::ndc_raw_arguments(
+            &ir.command_info.arguments,
+            ir.command_info
+                .data_connector
+                .capabilities
+                .supported_ndc_version,
+        )?,
         fields: ndc_nested_field,
     };
     let mut collection_relationships = BTreeMap::new();

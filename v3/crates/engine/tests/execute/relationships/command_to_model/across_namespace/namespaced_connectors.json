@@ -16,7 +16,7 @@
             },
             "headers": {},
             "schema": {
-              "version": "v0.1",
+              "version": "v0.2",
               "schema": {
                 "scalar_types": {
                   "Actor_Name": {
@@ -1254,10 +1254,19 @@
                       "name": "movie"
                     }
                   }
-                ]
+                ],
+                "capabilities": {
+                  "query": {
+                    "aggregates": {
+                      "filter_by": {
+                        "count_scalar_type": "Int"
+                      }
+                    }
+                  }
+                }
               },
               "capabilities": {
-                "version": "0.1.3",
+                "version": "0.2.0",
                 "capabilities": {
                   "query": {
                     "aggregates": {},
@@ -1266,6 +1275,9 @@
                       "filter_by": {},
                       "order_by": {},
                       "aggregates": {}
+                    },
+                    "exists": {
+                      "unrelated": {}
                     }
                   },
                   "mutation": {},
@@ -1295,7 +1307,7 @@
             },
             "headers": {},
             "schema": {
-              "version": "v0.1",
+              "version": "v0.2",
               "schema": {
                 "scalar_types": {
                   "Actor_Name": {
@@ -2533,10 +2545,19 @@
                       "name": "movie"
                     }
                   }
-                ]
+                ],
+                "capabilities": {
+                  "query": {
+                    "aggregates": {
+                      "filter_by": {
+                        "count_scalar_type": "Int"
+                      }
+                    }
+                  }
+                }
               },
               "capabilities": {
-                "version": "0.1.3",
+                "version": "0.2.0",
                 "capabilities": {
                   "query": {
                     "aggregates": {},
@@ -2545,6 +2566,9 @@
                       "filter_by": {},
                       "order_by": {},
                       "aggregates": {}
+                    },
+                    "exists": {
+                      "unrelated": {}
                     }
                   },
                   "mutation": {},

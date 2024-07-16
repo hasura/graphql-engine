@@ -12,6 +12,7 @@ use crate::remote_joins::types::{
 };
 use crate::remote_joins::types::{Location, RemoteJoin};
 use indexmap::IndexMap;
+use metadata_resolve::data_connectors::NdcVersion;
 use metadata_resolve::FieldMapping;
 use open_dds::data_connector::DataConnectorColumnName;
 use std::collections::{BTreeMap, HashMap};
@@ -19,11 +20,12 @@ use std::collections::{BTreeMap, HashMap};
 pub(crate) fn process_nested_selection<'s, 'ir>(
     nested_selection: &'ir NestedSelection<'s>,
     join_id_counter: &mut MonotonicCounter,
+    ndc_version: NdcVersion,
 ) -> Result<(ndc_models::NestedField, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
     match nested_selection {
         NestedSelection::Object(model_selection) => {
             let (fields, join_locations) =
-                process_selection_set_ir(model_selection, join_id_counter)?;
+                process_selection_set_ir(model_selection, join_id_counter, ndc_version)?;
             Ok((
                 ndc_models::NestedField::Object(ndc_models::NestedObject { fields }),
                 join_locations,
@@ -31,7 +33,7 @@ pub(crate) fn process_nested_selection<'s, 'ir>(
         }
         NestedSelection::Array(nested_selection) => {
             let (field, join_locations) =
-                process_nested_selection(nested_selection, join_id_counter)?;
+                process_nested_selection(nested_selection, join_id_counter, ndc_version)?;
             Ok((
                 ndc_models::NestedField::Array(ndc_models::NestedArray {
                     fields: Box::new(field),
@@ -50,6 +52,7 @@ pub(crate) fn process_nested_selection<'s, 'ir>(
 pub(crate) fn process_selection_set_ir<'s, 'ir>(
     model_selection: &'ir ResultSelectionSet<'s>,
     join_id_counter: &mut MonotonicCounter,
+    ndc_version: NdcVersion,
 ) -> Result<
     (
         IndexMap<ndc_models::FieldName, ndc_models::Field>,
@@ -69,7 +72,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 let (nested_field, nested_join_locations) = nested_selection
                     .as_ref()
                     .map(|nested_selection| {
-                        process_nested_selection(nested_selection, join_id_counter)
+                        process_nested_selection(nested_selection, join_id_counter, ndc_version)
                     })
                     .transpose()?
                     .unzip();
@@ -78,7 +81,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     ndc_models::Field::Column {
                         column: ndc_models::FieldName::from(column.as_str()),
                         fields: nested_field,
-                        arguments: common::ndc_arguments(arguments)?,
+                        arguments: common::ndc_arguments(arguments, ndc_version)?,
                     },
                 );
                 if let Some(jl) = nested_join_locations {
@@ -124,7 +127,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     commands::ndc_query(&ir.command_info, join_id_counter)?;
 
                 let relationship_arguments: BTreeMap<_, _> =
-                    common::ndc_relationship_arguments(&ir.command_info.arguments)?;
+                    common::ndc_relationship_arguments(&ir.command_info.arguments, ndc_version)?;
 
                 let ndc_field = ndc_models::Field::Relationship {
                     query: Box::new(relationship_query),

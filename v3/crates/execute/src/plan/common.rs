@@ -1,20 +1,23 @@
 use std::collections::BTreeMap;
 
+use metadata_resolve::data_connectors::NdcVersion;
 use open_dds::types::DataConnectorArgumentName;
 
 use super::error;
 use crate::ir::arguments;
 use crate::ir::filter;
+use crate::ndc;
 
 pub fn ndc_arguments(
     arguments: &BTreeMap<DataConnectorArgumentName, arguments::Argument>,
+    ndc_version: NdcVersion,
 ) -> Result<BTreeMap<ndc_models::ArgumentName, ndc_models::Argument>, error::Error> {
     arguments
         .iter()
         .map(|(argument_name, argument_value)| {
             Ok((
                 ndc_models::ArgumentName::from(argument_name.as_str()),
-                ndc_argument(argument_value)?,
+                ndc_argument(argument_value, ndc_version)?,
             ))
         })
         .collect::<Result<BTreeMap<_, _>, error::Error>>()
@@ -22,13 +25,14 @@ pub fn ndc_arguments(
 
 pub fn ndc_raw_arguments(
     arguments: &BTreeMap<DataConnectorArgumentName, arguments::Argument>,
+    ndc_version: NdcVersion,
 ) -> Result<BTreeMap<ndc_models::ArgumentName, serde_json::Value>, error::Error> {
     arguments
         .iter()
         .map(|(argument_name, argument_value)| {
             Ok((
                 ndc_models::ArgumentName::from(argument_name.as_str()),
-                ndc_raw_argument(argument_value)?,
+                ndc_raw_argument(argument_value, ndc_version)?,
             ))
         })
         .collect::<Result<BTreeMap<_, _>, error::Error>>()
@@ -36,13 +40,14 @@ pub fn ndc_raw_arguments(
 
 pub fn ndc_relationship_arguments(
     arguments: &BTreeMap<DataConnectorArgumentName, arguments::Argument>,
+    ndc_version: NdcVersion,
 ) -> Result<BTreeMap<ndc_models::ArgumentName, ndc_models::RelationshipArgument>, error::Error> {
     arguments
         .iter()
         .map(|(argument_name, argument_value)| {
             Ok((
                 ndc_models::ArgumentName::from(argument_name.as_str()),
-                ndc_relationship_argument(argument_value)?,
+                ndc_relationship_argument(argument_value, ndc_version)?,
             ))
         })
         .collect::<Result<BTreeMap<_, _>, error::Error>>()
@@ -50,29 +55,47 @@ pub fn ndc_relationship_arguments(
 
 fn ndc_argument(
     argument_value: &arguments::Argument,
+    ndc_version: NdcVersion,
 ) -> Result<ndc_models::Argument, error::Error> {
     Ok(ndc_models::Argument::Literal {
-        value: ndc_raw_argument(argument_value)?,
+        value: ndc_raw_argument(argument_value, ndc_version)?,
     })
 }
 
 fn ndc_relationship_argument(
     argument_value: &arguments::Argument,
+    ndc_version: NdcVersion,
 ) -> Result<ndc_models::RelationshipArgument, error::Error> {
     Ok(ndc_models::RelationshipArgument::Literal {
-        value: ndc_raw_argument(argument_value)?,
+        value: ndc_raw_argument(argument_value, ndc_version)?,
     })
 }
 
 fn ndc_raw_argument(
     argument_value: &arguments::Argument,
+    ndc_version: NdcVersion,
 ) -> Result<serde_json::Value, error::Error> {
     match argument_value {
         arguments::Argument::Literal { value } => Ok(value.clone()),
         arguments::Argument::BooleanExpression { predicate } => {
-            Ok(serde_json::to_value(ndc_expression(predicate))
+            serialize_ndc_expression(ndc_expression(predicate), ndc_version)
+        }
+    }
+}
+
+fn serialize_ndc_expression(
+    expression: ndc_models::Expression,
+    version: NdcVersion,
+) -> Result<serde_json::Value, error::Error> {
+    match version {
+        NdcVersion::V01 => {
+            let v01_expression = ndc::migration::v01::downgrade_v02_expression(expression)
+                .map_err(error::InternalError::NdcRequestDowngradeError)?;
+            Ok(serde_json::to_value(v01_expression)
                 .map_err(error::InternalError::ExpressionSerializationError)?)
         }
+        NdcVersion::V02 => Ok(serde_json::to_value(expression)
+            .map_err(error::InternalError::ExpressionSerializationError)?),
     }
 }
 
@@ -132,7 +155,6 @@ fn ndc_comparison_target(target: &filter::ComparisonTarget) -> ndc_models::Compa
                             .collect(),
                     )
                 },
-                path: vec![],
             }
         }
     }

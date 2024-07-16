@@ -1192,7 +1192,7 @@ dependencies = [
  "axum",
  "env_logger",
  "indexmap 2.2.6",
- "ndc-models 0.1.4 (git+https://github.com/hasura/ndc-spec.git?rev=f848c1e97a5b4410627a077420e79a9447ff97bf)",
+ "ndc-models 0.2.0",
  "regex",
  "serde",
  "serde_json",
@@ -1803,8 +1803,8 @@ dependencies = [
  "lang-graphql",
  "metadata-resolve",
  "mockito",
- "ndc-models 0.1.4 (git+https://github.com/hasura/ndc-spec.git?tag=v0.1.4)",
- "ndc-models 0.1.4 (git+https://github.com/hasura/ndc-spec.git?rev=f848c1e97a5b4410627a077420e79a9447ff97bf)",
+ "ndc-models 0.1.5",
+ "ndc-models 0.2.0",
  "nonempty",
  "open-dds",
  "pretty_assertions",
@@ -2784,8 +2784,8 @@ dependencies = [
  "indexmap 2.2.6",
  "insta",
  "lang-graphql",
- "ndc-models 0.1.4 (git+https://github.com/hasura/ndc-spec.git?tag=v0.1.4)",
- "ndc-models 0.1.4 (git+https://github.com/hasura/ndc-spec.git?rev=f848c1e97a5b4410627a077420e79a9447ff97bf)",
+ "ndc-models 0.1.5",
+ "ndc-models 0.2.0",
  "nonempty",
  "open-dds",
  "ref-cast",
@@ -2879,22 +2879,25 @@ dependencies = [
 
 [[package]]
 name = "ndc-models"
-version = "0.1.4"
-source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.1.4#20172e3b2552b78d16dbafcd047f559ced420309"
+version = "0.1.5"
+source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.1.5#78f52768bd02a8289194078a5abc2432c8e3a758"
 dependencies = [
  "indexmap 2.2.6",
+ "ref-cast",
  "schemars",
  "serde",
  "serde_json",
  "serde_with",
+ "smol_str",
 ]
 
 [[package]]
 name = "ndc-models"
-version = "0.1.4"
-source = "git+https://github.com/hasura/ndc-spec.git?rev=f848c1e97a5b4410627a077420e79a9447ff97bf#f848c1e97a5b4410627a077420e79a9447ff97bf"
+version = "0.2.0"
+source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.2.0-rc.0#2893acd5de273667e84f9f87a25901615b368593"
 dependencies = [
  "indexmap 2.2.6",
+ "ref-cast",
  "schemars",
  "serde",
  "serde_json",
@@ -3076,8 +3079,8 @@ dependencies = [
  "goldenfile",
  "indexmap 2.2.6",
  "jsonschema-tidying",
- "ndc-models 0.1.4 (git+https://github.com/hasura/ndc-spec.git?tag=v0.1.4)",
- "ndc-models 0.1.4 (git+https://github.com/hasura/ndc-spec.git?rev=f848c1e97a5b4410627a077420e79a9447ff97bf)",
+ "ndc-models 0.1.5",
+ "ndc-models 0.2.0",
  "opendds-derive",
  "pretty_assertions",
  "ref-cast",
@@ -4356,7 +4359,7 @@ dependencies = [
  "hasura-authn-core",
  "indexmap 2.2.6",
  "metadata-resolve",
- "ndc-models 0.1.4 (git+https://github.com/hasura/ndc-spec.git?rev=f848c1e97a5b4410627a077420e79a9447ff97bf)",
+ "ndc-models 0.2.0",
  "open-dds",
  "schema",
  "serde",

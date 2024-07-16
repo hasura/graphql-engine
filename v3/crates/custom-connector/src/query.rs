@@ -200,7 +200,11 @@ fn execute_query(
         })
         .transpose()?;
 
-    Ok(ndc_models::RowSet { aggregates, rows })
+    Ok(ndc_models::RowSet {
+        aggregates,
+        rows,
+        groups: None,
+    })
 }
 
 fn eval_row(
@@ -574,29 +578,41 @@ fn eval_order_by_element(
             name,
             field_path,
         ),
-        ndc_models::OrderByTarget::SingleColumnAggregate {
-            column,
-            field_path: _,
-            function,
-            path,
-        } => eval_order_by_single_column_aggregate(
-            collection_relationships,
-            variables,
-            state,
-            item,
-            path,
-            column,
-            function,
-        ),
-        ndc_models::OrderByTarget::StarCountAggregate { path } => {
-            eval_order_by_star_count_aggregate(
+        ndc_models::OrderByTarget::Aggregate { aggregate, path } => match aggregate {
+            ndc_models::Aggregate::ColumnCount {
+                column,
+                field_path: _,
+                distinct,
+            } => eval_order_by_column_count_aggregate(
                 collection_relationships,
                 variables,
                 state,
                 item,
                 path,
-            )
-        }
+                column,
+                *distinct,
+            ),
+            ndc_models::Aggregate::SingleColumn {
+                column,
+                field_path: _,
+                function,
+            } => eval_order_by_single_column_aggregate(
+                collection_relationships,
+                variables,
+                state,
+                item,
+                path,
+                column,
+                function,
+            ),
+            ndc_models::Aggregate::StarCount {} => eval_order_by_star_count_aggregate(
+                collection_relationships,
+                variables,
+                state,
+                item,
+                path,
+            ),
+        },
     }
 }
 
@@ -609,6 +625,43 @@ fn eval_order_by_star_count_aggregate(
 ) -> Result<serde_json::Value> {
     let rows: Vec<Row> = eval_path(collection_relationships, variables, state, path, item)?;
     Ok(rows.len().into())
+}
+
+fn eval_order_by_column_count_aggregate(
+    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
+    variables: &BTreeMap<ndc_models::VariableName, serde_json::Value>,
+    state: &AppState,
+    item: &Row,
+    path: &[ndc_models::PathElement],
+    column: &ndc_models::FieldName,
+    distinct: bool,
+) -> Result<serde_json::Value> {
+    let rows: Vec<Row> = eval_path(collection_relationships, variables, state, path, item)?;
+    let values = rows
+        .iter()
+        .map(|row| {
+            row.get(column).ok_or((
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: "invalid column name".into(),
+                    details: serde_json::Value::Null,
+                }),
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let non_null_value_count = if distinct {
+        values
+            .iter()
+            .filter(|column_value| !column_value.is_null())
+            .collect::<HashSet<_>>()
+            .len()
+    } else {
+        values
+            .iter()
+            .filter(|column_value| !column_value.is_null())
+            .count()
+    };
+    Ok(serde_json::Value::from(non_null_value_count))
 }
 
 fn eval_order_by_single_column_aggregate(
@@ -871,15 +924,8 @@ fn eval_expression(
 
         ndc_models::Expression::UnaryComparisonOperator { column, operator } => match operator {
             ndc_models::UnaryComparisonOperator::IsNull => {
-                let vals = eval_comparison_target(
-                    collection_relationships,
-                    variables,
-                    state,
-                    column,
-                    root,
-                    item,
-                )?;
-                Ok(vals.iter().any(serde_json::Value::is_null))
+                let val = eval_comparison_target(column, item)?;
+                Ok(val.is_null())
             }
         },
 
@@ -889,77 +935,47 @@ fn eval_expression(
             value,
         } => match operator.as_str() {
             "_eq" => {
-                let left_vals = eval_comparison_target(
-                    collection_relationships,
-                    variables,
-                    state,
-                    column,
-                    root,
-                    item,
-                )?;
-                let right_vals = eval_comparison_value(
-                    collection_relationships,
-                    variables,
-                    state,
-                    value,
-                    root,
-                    item,
-                )?;
-                for left_val in &left_vals {
-                    for right_val in &right_vals {
-                        if left_val == right_val {
-                            return Ok(true);
-                        }
+                let left_val = eval_comparison_target(column, item)?;
+                let right_vals =
+                    eval_comparison_value(collection_relationships, variables, state, value, item)?;
+                for right_val in &right_vals {
+                    if left_val == *right_val {
+                        return Ok(true);
                     }
                 }
 
                 Ok(false)
             }
             "like" => {
-                let column_vals = eval_comparison_target(
-                    collection_relationships,
-                    variables,
-                    state,
-                    column,
-                    root,
-                    item,
-                )?;
-                let regex_vals = eval_comparison_value(
-                    collection_relationships,
-                    variables,
-                    state,
-                    value,
-                    root,
-                    item,
-                )?;
-                for column_val in &column_vals {
-                    for regex_val in &regex_vals {
-                        let column_str = column_val.as_str().ok_or((
+                let column_val = eval_comparison_target(column, item)?;
+                let regex_vals =
+                    eval_comparison_value(collection_relationships, variables, state, value, item)?;
+                for regex_val in &regex_vals {
+                    let column_str = column_val.as_str().ok_or((
+                        StatusCode::BAD_REQUEST,
+                        Json(ndc_models::ErrorResponse {
+                            message: "column is not a string".into(),
+                            details: serde_json::Value::Null,
+                        }),
+                    ))?;
+                    let regex_str = regex_val.as_str().ok_or((
+                        StatusCode::BAD_REQUEST,
+                        Json(ndc_models::ErrorResponse {
+                            message: " ".into(),
+                            details: serde_json::Value::Null,
+                        }),
+                    ))?;
+                    let regex = Regex::new(regex_str).map_err(|_| {
+                        (
                             StatusCode::BAD_REQUEST,
                             Json(ndc_models::ErrorResponse {
-                                message: "column is not a string".into(),
+                                message: "invalid regular expression".into(),
                                 details: serde_json::Value::Null,
                             }),
-                        ))?;
-                        let regex_str = regex_val.as_str().ok_or((
-                            StatusCode::BAD_REQUEST,
-                            Json(ndc_models::ErrorResponse {
-                                message: " ".into(),
-                                details: serde_json::Value::Null,
-                            }),
-                        ))?;
-                        let regex = Regex::new(regex_str).map_err(|_| {
-                            (
-                                StatusCode::BAD_REQUEST,
-                                Json(ndc_models::ErrorResponse {
-                                    message: "invalid regular expression".into(),
-                                    details: serde_json::Value::Null,
-                                }),
-                            )
-                        })?;
-                        if regex.is_match(column_str) {
-                            return Ok(true);
-                        }
+                        )
+                    })?;
+                    if regex.is_match(column_str) {
+                        return Ok(true);
                     }
                 }
                 Ok(false)
@@ -978,6 +994,7 @@ fn eval_expression(
         } => {
             let query = ndc_models::Query {
                 aggregates: None,
+                groups: None,
                 fields: Some(IndexMap::new()),
                 limit: None,
                 offset: None,
@@ -1058,31 +1075,23 @@ fn eval_in_collection(
 }
 
 fn eval_comparison_target(
-    collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
-    variables: &BTreeMap<ndc_models::VariableName, serde_json::Value>,
-    state: &AppState,
     target: &ndc_models::ComparisonTarget,
-    root: &Row,
     item: &Row,
-) -> Result<Vec<serde_json::Value>> {
+) -> Result<serde_json::Value> {
     match target {
-        ndc_models::ComparisonTarget::Column {
-            name,
-            field_path,
-            path,
-        } => {
-            let rows = eval_path(collection_relationships, variables, state, path, item)?;
-            let mut values = vec![];
-            for row in &rows {
-                let value = eval_column_field_path(row, name, field_path)?;
-                values.push(value);
-            }
-            Ok(values)
+        ndc_models::ComparisonTarget::Column { name, field_path } => {
+            Ok(eval_column_field_path(item, name, field_path)?)
         }
-        ndc_models::ComparisonTarget::RootCollectionColumn { name, field_path } => {
-            let value = eval_column_field_path(root, name, field_path)?;
-            Ok(vec![value])
-        }
+        ndc_models::ComparisonTarget::Aggregate {
+            aggregate: _,
+            path: _,
+        } => Err((
+            StatusCode::NOT_IMPLEMENTED,
+            Json(ndc_models::ErrorResponse {
+                message: "aggregate predicates not supported".into(),
+                details: serde_json::Value::Null,
+            }),
+        )),
     }
 }
 
@@ -1125,18 +1134,23 @@ fn eval_comparison_value(
     variables: &BTreeMap<ndc_models::VariableName, serde_json::Value>,
     state: &AppState,
     comparison_value: &ndc_models::ComparisonValue,
-    root: &Row,
     item: &Row,
 ) -> Result<Vec<serde_json::Value>> {
     match comparison_value {
-        ndc_models::ComparisonValue::Column { column } => eval_comparison_target(
-            collection_relationships,
-            variables,
-            state,
-            column,
-            root,
-            item,
-        ),
+        ndc_models::ComparisonValue::Column {
+            name,
+            field_path,
+            path,
+            scope: _,
+        } => {
+            let rows = eval_path(collection_relationships, variables, state, path, item)?;
+            let mut values = vec![];
+            for row in &rows {
+                let value = eval_column_field_path(row, name, field_path)?;
+                values.push(value);
+            }
+            Ok(values)
+        }
         ndc_models::ComparisonValue::Scalar { value } => Ok(vec![value.clone()]),
         ndc_models::ComparisonValue::Variable { name } => {
             let value = variables
@@ -1222,6 +1236,13 @@ pub(crate) fn eval_nested_field(
                 })?,
             ))
         }
+        ndc_models::NestedField::Collection(ndc_models::NestedCollection { .. }) => Err((
+            StatusCode::NOT_IMPLEMENTED,
+            Json(ndc_models::ErrorResponse {
+                message: "Nested field collections are not supported".into(),
+                details: serde_json::Value::Null,
+            }),
+        )),
     }
 }
 

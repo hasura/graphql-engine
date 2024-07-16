@@ -159,6 +159,7 @@ fn analyze_internal(
 
             let ndc_query = ndc_models::Query {
                 aggregates: None,
+                groups: None,
                 fields: Some(ndc_fields),
                 limit: None,
                 offset: None,

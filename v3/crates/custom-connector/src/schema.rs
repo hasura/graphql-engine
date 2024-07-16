@@ -9,12 +9,21 @@ pub fn get_schema() -> ndc_models::SchemaResponse {
         collections: collections::get_collections(),
         functions: functions::get_functions(),
         procedures: procedures::get_procedures(),
+        capabilities: Some(ndc_models::CapabilitySchemaInfo {
+            query: Some(ndc_models::QueryCapabilitiesSchemaInfo {
+                aggregates: Some(ndc_models::AggregateCapabilitiesSchemaInfo {
+                    filter_by: Some(ndc_models::AggregateFilterByCapabilitiesSchemaInfo {
+                        count_scalar_type: "Int".to_owned(),
+                    }),
+                }),
+            }),
+        }),
     }
 }
 
 pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
     ndc_models::CapabilitiesResponse {
-        version: "0.1.3".into(),
+        version: ndc_models::VERSION.to_owned(),
         capabilities: ndc_models::Capabilities {
             mutation: ndc_models::MutationCapabilities {
                 transactional: None,
@@ -22,12 +31,20 @@ pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
             },
             query: ndc_models::QueryCapabilities {
                 explain: None,
-                aggregates: Some(ndc_models::LeafCapability {}),
+                aggregates: Some(ndc_models::AggregateCapabilities {
+                    filter_by: None,
+                    group_by: None,
+                }),
                 variables: Some(ndc_models::LeafCapability {}),
                 nested_fields: ndc_models::NestedFieldCapabilities {
                     aggregates: Some(ndc_models::LeafCapability {}),
                     filter_by: Some(ndc_models::LeafCapability {}),
                     order_by: Some(ndc_models::LeafCapability {}),
+                    nested_collections: None,
+                },
+                exists: ndc_models::ExistsCapabilities {
+                    named_scopes: None,
+                    unrelated: Some(ndc_models::LeafCapability {}),
                 },
             },
             relationships: Some(ndc_models::RelationshipCapabilities {
