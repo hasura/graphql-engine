@@ -4538,7 +4538,7 @@
           "type": "string"
         },
         "forwardHeaders": {
-          "description": "List of actual HTTP response headers from the data conector to be set as response headers",
+          "description": "List of actual HTTP response headers from the data connector to be set as response headers",
           "type": "array",
           "items": {
             "type": "string"

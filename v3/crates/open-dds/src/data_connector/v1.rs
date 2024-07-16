@@ -118,7 +118,7 @@ pub struct ResponseHeaders {
     /// Name of the field in the NDC function/procedure's result which contains
     /// the result
     pub result_field: String,
-    /// List of actual HTTP response headers from the data conector to be set as
+    /// List of actual HTTP response headers from the data connector to be set as
     /// response headers
     pub forward_headers: Vec<String>,
 }
