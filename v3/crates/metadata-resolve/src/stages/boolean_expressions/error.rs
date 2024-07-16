@@ -28,6 +28,12 @@ pub enum BooleanExpressionError {
         data_connector_object_type: DataConnectorObjectType,
         object_boolean_expression_type: Qualified<CustomTypeName>,
     },
+    #[error("field '{field_name:}' in object boolean expression type {object_boolean_expression_type:} is a nested array and cannot be used for comparison")]
+    CannotCompareNestedArray {
+        field_name: FieldName,
+        object_boolean_expression_type: Qualified<CustomTypeName>,
+    },
+
     #[error("unknown field '{field_name:}' used in object boolean expression type {object_boolean_expression_type:}")]
     UnknownFieldInObjectBooleanExpressionType {
         field_name: FieldName,

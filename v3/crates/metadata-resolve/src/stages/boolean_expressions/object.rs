@@ -4,7 +4,7 @@ use super::helpers;
 pub use super::{BooleanExpressionComparableRelationship, ResolvedObjectBooleanExpressionType};
 use crate::stages::{graphql_config, object_types, scalar_boolean_expressions, type_permissions};
 use crate::types::subgraph::mk_qualified_type_name;
-use crate::Qualified;
+use crate::{Qualified, QualifiedBaseType};
 use open_dds::{
     boolean_expression::{
         BooleanExpressionComparableField, BooleanExpressionLogicalOperators,
@@ -152,16 +152,6 @@ fn resolve_comparable_fields(
 
     // validate comparable fields all exist in underlying object
     for comparable_field in comparable_fields {
-        // fields with field arguments are not allowed in boolean expressions
-        if let Some(field_definition) = object_type_representation
-            .fields
-            .get(&comparable_field.field_name)
-        {
-            if !field_definition.field_arguments.is_empty() {
-                continue;
-            }
-        }
-
         let field = object_type_representation
             .fields
             .get(&comparable_field.field_name)
@@ -171,6 +161,21 @@ fn resolve_comparable_fields(
                     object_boolean_expression_type: boolean_expression_type_name.clone(),
                 },
             )?;
+
+        // throw an error if attempting to match a nested array
+        // this is not yet supported by ndc-spec
+        match field.field_type.underlying_type {
+            QualifiedBaseType::List(_) => Err(BooleanExpressionError::CannotCompareNestedArray {
+                field_name: comparable_field.field_name.clone(),
+                object_boolean_expression_type: boolean_expression_type_name.clone(),
+            }),
+            QualifiedBaseType::Named(_) => Ok(()),
+        }?;
+
+        // fields with field arguments are not allowed in boolean expressions
+        if !field.field_arguments.is_empty() {
+            continue;
+        }
 
         let field_boolean_expression_type_name = Qualified::new(
             subgraph.to_string(),

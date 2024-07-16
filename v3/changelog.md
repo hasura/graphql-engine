@@ -6,6 +6,9 @@
 
 ### Fixed
 
+- Build-time check to ensure boolean expressions cannot be built over nested
+  array fields until these are supported.
+
 - Fixes a bug with variable nullability coercion. Specifically, providing a
   non-null variable for a nullable field should work, as all non-nullable
   variables can be used as nullable variables via "coercion".
