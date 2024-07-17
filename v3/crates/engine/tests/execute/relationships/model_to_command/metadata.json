@@ -220,7 +220,7 @@
             "name": "get_movie_by_id",
             "arguments": [
               {
-                "name": "movie_id",
+                "name": "id",
                 "type": "Int!"
               }
             ],
@@ -231,7 +231,7 @@
                 "function": "get_movie_by_id"
               },
               "argumentMapping": {
-                "movie_id": "movie_id"
+                "id": "movie_id"
               }
             },
             "graphql": {
@@ -241,6 +241,8 @@
           }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "actor",
             "name": "MovieFromCommand",
@@ -260,14 +262,12 @@
                 },
                 "target": {
                   "argument": {
-                    "argumentName": "movie_id"
+                    "argumentName": "id"
                   }
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         }
       ]
     }

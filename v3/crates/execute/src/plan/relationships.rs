@@ -190,9 +190,24 @@ pub(crate) fn process_command_relationship_definition(
                 name: ndc_models::FieldName::from(source_column.column.as_str()),
             };
 
+            let connector_argument_name = target_source
+                .details
+                .argument_mappings
+                .get(target_argument)
+                .ok_or_else(|| {
+                    error::Error::Internal(
+                        error::InternalError::MissingArgumentMappingInCommandRelationship {
+                            source_type: annotation.source_type.clone(),
+                            relationship_name: annotation.relationship_name.clone(),
+                            command_name: annotation.command_name.clone(),
+                            argument_name: target_argument.clone(),
+                        },
+                    )
+                })?;
+
             if arguments
                 .insert(
-                    ndc_models::ArgumentName::from(target_argument.as_str()),
+                    ndc_models::ArgumentName::from(connector_argument_name.as_str()),
                     relationship_argument,
                 )
                 .is_some()

@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a bug where command targeted relationships were not using the Open DD
+  argument name instead of the data connector's argument name when querying the
+  data connector
+
 ## [v2024.07.10]
 
 ### Fixed
