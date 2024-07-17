@@ -1,5 +1,5 @@
 use crate::helpers::type_mappings::TypeMappingCollectionError;
-use crate::stages::graphql_config;
+use crate::stages::{data_connectors, graphql_config, scalar_boolean_expressions};
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType},
@@ -89,6 +89,24 @@ pub enum BooleanExpressionError {
         field_boolean_expression_type_name: Qualified<CustomTypeName>,
         underlying_type: QualifiedTypeName,
     },
+
+    #[error("Field level comparison operator configuration is not fully supported yet. Please use \"enableAll\":true.")]
+    FieldLevelComparisonOperatorConfigurationNotSupported,
+
+    #[error("Field level comparison operator configuration is not fully supported yet. Please add all fields in filterable_fields.")]
+    FieldLevelComparisonOperatorNeedsAllFields,
+
     #[error("{0}")]
     GraphqlConfigError(#[from] graphql_config::GraphqlConfigError),
+
+    #[error("{0}")]
+    ScalarBooleanExpressionTypeError(
+        #[from] scalar_boolean_expressions::ScalarBooleanExpressionTypeError,
+    ),
+
+    #[error("data connector error in boolean expression {boolean_expression_name:}: {data_connector_error:}")]
+    DataConnectorError {
+        boolean_expression_name: Qualified<CustomTypeName>,
+        data_connector_error: data_connectors::DataConnectorError,
+    },
 }

@@ -1,5 +1,4 @@
 use crate::stages::{data_connector_scalar_types, scalar_boolean_expressions};
-use crate::types::error::Error;
 
 use crate::types::subgraph::{
     mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeReference,
@@ -15,7 +14,7 @@ pub(crate) fn resolve_ndc_type(
     source_type: &ndc_models::Type,
     scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     subgraph: &str,
-) -> Result<QualifiedTypeReference, Error> {
+) -> Result<QualifiedTypeReference, scalar_boolean_expressions::ScalarBooleanExpressionTypeError> {
     match source_type {
         ndc_models::Type::Named { name } => {
             let scalar_type = scalars.0.get(name.as_str()).ok_or(
@@ -27,7 +26,7 @@ pub(crate) fn resolve_ndc_type(
             scalar_type
                 .representation
                 .clone()
-                .ok_or(Error::DataConnectorScalarRepresentationRequired {
+                .ok_or(scalar_boolean_expressions::ScalarBooleanExpressionTypeError::DataConnectorScalarRepresentationRequired {
                     data_connector: data_connector.clone(),
                     scalar_type: DataConnectorScalarType::from(name.as_str()),
                 })
@@ -54,6 +53,8 @@ pub(crate) fn resolve_ndc_type(
                 }
             })
         }
-        ndc_models::Type::Predicate { .. } => Err(Error::PredicateTypesUnsupported),
+        ndc_models::Type::Predicate { .. } => Err(
+            scalar_boolean_expressions::ScalarBooleanExpressionTypeError::PredicateTypesUnsupported,
+        ),
     }
 }

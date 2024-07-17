@@ -372,13 +372,6 @@ pub enum Error {
         old_representation: TypeName,
         new_representation: TypeName,
     },
-    #[error(
-        "scalar type representation required for type {scalar_type:} in data connector {data_connector:}"
-    )]
-    DataConnectorScalarRepresentationRequired {
-        data_connector: Qualified<DataConnectorName>,
-        scalar_type: DataConnectorScalarType,
-    },
     #[error("type mapping required for type {type_name:} in model source {model_name:} backed by data connector {data_connector:}")]
     TypeMappingRequired {
         model_name: Qualified<ModelName>,
@@ -418,8 +411,6 @@ pub enum Error {
         procedure_name: ProcedureName,
         error: ArgumentMappingError,
     },
-    #[error("Predicate types in data connectors are unsupported")]
-    PredicateTypesUnsupported,
     #[error(
         "Type error in preset argument {argument_name:} for command {command_name:}: {type_error:}"
     )]

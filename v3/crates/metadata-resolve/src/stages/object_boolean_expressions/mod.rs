@@ -3,7 +3,6 @@ use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
     object_types, type_permissions,
 };
-use crate::types::error::Error;
 
 use crate::helpers::model::resolve_ndc_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
@@ -29,7 +28,7 @@ pub fn resolve(
     object_types: &type_permissions::ObjectTypesWithPermissions,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<ObjectBooleanExpressionsOutput, Error> {
+) -> Result<ObjectBooleanExpressionsOutput, boolean_expressions::BooleanExpressionError> {
     let mut object_boolean_expression_types = BTreeMap::new();
     let mut graphql_types = existing_graphql_types.clone();
 
@@ -51,11 +50,11 @@ pub fn resolve(
             resolved_boolean_expression.name.clone(),
             resolved_boolean_expression,
         ) {
-            return Err(Error::from(
+            return Err(
                 boolean_expressions::BooleanExpressionError::DuplicateObjectBooleanExpressionTypeDefinition {
                     name: existing.name,
-                },
-            ));
+                }
+            );
         }
     }
     Ok(ObjectBooleanExpressionsOutput {
@@ -76,10 +75,11 @@ pub(crate) fn resolve_object_boolean_expression_type(
     object_types: &type_permissions::ObjectTypesWithPermissions,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<ObjectBooleanExpressionType, Error> {
+) -> Result<ObjectBooleanExpressionType, boolean_expressions::BooleanExpressionError> {
     // name of the boolean expression
     let qualified_name =
         Qualified::new(subgraph.to_string(), object_boolean_expression.name.clone());
+
     // name of the object type backing the boolean expression
     let qualified_object_type_name = Qualified::new(
         subgraph.to_string(),
@@ -87,11 +87,9 @@ pub(crate) fn resolve_object_boolean_expression_type(
     );
     let object_type_representation =
         object_types.get(&qualified_object_type_name).map_err(|_| {
-            Error::from(
-                boolean_expressions::BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
-                    type_name: qualified_object_type_name.clone(),
-                },
-            )
+            boolean_expressions::BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
+                type_name: qualified_object_type_name.clone(),
+            }
         })?;
 
     let qualified_data_connector_name = Qualified::new(
@@ -104,12 +102,11 @@ pub(crate) fn resolve_object_boolean_expression_type(
         .0
         .get(&qualified_data_connector_name)
         .ok_or_else(|| {
-            Error::from(
                 boolean_expressions::BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
                     data_connector: qualified_data_connector_name.clone(),
                     object_boolean_expression_type: qualified_name.clone(),
-                },
-            )
+                }
+
         })?;
 
     // validate data connector object type
@@ -118,15 +115,15 @@ pub(crate) fn resolve_object_boolean_expression_type(
             .data_connector_object_type
             .as_str(),
     ) {
-        return Err(Error::from(
+        return Err(
             boolean_expressions::BooleanExpressionError::UnknownDataConnectorTypeInObjectBooleanExpressionType {
                 data_connector: qualified_data_connector_name.clone(),
                 object_boolean_expression_type: qualified_name.clone(),
                 data_connector_object_type: object_boolean_expression
                     .data_connector_object_type
                     .clone(),
-            },
-        ));
+            }
+        );
     }
 
     object_type_representation.type_mappings
@@ -135,13 +132,13 @@ pub(crate) fn resolve_object_boolean_expression_type(
                     &object_boolean_expression.data_connector_object_type,
                 )
                 .ok_or_else(|| {
-                    Error::from(boolean_expressions::BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
+                    boolean_expressions::BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
                         object_type: qualified_object_type_name.clone(),
                         object_boolean_expression_type: qualified_name.clone(),
                         data_connector_object_type: object_boolean_expression
                             .data_connector_object_type.clone(),
                         data_connector: qualified_data_connector_name.clone(),
-                    })
+                    }
                 })?;
 
     // validate comparable fields
@@ -155,29 +152,28 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 boolean_expressions::BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
                     field_name: comparable_field.field_name.clone(),
                     object_boolean_expression_type: qualified_name.clone(),
-                }
-                .into(),
+                },
             );
         }
 
         // As of now, only `"enableAll": true` is allowed for field operators
         match &comparable_field.operators {
-                    open_dds::models::EnableAllOrSpecific::EnableAll(true) => {}
-                    _ => {
-                        return Err(Error::UnsupportedFeature {
-                            message: "Field level comparison operator configuration is not fully supported yet. Please use \"enableAll\":true.".to_string(),
-                        })
-                    }
-                }
+            open_dds::models::EnableAllOrSpecific::EnableAll(true) => {}
+            _ => {
+                return Err(
+                    boolean_expressions::BooleanExpressionError::FieldLevelComparisonOperatorConfigurationNotSupported,
+                )
+            }
+        }
     }
 
     // Comparable fields should have all type fields
     if object_boolean_expression.comparable_fields.len()
         != object_type_representation.object_type.fields.len()
     {
-        return Err(Error::UnsupportedFeature {
-                    message: "Field level comparison operator configuration is not fully supported yet. Please add all fields in filterable_fields.".to_string(),
-                });
+        return Err(
+            boolean_expressions::BooleanExpressionError::FieldLevelComparisonOperatorNeedsAllFields,
+        );
     }
 
     let object_boolean_expression_type =
@@ -209,12 +205,12 @@ pub(crate) fn resolve_object_boolean_expression_type(
             let scalars =
                 data_connector_scalars
                     .get(&data_connector_name)
-                    .ok_or(Error::from (
+                    .ok_or(
                         boolean_expressions::BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
                             object_boolean_expression_type: object_boolean_expression_type.clone(),
                             data_connector: data_connector_name.clone(),
-                        },
-                    ))?;
+                        }
+                    )?;
 
             resolve_boolean_expression_graphql_config(
                 &data_connector_name,
@@ -229,7 +225,13 @@ pub(crate) fn resolve_object_boolean_expression_type(
         .transpose()?;
 
     let data_connector_link =
-        data_connectors::DataConnectorLink::new(data_connector_name, data_connector_context)?;
+        data_connectors::DataConnectorLink::new(data_connector_name, data_connector_context)
+            .map_err(|data_connector_error| {
+                boolean_expressions::BooleanExpressionError::DataConnectorError {
+                    boolean_expression_name: qualified_name.clone(),
+                    data_connector_error,
+                }
+            })?;
 
     let resolved_boolean_expression = ObjectBooleanExpressionType {
         name: qualified_name.clone(),
@@ -253,7 +255,10 @@ pub fn resolve_boolean_expression_graphql_config(
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
     fields: &IndexMap<open_dds::types::FieldName, object_types::FieldDefinition>,
-) -> Result<boolean_expressions::BooleanExpressionGraphqlConfig, Error> {
+) -> Result<
+    boolean_expressions::BooleanExpressionGraphqlConfig,
+    boolean_expressions::BooleanExpressionError,
+> {
     let mut scalar_fields = BTreeMap::new();
 
     let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
@@ -262,9 +267,8 @@ pub fn resolve_boolean_expression_graphql_config(
         .query
         .filter_input_config
         .as_ref()
-        .ok_or_else(|| Error::GraphqlConfigError {
-            graphql_config_error:
-                graphql_config::GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig,
+        .ok_or_else(|| {
+            graphql_config::GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig
         })?;
 
     for (field_name, field_mapping) in field_mappings {

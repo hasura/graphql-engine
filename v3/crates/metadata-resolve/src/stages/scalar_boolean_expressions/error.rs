@@ -13,4 +13,13 @@ pub enum ScalarBooleanExpressionTypeError {
         data_connector: Qualified<DataConnectorName>,
         scalar_type: DataConnectorScalarType,
     },
+    #[error(
+        "scalar type representation required for type {scalar_type:} in data connector {data_connector:}"
+    )]
+    DataConnectorScalarRepresentationRequired {
+        data_connector: Qualified<DataConnectorName>,
+        scalar_type: DataConnectorScalarType,
+    },
+    #[error("Predicate types in data connectors are unsupported")]
+    PredicateTypesUnsupported,
 }
