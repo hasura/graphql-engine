@@ -1,4 +1,3 @@
-version: "3.6"
 services:
   redis:
     image: redis:latest

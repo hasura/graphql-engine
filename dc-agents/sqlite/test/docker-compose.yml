@@ -1,4 +1,3 @@
-version: '3.9'
 services:
   sqlite_agent:
     container_name: 'sqlite_agent'
