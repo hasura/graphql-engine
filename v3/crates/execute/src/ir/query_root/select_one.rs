@@ -2,8 +2,6 @@
 //!
 //! A 'select_one' operation fetches zero or one row from a model
 
-use std::collections::BTreeMap;
-
 /// Generates the IR for a 'select_one' operation
 // TODO: Remove once TypeMapping has more than one variant
 use hasura_authn_core::SessionVariables;
@@ -13,9 +11,8 @@ use serde::Serialize;
 
 use crate::ir::arguments;
 use crate::ir::error;
-use crate::ir::filter::{
-    ComparisonTarget, ComparisonValue, FilterExpression, ResolvedFilterExpression,
-};
+use crate::ir::filter;
+use crate::ir::filter::expression as filter_expression;
 use crate::ir::model_selection;
 use crate::ir::permissions;
 use crate::model_tracking::{count_model, UsagesCounts};
@@ -51,7 +48,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
     request_headers: &reqwest::header::HeaderMap,
     model_name: &'s Qualified<open_dds::models::ModelName>,
 ) -> Result<ModelSelectOne<'n, 's>, error::Error> {
-    let mut filter_clause_expressions = vec![];
+    let mut filter_expressions = vec![];
     let mut model_argument_fields = Vec::new();
     for argument in field_call.arguments.values() {
         match argument.info.generic {
@@ -64,17 +61,21 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
                 ModelInputAnnotation::ModelUniqueIdentifierArgument { ndc_column } => {
                     let ndc_column = ndc_column.as_ref().ok_or_else(|| error::InternalEngineError::InternalGeneric {
                         description: format!("Missing NDC column mapping for unique identifier argument {} on field {}", argument.name, field_call.name)})?;
-                    let ndc_expression = FilterExpression::BinaryComparisonOperator {
-                        target: ComparisonTarget::Column {
-                            name: ndc_column.column.clone(),
-                            field_path: vec![],
-                        },
-                        operator: ndc_column.equal_operator.clone(),
-                        value: ComparisonValue::Scalar {
-                            value: argument.value.as_json(),
-                        },
-                    };
-                    filter_clause_expressions.push(ndc_expression);
+                    let filter_expression =
+                        filter_expression::LocalFieldComparison::BinaryComparison {
+                            column: ndc_models::ComparisonTarget::Column {
+                                name: ndc_models::FieldName::from(ndc_column.column.as_str()),
+                                field_path: None,
+                            },
+                            operator: ndc_models::ComparisonOperatorName::from(
+                                ndc_column.equal_operator.as_str(),
+                            ),
+                            value: ndc_models::ComparisonValue::Scalar {
+                                value: argument.value.as_json(),
+                            },
+                        };
+                    filter_expressions
+                        .push(filter_expression::Expression::LocalField(filter_expression));
                 }
                 _ => Err(error::InternalEngineError::UnexpectedAnnotation {
                     annotation: annotation.clone(),
@@ -105,10 +106,9 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
         )?;
     }
 
-    let filter_clause = ResolvedFilterExpression {
-        expression: FilterExpression::mk_and(filter_clause_expressions)
-            .remove_always_true_expression(),
-        relationships: BTreeMap::new(),
+    let query_filter = filter::QueryFilter {
+        where_clause: None,
+        additional_filter: Some(filter_expression::Expression::mk_and(filter_expressions)),
     };
 
     let model_selection = model_selection::model_selection_ir(
@@ -116,7 +116,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
         data_type,
         model_source,
         model_arguments,
-        filter_clause,
+        query_filter,
         permissions::get_select_filter_predicate(field_call)?,
         None, // limit
         None, // offset

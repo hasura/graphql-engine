@@ -156,6 +156,7 @@ Metadata {
                                         ),
                                     },
                                     column_type_representation: None,
+                                    equal_operators: [],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -172,6 +173,11 @@ Metadata {
                                         ),
                                     },
                                     column_type_representation: None,
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -188,6 +194,11 @@ Metadata {
                                         ),
                                     },
                                     column_type_representation: None,
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                             },

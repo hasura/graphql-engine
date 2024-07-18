@@ -9,6 +9,7 @@ use open_dds::{
 };
 
 use crate::ir::error;
+use crate::ir::filter::expression as filter_expression;
 use crate::model_tracking::{count_model, UsagesCounts};
 use metadata_resolve;
 
@@ -18,11 +19,8 @@ use metadata_resolve::{
 use schema;
 use schema::GDS;
 
+use super::relationship::LocalModelRelationshipInfo;
 use super::{arguments::Argument, selection_set::NDCRelationshipName};
-use super::{
-    filter::{ComparisonTarget, ComparisonValue, ExistsInCollection, FilterExpression},
-    relationship::LocalModelRelationshipInfo,
-};
 
 /// Fetch filter expression from the namespace annotation
 /// of the field call. If the filter predicate namespace annotation
@@ -83,9 +81,8 @@ pub(crate) fn get_argument_presets(
 pub fn process_model_predicate<'s>(
     model_predicate: &'s metadata_resolve::ModelPredicate,
     session_variables: &SessionVariables,
-    relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
-) -> Result<FilterExpression, error::Error> {
+) -> Result<filter_expression::Expression<'s>, error::Error> {
     match model_predicate {
         metadata_resolve::ModelPredicate::UnaryFieldComparison {
             field: _,
@@ -110,23 +107,24 @@ pub fn process_model_predicate<'s>(
             session_variables,
         )?),
         metadata_resolve::ModelPredicate::Not(predicate) => {
-            let expr =
-                process_model_predicate(predicate, session_variables, relationships, usage_counts)?;
-            Ok(FilterExpression::mk_not(expr))
+            let expr = process_model_predicate(predicate, session_variables, usage_counts)?;
+            Ok(filter_expression::Expression::Not {
+                expression: Box::new(expr),
+            })
         }
         metadata_resolve::ModelPredicate::And(predicates) => {
             let exprs = predicates
                 .iter()
-                .map(|p| process_model_predicate(p, session_variables, relationships, usage_counts))
+                .map(|p| process_model_predicate(p, session_variables, usage_counts))
                 .collect::<Result<Vec<_>, error::Error>>()?;
-            Ok(FilterExpression::mk_and(exprs))
+            Ok(filter_expression::Expression::And { expressions: exprs })
         }
         metadata_resolve::ModelPredicate::Or(predicates) => {
             let exprs = predicates
                 .iter()
-                .map(|p| process_model_predicate(p, session_variables, relationships, usage_counts))
+                .map(|p| process_model_predicate(p, session_variables, usage_counts))
                 .collect::<Result<Vec<_>, error::Error>>()?;
-            Ok(FilterExpression::mk_or(exprs))
+            Ok(filter_expression::Expression::Or { expressions: exprs })
         }
         metadata_resolve::ModelPredicate::Relationship {
             relationship_info,
@@ -140,67 +138,70 @@ pub fn process_model_predicate<'s>(
                 &relationship_info.relationship_name,
             ))?;
 
-            relationships.insert(
-                relationship_name.clone(),
-                LocalModelRelationshipInfo {
-                    relationship_name: &relationship_info.relationship_name,
-                    relationship_type: &relationship_info.relationship_type,
-                    source_type: &relationship_info.source_type,
-                    source_data_connector: &relationship_info.source_data_connector,
-                    source_type_mappings: &relationship_info.source_type_mappings,
-                    target_source: &relationship_info.target_source,
-                    target_type: &relationship_info.target_type,
-                    mappings: &relationship_info.mappings,
-                },
-            );
-
-            let relationship_predicate =
-                process_model_predicate(predicate, session_variables, relationships, usage_counts)?;
-
-            let exists_in_relationship = ExistsInCollection::Related {
-                relationship: relationship_name,
+            let info = LocalModelRelationshipInfo {
+                relationship_name: &relationship_info.relationship_name,
+                relationship_type: &relationship_info.relationship_type,
+                source_type: &relationship_info.source_type,
+                source_data_connector: &relationship_info.source_data_connector,
+                source_type_mappings: &relationship_info.source_type_mappings,
+                target_source: &relationship_info.target_source,
+                target_type: &relationship_info.target_type,
+                mappings: &relationship_info.mappings,
             };
 
-            Ok(FilterExpression::Exists {
-                in_collection: exists_in_relationship,
+            let relationship_predicate =
+                process_model_predicate(predicate, session_variables, usage_counts)?;
+
+            let local_relationship_filter = filter_expression::Expression::LocalRelationship {
+                relationship: relationship_name,
+                arguments: BTreeMap::new(),
                 predicate: Box::new(relationship_predicate),
-            })
+                info,
+            };
+
+            Ok(local_relationship_filter)
         }
     }
 }
 
-fn make_permission_binary_boolean_expression(
+fn make_permission_binary_boolean_expression<'s>(
     ndc_column: &DataConnectorColumnName,
     argument_type: &QualifiedTypeReference,
     operator: &DataConnectorOperatorName,
-    value_expression: &metadata_resolve::ValueExpression,
+    value_expression: &'s metadata_resolve::ValueExpression,
     session_variables: &SessionVariables,
-) -> Result<FilterExpression, error::Error> {
+) -> Result<filter_expression::Expression<'s>, error::Error> {
     let ndc_expression_value =
         make_argument_from_value_expression(value_expression, argument_type, session_variables)?;
-    Ok(FilterExpression::BinaryComparisonOperator {
-        target: ComparisonTarget::Column {
-            name: ndc_column.clone(),
-            field_path: vec![],
+    Ok(filter_expression::Expression::LocalField(
+        filter_expression::LocalFieldComparison::BinaryComparison {
+            column: ndc_models::ComparisonTarget::Column {
+                name: ndc_models::FieldName::from(ndc_column.as_str()),
+                field_path: None,
+            },
+            operator: ndc_models::ComparisonOperatorName::from(operator.as_str()),
+            value: ndc_models::ComparisonValue::Scalar {
+                value: ndc_expression_value,
+            },
         },
-        operator: operator.clone(),
-        value: ComparisonValue::Scalar {
-            value: ndc_expression_value,
-        },
-    })
+    ))
 }
 
-fn make_permission_unary_boolean_expression(
+fn make_permission_unary_boolean_expression<'s>(
     ndc_column: &DataConnectorColumnName,
     operator: UnaryComparisonOperator,
-) -> FilterExpression {
-    FilterExpression::UnaryComparisonOperator {
-        target: ComparisonTarget::Column {
-            name: ndc_column.clone(),
-            field_path: vec![],
+) -> filter_expression::Expression<'s> {
+    filter_expression::Expression::LocalField(
+        filter_expression::LocalFieldComparison::UnaryComparison {
+            column: ndc_models::ComparisonTarget::Column {
+                name: ndc_models::FieldName::from(ndc_column.as_str()),
+                field_path: None,
+            },
+            operator: match operator {
+                UnaryComparisonOperator::IsNull => ndc_models::UnaryComparisonOperator::IsNull,
+            },
         },
-        operator,
-    }
+    )
 }
 
 pub(crate) fn make_argument_from_value_expression(
@@ -222,12 +223,12 @@ pub(crate) fn make_argument_from_value_expression(
     }
 }
 
-pub(crate) fn make_argument_from_value_expression_or_predicate(
-    val_expr: &metadata_resolve::ValueExpressionOrPredicate,
+pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
+    val_expr: &'s metadata_resolve::ValueExpressionOrPredicate,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
-) -> Result<Argument, error::Error> {
+) -> Result<Argument<'s>, error::Error> {
     match val_expr {
         metadata_resolve::ValueExpressionOrPredicate::Literal(val) => {
             Ok(Argument::Literal { value: val.clone() })
@@ -244,14 +245,8 @@ pub(crate) fn make_argument_from_value_expression_or_predicate(
             })
         }
         metadata_resolve::ValueExpressionOrPredicate::BooleanExpression(model_predicate) => {
-            let mut relationships = BTreeMap::new();
-
-            let filter_expression = process_model_predicate(
-                model_predicate,
-                session_variables,
-                &mut relationships,
-                usage_counts,
-            )?;
+            let filter_expression =
+                process_model_predicate(model_predicate, session_variables, usage_counts)?;
             Ok(Argument::BooleanExpression {
                 predicate: filter_expression,
             })

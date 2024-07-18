@@ -6,52 +6,51 @@ use indexmap::IndexMap;
 
 use super::common;
 use super::error;
+use super::filter;
 use super::relationships;
 use super::selection_set;
+use super::types;
 use crate::ir::aggregates::{AggregateFieldSelection, AggregateSelectionSet};
 use crate::ir::model_selection::ModelSelection;
 use crate::ir::order_by;
 use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings
-pub(crate) fn ndc_query<'s, 'ir>(
+// #[async_recursion]
+pub(crate) fn plan_query_node<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
+    relationships: &mut BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(ndc_models::Query, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
-    let (ndc_fields, join_locations) = ir
-        .selection
-        .as_ref()
-        .map(|selection| -> Result<_, error::Error> {
-            let (ndc_fields, join_locations) = selection_set::process_selection_set_ir(
-                selection,
-                join_id_counter,
-                ir.data_connector.capabilities.supported_ndc_version,
-            )?;
-            Ok((Some(ndc_fields), join_locations))
-        })
-        .transpose()?
-        .unwrap_or_else(|| (None, JoinLocations::new()));
+) -> Result<(types::QueryNode<'s>, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
+    let mut query_fields = None;
+    let mut join_locations = JoinLocations::new();
+    if let Some(selection) = &ir.selection {
+        let (fields, locations) = selection_set::plan_selection_set(
+            selection,
+            join_id_counter,
+            ir.data_connector.capabilities.supported_ndc_version,
+            relationships,
+        )?;
+        query_fields = Some(fields);
+        join_locations = locations;
+    }
 
     let aggregates = ir.aggregate_selection.as_ref().map(ndc_aggregates);
-
-    let ndc_query = ndc_models::Query {
-        aggregates,
-        groups: None,
-        fields: ndc_fields,
+    let predicate = filter::plan_filter_expression(&ir.filter_clause, relationships)?;
+    let query_node = types::QueryNode {
         limit: ir.limit,
         offset: ir.offset,
         order_by: ir
             .order_by
             .as_ref()
             .map(|x| ndc_order_by(&x.order_by_elements)),
-        predicate: ir
-            .filter_clause
-            .expression
-            .as_ref()
-            .map(common::ndc_expression),
+        predicate,
+        aggregates,
+        fields: query_fields,
+        groups: None,
     };
 
-    Ok((ndc_query, join_locations))
+    Ok((query_node, join_locations))
 }
 
 /// Translates the internal IR 'AggregateSelectionSet' into an NDC query aggregates selection
@@ -121,26 +120,35 @@ fn ndc_count_aggregate(column_path: &[&str], distinct: bool) -> ndc_models::Aggr
     }
 }
 
-/// Convert the internal IR (`ModelSelection`) into NDC IR (`ndc::models::QueryRequest`)
-pub(crate) fn ndc_ir<'s, 'ir>(
+/// Generate query execution plan from internal IR (`ModelSelection`)
+pub(crate) fn plan_query_execution<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(ndc_models::QueryRequest, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
+) -> Result<
+    (
+        types::QueryExecutionPlan<'s>,
+        JoinLocations<RemoteJoin<'s, 'ir>>,
+    ),
+    error::Error,
+> {
     let mut collection_relationships = BTreeMap::new();
     relationships::collect_relationships(ir, &mut collection_relationships)?;
 
-    let (query, join_locations) = ndc_query(ir, join_id_counter)?;
-    let query_request = ndc_models::QueryRequest {
-        query,
+    let (query, join_locations) =
+        plan_query_node(ir, &mut collection_relationships, join_id_counter)?;
+    let execution_node = types::QueryExecutionPlan {
+        query_node: query,
         collection: ndc_models::CollectionName::from(ir.collection.as_str()),
-        arguments: common::ndc_arguments(
+        arguments: common::plan_ndc_arguments(
             &ir.arguments,
             ir.data_connector.capabilities.supported_ndc_version,
+            &mut collection_relationships,
         )?,
         collection_relationships,
         variables: None,
+        data_connector: ir.data_connector,
     };
-    Ok((query_request, join_locations))
+    Ok((execution_node, join_locations))
 }
 
 fn ndc_order_by(order_by_elements: &[order_by::OrderByElement]) -> ndc_models::OrderBy {

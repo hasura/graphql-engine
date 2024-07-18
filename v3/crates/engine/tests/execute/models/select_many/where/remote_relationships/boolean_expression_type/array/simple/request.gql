@@ -1,0 +1,123 @@
+query MyQuery {
+  Album(where: { Tracks: { TrackId: { _eq: 3 } } }) {
+    AlbumId
+    Title
+    ArtistId
+    Tracks {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+
+  AlbumRemote: Album(where: { TracksRemote: { TrackId: { _eq: 3 } } }) {
+    AlbumId
+    Title
+    ArtistId
+    TracksRemote {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+
+  AlbumAnd: Album(
+    where: {
+      _and: [{ Tracks: { TrackId: { _eq: 3 } } }, { ArtistId: { _eq: 2 } }]
+    }
+  ) {
+    AlbumId
+    Title
+    ArtistId
+    Tracks {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+
+  AlbumAndRemote: Album(
+    where: {
+      _and: [
+        { TracksRemote: { TrackId: { _eq: 3 } } }
+        { ArtistId: { _eq: 2 } }
+      ]
+    }
+  ) {
+    AlbumId
+    Title
+    ArtistId
+    TracksRemote {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+
+  AlbumOr: Album(
+    where: {
+      _or: [{ Tracks: { TrackId: { _eq: 3 } } }, { ArtistId: { _eq: 2 } }]
+    }
+  ) {
+    AlbumId
+    Title
+    ArtistId
+    Tracks {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+
+  AlbumOrRemote: Album(
+    where: {
+      _or: [{ TracksRemote: { TrackId: { _eq: 3 } } }, { ArtistId: { _eq: 2 } }]
+    }
+  ) {
+    AlbumId
+    Title
+    ArtistId
+    TracksRemote {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+
+  AlbumTracksTwoRelationships: Album(
+    where: {
+      Tracks: { Album: { AlbumId: { _eq: 1 } }, Genre: { GenreId: { _eq: 1 } } }
+    }
+    limit: 1
+  ) {
+    Tracks(limit: 2) {
+      Genre {
+        GenreId
+      }
+      Album {
+        AlbumId
+      }
+      Name
+    }
+  }
+
+  AlbumTracksTwoRelationshipsRemote: Album(
+    where: {
+      TracksRemote: {
+        Album: { AlbumId: { _eq: 1 } }
+        GenreRemote: { GenreId: { _eq: 1 } }
+      }
+    }
+    limit: 1
+  ) {
+    Tracks(limit: 2) {
+      GenreRemote {
+        GenreId
+      }
+      Album {
+        AlbumId
+      }
+      Name
+    }
+  }
+}

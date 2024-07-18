@@ -12,21 +12,16 @@ use serde::Serialize;
 
 use super::{
     commands::generate_function_based_command,
-    filter::{
-        resolve_filter_expression, ComparisonTarget, ComparisonValue, FilterExpression,
-        ResolvedFilterExpression,
-    },
+    filter,
+    filter::expression as filter_expression,
     model_selection::{self, model_selection_ir},
     order_by::build_ndc_order_by,
     permissions,
     selection_set::{FieldSelection, NDCRelationshipName},
 };
 
+use crate::model_tracking::{count_model, UsagesCounts};
 use crate::{ir::error, model_tracking::count_command};
-use crate::{
-    model_tracking::{count_model, UsagesCounts},
-    remote_joins::types::VariableName,
-};
 use metadata_resolve::{self, serialize_qualified_btreemap, Qualified, RelationshipModelMapping};
 use schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, CommandTargetSource,
@@ -34,7 +29,7 @@ use schema::{
     ModelRelationshipAnnotation, GDS,
 };
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct LocalModelRelationshipInfo<'s> {
     pub relationship_name: &'s RelationshipName,
     pub relationship_type: &'s RelationshipType,
@@ -55,6 +50,7 @@ pub(crate) struct LocalCommandRelationshipInfo<'s> {
     #[serde(serialize_with = "serialize_qualified_btreemap")]
     pub source_type_mappings:
         &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+
     pub target_source: &'s CommandTargetSource,
 }
 
@@ -91,10 +87,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
 
     let mut limit = None;
     let mut offset = None;
-    let mut filter_clause = ResolvedFilterExpression {
-        expression: None,
-        relationships: BTreeMap::new(),
-    };
+    let mut where_clause = None;
     let mut order_by = None;
 
     for argument in field_call.arguments.values() {
@@ -127,12 +120,12 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                         BooleanExpressionAnnotation::BooleanExpression,
                     ) => {
                         if let Some(model_source) = &relationship_annotation.target_source {
-                            filter_clause = resolve_filter_expression(
+                            where_clause = Some(filter::resolve_filter_expression(
                                 argument.value.as_object()?,
                                 &model_source.model.data_connector,
                                 &model_source.model.type_mappings,
                                 usage_counts,
-                            )?;
+                            )?);
                         }
                     }
 
@@ -165,12 +158,17 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                 None => error::Error::from(normalized_ast::Error::NoTypenameFound),
             })?;
 
+    let query_filter = filter::QueryFilter {
+        where_clause,
+        additional_filter: None,
+    };
+
     let selection_ir = model_selection_ir(
         &field.selection_set,
         &relationship_annotation.target_type,
         &target_source.model,
         BTreeMap::new(),
-        filter_clause,
+        query_filter,
         permissions::get_select_filter_predicate(field_call)?,
         limit,
         offset,
@@ -179,6 +177,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
         request_headers,
         usage_counts,
     )?;
+
     match metadata_resolve::relationship_execution_category(
         source_data_connector,
         &target_source.model.data_connector,
@@ -433,25 +432,33 @@ pub(crate) fn build_remote_relationship<'s>(
         join_mapping.push((source_field, target_field));
     }
 
-    // modify `ModelSelection` to include the join condition in `where` with a variable
+    let mut relationship_join_filter_expressions = Vec::new();
+
+    // Generate the join condition expressions for the remote relationship
     for (_source, (_field_name, target_column)) in &join_mapping {
         let target_value_variable = format!("${}", &target_column.column);
-        let comparison_exp = FilterExpression::BinaryComparisonOperator {
-            target: ComparisonTarget::Column {
-                name: target_column.column.clone(),
-                field_path: vec![],
+        let comparison_exp = filter_expression::LocalFieldComparison::BinaryComparison {
+            column: ndc_models::ComparisonTarget::Column {
+                name: ndc_models::FieldName::from(target_column.column.as_str()),
+                field_path: None,
             },
-            operator: target_column.equal_operator.clone(),
-            value: ComparisonValue::Variable {
-                name: VariableName(target_value_variable),
+            operator: ndc_models::ComparisonOperatorName::from(
+                target_column.equal_operator.as_str(),
+            ),
+            value: ndc_models::ComparisonValue::Variable {
+                name: ndc_models::VariableName::from(target_value_variable.as_str()),
             },
         };
-        remote_relationships_ir.filter_clause.expression =
-            match remote_relationships_ir.filter_clause.expression {
-                Some(existing) => Some(FilterExpression::mk_and(vec![existing, comparison_exp])),
-                None => Some(comparison_exp),
-            };
+        relationship_join_filter_expressions
+            .push(filter_expression::Expression::LocalField(comparison_exp));
     }
+
+    remote_relationships_ir
+        .filter_clause
+        .relationship_join_filter = Some(filter_expression::Expression::mk_and(
+        relationship_join_filter_expressions,
+    ));
+
     let rel_info = RemoteModelRelationshipInfo { join_mapping };
     Ok(FieldSelection::ModelRelationshipRemote {
         ir: remote_relationships_ir,

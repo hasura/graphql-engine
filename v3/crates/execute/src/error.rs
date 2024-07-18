@@ -6,6 +6,7 @@ use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
+use crate::ndc;
 use crate::ndc::client as ndc_client;
 
 use super::ir;
@@ -75,6 +76,7 @@ impl TraceableError for RequestError {
 #[transitive(from(NDCUnexpectedError, FieldInternalError))]
 #[transitive(from(gql::normalized_ast::Error, FieldInternalError))]
 #[transitive(from(gql::introspection::Error, FieldInternalError))]
+#[transitive(from(FilterPredicateError, FieldInternalError))]
 pub enum FieldError {
     #[error("error from data source: {}", connector_error.error_response.message())]
     NDCExpected {
@@ -151,6 +153,15 @@ pub enum FieldInternalError {
     #[error("unexpected annotation: {annotation}")]
     UnexpectedAnnotation { annotation: Annotation },
 
+    #[error("unable to execute remote filter predicate: {0}")]
+    UnableToResolveFilterPredicate(#[from] FilterPredicateError),
+
+    #[error("failed to serialise an Expression to JSON: {0}")]
+    ExpressionSerializationError(serde_json::Error),
+
+    #[error("error when downgrading ndc request: {0}")]
+    NdcRequestDowngradeError(ndc::migration::NdcDowngradeError),
+
     #[error("internal error: {description}")]
     InternalGeneric { description: String },
 }
@@ -170,11 +181,39 @@ impl TraceableError for FieldInternalError {
             Self::NDCUnexpected(_) | Self::GlobalIdTypenameMappingNotFound { .. } => {
                 ErrorVisibility::User
             }
+            Self::UnableToResolveFilterPredicate(filter_predicate_error) => {
+                filter_predicate_error.visibility()
+            }
             Self::UnexpectedAnnotation { .. }
             | Self::JsonSerialization(_)
             | Self::InternalGeneric { .. }
             | Self::NormalizedAstError(_)
+            | Self::ExpressionSerializationError(_)
+            | Self::NdcRequestDowngradeError(_)
             | Self::IntrospectionError(_) => ErrorVisibility::Internal,
+        }
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum FilterPredicateError {
+    #[error("remote connector request error: {0}")]
+    RemoteRelationshipNDCRequest(ndc_client::Error),
+
+    #[error("not a single row set returned from remote connector request: {0}")]
+    NotASingleRowSet(String),
+
+    #[error("too many rows returned from remote connector request")]
+    TooManyRowsReturned,
+}
+
+impl TraceableError for FilterPredicateError {
+    fn visibility(&self) -> ErrorVisibility {
+        match self {
+            Self::RemoteRelationshipNDCRequest(_) | Self::NotASingleRowSet(_) => {
+                ErrorVisibility::Internal
+            }
+            Self::TooManyRowsReturned => ErrorVisibility::User,
         }
     }
 }

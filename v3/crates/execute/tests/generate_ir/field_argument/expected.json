@@ -155,8 +155,12 @@
             "collection": "Artist",
             "arguments": {},
             "filter_clause": {
-              "expression": null,
-              "relationships": {}
+              "query_filter": {
+                "where_clause": null,
+                "additional_filter": null
+              },
+              "permission_filter": null,
+              "relationship_join_filter": null
             },
             "limit": null,
             "offset": null,

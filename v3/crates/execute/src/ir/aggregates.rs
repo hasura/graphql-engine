@@ -205,7 +205,9 @@ pub fn mk_alias_from_graphql_field_path(graphql_field_path: &[&Alias]) -> String
         .join("_")
 }
 
-fn get_ndc_underlying_type_name(result_type: &ndc_models::Type) -> &ndc_models::TypeName {
+pub(crate) fn get_ndc_underlying_type_name(
+    result_type: &ndc_models::Type,
+) -> &ndc_models::TypeName {
     match result_type {
         ndc_models::Type::Named { name } => name,
         ndc_models::Type::Array { element_type } => get_ndc_underlying_type_name(element_type),

@@ -455,6 +455,11 @@ Metadata {
                                     column_type_representation: Some(
                                         String,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -475,6 +480,11 @@ Metadata {
                                     column_type_representation: Some(
                                         String,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -495,6 +505,11 @@ Metadata {
                                     column_type_representation: Some(
                                         String,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -515,6 +530,11 @@ Metadata {
                                     column_type_representation: Some(
                                         String,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -535,6 +555,11 @@ Metadata {
                                     column_type_representation: Some(
                                         String,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -553,6 +578,11 @@ Metadata {
                                     column_type_representation: Some(
                                         Int32,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -571,6 +601,11 @@ Metadata {
                                     column_type_representation: Some(
                                         Timestamp,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -589,6 +624,11 @@ Metadata {
                                     column_type_representation: Some(
                                         Int32,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -607,6 +647,11 @@ Metadata {
                                     column_type_representation: Some(
                                         BigDecimal,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                             },
@@ -800,6 +845,11 @@ Metadata {
                                     column_type_representation: Some(
                                         Int32,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -818,6 +868,11 @@ Metadata {
                                     column_type_representation: Some(
                                         Int32,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -836,6 +891,11 @@ Metadata {
                                     column_type_representation: Some(
                                         Int32,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -854,6 +914,11 @@ Metadata {
                                     column_type_representation: Some(
                                         Int32,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                                 FieldName(
@@ -872,6 +937,11 @@ Metadata {
                                     column_type_representation: Some(
                                         BigDecimal,
                                     ),
+                                    equal_operators: [
+                                        ComparisonOperatorName(
+                                            "_eq",
+                                        ),
+                                    ],
                                     argument_mappings: {},
                                 },
                             },
@@ -1266,6 +1336,11 @@ Metadata {
                                         column_type_representation: Some(
                                             String,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1286,6 +1361,11 @@ Metadata {
                                         column_type_representation: Some(
                                             String,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1306,6 +1386,11 @@ Metadata {
                                         column_type_representation: Some(
                                             String,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1326,6 +1411,11 @@ Metadata {
                                         column_type_representation: Some(
                                             String,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1346,6 +1436,11 @@ Metadata {
                                         column_type_representation: Some(
                                             String,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1364,6 +1459,11 @@ Metadata {
                                         column_type_representation: Some(
                                             Int32,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1382,6 +1482,11 @@ Metadata {
                                         column_type_representation: Some(
                                             Timestamp,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1400,6 +1505,11 @@ Metadata {
                                         column_type_representation: Some(
                                             Int32,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1418,6 +1528,11 @@ Metadata {
                                         column_type_representation: Some(
                                             BigDecimal,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                 },
@@ -1931,6 +2046,11 @@ Metadata {
                                         column_type_representation: Some(
                                             Int32,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1949,6 +2069,11 @@ Metadata {
                                         column_type_representation: Some(
                                             Int32,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1967,6 +2092,11 @@ Metadata {
                                         column_type_representation: Some(
                                             Int32,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -1985,6 +2115,11 @@ Metadata {
                                         column_type_representation: Some(
                                             Int32,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -2003,6 +2138,11 @@ Metadata {
                                         column_type_representation: Some(
                                             BigDecimal,
                                         ),
+                                        equal_operators: [
+                                            ComparisonOperatorName(
+                                                "_eq",
+                                            ),
+                                        ],
                                         argument_mappings: {},
                                     },
                                 },

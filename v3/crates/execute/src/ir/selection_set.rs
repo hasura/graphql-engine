@@ -34,7 +34,7 @@ pub(crate) enum FieldSelection<'s> {
     Column {
         column: DataConnectorColumnName,
         nested_selection: Option<NestedSelection<'s>>,
-        arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
+        arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
     },
     ModelRelationshipLocal {
         query: ModelSelection<'s>,

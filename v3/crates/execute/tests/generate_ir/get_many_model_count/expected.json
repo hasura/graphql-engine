@@ -59,6 +59,7 @@
                                             "name": "int4"
                                           },
                                           "column_type_representation": null,
+                                          "equal_operators": ["_eq"],
                                           "argument_mappings": {}
                                         },
                                         "author_id": {
@@ -68,6 +69,7 @@
                                             "name": "int4"
                                           },
                                           "column_type_representation": null,
+                                          "equal_operators": ["_eq"],
                                           "argument_mappings": {}
                                         },
                                         "title": {
@@ -77,6 +79,7 @@
                                             "name": "varchar"
                                           },
                                           "column_type_representation": null,
+                                          "equal_operators": ["_eq"],
                                           "argument_mappings": {}
                                         }
                                       }
@@ -184,6 +187,7 @@
                                                   "name": "int8"
                                                 },
                                                 "column_type_representation": null,
+                                                "equal_operators": ["_eq"],
                                                 "argument_mappings": {}
                                               },
                                               "first_name": {
@@ -193,6 +197,7 @@
                                                   "name": "varchar"
                                                 },
                                                 "column_type_representation": null,
+                                                "equal_operators": ["_eq"],
                                                 "argument_mappings": {}
                                               },
                                               "last_name": {
@@ -202,6 +207,7 @@
                                                   "name": "varchar"
                                                 },
                                                 "column_type_representation": null,
+                                                "equal_operators": ["_eq"],
                                                 "argument_mappings": {}
                                               }
                                             }
@@ -309,6 +315,9 @@
                                                         "name": "int4"
                                                       },
                                                       "column_type_representation": null,
+                                                      "equal_operators": [
+                                                        "_eq"
+                                                      ],
                                                       "argument_mappings": {}
                                                     },
                                                     "author_id": {
@@ -318,6 +327,9 @@
                                                         "name": "int4"
                                                       },
                                                       "column_type_representation": null,
+                                                      "equal_operators": [
+                                                        "_eq"
+                                                      ],
                                                       "argument_mappings": {}
                                                     },
                                                     "title": {
@@ -327,6 +339,9 @@
                                                         "name": "varchar"
                                                       },
                                                       "column_type_representation": null,
+                                                      "equal_operators": [
+                                                        "_eq"
+                                                      ],
                                                       "argument_mappings": {}
                                                     }
                                                   }
@@ -550,8 +565,12 @@
                         "collection": "article",
                         "arguments": {},
                         "filter_clause": {
-                          "expression": null,
-                          "relationships": {}
+                          "query_filter": {
+                            "where_clause": null,
+                            "additional_filter": null
+                          },
+                          "permission_filter": null,
+                          "relationship_join_filter": null
                         },
                         "limit": null,
                         "offset": null,
@@ -583,8 +602,12 @@
                                   "collection": "author",
                                   "arguments": {},
                                   "filter_clause": {
-                                    "expression": null,
-                                    "relationships": {}
+                                    "query_filter": {
+                                      "where_clause": null,
+                                      "additional_filter": null
+                                    },
+                                    "permission_filter": null,
+                                    "relationship_join_filter": null
                                   },
                                   "limit": null,
                                   "offset": null,
@@ -616,8 +639,12 @@
                                             "collection": "article",
                                             "arguments": {},
                                             "filter_clause": {
-                                              "expression": null,
-                                              "relationships": {}
+                                              "query_filter": {
+                                                "where_clause": null,
+                                                "additional_filter": null
+                                              },
+                                              "permission_filter": null,
+                                              "relationship_join_filter": null
                                             },
                                             "limit": null,
                                             "offset": null,
@@ -681,6 +708,9 @@
                                                         "name": "int8"
                                                       },
                                                       "column_type_representation": null,
+                                                      "equal_operators": [
+                                                        "_eq"
+                                                      ],
                                                       "argument_mappings": {}
                                                     },
                                                     "first_name": {
@@ -690,6 +720,9 @@
                                                         "name": "varchar"
                                                       },
                                                       "column_type_representation": null,
+                                                      "equal_operators": [
+                                                        "_eq"
+                                                      ],
                                                       "argument_mappings": {}
                                                     },
                                                     "last_name": {
@@ -699,6 +732,9 @@
                                                         "name": "varchar"
                                                       },
                                                       "column_type_representation": null,
+                                                      "equal_operators": [
+                                                        "_eq"
+                                                      ],
                                                       "argument_mappings": {}
                                                     }
                                                   }
@@ -740,6 +776,9 @@
                                                             "name": "int4"
                                                           },
                                                           "column_type_representation": null,
+                                                          "equal_operators": [
+                                                            "_eq"
+                                                          ],
                                                           "argument_mappings": {}
                                                         },
                                                         "author_id": {
@@ -749,6 +788,9 @@
                                                             "name": "int4"
                                                           },
                                                           "column_type_representation": null,
+                                                          "equal_operators": [
+                                                            "_eq"
+                                                          ],
                                                           "argument_mappings": {}
                                                         },
                                                         "title": {
@@ -758,6 +800,9 @@
                                                             "name": "varchar"
                                                           },
                                                           "column_type_representation": null,
+                                                          "equal_operators": [
+                                                            "_eq"
+                                                          ],
                                                           "argument_mappings": {}
                                                         }
                                                       }
@@ -837,6 +882,7 @@
                                               "name": "int4"
                                             },
                                             "column_type_representation": null,
+                                            "equal_operators": ["_eq"],
                                             "argument_mappings": {}
                                           },
                                           "author_id": {
@@ -846,6 +892,7 @@
                                               "name": "int4"
                                             },
                                             "column_type_representation": null,
+                                            "equal_operators": ["_eq"],
                                             "argument_mappings": {}
                                           },
                                           "title": {
@@ -855,6 +902,7 @@
                                               "name": "varchar"
                                             },
                                             "column_type_representation": null,
+                                            "equal_operators": ["_eq"],
                                             "argument_mappings": {}
                                           }
                                         }
@@ -896,6 +944,7 @@
                                                   "name": "int8"
                                                 },
                                                 "column_type_representation": null,
+                                                "equal_operators": ["_eq"],
                                                 "argument_mappings": {}
                                               },
                                               "first_name": {
@@ -905,6 +954,7 @@
                                                   "name": "varchar"
                                                 },
                                                 "column_type_representation": null,
+                                                "equal_operators": ["_eq"],
                                                 "argument_mappings": {}
                                               },
                                               "last_name": {
@@ -914,6 +964,7 @@
                                                   "name": "varchar"
                                                 },
                                                 "column_type_representation": null,
+                                                "equal_operators": ["_eq"],
                                                 "argument_mappings": {}
                                               }
                                             }
@@ -993,6 +1044,7 @@
                                     "name": "int4"
                                   },
                                   "column_type_representation": null,
+                                  "equal_operators": ["_eq"],
                                   "argument_mappings": {}
                                 },
                                 "author_id": {
@@ -1002,6 +1054,7 @@
                                     "name": "int4"
                                   },
                                   "column_type_representation": null,
+                                  "equal_operators": ["_eq"],
                                   "argument_mappings": {}
                                 },
                                 "title": {
@@ -1011,6 +1064,7 @@
                                     "name": "varchar"
                                   },
                                   "column_type_representation": null,
+                                  "equal_operators": ["_eq"],
                                   "argument_mappings": {}
                                 }
                               }
@@ -1052,6 +1106,7 @@
                                         "name": "int4"
                                       },
                                       "column_type_representation": null,
+                                      "equal_operators": ["_eq"],
                                       "argument_mappings": {}
                                     },
                                     "author_id": {
@@ -1061,6 +1116,7 @@
                                         "name": "int4"
                                       },
                                       "column_type_representation": null,
+                                      "equal_operators": ["_eq"],
                                       "argument_mappings": {}
                                     },
                                     "title": {
@@ -1070,6 +1126,7 @@
                                         "name": "varchar"
                                       },
                                       "column_type_representation": null,
+                                      "equal_operators": ["_eq"],
                                       "argument_mappings": {}
                                     }
                                   }

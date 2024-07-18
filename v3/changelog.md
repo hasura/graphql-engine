@@ -26,6 +26,42 @@
 
 ### Added
 
+#### Remote Relationships in Query Filter
+
+We have enhanced the GraphQL query capabilities to support array and object
+relationships targeting models backed by different data connectors. This allows
+you to specify remote relationships directly within the `where` expression of
+your queries.
+
+**Example:** Retrieve a list of customers who have been impacted by cancelled
+orders during the current sale event. This data should be filtered based on
+order logs stored in a separate data source.
+
+```graphql
+query CustomersWithFailedOrders {
+  Customers(
+    where: {
+      OrderLogs: {
+        _and: [
+          { timestamp: { _gt: "2024-10-10" } }
+          { status: { _eq: "cancelled" } }
+        ]
+      }
+    }
+  ) {
+    CustomerId
+    EmailId
+    OrderLogs {
+      OrderId
+    }
+  }
+}
+```
+
+By incorporating remote relationships into the where expression, you can
+seamlessly query and filter data that spans across multiple data sources, making
+your GraphQL queries more versatile and powerful.
+
 - Query Usage Analytics - usage analytics JSON data is attached to `execute`
   span using `internal.query_usage_analytics` attribute
 

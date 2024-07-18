@@ -147,6 +147,7 @@ pub struct FieldMapping {
     pub column: DataConnectorColumnName,
     pub column_type: ndc_models::Type,
     pub column_type_representation: Option<ndc_models::TypeRepresentation>,
+    pub equal_operators: Vec<ndc_models::ComparisonOperatorName>,
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
 }
 

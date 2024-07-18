@@ -201,7 +201,9 @@ fn convert_data_connectors_contexts<'a>(
     data_connector_scalars
 }
 
-fn get_comparison_operators(scalar_type: &ndc_models::ScalarType) -> ComparisonOperators {
+pub(crate) fn get_comparison_operators(
+    scalar_type: &ndc_models::ScalarType,
+) -> ComparisonOperators {
     let mut comparison_operators = ComparisonOperators::default();
     for (operator_name, operator_definition) in &scalar_type.comparison_operators {
         match operator_definition {

@@ -1,7 +1,8 @@
 use crate::types::error::{Error, TypePredicateError};
 
 use crate::stages::{
-    boolean_expressions, data_connectors, models, relationships, scalar_boolean_expressions,
+    boolean_expressions, data_connectors, models, object_types, relationships,
+    scalar_boolean_expressions,
 };
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
@@ -16,10 +17,10 @@ use std::collections::BTreeMap;
 // are compatible with our data connector
 // we want to know
 // a) does each scalar have mappings for our data connector?
-// b) does each relationship live on the same data connector?
-// c) if we used nested objects, does the data connector have the correct capability?
+// b) if we used nested objects, does the data connector have the correct capability?
 pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
     data_connector: &data_connectors::DataConnectorLink,
+    source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     object_boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
@@ -55,6 +56,7 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
             // continue checking the nested object...
             validate_data_connector_with_object_boolean_expression_type(
                 data_connector,
+                source_type_mappings,
                 leaf_boolean_expression,
                 boolean_expression_types,
                 object_types,
@@ -90,6 +92,7 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
         for comparable_relationship in graphql_config.relationship_fields.values() {
             validate_data_connector_with_comparable_relationship(
                 data_connector,
+                source_type_mappings,
                 object_boolean_expression_type,
                 comparable_relationship,
                 object_types,
@@ -106,6 +109,7 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
 // connector as the source of the boolean expression
 fn validate_data_connector_with_comparable_relationship(
     data_connector: &data_connectors::DataConnectorLink,
+    source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     object_boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
     comparable_relationship: &boolean_expressions::BooleanExpressionComparableRelationship,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
@@ -146,15 +150,47 @@ fn validate_data_connector_with_comparable_relationship(
 
         match &target_model.source {
             Some(target_model_source) => {
-                // we only support local relationships across boolean expression types
-                // at the moment, so explode if the data connectors used do not match
+                // If relationship is a not a local relationship.
+                // We need to check for the presence of equality operator on source NDC fields
                 if data_connector.name != target_model_source.data_connector.name {
-                    return Err(Error::DifferentDataConnectorInFilterExpression {
-                        model: target_model.name.clone(),
-                        model_data_connector: target_model_source.data_connector.name.clone(),
-                        filter_expression_type: object_boolean_expression_type.name.clone(),
-                        filter_expression_data_connector: data_connector.name.clone(),
-                    });
+                    let type_mapping = source_type_mappings
+                        .get(&object_boolean_expression_type.object_type)
+                        .ok_or_else(|| Error::TypePredicateError {
+                            type_predicate_error: TypePredicateError::UnknownTypeMapping {
+                                type_name: object_boolean_expression_type.object_type.clone(),
+                                data_connector_name: data_connector.name.clone(),
+                            },
+                        })?;
+                    let field_mappings = match type_mapping {
+                        object_types::TypeMapping::Object { field_mappings, .. } => field_mappings,
+                    };
+                    for relationship_mapping in &relationship_target_model.mappings {
+                        let source_field = &relationship_mapping.source_field.field_name;
+                        let object_types::FieldMapping {
+                            column: source_ndc_column,
+                            equal_operators,
+                            ..
+                        } = field_mappings.get(source_field).ok_or_else(|| {
+                            Error::TypePredicateError {
+                                type_predicate_error: TypePredicateError::UnknownFieldMapping {
+                                    type_name: object_boolean_expression_type.object_type.clone(),
+                                    field_name: source_field.clone(),
+                                    data_connector_name: data_connector.name.clone(),
+                                },
+                            }
+                        })?;
+
+                        if equal_operators.is_empty() {
+                            return Err(Error::TypePredicateError {
+                                type_predicate_error: TypePredicateError::MissingEqualOperator {
+                                    type_name: object_boolean_expression_type.object_type.clone(),
+                                    field_name: source_field.clone(),
+                                    ndc_column: source_ndc_column.clone(),
+                                    data_connector_name: data_connector.name.clone(),
+                                },
+                            });
+                        }
+                    }
                 };
             }
             None => {

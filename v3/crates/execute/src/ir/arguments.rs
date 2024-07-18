@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use crate::ir::arguments;
 use crate::ir::error;
+use crate::ir::filter::expression as filter_expression;
 use crate::model_tracking::UsagesCounts;
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common::Name;
@@ -19,17 +19,14 @@ use schema::{
 };
 use serde::Serialize;
 
-use super::filter;
 use super::permissions;
 
-#[derive(Debug, Serialize)]
-pub enum Argument {
+#[derive(Debug, Serialize, Clone, PartialEq)]
+pub enum Argument<'s> {
     /// The argument is provided as a literal value
-    Literal {
-        value: serde_json::Value,
-    },
+    Literal { value: serde_json::Value },
     BooleanExpression {
-        predicate: filter::FilterExpression,
+        predicate: filter_expression::Expression<'s>,
     },
 }
 
@@ -81,12 +78,15 @@ pub(crate) fn follow_field_path_and_insert_value(
 /// Takes 'ArgumentPresets' annotations and existing model arguments (which
 /// might be partially filled), and fill values in the existing model arguments
 /// based on the presets
-pub(crate) fn process_model_arguments_presets(
-    argument_presets: &ArgumentPresets,
+pub(crate) fn process_model_arguments_presets<'s, 'a>(
+    argument_presets: &'a ArgumentPresets,
     session_variables: &SessionVariables,
-    model_arguments: &mut BTreeMap<DataConnectorArgumentName, arguments::Argument>,
+    model_arguments: &mut BTreeMap<DataConnectorArgumentName, Argument<'s>>,
     usage_counts: &mut UsagesCounts,
-) -> Result<(), error::Error> {
+) -> Result<(), error::Error>
+where
+    'a: 's,
+{
     let ArgumentPresets { argument_presets } = argument_presets;
     for (argument_name_and_path, (field_type, argument_value)) in argument_presets {
         let ArgumentNameAndPath {
@@ -118,8 +118,8 @@ pub(crate) fn process_model_arguments_presets(
             Some(field_path) => {
                 if let Some(current_arg) = model_arguments.get_mut(&argument_name.clone()) {
                     let current_arg = match current_arg {
-                        arguments::Argument::Literal { value } => Ok(value),
-                        arguments::Argument::BooleanExpression { predicate: _ } => {
+                        Argument::Literal { value } => Ok(value),
+                        Argument::BooleanExpression { predicate: _ } => {
                             Err(error::InternalEngineError::ArgumentPresetExecution {
                                 description: "unexpected; can't merge an argument preset into an argument that has a boolean expression value"
                                     .to_owned(),
@@ -137,7 +137,7 @@ pub(crate) fn process_model_arguments_presets(
                         }
                     }?;
                     if let Some(current_arg_object) = current_arg.as_object_mut() {
-                        arguments::follow_field_path_and_insert_value(
+                        follow_field_path_and_insert_value(
                             &field_path,
                             current_arg_object,
                             preset_value,
@@ -179,11 +179,15 @@ pub fn build_ndc_command_arguments_as_value(
     }?
 }
 
-pub fn build_ndc_model_arguments<'a, TInputFieldIter: Iterator<Item = &'a InputField<'a, GDS>>>(
+pub fn build_ndc_model_arguments<
+    'a,
+    's,
+    TInputFieldIter: Iterator<Item = &'a InputField<'a, GDS>>,
+>(
     model_operation_field: &Name,
     arguments: TInputFieldIter,
     model_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-) -> Result<BTreeMap<DataConnectorArgumentName, arguments::Argument>, error::Error> {
+) -> Result<BTreeMap<DataConnectorArgumentName, Argument<'s>>, error::Error> {
     let mut ndc_arguments = BTreeMap::new();
     for argument in arguments {
         match argument.info.generic {
@@ -204,7 +208,7 @@ pub fn build_ndc_model_arguments<'a, TInputFieldIter: Iterator<Item = &'a InputF
                 )?;
                 ndc_arguments.insert(
                     ndc_table_argument.clone(),
-                    arguments::Argument::Literal {
+                    Argument::Literal {
                         value: mapped_argument_value,
                     },
                 );

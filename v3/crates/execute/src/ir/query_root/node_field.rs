@@ -9,9 +9,8 @@ use open_dds::types::CustomTypeName;
 use serde::Serialize;
 
 use crate::ir::error;
-use crate::ir::filter::{
-    ComparisonTarget, ComparisonValue, FilterExpression, ResolvedFilterExpression,
-};
+use crate::ir::filter;
+use crate::ir::filter::expression as filter_expression;
 use crate::ir::model_selection;
 use crate::model_tracking::UsagesCounts;
 use json_ext::HashMapWithJsonKey;
@@ -127,14 +126,18 @@ pub(crate) fn relay_node_ir<'n, 's>(
                                 global_id.typename, field_name
                             ),
                         })?;
-                    Ok(FilterExpression::BinaryComparisonOperator {
-                        target: ComparisonTarget::Column {
-                            name: field_mapping.column.clone(),
-                            field_path: vec![],
+                    Ok(filter_expression::Expression::LocalField(
+                        filter_expression::LocalFieldComparison::BinaryComparison {
+                            column: ndc_models::ComparisonTarget::Column {
+                                name: ndc_models::FieldName::from(field_mapping.column.as_str()),
+                                field_path: None,
+                            },
+                            operator: ndc_models::ComparisonOperatorName::from(
+                                field_mapping.equal_operator.as_str(),
+                            ),
+                            value: ndc_models::ComparisonValue::Scalar { value: val.clone() },
                         },
-                        operator: field_mapping.equal_operator.clone(),
-                        value: ComparisonValue::Scalar { value: val.clone() },
-                    })
+                    ))
                 })
                 .collect::<Result<_, error::Error>>()?;
 
@@ -144,10 +147,11 @@ pub(crate) fn relay_node_ir<'n, 's>(
 
             let mut usage_counts = UsagesCounts::new();
 
-            let filter_clauses = ResolvedFilterExpression {
-                expression: FilterExpression::mk_and(filter_clause_expressions)
-                    .remove_always_true_expression(),
-                relationships: BTreeMap::new(),
+            let query_filter = filter::QueryFilter {
+                where_clause: None,
+                additional_filter: Some(filter_expression::Expression::mk_and(
+                    filter_clause_expressions,
+                )),
             };
 
             let model_selection = model_selection::model_selection_ir(
@@ -155,7 +159,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
                 &typename_mapping.type_name,
                 model_source,
                 BTreeMap::new(),
-                filter_clauses,
+                query_filter,
                 role_model_select_permission,
                 None, // limit
                 None, // offset

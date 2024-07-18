@@ -14,6 +14,8 @@ use open_dds::{models::ModelName, types::CustomTypeName};
 
 use std::collections::BTreeMap;
 
+use super::object_types;
+
 /// resolve model and command arguments
 /// combined because they currently work in exactly the same way
 /// this is more of a validation step really, we don't add new info, just explode if things go wrong
@@ -30,11 +32,13 @@ pub fn resolve(
 ) -> Result<(), Error> {
     for command in commands.values() {
         let data_connector_link = command.source.as_ref().map(|source| &source.data_connector);
+        let type_mapping = command.source.as_ref().map(|source| &source.type_mappings);
 
         // check data source and arguments agree
         validate_arguments_with_source(
             &command.arguments,
             data_connector_link,
+            type_mapping,
             object_types,
             scalar_types,
             object_boolean_expression_types,
@@ -45,11 +49,13 @@ pub fn resolve(
 
     for model in models.values() {
         let data_connector_link = model.source.as_ref().map(|source| &source.data_connector);
+        let type_mapping = model.source.as_ref().map(|source| &source.type_mappings);
 
         // check data source and arguments agree
         validate_arguments_with_source(
             &model.arguments,
             data_connector_link,
+            type_mapping,
             object_types,
             scalar_types,
             object_boolean_expression_types,
@@ -66,6 +72,7 @@ pub fn resolve(
 pub fn validate_arguments_with_source(
     arguments: &IndexMap<ArgumentName, ArgumentInfo>,
     data_connector_link: Option<&data_connectors::DataConnectorLink>,
+    source_type_mapping: Option<&BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
@@ -91,11 +98,18 @@ pub fn validate_arguments_with_source(
 
             // if the type is a boolean expression and we have a data source, we can validate the
             // boolean expression against the data source
-            if let (Some(boolean_expression_type), Some(data_connector_link)) =
-                (boolean_expression_type, data_connector_link)
-            {
+            if let (
+                Some(boolean_expression_type),
+                Some(data_connector_link),
+                Some(source_type_mapping),
+            ) = (
+                boolean_expression_type,
+                data_connector_link,
+                source_type_mapping,
+            ) {
                 validate_data_connector_with_object_boolean_expression_type(
                     data_connector_link,
+                    source_type_mapping,
                     boolean_expression_type,
                     boolean_expression_types,
                     object_types,

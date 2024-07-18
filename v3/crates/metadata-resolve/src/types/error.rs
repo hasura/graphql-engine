@@ -3,6 +3,7 @@ use crate::stages::{
     graphql_config, object_types, relay, scalar_boolean_expressions, type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
+use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::{
     aggregates::AggregateExpressionName,
     arguments::ArgumentName,
@@ -653,6 +654,29 @@ pub enum TypePredicateError {
     },
     #[error("operator mappings not found for data connector {data_connector_name:}")]
     OperatorMappingsNotFound {
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error(
+        "no type mapping found for type {type_name:} in data connector {data_connector_name:}"
+    )]
+    UnknownTypeMapping {
+        type_name: Qualified<CustomTypeName>,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error("no field mapping found for field {field_name:} in type {type_name:} in data connector {data_connector_name:}")]
+    UnknownFieldMapping {
+        type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error(
+        "missing equality operator for source column {ndc_column:} in data connector {data_connector_name:} \
+         which is mapped to field {field_name:} in type {type_name:}"
+    )]
+    MissingEqualOperator {
+        type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+        ndc_column: DataConnectorColumnName,
         data_connector_name: Qualified<DataConnectorName>,
     },
 }

@@ -279,43 +279,6 @@ fn test_disallow_filter_expression_with_object_type_mismatch() -> anyhow::Result
 }
 
 #[test]
-fn test_disallow_filter_expression_with_data_connector_mismatch() -> anyhow::Result<()> {
-    let metadata = read_metadata("validate_metadata_artifacts/boolean_expressions/filter_expression_with_data_connector_mismatch.json")?;
-
-    let gds = GDS::new_with_default_flags(metadata);
-
-    assert!(
-        matches!(
-            gds,
-            Err(SchemaError::ResolveError {
-                error: ResolveError::DifferentDataConnectorInFilterExpression { .. }
-            })
-        ),
-        "actual: {gds:?}"
-    );
-    Ok(())
-}
-
-#[test]
-fn test_disallow_filter_expression_with_data_connector_object_type_mismatch() -> anyhow::Result<()>
-{
-    let metadata = read_metadata("validate_metadata_artifacts/boolean_expressions/filter_expression_with_data_connector_object_type_mismatch.json")?;
-
-    let gds = GDS::new_with_default_flags(metadata);
-
-    assert!(
-        matches!(
-            gds,
-            Err(SchemaError::ResolveError {
-                error: ResolveError::DifferentDataConnectorObjectTypeInFilterExpression { .. }
-            })
-        ),
-        "actual: {gds:?}"
-    );
-    Ok(())
-}
-
-#[test]
 fn test_disallow_boolean_expression_without_mapping() -> anyhow::Result<()> {
     let metadata = read_metadata(
         "validate_metadata_artifacts/boolean_expressions/boolean_expression_without_mapping.json",

@@ -1,3 +1,4 @@
+mod predicate;
 pub mod types;
 
 use std::borrow::Cow;
@@ -5,7 +6,7 @@ use std::borrow::Cow;
 use super::remote_joins::types::{JoinNode, RemoteJoinType};
 use super::HttpContext;
 use crate::ndc::client as ndc_client;
-use crate::plan::{ApolloFederationSelect, NodeQueryPlan, ProcessResponseAs};
+use crate::plan::{ApolloFederationSelect, NDCQueryExecution, NodeQueryPlan, ProcessResponseAs};
 use crate::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
 use crate::{error, plan};
 use async_recursion::async_recursion;
@@ -49,36 +50,78 @@ pub(crate) async fn explain_query_plan(
         match node {
             NodeQueryPlan::NDCQueryExecution(ndc_query_execution)
             | NodeQueryPlan::RelayNodeSelect(Some(ndc_query_execution)) => {
+                let NDCQueryExecution {
+                    execution_tree,
+                    process_response_as,
+                    ..
+                } = ndc_query_execution;
+
+                let mut predicate_explain_steps = vec![];
+                predicate::explain_query_predicate_node(
+                    &expose_internal_errors,
+                    http_context,
+                    &execution_tree.query_execution_plan.query_node,
+                    &mut predicate_explain_steps,
+                )
+                .await?;
+
+                let (ndc_request, data_connector) = execution_tree
+                    .query_execution_plan
+                    .resolve(http_context)
+                    .await
+                    .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
                 let sequence_steps = get_execution_steps(
                     expose_internal_errors,
                     http_context,
                     alias,
-                    &ndc_query_execution.process_response_as,
-                    ndc_query_execution.execution_tree.remote_executions,
-                    types::NDCRequest::Query(ndc_query_execution.execution_tree.root_node.query),
-                    ndc_query_execution.execution_tree.root_node.data_connector,
+                    &process_response_as,
+                    execution_tree.remote_join_executions,
+                    types::NDCRequest::Query(ndc_request),
+                    data_connector,
                 )
-                .await;
-                parallel_root_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
+                .await?;
+                parallel_root_steps.push(Box::new(types::Step::Sequence(prepend_vec_to_nonempty(
+                    predicate_explain_steps.into_iter().map(Box::new).collect(),
+                    sequence_steps,
+                ))));
             }
             NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::EntitiesSelect(
                 parallel_ndc_query_executions,
             )) => {
                 let mut parallel_steps = Vec::new();
                 for ndc_query_execution in parallel_ndc_query_executions {
+                    let NDCQueryExecution {
+                        execution_tree,
+                        process_response_as,
+                        ..
+                    } = ndc_query_execution;
+                    let mut predicate_explain_steps = vec![];
+                    predicate::explain_query_predicate_node(
+                        &expose_internal_errors,
+                        http_context,
+                        &execution_tree.query_execution_plan.query_node,
+                        &mut predicate_explain_steps,
+                    )
+                    .await?;
+                    let (ndc_request, data_connector) = execution_tree
+                        .query_execution_plan
+                        .resolve(http_context)
+                        .await
+                        .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
                     let sequence_steps = get_execution_steps(
                         expose_internal_errors,
                         http_context,
                         alias.clone(),
-                        &ndc_query_execution.process_response_as,
-                        ndc_query_execution.execution_tree.remote_executions,
-                        types::NDCRequest::Query(
-                            ndc_query_execution.execution_tree.root_node.query,
-                        ),
-                        ndc_query_execution.execution_tree.root_node.data_connector,
+                        &process_response_as,
+                        execution_tree.remote_join_executions,
+                        types::NDCRequest::Query(ndc_request),
+                        data_connector,
                     )
-                    .await;
-                    parallel_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
+                    .await?;
+                    parallel_steps.push(Box::new(types::Step::Sequence(prepend_vec_to_nonempty(
+                        predicate_explain_steps.into_iter().map(Box::new).collect(),
+                        sequence_steps,
+                    ))));
                 }
                 match NonEmpty::from_vec(parallel_steps) {
                     None => {}
@@ -133,17 +176,38 @@ pub(crate) async fn explain_mutation_plan(
 
     for (_, mutation_group) in mutation_plan.nodes {
         for (alias, ndc_mutation_execution) in mutation_group {
+            let mut predicate_explain_steps = vec![];
+            predicate::explain_query_predicate_nested_field(
+                &expose_internal_errors,
+                http_context,
+                ndc_mutation_execution
+                    .execution_node
+                    .procedure_fields
+                    .as_ref(),
+                &mut predicate_explain_steps,
+            )
+            .await?;
             let sequence_steps = get_execution_steps(
                 expose_internal_errors,
                 http_context,
                 alias,
                 &ndc_mutation_execution.process_response_as,
                 ndc_mutation_execution.join_locations,
-                types::NDCRequest::Mutation(ndc_mutation_execution.query),
+                types::NDCRequest::Mutation(
+                    ndc_mutation_execution
+                        .execution_node
+                        .resolve(http_context)
+                        .await
+                        .map_err(|e| error::RequestError::ExplainError(e.to_string()))?,
+                ),
                 ndc_mutation_execution.data_connector,
             )
-            .await;
-            root_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
+            .await?;
+            let field_steps = prepend_vec_to_nonempty(
+                predicate_explain_steps.into_iter().map(Box::new).collect(),
+                sequence_steps,
+            );
+            root_steps.push(Box::new(types::Step::Sequence(field_steps)));
         }
     }
 
@@ -167,7 +231,7 @@ async fn get_execution_steps<'s>(
     join_locations: JoinLocations<(RemoteJoin<'s, '_>, JoinId)>,
     ndc_request: types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
-) -> NonEmpty<Box<types::Step>> {
+) -> Result<NonEmpty<Box<types::Step>>, error::RequestError> {
     let mut sequence_steps = match process_response_as {
         ProcessResponseAs::CommandResponse { .. } => {
             // A command execution node
@@ -205,12 +269,12 @@ async fn get_execution_steps<'s>(
         }
     };
     if let Some(join_steps) =
-        get_join_steps(expose_internal_errors, join_locations, http_context).await
+        get_join_steps(expose_internal_errors, join_locations, http_context).await?
     {
         sequence_steps.push(Box::new(types::Step::Sequence(join_steps)));
         sequence_steps.push(Box::new(types::Step::HashJoin));
     };
-    sequence_steps
+    Ok(sequence_steps)
 }
 
 /// Get the join steps for a given join location. This should be used to get the join steps for a remote relationship.
@@ -222,19 +286,23 @@ async fn get_join_steps(
     expose_internal_errors: crate::ExposeInternalErrors,
     join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'async_recursion>, JoinId)>,
     http_context: &HttpContext,
-) -> Option<NonEmpty<Box<types::Step>>> {
+) -> Result<Option<NonEmpty<Box<types::Step>>>, error::RequestError> {
     let mut sequence_join_steps = vec![];
     for (alias, location) in join_locations.locations {
         let mut sequence_steps = vec![];
         if let JoinNode::Remote((remote_join, _join_id)) = location.join_node {
-            let mut query_request = remote_join.target_ndc_ir;
+            let (mut query_request, target_data_connector) = remote_join
+                .target_ndc_execution
+                .resolve(http_context)
+                .await
+                .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
             query_request.set_variables(Some(vec![]));
             let ndc_request = types::NDCRequest::Query(query_request);
             let data_connector_explain = fetch_explain_from_data_connector(
                 expose_internal_errors,
                 http_context,
                 &ndc_request,
-                remote_join.target_data_connector,
+                target_data_connector,
             )
             .await;
             sequence_steps.push(Box::new(types::Step::ForEach(
@@ -258,7 +326,7 @@ async fn get_join_steps(
             )));
         };
         if let Some(rest_join_steps) =
-            get_join_steps(expose_internal_errors, location.rest, http_context).await
+            get_join_steps(expose_internal_errors, location.rest, http_context).await?
         {
             sequence_steps.push(Box::new(types::Step::Sequence(rest_join_steps)));
             sequence_steps.push(Box::new(types::Step::HashJoin));
@@ -267,7 +335,7 @@ async fn get_join_steps(
             sequence_join_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
         };
     }
-    NonEmpty::from_vec(sequence_join_steps)
+    Ok(NonEmpty::from_vec(sequence_join_steps))
 }
 
 fn simplify_steps(steps: NonEmpty<Box<types::Step>>) -> NonEmpty<Box<types::Step>> {
@@ -300,7 +368,7 @@ fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
     }
 }
 
-async fn fetch_explain_from_data_connector(
+pub(crate) async fn fetch_explain_from_data_connector(
     expose_internal_errors: crate::ExposeInternalErrors,
     http_context: &HttpContext,
     ndc_request: &types::NDCRequest,
@@ -354,6 +422,16 @@ async fn fetch_explain_from_data_connector(
     }
 }
 
+pub(crate) fn prepend_vec_to_nonempty<T>(vec: Vec<T>, nonempty: NonEmpty<T>) -> NonEmpty<T> {
+    match NonEmpty::from_vec(vec) {
+        None => nonempty,
+        Some(mut vec_nonempty) => {
+            vec_nonempty.extend(nonempty);
+            vec_nonempty
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -379,5 +457,15 @@ mod tests {
         )]);
         let simplified_steps = simplify_step(Box::new(nested_step));
         assert_eq!(*simplified_steps, types::Step::HashJoin);
+    }
+
+    #[test]
+    fn test_prepend_vec_to_nonempty() {
+        let vec = vec![1, 2, 3];
+        let nonempty_list = nonempty::nonempty![4, 5, 6];
+        assert_eq!(
+            nonempty::nonempty![1, 2, 3, 4, 5, 6],
+            prepend_vec_to_nonempty(vec, nonempty_list)
+        );
     }
 }

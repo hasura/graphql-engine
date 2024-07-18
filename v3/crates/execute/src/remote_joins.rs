@@ -48,7 +48,7 @@
 //! - Command Remote relationship - [build_remote_command_relationship]
 //!
 //! ## Join Tree generation
-//! - The join tree is generated as part of query plan. See [process_selection_set_ir] function.
+//! - The join tree is generated as part of query plan. See [plan_selection_set] function.
 //! - To know about the types for remote joins, see the [types] module.
 //!
 //! ## Execution
@@ -71,7 +71,7 @@
 //!
 //! 5. Perform join on LHS response and RHS response
 //!
-//! [process_selection_set_ir]: crate::plan::selection_set::process_selection_set_ir
+//! [plan_selection_set]: crate::plan::selection_set::plan_selection_set
 //! [generate_selection_set_ir]: crate::ir::selection_set::generate_selection_set_ir
 //! [build_remote_relationship]: crate::ir::relationship::build_remote_relationship
 //! [build_remote_command_relationship]: crate::ir::relationship::build_remote_command_relationship
@@ -148,9 +148,13 @@ where
                     .collect()
             })
             .collect();
+
         join_node
-            .target_ndc_ir
+            .target_ndc_execution
             .set_variables(Some(foreach_variables));
+
+        let execution_node = join_node.target_ndc_execution.clone();
+        let (ndc_query, _) = execution_node.resolve(http_context).await?;
 
         // execute the remote query
         let mut target_response = tracer
@@ -161,7 +165,7 @@ where
                 || {
                     Box::pin(execute_ndc_query(
                         http_context,
-                        &join_node.target_ndc_ir,
+                        &ndc_query,
                         join_node.target_data_connector,
                         execution_span_attribute,
                         remote_alias.clone(),

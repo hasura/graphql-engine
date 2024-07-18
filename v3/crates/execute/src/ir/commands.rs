@@ -48,7 +48,7 @@ pub struct CommandInfo<'s> {
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
 
     /// Arguments for the NDC table
-    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
+    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
 
     /// IR for the command result selection set
     pub(crate) selection: Option<selection_set::NestedSelection<'s>>,

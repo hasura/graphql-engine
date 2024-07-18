@@ -7,8 +7,6 @@ use open_dds::{
 };
 use tracing_util::TraceableError;
 
-use crate::ndc;
-
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("internal: {0}")]
@@ -44,10 +42,4 @@ pub enum InternalError {
 
     #[error("generic error: {description}")]
     InternalGeneric { description: String },
-
-    #[error("failed to serialise an Expression to JSON: {0}")]
-    ExpressionSerializationError(serde_json::Error),
-
-    #[error("error when downgrading ndc request: {0}")]
-    NdcRequestDowngradeError(ndc::migration::NdcDowngradeError),
 }

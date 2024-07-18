@@ -56,12 +56,6 @@ pub(crate) fn collect_relationships(
         }
     }
 
-    // from filter clause
-    for (name, relationship) in &ir.filter_clause.relationships {
-        let result = process_model_relationship_definition(relationship)?;
-        relationships.insert(ndc_models::RelationshipName::from(name.0.as_str()), result);
-    }
-
     // from order by clause
     if let Some(order_by) = &ir.order_by {
         for (name, relationship) in &order_by.relationships {

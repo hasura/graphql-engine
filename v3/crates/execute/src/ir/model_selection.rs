@@ -14,8 +14,7 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 
 use super::{
-    aggregates, arguments,
-    filter::{self, FilterExpression, ResolvedFilterExpression},
+    aggregates, arguments, filter,
     order_by::{self, ResolvedOrderBy},
     permissions, selection_set,
 };
@@ -35,10 +34,10 @@ pub struct ModelSelection<'s> {
     pub(crate) collection: &'s CollectionName,
 
     // Arguments for the NDC collection
-    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
+    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
 
     // The boolean expression that would fetch a single row from this model
-    pub(crate) filter_clause: ResolvedFilterExpression<'s>,
+    pub(crate) filter_clause: filter::FilterExpression<'s>,
 
     // Limit
     pub(crate) limit: Option<u32>,
@@ -57,7 +56,7 @@ pub struct ModelSelection<'s> {
 }
 
 struct ModelSelectAggregateArguments<'s> {
-    model_arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
+    model_arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
     filter_input_arguments: FilterInputArguments<'s>,
 }
 
@@ -65,7 +64,7 @@ struct FilterInputArguments<'s> {
     limit: Option<u32>,
     offset: Option<u32>,
     order_by: Option<ResolvedOrderBy<'s>>,
-    filter_clause: ResolvedFilterExpression<'s>,
+    filter_clause: Option<filter::expression::Expression<'s>>,
 }
 
 /// Generates the IR fragment for selecting from a model.
@@ -74,8 +73,8 @@ pub(crate) fn model_selection_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
-    arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
-    filter_clauses: ResolvedFilterExpression<'s>,
+    arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
+    query_filter: filter::QueryFilter<'s>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     limit: Option<u32>,
     offset: Option<u32>,
@@ -84,12 +83,14 @@ pub(crate) fn model_selection_ir<'s>(
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
-    let filter_clauses = apply_permissions_predicate(
-        filter_clauses,
-        permissions_predicate,
-        session_variables,
-        usage_counts,
-    )?;
+    let permission_filter =
+        build_permissions_filter(permissions_predicate, session_variables, usage_counts)?;
+
+    let filter_clause = filter::FilterExpression {
+        query_filter,
+        permission_filter,
+        relationship_join_filter: None,
+    };
 
     let field_mappings = get_field_mappings_for_object_type(model_source, data_type)?;
     let selection = selection_set::generate_selection_set_ir(
@@ -106,7 +107,7 @@ pub(crate) fn model_selection_ir<'s>(
         data_connector: &model_source.data_connector,
         collection: &model_source.collection,
         arguments,
-        filter_clause: filter_clauses,
+        filter_clause,
         limit,
         offset,
         order_by,
@@ -115,36 +116,19 @@ pub(crate) fn model_selection_ir<'s>(
     })
 }
 
-fn apply_permissions_predicate<'s>(
-    mut filter_clauses: ResolvedFilterExpression<'s>,
+fn build_permissions_filter<'s>(
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
-) -> Result<ResolvedFilterExpression<'s>, error::Error> {
+) -> Result<Option<filter::expression::Expression<'s>>, error::Error> {
     match permissions_predicate {
-        metadata_resolve::FilterPermission::AllowAll => {}
+        metadata_resolve::FilterPermission::AllowAll => Ok(None),
         metadata_resolve::FilterPermission::Filter(predicate) => {
-            let mut permissions_predicate_relationships = BTreeMap::new();
-            let processed_model_predicate = permissions::process_model_predicate(
-                predicate,
-                session_variables,
-                &mut permissions_predicate_relationships,
-                usage_counts,
-            )?;
-            filter_clauses.expression = match filter_clauses.expression {
-                Some(existing) => Some(FilterExpression::mk_and(vec![
-                    existing,
-                    processed_model_predicate,
-                ])),
-                None => Some(processed_model_predicate),
-            };
-            for (rel_name, rel_info) in permissions_predicate_relationships {
-                filter_clauses.relationships.insert(rel_name, rel_info);
-            }
+            let permission_filter =
+                permissions::process_model_predicate(predicate, session_variables, usage_counts)?;
+            Ok(Some(permission_filter))
         }
-    };
-
-    Ok(filter_clauses)
+    }
 }
 
 pub fn generate_aggregate_model_selection_ir<'s>(
@@ -172,12 +156,17 @@ pub fn generate_aggregate_model_selection_ir<'s>(
         )?;
     }
 
+    let query_filter = filter::QueryFilter {
+        where_clause: arguments.filter_input_arguments.filter_clause,
+        additional_filter: None,
+    };
+
     model_aggregate_selection_ir(
         &field.selection_set,
         data_type,
         model_source,
         arguments.model_arguments,
-        arguments.filter_input_arguments.filter_clause,
+        query_filter,
         permissions::get_select_filter_predicate(field_call)?,
         arguments.filter_input_arguments.limit,
         arguments.filter_input_arguments.offset,
@@ -351,10 +340,7 @@ fn read_filter_input_arguments<'s>(
         limit,
         offset,
         order_by,
-        filter_clause: filter_clause.unwrap_or_else(|| ResolvedFilterExpression {
-            expression: None,
-            relationships: BTreeMap::new(),
-        }),
+        filter_clause,
     })
 }
 
@@ -364,8 +350,8 @@ fn model_aggregate_selection_ir<'s>(
     aggregate_selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
-    arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument>,
-    filter_clauses: ResolvedFilterExpression<'s>,
+    arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
+    query_filter: filter::QueryFilter<'s>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     limit: Option<u32>,
     offset: Option<u32>,
@@ -373,12 +359,14 @@ fn model_aggregate_selection_ir<'s>(
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
-    let filter_clauses = apply_permissions_predicate(
-        filter_clauses,
-        permissions_predicate,
-        session_variables,
-        usage_counts,
-    )?;
+    let permission_filter =
+        build_permissions_filter(permissions_predicate, session_variables, usage_counts)?;
+
+    let filter_clause = filter::FilterExpression {
+        query_filter,
+        permission_filter,
+        relationship_join_filter: None,
+    };
 
     let field_mappings = get_field_mappings_for_object_type(model_source, data_type)?;
     let aggregate_selection = aggregates::generate_aggregate_selection_set_ir(
@@ -393,7 +381,7 @@ fn model_aggregate_selection_ir<'s>(
         data_connector: &model_source.data_connector,
         collection: &model_source.collection,
         arguments,
-        filter_clause: filter_clauses,
+        filter_clause,
         limit,
         offset,
         order_by,

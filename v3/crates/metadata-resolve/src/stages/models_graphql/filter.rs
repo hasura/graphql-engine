@@ -81,6 +81,7 @@ pub(crate) fn resolve_filter_expression_type(
                     // we're using the new style of BooleanExpressionType
                     validate_data_connector_with_object_boolean_expression_type(
                         &model_source.data_connector,
+                        &model_source.type_mappings,
                         boolean_expression_object_type,
                         boolean_expression_types,
                         object_types,

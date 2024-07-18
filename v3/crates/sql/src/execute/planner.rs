@@ -8,7 +8,7 @@ use datafusion::{
     physical_planner::{DefaultPhysicalPlanner, ExtensionPlanner, PhysicalPlanner},
 };
 
-use execute::{ndc_expression, process_model_relationship_definition};
+use execute::plan_expression;
 use indexmap::IndexMap;
 use metadata_resolve::FilterPermission;
 use open_dds::identifier::Identifier;
@@ -135,45 +135,39 @@ impl ExtensionPlanner for NDCPushDownPlanner {
             let mut relationships = BTreeMap::new();
 
             let permission_filter = match &select_permission.filter {
-                FilterPermission::AllowAll => Ok(None),
+                FilterPermission::AllowAll => Ok::<_, DataFusionError>(None),
                 FilterPermission::Filter(filter) => {
-                    execute::ir::permissions::process_model_predicate(
+                    let filter_ir = execute::ir::permissions::process_model_predicate(
                         filter,
                         &table.session.variables,
-                        &mut relationships,
                         &mut usage_counts,
                     )
-                    .map(Some)
                     .map_err(|e| {
                         DataFusionError::Internal(format!(
                             "error when processing model predicate: {e}"
                         ))
-                    })
+                    })?;
+
+                    let filter_plan =
+                        plan_expression(&filter_ir, &mut relationships).map_err(|e| {
+                            DataFusionError::Internal(format!(
+                                "error constructing permission filter plan: {e}"
+                            ))
+                        })?;
+                    let filter = filter_plan
+                        .resolve(&table.http_context.clone())
+                        .await
+                        .map_err(|e| {
+                            DataFusionError::Internal(format!(
+                                "error resolving permission filter plan: {e}"
+                            ))
+                        })?;
+                    Ok(Some(filter))
                 }
             }?;
 
-            let relationships = relationships
-                .into_values()
-                .map(|v| {
-                    process_model_relationship_definition(&v)
-                        .map(|r| {
-                            (
-                                ndc_models::RelationshipName::from(v.relationship_name.as_str()),
-                                r,
-                            )
-                        })
-                        .map_err(|e| {
-                            DataFusionError::Internal(format!(
-                                "error constructing ndc relationship definition: {e}"
-                            ))
-                        })
-                })
-                .collect::<Result<
-                    BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
-                    DataFusionError,
-                >>()?;
             let mut query = ndc_node.query.clone();
-            query.query.predicate = permission_filter.map(|expr| ndc_expression(&expr));
+            query.query.predicate = permission_filter;
             query.collection_relationships = relationships;
             let ndc_pushdown = NDCPushDown::new(
                 table.http_context.clone(),

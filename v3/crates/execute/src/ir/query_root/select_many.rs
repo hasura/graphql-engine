@@ -14,7 +14,6 @@ use std::collections::BTreeMap;
 use crate::ir::arguments;
 use crate::ir::error;
 use crate::ir::filter;
-use crate::ir::filter::ResolvedFilterExpression;
 use crate::ir::model_selection;
 use crate::ir::order_by::build_ndc_order_by;
 use crate::ir::permissions;
@@ -52,10 +51,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
 ) -> Result<ModelSelectMany<'n, 's>, error::Error> {
     let mut limit = None;
     let mut offset = None;
-    let mut filter_clause = ResolvedFilterExpression {
-        expression: None,
-        relationships: BTreeMap::new(),
-    };
+    let mut where_clause = None;
     let mut order_by = None;
     let mut model_arguments = BTreeMap::new();
 
@@ -112,12 +108,12 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
             Annotation::Input(schema::InputAnnotation::BooleanExpression(
                 BooleanExpressionAnnotation::BooleanExpression,
             )) => {
-                filter_clause = filter::resolve_filter_expression(
+                where_clause = Some(filter::resolve_filter_expression(
                     argument.value.as_object()?,
                     &model_source.data_connector,
                     &model_source.type_mappings,
                     &mut usage_counts,
-                )?;
+                )?);
             }
 
             annotation => {
@@ -143,12 +139,17 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
         }
     }
 
+    let query_filter = filter::QueryFilter {
+        where_clause,
+        additional_filter: None,
+    };
+
     let model_selection = model_selection::model_selection_ir(
         &field.selection_set,
         data_type,
         model_source,
         model_arguments,
-        filter_clause,
+        query_filter,
         permissions::get_select_filter_predicate(field_call)?,
         limit,
         offset,

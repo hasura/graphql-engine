@@ -8,7 +8,7 @@ use json_ext::ValueExt;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;
 
-use crate::ndc;
+use crate::plan::types as plan_types;
 use crate::plan::ProcessResponseAs;
 
 /// This tree structure captures all the locations (in the selection set IR) where
@@ -109,8 +109,8 @@ pub struct Location<T> {
 pub struct RemoteJoin<'s, 'ir> {
     /// target data connector to execute query on
     pub target_data_connector: &'s metadata_resolve::DataConnectorLink,
-    /// NDC IR to execute on a data connector
-    pub target_ndc_ir: ndc::NdcQueryRequest,
+    /// NDC node to execute on a data connector
+    pub target_ndc_execution: plan_types::QueryExecutionPlan<'s>,
     /// Mapping of the fields in source to fields in target.
     /// The HashMap has the following info -
     ///   - key: is the field name in the source
@@ -156,12 +156,6 @@ pub struct JoinId(pub i16);
 /// Name of the variable used in the IR
 #[derive(Debug, PartialEq, Eq, Hash, Ord, PartialOrd, Clone, Serialize)]
 pub struct VariableName(pub String);
-
-impl VariableName {
-    pub fn as_str(&self) -> &str {
-        self.0.as_str()
-    }
-}
 
 /// An 'Argument' is a map of variable name to it's value.
 /// For example, `{"first_name": "John", "last_name": "Doe"}`

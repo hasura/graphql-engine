@@ -22,6 +22,8 @@ use crate::types::subgraph::{mk_qualified_type_reference, Qualified};
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 
+use super::data_connector_scalar_types::get_comparison_operators;
+
 /// resolve object types, matching them to that in the data connectors
 pub(crate) fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
@@ -341,15 +343,22 @@ pub fn resolve_data_connector_type_mapping(
         let source_column =
             get_column(ndc_object_type, field_name, &resolved_field_mapping_column)?;
         let underlying_column_type = get_underlying_named_type(&source_column.r#type);
-        let column_type_representation = data_connector_context
+        let scalar_type = data_connector_context
             .schema
             .scalar_types
-            .get(underlying_column_type.as_str())
-            .and_then(|scalar_type| scalar_type.representation.clone());
+            .get(underlying_column_type.as_str());
+
+        let column_type_representation = scalar_type.and_then(|ty| ty.representation.clone());
+
+        let equal_operators = scalar_type
+            .map(|ty| get_comparison_operators(ty).equal_operators)
+            .unwrap_or_default();
+
         let resolved_field_mapping = FieldMapping {
             column: resolved_field_mapping_column.into_owned(),
             column_type: source_column.r#type.clone(),
             column_type_representation,
+            equal_operators,
             argument_mappings: resolved_argument_mappings.0,
         };
 

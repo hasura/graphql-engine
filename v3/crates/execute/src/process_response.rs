@@ -628,7 +628,7 @@ pub fn process_mutation_response(
     )
 }
 
-fn get_single_rowset(
+pub(crate) fn get_single_rowset(
     rows_sets: Vec<ndc_models::RowSet>,
 ) -> Result<ndc_models::RowSet, error::FieldError> {
     Ok(rows_sets
