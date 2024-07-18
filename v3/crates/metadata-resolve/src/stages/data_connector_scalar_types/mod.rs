@@ -1,7 +1,10 @@
-pub mod types;
+mod error;
+mod types;
+pub use error::DataConnectorScalarTypesError;
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
-    ComparisonOperators, ScalarTypeWithRepresentationInfo, ScalarTypeWithRepresentationInfoMap,
+    ComparisonOperators, DataConnectorWithScalarsOutput, ScalarTypeWithRepresentationInfo,
+    ScalarTypeWithRepresentationInfoMap,
 };
 
 use lang_graphql::ast::common as ast;
@@ -11,16 +14,9 @@ use open_dds::types::{CustomTypeName, TypeName};
 use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
 
 use crate::helpers::types::mk_name;
-use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
 use crate::stages::{data_connectors, scalar_boolean_expressions, scalar_types};
-
-pub struct DataConnectorWithScalarsOutput<'a> {
-    pub data_connector_scalars:
-        BTreeMap<Qualified<DataConnectorName>, ScalarTypeWithRepresentationInfoMap<'a>>,
-    pub graphql_types: BTreeSet<ast::TypeName>,
-}
 
 /// resolve data connector scalar representations
 /// also use scalar `BooleanExpressionType`s
@@ -33,7 +29,7 @@ pub fn resolve<'a>(
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
     existing_graphql_types: &'a BTreeSet<ast::TypeName>,
-) -> Result<DataConnectorWithScalarsOutput<'a>, Error> {
+) -> Result<DataConnectorWithScalarsOutput<'a>, DataConnectorScalarTypesError> {
     let mut graphql_types = existing_graphql_types.clone();
 
     // we convert data from the old types to the new types and then start mutating everything
@@ -78,10 +74,12 @@ pub fn resolve<'a>(
 
             scalar_type.representation = Some(scalar_type_representation.representation.clone());
         } else {
-            return Err(Error::DuplicateDataConnectorScalarRepresentation {
-                data_connector: qualified_data_connector_name.clone(),
-                scalar_type: scalar_type_name.clone(),
-            });
+            return Err(
+                DataConnectorScalarTypesError::DuplicateDataConnectorScalarRepresentation {
+                    data_connector: qualified_data_connector_name.clone(),
+                    scalar_type: scalar_type_name.clone(),
+                },
+            );
         }
         scalar_type.comparison_expression_name = match scalar_type_representation.graphql.as_ref() {
             None => Ok(None),
@@ -133,11 +131,13 @@ pub fn resolve<'a>(
             // we allow it but check their OpenDD types don't conflict
             if let Some(existing_representation) = &scalar_type.representation {
                 if *existing_representation != scalar_boolean_expression.representation {
-                    return Err(Error::DataConnectorScalarRepresentationMismatch {
-                        data_connector: data_connector_name.clone(),
-                        old_representation: existing_representation.clone(),
-                        new_representation: scalar_boolean_expression.representation.clone(),
-                    });
+                    return Err(
+                        DataConnectorScalarTypesError::DataConnectorScalarRepresentationMismatch {
+                            data_connector: data_connector_name.clone(),
+                            old_representation: existing_representation.clone(),
+                            new_representation: scalar_boolean_expression.representation.clone(),
+                        },
+                    );
                 }
             }
             scalar_type.representation = Some(scalar_boolean_expression.representation.clone());
@@ -155,13 +155,13 @@ fn validate_type_name(
     subgraph: &str,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     scalar_type_name: &DataConnectorScalarType,
-) -> Result<(), Error> {
+) -> Result<(), DataConnectorScalarTypesError> {
     match type_name {
         TypeName::Inbuilt(_) => {} // TODO: Validate Nullable and Array types in Inbuilt
         TypeName::Custom(type_name) => {
             let qualified_type_name = Qualified::new(subgraph.to_string(), type_name.to_owned());
             let _representation = scalar_types.get(&qualified_type_name).ok_or_else(|| {
-                Error::ScalarTypeUnknownRepresentation {
+                DataConnectorScalarTypesError::ScalarTypeUnknownRepresentation {
                     scalar_type: scalar_type_name.clone(),
                     type_name: qualified_type_name,
                 }

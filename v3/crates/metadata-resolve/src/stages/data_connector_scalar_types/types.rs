@@ -1,10 +1,16 @@
+use crate::types::subgraph::Qualified;
 use lang_graphql::ast::common as ast;
-
 use ndc_models;
-use open_dds::data_connector::DataConnectorScalarType;
+use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
 use open_dds::types::TypeName;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 
+pub struct DataConnectorWithScalarsOutput<'a> {
+    pub data_connector_scalars:
+        BTreeMap<Qualified<DataConnectorName>, ScalarTypeWithRepresentationInfoMap<'a>>,
+    pub graphql_types: BTreeSet<ast::TypeName>,
+}
 // basic scalar type info
 #[derive(Debug)]
 pub struct ScalarTypeWithRepresentationInfo<'a> {
