@@ -1,6 +1,4 @@
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
-
+use crate::stages::graphql_config;
 use open_dds::{
     aggregates::{
         AggregateExpressionName, AggregationFunctionName, DataConnectorAggregationFunctionName,
@@ -8,6 +6,8 @@ use open_dds::{
     data_connector::{DataConnectorName, DataConnectorScalarType},
     types::{CustomTypeName, FieldName},
 };
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common::{self as ast};
 
@@ -210,5 +210,10 @@ pub enum AggregateExpressionError {
         name: Qualified<AggregateExpressionName>,
         data_connector_name: Qualified<DataConnectorName>,
         field_name: FieldName,
+    },
+    #[error("graphql config error in {aggregate_expression_name:}: {graphql_config_error:}")]
+    GraphqlConfigError {
+        aggregate_expression_name: Qualified<AggregateExpressionName>,
+        graphql_config_error: graphql_config::GraphqlConfigError,
     },
 }
