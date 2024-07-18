@@ -2,27 +2,13 @@
 
 ## [Unreleased]
 
-### Fixed
-
-- Fixed a bug where command targeted relationships were not using the Open DD
-  argument name instead of the data connector's argument name when querying the
-  data connector
-
-## [v2024.07.10]
+### Added
 
 ### Fixed
 
-- Build-time check to ensure boolean expressions cannot be built over nested
-  array fields until these are supported.
+### Changed
 
-- Fixes a bug with variable nullability coercion. Specifically, providing a
-  non-null variable for a nullable field should work, as all non-nullable
-  variables can be used as nullable variables via "coercion".
-
-- Fixes a bug where data connectors without the `foreach` capability were not
-  allowed to create local relationships
-
-## [v2024.07.04]
+## [v2024.07.18]
 
 ### Added
 
@@ -61,6 +47,30 @@ query CustomersWithFailedOrders {
 By incorporating remote relationships into the where expression, you can
 seamlessly query and filter data that spans across multiple data sources, making
 your GraphQL queries more versatile and powerful.
+
+### Fixed
+
+- Build-time check to ensure boolean expressions cannot be built over nested
+  array fields until these are supported.
+
+- Fixed a bug where command targeted relationships were not using the Open DD
+  argument name instead of the data connector's argument name when querying the
+  data connector
+
+## [v2024.07.10]
+
+### Fixed
+
+- Fixes a bug with variable nullability coercion. Specifically, providing a
+  non-null variable for a nullable field should work, as all non-nullable
+  variables can be used as nullable variables via "coercion".
+
+- Fixes a bug where data connectors without the `foreach` capability were not
+  allowed to create local relationships
+
+## [v2024.07.04]
+
+### Added
 
 - Query Usage Analytics - usage analytics JSON data is attached to `execute`
   span using `internal.query_usage_analytics` attribute
@@ -219,7 +229,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.06.13...HEAD
-[v2024.06.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.06.13
-[v2024.07.04]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.04
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.07.18...HEAD
+[v2024.07.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.18
 [v2024.07.10]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.10
+[v2024.07.04]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.04
+[v2024.06.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.06.13
