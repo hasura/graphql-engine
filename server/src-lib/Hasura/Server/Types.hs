@@ -106,6 +106,7 @@ data ExperimentalFeature
   | EFHideStreamFields
   | EFGroupByAggregations
   | EFDisablePostgresArrays
+  | EFNoNullUnboundVariableDefault
   deriving (Bounded, Enum, Eq, Generic, Show)
 
 experimentalFeatureKey :: ExperimentalFeature -> Text
@@ -121,6 +122,7 @@ experimentalFeatureKey = \case
   EFHideStreamFields -> "hide_stream_fields"
   EFGroupByAggregations -> "group_by_aggregations"
   EFDisablePostgresArrays -> "disable_postgres_arrays"
+  EFNoNullUnboundVariableDefault -> "no_null_unbound_variable_default"
 
 instance Hashable ExperimentalFeature
 

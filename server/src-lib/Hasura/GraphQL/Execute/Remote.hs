@@ -39,7 +39,7 @@ getVariableDefinitionAndValue var@(Variable varInfo gType varValue) =
     defaultVal =
       case varInfo of
         VIRequired _ -> Nothing
-        VIOptional _ val -> Just val
+        VIOptional _ val -> val
 
     varJSONValue =
       case varValue of

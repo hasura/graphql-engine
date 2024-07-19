@@ -79,7 +79,7 @@ import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.BackendType
-import Hasura.RQL.Types.Common (SQLGenCtx (nullInNonNullableVariables))
+import Hasura.RQL.Types.Common (SQLGenCtx (SQLGenCtx, noNullUnboundVariableDefault, nullInNonNullableVariables))
 import Hasura.RQL.Types.Endpoint as EP
 import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.Roles (adminRoleName, roleNameToTxt)
@@ -657,8 +657,8 @@ gqlExplainHandler query = do
   reqHeaders <- asks hcReqHeaders
   responseErrorsConfig <- asks (acResponseInternalErrorsConfig . hcAppContext)
   licenseKeyCache <- asks hcLicenseKeyCache
-  nullInNonNullableVariables <- asks (nullInNonNullableVariables . acSQLGenCtx . hcAppContext)
-  res <- GE.explainGQLQuery nullInNonNullableVariables (lastBuiltSchemaCache schemaCache) licenseKeyCache reqHeaders query responseErrorsConfig
+  SQLGenCtx {nullInNonNullableVariables, noNullUnboundVariableDefault} <- asks (acSQLGenCtx . hcAppContext)
+  res <- GE.explainGQLQuery nullInNonNullableVariables noNullUnboundVariableDefault (lastBuiltSchemaCache schemaCache) licenseKeyCache reqHeaders query responseErrorsConfig
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m) => PGD.PGDumpReqBody -> m APIResp

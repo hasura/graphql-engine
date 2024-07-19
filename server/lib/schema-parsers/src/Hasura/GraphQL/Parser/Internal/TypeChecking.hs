@@ -99,7 +99,7 @@ isVariableUsageAllowed locationHasDefaultValue locationType variable
     hasNonNullDefault =
       vInfo >>> \case
         VIRequired _ -> False
-        VIOptional _ value -> value /= VNull
+        VIOptional _ value -> value /= Just VNull
     compareTypes = curry \case
       (TypeList lNull lType, TypeList vNull vType) ->
         checkNull lNull vNull && areTypesCompatible lType vType

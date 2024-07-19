@@ -15,6 +15,7 @@ module Hasura.RQL.Types.Schema.Options
     BigQueryStringNumericInput (..),
     IncludeGroupByAggregateFields (..),
     UsePostgresArrays (..),
+    NoNullUnboundVariableDefault (..),
   )
 where
 
@@ -34,7 +35,8 @@ data SchemaOptions = SchemaOptions
     soIncludeStreamFields :: IncludeStreamFields,
     soBigQueryStringNumericInput :: BigQueryStringNumericInput,
     soIncludeGroupByAggregateFields :: IncludeGroupByAggregateFields,
-    soPostgresArrays :: UsePostgresArrays
+    soPostgresArrays :: UsePostgresArrays,
+    soNoNullUnboundVariableDefault :: NoNullUnboundVariableDefault
   }
 
 -- | Should we represent numbers in our responses as numbers, or strings?
@@ -196,3 +198,25 @@ data UsePostgresArrays
   = UsePostgresArrays
   | DontUsePostgresArrays
   deriving (Eq, Show)
+
+-- | The spec says that unbound nullable variables with no defaults should be
+-- "removed" from the query. In other words, if no value for @$var@ is given,
+-- and no default value exists within the query, then @{ foo: $var }@ should be
+-- equivalent to @{}@. Without the flag, @$var@ becomes @null@.
+data NoNullUnboundVariableDefault
+  = DefaultUnboundNullableVariablesToNull
+  | RemoveUnboundNullableVariablesFromTheQuery
+  deriving (Eq, Show)
+
+instance FromJSON NoNullUnboundVariableDefault where
+  parseJSON =
+    withBool "NoNullUnboundVariableDefault"
+      $ pure
+      . \case
+        True -> RemoveUnboundNullableVariablesFromTheQuery
+        False -> DefaultUnboundNullableVariablesToNull
+
+instance ToJSON NoNullUnboundVariableDefault where
+  toJSON = \case
+    RemoveUnboundNullableVariablesFromTheQuery -> Bool True
+    DefaultUnboundNullableVariablesToNull -> Bool False

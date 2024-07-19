@@ -50,6 +50,7 @@ import Network.HTTP.Types qualified as HTTP
 parseGraphQLQuery ::
   (MonadError QErr m) =>
   Options.BackwardsCompatibleNullInNonNullableVariables ->
+  Options.NoNullUnboundVariableDefault ->
   GQLContext ->
   [G.VariableDefinition] ->
   Maybe (HashMap G.Name J.Value) ->
@@ -60,8 +61,8 @@ parseGraphQLQuery ::
       [G.Directive Variable],
       G.SelectionSet G.NoFragments Variable
     )
-parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs varValsM directives fields = do
-  (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables varDefs (fromMaybe HashMap.empty varValsM) directives fields
+parseGraphQLQuery nullInNonNullableVariables noNullUnboundVariableDefault gqlContext varDefs varValsM directives fields = do
+  (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables noNullUnboundVariableDefault varDefs (fromMaybe HashMap.empty varValsM) directives fields
   parsedQuery <- liftEither $ gqlQueryParser gqlContext resolvedSelSet
   pure (parsedQuery, resolvedDirectives, resolvedSelSet)
 
@@ -102,7 +103,7 @@ convertQuerySelSet
   tracingPropagator
   prometheusMetrics
   gqlContext
-  SQLGenCtx {nullInNonNullableVariables}
+  SQLGenCtx {nullInNonNullableVariables, noNullUnboundVariableDefault}
   userInfo
   reqHeaders
   directives
@@ -117,7 +118,7 @@ convertQuerySelSet
   traceQueryStatus = do
     -- 1. Parse the GraphQL query into the 'RootFieldMap' and a 'SelectionSet'
     (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
-      Tracing.newSpan "Parse query IR" Tracing.SKInternal $ parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
+      Tracing.newSpan "Parse query IR" Tracing.SKInternal $ parseGraphQLQuery nullInNonNullableVariables noNullUnboundVariableDefault gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
 
     -- 2. Parse directives on the query
     dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)

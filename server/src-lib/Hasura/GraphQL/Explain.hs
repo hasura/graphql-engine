@@ -96,13 +96,14 @@ explainGQLQuery ::
     MonadTrace m
   ) =>
   Options.BackwardsCompatibleNullInNonNullableVariables ->
+  Options.NoNullUnboundVariableDefault ->
   SchemaCache ->
   Maybe (CredentialCache AgentLicenseKey) ->
   [HTTP.Header] ->
   GQLExplain ->
   ResponseInternalErrorsConfig ->
   m EncJSON
-explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) responseErrorsConfig = do
+explainGQLQuery nullInNonNullableVariables noNullUnboundVariableDefault sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) responseErrorsConfig = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <-
     mkUserInfo
@@ -115,7 +116,7 @@ explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExp
   case queryParts of
     G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do
       (unpreparedQueries, _, _) <-
-        E.parseGraphQLQuery nullInNonNullableVariables graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+        E.parseGraphQLQuery nullInNonNullableVariables noNullUnboundVariableDefault graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
       -- TODO: validate directives here
       encJFromList
         <$> for (InsOrdHashMap.toList unpreparedQueries) (uncurry (explainQueryField agentLicenseKey userInfo reqHeaders (_unOperationName <$> _grOperationName query)))
@@ -125,6 +126,7 @@ explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExp
       (_normalizedDirectives, normalizedSelectionSet) <-
         ER.resolveVariables
           nullInNonNullableVariables
+          noNullUnboundVariableDefault
           varDefs
           (fromMaybe mempty (GH._grVariables query))
           directives

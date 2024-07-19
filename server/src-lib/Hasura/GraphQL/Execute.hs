@@ -440,6 +440,7 @@ getResolvedExecPlan
           (normalizedDirectives, normalizedSelectionSet) <-
             ER.resolveVariables
               (nullInNonNullableVariables sqlGenCtx)
+              (noNullUnboundVariableDefault sqlGenCtx)
               varDefs
               (fromMaybe mempty (_grVariables reqUnparsed))
               directives

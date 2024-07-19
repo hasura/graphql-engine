@@ -253,7 +253,7 @@ buildSchemaOptions ::
   HashSet ExperimentalFeature ->
   SchemaOptions
 buildSchemaOptions
-  ( SQLGenCtx stringifyNum dangerousBooleanCollapse _nullInNonNullableVariables remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput,
+  ( SQLGenCtx stringifyNum dangerousBooleanCollapse _nullInNonNullableVariables noNullUnboundVariableDefault remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput,
     functionPermsCtx
     )
   expFeatures =
@@ -283,7 +283,9 @@ buildSchemaOptions
         soPostgresArrays =
           if EFDisablePostgresArrays `Set.member` expFeatures
             then Options.DontUsePostgresArrays
-            else Options.UsePostgresArrays
+            else Options.UsePostgresArrays,
+        soNoNullUnboundVariableDefault =
+          noNullUnboundVariableDefault
       }
 
 -- | Build the @QueryHasura@ context for a given role.
