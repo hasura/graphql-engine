@@ -157,7 +157,7 @@ const config = {
       },
       announcementBar: {
         id: 'announcementBar-1', // Increment on change
-        content: `This is the documentation for Hasura v2. <a target="_blank" rel="noopener noreferrer" href="https://hasura.io/docs/3.0/index/">Click here for the Hasura DDN docs</a>, the future of data delivery.`,
+        content: `The new version of Hasura has launched. <a target="_blank" rel="noopener noreferrer" href="https://hasura.io/docs/3.0/index/">Check out the Hasura DDN docs here.</a>`,
         // isCloseable: true,
         // backgroundColor: '#fafbfc',
         // textColor: '#091E42',
