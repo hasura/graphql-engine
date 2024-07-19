@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 mod v1;
 
 pub use v1::{
-    ArgumentPreset, ArgumentPresetValue, DataConnectorLinkV1,
+    DataConnectorArgumentPreset, DataConnectorArgumentPresetValue, DataConnectorLinkV1,
     DataConnectorUrlV1 as DataConnectorUrl, HttpHeadersPreset, ReadWriteUrls, ResponseHeaders,
 };
 

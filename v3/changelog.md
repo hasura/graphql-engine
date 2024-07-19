@@ -6,6 +6,9 @@
 
 ### Fixed
 
+- Renamed the `ArgumentPreset` for data connectors to
+  `DataConnectorArgumentPreset` to avoid ambiguity in generated JSONSchema.
+
 ### Changed
 
 ## [v2024.07.18]

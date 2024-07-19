@@ -407,7 +407,7 @@
     "ArgumentPreset": {
       "$id": "https://hasura.io/jsonschemas/metadata/ArgumentPreset",
       "title": "ArgumentPreset",
-      "description": "An argument preset that can be applied to all functions/procedures of a connector",
+      "description": "Preset value for an argument",
       "type": "object",
       "required": [
         "argument",
@@ -415,27 +415,18 @@
       ],
       "properties": {
         "argument": {
-          "$ref": "#/definitions/ArgumentName"
-        },
-        "value": {
-          "$ref": "#/definitions/ArgumentPresetValue"
-        }
-      },
-      "additionalProperties": false
-    },
-    "ArgumentPresetValue": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentPresetValue",
-      "title": "ArgumentPresetValue",
-      "type": "object",
-      "required": [
-        "httpHeaders"
-      ],
-      "properties": {
-        "httpHeaders": {
-          "description": "HTTP headers that can be preset from request",
+          "description": "Argument name for preset",
           "allOf": [
             {
-              "$ref": "#/definitions/HttpHeadersPreset"
+              "$ref": "#/definitions/ArgumentName"
+            }
+          ]
+        },
+        "value": {
+          "description": "Value for preset",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ValueExpressionOrPredicate"
             }
           ]
         }
@@ -1134,6 +1125,44 @@
       "description": "The name of an argument as defined by a data connector.",
       "type": "string"
     },
+    "DataConnectorArgumentPreset": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorArgumentPreset",
+      "title": "DataConnectorArgumentPreset",
+      "description": "An argument preset that can be applied to all functions/procedures of a connector",
+      "type": "object",
+      "required": [
+        "argument",
+        "value"
+      ],
+      "properties": {
+        "argument": {
+          "$ref": "#/definitions/ArgumentName"
+        },
+        "value": {
+          "$ref": "#/definitions/DataConnectorArgumentPresetValue"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DataConnectorArgumentPresetValue": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorArgumentPresetValue",
+      "title": "DataConnectorArgumentPresetValue",
+      "type": "object",
+      "required": [
+        "httpHeaders"
+      ],
+      "properties": {
+        "httpHeaders": {
+          "description": "HTTP headers that can be preset from request",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HttpHeadersPreset"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "DataConnectorColumnName": {
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorColumnName",
       "title": "DataConnectorColumnName",
@@ -1221,7 +1250,7 @@
           "default": [],
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ArgumentPreset"
+            "$ref": "#/definitions/DataConnectorArgumentPreset"
           }
         },
         "responseHeaders": {
@@ -4929,6 +4958,50 @@
           "properties": {
             "sessionVariable": {
               "$ref": "#/definitions/OpenDdSessionVariable"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ValueExpressionOrPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ValueExpressionOrPredicate",
+      "title": "ValueExpressionOrPredicate",
+      "description": "An expression which evaluates to a value that can be used in permissions and various presets.",
+      "oneOf": [
+        {
+          "title": "Literal",
+          "type": "object",
+          "required": [
+            "literal"
+          ],
+          "properties": {
+            "literal": true
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "SessionVariable",
+          "type": "object",
+          "required": [
+            "sessionVariable"
+          ],
+          "properties": {
+            "sessionVariable": {
+              "$ref": "#/definitions/OpenDdSessionVariable"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "BooleanExpression",
+          "type": "object",
+          "required": [
+            "booleanExpression"
+          ],
+          "properties": {
+            "booleanExpression": {
+              "$ref": "#/definitions/ModelPredicate"
             }
           },
           "additionalProperties": false

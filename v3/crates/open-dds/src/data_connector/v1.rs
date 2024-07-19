@@ -61,7 +61,7 @@ pub struct DataConnectorLinkV1 {
     /// Argument presets that applies to all functions and procedures of this
     /// data connector. Defaults to no argument presets.
     #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
-    pub argument_presets: Vec<ArgumentPreset>,
+    pub argument_presets: Vec<DataConnectorArgumentPreset>,
     /// HTTP response headers configuration that is forwarded from a data
     /// connector to the client.
     pub response_headers: Option<ResponseHeaders>,
@@ -71,14 +71,14 @@ pub struct DataConnectorLinkV1 {
 #[serde(rename_all = "camelCase")]
 /// An argument preset that can be applied to all functions/procedures of a
 /// connector
-pub struct ArgumentPreset {
+pub struct DataConnectorArgumentPreset {
     pub argument: ArgumentName,
-    pub value: ArgumentPresetValue,
+    pub value: DataConnectorArgumentPresetValue,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
-pub struct ArgumentPresetValue {
+pub struct DataConnectorArgumentPresetValue {
     /// HTTP headers that can be preset from request
     pub http_headers: HttpHeadersPreset,
 }
