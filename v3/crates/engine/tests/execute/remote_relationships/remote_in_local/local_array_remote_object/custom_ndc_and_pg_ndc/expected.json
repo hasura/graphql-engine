@@ -31,6 +31,15 @@
           "rating": 5,
           "Actors": [
             {
+              "name": "Peter",
+              "favourite_author_id": 1,
+              "FavouriteAuthor": {
+                "author_id": 1,
+                "first_name": "Peter",
+                "last_name": "Landin"
+              }
+            },
+            {
               "name": "Irfan Khan",
               "favourite_author_id": 1,
               "FavouriteAuthor": {
@@ -106,6 +115,15 @@
           "rating": 5,
           "Actors": [
             {
+              "name": "Peter",
+              "favourite_author_id": 1,
+              "FavouriteAuthor": {
+                "author_id": 1,
+                "first_name": "Peter",
+                "last_name": "Landin"
+              }
+            },
+            {
               "name": "Irfan Khan",
               "favourite_author_id": 1,
               "FavouriteAuthor": {
@@ -126,6 +144,15 @@
           "title": "Slumdog Millionaire",
           "rating": 5,
           "Actors": [
+            {
+              "name": "Peter",
+              "favourite_author_id": 1,
+              "FavouriteAuthor": {
+                "author_id": 1,
+                "first_name": "Peter",
+                "last_name": "Landin"
+              }
+            },
             {
               "name": "Irfan Khan",
               "favourite_author_id": 1,

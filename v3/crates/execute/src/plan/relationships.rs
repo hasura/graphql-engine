@@ -47,10 +47,21 @@ pub(crate) fn collect_relationships(
                         )?;
                     }
                 }
-                FieldSelection::Column { .. }
+                FieldSelection::Column {
+                    arguments: _,
+                    column: _,
+                    nested_selection,
+                } => {
+                    if let Some(nested_selection) = &nested_selection {
+                        selection_set::collect_relationships_from_nested_selection(
+                            nested_selection,
+                            relationships,
+                        )?;
+                    }
+                }
                 // we ignore remote relationships as we are generating relationship
                 // definition for one data connector
-                | FieldSelection::ModelRelationshipRemote { .. }
+                FieldSelection::ModelRelationshipRemote { .. }
                 | FieldSelection::CommandRelationshipRemote { .. } => (),
             };
         }

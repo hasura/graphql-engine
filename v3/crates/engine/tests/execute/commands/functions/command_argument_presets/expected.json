@@ -3,6 +3,11 @@
     "data": {
       "getActorsByMovieIdBounds": [
         {
+          "actor_id": 0,
+          "movie_id": 2,
+          "name": "Peter"
+        },
+        {
           "actor_id": 3,
           "movie_id": 2,
           "name": "Irfan Khan"

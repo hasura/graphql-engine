@@ -116,6 +116,17 @@ fn test_model_select_many_nested_select_no_explicit_type_mapping() -> anyhow::Re
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
+// Same test as the nested selection
+#[test]
+fn test_model_select_many_nested_select_with_relationship() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/nested_select/relationship";
+    let common_metadata_paths = [
+        "execute/common_metadata/custom_connector_schema.json",
+        "execute/models/select_many/nested_select/metadata.json",
+    ];
+    common::test_execution_expectation_legacy(test_path_string, &common_metadata_paths)
+}
+
 // nested selection tests, using Postgres
 #[test]
 fn test_model_select_many_nested_select_postgres() -> anyhow::Result<()> {

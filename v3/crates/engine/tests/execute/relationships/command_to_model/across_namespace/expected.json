@@ -4,6 +4,15 @@
       "getAllActors": [
         {
           "Movies": {
+            "movie_id": 2,
+            "rating": 5,
+            "title": "Slumdog Millionaire"
+          },
+          "actor_id": 0,
+          "name": "Peter"
+        },
+        {
+          "Movies": {
             "movie_id": 1,
             "rating": 4,
             "title": "Titanic"
@@ -72,6 +81,11 @@
     "data": {
       "getAllActors": [
         {
+          "Movies": null,
+          "actor_id": 0,
+          "name": "Peter"
+        },
+        {
           "Movies": {
             "movie_id": 1,
             "rating": 4,
@@ -122,6 +136,11 @@
       "getAllActors": [
         {
           "Movies": null,
+          "actor_id": 0,
+          "name": "Peter"
+        },
+        {
+          "Movies": null,
           "actor_id": 1,
           "name": "Leonardo DiCaprio"
         },
@@ -161,6 +180,11 @@
   {
     "data": {
       "getAllActors": [
+        {
+          "Movies": null,
+          "actor_id": 0,
+          "name": "Peter"
+        },
         {
           "Movies": null,
           "actor_id": 1,

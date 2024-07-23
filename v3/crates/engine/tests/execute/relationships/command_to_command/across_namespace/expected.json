@@ -4,6 +4,15 @@
       "getAllActors": [
         {
           "MovieFromActor": {
+            "movie_id": 2,
+            "rating": 5,
+            "title": "Slumdog Millionaire"
+          },
+          "actor_id": 0,
+          "name": "Peter"
+        },
+        {
+          "MovieFromActor": {
             "movie_id": 1,
             "rating": 4,
             "title": "Titanic"

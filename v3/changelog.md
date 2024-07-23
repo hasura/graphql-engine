@@ -6,6 +6,10 @@
 
 ### Fixed
 
+- Fixes a bug where relationships within nested columns would throw an internal
+  error. While generating NDC relationship definitions, engine would ignore
+  columns with nested selection.
+
 - Renamed the `ArgumentPreset` for data connectors to
   `DataConnectorArgumentPreset` to avoid ambiguity in generated JSONSchema.
 
@@ -56,9 +60,9 @@ your GraphQL queries more versatile and powerful.
 - Build-time check to ensure boolean expressions cannot be built over nested
   array fields until these are supported.
 
-- Fixed a bug where command targeted relationships were not using the Open DD
+- Fixed a bug where command targeted relationships were not using the OpenDD
   argument name instead of the data connector's argument name when querying the
-  data connector
+  data connector.
 
 ## [v2024.07.10]
 
