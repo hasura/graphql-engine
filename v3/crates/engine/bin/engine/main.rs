@@ -418,6 +418,7 @@ async fn graphql_request_tracing_middleware<B: Send>(
     use tracing_util::*;
     let tracer = global_tracer();
     let path = "/graphql";
+
     tracer
         .in_span_async_with_parent_context(
             path,
@@ -428,10 +429,12 @@ async fn graphql_request_tracing_middleware<B: Send>(
                 set_attribute_on_active_span(AttributeVisibility::Internal, "version", VERSION);
                 Box::pin(async move {
                     let mut response = next.run(request).await;
-                    TraceContextResponsePropagator::new().inject_context(
-                        &Context::current(),
-                        &mut HeaderInjector(response.headers_mut()),
-                    );
+                    get_text_map_propagator(|propagator| {
+                        propagator.inject_context(
+                            &Context::current(),
+                            &mut HeaderInjector(response.headers_mut()),
+                        );
+                    });
                     TraceableHttpResponse::new(response, path)
                 })
             },

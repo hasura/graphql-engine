@@ -1,8 +1,11 @@
+use opentelemetry::baggage::BaggageExt;
+use opentelemetry::trace::Span; // 'Span'-the-trait, c.f. to 'Span'-the-struct. Used for its
+                                // 'set_attribute' method.
 use opentelemetry::propagation::composite::TextMapCompositePropagator;
 use opentelemetry::{global, trace::TraceError, KeyValue};
 use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
-use opentelemetry_sdk::propagation::TraceContextPropagator;
-use opentelemetry_sdk::trace::TracerProvider as SDKTracerProvider;
+use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
+use opentelemetry_sdk::trace::{SpanProcessor, TracerProvider as SDKTracerProvider};
 use opentelemetry_semantic_conventions as semcov;
 
 pub fn initialize_tracing(
@@ -16,6 +19,7 @@ pub fn initialize_tracing(
     global::set_text_map_propagator(TextMapCompositePropagator::new(vec![
         Box::new(TraceContextPropagator::new()),
         Box::new(opentelemetry_zipkin::Propagator::new()),
+        Box::new(BaggagePropagator::new()),
     ]));
 
     let mut resource_entries = vec![KeyValue::new(semcov::resource::SERVICE_NAME, service_name)];
@@ -39,12 +43,46 @@ pub fn initialize_tracing(
     let tracer_provider = SDKTracerProvider::builder()
         .with_simple_exporter(stdout_exporter)
         .with_batch_exporter(otlp_exporter, opentelemetry_sdk::runtime::Tokio)
+        .with_span_processor(BaggageSpanProcessor())
         .with_config(config)
         .build();
 
     // Set the global tracer provider so everyone gets this setup.
     global::set_tracer_provider(tracer_provider);
     Ok(())
+}
+
+/// The sole purpose in life of the 'BaggageSpanProcessor' type is to witness a 'SpanProcessor'
+/// instance which outputs each key-value pair stored in the baggage field of the Context to each
+/// span. It is only relevant to the tracing setup code.
+///
+/// "Baggage" is established OpenTelemetry terminology, which signifies contextual data that is
+/// passed along across service boundaries.
+///
+/// A 'BaggagePropagator' is used to inject the recorded baggage into request headers (using the
+/// <https://w3c.github.io/baggage/> format) that this process calls, and extract baggage from
+/// requests made to this process.
+///
+/// Baggage may be added to the context using the `Context::current_with_baggage(..)` method.
+#[derive(Debug)]
+struct BaggageSpanProcessor();
+
+impl SpanProcessor for BaggageSpanProcessor {
+    fn on_start(&self, span: &mut opentelemetry_sdk::trace::Span, cx: &opentelemetry::Context) {
+        for (key, (value, _)) in cx.baggage() {
+            span.set_attribute(KeyValue::new(key.to_string(), value.to_string()));
+        }
+    }
+
+    fn on_end(&self, _span: opentelemetry_sdk::export::trace::SpanData) {}
+
+    fn force_flush(&self) -> opentelemetry::trace::TraceResult<()> {
+        Ok(())
+    }
+
+    fn shutdown(&mut self) -> opentelemetry::trace::TraceResult<()> {
+        Ok(())
+    }
 }
 
 pub fn shutdown_tracer() {

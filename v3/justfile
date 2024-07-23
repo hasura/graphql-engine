@@ -89,6 +89,18 @@ coverage *filterexp:
 generate-benchmarks gh-issue gh-token:
   just docker_with_test_env bash benchmark.sh {{gh-issue}} {{gh-token}}
 
+run-local-with-shell:
+  #!/usr/bin/env bash
+  cargo run --bin custom-connector | ts "custom-connector:" &
+  OTLP_ENDPOINT=http://localhost:4317 \
+    cargo run --bin dev-auth-webhook | ts "dev-auth-webhook:" &
+  RUST_LOG=DEBUG cargo run --bin engine -- \
+  --otlp-endpoint http://localhost:4317 \
+  --authn-config-path auth_config.json \
+  --metadata-path crates/engine/tests/schema.json \
+  --expose-internal-errors | ts "engine:          " &
+  wait
+
 dev:
   docker compose run --build --rm dev_setup bash
   docker compose down

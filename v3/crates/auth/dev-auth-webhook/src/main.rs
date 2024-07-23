@@ -11,9 +11,12 @@ const DEFAULT_PORT: u16 = 3050;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    if let Ok(otlp_endpoint) = env::var("OTLP_ENDPOINT") {
-        tracing_util::initialize_tracing(Some(&otlp_endpoint), env!("CARGO_PKG_NAME"), None)?;
-    }
+    let otlp_endpoint_option = env::var("OTLP_ENDPOINT").ok();
+    tracing_util::initialize_tracing(
+        otlp_endpoint_option.as_deref(),
+        env!("CARGO_PKG_NAME"),
+        None,
+    )?;
 
     let app = Router::new()
         .route("/validate-request", post(validate_request))
@@ -91,8 +94,10 @@ async fn graphql_request_tracing_middleware<B: Send>(
             || {
                 Box::pin(async move {
                     let mut response = next.run(request).await;
-                    TraceContextResponsePropagator::new()
-                        .inject(&mut HeaderInjector(response.headers_mut()));
+
+                    get_text_map_propagator(|propagator| {
+                        propagator.inject(&mut HeaderInjector(response.headers_mut()))
+                    });
                     TraceableHttpResponse::new(response, "")
                 })
             },
