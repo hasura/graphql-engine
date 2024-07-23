@@ -203,6 +203,7 @@ pub enum ModelInputAnnotation {
     ModelArgumentsExpression,
     ModelArgument {
         argument_type: QualifiedTypeReference,
+        argument_kind: metadata_resolve::ArgumentKind,
         ndc_table_argument: Option<DataConnectorArgumentName>,
     },
     ComparisonOperation {
@@ -266,6 +267,7 @@ pub enum InputAnnotation {
     BooleanExpression(BooleanExpressionAnnotation),
     CommandArgument {
         argument_type: QualifiedTypeReference,
+        argument_kind: metadata_resolve::ArgumentKind,
         ndc_func_proc_argument: Option<DataConnectorArgumentName>,
     },
     Relay(RelayInputAnnotation),

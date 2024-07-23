@@ -7,7 +7,7 @@ pub fn generate_field_argument(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
     argument_name: &ArgumentName,
-    argument_type: &metadata_resolve::ArgumentInfo,
+    argument_type: &metadata_resolve::FieldArgumentInfo,
 ) -> Result<
     (
         ast::Name,

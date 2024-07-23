@@ -2,13 +2,6 @@
 //!
 //! A 'select_one' operation fetches zero or one row from a model
 
-/// Generates the IR for a 'select_one' operation
-// TODO: Remove once TypeMapping has more than one variant
-use hasura_authn_core::SessionVariables;
-use lang_graphql::{ast::common as ast, normalized_ast};
-use open_dds;
-use serde::Serialize;
-
 use crate::ir::arguments;
 use crate::ir::error;
 use crate::ir::filter;
@@ -16,8 +9,15 @@ use crate::ir::filter::expression as filter_expression;
 use crate::ir::model_selection;
 use crate::ir::permissions;
 use crate::model_tracking::{count_model, UsagesCounts};
+/// Generates the IR for a 'select_one' operation
+// TODO: Remove once TypeMapping has more than one variant
+use hasura_authn_core::SessionVariables;
+use lang_graphql::{ast::common as ast, normalized_ast};
 use metadata_resolve;
 use metadata_resolve::Qualified;
+use open_dds;
+use serde::Serialize;
+use std::collections::BTreeMap;
 
 use schema::GDS;
 use schema::{self, Annotation, ModelInputAnnotation};
@@ -90,11 +90,19 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
     let mut usage_counts = UsagesCounts::new();
     count_model(model_name, &mut usage_counts);
 
-    let mut model_arguments = arguments::build_ndc_model_arguments(
-        &field_call.name,
-        model_argument_fields.into_iter(),
-        &model_source.type_mappings,
-    )?;
+    let mut model_arguments = BTreeMap::new();
+
+    for argument in model_argument_fields {
+        let (ndc_arg_name, ndc_val) = arguments::build_ndc_argument_as_value(
+            &field_call.name,
+            argument,
+            &model_source.type_mappings,
+            &model_source.data_connector,
+            &mut usage_counts,
+        )?;
+
+        model_arguments.insert(ndc_arg_name, ndc_val);
+    }
 
     if let Some(argument_presets) = permissions::get_argument_presets(field_call.info.namespaced)? {
         // add any preset arguments from model permissions

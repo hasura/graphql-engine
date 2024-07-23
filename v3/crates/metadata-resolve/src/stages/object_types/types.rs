@@ -1,6 +1,5 @@
 use super::error::ObjectTypesError;
 use crate::types::subgraph::QualifiedTypeReference;
-use crate::ArgumentInfo;
 use indexmap::IndexMap;
 use open_dds::arguments::ArgumentName;
 use open_dds::models::ModelName;
@@ -128,7 +127,13 @@ pub struct FieldDefinition {
     pub field_type: QualifiedTypeReference,
     pub description: Option<String>,
     pub deprecated: Option<Deprecated>,
-    pub field_arguments: IndexMap<ArgumentName, ArgumentInfo>,
+    pub field_arguments: IndexMap<ArgumentName, FieldArgumentInfo>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct FieldArgumentInfo {
+    pub argument_type: QualifiedTypeReference,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

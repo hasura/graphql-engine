@@ -33,6 +33,7 @@ pub(crate) fn generate_command_argument(
         argument_type.description.clone(),
         Annotation::Input(types::InputAnnotation::CommandArgument {
             argument_type: argument_type.argument_type.clone(),
+            argument_kind: argument_type.argument_kind.clone(),
             ndc_func_proc_argument: command
                 .command
                 .source

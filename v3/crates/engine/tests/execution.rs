@@ -1045,6 +1045,22 @@ fn test_boolean_expression_command_argument_presets_boolean_expression_type() ->
     )
 }
 
+// new `boolean_expression_type` with boolean expression provided in query
+#[test]
+fn test_boolean_expression_command_argument_from_user() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/commands/functions/boolean_expression_command_argument/passed_by_user";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
 // Tests a select many query command with preset arguments on the model:
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
 #[test]

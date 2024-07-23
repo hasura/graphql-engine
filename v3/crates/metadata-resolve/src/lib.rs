@@ -47,7 +47,8 @@ pub use stages::object_boolean_expressions::{
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
 };
 pub use stages::object_types::{
-    FieldMapping, ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,
+    FieldArgumentInfo, FieldMapping, ObjectTypeRepresentation,
+    ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 pub use stages::relationships::{
     relationship_execution_category, CommandRelationshipTarget, ModelAggregateRelationshipTarget,
@@ -63,6 +64,6 @@ pub use types::error::Error;
 pub use types::permission::{ValueExpression, ValueExpressionOrPredicate};
 pub use types::subgraph::{
     deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
-    serialize_non_string_key_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
-    QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
+    serialize_non_string_key_btreemap, serialize_qualified_btreemap, ArgumentInfo, ArgumentKind,
+    Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };

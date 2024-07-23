@@ -1,3 +1,4 @@
+use crate::helpers::argument::get_argument_kind;
 use crate::helpers::types::{get_type_representation, mk_name};
 use crate::stages::{
     boolean_expressions, object_boolean_expressions, scalar_types, type_permissions,
@@ -37,6 +38,13 @@ pub fn resolve_command(
             object_boolean_expression_types,
             boolean_expression_types,
         ) {
+            // is this an expression or not?
+            let argument_kind = get_argument_kind(
+                &argument.argument_type,
+                subgraph,
+                object_boolean_expression_types,
+                boolean_expression_types,
+            );
             if arguments
                 .insert(
                     argument.name.clone(),
@@ -45,6 +53,7 @@ pub fn resolve_command(
                             &argument.argument_type,
                             subgraph,
                         ),
+                        argument_kind,
                         description: argument.description.clone(),
                     },
                 )

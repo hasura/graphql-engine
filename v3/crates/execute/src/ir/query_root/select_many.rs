@@ -82,14 +82,17 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                 }
                 ModelInputAnnotation::ModelArgumentsExpression => match &argument.value {
                     normalized_ast::Value::Object(arguments) => {
-                        model_arguments.extend(
-                            arguments::build_ndc_model_arguments(
+                        for argument in arguments.values() {
+                            let (ndc_arg_name, ndc_val) = arguments::build_ndc_argument_as_value(
                                 &field_call.name,
-                                arguments.values(),
+                                argument,
                                 &model_source.type_mappings,
-                            )?
-                            .into_iter(),
-                        );
+                                &model_source.data_connector,
+                                &mut usage_counts,
+                            )?;
+
+                            model_arguments.insert(ndc_arg_name, ndc_val);
+                        }
                     }
                     _ => Err(error::InternalEngineError::InternalGeneric {
                         description: "Expected object value for model arguments".into(),

@@ -119,6 +119,23 @@ fn test_introspect_boolean_expression_in_command_boolean_expression_type() -> an
     )
 }
 
+// new `boolean_expression_type` with manually passed argument
+
+#[test]
+fn test_introspect_boolean_expression_in_command_boolean_expression_type_passed_in_query(
+) -> anyhow::Result<()> {
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+
+    common::test_introspection_expectation(
+        "execute/commands/functions/boolean_expression_command_argument/passed_by_user",
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
 // end of command arguments with boolean expressions
 
 #[test]

@@ -9,6 +9,10 @@
 
 ### Fixed
 
+- Fixes a bug where boolean expressions passed as arguments would not be
+  translated into NDC `Expression` types before being sent to the data
+  connector.
+
 - Fixes a bug where relationships within nested columns would throw an internal
   error. While generating NDC relationship definitions, engine would ignore
   columns with nested selection.

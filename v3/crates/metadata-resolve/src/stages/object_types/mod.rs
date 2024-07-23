@@ -8,9 +8,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use open_dds::commands::ArgumentMapping;
 use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
 pub use types::{
-    DataConnectorTypeMappingsForObject, FieldDefinition, FieldMapping, ObjectTypeRepresentation,
-    ObjectTypeWithTypeMappings, ObjectTypesOutput, ObjectTypesWithTypeMappings,
-    ResolvedApolloFederationObjectKey, ResolvedObjectApolloFederationConfig, TypeMapping,
+    DataConnectorTypeMappingsForObject, FieldArgumentInfo, FieldDefinition, FieldMapping,
+    ObjectTypeRepresentation, ObjectTypeWithTypeMappings, ObjectTypesOutput,
+    ObjectTypesWithTypeMappings, ResolvedApolloFederationObjectKey,
+    ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
 use crate::helpers::ndc_validation::get_underlying_named_type;
@@ -112,7 +113,7 @@ fn resolve_field(
 ) -> Result<FieldDefinition, ObjectTypesError> {
     let mut field_arguments = IndexMap::new();
     for argument in &field.arguments {
-        let field_argument_definition = crate::ArgumentInfo {
+        let field_argument_definition = FieldArgumentInfo {
             argument_type: mk_qualified_type_reference(&argument.argument_type, subgraph),
             description: argument.description.clone(),
         };

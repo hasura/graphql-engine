@@ -100,15 +100,15 @@ pub(crate) fn generate_command_info<'n, 's>(
     let mut command_arguments = BTreeMap::new();
 
     for argument in field_call.arguments.values() {
-        let (ndc_arg_name, ndc_val) = arguments::build_ndc_command_arguments_as_value(
+        let (ndc_arg_name, ndc_val) = arguments::build_ndc_argument_as_value(
             &field_call.name,
             argument,
             &command_source.type_mappings,
+            &command_source.data_connector,
+            usage_counts,
         )?;
-        command_arguments.insert(
-            ndc_arg_name,
-            arguments::Argument::Literal { value: ndc_val },
-        );
+
+        command_arguments.insert(ndc_arg_name, ndc_val);
     }
 
     // preset arguments from permissions presets (both command permission argument

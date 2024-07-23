@@ -71,6 +71,7 @@ pub fn build_model_argument_fields(
                 Annotation::Input(InputAnnotation::Model(
                     ModelInputAnnotation::ModelArgument {
                         argument_type: argument_type.argument_type.clone(),
+                        argument_kind: argument_type.argument_kind.clone(),
                         ndc_table_argument: model
                             .model
                             .source

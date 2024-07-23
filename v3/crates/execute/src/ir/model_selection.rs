@@ -201,13 +201,24 @@ fn read_model_select_aggregate_arguments<'s>(
                     field_call_argument
                         .value
                         .as_object()
-                        .map_err(std::convert::Into::into)
-                        .and_then(|model_args_input_props| {
-                            arguments::build_ndc_model_arguments(
-                                &field_call.name,
-                                model_args_input_props.values(),
-                                &model_source.type_mappings,
-                            )
+                        .map_err(std::convert::Into::<error::Error>::into)
+                        .map(|model_args_input_props| {
+                            let mut inner_model_arguments = BTreeMap::new();
+
+                            for argument in model_args_input_props.values() {
+                                if let Ok((ndc_arg_name, ndc_val)) =
+                                    arguments::build_ndc_argument_as_value(
+                                        &field_call.name,
+                                        argument,
+                                        &model_source.type_mappings,
+                                        &model_source.data_connector,
+                                        usage_counts,
+                                    )
+                                {
+                                    inner_model_arguments.insert(ndc_arg_name, ndc_val);
+                                }
+                            }
+                            inner_model_arguments
                         })?,
                 );
             }

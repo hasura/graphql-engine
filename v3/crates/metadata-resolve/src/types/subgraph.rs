@@ -73,10 +73,18 @@ impl QualifiedTypeReference {
     }
 }
 
+// should this argument be converted into an NDC expression
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum ArgumentKind {
+    NDCExpression,
+    Other,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ArgumentInfo {
     pub argument_type: QualifiedTypeReference,
     pub description: Option<String>,
+    pub argument_kind: ArgumentKind,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]

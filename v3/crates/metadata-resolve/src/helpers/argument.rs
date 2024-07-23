@@ -12,8 +12,9 @@ use crate::stages::{
 };
 use crate::types::error::{Error, RelationshipError, TypeError, TypePredicateError};
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
-use crate::types::subgraph::{ArgumentInfo, Qualified, QualifiedBaseType, QualifiedTypeReference};
-
+use crate::types::subgraph::{
+    ArgumentInfo, ArgumentKind, Qualified, QualifiedBaseType, QualifiedTypeReference,
+};
 use indexmap::IndexMap;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
@@ -23,7 +24,7 @@ use open_dds::data_connector::{
 use open_dds::models::ModelName;
 use open_dds::permissions;
 use open_dds::types::DataConnectorArgumentName;
-use open_dds::types::{CustomTypeName, FieldName, OperatorName};
+use open_dds::types::{BaseType, CustomTypeName, FieldName, OperatorName, TypeName, TypeReference};
 use ref_cast::RefCast;
 use std::collections::BTreeMap;
 
@@ -811,4 +812,46 @@ fn remove_object_relationships(
             )
             .collect(),
     )
+}
+
+// in short, should we convert this to an NDC expression before sending it
+pub fn get_argument_kind(
+    type_obj: &TypeReference,
+    subgraph: &str,
+    object_boolean_expression_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_boolean_expressions::ObjectBooleanExpressionType,
+    >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+) -> ArgumentKind {
+    match &type_obj.underlying_type {
+        BaseType::List(type_obj) => get_argument_kind(
+            type_obj,
+            subgraph,
+            object_boolean_expression_types,
+            boolean_expression_types,
+        ),
+        BaseType::Named(type_name) => match type_name {
+            TypeName::Inbuilt(_) => ArgumentKind::Other,
+            TypeName::Custom(type_name) => {
+                let qualified_type_name =
+                    Qualified::new(subgraph.to_string(), type_name.to_owned());
+
+                match get_type_representation::<type_permissions::ObjectTypesWithPermissions>(
+                    &qualified_type_name,
+                    &BTreeMap::new(),
+                    &BTreeMap::new(),
+                    object_boolean_expression_types,
+                    boolean_expression_types,
+                ) {
+                    Ok(
+                        TypeRepresentation::BooleanExpressionScalar(_)
+                        | TypeRepresentation::BooleanExpressionObject(_)
+                        | TypeRepresentation::BooleanExpression(_),
+                    ) => ArgumentKind::NDCExpression,
+                    _ => ArgumentKind::Other,
+                }
+            }
+        },
+    }
 }

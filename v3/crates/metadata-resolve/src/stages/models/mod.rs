@@ -4,10 +4,10 @@ mod helpers;
 mod ordering;
 mod source;
 mod types;
+pub use crate::helpers::argument::get_argument_kind;
+use crate::types::error::Error;
 pub use aggregation::resolve_aggregate_expression;
 pub use helpers::get_ndc_column_for_comparison;
-
-use crate::types::error::Error;
 
 use crate::stages::{
     aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors,
@@ -69,6 +69,8 @@ pub fn resolve(
             subgraph,
             model,
             object_types,
+            object_boolean_expression_types,
+            boolean_expression_types,
             &mut global_id_enabled_types,
             &mut apollo_federation_entity_enabled_types,
         )?;
@@ -142,6 +144,11 @@ fn resolve_model(
     subgraph: &str,
     model: &ModelV1,
     object_types: &type_permissions::ObjectTypesWithPermissions,
+    object_boolean_expression_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_boolean_expressions::ObjectBooleanExpressionType,
+    >,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     global_id_enabled_types: &mut BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &mut BTreeMap<
         Qualified<CustomTypeName>,
@@ -253,11 +260,20 @@ fn resolve_model(
 
     let mut arguments = IndexMap::new();
     for argument in &model.arguments {
+        // is this an expression or not?
+        let argument_kind = get_argument_kind(
+            &argument.argument_type,
+            subgraph,
+            object_boolean_expression_types,
+            boolean_expression_types,
+        );
+
         if arguments
             .insert(
                 argument.name.clone(),
                 ArgumentInfo {
                     argument_type: mk_qualified_type_reference(&argument.argument_type, subgraph),
+                    argument_kind,
                     description: argument.description.clone(),
                 },
             )
