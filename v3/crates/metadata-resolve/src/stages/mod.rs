@@ -19,7 +19,7 @@ pub mod scalar_boolean_expressions;
 pub mod scalar_types;
 pub mod type_permissions;
 mod types;
-
+use crate::types::warning::Warning;
 pub use types::Metadata;
 
 use crate::types::configuration::Configuration;
@@ -29,7 +29,10 @@ use crate::types::error::Error;
 pub fn resolve(
     metadata: open_dds::Metadata,
     configuration: Configuration,
-) -> Result<Metadata, Error> {
+) -> Result<(Metadata, Vec<Warning>), Error> {
+    // all warnings raised throughout metadata-resolve
+    let mut all_warnings = vec![];
+
     let metadata_accessor: open_dds::accessor::MetadataAccessor =
         open_dds::accessor::MetadataAccessor::new(metadata);
 
@@ -66,6 +69,7 @@ pub fn resolve(
     let data_connector_scalar_types::DataConnectorWithScalarsOutput {
         data_connector_scalars,
         graphql_types,
+        warnings,
     } = data_connector_scalar_types::resolve(
         &metadata_accessor,
         &data_connectors,
@@ -73,6 +77,8 @@ pub fn resolve(
         &boolean_expression_scalar_types,
         &graphql_types,
     )?;
+
+    all_warnings.extend(warnings.into_iter().map(Warning::from));
 
     // Fetch and validate permissions, and attach them to the relevant object types
     let object_types_with_permissions =
@@ -109,6 +115,7 @@ pub fn resolve(
     let object_boolean_expressions::ObjectBooleanExpressionsOutput {
         object_boolean_expression_types,
         graphql_types,
+        warnings,
     } = object_boolean_expressions::resolve(
         &metadata_accessor,
         &data_connectors,
@@ -117,6 +124,8 @@ pub fn resolve(
         &graphql_types,
         &graphql_config,
     )?;
+
+    all_warnings.extend(warnings.into_iter().map(Warning::from));
 
     // Resolve models and their sources
     let models::ModelsOutput {
@@ -214,15 +223,18 @@ pub fn resolve(
         &commands_with_permissions,
     );
 
-    Ok(Metadata {
-        scalar_types,
-        object_types: object_types_with_relationships,
-        models: models_with_permissions,
-        commands: commands_with_permissions,
-        object_boolean_expression_types,
-        boolean_expression_types,
-        aggregate_expressions,
-        graphql_config: graphql_config.global,
-        roles,
-    })
+    Ok((
+        Metadata {
+            scalar_types,
+            object_types: object_types_with_relationships,
+            models: models_with_permissions,
+            commands: commands_with_permissions,
+            object_boolean_expression_types,
+            boolean_expression_types,
+            aggregate_expressions,
+            graphql_config: graphql_config.global,
+            roles,
+        },
+        all_warnings,
+    ))
 }

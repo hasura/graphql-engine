@@ -3,8 +3,8 @@ mod types;
 pub use error::DataConnectorScalarTypesError;
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
-    ComparisonOperators, DataConnectorWithScalarsOutput, ScalarTypeWithRepresentationInfo,
-    ScalarTypeWithRepresentationInfoMap,
+    ComparisonOperators, DataConnectorScalarTypesWarning, DataConnectorWithScalarsOutput,
+    ScalarTypeWithRepresentationInfo, ScalarTypeWithRepresentationInfoMap,
 };
 
 use lang_graphql::ast::common as ast;
@@ -31,6 +31,7 @@ pub fn resolve<'a>(
     existing_graphql_types: &'a BTreeSet<ast::TypeName>,
 ) -> Result<DataConnectorWithScalarsOutput<'a>, DataConnectorScalarTypesError> {
     let mut graphql_types = existing_graphql_types.clone();
+    let mut warnings = vec![];
 
     // we convert data from the old types to the new types and then start mutating everything
     // there is no doubt room for improvement here, but at least we are keeping the mutation
@@ -73,6 +74,15 @@ pub fn resolve<'a>(
             )?;
 
             scalar_type.representation = Some(scalar_type_representation.representation.clone());
+
+            warnings.push(
+                DataConnectorScalarTypesWarning::PleaseUpgradeToBooleanExpressionType {
+                    data_connector_name: qualified_data_connector_name.clone(),
+                    scalar_type: scalar_type_representation
+                        .data_connector_scalar_type
+                        .clone(),
+                },
+            );
         } else {
             return Err(
                 DataConnectorScalarTypesError::DuplicateDataConnectorScalarRepresentation {
@@ -147,6 +157,7 @@ pub fn resolve<'a>(
     Ok(DataConnectorWithScalarsOutput {
         data_connector_scalars,
         graphql_types,
+        warnings,
     })
 }
 

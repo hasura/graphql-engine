@@ -37,6 +37,7 @@ pub use stages::model_permissions::{
 };
 pub use stages::models::{Model, ModelSource};
 pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;
+pub use types::warning::Warning;
 
 pub use stages::models_graphql::{
     ModelExpressionType, ModelOrderByExpression, SelectAggregateGraphQlDefinition,

@@ -4,6 +4,9 @@
 
 ### Added
 
+- The metadata resolve step now emits warnings to let users know about
+  soon-to-be deprecated features and suggest fixes.
+
 ### Fixed
 
 - Fixes a bug where relationships within nested columns would throw an internal
@@ -12,6 +15,12 @@
 
 - Renamed the `ArgumentPreset` for data connectors to
   `DataConnectorArgumentPreset` to avoid ambiguity in generated JSONSchema.
+
+### Changed
+
+- Fixed a bug where command targeted relationships were not using the Open DD
+  argument name instead of the data connector's argument name when querying the
+  data connector
 
 ### Changed
 

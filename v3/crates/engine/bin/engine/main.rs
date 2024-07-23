@@ -718,6 +718,14 @@ async fn handle_sql_request(
     }
 }
 
+#[allow(clippy::print_stdout)]
+/// Print any build warnings to stdout
+fn print_warnings(warnings: Vec<metadata_resolve::Warning>) {
+    for warning in warnings {
+        println!("Warning: {warning}");
+    }
+}
+
 /// Build the engine state - include auth, metadata, and sql context.
 fn build_state(
     expose_internal_errors: execute::ExposeInternalErrors,
@@ -732,7 +740,11 @@ fn build_state(
             .map_err(StartupError::ReadPrePlugin)?;
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
-    let resolved_metadata = metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
+    let (resolved_metadata, warnings) =
+        metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
+
+    print_warnings(warnings);
+
     let http_context = HttpContext {
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,

@@ -10,6 +10,7 @@ pub struct DataConnectorWithScalarsOutput<'a> {
     pub data_connector_scalars:
         BTreeMap<Qualified<DataConnectorName>, ScalarTypeWithRepresentationInfoMap<'a>>,
     pub graphql_types: BTreeSet<ast::TypeName>,
+    pub warnings: Vec<DataConnectorScalarTypesWarning>,
 }
 // basic scalar type info
 #[derive(Debug)]
@@ -31,4 +32,13 @@ pub struct ScalarTypeWithRepresentationInfoMap<'a>(
 pub struct ComparisonOperators {
     pub equal_operators: Vec<ndc_models::ComparisonOperatorName>,
     pub in_operators: Vec<ndc_models::ComparisonOperatorName>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum DataConnectorScalarTypesWarning {
+    #[error("DataConnectorScalarRepresentation is deprecated in favour of BooleanExpressionType. Please consider upgrading {scalar_type:} for data connector {data_connector_name}.")]
+    PleaseUpgradeToBooleanExpressionType {
+        scalar_type: DataConnectorScalarType,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
 }
