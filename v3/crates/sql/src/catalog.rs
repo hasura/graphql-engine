@@ -239,18 +239,18 @@ impl Context {
             default_schema: default_schema_name.map(|s| Arc::new(s.clone())),
             catalog: catalog.clone(),
         });
-        let session_state =
+        let mut session_state =
             SessionState::new_with_config_rt(session_config, Arc::new(RuntimeEnv::default()))
-                .with_analyzer_rules(vec![Arc::new(
-                    super::execute::analyzer::ReplaceTableScan::new(
-                        default_schema_name.map(|s| Arc::new(s.clone())),
-                        catalog.clone(),
-                    ),
-                )])
                 .with_query_planner(query_planner)
                 .add_optimizer_rule(Arc::new(
                     super::execute::optimizer::NDCPushDownProjection {},
                 ));
+        // add_analyzer_rule takes a mut &self instead of mut self because of which we can't chain
+        // the creation of session_state
+        session_state.add_analyzer_rule(Arc::new(super::execute::analyzer::ReplaceTableScan::new(
+            default_schema_name.map(|s| Arc::new(s.clone())),
+            catalog.clone(),
+        )));
         let session_context = datafusion::SessionContext::new_with_state(session_state);
         session_context
             .register_catalog("default", catalog as Arc<dyn datafusion::CatalogProvider>);
