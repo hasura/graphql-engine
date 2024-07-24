@@ -18,7 +18,6 @@
 //! Analyzed rule to replace TableScan references
 //! such as DataFrames and Views and inlines the LogicalPlan.
 
-use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use datafusion::{
@@ -31,6 +30,7 @@ use datafusion::{
     logical_expr::{logical_plan::LogicalPlan, Extension, TableScan},
     optimizer::AnalyzerRule,
 };
+use execute::ir::selection_set::NdcFieldName;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
 use open_dds::identifier::Identifier;
@@ -147,39 +147,13 @@ fn analyze_internal(
                         })
                         .map(|field_mapping| field_mapping.column.clone())
                 }?;
-                ndc_fields.insert(
-                    ndc_models::FieldName::from(field.name().as_str()),
-                    ndc_models::Field::Column {
-                        column: ndc_models::FieldName::from(ndc_field.as_str()),
-                        fields: None,
-                        arguments: BTreeMap::new(),
-                    },
-                );
+                ndc_fields.insert(NdcFieldName::from(field.name().as_str()), ndc_field.clone());
             }
 
-            let ndc_query = ndc_models::Query {
-                aggregates: None,
-                groups: None,
-                fields: Some(ndc_fields),
-                limit: None,
-                offset: None,
-                order_by: None,
-                predicate: None,
-            };
-
-            let query_request = ndc_models::QueryRequest {
-                query: ndc_query,
-                collection: ndc_models::CollectionName::from(model_source.collection.as_str()),
-                arguments: BTreeMap::new(),
-                collection_relationships: BTreeMap::new(),
-                variables: None,
-            };
             let ndc_query_node = NDCQuery {
                 table: table_name.clone(),
-                query: query_request,
-                data_source_name: Arc::new(ndc_models::CollectionName::from(
-                    model_source.collection.as_str(),
-                )),
+                fields: ndc_fields,
+                data_source_name: Arc::new(model_source.collection.clone()),
                 schema: projected_schema,
             };
             Ok(Transformed::yes(LogicalPlan::Extension(Extension {

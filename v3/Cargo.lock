@@ -4350,12 +4350,10 @@ dependencies = [
  "hasura-authn-core",
  "indexmap 2.2.6",
  "metadata-resolve",
- "ndc-models 0.1.5",
  "ndc-models 0.2.0",
  "open-dds",
  "schema",
  "serde",
- "serde_json",
  "thiserror",
  "tracing-util",
 ]

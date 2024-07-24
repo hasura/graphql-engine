@@ -13,13 +13,11 @@ tracing-util = { path = "../utils/tracing-util" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 
 ndc-models = { workspace = true }
-ndc-models-v01 = { workspace = true }
 indexmap = { workspace = true }
 datafusion = { version = "40.0.0", features = ["serde"] }
 async-trait = "0.1.81"
 futures = "0.3.30"
 serde = { workspace = true, features = ["rc"] }
-serde_json = { workspace = true }
 thiserror = { workspace = true }
 
 [lints]

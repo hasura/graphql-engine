@@ -4,12 +4,10 @@ mod global_id;
 pub mod ir;
 pub mod model_tracking;
 pub mod ndc;
-mod plan;
+pub mod plan;
 mod process_response;
 mod query_usage;
 mod remote_joins;
-
-pub use plan::{ndc_request, plan_expression, resolve_expression, ExecuteQueryResult};
 
 use gql::normalized_ast::Operation;
 use hasura_authn_core::Session;
@@ -19,6 +17,7 @@ use lang_graphql::{
     http::{RawRequest, Response},
     schema::Schema,
 };
+use plan::ExecuteQueryResult;
 use schema::{GDSRoleNamespaceGetter, GDS};
 use tracing_util::{
     set_attribute_on_active_span, AttributeVisibility, ErrorVisibility, SpanVisibility, Traceable,

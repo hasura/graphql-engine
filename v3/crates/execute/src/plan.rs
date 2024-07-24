@@ -1,15 +1,12 @@
 mod arguments;
 mod commands;
-pub(crate) mod error;
-pub(crate) mod filter;
+pub mod error;
+pub mod filter;
 mod model_selection;
 pub mod ndc_request;
 mod relationships;
 pub(crate) mod selection_set;
-pub(crate) mod types;
-
-pub use filter::plan_expression;
-pub use types::resolve_expression;
+pub mod types;
 
 use gql::normalized_ast;
 use gql::schema::NamespacedGetter;
