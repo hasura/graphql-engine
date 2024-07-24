@@ -135,13 +135,16 @@
                       "LocalField": {
                         "BinaryComparison": {
                           "column": {
-                            "type": "column",
-                            "name": "title"
+                            "Column": {
+                              "name": "title",
+                              "field_path": []
+                            }
                           },
                           "operator": "_like",
                           "value": {
-                            "type": "scalar",
-                            "value": "%Functional%"
+                            "Scalar": {
+                              "value": "%Functional%"
+                            }
                           }
                         }
                       }
@@ -152,10 +155,12 @@
                           "LocalField": {
                             "UnaryComparison": {
                               "column": {
-                                "type": "column",
-                                "name": "author_id"
+                                "Column": {
+                                  "name": "author_id",
+                                  "field_path": []
+                                }
                               },
-                              "operator": "is_null"
+                              "operator": "IsNull"
                             }
                           }
                         }

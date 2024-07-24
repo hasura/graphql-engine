@@ -5,18 +5,19 @@ use super::error;
 use super::relationships::process_model_relationship_definition;
 use super::types;
 use crate::ir::filter;
+use crate::ir::selection_set::{NdcFieldName, NdcRelationshipName};
 
 /// Plan the filter expression IR.
 /// This function will take the filter expression IR and convert it into a planned filter expression
 /// that can be converted the NDC filter expression.
 /// This will record the relationships that are used in the filter expression.
-pub(crate) fn plan_filter_expression<'s, 'a>(
+pub(crate) fn plan_filter_expression<'s>(
     filter::FilterExpression {
         query_filter,
         permission_filter,
         relationship_join_filter,
-    }: &'a filter::FilterExpression<'s>,
-    relationships: &'a mut BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
+    }: &filter::FilterExpression<'s>,
+    relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
 ) -> Result<Option<types::FilterExpression<'s>>, error::Error> {
     let mut expressions = Vec::new();
 
@@ -43,7 +44,7 @@ pub(crate) fn plan_filter_expression<'s, 'a>(
 /// Plan the expression IR type.
 pub fn plan_expression<'s, 'a>(
     expression: &'a filter::expression::Expression<'s>,
-    relationships: &'a mut BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
+    relationships: &'a mut BTreeMap<NdcRelationshipName, types::Relationship>,
 ) -> Result<types::FilterExpression<'s>, error::Error> {
     match expression {
         filter::expression::Expression::And {
@@ -72,48 +73,22 @@ pub fn plan_expression<'s, 'a>(
             let result = plan_expression(not_expression, relationships)?;
             Ok(types::FilterExpression::mk_not(result))
         }
-        filter::expression::Expression::LocalField(local_field_comparison) => {
-            match local_field_comparison {
-                filter::expression::LocalFieldComparison::UnaryComparison { column, operator } => {
-                    let ndc_expression = ndc_models::Expression::UnaryComparisonOperator {
-                        column: column.clone(),
-                        operator: *operator,
-                    };
-                    Ok(types::FilterExpression::NDCComparison { ndc_expression })
-                }
-                filter::expression::LocalFieldComparison::BinaryComparison {
-                    column,
-                    operator,
-                    value,
-                } => {
-                    let ndc_expression = ndc_models::Expression::BinaryComparisonOperator {
-                        column: column.clone(),
-                        operator: operator.clone(),
-                        value: value.clone(),
-                    };
-                    Ok(types::FilterExpression::NDCComparison { ndc_expression })
-                }
-            }
-        }
+        filter::expression::Expression::LocalField(local_field_comparison) => Ok(
+            types::FilterExpression::LocalFieldComparison(local_field_comparison.clone()),
+        ),
         filter::expression::Expression::LocalRelationship {
             relationship,
-            arguments,
             predicate,
             info,
         } => {
             let relationship_filter = plan_expression(predicate, relationships)?;
-            let relationship_name = ndc_models::RelationshipName::from(relationship.as_str());
             relationships.insert(
-                relationship_name.clone(),
+                relationship.clone(),
                 process_model_relationship_definition(info)?,
             );
 
-            let exists_in_relationship = ndc_models::ExistsInCollection::Related {
-                relationship: relationship_name,
-                arguments: arguments.clone(),
-            };
             Ok(types::FilterExpression::LocalRelationshipComparison {
-                exists_in_collection: exists_in_relationship,
+                relationship: relationship.clone(),
                 predicate: Box::new(relationship_filter),
             })
         }
@@ -130,9 +105,7 @@ pub fn plan_expression<'s, 'a>(
                 relationship_name: relationship.clone(),
                 model_name: target_model_name.to_string(),
                 ndc_column_mapping: ndc_column_mapping.clone(),
-                remote_collection: ndc_models::CollectionName::from(
-                    target_model_source.collection.as_str(),
-                ),
+                remote_collection: target_model_source.collection.clone(),
                 remote_query_node: Box::new(remote_query_node),
                 collection_relationships,
                 data_connector: &target_model_source.data_connector,
@@ -148,7 +121,7 @@ fn plan_remote_predicate<'s, 'a>(
 ) -> Result<
     (
         types::QueryNode<'s>,
-        BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
+        BTreeMap<NdcRelationshipName, types::Relationship>,
     ),
     error::Error,
 > {
@@ -162,7 +135,6 @@ fn plan_remote_predicate<'s, 'a>(
         predicate: Some(planned_predicate),
         aggregates: None,
         fields: Some(build_ndc_query_fields(ndc_column_mapping)),
-        groups: None,
     };
 
     Ok((query_node, relationships))
@@ -172,16 +144,18 @@ fn plan_remote_predicate<'s, 'a>(
 /// These field values are fetched from the remote data connector.
 fn build_ndc_query_fields<'s>(
     ndc_column_mapping: &[filter::expression::RelationshipColumnMapping],
-) -> IndexMap<ndc_models::FieldName, types::Field<'s>> {
+) -> IndexMap<NdcFieldName, types::Field<'s>> {
     let mut fields = IndexMap::new();
     for mapping in ndc_column_mapping {
-        let target_column_field = ndc_models::FieldName::from(mapping.target_ndc_column.as_str());
         let field = types::Field::Column {
-            column: target_column_field.clone(),
+            column: mapping.target_ndc_column.clone(),
             fields: None,
             arguments: BTreeMap::new(),
         };
-        fields.insert(target_column_field, field);
+        fields.insert(
+            NdcFieldName::from(mapping.target_ndc_column.as_str()),
+            field,
+        );
     }
     fields
 }

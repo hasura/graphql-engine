@@ -17,11 +17,14 @@ use super::{
     model_selection::{self, model_selection_ir},
     order_by::build_ndc_order_by,
     permissions,
-    selection_set::{FieldSelection, NDCRelationshipName},
+    selection_set::{FieldSelection, NdcRelationshipName},
 };
 
-use crate::model_tracking::{count_model, UsagesCounts};
 use crate::{ir::error, model_tracking::count_command};
+use crate::{
+    model_tracking::{count_model, UsagesCounts},
+    remote_joins::types::VariableName,
+};
 use metadata_resolve::{self, serialize_qualified_btreemap, Qualified, RelationshipModelMapping};
 use schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, CommandTargetSource,
@@ -349,7 +352,7 @@ pub(crate) fn build_local_model_relationship<'s>(
 
     Ok(FieldSelection::ModelRelationshipLocal {
         query: relationships_ir,
-        name: NDCRelationshipName::new(source_type, relationship_name)?,
+        name: NdcRelationshipName::new(source_type, relationship_name)?,
         relationship_info: rel_info,
     })
 }
@@ -394,7 +397,7 @@ pub(crate) fn build_local_command_relationship<'s>(
 
     Ok(FieldSelection::CommandRelationshipLocal {
         ir: relationships_ir,
-        name: NDCRelationshipName::new(&annotation.source_type, &annotation.relationship_name)?,
+        name: NdcRelationshipName::new(&annotation.source_type, &annotation.relationship_name)?,
         relationship_info: rel_info,
     })
 }
@@ -438,15 +441,13 @@ pub(crate) fn build_remote_relationship<'s>(
     for (_source, (_field_name, target_column)) in &join_mapping {
         let target_value_variable = format!("${}", &target_column.column);
         let comparison_exp = filter_expression::LocalFieldComparison::BinaryComparison {
-            column: ndc_models::ComparisonTarget::Column {
-                name: ndc_models::FieldName::from(target_column.column.as_str()),
-                field_path: None,
+            column: filter_expression::ComparisonTarget::Column {
+                name: target_column.column.clone(),
+                field_path: vec![],
             },
-            operator: ndc_models::ComparisonOperatorName::from(
-                target_column.equal_operator.as_str(),
-            ),
-            value: ndc_models::ComparisonValue::Variable {
-                name: ndc_models::VariableName::from(target_value_variable.as_str()),
+            operator: target_column.equal_operator.clone(),
+            value: filter_expression::ComparisonValue::Variable {
+                name: VariableName(target_value_variable),
             },
         };
         relationship_join_filter_expressions

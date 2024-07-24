@@ -11,7 +11,9 @@ use lang_graphql::ast::common as ast;
 
 use open_dds::types::{CustomTypeName, TypeName};
 
-use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
+use open_dds::data_connector::{
+    DataConnectorName, DataConnectorOperatorName, DataConnectorScalarType,
+};
 
 use crate::helpers::types::mk_name;
 use crate::types::subgraph::Qualified;
@@ -221,12 +223,16 @@ pub(crate) fn get_comparison_operators(
             ndc_models::ComparisonOperatorDefinition::Equal => {
                 comparison_operators
                     .equal_operators
-                    .push(operator_name.clone());
+                    .push(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
             }
             ndc_models::ComparisonOperatorDefinition::In => {
                 comparison_operators
                     .in_operators
-                    .push(operator_name.clone());
+                    .push(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
             }
             ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {}
         };

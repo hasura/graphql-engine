@@ -63,14 +63,12 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
                         description: format!("Missing NDC column mapping for unique identifier argument {} on field {}", argument.name, field_call.name)})?;
                     let filter_expression =
                         filter_expression::LocalFieldComparison::BinaryComparison {
-                            column: ndc_models::ComparisonTarget::Column {
-                                name: ndc_models::FieldName::from(ndc_column.column.as_str()),
-                                field_path: None,
+                            column: filter_expression::ComparisonTarget::Column {
+                                name: ndc_column.column.clone(),
+                                field_path: vec![],
                             },
-                            operator: ndc_models::ComparisonOperatorName::from(
-                                ndc_column.equal_operator.as_str(),
-                            ),
-                            value: ndc_models::ComparisonValue::Scalar {
+                            operator: ndc_column.equal_operator.clone(),
+                            value: filter_expression::ComparisonValue::Scalar {
                                 value: argument.value.as_json(),
                             },
                         };

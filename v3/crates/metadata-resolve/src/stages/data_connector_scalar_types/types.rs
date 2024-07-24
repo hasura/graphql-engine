@@ -1,7 +1,9 @@
 use crate::types::subgraph::Qualified;
 use lang_graphql::ast::common as ast;
 use ndc_models;
-use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
+use open_dds::data_connector::{
+    DataConnectorName, DataConnectorOperatorName, DataConnectorScalarType,
+};
 use open_dds::types::TypeName;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -30,8 +32,8 @@ pub struct ScalarTypeWithRepresentationInfoMap<'a>(
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Default)]
 pub struct ComparisonOperators {
-    pub equal_operators: Vec<ndc_models::ComparisonOperatorName>,
-    pub in_operators: Vec<ndc_models::ComparisonOperatorName>,
+    pub equal_operators: Vec<DataConnectorOperatorName>,
+    pub in_operators: Vec<DataConnectorOperatorName>,
 }
 
 #[derive(Debug, thiserror::Error)]

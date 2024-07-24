@@ -12,7 +12,6 @@ use nonempty::NonEmpty;
 use open_dds::commands;
 use open_dds::commands::FunctionName;
 use open_dds::commands::ProcedureName;
-use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::types::DataConnectorArgumentName;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -21,6 +20,7 @@ use super::arguments;
 use super::error::InternalDeveloperError;
 use super::selection_set;
 use super::selection_set::FieldSelection;
+use super::selection_set::NdcFieldName;
 use super::selection_set::NestedSelection;
 use super::selection_set::ResultSelectionSet;
 use crate::ir::error;
@@ -267,15 +267,15 @@ fn wrap_selection_in_response_config<'a>(
             if command_source.ndc_type_opendd_type_same {
                 original_selection
             } else {
-                let headers_field_name = response_config.headers_field.as_str().to_owned();
+                let headers_field_name = NdcFieldName::from(response_config.headers_field.as_str());
                 let headers_field = FieldSelection::Column {
-                    column: DataConnectorColumnName::from(headers_field_name.as_str()),
+                    column: response_config.headers_field.clone(),
                     nested_selection: None,
                     arguments: BTreeMap::new(),
                 };
-                let result_field_name = response_config.result_field.as_str().to_owned();
+                let result_field_name = NdcFieldName::from(response_config.result_field.as_str());
                 let result_field = FieldSelection::Column {
-                    column: DataConnectorColumnName::from(result_field_name.as_str()),
+                    column: response_config.result_field.clone(),
                     nested_selection: original_selection,
                     arguments: BTreeMap::new(),
                 };

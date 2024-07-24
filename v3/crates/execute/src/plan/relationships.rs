@@ -1,12 +1,14 @@
 //! NDC query generation from 'ModelSelection' IR for relationships.
 
+use open_dds::data_connector::CollectionName;
 use open_dds::relationships::RelationshipType;
+use open_dds::types::DataConnectorArgumentName;
 use std::collections::BTreeMap;
 
-use super::selection_set;
+use super::{selection_set, types};
 use crate::ir::model_selection::ModelSelection;
 use crate::ir::relationship::{self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo};
-use crate::ir::selection_set::FieldSelection;
+use crate::ir::selection_set::{FieldSelection, NdcRelationshipName};
 use crate::plan::error;
 
 /// collect relationships recursively from IR components containing relationships,
@@ -14,7 +16,7 @@ use crate::plan::error;
 /// variable.
 pub(crate) fn collect_relationships(
     ir: &ModelSelection<'_>,
-    relationships: &mut BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
+    relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
 ) -> Result<(), error::Error> {
     // from selection fields
     if let Some(selection) = &ir.selection {
@@ -26,7 +28,7 @@ pub(crate) fn collect_relationships(
                     relationship_info,
                 } => {
                     relationships.insert(
-                        ndc_models::RelationshipName::from(name.0.as_str()),
+                        name.clone(),
                         process_model_relationship_definition(relationship_info)?,
                     );
                     collect_relationships(query, relationships)?;
@@ -37,7 +39,7 @@ pub(crate) fn collect_relationships(
                     relationship_info,
                 } => {
                     relationships.insert(
-                        ndc_models::RelationshipName::from(name.0.as_str()),
+                        name.clone(),
                         process_command_relationship_definition(relationship_info)?,
                     );
                     if let Some(nested_selection) = &ir.command_info.selection {
@@ -71,7 +73,7 @@ pub(crate) fn collect_relationships(
     if let Some(order_by) = &ir.order_by {
         for (name, relationship) in &order_by.relationships {
             let result = process_model_relationship_definition(relationship)?;
-            relationships.insert(ndc_models::RelationshipName::from(name.0.as_str()), result);
+            relationships.insert(name.clone(), result);
         }
     };
 
@@ -80,7 +82,7 @@ pub(crate) fn collect_relationships(
 
 pub fn process_model_relationship_definition(
     relationship_info: &LocalModelRelationshipInfo,
-) -> Result<ndc_models::Relationship, error::Error> {
+) -> Result<types::Relationship, error::Error> {
     let &LocalModelRelationshipInfo {
         relationship_name,
         relationship_type,
@@ -126,10 +128,7 @@ pub fn process_model_relationship_definition(
             })?;
 
             if column_mapping
-                .insert(
-                    ndc_models::FieldName::from(source_column.column.as_str()),
-                    ndc_models::FieldName::from(target_column.column.as_str()),
-                )
+                .insert(source_column.column, target_column.column.clone())
                 .is_some()
             {
                 Err(error::InternalError::MappingExistsInRelationship {
@@ -141,17 +140,10 @@ pub fn process_model_relationship_definition(
             Err(error::InternalError::RemoteRelationshipsAreNotSupported)?;
         }
     }
-    let ndc_relationship = ndc_models::Relationship {
+    let ndc_relationship = types::Relationship {
         column_mapping,
-        relationship_type: {
-            match relationship_type {
-                RelationshipType::Object => ndc_models::RelationshipType::Object,
-                RelationshipType::Array => ndc_models::RelationshipType::Array,
-            }
-        },
-        target_collection: ndc_models::CollectionName::from(
-            target_source.model.collection.as_str(),
-        ),
+        relationship_type: relationship_type.clone(),
+        target_collection: target_source.model.collection.clone(),
         arguments: BTreeMap::new(),
     };
     Ok(ndc_relationship)
@@ -159,7 +151,7 @@ pub fn process_model_relationship_definition(
 
 pub(crate) fn process_command_relationship_definition(
     relationship_info: &LocalCommandRelationshipInfo,
-) -> Result<ndc_models::Relationship, error::Error> {
+) -> Result<types::Relationship, error::Error> {
     let &LocalCommandRelationshipInfo {
         annotation,
         source_data_connector,
@@ -191,8 +183,8 @@ pub(crate) fn process_command_relationship_definition(
                 description: e.to_string(),
             })?;
 
-            let relationship_argument = ndc_models::RelationshipArgument::Column {
-                name: ndc_models::FieldName::from(source_column.column.as_str()),
+            let relationship_argument = types::RelationshipArgument::Column {
+                name: source_column.column,
             };
 
             let connector_argument_name = target_source
@@ -212,7 +204,7 @@ pub(crate) fn process_command_relationship_definition(
 
             if arguments
                 .insert(
-                    ndc_models::ArgumentName::from(connector_argument_name.as_str()),
+                    DataConnectorArgumentName::from(connector_argument_name.as_str()),
                     relationship_argument,
                 )
                 .is_some()
@@ -227,10 +219,10 @@ pub(crate) fn process_command_relationship_definition(
         }
     }
 
-    let ndc_relationship = ndc_models::Relationship {
+    let ndc_relationship = types::Relationship {
         column_mapping: BTreeMap::new(),
-        relationship_type: ndc_models::RelationshipType::Object,
-        target_collection: ndc_models::CollectionName::from(target_source.function_name.as_str()),
+        relationship_type: RelationshipType::Object,
+        target_collection: CollectionName::from(target_source.function_name.as_str()),
         arguments,
     };
     Ok(ndc_relationship)

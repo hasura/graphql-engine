@@ -130,13 +130,16 @@
                   "LocalField": {
                     "BinaryComparison": {
                       "column": {
-                        "type": "column",
-                        "name": "id"
+                        "Column": {
+                          "name": "id",
+                          "field_path": []
+                        }
                       },
                       "operator": "_eq",
                       "value": {
-                        "type": "scalar",
-                        "value": 1
+                        "Scalar": {
+                          "value": 1
+                        }
                       }
                     }
                   }

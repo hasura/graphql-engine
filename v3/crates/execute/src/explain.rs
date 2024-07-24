@@ -65,11 +65,17 @@ pub(crate) async fn explain_query_plan(
                 )
                 .await?;
 
-                let (ndc_request, data_connector) = execution_tree
+                let resolved_execution_plan = execution_tree
                     .query_execution_plan
                     .resolve(http_context)
                     .await
                     .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+
+                let data_connector = resolved_execution_plan.data_connector;
+                let ndc_request =
+                    plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
+                        .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+
                 let sequence_steps = get_execution_steps(
                     expose_internal_errors,
                     http_context,
@@ -103,11 +109,18 @@ pub(crate) async fn explain_query_plan(
                         &mut predicate_explain_steps,
                     )
                     .await?;
-                    let (ndc_request, data_connector) = execution_tree
+
+                    let resolved_execution_plan = execution_tree
                         .query_execution_plan
                         .resolve(http_context)
                         .await
                         .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+
+                    let data_connector = resolved_execution_plan.data_connector;
+                    let ndc_request =
+                        plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
+                            .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+
                     let sequence_steps = get_execution_steps(
                         expose_internal_errors,
                         http_context,
@@ -187,19 +200,24 @@ pub(crate) async fn explain_mutation_plan(
                 &mut predicate_explain_steps,
             )
             .await?;
+
+            let resolved_execution_plan = ndc_mutation_execution
+                .execution_node
+                .resolve(http_context)
+                .await
+                .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+
+            let mutation_request =
+                plan::ndc_request::make_ndc_mutation_request(resolved_execution_plan)
+                    .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+
             let sequence_steps = get_execution_steps(
                 expose_internal_errors,
                 http_context,
                 alias,
                 &ndc_mutation_execution.process_response_as,
                 ndc_mutation_execution.join_locations,
-                types::NDCRequest::Mutation(
-                    ndc_mutation_execution
-                        .execution_node
-                        .resolve(http_context)
-                        .await
-                        .map_err(|e| error::RequestError::ExplainError(e.to_string()))?,
-                ),
+                types::NDCRequest::Mutation(mutation_request),
                 ndc_mutation_execution.data_connector,
             )
             .await?;
@@ -291,13 +309,19 @@ async fn get_join_steps(
     for (alias, location) in join_locations.locations {
         let mut sequence_steps = vec![];
         if let JoinNode::Remote((remote_join, _join_id)) = location.join_node {
-            let (mut query_request, target_data_connector) = remote_join
+            let mut resolved_execution_plan = remote_join
                 .target_ndc_execution
                 .resolve(http_context)
                 .await
                 .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
-            query_request.set_variables(Some(vec![]));
+
+            resolved_execution_plan.variables = Some(vec![]);
+            let target_data_connector = resolved_execution_plan.data_connector;
+            let query_request = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
+                .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+
             let ndc_request = types::NDCRequest::Query(query_request);
+
             let data_connector_explain = fetch_explain_from_data_connector(
                 expose_internal_errors,
                 http_context,

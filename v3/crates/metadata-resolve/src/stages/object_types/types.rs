@@ -13,7 +13,7 @@ use crate::types::subgraph::Qualified;
 
 use lang_graphql::ast::common as ast;
 use open_dds::data_connector::{
-    DataConnectorColumnName, DataConnectorName, DataConnectorObjectType,
+    DataConnectorColumnName, DataConnectorName, DataConnectorObjectType, DataConnectorOperatorName,
 };
 
 /// A mapping from a data connector to their objects, which contain field types.
@@ -152,7 +152,7 @@ pub struct FieldMapping {
     pub column: DataConnectorColumnName,
     pub column_type: ndc_models::Type,
     pub column_type_representation: Option<ndc_models::TypeRepresentation>,
-    pub equal_operators: Vec<ndc_models::ComparisonOperatorName>,
+    pub equal_operators: Vec<DataConnectorOperatorName>,
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
 }
 

@@ -4560,11 +4560,19 @@
       "properties": {
         "headersField": {
           "description": "Name of the field in the NDC function/procedure's result which contains the response headers",
-          "type": "string"
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorColumnName"
+            }
+          ]
         },
         "resultField": {
           "description": "Name of the field in the NDC function/procedure's result which contains the result",
-          "type": "string"
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorColumnName"
+            }
+          ]
         },
         "forwardHeaders": {
           "description": "List of actual HTTP response headers from the data connector to be set as response headers",

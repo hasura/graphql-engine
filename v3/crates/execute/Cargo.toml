@@ -36,6 +36,7 @@ reqwest = { workspace = true, features = ["json", "multipart"] }
 schemars = { workspace = true, features = ["smol_str"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+smol_str = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
 transitive = { workspace = true }

@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use hasura_authn_core::{SessionVariableValue, SessionVariables};
 use lang_graphql::normalized_ast;
 
@@ -20,7 +18,7 @@ use schema;
 use schema::GDS;
 
 use super::relationship::LocalModelRelationshipInfo;
-use super::{arguments::Argument, selection_set::NDCRelationshipName};
+use super::{arguments::Argument, selection_set::NdcRelationshipName};
 
 /// Fetch filter expression from the namespace annotation
 /// of the field call. If the filter predicate namespace annotation
@@ -133,7 +131,7 @@ pub fn process_model_predicate<'s>(
             // Add the target model being used in the usage counts
             count_model(&relationship_info.target_model_name, usage_counts);
 
-            let relationship_name = (NDCRelationshipName::new(
+            let relationship_name = (NdcRelationshipName::new(
                 &relationship_info.source_type,
                 &relationship_info.relationship_name,
             ))?;
@@ -154,7 +152,6 @@ pub fn process_model_predicate<'s>(
 
             let local_relationship_filter = filter_expression::Expression::LocalRelationship {
                 relationship: relationship_name,
-                arguments: BTreeMap::new(),
                 predicate: Box::new(relationship_predicate),
                 info,
             };
@@ -175,12 +172,12 @@ fn make_permission_binary_boolean_expression<'s>(
         make_argument_from_value_expression(value_expression, argument_type, session_variables)?;
     Ok(filter_expression::Expression::LocalField(
         filter_expression::LocalFieldComparison::BinaryComparison {
-            column: ndc_models::ComparisonTarget::Column {
-                name: ndc_models::FieldName::from(ndc_column.as_str()),
-                field_path: None,
+            column: filter_expression::ComparisonTarget::Column {
+                name: ndc_column.clone(),
+                field_path: vec![],
             },
-            operator: ndc_models::ComparisonOperatorName::from(operator.as_str()),
-            value: ndc_models::ComparisonValue::Scalar {
+            operator: operator.clone(),
+            value: filter_expression::ComparisonValue::Scalar {
                 value: ndc_expression_value,
             },
         },
@@ -193,13 +190,11 @@ fn make_permission_unary_boolean_expression<'s>(
 ) -> filter_expression::Expression<'s> {
     filter_expression::Expression::LocalField(
         filter_expression::LocalFieldComparison::UnaryComparison {
-            column: ndc_models::ComparisonTarget::Column {
-                name: ndc_models::FieldName::from(ndc_column.as_str()),
-                field_path: None,
+            column: filter_expression::ComparisonTarget::Column {
+                name: ndc_column.clone(),
+                field_path: vec![],
             },
-            operator: match operator {
-                UnaryComparisonOperator::IsNull => ndc_models::UnaryComparisonOperator::IsNull,
-            },
+            operator,
         },
     )
 }

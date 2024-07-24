@@ -8,31 +8,31 @@ use schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use serde::Serialize;
 
 use super::relationship::LocalModelRelationshipInfo;
-use super::selection_set::NDCRelationshipName;
+use super::selection_set::NdcRelationshipName;
 
 use crate::ir::error;
 use schema;
 use schema::GDS;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub(crate) struct ResolvedOrderBy<'s> {
     pub(crate) order_by_elements: Vec<OrderByElement>,
     // relationships that were used in the order_by expression. This is helpful
     // for collecting relatinships and sending collection_relationships
-    pub(crate) relationships: BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+    pub(crate) relationships: BTreeMap<NdcRelationshipName, LocalModelRelationshipInfo<'s>>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct OrderByElement {
     pub order_direction: schema::ModelOrderByDirection,
     pub target: OrderByTarget,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub enum OrderByTarget {
     Column {
         name: DataConnectorColumnName,
-        relationship_path: Vec<NDCRelationshipName>,
+        relationship_path: Vec<NdcRelationshipName>,
     },
 }
 
@@ -116,8 +116,8 @@ pub(crate) fn build_ndc_order_by_element<'s>(
     // non-relationship column, this will be empty. The paths contains
     // the names of relationships (in order) that needs to be traversed
     // to access the column.
-    mut relationship_paths: Vec<NDCRelationshipName>,
-    relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+    mut relationship_paths: Vec<NdcRelationshipName>,
+    relationships: &mut BTreeMap<NdcRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Vec<OrderByElement>, error::Error> {
     match argument.info.generic {
@@ -167,7 +167,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
                 },
             ),
         )) => {
-            let ndc_relationship_name = NDCRelationshipName::new(source_type, relationship_name)?;
+            let ndc_relationship_name = NdcRelationshipName::new(source_type, relationship_name)?;
 
             relationships.insert(
                 ndc_relationship_name.clone(),

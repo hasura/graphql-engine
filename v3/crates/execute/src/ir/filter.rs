@@ -18,7 +18,7 @@ use schema::{self};
 use schema::{BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation};
 
 use super::relationship::LocalModelRelationshipInfo;
-use crate::ir::selection_set::NDCRelationshipName;
+use crate::ir::selection_set::NdcRelationshipName;
 
 pub mod expression;
 
@@ -228,7 +228,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
 
                         let source_ndc_column = expression::SourceNdcColumn {
                             column: source_column,
-                            field_path: to_ndc_field_path(field_path.clone()),
+                            field_path: field_path.clone(),
                             eq_operator: eq_operator.clone(),
                         };
 
@@ -257,7 +257,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
 
                 metadata_resolve::RelationshipExecutionCategory::Local => {
                     let ndc_relationship_name =
-                        NDCRelationshipName::new(source_type, relationship_name)?;
+                        NdcRelationshipName::new(source_type, relationship_name)?;
 
                     let local_model_relationship_info = LocalModelRelationshipInfo {
                         relationship_name,
@@ -272,7 +272,6 @@ fn build_filter_expression_from_boolean_expression<'s>(
 
                     Ok(expression::Expression::LocalRelationship {
                         relationship: ndc_relationship_name,
-                        arguments: BTreeMap::new(),
                         predicate: Box::new(relationship_predicate),
                         info: local_model_relationship_info,
                     })
@@ -378,11 +377,11 @@ fn build_is_null_expression<'s>(
     // Build an 'IsNull' unary comparison expression
     let unary_comparison_expression =
         expression::Expression::LocalField(expression::LocalFieldComparison::UnaryComparison {
-            column: ndc_models::ComparisonTarget::Column {
-                name: ndc_models::FieldName::from(column.as_str()),
-                field_path: to_ndc_field_path(field_path),
+            column: expression::ComparisonTarget::Column {
+                name: column.clone(),
+                field_path,
             },
-            operator: ndc_models::UnaryComparisonOperator::IsNull,
+            operator: metadata_resolve::UnaryComparisonOperator::IsNull,
         });
     // Get `_is_null` input value as boolean
     let is_null = value.as_boolean()?;
@@ -403,12 +402,12 @@ fn build_binary_comparison_expression<'s>(
     field_path: &[DataConnectorColumnName],
 ) -> expression::Expression<'s> {
     expression::Expression::LocalField(expression::LocalFieldComparison::BinaryComparison {
-        column: ndc_models::ComparisonTarget::Column {
-            name: ndc_models::FieldName::from(column.as_str()),
-            field_path: to_ndc_field_path(field_path.to_vec()),
+        column: expression::ComparisonTarget::Column {
+            name: column.clone(),
+            field_path: field_path.to_vec(),
         },
-        operator: ndc_models::ComparisonOperatorName::from(operator.as_str()),
-        value: ndc_models::ComparisonValue::Scalar {
+        operator: operator.clone(),
+        value: expression::ComparisonValue::Scalar {
             value: value.as_json(),
         },
     })
@@ -466,21 +465,5 @@ fn get_field_mapping_of_field_name(
                 field_name: field_name.clone(),
             })?
             .clone()),
-    }
-}
-
-/// Only pass a path if there are items in it
-fn to_ndc_field_path(
-    field_path: Vec<DataConnectorColumnName>,
-) -> Option<Vec<ndc_models::FieldName>> {
-    if field_path.is_empty() {
-        None
-    } else {
-        Some(
-            field_path
-                .into_iter()
-                .map(|s| ndc_models::FieldName::new(s.into_inner()))
-                .collect(),
-        )
     }
 }

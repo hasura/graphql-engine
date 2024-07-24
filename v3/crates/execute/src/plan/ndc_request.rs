@@ -1,29 +1,41 @@
-use crate::ndc;
+pub mod v01;
+pub mod v02;
+
+use crate::{error, ndc};
 use metadata_resolve::data_connectors::NdcVersion;
 
-pub(crate) fn make_ndc_query_request(
-    query_request: ndc_models::QueryRequest,
-    data_connector: &metadata_resolve::DataConnectorLink,
-) -> Result<ndc::NdcQueryRequest, ndc::migration::NdcDowngradeError> {
-    match data_connector.capabilities.supported_ndc_version {
-        NdcVersion::V01 => {
-            let v01_request = ndc::migration::v01::downgrade_v02_query_request(query_request)?;
-            Ok(ndc::NdcQueryRequest::V01(v01_request))
-        }
-        NdcVersion::V02 => Ok(ndc::NdcQueryRequest::V02(query_request)),
+use super::types;
+
+pub fn make_ndc_query_request(
+    query_execution_plan: types::QueryExecutionPlan,
+) -> Result<ndc::NdcQueryRequest, error::FieldError> {
+    match query_execution_plan
+        .data_connector
+        .capabilities
+        .supported_ndc_version
+    {
+        NdcVersion::V01 => Ok(ndc::NdcQueryRequest::V01(v01::make_query_request(
+            query_execution_plan,
+        )?)),
+        NdcVersion::V02 => Ok(ndc::NdcQueryRequest::V02(v02::make_query_request(
+            query_execution_plan,
+        )?)),
     }
 }
 
-pub(crate) fn make_ndc_mutation_request(
-    mutation_request: ndc_models::MutationRequest,
-    data_connector: &metadata_resolve::DataConnectorLink,
-) -> Result<ndc::NdcMutationRequest, ndc::migration::NdcDowngradeError> {
-    match data_connector.capabilities.supported_ndc_version {
-        NdcVersion::V01 => {
-            let v01_request =
-                ndc::migration::v01::downgrade_v02_mutation_request(mutation_request)?;
-            Ok(ndc::NdcMutationRequest::V01(v01_request))
-        }
-        NdcVersion::V02 => Ok(ndc::NdcMutationRequest::V02(mutation_request)),
+pub fn make_ndc_mutation_request(
+    mutation_execution_plan: types::MutationExecutionPlan,
+) -> Result<ndc::NdcMutationRequest, error::FieldError> {
+    match mutation_execution_plan
+        .data_connector
+        .capabilities
+        .supported_ndc_version
+    {
+        NdcVersion::V01 => Ok(ndc::NdcMutationRequest::V01(v01::make_mutation_request(
+            mutation_execution_plan,
+        )?)),
+        NdcVersion::V02 => Ok(ndc::NdcMutationRequest::V02(v02::make_mutation_request(
+            mutation_execution_plan,
+        )?)),
     }
 }

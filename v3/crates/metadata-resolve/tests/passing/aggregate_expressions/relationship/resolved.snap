@@ -457,7 +457,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             String,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -482,7 +482,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             String,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -507,7 +507,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             String,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -532,7 +532,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             String,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -557,7 +557,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             String,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -580,7 +580,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             Int32,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -603,7 +603,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             Timestamp,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -626,7 +626,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             Int32,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -649,7 +649,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             BigDecimal,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -847,7 +847,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             Int32,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -870,7 +870,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             Int32,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -893,7 +893,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             Int32,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -916,7 +916,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             Int32,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -939,7 +939,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                             BigDecimal,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -1338,7 +1338,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 String,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1363,7 +1363,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 String,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1388,7 +1388,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 String,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1413,7 +1413,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 String,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1438,7 +1438,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 String,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1461,7 +1461,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 Int32,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1484,7 +1484,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 Timestamp,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1507,7 +1507,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 Int32,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1530,7 +1530,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 BigDecimal,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -2048,7 +2048,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 Int32,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -2071,7 +2071,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 Int32,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -2094,7 +2094,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 Int32,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -2117,7 +2117,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 Int32,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -2140,7 +2140,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                                 BigDecimal,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],

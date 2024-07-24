@@ -11,6 +11,7 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common::OperationType;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
+use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::{
     commands::{FunctionName, ProcedureName},
     data_connector::{
@@ -381,8 +382,8 @@ fn to_error(
 /// Configure how NDC functions/procedures should be processed to extract
 /// headers and result
 pub struct CommandsResponseConfig {
-    pub headers_field: ndc_models::FieldName,
-    pub result_field: ndc_models::FieldName,
+    pub headers_field: DataConnectorColumnName,
+    pub result_field: DataConnectorColumnName,
     pub forward_headers: Vec<SerializableHeaderName>,
 }
 
@@ -400,8 +401,8 @@ impl CommandsResponseConfig {
             })
             .collect::<Result<Vec<_>, DataConnectorError>>()?;
         Ok(Self {
-            headers_field: ndc_models::FieldName::from(response_headers.headers_field.as_str()),
-            result_field: ndc_models::FieldName::from(response_headers.result_field.as_str()),
+            headers_field: response_headers.headers_field.clone(),
+            result_field: response_headers.result_field.clone(),
             forward_headers,
         })
     }

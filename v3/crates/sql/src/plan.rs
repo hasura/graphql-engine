@@ -19,10 +19,12 @@ use execute::HttpContext;
 use futures::TryFutureExt;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
+use crate::ndc_migration;
+
 #[derive(Debug, thiserror::Error)]
 pub enum ExecutionPlanError {
     #[error("{0}")]
-    NDCDowngradeError(#[from] execute::ndc::migration::NdcDowngradeError),
+    NDCDowngradeError(#[from] ndc_migration::NdcDowngradeError),
 
     #[error("{0}")]
     NDCExecutionError(#[from] execute::ndc::client::Error),
@@ -227,9 +229,7 @@ pub async fn fetch_from_data_connector(
     let tracer = tracing_util::global_tracer();
     let query_request = match data_connector.capabilities.supported_ndc_version {
         metadata_resolve::data_connectors::NdcVersion::V01 => execute::ndc::NdcQueryRequest::V01(
-            execute::ndc::migration::v01::downgrade_v02_query_request(
-                query_request.as_ref().clone(),
-            )?,
+            ndc_migration::v01::downgrade_v02_query_request(query_request.as_ref().clone())?,
         ),
         metadata_resolve::data_connectors::NdcVersion::V02 => {
             execute::ndc::NdcQueryRequest::V02(query_request.as_ref().clone())

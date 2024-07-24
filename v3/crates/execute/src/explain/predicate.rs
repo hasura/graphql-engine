@@ -2,7 +2,8 @@ use super::types;
 use super::HttpContext;
 use crate::error;
 use crate::explain::fetch_explain_from_data_connector;
-use crate::plan::ndc_request;
+use crate::ir::selection_set::NdcFieldName;
+use crate::plan;
 use crate::plan::types::{Field, FilterExpression, NestedField, QueryNode};
 use async_recursion::async_recursion;
 use indexmap::IndexMap;
@@ -40,7 +41,7 @@ pub(crate) async fn explain_query_predicate_node<'s>(
 async fn explain_query_predicate_fields<'s, 'a>(
     expose_internal_errors: &crate::ExposeInternalErrors,
     http_context: &HttpContext,
-    fields: Option<&'a IndexMap<ndc_models::FieldName, Field<'s>>>,
+    fields: Option<&'a IndexMap<NdcFieldName, Field<'s>>>,
     steps: &mut Vec<types::Step>,
 ) -> Result<(), error::RequestError> {
     if let Some(fields) = fields {
@@ -127,7 +128,7 @@ async fn explain_query_predicate<'s>(
         FilterExpression::Not { expression } => {
             explain_query_predicate(expose_internal_errors, http_context, expression, steps).await
         }
-        FilterExpression::NDCComparison { .. }
+        FilterExpression::LocalFieldComparison { .. }
         | FilterExpression::LocalRelationshipComparison { .. } => Ok(()),
         FilterExpression::RemoteRelationshipComparison {
             relationship_name: _,
@@ -145,22 +146,25 @@ async fn explain_query_predicate<'s>(
                 steps,
             )
             .await?;
-            let query = remote_query_node
+
+            let resolved_query_node = remote_query_node
                 .clone()
                 .resolve(http_context)
                 .await
                 .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
-            let query_request = ndc_models::QueryRequest {
+
+            let query_execution_plan = plan::types::QueryExecutionPlan {
+                query_node: resolved_query_node,
                 collection: remote_collection.clone(),
-                query,
                 arguments: BTreeMap::new(),
                 collection_relationships: collection_relationships.clone(),
                 variables: None,
+                data_connector,
             };
 
-            let ndc_query_request =
-                ndc_request::make_ndc_query_request(query_request, data_connector)
-                    .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+            let ndc_query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)
+                .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+
             let ndc_request = types::NDCRequest::Query(ndc_query_request);
             let data_connector_explain = fetch_explain_from_data_connector(
                 *expose_internal_errors,

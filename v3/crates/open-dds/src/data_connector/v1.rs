@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{arguments::ArgumentName, permissions::ValueExpression, EnvironmentValue};
 
-use super::{DataConnectorName, VersionedSchemaAndCapabilities};
+use super::{DataConnectorColumnName, DataConnectorName, VersionedSchemaAndCapabilities};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -107,17 +107,17 @@ impl Deref for AdditionalHttpHeaders {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq, opendds_derive::OpenDd, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Configuration of what HTTP response headers should be forwarded from a data
 /// connector to the client in HTTP response.
 pub struct ResponseHeaders {
     /// Name of the field in the NDC function/procedure's result which contains
     /// the response headers
-    pub headers_field: String,
+    pub headers_field: DataConnectorColumnName,
     /// Name of the field in the NDC function/procedure's result which contains
     /// the result
-    pub result_field: String,
+    pub result_field: DataConnectorColumnName,
     /// List of actual HTTP response headers from the data connector to be set as
     /// response headers
     pub forward_headers: Vec<String>,

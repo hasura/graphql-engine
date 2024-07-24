@@ -1,9 +1,24 @@
 use super::ndc_request;
-use crate::{error, ir, ndc, HttpContext};
+use crate::{
+    error,
+    ir::{
+        self,
+        aggregates::AggregateSelectionSet,
+        order_by::OrderByElement,
+        selection_set::{NdcFieldName, NdcRelationshipName},
+    },
+    ndc,
+    remote_joins::types::VariableName,
+    HttpContext,
+};
 use async_recursion::async_recursion;
 use indexmap::IndexMap;
-use metadata_resolve::data_connectors::NdcVersion;
-use open_dds::relationships::RelationshipName;
+use open_dds::{
+    commands::ProcedureName,
+    data_connector::{CollectionName, DataConnectorColumnName},
+    relationships::{RelationshipName, RelationshipType},
+    types::DataConnectorArgumentName,
+};
 use std::collections::BTreeMap;
 use tracing_util::SpanVisibility;
 
@@ -11,11 +26,14 @@ use tracing_util::SpanVisibility;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Argument<'s> {
     /// The argument is provided as a literal value
-    Literal { value: serde_json::Value },
+    Literal {
+        value: serde_json::Value,
+    },
     /// The argument is provided by reference to a variable
-    Variable { name: ndc_models::VariableName },
+    Variable {
+        name: VariableName,
+    },
     BooleanExpression {
-        ndc_version: NdcVersion,
         predicate: FilterExpression<'s>,
     },
 }
@@ -24,8 +42,7 @@ impl<'s> Argument<'s> {
     /// Generate the argument plan from IR argument
     pub fn plan<'a>(
         ir_argument: &'a ir::arguments::Argument<'s>,
-        ndc_version: NdcVersion,
-        relationships: &'a mut BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
+        relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
     ) -> Result<Self, super::error::Error> {
         let planned_argument = match ir_argument {
             ir::arguments::Argument::Literal { value } => Argument::Literal {
@@ -35,61 +52,72 @@ impl<'s> Argument<'s> {
                 let expression = super::filter::plan_expression(predicate, relationships)?;
                 Argument::BooleanExpression {
                     predicate: expression,
-                    ndc_version,
                 }
             }
         };
         Ok(planned_argument)
     }
 
-    /// Resolve the argument plan into NDC argument
-    pub async fn resolve(
-        self,
-        http_context: &HttpContext,
-    ) -> Result<ndc_models::Argument, error::FieldError> {
+    pub async fn resolve(self, http_context: &HttpContext) -> Result<Self, error::FieldError> {
         match self {
-            Argument::Literal { value } => Ok(ndc_models::Argument::Literal { value }),
-            Argument::Variable { name } => Ok(ndc_models::Argument::Variable { name }),
-            Argument::BooleanExpression {
-                predicate,
-                ndc_version,
-            } => {
-                let ndc_predicate = predicate.resolve(http_context).await?;
-                let value = match ndc_version {
-                    NdcVersion::V01 => {
-                        // Downgrade the NDC expression to V01
-                        let v01_expression =
-                            ndc::migration::v01::downgrade_v02_expression(ndc_predicate)
-                                .map_err(error::FieldInternalError::NdcRequestDowngradeError)?;
-
-                        serde_json::to_value(v01_expression)
-                            .map_err(error::FieldInternalError::ExpressionSerializationError)?
-                    }
-                    NdcVersion::V02 => serde_json::to_value(ndc_predicate)
-                        .map_err(error::FieldInternalError::ExpressionSerializationError)?,
-                };
-                Ok(ndc_models::Argument::Literal { value })
+            Argument::Literal { value } => Ok(Argument::Literal { value }),
+            Argument::Variable { name } => Ok(Argument::Variable { name }),
+            Argument::BooleanExpression { predicate } => {
+                let resolved_predicate = predicate.resolve(http_context).await?;
+                Ok(Argument::BooleanExpression {
+                    predicate: resolved_predicate,
+                })
             }
         }
     }
+}
 
-    pub async fn resolve_raw(
-        self,
-        http_context: &HttpContext,
-    ) -> Result<serde_json::Value, error::FieldError> {
-        let value = match self.resolve(http_context).await? {
-            ndc_models::Argument::Literal { value } => value,
-            ndc_models::Argument::Variable { name: _ } => {
-                Err(error::FieldInternalError::InternalGeneric {
-                    description: "Cannot encode variable argument value to raw json".to_string(),
-                })?
+/// Argument plan to express various kinds of arguments
+#[derive(Debug, Clone, PartialEq)]
+pub enum MutationArgument<'s> {
+    /// The argument is provided as a literal value
+    Literal {
+        value: serde_json::Value,
+    },
+    BooleanExpression {
+        predicate: FilterExpression<'s>,
+    },
+}
+
+impl<'s> MutationArgument<'s> {
+    /// Generate the argument plan from IR argument
+    pub fn plan<'a>(
+        ir_argument: &'a ir::arguments::Argument<'s>,
+        relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
+    ) -> Result<Self, super::error::Error> {
+        let planned_argument = match ir_argument {
+            ir::arguments::Argument::Literal { value } => MutationArgument::Literal {
+                value: value.clone(),
+            },
+            ir::arguments::Argument::BooleanExpression { predicate } => {
+                let expression = super::filter::plan_expression(predicate, relationships)?;
+                MutationArgument::BooleanExpression {
+                    predicate: expression,
+                }
             }
         };
-        Ok(value)
+        Ok(planned_argument)
+    }
+
+    pub async fn resolve(self, http_context: &HttpContext) -> Result<Self, error::FieldError> {
+        match self {
+            MutationArgument::Literal { value } => Ok(MutationArgument::Literal { value }),
+            MutationArgument::BooleanExpression { predicate } => {
+                let resolved_predicate = predicate.resolve(http_context).await?;
+                Ok(MutationArgument::BooleanExpression {
+                    predicate: resolved_predicate,
+                })
+            }
+        }
     }
 }
 
-/// Filter expression plan to be resolved into NDC expression
+/// Filter expression plan to be resolved
 #[derive(Debug, Clone, PartialEq)]
 pub enum FilterExpression<'s> {
     And {
@@ -101,20 +129,18 @@ pub enum FilterExpression<'s> {
     Not {
         expression: Box<FilterExpression<'s>>,
     },
-    NDCComparison {
-        ndc_expression: ndc_models::Expression,
-    },
+    LocalFieldComparison(ir::filter::expression::LocalFieldComparison),
     LocalRelationshipComparison {
-        exists_in_collection: ndc_models::ExistsInCollection,
+        relationship: NdcRelationshipName,
         predicate: Box<FilterExpression<'s>>,
     },
     RemoteRelationshipComparison {
         relationship_name: RelationshipName,
         model_name: String,
         ndc_column_mapping: Vec<ir::filter::expression::RelationshipColumnMapping>,
-        remote_collection: ndc_models::CollectionName,
+        remote_collection: CollectionName,
         remote_query_node: Box<QueryNode<'s>>,
-        collection_relationships: BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
+        collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
         data_connector: &'s metadata_resolve::DataConnectorLink,
     },
 }
@@ -204,49 +230,48 @@ impl<'s> FilterExpression<'s> {
 
     /// Resolve the filter expression plan and generate NDC expression.
     #[async_recursion]
-    pub async fn resolve(
-        self,
-        http_context: &HttpContext,
-    ) -> Result<ndc_models::Expression, error::FieldError>
+    pub async fn resolve(self, http_context: &HttpContext) -> Result<Self, error::FieldError>
     where
         's: 'async_recursion,
     {
         match self {
             FilterExpression::And { expressions } => {
-                let mut ndc_expressions = Vec::new();
+                let mut resolved_expressions: Vec<FilterExpression> = Vec::new();
                 for expression in expressions {
-                    let ndc_expression = expression.resolve(http_context).await?;
-                    ndc_expressions.push(ndc_expression);
+                    let resolved_expression = expression.resolve(http_context).await?;
+                    resolved_expressions.push(resolved_expression);
                 }
-                Ok(ndc_models::Expression::And {
-                    expressions: ndc_expressions,
+                Ok(FilterExpression::And {
+                    expressions: resolved_expressions,
                 })
             }
             FilterExpression::Or { expressions } => {
-                let mut ndc_expressions = Vec::new();
+                let mut resolved_expressions = Vec::new();
                 for expression in expressions {
-                    let ndc_expression = expression.resolve(http_context).await?;
-                    ndc_expressions.push(ndc_expression);
+                    let resolve_expression = expression.resolve(http_context).await?;
+                    resolved_expressions.push(resolve_expression);
                 }
-                Ok(ndc_models::Expression::Or {
-                    expressions: ndc_expressions,
+                Ok(FilterExpression::Or {
+                    expressions: resolved_expressions,
                 })
             }
             FilterExpression::Not { expression } => {
-                let ndc_expression = expression.resolve(http_context).await?;
-                Ok(ndc_models::Expression::Not {
-                    expression: Box::new(ndc_expression),
+                let resolved_expression = expression.resolve(http_context).await?;
+                Ok(FilterExpression::Not {
+                    expression: Box::new(resolved_expression),
                 })
             }
-            FilterExpression::NDCComparison { ndc_expression } => Ok(ndc_expression),
+            FilterExpression::LocalFieldComparison(local_field_comparison) => Ok(
+                FilterExpression::LocalFieldComparison(local_field_comparison),
+            ),
             FilterExpression::LocalRelationshipComparison {
-                exists_in_collection,
+                relationship,
                 predicate,
             } => {
-                let ndc_predicate = predicate.resolve(http_context).await?;
-                Ok(ndc_models::Expression::Exists {
-                    in_collection: exists_in_collection,
-                    predicate: Some(Box::new(ndc_predicate)),
+                let resolved_expression = predicate.resolve(http_context).await?;
+                Ok(FilterExpression::LocalRelationshipComparison {
+                    relationship,
+                    predicate: Box::new(resolved_expression),
                 })
             }
             FilterExpression::RemoteRelationshipComparison {
@@ -265,20 +290,17 @@ impl<'s> FilterExpression<'s> {
                     SpanVisibility::User,
                     || {
                         Box::pin(async {
-                            let query = remote_query_node.resolve(http_context).await?;
-                            let query_request = ndc_models::QueryRequest {
+                            let query_execution_plan = QueryExecutionPlan {
+                                query_node: remote_query_node.resolve(http_context).await?,
                                 collection: remote_collection,
-                                query,
                                 arguments: BTreeMap::new(),
                                 collection_relationships,
                                 variables: None,
+                                data_connector
                             };
 
-                            let ndc_query_request =
-                                ndc_request::make_ndc_query_request(
-                                    query_request,
-                                    data_connector
-                                ).map_err(error::FieldInternalError::NdcRequestDowngradeError)?;
+                            let ndc_query_request = ndc_request::make_ndc_query_request(query_execution_plan)?;
+
                             // Generate LHS mapping NDC columns values from the remote data connector
                             // using the RHS NDC columns.
                             let connector_result = ndc::fetch_from_data_connector(
@@ -296,15 +318,10 @@ impl<'s> FilterExpression<'s> {
                             )
                                 .map_err(|e| error::FilterPredicateError::NotASingleRowSet(e.to_string()))?;
 
-                            let rows = single_rowset.rows.unwrap_or_else(Vec::new);
+                            let column_comparison = build_source_column_comparisons(
+                                single_rowset.rows.unwrap_or_else(Vec::new), &ndc_column_mapping
+                            )?;
 
-                            // Check if the rows returned from the remote model within the limit
-                            // For now, this is a hard limit of 100k rows. We need to expose a metadata
-                            // configuration to the users to customize the limit.
-                            if rows.len() > 100000 {
-                                Err(error::FilterPredicateError::TooManyRowsReturned)?;
-                            }
-                            let column_comparison = build_source_column_comparisons(rows, &ndc_column_mapping)?;
                             Ok(column_comparison)
                         })
                     }
@@ -316,18 +333,18 @@ impl<'s> FilterExpression<'s> {
 
 /// Utility to store distinct comparisons to avoid duplicate comparison predicates
 /// in the remote relationship comparison expression.
-struct DistinctComparisons {
-    comparisons: Vec<ndc_models::Expression>,
+struct DistinctComparisons<'s> {
+    comparisons: Vec<FilterExpression<'s>>,
 }
 
-impl DistinctComparisons {
+impl<'s> DistinctComparisons<'s> {
     fn new() -> Self {
         DistinctComparisons {
             comparisons: Vec::new(),
         }
     }
 
-    fn push(&mut self, expression: ndc_models::Expression) {
+    fn push(&mut self, expression: FilterExpression<'s>) {
         if !self.comparisons.contains(&expression) {
             self.comparisons.push(expression);
         }
@@ -340,10 +357,10 @@ impl DistinctComparisons {
 /// WHERE (a = a_value_1 AND b = b_value_1) OR (a = a_value_2 AND b = b_value_2)
 /// The above filter is semantically equivalent to
 /// WHERE (a, b) IN ((a_value_1, b_value_1), (a_value_2, b_value_2))
-fn build_source_column_comparisons(
+fn build_source_column_comparisons<'s>(
     mut rows: Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>>,
     ndc_column_mapping: &[ir::filter::expression::RelationshipColumnMapping],
-) -> Result<ndc_models::Expression, error::FieldError> {
+) -> Result<FilterExpression<'s>, error::FieldError> {
     let mut expressions = DistinctComparisons::new();
     for row in &mut rows {
         let mut column_comparisons = Vec::new();
@@ -364,72 +381,48 @@ fn build_source_column_comparisons(
                 field_path,
                 eq_operator,
             } = &column_mapping.source_ndc_column;
-            let source_column_field = ndc_models::FieldName::from(source_column.as_str());
             // Generate LHS (source) column comparison with target column value
-            column_comparisons.push(ndc_models::Expression::BinaryComparisonOperator {
-                column: ndc_models::ComparisonTarget::Column {
-                    name: source_column_field,
-                    field_path: field_path.clone(),
+            column_comparisons.push(FilterExpression::LocalFieldComparison(
+                ir::filter::expression::LocalFieldComparison::BinaryComparison {
+                    column: ir::filter::expression::ComparisonTarget::Column {
+                        name: source_column.clone(),
+                        field_path: field_path.clone(),
+                    },
+                    operator: eq_operator.clone(),
+                    value: ir::filter::expression::ComparisonValue::Scalar {
+                        value: target_value.0,
+                    },
                 },
-                operator: eq_operator.clone(),
-                value: ndc_models::ComparisonValue::Scalar {
-                    value: target_value.0,
-                },
-            });
+            ));
         }
         // combine column comparisons from each row with AND
         // Ex. (source_column_a = target_column_value) AND (source_column_b = target_column_value)
-        expressions.push(combine_expressions(column_comparisons, |exps| {
-            ndc_models::Expression::And { expressions: exps }
-        }));
+        expressions.push(FilterExpression::mk_and(column_comparisons));
     }
     // combine all row comparisons with OR
     // Ex. (source_column_a = target_column_value) AND (source_column_b = target_column_value)
     //     OR (source_column_a = target_column_value) AND (source_column_b = target_column_value)
-    Ok(combine_expressions(expressions.comparisons, |exps| {
-        ndc_models::Expression::Or { expressions: exps }
-    }))
-}
-
-/// Combines a vector of expressions into one or returns the single item if there's only one.
-fn combine_expressions(
-    expressions: Vec<ndc_models::Expression>,
-    combiner: fn(Vec<ndc_models::Expression>) -> ndc_models::Expression,
-) -> ndc_models::Expression {
-    match expressions.as_slice() {
-        [single] => single.to_owned(),
-        _ => combiner(expressions),
-    }
+    Ok(FilterExpression::mk_or(expressions.comparisons))
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QueryExecutionPlan<'s> {
     pub query_node: QueryNode<'s>,
     /// The name of a collection
-    pub collection: ndc_models::CollectionName,
+    pub collection: CollectionName,
     /// Values to be provided to any collection arguments
-    pub arguments: BTreeMap<ndc_models::ArgumentName, Argument<'s>>,
+    pub arguments: BTreeMap<DataConnectorArgumentName, Argument<'s>>,
     /// Any relationships between collections involved in the query request
-    pub collection_relationships: BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
+    pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     /// One set of named variables for each rowset to fetch. Each variable set
     /// should be subtituted in turn, and a fresh set of rows returned.
-    pub variables: Option<Vec<BTreeMap<ndc_models::VariableName, serde_json::Value>>>,
+    pub variables: Option<Vec<BTreeMap<VariableName, serde_json::Value>>>,
     /// The data connector used to fetch the data
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
 }
 
 impl<'s> QueryExecutionPlan<'s> {
-    /// Resolve a query execution plan into a NDC Query Request to fetch data from connector.
-    pub async fn resolve(
-        self,
-        http_context: &HttpContext,
-    ) -> Result<
-        (
-            ndc::NdcQueryRequest,
-            &'s metadata_resolve::DataConnectorLink,
-        ),
-        error::FieldError,
-    > {
+    pub async fn resolve(self, http_context: &HttpContext) -> Result<Self, error::FieldError> {
         let QueryExecutionPlan {
             query_node,
             collection,
@@ -438,24 +431,15 @@ impl<'s> QueryExecutionPlan<'s> {
             variables,
             data_connector,
         } = self;
-        let query_request = ndc_models::QueryRequest {
+        let query_request = QueryExecutionPlan {
+            query_node: query_node.resolve(http_context).await?,
             collection,
-            query: query_node.resolve(http_context).await?,
             arguments: resolve_arguments(http_context, arguments).await?,
             collection_relationships,
             variables,
+            data_connector,
         };
-        let ndc_query_request = ndc_request::make_ndc_query_request(query_request, data_connector)
-            .map_err(error::FieldInternalError::NdcRequestDowngradeError)?;
-        Ok((ndc_query_request, data_connector))
-    }
-
-    /// An utility to override the variables in the query plan
-    pub fn set_variables(
-        &mut self,
-        variables: Option<Vec<BTreeMap<ndc_models::VariableName, serde_json::Value>>>,
-    ) {
-        self.variables = variables;
+        Ok(query_request)
     }
 }
 
@@ -467,23 +451,18 @@ pub struct QueryNode<'s> {
     /// Optionally offset from the Nth result
     pub offset: Option<u32>,
     /// Optionally sort results
-    pub order_by: Option<ndc_models::OrderBy>,
+    pub order_by: Option<Vec<OrderByElement>>,
     /// Optionally filter results
     pub predicate: Option<FilterExpression<'s>>,
     /// Aggregate fields of the query
-    pub aggregates: Option<IndexMap<ndc_models::FieldName, ndc_models::Aggregate>>,
+    pub aggregates: Option<AggregateSelectionSet<'s>>,
     /// Fields of the query
-    pub fields: Option<IndexMap<ndc_models::FieldName, Field<'s>>>,
-    /// Optionally group and aggregate the selected rows
-    pub groups: Option<ndc_models::Grouping>,
+    pub fields: Option<IndexMap<NdcFieldName, Field<'s>>>,
 }
 
 impl<'s> QueryNode<'s> {
     #[async_recursion]
-    pub async fn resolve(
-        self,
-        http_context: &HttpContext,
-    ) -> Result<ndc_models::Query, error::FieldError>
+    pub async fn resolve(self, http_context: &HttpContext) -> Result<Self, error::FieldError>
     where
         's: 'async_recursion,
     {
@@ -494,13 +473,12 @@ impl<'s> QueryNode<'s> {
             predicate,
             aggregates,
             fields,
-            groups,
         } = self;
-        let ndc_predicate = match predicate {
+        let predicate = match predicate {
             Some(predicate) => Some(predicate.resolve(http_context).await?),
             None => None,
         };
-        let ndc_fields = match fields {
+        let fields = match fields {
             Some(fields) => {
                 let mut ndc_fields_ = IndexMap::new();
                 for (name, field) in fields {
@@ -510,14 +488,13 @@ impl<'s> QueryNode<'s> {
             }
             None => None,
         };
-        Ok(ndc_models::Query {
+        Ok(QueryNode {
             limit,
             offset,
             order_by,
-            predicate: ndc_predicate,
+            predicate,
             aggregates,
-            fields: ndc_fields,
-            groups,
+            fields,
         })
     }
 }
@@ -527,28 +504,25 @@ impl<'s> QueryNode<'s> {
 pub enum Field<'s> {
     Column {
         /// Column
-        column: ndc_models::FieldName,
+        column: DataConnectorColumnName,
         /// Nested fields if column is array or object type
         fields: Option<NestedField<'s>>,
         /// Input field arguments
-        arguments: BTreeMap<ndc_models::ArgumentName, Argument<'s>>,
+        arguments: BTreeMap<DataConnectorArgumentName, Argument<'s>>,
     },
     Relationship {
         /// The relationship query
         query_node: Box<QueryNode<'s>>,
         /// The name of the relationship to follow for the subquery
-        relationship: ndc_models::RelationshipName,
+        relationship: NdcRelationshipName,
         /// Values to be provided to any collection arguments
-        arguments: BTreeMap<ndc_models::ArgumentName, Argument<'s>>,
+        arguments: BTreeMap<DataConnectorArgumentName, Argument<'s>>,
     },
 }
 
 impl<'s> Field<'s> {
     /// Resolve field plan into NDC field
-    pub async fn resolve(
-        self,
-        http_context: &HttpContext,
-    ) -> Result<ndc_models::Field, error::FieldError> {
+    pub async fn resolve(self, http_context: &HttpContext) -> Result<Self, error::FieldError> {
         match self {
             Field::Column {
                 column,
@@ -559,7 +533,7 @@ impl<'s> Field<'s> {
                     Some(nested_field) => Some(nested_field.resolve(http_context).await?),
                     None => None,
                 };
-                Ok(ndc_models::Field::Column {
+                Ok(Field::Column {
                     column,
                     fields: resolved_fields,
                     arguments: resolve_arguments(http_context, arguments).await?,
@@ -571,10 +545,10 @@ impl<'s> Field<'s> {
                 arguments,
             } => {
                 let query_node = query_node.resolve(http_context).await?;
-                Ok(ndc_models::Field::Relationship {
-                    query: Box::new(query_node),
+                Ok(Field::Relationship {
+                    query_node: Box::new(query_node),
                     relationship,
-                    arguments: resolve_arguments_relationship(http_context, arguments).await?,
+                    arguments: resolve_arguments(http_context, arguments).await?,
                 })
             }
         }
@@ -589,18 +563,15 @@ pub enum NestedField<'s> {
 
 impl<'s> NestedField<'s> {
     #[async_recursion]
-    pub async fn resolve(
-        self,
-        http_context: &HttpContext,
-    ) -> Result<ndc_models::NestedField, error::FieldError>
+    pub async fn resolve(self, http_context: &HttpContext) -> Result<Self, error::FieldError>
     where
         's: 'async_recursion,
     {
         match self {
-            NestedField::Object(nested_object) => Ok(ndc_models::NestedField::Object(
+            NestedField::Object(nested_object) => Ok(NestedField::Object(
                 nested_object.resolve(http_context).await?,
             )),
-            NestedField::Array(nested_array) => Ok(ndc_models::NestedField::Array(
+            NestedField::Array(nested_array) => Ok(NestedField::Array(
                 nested_array.resolve(http_context).await?,
             )),
         }
@@ -609,19 +580,16 @@ impl<'s> NestedField<'s> {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NestedObject<'s> {
-    pub fields: IndexMap<ndc_models::FieldName, Field<'s>>,
+    pub fields: IndexMap<NdcFieldName, Field<'s>>,
 }
 
 impl<'s> NestedObject<'s> {
-    pub async fn resolve(
-        self,
-        http_context: &HttpContext,
-    ) -> Result<ndc_models::NestedObject, error::FieldError> {
+    pub async fn resolve(self, http_context: &HttpContext) -> Result<Self, error::FieldError> {
         let mut fields = IndexMap::new();
         for (name, field) in self.fields {
             fields.insert(name, field.resolve(http_context).await?);
         }
-        Ok(ndc_models::NestedObject { fields })
+        Ok(NestedObject { fields })
     }
 }
 
@@ -631,27 +599,40 @@ pub struct NestedArray<'s> {
 }
 
 impl<'s> NestedArray<'s> {
-    pub async fn resolve(
-        self,
-        http_context: &HttpContext,
-    ) -> Result<ndc_models::NestedArray, error::FieldError> {
+    pub async fn resolve(self, http_context: &HttpContext) -> Result<Self, error::FieldError> {
         let fields = self.fields.resolve(http_context).await?;
-        Ok(ndc_models::NestedArray {
+        Ok(NestedArray {
             fields: Box::new(fields),
         })
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct Relationship {
+    /// A mapping between columns on the source collection to columns on the target collection
+    pub column_mapping: BTreeMap<DataConnectorColumnName, DataConnectorColumnName>,
+    pub relationship_type: RelationshipType,
+    /// The name of a collection
+    pub target_collection: CollectionName,
+    /// Values to be provided to any collection arguments
+    pub arguments: BTreeMap<DataConnectorArgumentName, RelationshipArgument>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RelationshipArgument {
+    Column { name: DataConnectorColumnName },
+}
+
 #[derive(Debug)]
 pub struct MutationExecutionPlan<'s> {
     /// The name of a procedure
-    pub procedure_name: ndc_models::ProcedureName,
+    pub procedure_name: ProcedureName,
     /// Any named procedure arguments
-    pub procedure_arguments: BTreeMap<ndc_models::ArgumentName, Argument<'s>>,
+    pub procedure_arguments: BTreeMap<DataConnectorArgumentName, MutationArgument<'s>>,
     /// The fields to return from the result, or null to return everything
     pub procedure_fields: Option<NestedField<'s>>,
     /// Any relationships between collections involved in the query request
-    pub collection_relationships: BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
+    pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     /// The data connector used to fetch the data
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
 }
@@ -660,7 +641,7 @@ impl<'s> MutationExecutionPlan<'s> {
     pub async fn resolve(
         self,
         http_context: &HttpContext,
-    ) -> Result<ndc::NdcMutationRequest, error::FieldError> {
+    ) -> Result<MutationExecutionPlan<'s>, error::FieldError> {
         let MutationExecutionPlan {
             procedure_name,
             procedure_arguments,
@@ -668,30 +649,29 @@ impl<'s> MutationExecutionPlan<'s> {
             collection_relationships,
             data_connector,
         } = self;
-        let ndc_fields = match procedure_fields {
+
+        let resolved_fields = match procedure_fields {
             Some(fields) => Some(fields.resolve(http_context).await?),
             None => None,
         };
-        let mutation_operation = ndc_models::MutationOperation::Procedure {
-            name: procedure_name,
-            arguments: resolve_arguments_raw(http_context, procedure_arguments).await?,
-            fields: ndc_fields,
-        };
-        let mutation_request = ndc_models::MutationRequest {
-            operations: vec![mutation_operation],
+
+        let resolved_arguments =
+            resolve_mutation_arguments(http_context, procedure_arguments).await?;
+
+        Ok(MutationExecutionPlan {
+            procedure_name,
+            procedure_arguments: resolved_arguments,
+            procedure_fields: resolved_fields,
             collection_relationships,
-        };
-        let ndc_mutation_request =
-            ndc_request::make_ndc_mutation_request(mutation_request, data_connector)
-                .map_err(error::FieldInternalError::NdcRequestDowngradeError)?;
-        Ok(ndc_mutation_request)
+            data_connector,
+        })
     }
 }
 
 async fn resolve_arguments<'s>(
     http_context: &HttpContext,
-    arguments: BTreeMap<ndc_models::ArgumentName, Argument<'s>>,
-) -> Result<BTreeMap<ndc_models::ArgumentName, ndc_models::Argument>, error::FieldError> {
+    arguments: BTreeMap<DataConnectorArgumentName, Argument<'s>>,
+) -> Result<BTreeMap<DataConnectorArgumentName, Argument<'s>>, error::FieldError> {
     let mut result = BTreeMap::new();
     for (argument_name, argument_value) in arguments {
         result.insert(argument_name, argument_value.resolve(http_context).await?);
@@ -699,31 +679,13 @@ async fn resolve_arguments<'s>(
     Ok(result)
 }
 
-async fn resolve_arguments_raw<'s>(
+async fn resolve_mutation_arguments<'s>(
     http_context: &HttpContext,
-    arguments: BTreeMap<ndc_models::ArgumentName, Argument<'s>>,
-) -> Result<BTreeMap<ndc_models::ArgumentName, serde_json::Value>, error::FieldError> {
+    arguments: BTreeMap<DataConnectorArgumentName, MutationArgument<'s>>,
+) -> Result<BTreeMap<DataConnectorArgumentName, MutationArgument<'s>>, error::FieldError> {
     let mut result = BTreeMap::new();
     for (argument_name, argument_value) in arguments {
-        result.insert(
-            argument_name,
-            argument_value.resolve_raw(http_context).await?,
-        );
-    }
-    Ok(result)
-}
-
-async fn resolve_arguments_relationship<'s>(
-    http_context: &HttpContext,
-    arguments: BTreeMap<ndc_models::ArgumentName, Argument<'s>>,
-) -> Result<BTreeMap<ndc_models::ArgumentName, ndc_models::RelationshipArgument>, error::FieldError>
-{
-    let mut result = BTreeMap::new();
-    for (argument_name, argument_value) in arguments {
-        let value = ndc_models::RelationshipArgument::Literal {
-            value: argument_value.resolve_raw(http_context).await?,
-        };
-        result.insert(argument_name, value);
+        result.insert(argument_name, argument_value.resolve(http_context).await?);
     }
     Ok(result)
 }

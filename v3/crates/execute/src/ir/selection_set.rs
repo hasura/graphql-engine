@@ -7,6 +7,8 @@ use open_dds::relationships::RelationshipName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, FieldName};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use smol_str::SmolStr;
+use std::borrow::Borrow;
 use std::collections::BTreeMap;
 
 use super::arguments;
@@ -41,12 +43,12 @@ pub(crate) enum FieldSelection<'s> {
         // Relationship names needs to be unique across the IR. This field contains
         // the uniquely generated relationship name. `ModelRelationshipAnnotation`
         // contains a relationship name but that is the name from the metadata.
-        name: NDCRelationshipName,
+        name: NdcRelationshipName,
         relationship_info: LocalModelRelationshipInfo<'s>,
     },
     CommandRelationshipLocal {
         ir: FunctionBasedCommand<'s>,
-        name: NDCRelationshipName,
+        name: NdcRelationshipName,
         relationship_info: LocalCommandRelationshipInfo<'s>,
     },
     ModelRelationshipRemote {
@@ -79,19 +81,72 @@ pub(crate) enum FieldSelection<'s> {
     PartialOrd,
     Ord,
 )]
-pub struct NDCRelationshipName(pub(crate) String);
+pub struct NdcRelationshipName(pub(crate) String);
 
-impl NDCRelationshipName {
+impl NdcRelationshipName {
     pub fn new(
         source_type: &metadata_resolve::Qualified<CustomTypeName>,
         relationship_name: &RelationshipName,
     ) -> Result<Self, error::Error> {
         let name = serde_json::to_string(&(source_type, relationship_name))?;
-        Ok(NDCRelationshipName(name))
+        Ok(NdcRelationshipName(name))
     }
 
     pub fn as_str(&self) -> &str {
         self.0.as_str()
+    }
+}
+
+/// An NDC field name. Not quite the same as an OpenDD FieldName
+/// since there are no character restrictions on the string itself
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, Hash, derive_more::Display, PartialOrd, Ord)]
+pub struct NdcFieldName(SmolStr);
+
+impl NdcFieldName {
+    pub fn new<T: AsRef<str>>(str: T) -> Self {
+        NdcFieldName(SmolStr::new(str))
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+
+    pub fn inner(&self) -> &SmolStr {
+        &self.0
+    }
+
+    pub fn into_inner(self) -> SmolStr {
+        self.into()
+    }
+}
+
+impl From<&str> for NdcFieldName {
+    fn from(value: &str) -> Self {
+        NdcFieldName::new(value)
+    }
+}
+
+impl From<NdcFieldName> for SmolStr {
+    fn from(value: NdcFieldName) -> Self {
+        value.0
+    }
+}
+
+impl From<NdcFieldName> for String {
+    fn from(value: NdcFieldName) -> Self {
+        value.0.as_str().to_owned()
+    }
+}
+
+impl Borrow<str> for NdcFieldName {
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl Borrow<SmolStr> for NdcFieldName {
+    fn borrow(&self) -> &SmolStr {
+        &self.0
     }
 }
 
@@ -101,13 +156,16 @@ pub(crate) struct ResultSelectionSet<'s> {
     // The fields in the selection set. They are stored in the form that would
     // be converted and sent over the wire. Serialized the map as ordered to
     // produce deterministic golden files.
-    pub(crate) fields: IndexMap<String, FieldSelection<'s>>,
+    pub(crate) fields: IndexMap<NdcFieldName, FieldSelection<'s>>,
 }
 
 impl<'s> ResultSelectionSet<'s> {
     /// Takes a 'FieldMapping' and returns the alias, if the field is found in
     /// existing fields
-    pub(crate) fn contains(&self, other_field: &metadata_resolve::FieldMapping) -> Option<String> {
+    pub(crate) fn contains(
+        &self,
+        other_field: &metadata_resolve::FieldMapping,
+    ) -> Option<NdcFieldName> {
         self.fields.iter().find_map(|(alias, field)| match field {
             FieldSelection::Column { column, .. } => {
                 if column.as_str() == other_field.column.as_str() {
@@ -125,7 +183,7 @@ fn build_global_id_fields(
     global_id_fields: &Vec<FieldName>,
     field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     field_alias: &Alias,
-    fields: &mut IndexMap<String, FieldSelection>,
+    fields: &mut IndexMap<NdcFieldName, FieldSelection>,
 ) -> Result<(), error::Error> {
     for field_name in global_id_fields {
         let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
@@ -140,7 +198,7 @@ fn build_global_id_fields(
         let global_col_id_alias = global_id::global_id_col_format(field_alias, field_name);
 
         fields.insert(
-            global_col_id_alias,
+            NdcFieldName::from(global_col_id_alias.as_str()),
             FieldSelection::Column {
                 column: field_mapping.column.clone(),
                 nested_selection: None,
@@ -291,7 +349,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                     }
 
                     fields.insert(
-                        field.alias.to_string(),
+                        NdcFieldName::from(field.alias.0.as_str()),
                         FieldSelection::Column {
                             column: field_mapping.column.clone(),
                             nested_selection,
@@ -337,7 +395,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                 }
                 OutputAnnotation::RelationshipToModel(relationship_annotation) => {
                     fields.insert(
-                        field.alias.to_string(),
+                        NdcFieldName::from(field.alias.0.as_str()),
                         relationship::generate_model_relationship_ir(
                             field,
                             relationship_annotation,
@@ -351,7 +409,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                 }
                 OutputAnnotation::RelationshipToModelAggregate(relationship_annotation) => {
                     fields.insert(
-                        field.alias.to_string(),
+                        NdcFieldName::from(field.alias.0.as_str()),
                         relationship::generate_model_aggregate_relationship_ir(
                             field,
                             relationship_annotation,
@@ -364,7 +422,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                 }
                 OutputAnnotation::RelationshipToCommand(relationship_annotation) => {
                     fields.insert(
-                        field.alias.to_string(),
+                        NdcFieldName::from(field.alias.0.as_str()),
                         relationship::generate_command_relationship_ir(
                             field,
                             relationship_annotation,

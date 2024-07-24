@@ -9,6 +9,7 @@ mod process_response;
 mod query_usage;
 mod remote_joins;
 
+pub use plan::ndc_request;
 pub use plan::plan_expression;
 use plan::ExecuteQueryResult;
 

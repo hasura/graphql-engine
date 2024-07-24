@@ -290,7 +290,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             String,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -315,7 +315,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             String,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -340,7 +340,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             String,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -365,7 +365,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             String,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -390,7 +390,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             String,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -413,7 +413,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             Int32,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -436,7 +436,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             Timestamp,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -459,7 +459,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             Int32,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -482,7 +482,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             BigDecimal,
                                         ),
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -881,7 +881,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                                 String,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -906,7 +906,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                                 String,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -931,7 +931,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                                 String,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -956,7 +956,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                                 String,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -981,7 +981,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                                 String,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1004,7 +1004,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                                 Int32,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1027,7 +1027,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                                 Timestamp,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1050,7 +1050,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                                 Int32,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -1073,7 +1073,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                                 BigDecimal,
                                             ),
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],

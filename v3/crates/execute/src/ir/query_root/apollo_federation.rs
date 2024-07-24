@@ -150,14 +150,14 @@ pub(crate) fn entities_ir<'n, 's>(
                     )?;
                     Ok(filter_expression::Expression::LocalField(
                         filter_expression::LocalFieldComparison::BinaryComparison {
-                            column: ndc_models::ComparisonTarget::Column {
-                                name: ndc_models::FieldName::from(field_mapping.column.as_str()),
-                                field_path: None, // We don't support nested fields in the key fields, so the path is empty
+                            column: filter_expression::ComparisonTarget::Column {
+                                name: field_mapping.column.clone(),
+                                field_path: vec![], // We don't support nested fields in the key fields, so the path is empty
                             },
-                            operator: ndc_models::ComparisonOperatorName::from(
-                                field_mapping.equal_operator.as_str(),
-                            ),
-                            value: ndc_models::ComparisonValue::Scalar { value: val.clone() },
+                            operator: field_mapping.equal_operator.clone(),
+                            value: filter_expression::ComparisonValue::Scalar {
+                                value: val.clone(),
+                            },
                         },
                     ))
                 })

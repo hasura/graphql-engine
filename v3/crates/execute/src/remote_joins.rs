@@ -82,6 +82,8 @@ use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;
 
+use crate::plan;
+
 use super::ndc::execute_ndc_query;
 use super::plan::ProcessResponseAs;
 use super::{error, HttpContext, ProjectId};
@@ -140,21 +142,16 @@ where
             continue;
         }
         // patch the target/RHS IR with variable values
-        let foreach_variables: Vec<BTreeMap<ndc_models::VariableName, json::Value>> = arguments
+        let foreach_variables: Vec<BTreeMap<types::VariableName, json::Value>> = arguments
             .iter()
-            .map(|bmap| {
-                bmap.iter()
-                    .map(|(k, v)| (ndc_models::VariableName::from(k.0.as_str()), v.0.clone()))
-                    .collect()
-            })
+            .map(|bmap| bmap.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect())
             .collect();
 
-        join_node
-            .target_ndc_execution
-            .set_variables(Some(foreach_variables));
+        join_node.target_ndc_execution.variables = Some(foreach_variables);
 
         let execution_node = join_node.target_ndc_execution.clone();
-        let (ndc_query, _) = execution_node.resolve(http_context).await?;
+        let resolved_execution_plan = execution_node.resolve(http_context).await?;
+        let ndc_query = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)?;
 
         // execute the remote query
         let mut target_response = tracer

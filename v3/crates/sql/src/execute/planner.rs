@@ -8,7 +8,7 @@ use datafusion::{
     physical_planner::{DefaultPhysicalPlanner, ExtensionPlanner, PhysicalPlanner},
 };
 
-use execute::plan_expression;
+use execute::{ndc_request, plan_expression};
 use indexmap::IndexMap;
 use metadata_resolve::FilterPermission;
 use open_dds::identifier::Identifier;
@@ -162,13 +162,22 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                                 "error resolving permission filter plan: {e}"
                             ))
                         })?;
-                    Ok(Some(filter))
+                    let ndc_expression = execute::ndc_request::v02::make_expression(filter)
+                        .map_err(|e| {
+                            DataFusionError::Internal(format!(
+                                "error making ndc expression from permission filter plan: {e}"
+                            ))
+                        })?;
+                    Ok(Some(ndc_expression))
                 }
             }?;
 
+            let ndc_collection_relationships =
+                ndc_request::v02::make_collection_relationships(relationships);
+
             let mut query = ndc_node.query.clone();
             query.query.predicate = permission_filter;
-            query.collection_relationships = relationships;
+            query.collection_relationships = ndc_collection_relationships;
             let ndc_pushdown = NDCPushDown::new(
                 table.http_context.clone(),
                 ndc_node.schema.inner().clone(),

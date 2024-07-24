@@ -175,7 +175,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                         },
                                         column_type_representation: None,
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -196,7 +196,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                         },
                                         column_type_representation: None,
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -217,7 +217,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                         },
                                         column_type_representation: None,
                                         equal_operators: [
-                                            ComparisonOperatorName(
+                                            DataConnectorOperatorName(
                                                 "_eq",
                                             ),
                                         ],
@@ -397,7 +397,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                             },
                                             column_type_representation: None,
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -418,7 +418,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                             },
                                             column_type_representation: None,
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],
@@ -439,7 +439,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                             },
                                             column_type_representation: None,
                                             equal_operators: [
-                                                ComparisonOperatorName(
+                                                DataConnectorOperatorName(
                                                     "_eq",
                                                 ),
                                             ],

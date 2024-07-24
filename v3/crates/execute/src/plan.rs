@@ -1,9 +1,9 @@
+mod arguments;
 mod commands;
-mod common;
 pub(crate) mod error;
 pub(crate) mod filter;
 mod model_selection;
-pub(crate) mod ndc_request;
+pub mod ndc_request;
 mod relationships;
 pub(crate) mod selection_set;
 pub(crate) mod types;
@@ -884,10 +884,13 @@ async fn resolve_ndc_query_execution(
         process_response_as,
     } = ndc_query;
 
-    let (query_request, data_connector) = execution_tree
+    let resolved_execution_plan = execution_tree
         .query_execution_plan
         .resolve(http_context)
         .await?;
+
+    let data_connector = resolved_execution_plan.data_connector;
+    let query_request = ndc_request::make_ndc_query_request(resolved_execution_plan)?;
 
     let response = ndc::execute_ndc_query(
         http_context,
@@ -932,7 +935,10 @@ async fn resolve_ndc_mutation_execution(
         join_locations: _,
     } = ndc_mutation_execution;
 
-    let mutation_request = execution_node.resolve(http_context).await?;
+    let resolved_execution_plan = execution_node.resolve(http_context).await?;
+
+    let mutation_request = ndc_request::make_ndc_mutation_request(resolved_execution_plan)?;
+
     let response = ndc::execute_ndc_mutation(
         http_context,
         &mutation_request,
