@@ -111,8 +111,9 @@ type ActionWebhookResponse = J.Value
 
 data ActionRequestInfo = ActionRequestInfo
   { _areqiUrl :: !Text,
-    _areqiBody :: !J.Value,
-    _areqiHeaders :: ![HeaderConf],
+    _areqiAction :: !ActionContext,
+    _areqiInput :: !J.Value,
+    _areqiRequestQuery :: !(Maybe GQLQueryText),
     _areqiTransformedRequest :: !(Maybe HTTP.Request)
   }
   deriving (Show, Generic)
