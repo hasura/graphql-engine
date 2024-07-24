@@ -18,7 +18,13 @@ pub(crate) fn plan_query_node<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(types::QueryNode<'s>, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
+) -> Result<
+    (
+        types::UnresolvedQueryNode<'s>,
+        JoinLocations<RemoteJoin<'s, 'ir>>,
+    ),
+    error::Error,
+> {
     let mut query_fields = None;
     let mut join_locations = JoinLocations::new();
     if let Some(selection) = &ir.selection {
@@ -51,7 +57,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
-        types::QueryExecutionPlan<'s>,
+        types::UnresolvedQueryExecutionPlan<'s>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
@@ -61,7 +67,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
 
     let (query, join_locations) =
         plan_query_node(ir, &mut collection_relationships, join_id_counter)?;
-    let execution_node = types::QueryExecutionPlan {
+    let execution_node = types::UnresolvedQueryExecutionPlan {
         query_node: query,
         collection: ir.collection.clone(),
         arguments: arguments::plan_arguments(&ir.arguments, &mut collection_relationships)?,

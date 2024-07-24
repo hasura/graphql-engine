@@ -9,9 +9,7 @@ mod process_response;
 mod query_usage;
 mod remote_joins;
 
-pub use plan::ndc_request;
-pub use plan::plan_expression;
-use plan::ExecuteQueryResult;
+pub use plan::{ndc_request, plan_expression, resolve_expression, ExecuteQueryResult};
 
 use gql::normalized_ast::Operation;
 use hasura_authn_core::Session;

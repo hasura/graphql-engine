@@ -18,7 +18,7 @@ pub(crate) fn plan_filter_expression<'s>(
         relationship_join_filter,
     }: &filter::FilterExpression<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
-) -> Result<Option<types::FilterExpression<'s>>, error::Error> {
+) -> Result<Option<filter::expression::Expression<'s>>, error::Error> {
     let mut expressions = Vec::new();
 
     if let Some(filter) = permission_filter {
@@ -38,14 +38,14 @@ pub(crate) fn plan_filter_expression<'s>(
         expressions.push(planned_expression);
     }
 
-    Ok(types::FilterExpression::mk_and(expressions).remove_always_true_expression())
+    Ok(filter::expression::Expression::mk_and(expressions).remove_always_true_expression())
 }
 
 /// Plan the expression IR type.
 pub fn plan_expression<'s, 'a>(
     expression: &'a filter::expression::Expression<'s>,
     relationships: &'a mut BTreeMap<NdcRelationshipName, types::Relationship>,
-) -> Result<types::FilterExpression<'s>, error::Error> {
+) -> Result<filter::expression::Expression<'s>, error::Error> {
     match expression {
         filter::expression::Expression::And {
             expressions: and_expressions,
@@ -55,7 +55,7 @@ pub fn plan_expression<'s, 'a>(
                 let result = plan_expression(and_expression, relationships)?;
                 results.push(result);
             }
-            Ok(types::FilterExpression::mk_and(results))
+            Ok(filter::expression::Expression::mk_and(results))
         }
         filter::expression::Expression::Or {
             expressions: or_expressions,
@@ -65,16 +65,16 @@ pub fn plan_expression<'s, 'a>(
                 let result = plan_expression(or_expression, relationships)?;
                 results.push(result);
             }
-            Ok(types::FilterExpression::mk_or(results))
+            Ok(filter::expression::Expression::mk_or(results))
         }
         filter::expression::Expression::Not {
             expression: not_expression,
         } => {
             let result = plan_expression(not_expression, relationships)?;
-            Ok(types::FilterExpression::mk_not(result))
+            Ok(filter::expression::Expression::mk_not(result))
         }
         filter::expression::Expression::LocalField(local_field_comparison) => Ok(
-            types::FilterExpression::LocalFieldComparison(local_field_comparison.clone()),
+            filter::expression::Expression::LocalField(local_field_comparison.clone()),
         ),
         filter::expression::Expression::LocalRelationship {
             relationship,
@@ -87,9 +87,10 @@ pub fn plan_expression<'s, 'a>(
                 process_model_relationship_definition(info)?,
             );
 
-            Ok(types::FilterExpression::LocalRelationshipComparison {
+            Ok(filter::expression::Expression::LocalRelationship {
                 relationship: relationship.clone(),
                 predicate: Box::new(relationship_filter),
+                info: info.clone(),
             })
         }
         filter::expression::Expression::RemoteRelationship {
@@ -99,28 +100,25 @@ pub fn plan_expression<'s, 'a>(
             ndc_column_mapping,
             predicate,
         } => {
-            let (remote_query_node, collection_relationships) =
-                plan_remote_predicate(ndc_column_mapping, predicate)?;
-            Ok(types::FilterExpression::RemoteRelationshipComparison {
-                relationship_name: relationship.clone(),
-                model_name: target_model_name.to_string(),
+            // This is a remote relationship, further planning is deferred until it is resolved
+            Ok(filter::expression::Expression::RemoteRelationship {
+                relationship: relationship.clone(),
+                target_model_name,
+                target_model_source,
                 ndc_column_mapping: ndc_column_mapping.clone(),
-                remote_collection: target_model_source.collection.clone(),
-                remote_query_node: Box::new(remote_query_node),
-                collection_relationships,
-                data_connector: &target_model_source.data_connector,
+                predicate: predicate.clone(),
             })
         }
     }
 }
 
 /// Generate comparison expression plan for remote relationshp predicate.
-fn plan_remote_predicate<'s, 'a>(
+pub fn plan_remote_predicate<'s, 'a>(
     ndc_column_mapping: &'a [filter::expression::RelationshipColumnMapping],
     predicate: &'a filter::expression::Expression<'s>,
 ) -> Result<
     (
-        types::QueryNode<'s>,
+        types::UnresolvedQueryNode<'s>,
         BTreeMap<NdcRelationshipName, types::Relationship>,
     ),
     error::Error,
@@ -144,7 +142,7 @@ fn plan_remote_predicate<'s, 'a>(
 /// These field values are fetched from the remote data connector.
 fn build_ndc_query_fields<'s>(
     ndc_column_mapping: &[filter::expression::RelationshipColumnMapping],
-) -> IndexMap<NdcFieldName, types::Field<'s>> {
+) -> IndexMap<NdcFieldName, types::Field<'s, filter::expression::Expression<'s>>> {
     let mut fields = IndexMap::new();
     for mapping in ndc_column_mapping {
         let field = types::Field::Column {

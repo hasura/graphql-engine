@@ -9,6 +9,7 @@ pub(crate) mod selection_set;
 pub(crate) mod types;
 
 pub use filter::plan_expression;
+pub use types::resolve_expression;
 
 use gql::normalized_ast;
 use gql::schema::NamespacedGetter;
@@ -107,7 +108,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 
 #[derive(Debug)]
 pub struct NDCMutationExecution<'n, 's, 'ir> {
-    pub execution_node: types::MutationExecutionPlan<'s>,
+    pub execution_node: types::UnresolvedMutationExecutionPlan<'s>,
     pub join_locations: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
     pub execution_span_attribute: String,
@@ -118,7 +119,7 @@ pub struct NDCMutationExecution<'n, 's, 'ir> {
 
 #[derive(Debug)]
 pub struct ExecutionTree<'s, 'ir> {
-    pub query_execution_plan: types::QueryExecutionPlan<'s>,
+    pub query_execution_plan: types::UnresolvedQueryExecutionPlan<'s>,
     pub remote_join_executions: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
 }
 

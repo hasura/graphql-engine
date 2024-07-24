@@ -9,7 +9,7 @@ use crate::ir::selection_set::NdcRelationshipName;
 pub fn plan_arguments<'s>(
     arguments: &BTreeMap<DataConnectorArgumentName, ir_arguments::Argument<'s>>,
     relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
-) -> Result<BTreeMap<DataConnectorArgumentName, types::Argument<'s>>, error::Error> {
+) -> Result<BTreeMap<DataConnectorArgumentName, types::UnresolvedArgument<'s>>, error::Error> {
     let mut result = BTreeMap::new();
     for (argument_name, argument_value) in arguments {
         result.insert(
@@ -23,7 +23,8 @@ pub fn plan_arguments<'s>(
 pub fn plan_mutation_arguments<'s>(
     arguments: &BTreeMap<DataConnectorArgumentName, ir_arguments::Argument<'s>>,
     relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
-) -> Result<BTreeMap<DataConnectorArgumentName, types::MutationArgument<'s>>, error::Error> {
+) -> Result<BTreeMap<DataConnectorArgumentName, types::UnresolvedMutationArgument<'s>>, error::Error>
+{
     arguments
         .iter()
         .map(|(name, argument)| {

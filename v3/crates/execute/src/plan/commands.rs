@@ -21,7 +21,13 @@ pub(crate) fn plan_query_node<'s, 'ir>(
     ir: &'ir CommandInfo<'s>,
     join_id_counter: &mut MonotonicCounter,
     relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
-) -> Result<(types::QueryNode<'s>, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
+) -> Result<
+    (
+        types::UnresolvedQueryNode<'s>,
+        JoinLocations<RemoteJoin<'s, 'ir>>,
+    ),
+    error::Error,
+> {
     let mut ndc_nested_field = None;
     let mut jl = JoinLocations::new();
     if let Some(nested_selection) = &ir.selection {
@@ -57,7 +63,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
-        types::QueryExecutionPlan<'s>,
+        types::UnresolvedQueryExecutionPlan<'s>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
@@ -88,7 +94,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
         )?;
     }
 
-    let query_request = types::QueryExecutionPlan {
+    let query_request = types::UnresolvedQueryExecutionPlan {
         query_node,
         collection: CollectionName::from(ir.function_name.as_str()),
         arguments: arguments.clone(),
@@ -105,7 +111,7 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
-        types::MutationExecutionPlan<'s>,
+        types::UnresolvedMutationExecutionPlan<'s>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,

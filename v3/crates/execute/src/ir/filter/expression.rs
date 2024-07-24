@@ -36,6 +36,17 @@ pub enum Expression<'s> {
 }
 
 impl<'s> Expression<'s> {
+    pub fn remove_always_true_expression(self) -> Option<Expression<'s>> {
+        match &self {
+            Expression::And { expressions } if expressions.is_empty() => None,
+            Expression::Not { expression } => match expression.as_ref() {
+                Expression::Or { expressions } if expressions.is_empty() => None,
+                _ => Some(self),
+            },
+            _ => Some(self),
+        }
+    }
+
     /// Creates a 'Expression::And' and applies some basic expression simplification logic
     /// to remove redundant boolean logic operators
     pub fn mk_and(expressions: Vec<Expression>) -> Expression {

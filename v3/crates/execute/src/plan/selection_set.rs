@@ -24,7 +24,13 @@ pub(crate) fn plan_nested_selection<'s, 'ir>(
     join_id_counter: &mut MonotonicCounter,
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
-) -> Result<(types::NestedField<'s>, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
+) -> Result<
+    (
+        types::UnresolvedNestedField<'s>,
+        JoinLocations<RemoteJoin<'s, 'ir>>,
+    ),
+    error::Error,
+> {
     match nested_selection {
         NestedSelection::Object(model_selection) => {
             let (fields, join_locations) =
@@ -63,12 +69,12 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
     relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
 ) -> Result<
     (
-        IndexMap<NdcFieldName, types::Field<'s>>,
+        IndexMap<NdcFieldName, types::UnresolvedField<'s>>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
 > {
-    let mut fields = IndexMap::<NdcFieldName, types::Field<'s>>::new();
+    let mut fields = IndexMap::<NdcFieldName, types::UnresolvedField<'s>>::new();
     let mut join_locations = JoinLocations::new();
     for (field_name, field) in &model_selection.fields {
         match field {
@@ -254,7 +260,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
 fn process_remote_relationship_field_mapping(
     selection: &ResultSelectionSet<'_>,
     field_mapping: &FieldMapping,
-    fields: &mut IndexMap<NdcFieldName, types::Field>,
+    fields: &mut IndexMap<NdcFieldName, types::UnresolvedField>,
 ) -> SourceFieldAlias {
     match selection.contains(field_mapping) {
         None => {

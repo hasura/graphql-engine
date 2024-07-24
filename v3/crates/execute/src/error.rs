@@ -197,6 +197,9 @@ impl TraceableError for FieldInternalError {
 
 #[derive(thiserror::Error, Debug)]
 pub enum FilterPredicateError {
+    #[error("{0}")]
+    RemoteRelationshipPlanError(Box<plan::error::Error>),
+
     #[error("remote connector request error: {0}")]
     RemoteRelationshipNDCRequest(ndc_client::Error),
 
@@ -210,6 +213,7 @@ pub enum FilterPredicateError {
 impl TraceableError for FilterPredicateError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
+            Self::RemoteRelationshipPlanError(error) => error.visibility(),
             Self::RemoteRelationshipNDCRequest(_) | Self::NotASingleRowSet(_) => {
                 ErrorVisibility::Internal
             }

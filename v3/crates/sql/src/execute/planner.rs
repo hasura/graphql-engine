@@ -8,7 +8,7 @@ use datafusion::{
     physical_planner::{DefaultPhysicalPlanner, ExtensionPlanner, PhysicalPlanner},
 };
 
-use execute::{ndc_request, plan_expression};
+use execute::{ndc_request, plan_expression, resolve_expression};
 use indexmap::IndexMap;
 use metadata_resolve::FilterPermission;
 use open_dds::identifier::Identifier;
@@ -154,8 +154,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                                 "error constructing permission filter plan: {e}"
                             ))
                         })?;
-                    let filter = filter_plan
-                        .resolve(&table.http_context.clone())
+                    let filter = resolve_expression(filter_plan, &table.http_context.clone())
                         .await
                         .map_err(|e| {
                             DataFusionError::Internal(format!(
