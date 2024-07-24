@@ -338,7 +338,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                             password: None,
                                             host: Some(
                                                 Domain(
-                                                    "postgres_connector",
+                                                    "localhost",
                                                 ),
                                             ),
                                             port: Some(

@@ -9,7 +9,7 @@
             "name": "custom_connector",
             "url": {
               "singleUrl": {
-                "value": "http://custom_connector:8101"
+                "value": "http://localhost:8101"
               }
             },
             "schema": {

@@ -119,7 +119,7 @@ services:
 
   custom_connector:
     build:
-      dockerfile: debug.Dockerfile
+      dockerfile: custom-connector.Dockerfile
     entrypoint:
       - ./bin/custom-connector
     ports:

@@ -194,7 +194,7 @@
       "name": "postgres_db",
       "url": {
         "singleUrl": {
-          "value": "http://postgres_connector:8080"
+          "value": "http://localhost:8080"
         }
       },
       "schema": {

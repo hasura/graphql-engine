@@ -128,10 +128,6 @@ stop-docker:
 # local development commands
 
 # these work by running tests locally rather than in Docker
-# to make them work, add the following lines to your `/etc/hosts` file
-# (without the '#' at the start):
-# 127.0.0.1 postgres_connector
-# 127.0.0.1 custom_connector
 
 # run the tests using local engine (once)
 test-local *ARGS: start-docker-test-deps
@@ -188,11 +184,11 @@ update-custom-connector-schema-in-test-metadata: && fix-format
     # Check if the file actually contains a custom connector DataConnectorLink
     if jq -e '
       (. | type == "object") and has("subgraphs") and (.subgraphs | length > 0) and (.subgraphs[] | has("objects") and (.objects | length > 0))
-      and any(.subgraphs[].objects[]; .kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://custom_connector:8101")' "$file" >/dev/null; then
+      and any(.subgraphs[].objects[]; .kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://localhost:8101")' "$file" >/dev/null; then
 
       # Update its schema, capabilities and version
       jq --argjson newCapabilities "$new_capabilities" --argjson newSchema "$new_schema" --arg ndcVersion "$ndc_version" '
-        (.subgraphs[].objects[] | select(.kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://custom_connector:8101").definition.schema)
+        (.subgraphs[].objects[] | select(.kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://localhost:8101").definition.schema)
         |= (.capabilities = $newCapabilities | .schema = $newSchema | .version = $ndcVersion)
       ' $file \
       | sponge $file

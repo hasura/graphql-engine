@@ -28,9 +28,6 @@ To start the reference agent only, you can do:
 docker compose up reference_agent
 ```
 
-and point the host name `reference_agent` to localhost in your `/etc/hosts`
-file.
-
 ## Run v3-engine (with reference agent)
 
 ### Building locally using `cargo`
@@ -226,10 +223,6 @@ To get this running, you can run the following command:
 METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=auth_config.json docker compose up postgres_connector engine
 ```
 
-If you are running the v3-engine locally through cargo, then you'll need to
-update the value of the `singleUrl` present in
-`crates/engine/tests/chinook/schema.json** from `"http://postgres_connector:8080"`to`"http://localhost:8100"`.
-
 ### Running tests with a single command
 
 Alternatively, the tests can be run in the same Docker image as CI:
@@ -244,7 +237,7 @@ There are some tests where we compare the output of the test against an expected
 golden file. If you make some changes which expectedly change the goldenfile,
 you can regenerate them like this:
 
-Locally (with postgres_connector pointing to localhost)
+Locally
 
 ```sh
   UPDATE_GOLDENFILES=1 cargo test

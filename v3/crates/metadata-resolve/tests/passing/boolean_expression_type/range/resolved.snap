@@ -419,7 +419,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             password: None,
                                             host: Some(
                                                 Domain(
-                                                    "custom_connector",
+                                                    "localhost",
                                                 ),
                                             ),
                                             port: Some(

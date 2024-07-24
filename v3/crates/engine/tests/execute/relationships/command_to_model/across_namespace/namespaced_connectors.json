@@ -11,7 +11,7 @@
             "name": "custom",
             "url": {
               "singleUrl": {
-                "value": "http://custom_connector:8101"
+                "value": "http://localhost:8101"
               }
             },
             "headers": {},
@@ -1302,7 +1302,7 @@
             "name": "custom",
             "url": {
               "singleUrl": {
-                "value": "http://custom_connector:8101"
+                "value": "http://localhost:8101"
               }
             },
             "headers": {},
