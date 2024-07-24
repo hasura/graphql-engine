@@ -22,7 +22,7 @@ ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 # Install Rust tools.
 COPY rust-toolchain.toml .
 RUN rustup show
-RUN cargo install cargo-chef cargo-nextest critcmp grcov just
+RUN cargo install cargo-chef cargo-nextest critcmp just
 
 COPY Cargo.toml Cargo.lock .
 
