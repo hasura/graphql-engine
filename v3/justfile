@@ -86,9 +86,6 @@ drill:
 coverage *filterexp:
   just docker_with_source_only bash coverage.sh '{{filterexp}}'
 
-generate-benchmarks gh-issue gh-token:
-  just docker_with_test_env bash benchmark.sh {{gh-issue}} {{gh-token}}
-
 run-local-with-shell:
   #!/usr/bin/env bash
   cargo run --bin custom-connector | ts "custom-connector:" &
