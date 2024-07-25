@@ -5,31 +5,12 @@
       "name": "default",
       "objects": [
         {
-          "kind": "DataConnectorLink",
-          "version": "v1",
           "definition": {
-            "name": "custom",
+            "name": "custom_connector",
             "url": {
               "singleUrl": {
-                "value": "http://localhost:8101"
+                "value": "http://localhost:8102"
               }
-            },
-            "headers": {},
-            "argumentPresets": [
-              {
-                "argument": "_headers",
-                "value": {
-                  "httpHeaders": {
-                    "forward": ["cookie", "authorization", "x-hasura-role"],
-                    "additional": {}
-                  }
-                }
-              }
-            ],
-            "responseHeaders": {
-              "headersField": "headers",
-              "resultField": "response",
-              "forwardHeaders": ["set-cookie"]
             },
             "schema": {
               "version": "v0.2",
@@ -1304,7 +1285,9 @@
                 }
               }
             }
-          }
+          },
+          "version": "v1",
+          "kind": "DataConnectorLink"
         }
       ]
     }

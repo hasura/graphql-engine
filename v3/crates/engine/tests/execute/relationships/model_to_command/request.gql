@@ -1,5 +1,5 @@
 query MyQuery {
-  ActorMany {
+  ActorMany(where: { _not: { actor_id: { _eq: 0 } } }) {
     MovieFromCommand {
       movie_id
       rating

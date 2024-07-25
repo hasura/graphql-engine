@@ -52,6 +52,70 @@
           }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "actor_boolexp",
+            "operand": {
+              "object": {
+                "type": "actor",
+                "comparableFields": [
+                  {
+                    "fieldName": "actor_id",
+                    "booleanExpressionType": "Int_boolexp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "isNull": {
+              "enable": false
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "actor_boolexp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Int_boolexp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {
+                      "_eq": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": false
+            },
+            "graphql": {
+              "typeName": "Int_boolexp"
+            }
+          }
+        },
+        {
           "kind": "TypePermissions",
           "version": "v1",
           "definition": {
@@ -94,6 +158,7 @@
               "dataConnectorName": "custom",
               "collection": "actors"
             },
+            "filterExpressionType": "actor_boolexp",
             "graphql": {
               "selectUniques": [],
               "selectMany": {

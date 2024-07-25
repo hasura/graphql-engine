@@ -28,9 +28,9 @@ async fn main() -> anyhow::Result<()> {
         .route("/explain", post(post_explain))
         .with_state(app_state);
 
-    // run it with hyper on localhost:8101
+    // run it with hyper on localhost:8102
     let host = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED);
-    let port = 8101;
+    let port = 8102;
     let socket_addr = net::SocketAddr::new(host, port);
     axum::Server::bind(&socket_addr)
         .serve(app.into_make_service())

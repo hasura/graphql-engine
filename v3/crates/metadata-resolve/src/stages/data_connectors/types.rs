@@ -21,10 +21,19 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Serialize, Deserialize)]
 pub enum NdcVersion {
     V01,
     V02,
+}
+
+impl std::fmt::Display for NdcVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            NdcVersion::V01 => write!(f, "v0.1.x"),
+            NdcVersion::V02 => write!(f, "v0.2.x"),
+        }
+    }
 }
 
 /// Map of resolved data connectors information that are used in the later

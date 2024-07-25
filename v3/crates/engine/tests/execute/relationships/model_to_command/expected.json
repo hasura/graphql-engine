@@ -4,14 +4,6 @@
       "ActorMany": [
         {
           "MovieFromCommand": {
-            "movie_id": 2,
-            "rating": 5,
-            "title": "Slumdog Millionaire"
-          },
-          "name": "Peter"
-        },
-        {
-          "MovieFromCommand": {
             "movie_id": 1,
             "rating": 4,
             "title": "Titanic"
