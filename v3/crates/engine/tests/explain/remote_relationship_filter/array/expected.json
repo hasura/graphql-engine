@@ -296,7 +296,7 @@
                             }
                           }
                         },
-                        "relationship": "[{\"subgraph\":\"default\",\"name\":\"Album\"},\"Tracks\"]",
+                        "relationship": "default___Album__Tracks",
                         "arguments": {}
                       }
                     },
@@ -307,7 +307,7 @@
                           "type": "exists",
                           "in_collection": {
                             "type": "related",
-                            "relationship": "[{\"subgraph\":\"default\",\"name\":\"Album\"},\"Tracks\"]",
+                            "relationship": "default___Album__Tracks",
                             "arguments": {}
                           },
                           "predicate": {
@@ -342,7 +342,7 @@
                   },
                   "arguments": {},
                   "collection_relationships": {
-                    "[{\"subgraph\":\"default\",\"name\":\"Album\"},\"Tracks\"]": {
+                    "default___Album__Tracks": {
                       "column_mapping": {
                         "AlbumId": "AlbumId"
                       },
@@ -857,7 +857,7 @@
                           "type": "exists",
                           "in_collection": {
                             "type": "related",
-                            "relationship": "[{\"subgraph\":\"default\",\"name\":\"Artist\"},\"Albums\"]",
+                            "relationship": "default___Artist__Albums",
                             "arguments": {}
                           },
                           "predicate": {
@@ -1261,7 +1261,7 @@
                   },
                   "arguments": {},
                   "collection_relationships": {
-                    "[{\"subgraph\":\"default\",\"name\":\"Artist\"},\"Albums\"]": {
+                    "default___Artist__Albums": {
                       "column_mapping": {
                         "ArtistId": "ArtistId"
                       },
@@ -1306,7 +1306,7 @@
                   "type": "exists",
                   "in_collection": {
                     "type": "related",
-                    "relationship": "[{\"subgraph\":\"default\",\"name\":\"Artist\"},\"Albums\"]",
+                    "relationship": "default___Artist__Albums",
                     "arguments": {}
                   },
                   "predicate": {
@@ -1726,7 +1726,7 @@
               },
               "arguments": {},
               "collection_relationships": {
-                "[{\"subgraph\":\"default\",\"name\":\"Artist\"},\"Albums\"]": {
+                "default___Artist__Albums": {
                   "column_mapping": {
                     "ArtistId": "ArtistId"
                   },

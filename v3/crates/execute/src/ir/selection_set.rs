@@ -81,15 +81,20 @@ pub(crate) enum FieldSelection<'s> {
     PartialOrd,
     Ord,
 )]
-pub struct NdcRelationshipName(pub(crate) String);
+pub struct NdcRelationshipName(pub(crate) SmolStr);
 
 impl NdcRelationshipName {
     pub fn new(
         source_type: &metadata_resolve::Qualified<CustomTypeName>,
         relationship_name: &RelationshipName,
     ) -> Result<Self, error::Error> {
-        let name = serde_json::to_string(&(source_type, relationship_name))?;
-        Ok(NdcRelationshipName(name))
+        let name = format!(
+            "{}___{}__{}",
+            source_type.subgraph,
+            source_type.name,
+            relationship_name.as_str()
+        );
+        Ok(NdcRelationshipName(SmolStr::new(name)))
     }
 
     pub fn as_str(&self) -> &str {
@@ -160,8 +165,7 @@ pub(crate) struct ResultSelectionSet<'s> {
 }
 
 impl<'s> ResultSelectionSet<'s> {
-    /// Takes a 'FieldMapping' and returns the alias, if the field is found in
-    /// existing fields
+    /// Check if the field is found in existing fields. Returns the alias of the field.
     pub(crate) fn contains(
         &self,
         other_field: &metadata_resolve::FieldMapping,

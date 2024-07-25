@@ -669,7 +669,7 @@
                                             },
                                             "aggregate_selection": null
                                           },
-                                          "name": "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]",
+                                          "name": "default___author__Articles",
                                           "relationship_info": {
                                             "relationship_name": "Articles",
                                             "relationship_type": "Array",
@@ -843,7 +843,7 @@
                                   },
                                   "aggregate_selection": null
                                 },
-                                "name": "[{\"subgraph\":\"default\",\"name\":\"article\"},\"Author\"]",
+                                "name": "default___article__Author",
                                 "relationship_info": {
                                   "relationship_name": "Author",
                                   "relationship_type": "Object",
@@ -1005,7 +1005,7 @@
                         },
                         "aggregate_selection": null
                       },
-                      "name": "[{\"subgraph\":\"default\",\"name\":\"commandArticle\"},\"article\"]",
+                      "name": "default___commandArticle__article",
                       "relationship_info": {
                         "relationship_name": "article",
                         "relationship_type": "Object",
