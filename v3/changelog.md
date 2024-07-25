@@ -8,6 +8,12 @@
 
 ### Changed
 
+## [v2024.07.25]
+
+### Fixed
+
+- Ensured `traceresponse` header is returned
+
 ## [v2024.07.24]
 
 ### Added
