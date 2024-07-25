@@ -6,7 +6,7 @@ pub enum BuildError {
     UnableToBuildSchema(#[from] schema::Error),
 }
 
-/// this is used by Metadata Build Service
+/// this function is used by Metadata Build Service
 pub fn build_schema(
     metadata: open_dds::Metadata,
     metadata_resolve_configuration: metadata_resolve::configuration::Configuration,

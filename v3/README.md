@@ -249,21 +249,6 @@ Docker:
   just update-golden-files
 ```
 
-### Running coverage report
-
-We can check for coverage of unit tests by running:
-
-```sh
-just coverage
-```
-
-You can also give a filter expression (which is passed to `grep -E`) to give
-coverage only for matched files:
-
-```sh
-just coverage "open-dds|engine"
-```
-
 ## Run benchmarks
 
 The benchmarks operate against the reference agent using the same test cases as
@@ -275,10 +260,4 @@ To run benchmarks for the lexer, parser and validation:
 cargo bench -p lang-graphql "lexer"
 cargo bench -p lang-graphql "parser"
 cargo bench -p lang-graphql "validation/.*"
-```
-
-Alternatively, the benchmarks can be run in the same Docker image as CI:
-
-```sh
-just ci-bench
 ```

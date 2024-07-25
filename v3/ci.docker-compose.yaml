@@ -44,34 +44,5 @@ services:
     environment:
       RUST_LOG: info
 
-  source_only:
-    build:
-      dockerfile: debug.Dockerfile
-    volumes:
-      - ./auth_config.json:/app/auth_config.json
-      - ./benchmark.sh:/app/benchmark.sh
-      - ./coverage.sh:/app/coverage.sh
-      - ./crates:/app/crates
-      - ./coverage:/app/coverage
-
-  test_setup:
-    build:
-      dockerfile: debug.Dockerfile
-    depends_on:
-      postgres:
-        condition: service_healthy
-      postgres_connector:
-        condition: service_healthy
-      custom_connector:
-        condition: service_healthy
-      custom_connector_ndc_v01:
-        condition: service_started
-    volumes:
-      - ./auth_config.json:/app/auth_config.json
-      - ./benchmark.sh:/app/benchmark.sh
-      - ./coverage.sh:/app/coverage.sh
-      - ./crates:/app/crates
-      - ./coverage:/app/coverage
-
 volumes:
   postgres:

@@ -3,7 +3,7 @@
 services:
   engine:
     build:
-      dockerfile: debug.Dockerfile
+      dockerfile: Dockerfile
     entrypoint:
       - ./bin/engine
     environment:
