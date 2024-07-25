@@ -3,6 +3,7 @@ use opentelemetry::trace::Span; // 'Span'-the-trait, c.f. to 'Span'-the-struct. 
                                 // 'set_attribute' method.
 use opentelemetry::propagation::composite::TextMapCompositePropagator;
 use opentelemetry::{global, trace::TraceError, KeyValue};
+pub use opentelemetry_contrib::trace::propagator::trace_context_response::TraceContextResponsePropagator;
 use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
 use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
 use opentelemetry_sdk::trace::{SpanProcessor, TracerProvider as SDKTracerProvider};
@@ -20,6 +21,7 @@ pub fn initialize_tracing(
         Box::new(TraceContextPropagator::new()),
         Box::new(opentelemetry_zipkin::Propagator::new()),
         Box::new(BaggagePropagator::new()),
+        Box::new(TraceContextResponsePropagator::new()),
     ]));
 
     let mut resource_entries = vec![KeyValue::new(semcov::resource::SERVICE_NAME, service_name)];
