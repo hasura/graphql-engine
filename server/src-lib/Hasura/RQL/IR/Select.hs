@@ -127,6 +127,10 @@ data QueryDB (b :: BackendType) (r :: Type) v
   | QDBStreamMultipleRows (AnnSimpleStreamSelectG b r v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
+deriving stock instance
+  (Backend b, Show r, Show v, Show (AggregationPredicates b v), Show (BooleanOperators b v), Show (FunctionArgumentExp b v), Show (CountType b v)) =>
+  Show (QueryDB b r v)
+
 instance (Backend b) => Bifoldable (QueryDB b) where
   bifoldMap f g = \case
     QDBMultipleRows annSel -> bifoldMapAnnSelectG f g annSel

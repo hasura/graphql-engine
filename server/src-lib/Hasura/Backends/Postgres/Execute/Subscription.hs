@@ -115,7 +115,7 @@ validateVariablesTx variableValues = do
 -- Multiplexed queries
 
 newtype MultiplexedQuery = MultiplexedQuery {unMultiplexedQuery :: PG.Query}
-  deriving (Eq, Hashable)
+  deriving (Eq, Hashable, Show)
 
 instance ToTxt MultiplexedQuery where
   toTxt = PG.getQueryText . unMultiplexedQuery
