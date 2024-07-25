@@ -40,6 +40,7 @@ use execute::HttpContext;
 use hasura_authn_core::Session;
 use hasura_authn_jwt::auth as jwt_auth;
 use hasura_authn_jwt::jwt;
+use hasura_authn_noauth as noauth;
 use hasura_authn_webhook::webhook;
 use lang_graphql as gql;
 use schema::GDS;
@@ -548,6 +549,10 @@ where
                 Box::pin(async {
                     match &engine_state.auth_config {
                         V1AuthConfig(auth_config) => match &auth_config.mode {
+                            AuthModeConfig::NoAuth(no_auth_config) => {
+                                Ok(noauth::identity_from_config(no_auth_config))
+                            }
+
                             AuthModeConfig::Webhook(webhook_config) => {
                                 webhook::authenticate_request(
                                     &engine_state.http_context.client,

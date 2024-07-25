@@ -1,16 +1,19 @@
 use hasura_authn_core::Role;
 use hasura_authn_jwt::jwt;
+use hasura_authn_noauth as noauth;
 use hasura_authn_webhook::webhook;
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[schemars(title = "AuthModeConfig")]
-/// The configuration for the authentication mode to use - webhook or JWT.
+/// The configuration for the authentication mode to use - webhook, JWT or NoAuth.
 pub enum AuthModeConfig {
     Webhook(webhook::AuthHookConfig),
     Jwt(Box<jwt::JWTConfig>),
+    NoAuth(noauth::NoAuthConfig),
 }
 
 #[derive(Serialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd, Deserialize)]

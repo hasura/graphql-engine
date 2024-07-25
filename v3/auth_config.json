@@ -3,9 +3,11 @@
   "definition": {
     "allowRoleEmulationBy": "admin",
     "mode": {
-      "webhook": {
-        "url": "http://auth_hook:3050/validate-request",
-        "method": "Post"
+      "noAuth": {
+        "role": "admin",
+        "sessionVariables": {
+          "x-hasura-user-id": "1"
+        }
       }
     }
   }

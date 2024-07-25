@@ -58,7 +58,7 @@
     "AuthModeConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/AuthModeConfig",
       "title": "AuthModeConfig",
-      "description": "The configuration for the authentication mode to use - webhook or JWT.",
+      "description": "The configuration for the authentication mode to use - webhook, JWT or NoAuth.",
       "oneOf": [
         {
           "type": "object",
@@ -80,6 +80,18 @@
           "properties": {
             "jwt": {
               "$ref": "#/definitions/JWTConfig"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "noAuth"
+          ],
+          "properties": {
+            "noAuth": {
+              "$ref": "#/definitions/NoAuthConfig"
             }
           },
           "additionalProperties": false
@@ -307,36 +319,42 @@
         }
       ]
     },
-    "EnvironmentValue": {
-      "$id": "https://hasura.io/jsonschemas/EnvironmentValue",
-      "title": "EnvironmentValue",
-      "description": "Either a literal string or a reference to a Hasura secret",
-      "oneOf": [
+    "NoAuthConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/NoAuthConfig",
+      "title": "NoAuthConfig",
+      "description": "Configuration used when running engine without authentication",
+      "examples": [
         {
-          "type": "object",
-          "required": [
-            "value"
-          ],
-          "properties": {
-            "value": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "valueFromEnv"
-          ],
-          "properties": {
-            "valueFromEnv": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
+          "role": "admin",
+          "sessionVariables": {
+            "x-hasura-user-id": "100"
+          }
         }
-      ]
+      ],
+      "type": "object",
+      "required": [
+        "role",
+        "sessionVariables"
+      ],
+      "properties": {
+        "role": {
+          "description": "role to assume whilst running the engine",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Role"
+            }
+          ]
+        },
+        "sessionVariables": {
+          "title": "SessionVariables",
+          "description": "static session variables to use whilst running the engine",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/SessionVariableValue"
+          }
+        }
+      },
+      "additionalProperties": false
     },
     "JWTClaimsMappingPathEntry_for_Role": {
       "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingPathEntry_for_Role",
@@ -459,6 +477,7 @@
       ]
     },
     "SessionVariableValue": {
+      "description": "Value of a session variable",
       "type": "string"
     },
     "JWTClaimsMappingPathEntry_for_SessionVariableValue": {
@@ -751,6 +770,37 @@
           "enum": [
             "EdDSA"
           ]
+        }
+      ]
+    },
+    "EnvironmentValue": {
+      "$id": "https://hasura.io/jsonschemas/EnvironmentValue",
+      "title": "EnvironmentValue",
+      "description": "Either a literal string or a reference to a Hasura secret",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "valueFromEnv"
+          ],
+          "properties": {
+            "valueFromEnv": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
         }
       ]
     }

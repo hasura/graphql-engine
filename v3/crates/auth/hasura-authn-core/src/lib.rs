@@ -22,10 +22,8 @@ pub use open_dds::{
     session_variables::{SessionVariable, SESSION_VARIABLE_ROLE},
 };
 
-// Value of a session variable
-// TODO: This need to change to serde_json::Value
-// TODO: Get rid of the pub access to inner value
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize, JsonSchema)]
+/// Value of a session variable
 pub struct SessionVariableValue(pub String);
 
 impl SessionVariableValue {

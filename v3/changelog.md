@@ -4,6 +4,10 @@
 
 ### Added
 
+- New `NoAuth` mode in auth config can be used to provide a static role and
+  session variables to use whilst running the engine, to make getting started
+  easier.
+
 ### Fixed
 
 ### Changed

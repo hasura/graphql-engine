@@ -1722,6 +1722,7 @@ dependencies = [
  "goldenfile",
  "hasura-authn-core",
  "hasura-authn-jwt",
+ "hasura-authn-noauth",
  "hasura-authn-webhook",
  "json_value_merge",
  "lang-graphql",
@@ -2187,6 +2188,16 @@ dependencies = [
  "tokio",
  "tracing-util",
  "url",
+]
+
+[[package]]
+name = "hasura-authn-noauth"
+version = "0.1.0"
+dependencies = [
+ "hasura-authn-core",
+ "schemars",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

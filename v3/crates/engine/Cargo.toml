@@ -24,6 +24,7 @@ harness = false
 execute = { path = "../execute" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 hasura-authn-jwt = { path = "../auth/hasura-authn-jwt" }
+hasura-authn-noauth = { path = "../auth/hasura-authn-noauth" }
 hasura-authn-webhook = { path = "../auth/hasura-authn-webhook" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }
