@@ -439,7 +439,7 @@ pub enum Error {
     #[error("{0}")]
     ModelAggregateExpressionError(ModelAggregateExpressionError),
     #[error("{0}")]
-    DataConnectorError(#[from] data_connectors::DataConnectorError),
+    DataConnectorError(#[from] data_connectors::NamedDataConnectorError),
     #[error("{0}")]
     TypePermissionError(type_permissions::TypePermissionError),
     #[error("{0}")]

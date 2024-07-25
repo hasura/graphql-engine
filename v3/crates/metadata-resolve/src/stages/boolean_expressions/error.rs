@@ -107,6 +107,6 @@ pub enum BooleanExpressionError {
     #[error("data connector error in boolean expression {boolean_expression_name:}: {data_connector_error:}")]
     DataConnectorError {
         boolean_expression_name: Qualified<CustomTypeName>,
-        data_connector_error: data_connectors::DataConnectorError,
+        data_connector_error: data_connectors::NamedDataConnectorError,
     },
 }

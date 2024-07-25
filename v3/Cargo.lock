@@ -2792,8 +2792,11 @@ dependencies = [
  "ref-cast",
  "reqwest",
  "schemars",
+ "semver",
  "serde",
  "serde_json",
+ "strum",
+ "strum_macros",
  "thiserror",
  "url",
 ]
