@@ -595,6 +595,7 @@ callWebhook
         responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
         (EnvRecord webhookEnvName resolvedWebhookValue) = resolvedWebhook
         webhookUrl = unResolvedWebhook resolvedWebhookValue
+        actionContext = _awpAction actionWebhookPayload
         sessionVars = Just $ _awpSessionVariables actionWebhookPayload
 
     initReq <- liftIO $ HTTP.mkRequestThrow webhookUrl
@@ -629,7 +630,13 @@ callWebhook
       Tracing.traceHTTPRequest tracesPropagator actualReq $ \request ->
         liftIO . try $ HTTP.httpLbs request manager
 
-    let requestInfo = ActionRequestInfo webhookEnvName postPayload (confHeaders <> toHeadersConf clientHeaders) transformedReq
+    let requestInfo =
+          ActionRequestInfo
+            webhookEnvName
+            actionContext
+            (_awpInput actionWebhookPayload)
+            (_awpRequestQuery actionWebhookPayload)
+            transformedReq
 
     case httpResponse of
       Left e ->
@@ -640,7 +647,7 @@ callWebhook
         -- TODO(SOLOMON): Remove 'wreq'
         let responseBody = responseWreq ^. Wreq.responseBody
             responseBodySize = BL.length responseBody
-            actionName = _acName $ _awpAction actionWebhookPayload
+            actionName = _acName actionContext
             responseStatus = responseWreq ^. Wreq.responseStatus
             mkResponseInfo respBody =
               ActionResponseInfo (HTTP.statusCode responseStatus) respBody
@@ -678,7 +685,7 @@ callWebhook
             let responseInfo = mkResponseInfo $ J.String $ bsToTxt $ BL.toStrict responseBody
             throw500WithDetail "not a valid json response from webhook"
               $ J.toJSON
-              $ ActionInternalError (J.toJSON $ "invalid json: " <> e) requestInfo
+              $ ActionInternalError (J.toJSON $ "invalid JSON: " <> e) requestInfo
               $ Just responseInfo
           Right responseValue -> do
             let responseInfo = mkResponseInfo responseValue
