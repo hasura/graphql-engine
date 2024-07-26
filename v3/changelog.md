@@ -265,7 +265,9 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.07.18...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.07.25...HEAD
+[v2024.07.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.25
+[v2024.07.24]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.24
 [v2024.07.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.18
 [v2024.07.10]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.10
 [v2024.07.04]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.04
