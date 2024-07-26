@@ -95,6 +95,7 @@ explainGQLQuery ::
     MonadQueryTags m,
     MonadTrace m
   ) =>
+  Options.RemoveEmptySubscriptionResponses ->
   Options.BackwardsCompatibleNullInNonNullableVariables ->
   Options.NoNullUnboundVariableDefault ->
   SchemaCache ->
@@ -103,7 +104,7 @@ explainGQLQuery ::
   GQLExplain ->
   ResponseInternalErrorsConfig ->
   m EncJSON
-explainGQLQuery nullInNonNullableVariables noNullUnboundVariableDefault sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) responseErrorsConfig = do
+explainGQLQuery removeEmptySubscriptionResponses nullInNonNullableVariables noNullUnboundVariableDefault sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) responseErrorsConfig = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <-
     mkUserInfo
@@ -137,7 +138,7 @@ explainGQLQuery nullInNonNullableVariables noNullUnboundVariableDefault sc agent
       -- TODO: validate directives here
       -- query-tags are not necessary for EXPLAIN API
       -- RequestContext are not necessary for EXPLAIN API
-      ((validSubscription, _), _) <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query) responseErrorsConfig
+      ((validSubscription, _), _) <- E.buildSubscriptionPlan removeEmptySubscriptionResponses userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query) responseErrorsConfig
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB (E.SSLivequery actionIds liveQueryBuilder) -> do

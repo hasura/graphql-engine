@@ -68,7 +68,10 @@ instance BackendExecute 'MSSQL where
 
   mkDBQueryPlan = msDBQueryPlan
   mkDBMutationPlan = msDBMutationPlan
-  mkLiveQuerySubscriptionPlan = msDBLiveQuerySubscriptionPlan
+
+  -- TODO: MSSQL currently does not recognise the
+  -- RemoveEmptySubscriptionResponses flag.
+  mkLiveQuerySubscriptionPlan _ = msDBLiveQuerySubscriptionPlan
   mkDBStreamingSubscriptionPlan _ _ _ _ _ _ = throw500 "Streaming subscriptions are not supported for MS-SQL sources yet"
   mkDBQueryExplain = msDBQueryExplain
   mkSubscriptionExplain = msDBSubscriptionExplain

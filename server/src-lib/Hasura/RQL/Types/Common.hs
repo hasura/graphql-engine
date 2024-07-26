@@ -303,6 +303,7 @@ data SQLGenCtx = SQLGenCtx
     dangerousBooleanCollapse :: Options.DangerouslyCollapseBooleans,
     nullInNonNullableVariables :: Options.BackwardsCompatibleNullInNonNullableVariables,
     noNullUnboundVariableDefault :: Options.NoNullUnboundVariableDefault,
+    removeEmptySubscriptionResponses :: Options.RemoveEmptySubscriptionResponses,
     remoteNullForwardingPolicy :: Options.RemoteNullForwardingPolicy,
     optimizePermissionFilters :: Options.OptimizePermissionFilters,
     bigqueryStringNumericInput :: Options.BigQueryStringNumericInput

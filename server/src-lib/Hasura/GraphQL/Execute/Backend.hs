@@ -113,6 +113,7 @@ class
       MonadBaseControl IO m,
       MonadReader QueryTagsComment m
     ) =>
+    Options.RemoveEmptySubscriptionResponses ->
     UserInfo ->
     SourceName ->
     SourceConfig b ->

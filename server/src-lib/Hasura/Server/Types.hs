@@ -107,6 +107,7 @@ data ExperimentalFeature
   | EFGroupByAggregations
   | EFDisablePostgresArrays
   | EFNoNullUnboundVariableDefault
+  | EFRemoveEmptySubscriptionResponses
   deriving (Bounded, Enum, Eq, Generic, Show)
 
 experimentalFeatureKey :: ExperimentalFeature -> Text
@@ -123,6 +124,7 @@ experimentalFeatureKey = \case
   EFGroupByAggregations -> "group_by_aggregations"
   EFDisablePostgresArrays -> "disable_postgres_arrays"
   EFNoNullUnboundVariableDefault -> "no_null_unbound_variable_default"
+  EFRemoveEmptySubscriptionResponses -> "remove_empty_subscription_responses"
 
 instance Hashable ExperimentalFeature
 

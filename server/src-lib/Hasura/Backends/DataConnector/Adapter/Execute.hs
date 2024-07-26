@@ -99,7 +99,7 @@ instance BackendExecute 'DataConnector where
         modelInfo
       )
 
-  mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ =
+  mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ _ =
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
 
   mkDBStreamingSubscriptionPlan _ _ _ _ _ _ =

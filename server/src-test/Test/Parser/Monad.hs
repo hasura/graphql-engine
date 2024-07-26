@@ -73,7 +73,8 @@ defaultSchemaOptions =
       soBigQueryStringNumericInput = Options.EnableBigQueryStringNumericInput,
       soIncludeGroupByAggregateFields = Options.IncludeGroupByAggregateFields,
       soPostgresArrays = Options.UsePostgresArrays,
-      soNoNullUnboundVariableDefault = Options.DefaultUnboundNullableVariablesToNull
+      soNoNullUnboundVariableDefault = Options.DefaultUnboundNullableVariablesToNull,
+      soRemoveEmptySubscriptionResponses = Options.PreserveEmptyResponses
     }
 
 instance Has NamingCase SchemaEnvironment where

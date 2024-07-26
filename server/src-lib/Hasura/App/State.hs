@@ -355,7 +355,11 @@ initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse nullInN
       noNullUnboundVariableDefault
         | EFNoNullUnboundVariableDefault `elem` experimentalFeatures = Options.RemoveUnboundNullableVariablesFromTheQuery
         | otherwise = Options.DefaultUnboundNullableVariablesToNull
-   in SQLGenCtx stringifyNum dangerousBooleanCollapse nullInNonNullableVariables noNullUnboundVariableDefault remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput
+
+      removeEmptySubscriptionResponses
+        | EFRemoveEmptySubscriptionResponses `elem` experimentalFeatures = Options.RemoveEmptyResponses
+        | otherwise = Options.PreserveEmptyResponses
+   in SQLGenCtx stringifyNum dangerousBooleanCollapse nullInNonNullableVariables noNullUnboundVariableDefault removeEmptySubscriptionResponses remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput
 
 buildCacheStaticConfig :: AppEnv -> CacheStaticConfig
 buildCacheStaticConfig AppEnv {..} =

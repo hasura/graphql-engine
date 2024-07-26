@@ -467,6 +467,7 @@ pgDBLiveQuerySubscriptionPlan ::
     PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
+  Options.RemoveEmptySubscriptionResponses ->
   UserInfo ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
@@ -475,7 +476,7 @@ pgDBLiveQuerySubscriptionPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   m (SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)), [ModelInfoPart])
-pgDBLiveQuerySubscriptionPlan userInfo sourceName sourceConfig namespace unpreparedAST reqHeaders operationName = do
+pgDBLiveQuerySubscriptionPlan removeEmptySubscriptionResponses userInfo sourceName sourceConfig namespace unpreparedAST reqHeaders operationName = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty
       $ for unpreparedAST
@@ -492,7 +493,7 @@ pgDBLiveQuerySubscriptionPlan userInfo sourceName sourceConfig namespace unprepa
   let modelInfo = getModelInfoPartfromModelNames modelNameInfo (ModelOperationType G.OperationTypeSubscription)
 
   subscriptionQueryTagsComment <- ask
-  multiplexedQuery <- PGL.mkMultiplexedQuery userInfo $ InsOrdHashMap.mapKeys _rfaAlias preparedAST
+  multiplexedQuery <- PGL.mkMultiplexedQuery removeEmptySubscriptionResponses userInfo $ InsOrdHashMap.mapKeys _rfaAlias preparedAST
   let multiplexedQueryWithQueryTags =
         multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
       roleName = _uiRole userInfo
