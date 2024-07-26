@@ -339,7 +339,8 @@ deprecatedEnvVars =
 sensitiveHeaders :: HashSet HTTP.HeaderName
 sensitiveHeaders =
   Set.fromList
-    [ "Authorization",
+    [ "Access-Token",
+      "Authorization",
       "Cookie"
     ]
 
