@@ -45,7 +45,7 @@ import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Function qualified as Postgres
 import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error (QErr)
-import Hasura.EncJSON (EncJSON, encJFromJValue)
+import Hasura.EncJSON (EncJSON, encJFromJValue, encJFromList)
 import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.Backend
   ( BackendExecute (..),
@@ -307,7 +307,9 @@ convertUpdate sourceName modelSourceType env manager logger userInfo updateOpera
       pure $ concat whereModelsList
   let modelNames = [ModelNameInfo (modelName, modelType, sourceName, modelSourceType)] <> (argModelNames) <> preUpdatePermissionModelNames <> postUpdateCheckModelNames <> (returnModels)
   if Postgres.updateVariantIsEmpty $ IR._auUpdateVariant updateOperation
-    then pure $ (OnBaseMonad $ pure $ IR.buildEmptyMutResp $ IR._auOutput preparedUpdate, modelNames)
+    then case mutationUpdateVariant of
+      Postgres.SingleBatch _ -> pure $ (OnBaseMonad $ pure $ IR.buildEmptyMutResp (IR._auOutput preparedUpdate), modelNames)
+      Postgres.MultipleBatches _ -> pure (OnBaseMonad $ pure (encJFromList []), modelNames)
     else
       pure
         $ ( OnBaseMonad
