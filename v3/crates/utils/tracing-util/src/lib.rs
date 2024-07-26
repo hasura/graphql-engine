@@ -16,10 +16,12 @@ pub use tracer::{
 
 // re-export things from OpenTelemetry to avoid library users importing their own version and
 // risking mismatches and multiple globals
+pub use opentelemetry::baggage;
 pub use opentelemetry::global::get_text_map_propagator;
 pub use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
 pub use opentelemetry::trace::get_active_span;
 pub use opentelemetry::trace::FutureExt;
 pub use opentelemetry::trace::Status;
 pub use opentelemetry::Context;
+pub use opentelemetry::KeyValue;
 pub use opentelemetry_http::HeaderInjector;

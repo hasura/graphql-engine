@@ -6,7 +6,7 @@ use opentelemetry::{global, trace::TraceError, KeyValue};
 pub use opentelemetry_contrib::trace::propagator::trace_context_response::TraceContextResponsePropagator;
 use opentelemetry_otlp::{WithExportConfig, OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT};
 use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
-use opentelemetry_sdk::trace::{SpanProcessor, TracerProvider as SDKTracerProvider};
+use opentelemetry_sdk::trace::{SpanProcessor, TracerProvider};
 use opentelemetry_semantic_conventions as semcov;
 
 pub fn initialize_tracing(
@@ -42,7 +42,7 @@ pub fn initialize_tracing(
     .build_span_exporter()?;
 
     let stdout_exporter = opentelemetry_stdout::SpanExporter::default();
-    let tracer_provider = SDKTracerProvider::builder()
+    let tracer_provider = TracerProvider::builder()
         .with_simple_exporter(stdout_exporter)
         .with_batch_exporter(otlp_exporter, opentelemetry_sdk::runtime::Tokio)
         .with_span_processor(BaggageSpanProcessor())
