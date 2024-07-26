@@ -10,7 +10,7 @@ use super::types;
 use crate::ir::commands::CommandInfo;
 use crate::ir::commands::FunctionBasedCommand;
 use crate::ir::commands::ProcedureBasedCommand;
-use crate::ir::selection_set::NdcFieldName;
+use crate::ir::selection_set::NdcFieldAlias;
 use crate::ir::selection_set::NdcRelationshipName;
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use crate::remote_joins::types::VariableName;
@@ -43,7 +43,7 @@ pub(crate) fn plan_query_node<'s, 'ir>(
     let query = types::QueryNode {
         aggregates: None,
         fields: Some(IndexMap::from([(
-            NdcFieldName::from(FUNCTION_IR_VALUE_COLUMN_NAME),
+            NdcFieldAlias::from(FUNCTION_IR_VALUE_COLUMN_NAME),
             types::Field::Column {
                 column: DataConnectorColumnName::from(FUNCTION_IR_VALUE_COLUMN_NAME),
                 fields: ndc_nested_field,

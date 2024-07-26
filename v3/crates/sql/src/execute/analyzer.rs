@@ -30,7 +30,7 @@ use datafusion::{
     logical_expr::{logical_plan::LogicalPlan, Extension, TableScan},
     optimizer::AnalyzerRule,
 };
-use execute::ir::selection_set::NdcFieldName;
+use execute::ir::selection_set::NdcFieldAlias;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
 use open_dds::identifier::Identifier;
@@ -147,7 +147,10 @@ fn analyze_internal(
                         })
                         .map(|field_mapping| field_mapping.column.clone())
                 }?;
-                ndc_fields.insert(NdcFieldName::from(field.name().as_str()), ndc_field.clone());
+                ndc_fields.insert(
+                    NdcFieldAlias::from(field.name().as_str()),
+                    ndc_field.clone(),
+                );
             }
 
             let ndc_query_node = NDCQuery {

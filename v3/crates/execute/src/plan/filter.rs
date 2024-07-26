@@ -5,7 +5,7 @@ use super::error;
 use super::relationships::process_model_relationship_definition;
 use super::types;
 use crate::ir::filter;
-use crate::ir::selection_set::{NdcFieldName, NdcRelationshipName};
+use crate::ir::selection_set::{NdcFieldAlias, NdcRelationshipName};
 
 /// Plan the filter expression IR.
 /// This function will take the filter expression IR and convert it into a planned filter expression
@@ -142,7 +142,7 @@ pub fn plan_remote_predicate<'s, 'a>(
 /// These field values are fetched from the remote data connector.
 fn build_ndc_query_fields<'s>(
     ndc_column_mapping: &[filter::expression::RelationshipColumnMapping],
-) -> IndexMap<NdcFieldName, types::Field<'s, filter::expression::Expression<'s>>> {
+) -> IndexMap<NdcFieldAlias, types::Field<'s, filter::expression::Expression<'s>>> {
     let mut fields = IndexMap::new();
     for mapping in ndc_column_mapping {
         let field = types::Field::Column {
@@ -151,7 +151,7 @@ fn build_ndc_query_fields<'s>(
             arguments: BTreeMap::new(),
         };
         fields.insert(
-            NdcFieldName::from(mapping.target_ndc_column.as_str()),
+            NdcFieldAlias::from(mapping.target_ndc_column.as_str()),
             field,
         );
     }

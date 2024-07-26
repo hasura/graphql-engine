@@ -4,7 +4,7 @@ use super::model_selection;
 use super::relationships;
 use super::types;
 use super::ProcessResponseAs;
-use crate::ir::selection_set::NdcFieldName;
+use crate::ir::selection_set::NdcFieldAlias;
 use crate::ir::selection_set::NdcRelationshipName;
 use crate::ir::selection_set::{FieldSelection, NestedSelection, ResultSelectionSet};
 use crate::plan::error;
@@ -69,12 +69,12 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
     relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
 ) -> Result<
     (
-        IndexMap<NdcFieldName, types::UnresolvedField<'s>>,
+        IndexMap<NdcFieldAlias, types::UnresolvedField<'s>>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
 > {
-    let mut fields = IndexMap::<NdcFieldName, types::UnresolvedField<'s>>::new();
+    let mut fields = IndexMap::<NdcFieldAlias, types::UnresolvedField<'s>>::new();
     let mut join_locations = JoinLocations::new();
     for (field_name, field) in &model_selection.fields {
         match field {
@@ -260,13 +260,13 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
 fn process_remote_relationship_field_mapping(
     selection: &ResultSelectionSet<'_>,
     field_mapping: &FieldMapping,
-    fields: &mut IndexMap<NdcFieldName, types::UnresolvedField>,
+    fields: &mut IndexMap<NdcFieldAlias, types::UnresolvedField>,
 ) -> SourceFieldAlias {
     match selection.contains(field_mapping) {
         None => {
             let internal_alias = make_hasura_phantom_field(&field_mapping.column);
             fields.insert(
-                NdcFieldName::from(internal_alias.as_str()),
+                NdcFieldAlias::from(internal_alias.as_str()),
                 types::Field::Column {
                     column: field_mapping.column.clone(),
                     fields: None,

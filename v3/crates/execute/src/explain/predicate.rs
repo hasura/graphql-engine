@@ -3,7 +3,7 @@ use super::HttpContext;
 use crate::error;
 use crate::explain::fetch_explain_from_data_connector;
 use crate::ir;
-use crate::ir::selection_set::NdcFieldName;
+use crate::ir::selection_set::NdcFieldAlias;
 use crate::plan;
 use crate::plan::types::{UnresolvedField, UnresolvedNestedField, UnresolvedQueryNode};
 use async_recursion::async_recursion;
@@ -42,7 +42,7 @@ pub(crate) async fn explain_query_predicate_node<'s>(
 async fn explain_query_predicate_fields<'s, 'a>(
     expose_internal_errors: &crate::ExposeInternalErrors,
     http_context: &HttpContext,
-    fields: Option<&'a IndexMap<NdcFieldName, UnresolvedField<'s>>>,
+    fields: Option<&'a IndexMap<NdcFieldAlias, UnresolvedField<'s>>>,
     steps: &mut Vec<types::Step>,
 ) -> Result<(), error::RequestError> {
     if let Some(fields) = fields {

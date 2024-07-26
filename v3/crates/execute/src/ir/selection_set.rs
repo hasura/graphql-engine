@@ -102,14 +102,14 @@ impl NdcRelationshipName {
     }
 }
 
-/// An NDC field name. Not quite the same as an OpenDD FieldName
-/// since there are no character restrictions on the string itself
+/// A NDC field alias. Not quite the same as an OpenDD FieldName since there are
+/// no character restrictions on the string itself
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, Hash, derive_more::Display, PartialOrd, Ord)]
-pub struct NdcFieldName(SmolStr);
+pub struct NdcFieldAlias(SmolStr);
 
-impl NdcFieldName {
+impl NdcFieldAlias {
     pub fn new<T: AsRef<str>>(str: T) -> Self {
-        NdcFieldName(SmolStr::new(str))
+        NdcFieldAlias(SmolStr::new(str))
     }
 
     pub fn as_str(&self) -> &str {
@@ -125,31 +125,31 @@ impl NdcFieldName {
     }
 }
 
-impl From<&str> for NdcFieldName {
+impl From<&str> for NdcFieldAlias {
     fn from(value: &str) -> Self {
-        NdcFieldName::new(value)
+        NdcFieldAlias::new(value)
     }
 }
 
-impl From<NdcFieldName> for SmolStr {
-    fn from(value: NdcFieldName) -> Self {
+impl From<NdcFieldAlias> for SmolStr {
+    fn from(value: NdcFieldAlias) -> Self {
         value.0
     }
 }
 
-impl From<NdcFieldName> for String {
-    fn from(value: NdcFieldName) -> Self {
+impl From<NdcFieldAlias> for String {
+    fn from(value: NdcFieldAlias) -> Self {
         value.0.as_str().to_owned()
     }
 }
 
-impl Borrow<str> for NdcFieldName {
+impl Borrow<str> for NdcFieldAlias {
     fn borrow(&self) -> &str {
         self.as_str()
     }
 }
 
-impl Borrow<SmolStr> for NdcFieldName {
+impl Borrow<SmolStr> for NdcFieldAlias {
     fn borrow(&self) -> &SmolStr {
         &self.0
     }
@@ -161,7 +161,7 @@ pub(crate) struct ResultSelectionSet<'s> {
     // The fields in the selection set. They are stored in the form that would
     // be converted and sent over the wire. Serialized the map as ordered to
     // produce deterministic golden files.
-    pub(crate) fields: IndexMap<NdcFieldName, FieldSelection<'s>>,
+    pub(crate) fields: IndexMap<NdcFieldAlias, FieldSelection<'s>>,
 }
 
 impl<'s> ResultSelectionSet<'s> {
@@ -169,7 +169,7 @@ impl<'s> ResultSelectionSet<'s> {
     pub(crate) fn contains(
         &self,
         other_field: &metadata_resolve::FieldMapping,
-    ) -> Option<NdcFieldName> {
+    ) -> Option<NdcFieldAlias> {
         self.fields.iter().find_map(|(alias, field)| match field {
             FieldSelection::Column { column, .. } => {
                 if column.as_str() == other_field.column.as_str() {
@@ -187,7 +187,7 @@ fn build_global_id_fields(
     global_id_fields: &Vec<FieldName>,
     field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     field_alias: &Alias,
-    fields: &mut IndexMap<NdcFieldName, FieldSelection>,
+    fields: &mut IndexMap<NdcFieldAlias, FieldSelection>,
 ) -> Result<(), error::Error> {
     for field_name in global_id_fields {
         let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
@@ -202,7 +202,7 @@ fn build_global_id_fields(
         let global_col_id_alias = global_id::global_id_col_format(field_alias, field_name);
 
         fields.insert(
-            NdcFieldName::from(global_col_id_alias.as_str()),
+            NdcFieldAlias::from(global_col_id_alias.as_str()),
             FieldSelection::Column {
                 column: field_mapping.column.clone(),
                 nested_selection: None,
@@ -353,7 +353,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                     }
 
                     fields.insert(
-                        NdcFieldName::from(field.alias.0.as_str()),
+                        NdcFieldAlias::from(field.alias.0.as_str()),
                         FieldSelection::Column {
                             column: field_mapping.column.clone(),
                             nested_selection,
@@ -399,7 +399,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                 }
                 OutputAnnotation::RelationshipToModel(relationship_annotation) => {
                     fields.insert(
-                        NdcFieldName::from(field.alias.0.as_str()),
+                        NdcFieldAlias::from(field.alias.0.as_str()),
                         relationship::generate_model_relationship_ir(
                             field,
                             relationship_annotation,
@@ -413,7 +413,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                 }
                 OutputAnnotation::RelationshipToModelAggregate(relationship_annotation) => {
                     fields.insert(
-                        NdcFieldName::from(field.alias.0.as_str()),
+                        NdcFieldAlias::from(field.alias.0.as_str()),
                         relationship::generate_model_aggregate_relationship_ir(
                             field,
                             relationship_annotation,
@@ -426,7 +426,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                 }
                 OutputAnnotation::RelationshipToCommand(relationship_annotation) => {
                     fields.insert(
-                        NdcFieldName::from(field.alias.0.as_str()),
+                        NdcFieldAlias::from(field.alias.0.as_str()),
                         relationship::generate_command_relationship_ir(
                             field,
                             relationship_annotation,

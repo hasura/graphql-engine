@@ -5,7 +5,7 @@ use crate::{
         self,
         aggregates::AggregateSelectionSet,
         order_by::OrderByElement,
-        selection_set::{NdcFieldName, NdcRelationshipName},
+        selection_set::{NdcFieldAlias, NdcRelationshipName},
     },
     ndc,
     remote_joins::types::VariableName,
@@ -491,7 +491,7 @@ pub struct QueryNode<'s, TFilterExpression> {
     /// Aggregate fields of the query
     pub aggregates: Option<AggregateSelectionSet<'s>>,
     /// Fields of the query
-    pub fields: Option<IndexMap<NdcFieldName, Field<'s, TFilterExpression>>>,
+    pub fields: Option<IndexMap<NdcFieldAlias, Field<'s, TFilterExpression>>>,
 }
 
 impl<'s> UnresolvedQueryNode<'s> {
@@ -632,7 +632,7 @@ pub type ResolvedNestedObject<'s> = NestedObject<'s, ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NestedObject<'s, TFilterExpression> {
-    pub fields: IndexMap<NdcFieldName, Field<'s, TFilterExpression>>,
+    pub fields: IndexMap<NdcFieldAlias, Field<'s, TFilterExpression>>,
 }
 
 impl<'s> UnresolvedNestedObject<'s> {

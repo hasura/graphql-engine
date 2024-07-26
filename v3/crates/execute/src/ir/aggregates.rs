@@ -15,7 +15,7 @@ use serde::Serialize;
 
 use crate::ir::error;
 
-use super::selection_set::NdcFieldName;
+use super::selection_set::NdcFieldAlias;
 
 /// IR that represents the selected fields of an output type.
 #[derive(Debug, Serialize, Default, PartialEq, Clone)]
@@ -23,7 +23,7 @@ pub struct AggregateSelectionSet<'s> {
     // The fields in the selection set. They are stored in the form that would
     // be converted and sent over the wire. Serialized the map as ordered to
     // produce deterministic golden files.
-    pub fields: IndexMap<NdcFieldName, AggregateFieldSelection<'s>>,
+    pub fields: IndexMap<NdcFieldAlias, AggregateFieldSelection<'s>>,
 }
 
 #[derive(Debug, Serialize, PartialEq, Clone)]
@@ -66,7 +66,7 @@ pub fn generate_aggregate_selection_set_ir<'s>(
 }
 
 fn add_aggregate_selections<'s>(
-    aggregate_field_selections: &mut IndexMap<NdcFieldName, AggregateFieldSelection<'s>>,
+    aggregate_field_selections: &mut IndexMap<NdcFieldAlias, AggregateFieldSelection<'s>>,
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     aggregate_operand_type: &QualifiedTypeName,
     data_connector_name: &Qualified<DataConnectorName>,
@@ -199,8 +199,8 @@ fn add_aggregate_selections<'s>(
     Ok(())
 }
 
-pub fn mk_alias_from_graphql_field_path(graphql_field_path: &[&Alias]) -> NdcFieldName {
-    NdcFieldName::from(
+pub fn mk_alias_from_graphql_field_path(graphql_field_path: &[&Alias]) -> NdcFieldAlias {
+    NdcFieldAlias::from(
         graphql_field_path
             .iter()
             .map(|alias| alias.0.as_str())

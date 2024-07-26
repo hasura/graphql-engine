@@ -19,7 +19,7 @@ use std::{any::Any, collections::BTreeMap, hash::Hash, sync::Arc};
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 use execute::{
-    ir::selection_set::{NdcFieldName, NdcRelationshipName},
+    ir::selection_set::{NdcFieldAlias, NdcRelationshipName},
     plan::{
         self,
         types::{
@@ -58,7 +58,7 @@ impl TraceableError for ExecutionPlanError {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct NDCQuery {
     pub(crate) table: TableReference,
-    pub(crate) fields: IndexMap<NdcFieldName, DataConnectorColumnName>,
+    pub(crate) fields: IndexMap<NdcFieldAlias, DataConnectorColumnName>,
     pub(crate) data_source_name: Arc<CollectionName>,
     pub(crate) schema: DFSchemaRef,
 }
@@ -84,7 +84,7 @@ impl NDCQuery {
             .map(|projected_field| {
                 self.fields
                     .swap_remove(projected_field.as_str())
-                    .map(|field| (NdcFieldName::from(projected_field.as_str()), field))
+                    .map(|field| (NdcFieldAlias::from(projected_field.as_str()), field))
                     .ok_or_else(|| {
                         DataFusionError::Internal(
                             "failed to lookup projectd field in ndcscan".to_string(),
@@ -138,7 +138,7 @@ impl UserDefinedLogicalNodeCore for NDCQuery {
 pub(crate) struct NDCPushDown {
     http_context: Arc<execute::HttpContext>,
     collection_name: CollectionName,
-    fields: IndexMap<NdcFieldName, DataConnectorColumnName>,
+    fields: IndexMap<NdcFieldAlias, DataConnectorColumnName>,
     filter: Option<ResolvedFilterExpression>,
     collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
@@ -151,7 +151,7 @@ impl NDCPushDown {
         http_context: Arc<HttpContext>,
         schema: SchemaRef,
         collection_name: CollectionName,
-        fields: IndexMap<NdcFieldName, DataConnectorColumnName>,
+        fields: IndexMap<NdcFieldAlias, DataConnectorColumnName>,
         filter: Option<ResolvedFilterExpression>,
         collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
         data_connector: Arc<metadata_resolve::DataConnectorLink>,
