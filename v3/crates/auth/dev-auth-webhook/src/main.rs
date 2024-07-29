@@ -16,6 +16,7 @@ async fn main() -> anyhow::Result<()> {
         otlp_endpoint_option.as_deref(),
         env!("CARGO_PKG_NAME"),
         None,
+        true,
     )?;
 
     let app = Router::new()

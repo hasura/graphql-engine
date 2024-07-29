@@ -1058,7 +1058,7 @@ mod tests {
     #[tokio::test]
     // This test emulates scenarios where multiple JWKs are present and only the correct encoded JWT is used to decode the Hasura claims
     async fn test_jwk() -> anyhow::Result<()> {
-        tracing_util::initialize_tracing(None, "test_jwk", None)?;
+        tracing_util::initialize_tracing(None, "test_jwk", None, false)?;
         let mut server = mockito::Server::new_async().await;
 
         let url = server.url();

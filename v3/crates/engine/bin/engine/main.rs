@@ -128,6 +128,7 @@ async fn main() {
         server.otlp_endpoint.as_deref(),
         "graphql-engine",
         Some(VERSION),
+        false,
     )
     .unwrap();
 

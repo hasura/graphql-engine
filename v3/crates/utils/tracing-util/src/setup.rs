@@ -1,4 +1,5 @@
 use opentelemetry::baggage::BaggageExt;
+use opentelemetry::propagation::TextMapPropagator;
 use opentelemetry::trace::Span; // 'Span'-the-trait, c.f. to 'Span'-the-struct. Used for its
                                 // 'set_attribute' method.
 use opentelemetry::propagation::composite::TextMapCompositePropagator;
@@ -9,10 +10,31 @@ use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
 use opentelemetry_sdk::trace::{SpanProcessor, TracerProvider};
 use opentelemetry_semantic_conventions as semcov;
 
+/// Initialize the tracing setup.
+///
+/// This includes setting the global tracer and propagators:
+///
+///  * Exporting to OTEL (e.g. Jaeger)
+///  * Exporting to Zipkin (Yours truly don't know why though)
+///  * Exporting to StdOut
+///  * Propagating context to the standard 'traceparent' etc. headers
+///  * Propagating context to the experimental 'traceresponse' header (which is subtly different from 'traceparent' in a way yours truly cannot relay faithfully, but which is what the console uses, so it's important not to break it)
+///  * Propagating Baggage via http headers
+///  * Adding every baggage item as a span attribute to every span
+///
+/// A service using the tracer-util may or may not want to propagate baggage from its callers. For
+/// example, a service that faces the internet directly may not want to anyone set baggage items
+/// since these end up in every span which may have an adversarial effect.
+///
+/// To this end we provide the 'propagate_caller_baggage' argument. When set to 'true' baggage
+/// times provided by callers in the 'baggage' header is carried over without prejudice. When set
+/// to 'false' we do not propagate incoming baggage, but will stil export baggage the service
+/// provides itself.
 pub fn initialize_tracing(
     endpoint: Option<&str>,
     service_name: &'static str,
     service_version: Option<&'static str>,
+    propagate_caller_baggage: bool,
 ) -> Result<(), TraceError> {
     // install global collector configured based on RUST_LOG env var.
     tracing_subscriber::fmt::init();
@@ -20,7 +42,11 @@ pub fn initialize_tracing(
     global::set_text_map_propagator(TextMapCompositePropagator::new(vec![
         Box::new(TraceContextPropagator::new()),
         Box::new(opentelemetry_zipkin::Propagator::new()),
-        Box::new(BaggagePropagator::new()),
+        if propagate_caller_baggage {
+            Box::new(BaggagePropagator::new())
+        } else {
+            Box::new(InjectOnlyTextMapPropagator(BaggagePropagator::new()))
+        },
         Box::new(TraceContextResponsePropagator::new()),
     ]));
 
@@ -84,6 +110,35 @@ impl SpanProcessor for BaggageSpanProcessor {
 
     fn shutdown(&mut self) -> opentelemetry::trace::TraceResult<()> {
         Ok(())
+    }
+}
+
+/// Produce from another TextMapPropagator a derived TextMapPropagator that only supports
+/// injection, i.e., serializing the current Context into some text map (the canonical example of
+/// such a map being http headers). Such a propagator will not extract any context values from
+/// callers.
+#[derive(Debug)]
+struct InjectOnlyTextMapPropagator<T>(T);
+
+impl<T: TextMapPropagator> TextMapPropagator for InjectOnlyTextMapPropagator<T> {
+    fn inject_context(
+        &self,
+        cx: &opentelemetry::Context,
+        injector: &mut dyn opentelemetry::propagation::Injector,
+    ) {
+        self.0.inject_context(cx, injector);
+    }
+
+    fn extract_with_context(
+        &self,
+        cx: &opentelemetry::Context,
+        _extractor: &dyn opentelemetry::propagation::Extractor,
+    ) -> opentelemetry::Context {
+        cx.clone()
+    }
+
+    fn fields(&self) -> opentelemetry::propagation::text_map_propagator::FieldIter<'_> {
+        self.0.fields()
     }
 }
 
