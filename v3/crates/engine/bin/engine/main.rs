@@ -1,4 +1,6 @@
 use std::fmt::Display;
+use std::hash;
+use std::hash::{Hash, Hasher};
 use std::net;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -12,29 +14,18 @@ use axum::{
     routing::{get, post},
     Extension, Json, Router,
 };
-
+use base64::engine::Engine;
 use clap::Parser;
-use pre_execution_plugin::{
-    configuration::PrePluginConfig, execute::pre_execution_plugins_handler,
-};
 use reqwest::header::CONTENT_TYPE;
 use serde::Serialize;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
-use tracing_util::{
-    add_event_on_active_span, set_attribute_on_active_span, set_status_on_current_span,
-    ErrorVisibility, SpanVisibility, TraceableError, TraceableHttpResponse,
-};
 
-use base64::engine::Engine;
-use engine::internal_flags::{resolve_unstable_features, UnstableFeature};
-use engine::VERSION;
 use engine::{
-    authentication::{
-        AuthConfig::{self, V1 as V1AuthConfig},
-        AuthModeConfig,
-    },
+    authentication::{resolve_auth_config, AuthConfig, AuthModeConfig},
+    internal_flags::{resolve_unstable_features, UnstableFeature},
     plugins::read_pre_execution_plugins_config,
+    VERSION,
 };
 use execute::HttpContext;
 use hasura_authn_core::Session;
@@ -43,9 +34,14 @@ use hasura_authn_jwt::jwt;
 use hasura_authn_noauth as noauth;
 use hasura_authn_webhook::webhook;
 use lang_graphql as gql;
+use pre_execution_plugin::{
+    configuration::PrePluginConfig, execute::pre_execution_plugins_handler,
+};
 use schema::GDS;
-use std::hash;
-use std::hash::{Hash, Hasher};
+use tracing_util::{
+    add_event_on_active_span, set_attribute_on_active_span, set_status_on_current_span,
+    ErrorVisibility, SpanVisibility, TraceableError, TraceableHttpResponse,
+};
 
 mod cors;
 
@@ -547,33 +543,36 @@ where
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    match &engine_state.auth_config {
-                        V1AuthConfig(auth_config) => match &auth_config.mode {
-                            AuthModeConfig::NoAuth(no_auth_config) => {
-                                Ok(noauth::identity_from_config(no_auth_config))
-                            }
-
-                            AuthModeConfig::Webhook(webhook_config) => {
-                                webhook::authenticate_request(
-                                    &engine_state.http_context.client,
-                                    webhook_config,
-                                    &headers_map,
-                                    auth_config.allow_role_emulation_by.as_ref(),
-                                )
-                                .await
-                                .map_err(AuthError::from)
-                            }
-                            AuthModeConfig::Jwt(jwt_secret_config) => {
-                                jwt_auth::authenticate_request(
-                                    &engine_state.http_context.client,
-                                    *jwt_secret_config.clone(),
-                                    auth_config.allow_role_emulation_by.as_ref(),
-                                    &headers_map,
-                                )
-                                .await
-                                .map_err(AuthError::from)
-                            }
-                        },
+                    // We are still supporting AuthConfig::V1, hence we need to
+                    // support role emulation
+                    let (auth_mode, allow_role_emulation_by) = match &engine_state.auth_config {
+                        AuthConfig::V1(auth_config) => (
+                            &auth_config.mode,
+                            auth_config.allow_role_emulation_by.as_ref(),
+                        ),
+                        // There is no role emulation in AuthConfig::V2
+                        AuthConfig::V2(auth_config) => (&auth_config.mode, None),
+                    };
+                    match auth_mode {
+                        AuthModeConfig::NoAuth(no_auth_config) => {
+                            Ok(noauth::identity_from_config(no_auth_config))
+                        }
+                        AuthModeConfig::Webhook(webhook_config) => webhook::authenticate_request(
+                            &engine_state.http_context.client,
+                            webhook_config,
+                            &headers_map,
+                            allow_role_emulation_by,
+                        )
+                        .await
+                        .map_err(AuthError::from),
+                        AuthModeConfig::Jwt(jwt_secret_config) => jwt_auth::authenticate_request(
+                            &engine_state.http_context.client,
+                            *jwt_secret_config.clone(),
+                            &headers_map,
+                            allow_role_emulation_by,
+                        )
+                        .await
+                        .map_err(AuthError::from),
                     }
                 })
             },
@@ -728,7 +727,7 @@ async fn handle_sql_request(
 
 #[allow(clippy::print_stdout)]
 /// Print any build warnings to stdout
-fn print_warnings(warnings: Vec<metadata_resolve::Warning>) {
+fn print_warnings<T: Display>(warnings: Vec<T>) {
     for warning in warnings {
         println!("Warning: {warning}");
     }
@@ -742,15 +741,23 @@ fn build_state(
     pre_execution_plugins_path: &Option<PathBuf>,
     metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
 ) -> Result<Arc<EngineState>, anyhow::Error> {
-    let auth_config = read_auth_config(authn_config_path).map_err(StartupError::ReadAuth)?;
+    // Auth Config
+    let raw_auth_config = std::fs::read_to_string(authn_config_path)?;
+    let (auth_config, auth_warnings) =
+        resolve_auth_config(&raw_auth_config).map_err(StartupError::ReadAuth)?;
+
+    // Plugins
     let pre_execution_plugins_config =
         read_pre_execution_plugins_config(pre_execution_plugins_path)
             .map_err(StartupError::ReadPrePlugin)?;
+
+    // Metadata
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
     let (resolved_metadata, warnings) =
         metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
 
+    print_warnings(auth_warnings);
     print_warnings(warnings);
 
     let http_context = HttpContext {
@@ -771,11 +778,4 @@ fn build_state(
         sql_context,
     });
     Ok(state)
-}
-
-fn read_auth_config(path: &PathBuf) -> Result<AuthConfig, anyhow::Error> {
-    let raw_auth_config = std::fs::read_to_string(path)?;
-    Ok(open_dds::traits::OpenDd::deserialize(
-        serde_json::from_str(&raw_auth_config)?,
-    )?)
 }

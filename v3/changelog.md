@@ -12,6 +12,9 @@
 
 ### Changed
 
+- Introduced `AuthConfig` `v2`. This new version removes role emulation in
+  engine (`allowRoleEmulationBy`) field.
+
 ## [v2024.07.25]
 
 ### Fixed

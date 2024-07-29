@@ -22,6 +22,25 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "definition",
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "enum": [
+            "v2"
+          ]
+        },
+        "definition": {
+          "$ref": "#/definitions/AuthConfigV2"
+        }
+      },
+      "additionalProperties": false
     }
   ],
   "definitions": {
@@ -319,39 +338,17 @@
         }
       ]
     },
-    "NoAuthConfig": {
-      "$id": "https://hasura.io/jsonschemas/metadata/NoAuthConfig",
-      "title": "NoAuthConfig",
-      "description": "Configuration used when running engine without authentication",
-      "examples": [
-        {
-          "role": "admin",
-          "sessionVariables": {
-            "x-hasura-user-id": "100"
-          }
-        }
-      ],
+    "AuthConfigV2": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AuthConfigV2",
+      "title": "AuthConfigV2",
+      "description": "Definition of the authentication configuration used by the API server.",
       "type": "object",
       "required": [
-        "role",
-        "sessionVariables"
+        "mode"
       ],
       "properties": {
-        "role": {
-          "description": "role to assume whilst running the engine",
-          "allOf": [
-            {
-              "$ref": "#/definitions/Role"
-            }
-          ]
-        },
-        "sessionVariables": {
-          "title": "SessionVariables",
-          "description": "static session variables to use whilst running the engine",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/SessionVariableValue"
-          }
+        "mode": {
+          "$ref": "#/definitions/AuthModeConfig"
         }
       },
       "additionalProperties": false
@@ -803,6 +800,43 @@
           "additionalProperties": false
         }
       ]
+    },
+    "NoAuthConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/NoAuthConfig",
+      "title": "NoAuthConfig",
+      "description": "Configuration used when running engine without authentication",
+      "examples": [
+        {
+          "role": "admin",
+          "sessionVariables": {
+            "x-hasura-user-id": "100"
+          }
+        }
+      ],
+      "type": "object",
+      "required": [
+        "role",
+        "sessionVariables"
+      ],
+      "properties": {
+        "role": {
+          "description": "role to assume whilst running the engine",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Role"
+            }
+          ]
+        },
+        "sessionVariables": {
+          "title": "SessionVariables",
+          "description": "static session variables to use whilst running the engine",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/SessionVariableValue"
+          }
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
