@@ -1,5 +1,8 @@
 use crate::Qualified;
-use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
+use open_dds::{
+    data_connector::{DataConnectorName, DataConnectorScalarType},
+    types::{CustomTypeName, OperatorName},
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ScalarBooleanExpressionTypeError {
@@ -12,6 +15,12 @@ pub enum ScalarBooleanExpressionTypeError {
     UnknownScalarTypeInDataConnector {
         data_connector: Qualified<DataConnectorName>,
         scalar_type: DataConnectorScalarType,
+    },
+    #[error("cannot find type {custom_type:} when resolving arguments for comparison operator {operator_name:} for {boolean_expression_type:}")]
+    UnknownCustomTypeInComparisonOperatorArgument {
+        custom_type: Qualified<CustomTypeName>,
+        operator_name: OperatorName,
+        boolean_expression_type: Qualified<CustomTypeName>,
     },
     #[error(
         "scalar type representation required for type {scalar_type:} in data connector {data_connector:}"

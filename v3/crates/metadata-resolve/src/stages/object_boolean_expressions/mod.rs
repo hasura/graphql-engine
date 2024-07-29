@@ -1,10 +1,11 @@
+mod helpers;
 pub mod types;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
     object_types, type_permissions,
 };
+pub use helpers::resolve_ndc_type;
 
-use crate::helpers::model::resolve_ndc_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::types::subgraph::Qualified;
 

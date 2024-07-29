@@ -1,7 +1,9 @@
 use super::error::ScalarBooleanExpressionTypeError;
 use super::types::{IncludeIsNull, ResolvedScalarBooleanExpressionType};
-use crate::stages::data_connectors;
-use crate::Qualified;
+use crate::helpers::types::unwrap_qualified_type_name;
+use crate::stages::{data_connectors, object_types, scalar_types};
+use crate::types::subgraph::mk_qualified_type_reference;
+use crate::{Qualified, QualifiedTypeName};
 use open_dds::{
     boolean_expression::{
         BooleanExpressionIsNull, BooleanExpressionScalarOperand,
@@ -18,6 +20,8 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     is_null: &BooleanExpressionIsNull,
     subgraph: &str,
     data_connectors: &data_connectors::DataConnectors,
+    object_types: &object_types::ObjectTypesWithTypeMappings,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
 ) -> Result<ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionTypeError> {
     let mut data_connector_operator_mappings = BTreeMap::new();
@@ -70,10 +74,28 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     let mut resolved_comparison_operators = BTreeMap::new();
 
     for comparison_operator in &scalar_boolean_expression_operand.comparison_operators {
-        resolved_comparison_operators.insert(
-            comparison_operator.name.clone(),
-            comparison_operator.argument_type.clone(),
-        );
+        let qualified_argument_type =
+            mk_qualified_type_reference(&comparison_operator.argument_type, subgraph);
+        // if our argument type is a Custom named type, check we know about it
+        match unwrap_qualified_type_name(&qualified_argument_type) {
+            QualifiedTypeName::Inbuilt(_) => Ok(()),
+            QualifiedTypeName::Custom(custom_type_name) => {
+                if object_types.contains_key(custom_type_name)
+                    || scalar_types.contains_key(custom_type_name)
+                {
+                    Ok(())
+                } else {
+                    Err(ScalarBooleanExpressionTypeError
+                        ::UnknownCustomTypeInComparisonOperatorArgument {
+                        custom_type: custom_type_name.clone(),
+                        operator_name: comparison_operator.name.clone(),
+                        boolean_expression_type: boolean_expression_type_name.clone(),
+                    })
+                }
+            }
+        }?;
+        resolved_comparison_operators
+            .insert(comparison_operator.name.clone(), qualified_argument_type);
     }
 
     let graphql_name = graphql.as_ref().map(|gql| gql.type_name.clone());

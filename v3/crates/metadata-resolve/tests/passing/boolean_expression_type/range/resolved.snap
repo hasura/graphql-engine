@@ -10,6 +10,127 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                 subgraph: "__unknown_namespace",
                 name: CustomTypeName(
                     Identifier(
+                        "int_range",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "start",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "end",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: Some(
+                        TypeName(
+                            Name(
+                                "IntRange",
+                            ),
+                        ),
+                    ),
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject(
+                    {
+                        Qualified {
+                            subgraph: "__unknown_namespace",
+                            name: DataConnectorName(
+                                Identifier(
+                                    "elastic",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "range",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "range",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "end",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "lte",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "double",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Number,
+                                        ),
+                                        equal_operators: [],
+                                        argument_mappings: {},
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "start",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "gte",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "double",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Number,
+                                        ),
+                                        equal_operators: [],
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ),
+            },
+            Qualified {
+                subgraph: "__unknown_namespace",
+                name: CustomTypeName(
+                    Identifier(
                         "movie",
                     ),
                 ),
@@ -567,7 +688,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                                 subgraph: "__unknown_namespace",
                                                                 name: CustomTypeName(
                                                                     Identifier(
-                                                                        "range",
+                                                                        "int_range",
                                                                     ),
                                                                 ),
                                                             },
@@ -787,7 +908,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                         subgraph: "__unknown_namespace",
                                                         name: CustomTypeName(
                                                             Identifier(
-                                                                "range",
+                                                                "int_range",
                                                             ),
                                                         ),
                                                     },
@@ -940,14 +1061,17 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     comparison_operators: {
                         OperatorName(
                             "range",
-                        ): TypeReference {
+                        ): QualifiedTypeReference {
                             underlying_type: Named(
                                 Custom(
-                                    CustomTypeName(
-                                        Identifier(
-                                            "range",
+                                    Qualified {
+                                        subgraph: "__unknown_namespace",
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "int_range",
+                                            ),
                                         ),
-                                    ),
+                                    },
                                 ),
                             ),
                             nullable: true,

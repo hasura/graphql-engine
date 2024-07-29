@@ -26,10 +26,6 @@ pub fn resolve<'a>(
     metadata_accessor: &'a open_dds::accessor::MetadataAccessor,
     data_connectors: &'a data_connectors::DataConnectors,
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    scalar_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
-    >,
     existing_graphql_types: &'a BTreeSet<ast::TypeName>,
 ) -> Result<DataConnectorWithScalarsOutput<'a>, DataConnectorScalarTypesError> {
     let mut graphql_types = existing_graphql_types.clone();
@@ -110,50 +106,6 @@ pub fn resolve<'a>(
         if let Some(new_graphql_type) = &scalar_type.comparison_expression_name {
             graphql_types.insert(new_graphql_type.clone());
         };
-    }
-
-    for scalar_boolean_expression in scalar_boolean_expression_types.values() {
-        for (data_connector_name, operator_mapping) in
-            &scalar_boolean_expression.data_connector_operator_mappings
-        {
-            let scalar_type_name = &operator_mapping.data_connector_scalar_type;
-
-            let scalars = data_connector_scalars
-                .get_mut(data_connector_name)
-                .ok_or_else(|| scalar_boolean_expressions::ScalarBooleanExpressionTypeError::ScalarTypeFromUnknownDataConnector {
-                    scalar_type: scalar_type_name.clone(),
-                    data_connector: data_connector_name.clone(),
-                })?;
-
-            let scalar_type = scalars.0.get_mut(scalar_type_name).ok_or_else(|| {
-                scalar_boolean_expressions::ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
-                    scalar_type: scalar_type_name.clone(),
-                    data_connector: data_connector_name.clone(),
-                }
-            })?;
-
-            validate_type_name(
-                &scalar_boolean_expression.representation,
-                &scalar_boolean_expression.name.subgraph,
-                scalar_types,
-                scalar_type_name,
-            )?;
-
-            // we may have multiple `BooleanExpressionType` for the same type,
-            // we allow it but check their OpenDD types don't conflict
-            if let Some(existing_representation) = &scalar_type.representation {
-                if *existing_representation != scalar_boolean_expression.representation {
-                    return Err(
-                        DataConnectorScalarTypesError::DataConnectorScalarRepresentationMismatch {
-                            data_connector: data_connector_name.clone(),
-                            old_representation: existing_representation.clone(),
-                            new_representation: scalar_boolean_expression.representation.clone(),
-                        },
-                    );
-                }
-            }
-            scalar_type.representation = Some(scalar_boolean_expression.representation.clone());
-        }
     }
 
     Ok(DataConnectorWithScalarsOutput {

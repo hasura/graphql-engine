@@ -586,6 +586,10 @@ pub enum TypePredicateError {
         field_name: FieldName,
         type_name: Qualified<CustomTypeName>,
     },
+    #[error("boolean expression '{boolean_expression_name:}' not found")]
+    BooleanExpressionNotFound {
+        boolean_expression_name: Qualified<CustomTypeName>,
+    },
     #[error(
         "the source data connector {data_connector:} for type {type_name:} has not been defined"
     )]
@@ -607,7 +611,7 @@ pub enum TypePredicateError {
     NestedPredicateInTypePredicate {
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("relationship '{relationship_name:}' used in predicate for type '{type_name:}' does not exist")]
+    #[error("relationship '{relationship_name:}' is used in predicate but does not exist in comparableRelationships in boolean expression for type '{type_name:}'")]
     UnknownRelationshipInTypePredicate {
         relationship_name: RelationshipName,
         type_name: Qualified<CustomTypeName>,
@@ -657,6 +661,11 @@ pub enum TypePredicateError {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error("Operator {operator_name:} not found for field {field_name:}")]
+    OperatorNotFoundForField {
+        field_name: FieldName,
+        operator_name: OperatorName,
     },
     #[error(
         "missing equality operator for source column {ndc_column:} in data connector {data_connector_name:} \

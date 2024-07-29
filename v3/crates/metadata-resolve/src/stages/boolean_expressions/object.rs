@@ -81,7 +81,6 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 &comparable_relationships,
                 scalar_boolean_expression_types,
                 raw_boolean_expression_types,
-                subgraph,
                 graphql_config,
             )
         })

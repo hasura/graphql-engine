@@ -9,7 +9,8 @@ use ndc_models;
 use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
 
 // helper function to resolve ndc types to dds type based on scalar type representations
-pub(crate) fn resolve_ndc_type(
+// this should only be used when we know the underlying type must be a scalar and not an object
+pub fn resolve_ndc_type(
     data_connector: &Qualified<DataConnectorName>,
     source_type: &ndc_models::Type,
     scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,

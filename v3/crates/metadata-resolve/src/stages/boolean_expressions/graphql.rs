@@ -6,7 +6,6 @@ pub use super::{
 };
 use crate::helpers::types::mk_name;
 use crate::stages::{graphql_config, scalar_boolean_expressions};
-use crate::types::subgraph::mk_qualified_type_reference;
 use crate::Qualified;
 use lang_graphql::ast::common::{self as ast};
 use open_dds::{
@@ -31,7 +30,6 @@ pub(crate) fn resolve_object_boolean_graphql(
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
     raw_boolean_expression_types: &super::object::RawBooleanExpressionTypes,
-    subgraph: &str,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<BooleanExpressionGraphqlConfig, BooleanExpressionError> {
     let boolean_expression_graphql_name =
@@ -55,14 +53,6 @@ pub(crate) fn resolve_object_boolean_graphql(
         {
             // Generate comparison expression for fields mapped to simple scalar type
             if let Some(graphql_name) = &scalar_boolean_expression_type.graphql_name {
-                let mut operators = BTreeMap::new();
-                for (op_name, op_definition) in &scalar_boolean_expression_type.comparison_operators
-                {
-                    operators.insert(
-                        op_name.clone(),
-                        mk_qualified_type_reference(op_definition, subgraph),
-                    );
-                }
                 let graphql_type_name = mk_name(graphql_name.as_str()).map(ast::TypeName)?;
 
                 let operator_mapping = resolve_operator_mapping_for_scalar_type(
@@ -70,7 +60,9 @@ pub(crate) fn resolve_object_boolean_graphql(
                 );
 
                 // Register scalar comparison field only if it contains non-zero operators.
-                if !operators.is_empty()
+                if !scalar_boolean_expression_type
+                    .comparison_operators
+                    .is_empty()
                     || scalar_boolean_expression_type.include_is_null
                         == scalar_boolean_expressions::IncludeIsNull::Yes
                 {
@@ -79,7 +71,7 @@ pub(crate) fn resolve_object_boolean_graphql(
                         ComparisonExpressionInfo {
                             object_type_name: Some(comparable_field_type_name.clone()),
                             type_name: graphql_type_name.clone(),
-                            operators: operators.clone(),
+                            operators: scalar_boolean_expression_type.comparison_operators.clone(),
                             operator_mapping,
                             is_null_operator_name: match scalar_boolean_expression_type
                                 .include_is_null

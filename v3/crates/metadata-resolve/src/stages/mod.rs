@@ -62,7 +62,13 @@ pub fn resolve(
     let scalar_boolean_expressions::ScalarBooleanExpressionsOutput {
         graphql_types,
         boolean_expression_scalar_types,
-    } = scalar_boolean_expressions::resolve(&metadata_accessor, &graphql_types, &data_connectors)?;
+    } = scalar_boolean_expressions::resolve(
+        &metadata_accessor,
+        &graphql_types,
+        &data_connectors,
+        &object_types,
+        &scalar_types,
+    )?;
 
     // Validate `DataConnectorScalarType` metadata. This will soon be deprecated and subsumed by
     // `BooleanExpressionType`
@@ -74,7 +80,6 @@ pub fn resolve(
         &metadata_accessor,
         &data_connectors,
         &scalar_types,
-        &boolean_expression_scalar_types,
         &graphql_types,
     )?;
 

@@ -1,4 +1,3 @@
-use crate::helpers::model::resolve_ndc_type;
 use crate::helpers::ndc_validation;
 use crate::helpers::type_mappings;
 use crate::helpers::types::{
@@ -23,6 +22,7 @@ use open_dds::data_connector::{
 };
 use open_dds::models::ModelName;
 use open_dds::permissions;
+use open_dds::relationships::RelationshipName;
 use open_dds::types::DataConnectorArgumentName;
 use open_dds::types::{BaseType, CustomTypeName, FieldName, OperatorName, TypeName, TypeReference};
 use ref_cast::RefCast;
@@ -223,7 +223,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                 })?;
 
             // lookup the relevant boolean expression type and get the underlying object type
-            let (boolean_expression_type, object_type_representation) =
+            let (boolean_expression_graphql, object_type_representation) =
                 match object_boolean_expression_types.get(base_type) {
                     Some(object_boolean_expression_type) => Ok((
                         None,
@@ -295,7 +295,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                 bool_exp,
                 base_type,
                 object_type_representation,
-                boolean_expression_type,
+                boolean_expression_graphql,
                 data_connector_field_mappings,
                 data_connector_link,
                 subgraph,
@@ -363,10 +363,9 @@ pub(crate) fn resolve_model_predicate_with_type(
                         })
                     })?;
 
-            // newer boolean expression types have operator_mappings that allow us
-            // to rename operators, if we have those, we'll need to fetch them
-            let operator_mapping =
-                boolean_expression_graphql.map_or(Ok(BTreeMap::new()), |graphql| {
+            // for newer boolean expressions we already have the information we need
+            let (resolved_operator, argument_type) = match boolean_expression_graphql {
+                Some(graphql) => {
                     // lookup this field
                     let comparable_field = graphql.scalar_fields.get(field).ok_or_else(|| {
                         Error::from(TypePredicateError::UnknownFieldInTypePredicate {
@@ -376,28 +375,46 @@ pub(crate) fn resolve_model_predicate_with_type(
                     })?;
 
                     // get any operator mappings
-                    comparable_field
+                    let operator_mappings = comparable_field
                         .operator_mapping
                         .get(&data_connector_link.name)
-                        .cloned()
                         .ok_or_else(|| {
                             Error::from(TypePredicateError::OperatorMappingsNotFound {
                                 data_connector_name: data_connector_link.name.clone(),
                             })
-                        })
-                })?;
+                        })?;
 
-            let (resolved_operator, argument_type) = resolve_binary_operator_for_type(
-                operator,
-                type_name,
-                &data_connector_link.name,
-                field,
-                fields,
-                scalars,
-                scalar_type_info.scalar_type,
-                subgraph,
-                &operator_mapping,
-            )?;
+                    // lookup ndc operator name in mappings, falling back to using OperatorName
+                    // when an override has not been specified
+                    let ndc_operator_name = operator_mappings
+                        .get(operator)
+                        .unwrap_or_else(|| DataConnectorOperatorName::ref_cast(operator.inner()));
+
+                    // lookup the argument type for this comparison operator
+                    let argument_type =
+                        comparable_field.operators.get(operator).ok_or_else(|| {
+                            Error::from(TypePredicateError::OperatorNotFoundForField {
+                                field_name: field.clone(),
+                                operator_name: operator.clone(),
+                            })
+                        })?;
+
+                    Ok((ndc_operator_name.clone(), argument_type.clone()))
+                }
+                None => {
+                    // otherwise we need to infer a lot of it from data_connector_scalar_types info
+                    resolve_binary_operator_for_type(
+                        operator,
+                        type_name,
+                        &data_connector_link.name,
+                        field,
+                        fields,
+                        scalars,
+                        scalar_type_info.scalar_type,
+                        subgraph,
+                    )
+                }
+            }?;
 
             let value_expression = match value {
                 open_dds::permissions::ValueExpression::Literal(json_value) => {
@@ -412,7 +429,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                 field: field.clone(),
                 field_parent_type: type_name.to_owned(),
                 ndc_column: field_mapping.column.clone(),
-                operator: resolved_operator.clone(),
+                operator: resolved_operator,
                 argument_type,
                 value: value_expression,
             })
@@ -593,30 +610,23 @@ pub(crate) fn resolve_model_predicate_with_type(
                                 // if a boolean expression type was provided, we can find the
                                 // target boolean expression type by following the appropriate
                                 // `comparable_relationship` field
-                                let target_boolean_expression_graphql = boolean_expression_graphql
-                                    .and_then(|graphql| {
-                                        graphql
-                                            .relationship_fields
-                                            .get(relationship.relationship_name.as_str())
-                                    })
-                                    .and_then(|comparable_relationship| {
-                                        match &comparable_relationship.boolean_expression_type {
-                                            Some(target_bool_exp_name) => boolean_expression_types
-                                                .objects
-                                                .get(target_bool_exp_name),
-                                            None => {target_model.filter_expression_type.as_ref().and_then(|met| match met {
-                                                    models_graphql::ModelExpressionType::BooleanExpressionType(bool_exp) => Some(bool_exp),
-                                                    models_graphql::ModelExpressionType::ObjectBooleanExpressionType(_) => None})
-                                            }}
-                                        }
-                                    )
-                                    .and_then(|bool_exp| bool_exp.graphql.as_ref());
+                                let target_boolean_expression_graphql =
+                                    match boolean_expression_graphql {
+                                        Some(graphql) => lookup_relationship_in_boolean_expression(
+                                            graphql,
+                                            type_name,
+                                            &relationship.relationship_name,
+                                            target_model,
+                                            boolean_expression_types,
+                                        ),
+                                        None => Ok(None),
+                                    }?;
 
                                 let target_model_predicate = resolve_model_predicate_with_type(
                                     nested_predicate,
                                     &target_model.inner.data_type,
                                     target_object_type,
-                                    target_boolean_expression_graphql,
+                                    target_boolean_expression_graphql.as_ref(),
                                     data_connector_field_mappings,
                                     data_connector_link,
                                     subgraph,
@@ -723,7 +733,54 @@ pub(crate) fn resolve_model_predicate_with_type(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+// if we use a relationship in a predicate, we should be able to find it in our
+// `BooleanExpressionType` and use it
+fn lookup_relationship_in_boolean_expression(
+    graphql: &boolean_expressions::BooleanExpressionGraphqlConfig,
+    type_name: &Qualified<CustomTypeName>,
+    relationship_name: &RelationshipName,
+    target_model: &models_graphql::ModelWithGraphql,
+    boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+) -> Result<Option<boolean_expressions::BooleanExpressionGraphqlConfig>, Error> {
+    // lookup relationship in boolean expression type's
+    // comparable relationships
+    let comparable_relationship = graphql
+        .relationship_fields
+        .get(relationship_name.as_str())
+        .ok_or_else(|| {
+            Error::from(TypePredicateError::UnknownRelationshipInTypePredicate {
+                type_name: type_name.clone(),
+                relationship_name: relationship_name.clone(),
+            })
+        })?;
+    // lookup the boolean expression type for this comparable
+    // relationship
+    // if it is defined, we fetch it from metadata
+
+    match &comparable_relationship.boolean_expression_type {
+        Some(target_bool_exp_name) => boolean_expression_types
+            .objects
+            .get(target_bool_exp_name)
+            .map(|bool_exp| bool_exp.graphql.clone())
+            .ok_or_else(|| {
+                Error::from(TypePredicateError::BooleanExpressionNotFound {
+                    boolean_expression_name: target_bool_exp_name.clone(),
+                })
+            }),
+        None => {
+            // if it is not defined we fall back to the one defined on the model
+            match &target_model.filter_expression_type {
+                Some(models_graphql::ModelExpressionType::BooleanExpressionType(bool_exp)) => {
+                    Ok(bool_exp.graphql.clone())
+                }
+                _ => Ok(None),
+            }
+        }
+    }
+}
+
+// this is only used for the older `ObjectBooleanExpressionType` where we
+// don't have this information explicitly provided in metadata
 fn resolve_binary_operator_for_type<'a>(
     operator: &'a OperatorName,
     type_name: &'a Qualified<CustomTypeName>,
@@ -733,8 +790,7 @@ fn resolve_binary_operator_for_type<'a>(
     scalars: &'a data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     ndc_scalar_type: &'a ndc_models::ScalarType,
     subgraph: &'a str,
-    operator_mappings: &'a BTreeMap<OperatorName, DataConnectorOperatorName>,
-) -> Result<(&'a DataConnectorOperatorName, QualifiedTypeReference), Error> {
+) -> Result<(DataConnectorOperatorName, QualifiedTypeReference), Error> {
     let field_definition = fields
         .get(field_name)
         .ok_or_else(|| Error::TypePredicateError {
@@ -744,10 +800,9 @@ fn resolve_binary_operator_for_type<'a>(
             },
         })?;
 
-    // lookup ndc operator name in mappings, falling back to using OperatorName
-    let ndc_operator_name = operator_mappings
-        .get(operator)
-        .unwrap_or_else(|| DataConnectorOperatorName::ref_cast(operator.inner()));
+    // this function is only used for `ObjectBooleanExpressionType` where we do not have a concept
+    // of mapping OpenDD operator names to NDC operator names, so we just cast it and yolo
+    let ndc_operator_name = DataConnectorOperatorName::new(operator.inner().clone());
 
     let comparison_operator_definition = &ndc_scalar_type
         .comparison_operators
@@ -774,7 +829,12 @@ fn resolve_binary_operator_for_type<'a>(
         )),
         ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => Ok((
             ndc_operator_name,
-            resolve_ndc_type(data_connector, argument_type, scalars, subgraph)?,
+            object_boolean_expressions::resolve_ndc_type(
+                data_connector,
+                argument_type,
+                scalars,
+                subgraph,
+            )?,
         )),
     }
 }

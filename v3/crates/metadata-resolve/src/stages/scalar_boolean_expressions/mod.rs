@@ -6,9 +6,9 @@ pub use error::ScalarBooleanExpressionTypeError;
 use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common as ast;
-use open_dds::boolean_expression::BooleanExpressionOperand;
+use open_dds::{boolean_expression::BooleanExpressionOperand, types::CustomTypeName};
 
-use crate::stages::data_connectors;
+use crate::stages::{data_connectors, object_types, scalar_types};
 use crate::Qualified;
 
 pub use types::{
@@ -19,6 +19,8 @@ pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     data_connectors: &data_connectors::DataConnectors,
+    object_types: &object_types::ObjectTypesWithTypeMappings,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<ScalarBooleanExpressionsOutput, ScalarBooleanExpressionTypeError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
 
@@ -54,6 +56,8 @@ pub fn resolve(
                 &boolean_expression_type.is_null,
                 subgraph,
                 data_connectors,
+                object_types,
+                scalar_types,
                 &boolean_expression_type.graphql,
             )?;
 

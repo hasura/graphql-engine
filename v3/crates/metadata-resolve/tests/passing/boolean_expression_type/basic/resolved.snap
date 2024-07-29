@@ -499,9 +499,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                     comparison_operators: {
                         OperatorName(
                             "_in",
-                        ): TypeReference {
+                        ): QualifiedTypeReference {
                             underlying_type: List(
-                                TypeReference {
+                                QualifiedTypeReference {
                                     underlying_type: Named(
                                         Inbuilt(
                                             Int,
@@ -514,7 +514,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                         },
                         OperatorName(
                             "equals",
-                        ): TypeReference {
+                        ): QualifiedTypeReference {
                             underlying_type: Named(
                                 Inbuilt(
                                     Int,
@@ -578,9 +578,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                     comparison_operators: {
                         OperatorName(
                             "_in",
-                        ): TypeReference {
+                        ): QualifiedTypeReference {
                             underlying_type: List(
-                                TypeReference {
+                                QualifiedTypeReference {
                                     underlying_type: Named(
                                         Inbuilt(
                                             String,
@@ -593,7 +593,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                         },
                         OperatorName(
                             "equals",
-                        ): TypeReference {
+                        ): QualifiedTypeReference {
                             underlying_type: Named(
                                 Inbuilt(
                                     String,

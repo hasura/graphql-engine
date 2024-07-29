@@ -60,7 +60,7 @@
           "comparisonOperators": [
             {
               "name": "range",
-              "argumentType": "range"
+              "argumentType": "int_range"
             }
           ],
           "dataConnectorOperatorMapping": [
@@ -79,7 +79,36 @@
       }
     }
   },
-
+  {
+    "kind": "ObjectType",
+    "version": "v1",
+    "definition": {
+      "name": "int_range",
+      "fields": [
+        {
+          "name": "start",
+          "type": "Int!"
+        },
+        {
+          "name": "end",
+          "type": "Int!"
+        }
+      ],
+      "graphql": {
+        "typeName": "IntRange"
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "elastic",
+          "dataConnectorObjectType": "range",
+          "fieldMapping": {
+            "start": { "column": { "name": "gte" } },
+            "end": { "column": { "name": "lte" } }
+          }
+        }
+      ]
+    }
+  },
   {
     "kind": "BooleanExpressionType",
     "version": "v1",

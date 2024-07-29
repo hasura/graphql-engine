@@ -10,6 +10,9 @@
 
 ### Fixed
 
+- Fix use of object types as comparison operator arguments by correctly
+  utilising user-provided OpenDD types.
+
 ### Changed
 
 - Introduced `AuthConfig` `v2`. This new version removes role emulation in
