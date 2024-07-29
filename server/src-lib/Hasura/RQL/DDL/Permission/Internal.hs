@@ -24,9 +24,8 @@ import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Authentication.Headers (userIdHeader)
 import Hasura.Authentication.Role (RoleName)
-import Hasura.Authentication.Session (isSessionVariable)
+import Hasura.Authentication.Session (fromSessionVariable, isSessionVariable, userIdHeader)
 import Hasura.Base.Error
 import Hasura.LogicalModel.Common (logicalModelFieldsToFieldInfo)
 import Hasura.LogicalModel.Fields (LogicalModelFieldsRM (..))
@@ -264,7 +263,7 @@ getDepHeadersFromVal val = case val of
     parseOnlyString v = case v of
       (String t)
         | isSessionVariable t -> [T.toLower t]
-        | isReqUserId t -> [userIdHeader]
+        | isReqUserId t -> [fromSessionVariable userIdHeader]
         | otherwise -> []
       _ -> []
     parseObject o =

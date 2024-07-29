@@ -38,7 +38,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
 import Hasura.Authentication.Role (RoleName, adminRoleName)
-import Hasura.Authentication.Session (SessionVariable, getSessionVariables, sessionVariableToText)
+import Hasura.Authentication.Session (SessionVariable, fromSessionVariable, getSessionVariables)
 import Hasura.Authentication.User (UserInfoM, askCurRole, askUserInfo, _uiSession)
 import Hasura.Backends.Postgres.Instances.Metadata ()
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -364,7 +364,7 @@ fromCurrentSession ::
 fromCurrentSession currentSessionExp sessVar =
   S.SEOpApp
     (S.SQLOp "->>")
-    [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
+    [currentSessionExp, S.SELit $ fromSessionVariable sessVar]
 
 currentSession :: S.SQLExp
 currentSession = S.SEUnsafe "current_setting('hasura.user')::json"

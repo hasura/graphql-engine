@@ -21,8 +21,7 @@ import Data.Semigroup.Foldable (Foldable1 (..))
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended (toTxt, (<<>), (<>>))
-import Hasura.Authentication.Headers (userIdHeader)
-import Hasura.Authentication.Session (SessionVariable, isSessionVariable, mkSessionVariable)
+import Hasura.Authentication.Session (SessionVariable, isSessionVariable, unsafeMkSessionVariable, userIdHeader)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0 (FunctionInfo (_fiDescription, _fiName))
 import Hasura.Backends.DataConnector.API.V0.Table qualified as DC (TableType (..))
@@ -611,7 +610,7 @@ parseCollectableType' ::
   m (PartialSQLExp 'DataConnector)
 parseCollectableType' collectableType = \case
   J.String t
-    | isSessionVariable t -> pure $ mkTypedSessionVar collectableType $ mkSessionVariable t
+    | isSessionVariable t -> pure . mkTypedSessionVar collectableType $ unsafeMkSessionVariable t
     | HSU.isReqUserId t -> pure $ mkTypedSessionVar collectableType userIdHeader
   val -> case collectableType of
     CollectableTypeScalar columnType ->

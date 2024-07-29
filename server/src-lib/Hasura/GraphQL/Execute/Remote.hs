@@ -14,7 +14,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Authentication.Session (getSessionVariableValue, sessionVariableToGraphQLName, sessionVariableToText)
+import Hasura.Authentication.Session (getSessionVariableValue, sessionVariableToGraphQLName)
 import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
@@ -166,7 +166,7 @@ resolveRemoteVariable userInfo = \case
         <<> " session variable expected, but not found"
     varName <-
       sessionVariableToGraphQLName sessionVar
-        `onNothing` throw500 ("'" <> sessionVariableToText sessionVar <> "' cannot be made into a valid GraphQL name")
+        `onNothing` throw500 (sessionVar <<> " cannot be made into a valid GraphQL name")
     coercedValue <-
       case presetInfo of
         SessionArgumentPresetScalar ->

@@ -15,9 +15,9 @@
       body:
         hello: world
       session_variables:
-        myVariable: some value
+        x-hasura-my-variable: some value
       request_transform:
-        body: '{{ getSessionVariable("myVariable") }}'
+        body: '{{ getSessionVariable("x-hasura-my-variable") }}'
         template_engine: Kriti
 
 - description: Test Webhook Transform getSessionVariable function | non existant session variable
@@ -44,7 +44,7 @@
       body:
         hello: world
       session_variables:
-        myVariable: some value
+        x-hasura-my-variable: some value
       request_transform:
         body: '{{ getSessionVariable("this_variable_doesnt_exist") }}'
         template_engine: Kriti
@@ -73,7 +73,7 @@
       body:
         hello: world
       session_variables:
-        myVariable: some value
+        x-hasura-my-variable: some value
       request_transform:
-        body: '{{ fooFunction("myVariable") }}'
+        body: '{{ fooFunction("x-hasura-my-variable") }}'
         template_engine: Kriti

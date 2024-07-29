@@ -13,11 +13,10 @@ where
 
 import Data.Aeson
 import Data.Char qualified as Char
-import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
-import Hasura.Authentication.Headers (adminSecretHeader, deprecatedAccessKeyHeader, useBackendOnlyPermissionsHeader, userRoleHeader)
+import Data.Text.Extended ((<<>))
 import Hasura.Authentication.Role (RoleName, adminRoleName, roleNameToTxt)
-import Hasura.Authentication.Session (SessionVariables (..), getSessionVariableValue, maybeRoleFromSessionVariables)
+import Hasura.Authentication.Session
 import Hasura.Base.Error (Code (..), QErr, throw400)
 import Hasura.Prelude
 
@@ -106,9 +105,9 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
   roleName <- case roleBuild of
     URBFromSessionVariables ->
       onNothing maybeSessionRole
-        $ throw400 InvalidParams
+        . throw400 InvalidParams
         $ userRoleHeader
-        <> " not found in session variables"
+        <<> " not found in session variables"
     URBFromSessionVariablesFallback roleName' -> pure $ fromMaybe roleName' maybeSessionRole
     URBPreDetermined roleName' -> pure roleName'
   backendOnlyFieldAccess <- getBackendOnlyFieldAccess
@@ -119,11 +118,9 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
 
     modifySessionVariables :: RoleName -> SessionVariables -> SessionVariables
     modifySessionVariables roleName =
-      SessionVariables
-        . HashMap.insert userRoleHeader (roleNameToTxt roleName)
-        . HashMap.delete adminSecretHeader
-        . HashMap.delete deprecatedAccessKeyHeader
-        . unSessionVariables
+      sessionVariablesWith userRoleHeader (roleNameToTxt roleName)
+        . sessionVariablesWithout adminSecretHeader
+        . sessionVariablesWithout deprecatedAccessKeyHeader
 
     getBackendOnlyFieldAccess :: m BackendOnlyFieldAccess
     getBackendOnlyFieldAccess = case userAdminSecret of
@@ -139,7 +136,7 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
                 Left err ->
                   throw400 BadRequest
                     $ useBackendOnlyPermissionsHeader
-                    <> ": "
+                    <<> ": "
                     <> T.pack err
                 Right privilege -> pure $ if privilege then BOFAAllowed else BOFADisallowed
 

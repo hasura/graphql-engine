@@ -31,7 +31,7 @@ import Data.HashSet qualified as Set
 import Data.Semigroup.Generic
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
-import Hasura.Authentication.Session (SessionVariable, SessionVariables, getSessionVariableValue, getSessionVariablesSet, sessionVariableToText)
+import Hasura.Authentication.Session (SessionVariable, SessionVariables, fromSessionVariable, getSessionVariableValue, getSessionVariablesSet)
 import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -482,9 +482,9 @@ resolveMultiplexedValue allSessionVars = \case
       getSessionVariableValue sessVar allSessionVars
         `onNothing` throw400
           NotFound
-          ("missing session variable: " <>> sessionVariableToText sessVar)
+          ("missing session variable: " <>> sessVar)
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
-    pure $ fromResVars ty ["session", sessionVariableToText sessVar]
+    pure $ fromResVars ty ["session", fromSessionVariable sessVar]
   UVLiteral sqlExp -> pure sqlExp
   UVSession -> do
     -- if the entire session is referenced, then add all session vars in referenced vars

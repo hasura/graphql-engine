@@ -241,9 +241,9 @@ instance (Arbitrary a) => Arbitrary (PathComponent a) where
       ]
 
 instance Arbitrary SessionVariable where
-  arbitrary = do
-    name <- arbitrary
-    pure $ mkSessionVariable $ Utils.sessionVariablePrefix <> name
+  arbitrary =
+    arbitrary `suchThatMap` \name ->
+      mkSessionVariable $ Utils.sessionVariablePrefix <> name
 
 instance Arbitrary IntrospectionResult where
   arbitrary = do

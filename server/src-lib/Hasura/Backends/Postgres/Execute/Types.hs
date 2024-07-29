@@ -46,7 +46,7 @@ import Database.PG.Query qualified as PG
 import Database.PG.Query.Class ()
 import Database.PG.Query.Connection qualified as PG
 import Hasura.Authentication.Role (adminRoleName)
-import Hasura.Authentication.Session (SessionVariables (..), getSessionVariableValue, maybeRoleFromSessionVariables)
+import Hasura.Authentication.Session (SessionVariables, getSessionVariableValue, maybeRoleFromSessionVariables)
 import Hasura.Authentication.User (UserInfo (_uiRole, _uiSession))
 import Hasura.Backends.Postgres.Connection.Settings (ConnectionTemplate (..), PostgresConnectionSetMemberName)
 import Hasura.Backends.Postgres.Execute.ConnectionTemplate

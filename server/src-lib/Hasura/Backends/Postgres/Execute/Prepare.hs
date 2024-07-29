@@ -25,7 +25,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.IntMap qualified as IntMap
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
-import Hasura.Authentication.Session (SessionVariables, getSessionVariableValue, sessionVariableToText)
+import Hasura.Authentication.Session (SessionVariables, fromSessionVariable, getSessionVariableValue)
 import Hasura.Authentication.User (UserInfo (_uiSession))
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -96,11 +96,11 @@ prepareWithPlan userInfo = \case
       getSessionVariableValue sessVar (_uiSession userInfo)
         `onNothing` throw400
           NotFound
-          ("missing session variable: " <>> sessionVariableToText sessVar)
+          ("missing session variable: " <>> sessVar)
     let sessVarVal =
           S.SEOpApp
             (S.SQLOp "->>")
-            [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
+            [currentSessionExp, S.SELit $ fromSessionVariable sessVar]
     pure $ withTypeAnn ty sessVarVal
   UVLiteral sqlExp -> pure sqlExp
   UVSession -> pure currentSessionExp
@@ -127,7 +127,7 @@ prepareWithoutPlan userInfo = \case
         <$> onNothing maybeSessionVariableValue
         $ throw400 NotFound
         $ "missing session variable: "
-        <>> sessionVariableToText sessVar
+        <>> sessVar
     pure $ withTypeAnn ty sessionVariableValue
 
 -- | The map of user session variables is always given the number (1) as its

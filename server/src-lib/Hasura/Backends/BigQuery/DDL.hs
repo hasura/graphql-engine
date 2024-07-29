@@ -10,8 +10,7 @@ module Hasura.Backends.BigQuery.DDL
 where
 
 import Data.Aeson
-import Hasura.Authentication.Headers (userIdHeader)
-import Hasura.Authentication.Session (SessionVariable, isSessionVariable, mkSessionVariable)
+import Hasura.Authentication.Session (SessionVariable, isSessionVariable, unsafeMkSessionVariable, userIdHeader)
 import Hasura.Backends.BigQuery.DDL.BoolExp
 import Hasura.Backends.BigQuery.DDL.ComputedField as M
 import Hasura.Backends.BigQuery.DDL.Source as M
@@ -72,7 +71,7 @@ parseCollectableType ::
   m (PartialSQLExp 'BigQuery)
 parseCollectableType collectableType = \case
   String t
-    | isSessionVariable t -> pure $ mkTypedSessionVar collectableType $ mkSessionVariable t
+    | isSessionVariable t -> pure . mkTypedSessionVar collectableType $ unsafeMkSessionVariable t
     | isReqUserId t -> pure $ mkTypedSessionVar collectableType userIdHeader
   val -> case collectableType of
     CollectableTypeScalar scalarType ->

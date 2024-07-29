@@ -17,7 +17,7 @@ import Data.Parser.Expires
 import Data.Text qualified as T
 import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
 import Hasura.Authentication.Headers (commonClientHeadersIgnored)
-import Hasura.Authentication.Session (mkSessionVariablesText)
+import Hasura.Authentication.Session (sessionVariablesFromMap)
 import Hasura.Authentication.User (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkUserInfo)
 import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
@@ -148,7 +148,7 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody respHdrs
     getUserInfoFromHdrs rawHeaders responseHdrs = do
       userInfo <-
         mkUserInfo URBFromSessionVariables UAdminSecretNotSent
-          $ mkSessionVariablesText rawHeaders
+          $ sessionVariablesFromMap rawHeaders
       logWebHookResp LevelInfo Nothing Nothing
       expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
       pure (userInfo, expiration, responseHdrs)

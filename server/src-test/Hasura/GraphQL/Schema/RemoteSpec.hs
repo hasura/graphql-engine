@@ -10,13 +10,14 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString.Lazy qualified as LBS
+import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty qualified as NEText
 import Data.Text.RawString
 import Hasura.Authentication.Role (adminRoleName)
-import Hasura.Authentication.Session (SessionVariables, mkSessionVariable)
+import Hasura.Authentication.Session (SessionVariables, unsafeMkSessionVariable)
 import Hasura.Authentication.User (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (ErrorMessage, fromErrorMessage)
@@ -96,7 +97,7 @@ mkTestRemoteSchema schema = RemoteSchemaIntrospection
                 Just $ case value of
                   G.VString "x-hasura-test" ->
                     G.VVariable
-                      $ SessionPresetVariable (mkSessionVariable "x-hasura-test") GName._String SessionArgumentPresetScalar
+                      $ SessionPresetVariable (unsafeMkSessionVariable ("x-hasura-test" :: CI.CI Text)) GName._String SessionArgumentPresetScalar
                   _ -> absurd <$> value
         }
 

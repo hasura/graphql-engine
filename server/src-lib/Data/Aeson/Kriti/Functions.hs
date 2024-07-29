@@ -59,7 +59,11 @@ sessionFunctions sessionVars = HashMap.singleton "getSessionVariable" getSession
     getSessionVar = \case
       J.Null -> Right $ J.Null
       J.String txt ->
-        case sessionVars >>= getSessionVariableValue (mkSessionVariable txt) of
-          Just x -> Right $ J.String x
-          Nothing -> Left . Kriti.CustomFunctionError $ "Session variable \"" <> txt <> "\" not found"
+        let value = do
+              sessionVars' <- sessionVars
+              var <- mkSessionVariable txt
+              getSessionVariableValue var sessionVars'
+         in case value of
+              Just x -> Right $ J.String x
+              Nothing -> Left . Kriti.CustomFunctionError $ "Session variable \"" <> txt <> "\" not found"
       _ -> Left $ Kriti.CustomFunctionError "Session variable name should be a string"
