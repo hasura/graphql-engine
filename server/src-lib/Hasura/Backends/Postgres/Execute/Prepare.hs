@@ -25,28 +25,20 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.IntMap qualified as IntMap
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.Session (SessionVariables, getSessionVariableValue, sessionVariableToText)
+import Hasura.Authentication.User (UserInfo (_uiSession))
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Column
 import Hasura.Backends.Postgres.Types.Column
-import Hasura.Base.Error
-  ( Code (NotFound),
-    QErr,
-    throw400,
-  )
+import Hasura.Base.Error (Code (NotFound), QErr, throw400)
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Parser.Names
 import Hasura.Prelude
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.Session
-  ( SessionVariables,
-    UserInfo (_uiSession),
-    getSessionVariableValue,
-    sessionVariableToText,
-  )
 import Language.GraphQL.Draft.Syntax qualified as G
 
 type PlanVariables = HashMap.HashMap PlanVariable Int

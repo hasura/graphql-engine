@@ -11,6 +11,7 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder qualified as LT
 import Data.Vector qualified as V
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.BigQuery.Execute qualified as DataLoader
 import Hasura.Backends.BigQuery.FromIr qualified as BigQuery
 import Hasura.Backends.BigQuery.Plan
@@ -39,7 +40,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (HeaderPrecedence, TraceQueryStatus)
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client as HTTP
 import Network.HTTP.Types qualified as HTTP

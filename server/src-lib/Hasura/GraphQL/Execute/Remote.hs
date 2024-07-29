@@ -14,6 +14,8 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended
+import Hasura.Authentication.Session (getSessionVariableValue, sessionVariableToGraphQLName, sessionVariableToText)
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.RemoteJoin.Types (RemoteJoins)
@@ -25,7 +27,6 @@ import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RemoteSchema.SchemaCache
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 getVariableDefinitionAndValue :: Variable -> (G.VariableDefinition, (G.Name, J.Value))

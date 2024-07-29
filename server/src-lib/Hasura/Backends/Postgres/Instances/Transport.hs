@@ -16,6 +16,7 @@ import Data.ByteString qualified as B
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
@@ -45,7 +46,6 @@ import Hasura.RQL.Types.BackendTag (HasTag)
 import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
-import Hasura.Session
 import Hasura.Tracing
 
 instance

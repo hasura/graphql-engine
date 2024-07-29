@@ -22,6 +22,7 @@ import Data.IntMap qualified as IntMap
 import Data.Sequence qualified as Seq
 import Data.Tuple.Extra (both)
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.ConnectionTemplate (QueryContext (..), QueryOperationType (..))
 import Hasura.Backends.Postgres.Execute.Insert (convertToSQLTransaction, validateInsertInput, validateInsertRows)
@@ -93,7 +94,6 @@ import Hasura.RQL.Types.Permission (ValidateInput (..), ValidateInputHttpDefinit
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (HeaderPrecedence, TraceQueryStatus (TraceQueryEnabled))
-import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP

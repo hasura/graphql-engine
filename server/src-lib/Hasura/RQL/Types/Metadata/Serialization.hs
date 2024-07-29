@@ -25,6 +25,7 @@ import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended qualified as T
 import Data.Vector qualified as Vector
+import Hasura.Authentication.Role (InheritedRole, Role (..))
 import Hasura.Function.Cache (emptyFunctionConfig)
 import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
@@ -91,7 +92,6 @@ import Hasura.RQL.Types.Permission
   )
 import Hasura.RQL.Types.QueryCollection (CreateCollection (..), QueryCollections)
 import Hasura.RQL.Types.Relationships.Local (RelDef (..))
-import Hasura.RQL.Types.Roles (InheritedRole, Role (..))
 import Hasura.RQL.Types.ScheduledTrigger (CronTriggerMetadata (..), defaultSTRetryConf)
 import Hasura.RQL.Types.SourceCustomization (emptySourceCustomization)
 import Hasura.RemoteSchema.Metadata

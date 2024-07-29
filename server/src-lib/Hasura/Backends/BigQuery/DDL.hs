@@ -10,6 +10,8 @@ module Hasura.Backends.BigQuery.DDL
 where
 
 import Data.Aeson
+import Hasura.Authentication.Headers (userIdHeader)
+import Hasura.Authentication.Session (SessionVariable, isSessionVariable, mkSessionVariable)
 import Hasura.Backends.BigQuery.DDL.BoolExp
 import Hasura.Backends.BigQuery.DDL.ComputedField as M
 import Hasura.Backends.BigQuery.DDL.Source as M
@@ -27,7 +29,6 @@ import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
 import Hasura.Server.Utils
-import Hasura.Session
 import Hasura.Table.Cache
 
 fetchAndValidateEnumValues ::

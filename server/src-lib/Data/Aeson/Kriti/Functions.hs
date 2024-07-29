@@ -13,8 +13,8 @@ import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
+import Hasura.Authentication.Session (SessionVariables, getSessionVariableValue, mkSessionVariable)
 import Hasura.Prelude
-import Hasura.Session (SessionVariables, getSessionVariableValue, mkSessionVariable)
 import Kriti qualified
 import Kriti.CustomFunctions qualified as Kriti
 import Kriti.Error (SerializeError (serialize), SerializedError)

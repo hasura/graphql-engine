@@ -15,6 +15,9 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty qualified as NEText
 import Data.Text.RawString
+import Hasura.Authentication.Role (adminRoleName)
+import Hasura.Authentication.Session (SessionVariables, mkSessionVariable)
+import Hasura.Authentication.User (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (ErrorMessage, fromErrorMessage)
 import Hasura.GraphQL.Execute.Inline
@@ -33,11 +36,9 @@ import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Root
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.RemoteSchema.SchemaCache
-import Hasura.Session (BackendOnlyFieldAccess (..), SessionVariables, UserInfo (..), mkSessionVariable)
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G

@@ -16,6 +16,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
+import Hasura.Authentication.Role
 import Hasura.Base.Error
 import Hasura.LogicalModel.API (LogicalModelName)
 import Hasura.LogicalModel.Fields (LogicalModelFieldsLookupRT (..), LogicalModelFieldsRM (..), runLogicalModelFieldsLookup)
@@ -32,7 +33,6 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.Roles.Internal
   ( CheckPermission (..),
     CombineRolePermInfo (..),

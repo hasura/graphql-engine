@@ -20,6 +20,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Set qualified as S
 import Data.Text.Extended
 import Data.Text.NonEmpty (mkNonEmptyText)
+import Hasura.Authentication.Role (RoleName)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Internal.Parser qualified as IP
 import Hasura.GraphQL.Schema.Backend
@@ -67,7 +68,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (RelName (..))
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local (Nullable (..))
-import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.Table.Cache (SelPermInfo (..))

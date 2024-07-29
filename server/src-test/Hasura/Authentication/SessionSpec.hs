@@ -1,9 +1,8 @@
-module Hasura.SessionSpec (spec) where
+module Hasura.Authentication.SessionSpec (spec) where
 
+import Hasura.Authentication.Session
 import Hasura.Prelude
 import Hasura.QuickCheck.Instances ()
-import Hasura.Server.Utils (isSessionVariable)
-import Hasura.Session (sessionVariableToText)
 import Test.Hspec (Spec, describe, shouldSatisfy)
 import Test.Hspec.QuickCheck (prop)
 

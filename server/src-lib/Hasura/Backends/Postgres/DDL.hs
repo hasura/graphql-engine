@@ -10,6 +10,8 @@ module Hasura.Backends.Postgres.DDL
 where
 
 import Data.Aeson
+import Hasura.Authentication.Headers (userIdHeader)
+import Hasura.Authentication.Session (SessionVariable, isSessionVariable, mkSessionVariable)
 import Hasura.Backends.Postgres.DDL.BoolExp as M
 import Hasura.Backends.Postgres.DDL.ComputedField as M
 import Hasura.Backends.Postgres.DDL.EventTrigger as M
@@ -26,8 +28,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.SQL.Types
-import Hasura.Server.Utils
-import Hasura.Session
+import Hasura.Server.Utils (isReqUserId)
 
 parseCollectableType ::
   forall pgKind m.

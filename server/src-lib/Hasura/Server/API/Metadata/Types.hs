@@ -7,6 +7,7 @@ module Hasura.Server.API.Metadata.Types
 where
 
 import GHC.Generics
+import Hasura.Authentication.Role (DropInheritedRole, InheritedRole)
 import Hasura.Function.API qualified as Functions
 import Hasura.LogicalModel.API qualified as LogicalModel
 import Hasura.NativeQuery.API qualified as NativeQueries
@@ -36,7 +37,6 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata (GetCatalogState, SetCatalogState)
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.AnyBackend

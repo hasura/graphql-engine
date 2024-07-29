@@ -13,6 +13,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Data.Text.NonEmpty
+import Hasura.Authentication.Role (adminRoleName)
 import Hasura.Backends.Postgres.Instances.Schema ()
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Types.Column
@@ -42,7 +43,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G

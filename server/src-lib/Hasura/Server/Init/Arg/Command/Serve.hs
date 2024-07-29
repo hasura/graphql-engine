@@ -85,6 +85,8 @@ import Data.HashSet qualified as HashSet
 import Data.Text qualified as Text
 import Data.Time qualified as Time
 import Database.PG.Query qualified as Query
+import Hasura.Authentication.Role (RoleName)
+import Hasura.Authentication.Role qualified as Roles
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Bounded
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
@@ -93,8 +95,6 @@ import Hasura.NativeQuery.Validation qualified as NativeQuery
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (MetadataDefaults, emptyMetadataDefaults)
 import Hasura.RQL.Types.NamingCase qualified as NC
-import Hasura.RQL.Types.Roles (RoleName)
-import Hasura.RQL.Types.Roles qualified as Roles
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors

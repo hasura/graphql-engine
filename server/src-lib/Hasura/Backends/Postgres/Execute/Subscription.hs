@@ -31,6 +31,8 @@ import Data.HashSet qualified as Set
 import Data.Semigroup.Generic
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.Session (SessionVariable, SessionVariables, getSessionVariableValue, getSessionVariablesSet, sessionVariableToText)
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Error
@@ -53,7 +55,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Schema.Options (RemoveEmptySubscriptionResponses (..))
 import Hasura.RQL.Types.Subscription
 import Hasura.SQL.Types
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------------------------------------------

@@ -13,6 +13,9 @@ import Data.Aeson.Extended qualified as J (encodeToStrictText)
 import Data.Foldable (for_)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
+import Hasura.Authentication.Role (mkRoleNameSafe)
+import Hasura.Authentication.Session (mkSessionVariablesText)
+import Hasura.Authentication.User (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..))
@@ -23,13 +26,7 @@ import Hasura.GraphQL.Parser.Variable (VariableInfo (..))
 import Hasura.RQL.IR.Value (Provenance (..), UnpreparedValue (..))
 import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (..))
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
-import Hasura.RQL.Types.Roles (mkRoleNameSafe)
 import Hasura.SQL.Types (CollectableType (..))
-import Hasura.Session
-  ( BackendOnlyFieldAccess (..),
-    UserInfo (..),
-    mkSessionVariablesText,
-  )
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Hspec (Expectation, Spec, describe, it, shouldBe)
 import Prelude

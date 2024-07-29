@@ -665,6 +665,13 @@ library
                      , Hasura.Logging
                      , Hasura.HTTP
                      , Hasura.PingSources
+
+                     , Hasura.Authentication.Header
+                     , Hasura.Authentication.Headers
+                     , Hasura.Authentication.Role
+                     , Hasura.Authentication.Session
+                     , Hasura.Authentication.User
+
                      , Hasura.Server.API.Backend
                      , Hasura.Server.API.Instances
                      , Hasura.Server.API.Metadata
@@ -722,7 +729,6 @@ library
                      , Hasura.GraphQL.Logging.QueryLog
                      , Hasura.GraphQL.Logging.ExecutionLog
                      , Hasura.RQL.DML.Select
-                     , Hasura.Session
 
                      , Hasura.Server.API.Config
                      , Hasura.Server.Metrics
@@ -801,6 +807,7 @@ library
                      , Hasura.RemoteSchema.SchemaCache.RemoteRelationship
                      , Hasura.RemoteSchema.SchemaCache.Build
                      , Hasura.RemoteSchema.SchemaCache
+
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.Allowlist
                      , Hasura.RQL.Types.ApiLimit
@@ -838,7 +845,6 @@ library
                      , Hasura.RQL.Types.Relationships.Remote
                      , Hasura.RQL.Types.Relationships.ToSource
                      , Hasura.RQL.Types.ResultCustomization
-                     , Hasura.RQL.Types.Roles
                      , Hasura.RQL.Types.Roles.Internal
                      , Hasura.RQL.Types.ResizePool
                      , Hasura.RQL.Types.ScheduledTrigger
@@ -848,7 +854,6 @@ library
                      , Hasura.RQL.Types.SchemaCache.Instances
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Schema.Options
-                     , Hasura.RQL.Types.Session
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.Source.Column
                      , Hasura.RQL.Types.Source.Table
@@ -1182,6 +1187,7 @@ test-suite graphql-engine-tests
     Data.TimeSpec
     Data.TrieSpec
     Hasura.AppSpec
+    Hasura.Authentication.SessionSpec
     Hasura.Base.Error.TestInstances
     Hasura.Backends.BigQuery.SourceSpec
     Hasura.Backends.BigQuery.TypesSpec
@@ -1248,7 +1254,6 @@ test-suite graphql-engine-tests
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
     Hasura.Server.ResourceCheckerSpec
-    Hasura.SessionSpec
     Hasura.SQL.BackendMapSpec
     Hasura.SQL.WKTSpec
     Hasura.Tracing.TraceIdSpec

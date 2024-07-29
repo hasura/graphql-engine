@@ -39,15 +39,16 @@ import Data.IORef (newIORef, readIORef)
 import Data.List qualified as L
 import Data.Text.Encoding qualified as T
 import Data.Time.Clock (UTCTime, getCurrentTime)
+import Hasura.Authentication.Headers
+import Hasura.Authentication.Role (RoleName, adminRoleName)
+import Hasura.Authentication.Session (getSessionVariableValue, mkSessionVariablesHeaders)
+import Hasura.Authentication.User (ExtraUserInfo, UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkUserInfo)
 import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import Hasura.Logging
 import Hasura.Prelude
-import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.Server.Auth.JWT hiding (processJwt_)
 import Hasura.Server.Auth.WebHook
-import Hasura.Server.Utils
-import Hasura.Session (ExtraUserInfo, UserAdminSecret (..), UserInfo, UserRoleBuild (..), getSessionVariableValue, mkSessionVariablesHeaders, mkUserInfo)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP

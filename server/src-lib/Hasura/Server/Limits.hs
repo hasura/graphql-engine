@@ -5,11 +5,11 @@ module Hasura.Server.Limits
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.ApiLimit (ApiLimit)
 import Hasura.Server.Types qualified as HGE
-import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing
 
 -- | Resource limits, represented by a function which modifies IO actions to

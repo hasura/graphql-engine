@@ -18,15 +18,17 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Parser.JSONPath
 import Data.Text qualified as T
+import Hasura.Authentication.Headers
+import Hasura.Authentication.Role (RoleName, adminRoleName, mkRoleName)
+import Hasura.Authentication.Session (mkSessionVariable, mkSessionVariablesHeaders, sessionVariableToText)
+import Hasura.Authentication.User (UserAdminSecret (..), UserInfo (..), UserRoleBuild (..), mkUserInfo)
 import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import Hasura.Logging (Logger (..))
 import Hasura.Prelude
-import Hasura.RQL.Types.Roles (RoleName, adminRoleName, mkRoleName)
 import Hasura.Server.Auth hiding (getUserInfoWithExpTime, processJwt)
 import Hasura.Server.Auth.JWT hiding (processJwt)
-import Hasura.Server.Utils
-import Hasura.Session (UserAdminSecret (..), UserInfo (..), UserRoleBuild (..), mkSessionVariable, mkSessionVariablesHeaders, mkUserInfo, sessionVariableToText)
+import Hasura.Server.Utils ()
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Test.Hspec

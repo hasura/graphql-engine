@@ -16,14 +16,15 @@ import Data.Parser.CacheControl (parseMaxAge)
 import Data.Parser.Expires
 import Data.Text qualified as T
 import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
+import Hasura.Authentication.Headers (commonClientHeadersIgnored)
+import Hasura.Authentication.Session (mkSessionVariablesText)
+import Hasura.Authentication.User (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkUserInfo)
 import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.HTTP
 import Hasura.Logging
 import Hasura.Prelude
 import Hasura.Server.Logging
-import Hasura.Server.Utils
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Wreq qualified as Wreq

@@ -89,20 +89,18 @@ import Data.Time.Clock
     getCurrentTime,
   )
 import GHC.AssertNF.CPP
+import Hasura.Authentication.Header (getRequestHeader)
+import Hasura.Authentication.Headers (userRoleHeader)
+import Hasura.Authentication.Role (RoleName, mkRoleName)
+import Hasura.Authentication.Session (SessionVariable, SessionVariableValue, isSessionVariable, mkSessionVariable, mkSessionVariablesHeaders, mkSessionVariablesText, sessionVariableToText)
+import Hasura.Authentication.User (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkUserInfo)
 import Hasura.Base.Error
 import Hasura.HTTP
 import Hasura.Logging (Hasura, LogLevel (..), Logger (..))
 import Hasura.Prelude
-import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
 import Hasura.Server.Auth.JWT.Internal (parseEdDSAKey, parseEsKey, parseHmacKey, parseRsaKey)
 import Hasura.Server.Auth.JWT.Logging
-import Hasura.Server.Utils
-  ( executeJSONPath,
-    getRequestHeader,
-    isSessionVariable,
-    userRoleHeader,
-  )
-import Hasura.Session (SessionVariable, SessionVariableValue, UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkSessionVariable, mkSessionVariablesHeaders, mkSessionVariablesText, mkUserInfo, sessionVariableToText)
+import Hasura.Server.Utils (executeJSONPath)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.HTTP.Types as N
 import Network.URI.Extended (URI)

@@ -5,10 +5,10 @@
 module Hasura.LogicalModel.Fields (LogicalModelFieldsRM (..), LogicalModelFieldsLookupRT (..), runLogicalModelFieldsLookup) where
 
 import Data.HashMap.Strict qualified as HashMap
+import Hasura.Authentication.User (UserInfoM)
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.LogicalModel.Types
 import Hasura.Prelude
-import Hasura.RQL.Types.Session (UserInfoM)
 import Hasura.Tracing (TraceT)
 
 -- | Class for looking up Logical Models
