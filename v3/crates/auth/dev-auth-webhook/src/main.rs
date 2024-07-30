@@ -26,7 +26,7 @@ async fn main() -> anyhow::Result<()> {
         ))
         .layer(TraceLayer::new_for_http());
 
-    let host = net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED);
+    let host = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED);
     let port = env::var("PORT")
         .map(|str| str.parse())
         .unwrap_or(Ok(DEFAULT_PORT))?;
