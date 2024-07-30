@@ -1,22 +1,38 @@
 //! NDC query generation from 'ModelSelection' IR for relationships.
 
-use open_dds::data_connector::CollectionName;
+use open_dds::data_connector::{CollectionName, DataConnectorColumnName};
 use open_dds::relationships::RelationshipType;
 use open_dds::types::DataConnectorArgumentName;
 use std::collections::BTreeMap;
 
-use super::{selection_set, types};
+use super::selection_set;
 use crate::ir::model_selection::ModelSelection;
 use crate::ir::relationship::{self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo};
 use crate::ir::selection_set::{FieldSelection, NdcRelationshipName};
 use crate::plan::error;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Relationship {
+    /// A mapping between columns on the source collection to columns on the target collection
+    pub column_mapping: BTreeMap<DataConnectorColumnName, DataConnectorColumnName>,
+    pub relationship_type: RelationshipType,
+    /// The name of a collection
+    pub target_collection: CollectionName,
+    /// Values to be provided to any collection arguments
+    pub arguments: BTreeMap<DataConnectorArgumentName, RelationshipArgument>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RelationshipArgument {
+    Column { name: DataConnectorColumnName },
+}
 
 /// collect relationships recursively from IR components containing relationships,
 /// and create NDC relationship definitions which will be added to the `relationships`
 /// variable.
 pub(crate) fn collect_relationships(
     ir: &ModelSelection<'_>,
-    relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
+    relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
 ) -> Result<(), error::Error> {
     // from selection fields
     if let Some(selection) = &ir.selection {
@@ -82,7 +98,7 @@ pub(crate) fn collect_relationships(
 
 pub fn process_model_relationship_definition(
     relationship_info: &LocalModelRelationshipInfo,
-) -> Result<types::Relationship, error::Error> {
+) -> Result<Relationship, error::Error> {
     let &LocalModelRelationshipInfo {
         relationship_name,
         relationship_type,
@@ -140,18 +156,18 @@ pub fn process_model_relationship_definition(
             Err(error::InternalError::RemoteRelationshipsAreNotSupported)?;
         }
     }
-    let ndc_relationship = types::Relationship {
+    let relationship = Relationship {
         column_mapping,
         relationship_type: relationship_type.clone(),
         target_collection: target_source.model.collection.clone(),
         arguments: BTreeMap::new(),
     };
-    Ok(ndc_relationship)
+    Ok(relationship)
 }
 
 pub(crate) fn process_command_relationship_definition(
     relationship_info: &LocalCommandRelationshipInfo,
-) -> Result<types::Relationship, error::Error> {
+) -> Result<Relationship, error::Error> {
     let &LocalCommandRelationshipInfo {
         annotation,
         source_data_connector,
@@ -183,7 +199,7 @@ pub(crate) fn process_command_relationship_definition(
                 description: e.to_string(),
             })?;
 
-            let relationship_argument = types::RelationshipArgument::Column {
+            let relationship_argument = RelationshipArgument::Column {
                 name: source_column.column,
             };
 
@@ -219,11 +235,11 @@ pub(crate) fn process_command_relationship_definition(
         }
     }
 
-    let ndc_relationship = types::Relationship {
+    let relationship = Relationship {
         column_mapping: BTreeMap::new(),
         relationship_type: RelationshipType::Object,
         target_collection: CollectionName::from(target_source.function_name.as_str()),
         arguments,
     };
-    Ok(ndc_relationship)
+    Ok(relationship)
 }

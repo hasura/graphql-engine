@@ -1,12 +1,19 @@
 mod arguments;
 mod commands;
 pub mod error;
-pub mod filter;
+pub(crate) mod field;
+pub(crate) mod filter;
 mod model_selection;
+mod mutation;
 pub mod ndc_request;
+pub(crate) mod query;
 mod relationships;
 pub(crate) mod selection_set;
-pub mod types;
+
+pub use field::ResolvedField;
+pub use filter::{plan_expression, resolve_expression, ResolvedFilterExpression};
+pub use query::{ResolvedQueryExecutionPlan, ResolvedQueryNode};
+pub use relationships::Relationship;
 
 use gql::normalized_ast;
 use gql::schema::NamespacedGetter;
@@ -105,7 +112,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 
 #[derive(Debug)]
 pub struct NDCMutationExecution<'n, 's, 'ir> {
-    pub execution_node: types::UnresolvedMutationExecutionPlan<'s>,
+    pub execution_node: mutation::UnresolvedMutationExecutionPlan<'s>,
     pub join_locations: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
     pub execution_span_attribute: String,
@@ -116,7 +123,7 @@ pub struct NDCMutationExecution<'n, 's, 'ir> {
 
 #[derive(Debug)]
 pub struct ExecutionTree<'s, 'ir> {
-    pub query_execution_plan: types::UnresolvedQueryExecutionPlan<'s>,
+    pub query_execution_plan: query::UnresolvedQueryExecutionPlan<'s>,
     pub remote_join_executions: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
 }
 

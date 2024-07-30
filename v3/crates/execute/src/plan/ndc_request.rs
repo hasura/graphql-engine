@@ -4,10 +4,8 @@ pub mod v02;
 use crate::{error, ndc};
 use metadata_resolve::data_connectors::NdcVersion;
 
-use super::types;
-
 pub fn make_ndc_query_request(
-    query_execution_plan: types::ResolvedQueryExecutionPlan,
+    query_execution_plan: super::query::ResolvedQueryExecutionPlan,
 ) -> Result<ndc::NdcQueryRequest, error::FieldError> {
     match query_execution_plan
         .data_connector
@@ -24,7 +22,7 @@ pub fn make_ndc_query_request(
 }
 
 pub fn make_ndc_mutation_request(
-    mutation_execution_plan: types::ResolvedMutationExecutionPlan,
+    mutation_execution_plan: super::mutation::ResolvedMutationExecutionPlan,
 ) -> Result<ndc::NdcMutationRequest, error::FieldError> {
     match mutation_execution_plan
         .data_connector

@@ -8,8 +8,7 @@ use json_ext::ValueExt;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;
 
-use crate::plan::types as plan_types;
-use crate::plan::ProcessResponseAs;
+use crate::plan::{self, ProcessResponseAs};
 
 /// This tree structure captures all the locations (in the selection set IR) where
 /// remote joins are found.
@@ -110,7 +109,7 @@ pub struct RemoteJoin<'s, 'ir> {
     /// target data connector to execute query on
     pub target_data_connector: &'s metadata_resolve::DataConnectorLink,
     /// NDC node to execute on a data connector
-    pub target_ndc_execution: plan_types::UnresolvedQueryExecutionPlan<'s>,
+    pub target_ndc_execution: plan::query::UnresolvedQueryExecutionPlan<'s>,
     /// Mapping of the fields in source to fields in target.
     /// The HashMap has the following info -
     ///   - key: is the field name in the source

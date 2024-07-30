@@ -141,22 +141,21 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                     })?;
 
                     let filter_plan =
-                        execute::plan::filter::plan_expression(&filter_ir, &mut relationships)
-                            .map_err(|e| {
+                        execute::plan::plan_expression(&filter_ir, &mut relationships).map_err(
+                            |e| {
                                 DataFusionError::Internal(format!(
                                     "error constructing permission filter plan: {e}"
                                 ))
+                            },
+                        )?;
+                    let filter =
+                        execute::plan::resolve_expression(filter_plan, &table.http_context.clone())
+                            .await
+                            .map_err(|e| {
+                                DataFusionError::Internal(format!(
+                                    "error resolving permission filter plan: {e}"
+                                ))
                             })?;
-                    let filter = execute::plan::types::resolve_expression(
-                        filter_plan,
-                        &table.http_context.clone(),
-                    )
-                    .await
-                    .map_err(|e| {
-                        DataFusionError::Internal(format!(
-                            "error resolving permission filter plan: {e}"
-                        ))
-                    })?;
                     Ok(Some(filter))
                 }
             }?;

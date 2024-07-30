@@ -21,11 +21,8 @@ use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 use execute::{
     ir::selection_set::{NdcFieldAlias, NdcRelationshipName},
     plan::{
-        self,
-        types::{
-            Relationship, ResolvedField, ResolvedFilterExpression, ResolvedQueryExecutionPlan,
-            ResolvedQueryNode,
-        },
+        self, Relationship, ResolvedField, ResolvedFilterExpression, ResolvedQueryExecutionPlan,
+        ResolvedQueryNode,
     },
     HttpContext,
 };

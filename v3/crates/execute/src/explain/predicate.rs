@@ -5,7 +5,8 @@ use crate::explain::fetch_explain_from_data_connector;
 use crate::ir;
 use crate::ir::selection_set::NdcFieldAlias;
 use crate::plan;
-use crate::plan::types::{UnresolvedField, UnresolvedNestedField, UnresolvedQueryNode};
+use crate::plan::field::{UnresolvedField, UnresolvedNestedField};
+use crate::plan::query::UnresolvedQueryNode;
 use async_recursion::async_recursion;
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
@@ -155,7 +156,7 @@ async fn explain_query_predicate<'s>(
                 .await
                 .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
 
-            let query_execution_plan = plan::types::ResolvedQueryExecutionPlan {
+            let query_execution_plan = plan::query::ResolvedQueryExecutionPlan {
                 query_node: resolved_query_node,
                 collection: target_model_source.collection.clone(),
                 arguments: BTreeMap::new(),

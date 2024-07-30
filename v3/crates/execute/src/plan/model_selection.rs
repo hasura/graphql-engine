@@ -5,9 +5,9 @@ use std::collections::BTreeMap;
 use super::arguments;
 use super::error;
 use super::filter;
+use super::query;
 use super::relationships;
 use super::selection_set;
-use super::types;
 use crate::ir::model_selection::ModelSelection;
 use crate::ir::selection_set::NdcRelationshipName;
 use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
@@ -16,11 +16,11 @@ use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
 // #[async_recursion]
 pub(crate) fn plan_query_node<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
-    relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
+    relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
-        types::UnresolvedQueryNode<'s>,
+        query::UnresolvedQueryNode<'s>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
@@ -39,7 +39,7 @@ pub(crate) fn plan_query_node<'s, 'ir>(
     }
 
     let predicate = filter::plan_filter_expression(&ir.filter_clause, relationships)?;
-    let query_node = types::QueryNode {
+    let query_node = query::QueryNode {
         limit: ir.limit,
         offset: ir.offset,
         order_by: ir.order_by.as_ref().map(|o| o.order_by_elements.clone()),
@@ -57,7 +57,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
-        types::UnresolvedQueryExecutionPlan<'s>,
+        query::UnresolvedQueryExecutionPlan<'s>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
@@ -67,7 +67,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
 
     let (query, join_locations) =
         plan_query_node(ir, &mut collection_relationships, join_id_counter)?;
-    let execution_node = types::UnresolvedQueryExecutionPlan {
+    let execution_node = query::UnresolvedQueryExecutionPlan {
         query_node: query,
         collection: ir.collection.clone(),
         arguments: arguments::plan_arguments(&ir.arguments, &mut collection_relationships)?,
