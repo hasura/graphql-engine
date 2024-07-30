@@ -11,6 +11,8 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
+import Data.String (fromString)
+import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Hasura.Authentication.Role (adminRoleName)
@@ -88,12 +90,13 @@ actionExecute customTypes actionInfo = runMaybeT do
           _aaeWebhook = _adHandler definition,
           _aaeHeaders = _adHeaders definition,
           _aaeForwardClientHeaders = _adForwardClientHeaders definition,
+          _aaeIgnoredClientHeaders = _aiIgnoredClientHeaders actionInfo,
           _aaeTimeOut = _adTimeout definition,
           _aaeRequestTransform = _adRequestTransform definition,
           _aaeResponseTransform = _adResponseTransform definition
         }
   where
-    ActionInfo actionName (outputType, outputObject) definition permissions _ comment = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions _ _ comment = actionInfo
 
 -- | actionAsyncMutation is used to execute a asynchronous mutation action. An
 --   asynchronous action expects the field name and the input arguments to the
@@ -115,9 +118,9 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
       description = G.Description <$> comment
   pure
     $ P.selection fieldName description inputArguments actionIdParser
-    <&> IR.AnnActionMutationAsync actionName forwardClientHeaders
+    <&> IR.AnnActionMutationAsync actionName forwardClientHeaders (map (fromString . T.unpack) ignoredClientHeaders)
   where
-    ActionInfo actionName _ definition permissions forwardClientHeaders comment = actionInfo
+    ActionInfo actionName _ definition permissions forwardClientHeaders ignoredClientHeaders comment = actionInfo
 
 -- | actionAsyncQuery is used to query/subscribe to the result of an
 --   asynchronous mutation action. The only input argument to an
@@ -196,6 +199,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
           _aaaqDefinitionList = definitionsList,
           _aaaqStringifyNum = stringifyNumbers,
           _aaaqForwardClientHeaders = forwardClientHeaders,
+          _aaaqIgnoredClientHeaders = map (fromString . T.unpack) ignoredClientHeaders,
           _aaaqSource = getActionSourceInfo outputObject
         }
   where
@@ -212,7 +216,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
       gName <- mkScalarTypeName HasuraCase scalarType
       pure $ mkScalar gName $ const $ pure ()
 
-    ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders ignoredClientHeaders comment = actionInfo
     idFieldName = Name._id
     idFieldDescription = "the unique id of an action"
 

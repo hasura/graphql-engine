@@ -23,6 +23,7 @@ import Data.List.Extended (duplicates)
 import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Authentication.Header (mkSetCookieHeaders)
+import Hasura.Authentication.Headers (commonClientHeadersIgnored)
 import Hasura.Authentication.Role (adminRoleName)
 import Hasura.Authentication.Session (mkClientHeadersForward, sessionVariablesToHeaders)
 import Hasura.Authentication.User (UserInfo, adminUserInfo, _uiSession)
@@ -150,7 +151,7 @@ execRemoteGQ env tracesPropagator userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
   when (G._todType _grQuery == G.OperationTypeSubscription)
     $ throwRemoteSchema "subscription to remote server is not supported"
   confHdrs <- makeHeadersFromConf env hdrConf
-  let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
+  let clientHdrs = bool [] (mkClientHeadersForward commonClientHeadersIgnored reqHdrs) fwdClientHdrs
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
       hdrMaps =

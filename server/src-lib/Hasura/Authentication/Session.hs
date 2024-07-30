@@ -45,7 +45,6 @@ import Data.Maybe qualified as Maybe
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Authentication.Header (filterHeaders)
-import Hasura.Authentication.Headers (commonClientHeadersIgnored)
 import Hasura.Authentication.Role (RoleName, mkRoleName)
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -211,11 +210,11 @@ maybeRoleFromSessionVariables sessionVariables =
   -- returns Nothing if x-hasura-role is an empty string
   getSessionVariableValue userRoleHeader sessionVariables >>= mkRoleName
 
-mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
-mkClientHeadersForward reqHeaders =
+mkClientHeadersForward :: [HTTP.HeaderName] -> [HTTP.Header] -> [HTTP.Header]
+mkClientHeadersForward ignoredHeaders reqHeaders =
   xForwardedHeaders <> (filterVars . filterRequestHeaders) reqHeaders
   where
-    filterRequestHeaders = filterHeaders $ HashSet.fromList commonClientHeadersIgnored
+    filterRequestHeaders = filterHeaders $ HashSet.fromList ignoredHeaders
     filterVars = filter (\(k, _) -> not $ isSessionVariable $ bsToTxt $ CI.original k)
     xForwardedHeaders = flip mapMaybe reqHeaders $ \(hdrName, hdrValue) ->
       case hdrName of

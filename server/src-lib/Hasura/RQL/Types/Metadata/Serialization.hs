@@ -614,6 +614,7 @@ actionMetadataToOrdJSONList = listToMaybeArraySort actionMetadataToOrdJSON _amNa
               actionType
               headers
               frwrdClientHdrs
+              ignoredClientHeaders
               timeout
               handler
               requestTransform
@@ -630,6 +631,7 @@ actionMetadataToOrdJSONList = listToMaybeArraySort actionMetadataToOrdJSON _amNa
                       ("output_type", AO.toOrdered outputType)
                     ]
                   <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
+                  <> [("ignored_client_headers", AO.toOrdered ignoredClientHeaders)]
                   <> catMaybes
                     [ listToMaybeOrdPair "headers" AO.toOrdered headers,
                       listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args,

@@ -203,6 +203,7 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
         _adType
         _adHeaders
         _adForwardClientHeaders
+        _adIgnoredClientHeaders
         _adTimeout
         webhookEnvRecord
         _adRequestTransform

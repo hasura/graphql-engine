@@ -1709,7 +1709,8 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
           withRecordInconsistencyM (mkActionMetadataObject action) $ modifyErr addActionContext do
             (resolvedDef, outObject) <- resolveAction env resolvedCustomTypes def scalarsMap
             let forwardClientHeaders = _adForwardClientHeaders resolvedDef
-            return $ ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders comment
+            let ignoredClientHeaders = _adIgnoredClientHeaders resolvedDef
+            return $ ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders ignoredClientHeaders comment
 
 buildRemoteSchemaRemoteRelationship ::
   (MonadWriter (Seq CollectItem) m) =>

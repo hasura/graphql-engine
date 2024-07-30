@@ -40,6 +40,7 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.Extended qualified as LE
 import Data.Sequence qualified as DS
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.Headers (commonClientHeadersIgnored)
 import Hasura.Authentication.Session (mkClientHeadersForward)
 import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.Postgres.Connection
@@ -506,7 +507,7 @@ validateMutation env manager logger userInfo (ResolvedWebhook urlText) confHeade
             "data" J..= inputData
           ]
   resolvedConfHeaders <- makeHeadersFromConf env confHeaders
-  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
+  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward commonClientHeadersIgnored reqHeaders else mempty
       hdrs = case headerPrecedence of
         -- preserves old behaviour (default)
         -- avoids duplicates and forwards client headers with higher precedence than configuration headers
