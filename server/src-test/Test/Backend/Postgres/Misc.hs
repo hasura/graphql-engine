@@ -16,6 +16,9 @@ module Test.Backend.Postgres.Misc
   )
 where
 
+import Hasura.Authentication.Role (adminRoleName)
+import Hasura.Authentication.Session (SessionVariables)
+import Hasura.Authentication.User (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..))
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..), txtEncoder, withScalarTypeAnn)
@@ -23,8 +26,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Value (Provenance (FreshVar), UnpreparedValue (..))
 import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo, ColumnType (..), ColumnValue (..))
-import Hasura.RQL.Types.Roles (adminRoleName)
-import Hasura.RQL.Types.Session (BackendOnlyFieldAccess (BOFADisallowed), SessionVariables, UserInfo (..))
 import Test.Parser.Expectation qualified as Expect
 
 type PG = 'Postgres 'Vanilla

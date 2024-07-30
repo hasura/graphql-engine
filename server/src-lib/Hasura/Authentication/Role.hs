@@ -1,4 +1,4 @@
-module Hasura.RQL.Types.Roles
+module Hasura.Authentication.Role
   ( DropInheritedRole (..),
     InheritedRole,
     ParentRoles (..),

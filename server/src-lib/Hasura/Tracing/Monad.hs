@@ -12,8 +12,8 @@ import Control.Monad.Catch (MonadCatch, MonadMask, MonadThrow)
 import Control.Monad.Morph
 import Control.Monad.Trans.Control
 import Data.IORef
+import Hasura.Authentication.User (UserInfoM (..))
 import Hasura.Prelude
-import Hasura.RQL.Types.Session (UserInfoM (..))
 import Hasura.Server.Types (MonadGetPolicies (..))
 import Hasura.Tracing.Class
 import Hasura.Tracing.Context

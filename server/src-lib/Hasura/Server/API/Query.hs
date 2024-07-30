@@ -13,6 +13,7 @@ import Data.Aeson.Casing qualified as J (snakeCase)
 import Data.Environment qualified as Env
 import Data.Has (Has)
 import Hasura.App.State
+import Hasura.Authentication.User (UserInfoM)
 import Hasura.Backends.Postgres.DDL.RunSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -58,7 +59,6 @@ import Hasura.RemoteSchema.MetadataAPI
 import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Services
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
 data RQLQueryV1

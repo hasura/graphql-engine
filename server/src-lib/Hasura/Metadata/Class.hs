@@ -18,6 +18,7 @@ where
 import Control.Monad.Trans.Extended
 import Control.Monad.Trans.Managed
 import Data.Aeson
+import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger.Types
 import Hasura.Prelude
@@ -30,7 +31,6 @@ import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Types
-import Hasura.Session
 import Hasura.Tracing.Monad (TraceT)
 import Network.HTTP.Types qualified as HTTP
 

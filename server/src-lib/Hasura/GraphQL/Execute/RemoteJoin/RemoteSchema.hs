@@ -31,6 +31,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated, toTxt, (<<>), (<>>))
 import Data.Validation (Validation (..), toEither)
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (fromErrorMessage)
 import Hasura.GraphQL.Execute.Remote
@@ -46,7 +47,6 @@ import Hasura.RQL.IR.RemoteSchema (convertSelectionSet)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RemoteSchema.SchemaCache
-import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G

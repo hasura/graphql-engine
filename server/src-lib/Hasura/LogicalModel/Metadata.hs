@@ -12,6 +12,7 @@ import Autodocodec qualified as AC
 import Data.Aeson (FromJSON (parseJSON), ToJSON, (.!=), (.:), (.:?))
 import Data.Aeson qualified as J
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
+import Hasura.Authentication.Role (RoleName)
 import Hasura.LogicalModel.Types
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
@@ -19,7 +20,6 @@ import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Common (SourceName, ToAesonPairs (toAesonPairs), defaultSource)
 import Hasura.RQL.Types.Permission (SelPermDef, _pdRole)
-import Hasura.RQL.Types.Roles (RoleName)
 
 -- | Description of a logical model for use in metadata (before schema cache)
 data LogicalModelMetadata (b :: BackendType) = LogicalModelMetadata

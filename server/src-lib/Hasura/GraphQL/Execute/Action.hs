@@ -39,6 +39,10 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as PG
 import Hasura.App.State
+import Hasura.Authentication.Header (mkSetCookieHeaders)
+import Hasura.Authentication.Role (adminRoleName)
+import Hasura.Authentication.Session (SessionVariables, mkClientHeadersForward)
+import Hasura.Authentication.User (UserInfo, _uiRole, _uiSession)
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.Execute.Types
@@ -75,16 +79,10 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Headers (HeaderConf)
 import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
-import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Init.Config (OptionalInterval (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
-import Hasura.Server.Utils
-  ( mkClientHeadersForward,
-    mkSetCookieHeaders,
-  )
-import Hasura.Session (SessionVariables, UserInfo, _uiRole, _uiSession)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Transformable qualified as HTTP

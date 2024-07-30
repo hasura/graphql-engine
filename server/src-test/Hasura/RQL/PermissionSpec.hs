@@ -2,11 +2,11 @@ module Hasura.RQL.PermissionSpec (spec) where
 
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
+import Hasura.Authentication.Role (ParentRoles (..), Role (..), RoleName, mkRoleName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Permission
 import Hasura.RQL.Types.Action
-import Hasura.RQL.Types.Roles
 import Test.Hspec
 
 spec :: Spec

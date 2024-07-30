@@ -42,6 +42,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
+import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Warnings (AllowWarnings (..))
@@ -50,7 +51,6 @@ import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata (Metadata, MetadataNoSources)
 import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
-import Hasura.Session (SessionVariables)
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 --------------------------------------------------------------------------------
