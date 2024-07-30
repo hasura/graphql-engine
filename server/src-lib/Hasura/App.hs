@@ -87,6 +87,8 @@ import Database.PG.Query qualified as PG
 import Database.PG.Query qualified as Q
 import GHC.AssertNF.CPP
 import Hasura.App.State
+import Hasura.Authentication.Role (adminRoleName)
+import Hasura.Authentication.User (ExtraUserInfo (..), UserInfo (..))
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
@@ -130,7 +132,6 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.ResizePool
-import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
@@ -156,7 +157,6 @@ import Hasura.Server.Telemetry
 import Hasura.Server.Types
 import Hasura.Server.Version
 import Hasura.Services
-import Hasura.Session
 import Hasura.ShutdownLatch
 import Hasura.Tracing
 import Network.HTTP.Client qualified as HTTP

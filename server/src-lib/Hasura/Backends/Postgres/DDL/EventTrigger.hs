@@ -48,6 +48,7 @@ import Data.Text.Lazy qualified as TL
 import Data.Time (UTCTime)
 import Data.Time.Clock qualified as Time
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -69,7 +70,6 @@ import Hasura.Server.Migrate.Internal
 import Hasura.Server.Migrate.LatestVersion
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
-import Hasura.Session
 import Hasura.Table.Cache (PrimaryKey)
 import Hasura.Tracing qualified as Tracing
 import Text.Builder qualified as TB

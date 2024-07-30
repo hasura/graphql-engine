@@ -12,10 +12,10 @@ import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
 import Data.Text.Extended (toTxt)
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
+import Hasura.Authentication.Role (mkRoleName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.Roles (mkRoleName)
 import Test.Hspec
 
 spec :: Spec

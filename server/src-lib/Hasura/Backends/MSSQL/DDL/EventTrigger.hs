@@ -49,6 +49,7 @@ import Data.Time.Format.ISO8601 (iso8601Show)
 import Database.MSSQL.Transaction (TxE, TxET, multiRowQueryE, singleRowQueryE, unitQueryE)
 import Database.ODBC.SQLServer (Datetime2 (..), Datetimeoffset (..), rawUnescapedText, toSql)
 import Database.ODBC.TH qualified as ODBC
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.DDL.Source.Version
 import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
@@ -66,7 +67,6 @@ import Hasura.RQL.Types.Eventing (EventId (..), OpVar (..))
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Types
 import Hasura.Server.Types
-import Hasura.Session
 import Hasura.Table.Cache (PrimaryKey (..))
 import Hasura.Tracing qualified as Tracing
 import Text.Builder qualified as TB

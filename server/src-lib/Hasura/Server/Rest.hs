@@ -14,6 +14,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Text.Extended
 import Data.These (These (..))
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
 import Hasura.CredentialCache
@@ -40,7 +41,6 @@ import Hasura.Server.Name qualified as Name
 import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Types
 import Hasura.Services
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP

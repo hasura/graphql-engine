@@ -8,6 +8,7 @@ module Hasura.Backends.Postgres.Translate.Update
 where
 
 import Data.HashMap.Strict qualified as HashMap
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp
@@ -22,7 +23,6 @@ import Hasura.RQL.IR.Update.Batch
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Session (UserInfo)
 import Hasura.SQL.Types
 
 data UpdateCTE

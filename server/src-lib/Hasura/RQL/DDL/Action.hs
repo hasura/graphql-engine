@@ -23,6 +23,7 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NEList
 import Data.Text.Extended
 import Data.URL.Template (printTemplate)
+import Hasura.Authentication.Role (RoleName)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Metadata.Class
@@ -33,7 +34,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.BackendMap (BackendMap)

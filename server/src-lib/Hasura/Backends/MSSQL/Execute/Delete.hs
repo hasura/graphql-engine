@@ -11,6 +11,7 @@ where
 
 import Data.Tuple.Extra (both)
 import Database.MSSQL.Transaction qualified as Tx
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.QueryTags
 import Hasura.Backends.MSSQL.FromIr as TSQL
@@ -34,7 +35,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (SourceName (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.Session
 
 -- | Executes a Delete IR AST and return results as JSON.
 executeDelete ::

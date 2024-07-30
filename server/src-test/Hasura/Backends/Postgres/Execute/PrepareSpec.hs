@@ -7,12 +7,12 @@ module Hasura.Backends.Postgres.Execute.PrepareSpec
   )
 where
 
-import Control.Monad.Except (MonadError)
-import Control.Monad.State (MonadState, StateT, evalStateT)
 import Data.Aeson.Extended qualified as J (encodeToStrictText)
-import Data.Foldable (for_)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
+import Hasura.Authentication.Role (mkRoleNameSafe)
+import Hasura.Authentication.Session (sessionVariablesFromMap, unsafeMkSessionVariable)
+import Hasura.Authentication.User (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..))
@@ -20,19 +20,13 @@ import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Base.Error (QErr)
 import Hasura.Base.Error.TestInstances ()
 import Hasura.GraphQL.Parser.Variable (VariableInfo (..))
+import Hasura.Prelude
 import Hasura.RQL.IR.Value (Provenance (..), UnpreparedValue (..))
 import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (..))
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
-import Hasura.RQL.Types.Roles (mkRoleNameSafe)
 import Hasura.SQL.Types (CollectableType (..))
-import Hasura.Session
-  ( BackendOnlyFieldAccess (..),
-    UserInfo (..),
-    mkSessionVariablesText,
-  )
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Hspec (Expectation, Spec, describe, it, shouldBe)
-import Prelude
 
 newtype Test x = Test (StateT PlanningSt (Either QErr) x)
   deriving newtype (Functor, Applicative, Monad)
@@ -48,11 +42,12 @@ spec = do
         UserInfo
           { _uiRole = role,
             _uiBackendOnlyFieldAccess = BOFAAllowed,
-            _uiSession = mkSessionVariablesText do
-              HashMap.fromList
-                [ ("foo", "123"),
-                  ("bar", "string_two")
-                ]
+            _uiSession =
+              sessionVariablesFromMap
+                $ HashMap.fromList
+                  [ ("x-hasura-foo", "123"),
+                    ("x-hasura-bar", "string_two")
+                  ]
           }
 
   describe "UVSession" do
@@ -135,12 +130,12 @@ spec = do
           `yields` S.SETyAnn (S.SELit "3") (S.TypeAnn "integer")
 
   describe "UVSessionVar" do
-    let sv = UVSessionVar (CollectableTypeScalar PGInteger) "foo"
+    let sv = UVSessionVar (CollectableTypeScalar PGInteger) (unsafeMkSessionVariable ("x-hasura-foo" :: Text))
 
     describe "prepareWithPlan" do
       it "prepares the session variable and accessor" do
         prepareWithPlan userInfo sv
-          `yields` S.SETyAnn (S.SEOpApp (S.SQLOp "->>") [S.SEPrep 1, S.SELit "foo"]) (S.TypeAnn "integer")
+          `yields` S.SETyAnn (S.SEOpApp (S.SQLOp "->>") [S.SEPrep 1, S.SELit "x-hasura-foo"]) (S.TypeAnn "integer")
 
     describe "prepareWithoutPlan" do
       it "inlines the result" do
