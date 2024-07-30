@@ -9,6 +9,7 @@ import Control.Exception.Safe (throwIO)
 import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Text.Extended ((<>>))
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.DataConnector.Adapter.Execute (DataConnectorPreparedQuery (..), encodePreparedQueryToJsonText)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), AgentClientT, AgentLicenseKey (..), runAgentClientT)
@@ -26,7 +27,6 @@ import Hasura.RQL.Types.Backend (ResolvedConnectionTemplate)
 import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.Server.Types (RequestId)
-import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing
 
 --------------------------------------------------------------------------------

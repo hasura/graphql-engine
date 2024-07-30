@@ -14,6 +14,7 @@ where
 import Control.Monad.Extra (concatMapM)
 import Control.Monad.Writer.Strict
 import Data.List.NonEmpty qualified as NE
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp (withRedactionExp)
@@ -29,7 +30,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Session (UserInfo)
 
 -- | Creates node extractors for all of the columns and computed fields used in aggregated fields.
 -- The ColumnAliases for all the extractors are namespaced aliases using the 'contextualize*` functions

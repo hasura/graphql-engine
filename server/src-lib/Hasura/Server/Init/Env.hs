@@ -30,6 +30,7 @@ import Data.Text qualified as Text
 import Data.Time qualified as Time
 import Data.URL.Template qualified as Template
 import Database.PG.Query qualified as Query
+import Hasura.Authentication.Role (RoleName, mkRoleName)
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema)
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Cache
@@ -39,7 +40,6 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..))
 import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.NamingCase qualified as NamingCase
-import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors

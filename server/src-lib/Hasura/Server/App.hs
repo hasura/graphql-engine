@@ -54,6 +54,9 @@ import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Encoding qualified as TL
 import GHC.Stats.Extended qualified as RTS
 import Hasura.App.State
+import Hasura.Authentication.Headers
+import Hasura.Authentication.Role (adminRoleName, roleNameToTxt)
+import Hasura.Authentication.User (ExtraUserInfo (..), UserInfo (..), UserInfoM, askUserInfo)
 import Hasura.Backends.DataConnector.API (openApiSchema)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Execute.Types
@@ -82,7 +85,6 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (SQLGenCtx (nullInNonNullableVariables))
 import Hasura.RQL.Types.Endpoint as EP
 import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
-import Hasura.RQL.Types.Roles (adminRoleName, roleNameToTxt)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.Server.API.Config (runGetConfig)
@@ -109,7 +111,6 @@ import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Server.Version
 import Hasura.Services
-import Hasura.Session (ExtraUserInfo (..), UserInfo (..), UserInfoM, askUserInfo)
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Types qualified as HTTP

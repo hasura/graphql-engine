@@ -19,6 +19,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Int (Int64)
+import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Transport.HTTP.Protocol
@@ -31,7 +32,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Headers (HeaderConf)
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 

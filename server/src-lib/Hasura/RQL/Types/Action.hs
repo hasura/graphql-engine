@@ -68,14 +68,14 @@ import Data.Typeable (Typeable)
 import Data.UUID qualified as UUID
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
+import Hasura.Authentication.Role (RoleName)
+import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing (EventId (..))
 import Hasura.RQL.Types.Headers
-import Hasura.RQL.Types.Roles (RoleName)
-import Hasura.RQL.Types.Session (SessionVariables)
 import Hasura.RQL.Types.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP

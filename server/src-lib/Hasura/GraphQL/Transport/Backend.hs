@@ -5,6 +5,7 @@ where
 
 import Control.Monad.Trans.Control
 import Data.ByteString qualified as B
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
 import Hasura.CredentialCache
@@ -20,7 +21,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.Server.Types (RequestId)
-import Hasura.Session
 import Hasura.Tracing
 
 -- | This typeclass enacapsulates how a given backend sends queries and mutations over the

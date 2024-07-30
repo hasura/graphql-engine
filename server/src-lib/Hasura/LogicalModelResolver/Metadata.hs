@@ -11,6 +11,7 @@ import Autodocodec qualified as AC
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
+import Hasura.Authentication.Role (RoleName)
 import Hasura.LogicalModel.Types
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude hiding (first)
@@ -18,7 +19,6 @@ import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Permission (SelPermDef, _pdRole)
-import Hasura.RQL.Types.Roles (RoleName)
 
 -- | the name of a Logical Model, or an inline Logical Model
 data LogicalModelIdentifier (b :: BackendType)
