@@ -2,13 +2,12 @@ use super::types;
 use super::HttpContext;
 use crate::error;
 use crate::explain::fetch_explain_from_data_connector;
-use crate::ir;
-use crate::ir::selection_set::NdcFieldAlias;
 use crate::plan;
 use crate::plan::field::{UnresolvedField, UnresolvedNestedField};
 use crate::plan::query::UnresolvedQueryNode;
 use async_recursion::async_recursion;
 use indexmap::IndexMap;
+use ir::NdcFieldAlias;
 use std::collections::BTreeMap;
 
 #[async_recursion]
@@ -109,30 +108,29 @@ pub(crate) async fn explain_query_predicate_nested_field<'s, 'a>(
 async fn explain_query_predicate<'s>(
     expose_internal_errors: &crate::ExposeInternalErrors,
     http_context: &HttpContext,
-    predicate: &ir::filter::expression::Expression<'s>,
+    predicate: &ir::Expression<'s>,
     steps: &mut Vec<types::Step>,
 ) -> Result<(), error::RequestError> {
     match predicate {
-        ir::filter::expression::Expression::And { expressions } => {
+        ir::Expression::And { expressions } => {
             for expression in expressions {
                 explain_query_predicate(expose_internal_errors, http_context, expression, steps)
                     .await?;
             }
             Ok(())
         }
-        ir::filter::expression::Expression::Or { expressions } => {
+        ir::Expression::Or { expressions } => {
             for expression in expressions {
                 explain_query_predicate(expose_internal_errors, http_context, expression, steps)
                     .await?;
             }
             Ok(())
         }
-        ir::filter::expression::Expression::Not { expression } => {
+        ir::Expression::Not { expression } => {
             explain_query_predicate(expose_internal_errors, http_context, expression, steps).await
         }
-        ir::filter::expression::Expression::LocalField { .. }
-        | ir::filter::expression::Expression::LocalRelationship { .. } => Ok(()),
-        ir::filter::expression::Expression::RemoteRelationship {
+        ir::Expression::LocalField { .. } | ir::Expression::LocalRelationship { .. } => Ok(()),
+        ir::Expression::RemoteRelationship {
             relationship: _,
             target_model_name,
             target_model_source,

@@ -11,13 +11,13 @@ use open_dds;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-use crate::ir::arguments;
-use crate::ir::error;
-use crate::ir::filter;
-use crate::ir::model_selection;
-use crate::ir::order_by::build_ndc_order_by;
-use crate::ir::permissions;
+use crate::arguments;
+use crate::error;
+use crate::filter;
+use crate::model_selection;
 use crate::model_tracking::{count_model, UsagesCounts};
+use crate::order_by::build_ndc_order_by;
+use crate::permissions;
 use metadata_resolve;
 use metadata_resolve::Qualified;
 use schema::GDS;
@@ -32,15 +32,15 @@ pub struct ModelSelectMany<'n, 's> {
     pub model_selection: model_selection::ModelSelection<'s>,
 
     // The Graphql output type of the operation
-    pub(crate) type_container: &'n ast::TypeContainer<ast::TypeName>,
+    pub type_container: &'n ast::TypeContainer<ast::TypeName>,
 
     // All the models/commands used in this operation. This includes the models/commands
     // used via relationships. And in future, the models/commands used in the filter clause
-    pub(crate) usage_counts: UsagesCounts,
+    pub usage_counts: UsagesCounts,
 }
 /// Generates the IR for a 'select_many' operation
 #[allow(irrefutable_let_patterns)]
-pub(crate) fn select_many_generate_ir<'n, 's>(
+pub fn select_many_generate_ir<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     data_type: &Qualified<open_dds::types::CustomTypeName>,

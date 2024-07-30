@@ -8,7 +8,6 @@ use transitive::Transitive;
 
 use crate::ndc::client as ndc_client;
 
-use super::ir;
 use super::plan;
 use schema::Annotation;
 
@@ -23,7 +22,7 @@ pub enum RequestError {
     ValidationFailed(#[from] gql::validation::Error),
 
     #[error("{0}")]
-    IRConversionError(#[from] ir::error::Error),
+    IRConversionError(#[from] ir::Error),
 
     #[error("error while generating plan: {0}")]
     PlanError(#[from] plan::error::Error),
@@ -40,7 +39,7 @@ impl RequestError {
         let message = match (self, expose_internal_errors) {
             // Error messages for internal errors from IR conversion and Plan generations are masked.
             (
-                Self::IRConversionError(ir::error::Error::Internal(_))
+                Self::IRConversionError(ir::Error::Internal(_))
                 | Self::PlanError(plan::error::Error::Internal(_)),
                 crate::ExposeInternalErrors::Censor,
             ) => "internal error".into(),

@@ -18,9 +18,8 @@ use super::{
     order_by::{self, ResolvedOrderBy},
     permissions, selection_set,
 };
-use crate::ir::error;
+use crate::error;
 use crate::model_tracking::{count_model, UsagesCounts};
-use metadata_resolve;
 use metadata_resolve::Qualified;
 use schema::GDS;
 
@@ -31,28 +30,28 @@ pub struct ModelSelection<'s> {
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
 
     // Source collection in the data connector for this model
-    pub(crate) collection: &'s CollectionName,
+    pub collection: &'s CollectionName,
 
     // Arguments for the NDC collection
-    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
+    pub arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
 
     // The boolean expression that would fetch a single row from this model
-    pub(crate) filter_clause: filter::FilterExpression<'s>,
+    pub filter_clause: filter::FilterExpression<'s>,
 
     // Limit
-    pub(crate) limit: Option<u32>,
+    pub limit: Option<u32>,
 
     // Offset
-    pub(crate) offset: Option<u32>,
+    pub offset: Option<u32>,
 
     // Order by
-    pub(crate) order_by: Option<ResolvedOrderBy<'s>>,
+    pub order_by: Option<ResolvedOrderBy<'s>>,
 
     // Fields requested from the model
-    pub(crate) selection: Option<selection_set::ResultSelectionSet<'s>>,
+    pub selection: Option<selection_set::ResultSelectionSet<'s>>,
 
     // Aggregates requested of the model
-    pub(crate) aggregate_selection: Option<aggregates::AggregateSelectionSet<'s>>,
+    pub aggregate_selection: Option<aggregates::AggregateSelectionSet<'s>>,
 }
 
 struct ModelSelectAggregateArguments<'s> {
@@ -69,7 +68,7 @@ struct FilterInputArguments<'s> {
 
 /// Generates the IR fragment for selecting from a model.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn model_selection_ir<'s>(
+pub fn model_selection_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,

@@ -13,7 +13,7 @@ use schema::{
 };
 use serde::Serialize;
 
-use crate::ir::error;
+use crate::error;
 
 use super::selection_set::NdcFieldAlias;
 

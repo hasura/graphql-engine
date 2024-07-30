@@ -1,14 +1,6 @@
-use crate::{
-    error,
-    ir::{
-        self,
-        aggregates::AggregateSelectionSet,
-        order_by::OrderByElement,
-        selection_set::{NdcFieldAlias, NdcRelationshipName},
-    },
-    remote_joins::types::VariableName,
-    HttpContext,
-};
+use crate::{error, HttpContext};
+use ir::{AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, VariableName};
+
 use async_recursion::async_recursion;
 use indexmap::IndexMap;
 use open_dds::{data_connector::CollectionName, types::DataConnectorArgumentName};
@@ -19,8 +11,7 @@ use super::field;
 use super::filter;
 use super::relationships;
 
-pub type UnresolvedQueryExecutionPlan<'s> =
-    QueryExecutionPlan<'s, ir::filter::expression::Expression<'s>>;
+pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, ir::Expression<'s>>;
 pub type ResolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -64,7 +55,7 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
     }
 }
 
-pub type UnresolvedQueryNode<'s> = QueryNode<'s, ir::filter::expression::Expression<'s>>;
+pub type UnresolvedQueryNode<'s> = QueryNode<'s, ir::Expression<'s>>;
 pub type ResolvedQueryNode<'s> = QueryNode<'s, filter::ResolvedFilterExpression>;
 
 /// Query plan for fetching data

@@ -20,10 +20,10 @@ use super::{
     selection_set::{FieldSelection, NdcRelationshipName},
 };
 
-use crate::{ir::error, model_tracking::count_command};
+use crate::{error, model_tracking::count_command};
 use crate::{
     model_tracking::{count_model, UsagesCounts},
-    remote_joins::types::VariableName,
+    remote_joins::VariableName,
 };
 use metadata_resolve::{self, serialize_qualified_btreemap, Qualified, RelationshipModelMapping};
 use schema::{
@@ -47,7 +47,7 @@ pub struct LocalModelRelationshipInfo<'s> {
 }
 
 #[derive(Debug, Serialize)]
-pub(crate) struct LocalCommandRelationshipInfo<'s> {
+pub struct LocalCommandRelationshipInfo<'s> {
     pub annotation: &'s CommandRelationshipAnnotation,
     pub source_data_connector: &'s metadata_resolve::DataConnectorLink,
     #[serde(serialize_with = "serialize_qualified_btreemap")]
@@ -67,7 +67,7 @@ pub struct RemoteModelRelationshipInfo {
 }
 
 #[derive(Debug, Serialize)]
-pub(crate) struct RemoteCommandRelationshipInfo<'s> {
+pub struct RemoteCommandRelationshipInfo<'s> {
     pub annotation: &'s CommandRelationshipAnnotation,
     pub join_mapping: Vec<(SourceField, ArgumentName)>,
 }
@@ -75,7 +75,7 @@ pub(crate) struct RemoteCommandRelationshipInfo<'s> {
 pub type SourceField = (FieldName, metadata_resolve::FieldMapping);
 pub type TargetField = (FieldName, metadata_resolve::NdcColumnForComparison);
 
-pub(crate) fn generate_model_relationship_ir<'s>(
+pub fn generate_model_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     relationship_annotation: &'s ModelRelationshipAnnotation,
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
@@ -209,7 +209,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
     }
 }
 
-pub(crate) fn generate_model_aggregate_relationship_ir<'s>(
+pub fn generate_model_aggregate_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     relationship_annotation: &'s ModelAggregateRelationshipAnnotation,
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
@@ -271,7 +271,7 @@ pub(crate) fn generate_model_aggregate_relationship_ir<'s>(
     }
 }
 
-pub(crate) fn generate_command_relationship_ir<'s>(
+pub fn generate_command_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
@@ -328,7 +328,7 @@ pub(crate) fn generate_command_relationship_ir<'s>(
     }
 }
 
-pub(crate) fn build_local_model_relationship<'s>(
+pub fn build_local_model_relationship<'s>(
     relationships_ir: model_selection::ModelSelection<'s>,
     relationship_name: &'s RelationshipName,
     relationship_type: &'s RelationshipType,
@@ -357,7 +357,7 @@ pub(crate) fn build_local_model_relationship<'s>(
     })
 }
 
-pub(crate) fn build_local_command_relationship<'s>(
+pub fn build_local_command_relationship<'s>(
     field: &normalized_ast::Field<'s, GDS>,
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
@@ -402,7 +402,7 @@ pub(crate) fn build_local_command_relationship<'s>(
     })
 }
 
-pub(crate) fn build_remote_relationship<'s>(
+pub fn build_remote_relationship<'s>(
     mut remote_relationships_ir: model_selection::ModelSelection<'s>,
     relationship_name: &'s RelationshipName,
     source_type: &'s Qualified<CustomTypeName>,
@@ -467,7 +467,7 @@ pub(crate) fn build_remote_relationship<'s>(
     })
 }
 
-pub(crate) fn build_remote_command_relationship<'n, 's>(
+pub fn build_remote_command_relationship<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
@@ -535,7 +535,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
     })
 }
 
-pub(crate) fn get_field_mapping_of_field_name(
+pub fn get_field_mapping_of_field_name(
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,

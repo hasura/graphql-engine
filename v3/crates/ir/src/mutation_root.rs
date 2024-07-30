@@ -10,7 +10,7 @@ use schema::Annotation;
 use schema::GDS;
 
 use super::{commands, root_field};
-use crate::ir::error;
+use crate::error;
 use schema::{OutputAnnotation, RootFieldAnnotation};
 
 /// Generates IR for the selection set of type 'mutation root'

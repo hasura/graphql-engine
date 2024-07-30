@@ -12,7 +12,6 @@ use std::collections::HashMap;
 use super::commands;
 use super::error;
 use super::root_field;
-use metadata_resolve;
 use schema::ApolloFederationRootFields;
 use schema::CommandSourceDetail;
 use schema::EntityFieldTypeNameMapping;

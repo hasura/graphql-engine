@@ -23,10 +23,9 @@ use super::selection_set::FieldSelection;
 use super::selection_set::NdcFieldAlias;
 use super::selection_set::NestedSelection;
 use super::selection_set::ResultSelectionSet;
-use crate::ir::error;
-use crate::ir::permissions;
+use crate::error;
 use crate::model_tracking::{count_command, UsagesCounts};
-use metadata_resolve;
+use crate::permissions;
 use metadata_resolve::http::SerializableHeaderMap;
 use metadata_resolve::{Qualified, QualifiedTypeReference};
 use schema::ArgumentNameAndPath;
@@ -48,17 +47,17 @@ pub struct CommandInfo<'s> {
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
 
     /// Arguments for the NDC table
-    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
+    pub arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
 
     /// IR for the command result selection set
-    pub(crate) selection: Option<selection_set::NestedSelection<'s>>,
+    pub selection: Option<selection_set::NestedSelection<'s>>,
 
     /// The Graphql base type for the output_type of command. Helps in deciding how
     /// the response from the NDC needs to be processed.
     pub type_container: TypeContainer<TypeName>,
 
     // All the models/commands used in the 'command' operation.
-    pub(crate) usage_counts: UsagesCounts,
+    pub usage_counts: UsagesCounts,
 }
 
 /// IR for the 'function based command' operations
@@ -86,7 +85,7 @@ pub struct ProcedureBasedCommand<'s> {
 
 /// Generates the IR for a 'command' operation
 #[allow(irrefutable_let_patterns)]
-pub(crate) fn generate_command_info<'n, 's>(
+pub fn generate_command_info<'n, 's>(
     command_name: &Qualified<commands::CommandName>,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
@@ -291,7 +290,7 @@ fn wrap_selection_in_response_config<'a>(
 }
 
 /// Generates the IR for a 'function based command' operation
-pub(crate) fn generate_function_based_command<'n, 's>(
+pub fn generate_function_based_command<'n, 's>(
     command_name: &Qualified<commands::CommandName>,
     function_name: &'s open_dds::commands::FunctionName,
     field: &'n normalized_ast::Field<'s, GDS>,
@@ -323,7 +322,7 @@ pub(crate) fn generate_function_based_command<'n, 's>(
 }
 
 /// Generates the IR for a 'procedure based command' operation
-pub(crate) fn generate_procedure_based_command<'n, 's>(
+pub fn generate_procedure_based_command<'n, 's>(
     command_name: &Qualified<commands::CommandName>,
     procedure_name: &'s open_dds::commands::ProcedureName,
     field: &'n normalized_ast::Field<'s, GDS>,

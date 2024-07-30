@@ -30,8 +30,8 @@ use datafusion::{
     logical_expr::{logical_plan::LogicalPlan, Extension, TableScan},
     optimizer::AnalyzerRule,
 };
-use execute::ir::selection_set::NdcFieldAlias;
 use indexmap::IndexMap;
+use ir::NdcFieldAlias;
 use metadata_resolve::{self as resolved};
 use open_dds::identifier::Identifier;
 use open_dds::types::FieldName;

@@ -4,9 +4,9 @@ use open_dds::models::ModelName;
 use open_dds::relationships::RelationshipName;
 use serde::Serialize;
 
-use crate::ir::relationship::LocalModelRelationshipInfo;
-use crate::ir::selection_set::NdcRelationshipName;
-use crate::remote_joins::types::VariableName;
+use crate::relationship::LocalModelRelationshipInfo;
+use crate::remote_joins::VariableName;
+use crate::selection_set::NdcRelationshipName;
 
 /// Represent a boolean expression that can be used to filter data
 #[derive(Debug, Serialize, Clone, PartialEq)]

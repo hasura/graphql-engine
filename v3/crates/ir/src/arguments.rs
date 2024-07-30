@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
-use crate::ir::error;
-use crate::ir::filter;
-use crate::ir::filter::expression as filter_expression;
+use crate::error;
+use crate::filter;
+use crate::filter::expression as filter_expression;
 use crate::model_tracking::UsagesCounts;
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common::Name;

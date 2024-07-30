@@ -4,9 +4,6 @@ use super::field;
 use super::model_selection;
 use super::relationships;
 use super::ProcessResponseAs;
-use crate::ir::selection_set::NdcFieldAlias;
-use crate::ir::selection_set::NdcRelationshipName;
-use crate::ir::selection_set::{FieldSelection, NestedSelection, ResultSelectionSet};
 use crate::plan::error;
 use crate::remote_joins::types::SourceFieldAlias;
 use crate::remote_joins::types::{
@@ -14,6 +11,9 @@ use crate::remote_joins::types::{
 };
 use crate::remote_joins::types::{Location, RemoteJoin};
 use indexmap::IndexMap;
+use ir::NdcFieldAlias;
+use ir::NdcRelationshipName;
+use ir::{FieldSelection, NestedSelection, ResultSelectionSet};
 use metadata_resolve::data_connectors::NdcVersion;
 use metadata_resolve::FieldMapping;
 use open_dds::data_connector::DataConnectorColumnName;

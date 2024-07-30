@@ -1,8 +1,5 @@
-use crate::{
-    error,
-    ir::{self, selection_set::NdcRelationshipName},
-    HttpContext,
-};
+use crate::{error, HttpContext};
+use ir::NdcRelationshipName;
 use open_dds::{commands::ProcedureName, types::DataConnectorArgumentName};
 use std::collections::BTreeMap;
 
@@ -11,8 +8,7 @@ use super::field;
 use super::filter;
 use super::relationships;
 
-pub type UnresolvedMutationExecutionPlan<'s> =
-    MutationExecutionPlan<'s, ir::filter::expression::Expression<'s>>;
+pub type UnresolvedMutationExecutionPlan<'s> = MutationExecutionPlan<'s, ir::Expression<'s>>;
 pub type ResolvedMutationExecutionPlan<'s> =
     MutationExecutionPlan<'s, filter::ResolvedFilterExpression>;
 

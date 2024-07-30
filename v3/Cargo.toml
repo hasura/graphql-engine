@@ -10,6 +10,7 @@ members = [
   "crates/custom-connector",
   "crates/engine",
   "crates/execute",
+  "crates/ir",
   "crates/lang-graphql",
   "crates/metadata-resolve",
   "crates/metadata-schema-generator",

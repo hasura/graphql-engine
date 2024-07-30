@@ -8,9 +8,9 @@ use super::filter;
 use super::query;
 use super::relationships;
 use super::selection_set;
-use crate::ir::model_selection::ModelSelection;
-use crate::ir::selection_set::NdcRelationshipName;
 use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
+use ir::ModelSelection;
+use ir::NdcRelationshipName;
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings
 // #[async_recursion]

@@ -8,27 +8,21 @@ use super::field;
 use super::ndc_request;
 use super::query;
 use super::relationships::{self, process_model_relationship_definition};
-use crate::{
-    error,
-    ir::{
-        self,
-        selection_set::{NdcFieldAlias, NdcRelationshipName},
-    },
-    ndc, HttpContext,
-};
+use crate::{error, ndc, HttpContext};
+use ir::{NdcFieldAlias, NdcRelationshipName};
 
 /// Plan the filter expression IR.
 /// This function will take the filter expression IR and convert it into a planned filter expression
 /// that can be converted the NDC filter expression.
 /// This will record the relationships that are used in the filter expression.
 pub(crate) fn plan_filter_expression<'s>(
-    ir::filter::FilterExpression {
+    ir::FilterExpression {
         query_filter,
         permission_filter,
         relationship_join_filter,
-    }: &ir::filter::FilterExpression<'s>,
+    }: &ir::FilterExpression<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<Option<ir::filter::expression::Expression<'s>>, plan_error::Error> {
+) -> Result<Option<ir::Expression<'s>>, plan_error::Error> {
     let mut expressions = Vec::new();
 
     if let Some(filter) = permission_filter {
@@ -48,16 +42,16 @@ pub(crate) fn plan_filter_expression<'s>(
         expressions.push(planned_expression);
     }
 
-    Ok(ir::filter::expression::Expression::mk_and(expressions).remove_always_true_expression())
+    Ok(ir::Expression::mk_and(expressions).remove_always_true_expression())
 }
 
 /// Plan the expression IR type.
 pub fn plan_expression<'s, 'a>(
-    expression: &'a ir::filter::expression::Expression<'s>,
+    expression: &'a ir::Expression<'s>,
     relationships: &'a mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<ir::filter::expression::Expression<'s>, plan_error::Error> {
+) -> Result<ir::Expression<'s>, plan_error::Error> {
     match expression {
-        ir::filter::expression::Expression::And {
+        ir::Expression::And {
             expressions: and_expressions,
         } => {
             let mut results = Vec::new();
@@ -65,9 +59,9 @@ pub fn plan_expression<'s, 'a>(
                 let result = plan_expression(and_expression, relationships)?;
                 results.push(result);
             }
-            Ok(ir::filter::expression::Expression::mk_and(results))
+            Ok(ir::Expression::mk_and(results))
         }
-        ir::filter::expression::Expression::Or {
+        ir::Expression::Or {
             expressions: or_expressions,
         } => {
             let mut results = Vec::new();
@@ -75,18 +69,18 @@ pub fn plan_expression<'s, 'a>(
                 let result = plan_expression(or_expression, relationships)?;
                 results.push(result);
             }
-            Ok(ir::filter::expression::Expression::mk_or(results))
+            Ok(ir::Expression::mk_or(results))
         }
-        ir::filter::expression::Expression::Not {
+        ir::Expression::Not {
             expression: not_expression,
         } => {
             let result = plan_expression(not_expression, relationships)?;
-            Ok(ir::filter::expression::Expression::mk_not(result))
+            Ok(ir::Expression::mk_not(result))
         }
-        ir::filter::expression::Expression::LocalField(local_field_comparison) => Ok(
-            ir::filter::expression::Expression::LocalField(local_field_comparison.clone()),
-        ),
-        ir::filter::expression::Expression::LocalRelationship {
+        ir::Expression::LocalField(local_field_comparison) => {
+            Ok(ir::Expression::LocalField(local_field_comparison.clone()))
+        }
+        ir::Expression::LocalRelationship {
             relationship,
             predicate,
             info,
@@ -97,13 +91,13 @@ pub fn plan_expression<'s, 'a>(
                 process_model_relationship_definition(info)?,
             );
 
-            Ok(ir::filter::expression::Expression::LocalRelationship {
+            Ok(ir::Expression::LocalRelationship {
                 relationship: relationship.clone(),
                 predicate: Box::new(relationship_filter),
                 info: info.clone(),
             })
         }
-        ir::filter::expression::Expression::RemoteRelationship {
+        ir::Expression::RemoteRelationship {
             relationship,
             target_model_name,
             target_model_source,
@@ -111,7 +105,7 @@ pub fn plan_expression<'s, 'a>(
             predicate,
         } => {
             // This is a remote relationship, further planning is deferred until it is resolved
-            Ok(ir::filter::expression::Expression::RemoteRelationship {
+            Ok(ir::Expression::RemoteRelationship {
                 relationship: relationship.clone(),
                 target_model_name,
                 target_model_source,
@@ -124,8 +118,8 @@ pub fn plan_expression<'s, 'a>(
 
 /// Generate comparison expression plan for remote relationshp predicate.
 pub fn plan_remote_predicate<'s, 'a>(
-    ndc_column_mapping: &'a [ir::filter::expression::RelationshipColumnMapping],
-    predicate: &'a ir::filter::expression::Expression<'s>,
+    ndc_column_mapping: &'a [ir::RelationshipColumnMapping],
+    predicate: &'a ir::Expression<'s>,
 ) -> Result<
     (
         query::UnresolvedQueryNode<'s>,
@@ -151,8 +145,8 @@ pub fn plan_remote_predicate<'s, 'a>(
 /// Generate the NDC query fields with the mapped NDC columns in a remote relationship.
 /// These field values are fetched from the remote data connector.
 fn build_ndc_query_fields<'s>(
-    ndc_column_mapping: &[ir::filter::expression::RelationshipColumnMapping],
-) -> IndexMap<NdcFieldAlias, field::Field<'s, ir::filter::expression::Expression<'s>>> {
+    ndc_column_mapping: &[ir::RelationshipColumnMapping],
+) -> IndexMap<NdcFieldAlias, field::Field<'s, ir::Expression<'s>>> {
     let mut fields = IndexMap::new();
     for mapping in ndc_column_mapping {
         let field = field::Field::Column {
@@ -180,7 +174,7 @@ pub enum ResolvedFilterExpression {
     Not {
         expression: Box<ResolvedFilterExpression>,
     },
-    LocalFieldComparison(ir::filter::expression::LocalFieldComparison),
+    LocalFieldComparison(ir::LocalFieldComparison),
     LocalRelationshipComparison {
         relationship: NdcRelationshipName,
         predicate: Box<ResolvedFilterExpression>,
@@ -274,14 +268,14 @@ impl ResolvedFilterExpression {
 /// Resolve the filter expression plan and generate NDC expression.
 #[async_recursion]
 pub async fn resolve_expression<'s>(
-    expression: ir::filter::expression::Expression<'s>,
+    expression: ir::Expression<'s>,
     http_context: &HttpContext,
 ) -> Result<ResolvedFilterExpression, error::FieldError>
 where
     's: 'async_recursion,
 {
     match expression {
-        ir::filter::expression::Expression::And { expressions } => {
+        ir::Expression::And { expressions } => {
             let mut resolved_expressions: Vec<ResolvedFilterExpression> = Vec::new();
             for subexpression in expressions {
                 let resolved_expression = resolve_expression(subexpression, http_context).await?;
@@ -291,7 +285,7 @@ where
                 expressions: resolved_expressions,
             })
         }
-        ir::filter::expression::Expression::Or { expressions } => {
+        ir::Expression::Or { expressions } => {
             let mut resolved_expressions = Vec::new();
             for subexpression in expressions {
                 let resolve_expression = resolve_expression(subexpression, http_context).await?;
@@ -301,7 +295,7 @@ where
                 expressions: resolved_expressions,
             })
         }
-        ir::filter::expression::Expression::Not {
+        ir::Expression::Not {
             expression: subexpression,
         } => {
             let resolved_expression = resolve_expression(*subexpression, http_context).await?;
@@ -309,10 +303,10 @@ where
                 expression: Box::new(resolved_expression),
             })
         }
-        ir::filter::expression::Expression::LocalField(local_field_comparison) => Ok(
+        ir::Expression::LocalField(local_field_comparison) => Ok(
             ResolvedFilterExpression::LocalFieldComparison(local_field_comparison),
         ),
-        ir::filter::expression::Expression::LocalRelationship {
+        ir::Expression::LocalRelationship {
             relationship,
             predicate,
             info: _,
@@ -323,7 +317,7 @@ where
                 predicate: Box::new(resolved_expression),
             })
         }
-        ir::filter::expression::Expression::RemoteRelationship {
+        ir::Expression::RemoteRelationship {
             relationship,
             target_model_name: _,
             target_model_source,
@@ -422,7 +416,7 @@ impl DistinctComparisons {
 /// WHERE (a, b) IN ((a_value_1, b_value_1), (a_value_2, b_value_2))
 fn build_source_column_comparisons(
     mut rows: Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>>,
-    ndc_column_mapping: &[ir::filter::expression::RelationshipColumnMapping],
+    ndc_column_mapping: &[ir::RelationshipColumnMapping],
 ) -> Result<ResolvedFilterExpression, error::FieldError> {
     let mut expressions = DistinctComparisons::new();
     for row in &mut rows {
@@ -439,20 +433,20 @@ fn build_source_column_comparisons(
                 }
             )?;
 
-            let ir::filter::expression::SourceNdcColumn {
+            let ir::SourceNdcColumn {
                 column: source_column,
                 field_path,
                 eq_operator,
             } = &column_mapping.source_ndc_column;
             // Generate LHS (source) column comparison with target column value
             column_comparisons.push(ResolvedFilterExpression::LocalFieldComparison(
-                ir::filter::expression::LocalFieldComparison::BinaryComparison {
-                    column: ir::filter::expression::ComparisonTarget::Column {
+                ir::LocalFieldComparison::BinaryComparison {
+                    column: ir::ComparisonTarget::Column {
                         name: source_column.clone(),
                         field_path: field_path.clone(),
                     },
                     operator: eq_operator.clone(),
-                    value: ir::filter::expression::ComparisonValue::Scalar {
+                    value: ir::ComparisonValue::Scalar {
                         value: target_value.0,
                     },
                 },

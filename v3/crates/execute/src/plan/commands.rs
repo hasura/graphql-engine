@@ -10,14 +10,12 @@ use super::mutation;
 use super::query;
 use super::relationships;
 use super::selection_set;
-use crate::ir::commands::CommandInfo;
-use crate::ir::commands::FunctionBasedCommand;
-use crate::ir::commands::ProcedureBasedCommand;
-use crate::ir::selection_set::NdcFieldAlias;
-use crate::ir::selection_set::NdcRelationshipName;
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
-use crate::remote_joins::types::VariableName;
 use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
+use ir::{
+    CommandInfo, FunctionBasedCommand, NdcFieldAlias, NdcRelationshipName, ProcedureBasedCommand,
+    VariableName,
+};
 use open_dds::commands::ProcedureName;
 
 pub(crate) fn plan_query_node<'s, 'ir>(

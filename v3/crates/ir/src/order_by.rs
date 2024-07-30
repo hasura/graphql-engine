@@ -10,16 +10,15 @@ use serde::Serialize;
 use super::relationship::LocalModelRelationshipInfo;
 use super::selection_set::NdcRelationshipName;
 
-use crate::ir::error;
-use schema;
+use crate::error;
 use schema::GDS;
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
-pub(crate) struct ResolvedOrderBy<'s> {
-    pub(crate) order_by_elements: Vec<OrderByElement>,
+pub struct ResolvedOrderBy<'s> {
+    pub order_by_elements: Vec<OrderByElement>,
     // relationships that were used in the order_by expression. This is helpful
     // for collecting relatinships and sending collection_relationships
-    pub(crate) relationships: BTreeMap<NdcRelationshipName, LocalModelRelationshipInfo<'s>>,
+    pub relationships: BTreeMap<NdcRelationshipName, LocalModelRelationshipInfo<'s>>,
 }
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
@@ -36,7 +35,7 @@ pub enum OrderByTarget {
     },
 }
 
-pub(crate) fn build_ndc_order_by<'s>(
+pub fn build_ndc_order_by<'s>(
     args_field: &InputField<'s, GDS>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ResolvedOrderBy<'s>, error::Error> {
@@ -110,7 +109,7 @@ pub(crate) fn build_ndc_order_by<'s>(
 //          }
 //      ]
 
-pub(crate) fn build_ndc_order_by_element<'s>(
+pub fn build_ndc_order_by_element<'s>(
     argument: &InputField<'s, GDS>,
     // The path to access the relationship column. If the column is a
     // non-relationship column, this will be empty. The paths contains

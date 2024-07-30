@@ -8,10 +8,10 @@ use lang_graphql::{ast::common as ast, normalized_ast};
 use open_dds::types::CustomTypeName;
 use serde::Serialize;
 
-use crate::ir::error;
-use crate::ir::filter;
-use crate::ir::filter::expression as filter_expression;
-use crate::ir::model_selection;
+use crate::error;
+use crate::filter;
+use crate::filter::expression as filter_expression;
+use crate::model_selection;
 use crate::model_tracking::UsagesCounts;
 use json_ext::HashMapWithJsonKey;
 use metadata_resolve;

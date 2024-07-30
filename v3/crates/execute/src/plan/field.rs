@@ -1,13 +1,7 @@
-use crate::{
-    error,
-    ir::{
-        self,
-        selection_set::{NdcFieldAlias, NdcRelationshipName},
-    },
-    HttpContext,
-};
+use crate::{error, HttpContext};
 use async_recursion::async_recursion;
 use indexmap::IndexMap;
+use ir::{NdcFieldAlias, NdcRelationshipName};
 use open_dds::{data_connector::DataConnectorColumnName, types::DataConnectorArgumentName};
 use std::collections::BTreeMap;
 
@@ -15,7 +9,7 @@ use super::arguments;
 use super::filter;
 use super::query;
 
-pub type UnresolvedField<'s> = Field<'s, ir::filter::expression::Expression<'s>>;
+pub type UnresolvedField<'s> = Field<'s, ir::Expression<'s>>;
 pub type ResolvedField<'s> = Field<'s, filter::ResolvedFilterExpression>;
 
 /// Field plan
@@ -77,7 +71,7 @@ impl<'s> UnresolvedField<'s> {
     }
 }
 
-pub type UnresolvedNestedField<'s> = NestedField<'s, ir::filter::expression::Expression<'s>>;
+pub type UnresolvedNestedField<'s> = NestedField<'s, ir::Expression<'s>>;
 pub type ResolvedNestedField<'s> = NestedField<'s, filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -106,7 +100,7 @@ impl<'s> UnresolvedNestedField<'s> {
     }
 }
 
-pub type UnresolvedNestedObject<'s> = NestedObject<'s, ir::filter::expression::Expression<'s>>;
+pub type UnresolvedNestedObject<'s> = NestedObject<'s, ir::Expression<'s>>;
 pub type ResolvedNestedObject<'s> = NestedObject<'s, filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -127,7 +121,7 @@ impl<'s> UnresolvedNestedObject<'s> {
     }
 }
 
-pub type UnresolvedNestedArray<'s> = NestedArray<'s, ir::filter::expression::Expression<'s>>;
+pub type UnresolvedNestedArray<'s> = NestedArray<'s, ir::Expression<'s>>;
 pub type ResolvedNestedArray<'s> = NestedArray<'s, filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]

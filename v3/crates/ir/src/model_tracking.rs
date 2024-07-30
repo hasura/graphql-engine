@@ -1,7 +1,9 @@
 //! Track the models that were used in query.
 
-use super::ir;
-use super::ir::root_field::{self};
+use super::{
+    root_field::{self},
+    IR,
+};
 use metadata_resolve::Qualified;
 use open_dds::{commands::CommandName, models::ModelName};
 use serde::{Deserialize, Serialize};
@@ -46,10 +48,10 @@ pub struct ModelCount {
 // field. We then merge the models/commands used in each root field into a single map.
 // That means, if the same model was used in multiple root fields, we will
 // sum up the number of times that model was used.
-pub fn get_all_usage_counts_in_query(ir: &ir::IR<'_, '_>) -> UsagesCounts {
+pub fn get_all_usage_counts_in_query(ir: &IR<'_, '_>) -> UsagesCounts {
     let mut all_usage_counts = UsagesCounts::new();
     match ir {
-        ir::IR::Query(ir) => {
+        IR::Query(ir) => {
             for ir_field in ir.values() {
                 match ir_field {
                     root_field::QueryRootField::TypeName { .. }
@@ -92,7 +94,7 @@ pub fn get_all_usage_counts_in_query(ir: &ir::IR<'_, '_>) -> UsagesCounts {
                 }
             }
         }
-        ir::IR::Mutation(ir) => {
+        IR::Mutation(ir) => {
             for ir_field in ir.values() {
                 match ir_field {
                     root_field::MutationRootField::TypeName { .. } => {}

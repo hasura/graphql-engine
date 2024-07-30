@@ -10,8 +10,8 @@ use lang_graphql::normalized_ast;
 use open_dds;
 use serde::Serialize;
 
-use crate::ir::error;
-use crate::ir::model_selection;
+use crate::error;
+use crate::model_selection;
 use crate::model_tracking::UsagesCounts;
 use metadata_resolve;
 use metadata_resolve::Qualified;

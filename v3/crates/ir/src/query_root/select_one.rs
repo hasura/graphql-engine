@@ -2,13 +2,13 @@
 //!
 //! A 'select_one' operation fetches zero or one row from a model
 
-use crate::ir::arguments;
-use crate::ir::error;
-use crate::ir::filter;
-use crate::ir::filter::expression as filter_expression;
-use crate::ir::model_selection;
-use crate::ir::permissions;
+use crate::arguments;
+use crate::error;
+use crate::filter;
+use crate::filter::expression as filter_expression;
+use crate::model_selection;
 use crate::model_tracking::{count_model, UsagesCounts};
+use crate::permissions;
 /// Generates the IR for a 'select_one' operation
 // TODO: Remove once TypeMapping has more than one variant
 use hasura_authn_core::SessionVariables;
@@ -31,15 +31,15 @@ pub struct ModelSelectOne<'n, 's> {
     pub model_selection: model_selection::ModelSelection<'s>,
 
     // The Graphql output type of the operation
-    pub(crate) type_container: &'n ast::TypeContainer<ast::TypeName>,
+    pub type_container: &'n ast::TypeContainer<ast::TypeName>,
 
     // All the models/commands used in this operation. This includes the models/commands
     // used via relationships. And in future, the models/commands used in the filter clause
-    pub(crate) usage_counts: UsagesCounts,
+    pub usage_counts: UsagesCounts,
 }
 
 #[allow(irrefutable_let_patterns)]
-pub(crate) fn select_one_generate_ir<'n, 's>(
+pub fn select_one_generate_ir<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'s normalized_ast::FieldCall<'s, GDS>,
     data_type: &Qualified<open_dds::types::CustomTypeName>,

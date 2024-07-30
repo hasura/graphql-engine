@@ -4,12 +4,10 @@ use std::collections::BTreeMap;
 use super::error as plan_error;
 use super::filter;
 use super::relationships;
-use crate::ir;
-use crate::{
-    error, ir::selection_set::NdcRelationshipName, remote_joins::types::VariableName, HttpContext,
-};
+use crate::{error, HttpContext};
+use ir::{NdcRelationshipName, VariableName};
 
-pub type UnresolvedArgument<'s> = Argument<ir::filter::expression::Expression<'s>>;
+pub type UnresolvedArgument<'s> = Argument<ir::Expression<'s>>;
 pub type ResolvedArgument = Argument<filter::ResolvedFilterExpression>;
 
 /// Argument plan to express various kinds of arguments
@@ -31,14 +29,14 @@ pub enum Argument<TFilterExpression> {
 impl<'s> UnresolvedArgument<'s> {
     /// Generate the argument plan from IR argument
     pub fn plan<'a>(
-        ir_argument: &'a ir::arguments::Argument<'s>,
+        ir_argument: &'a ir::Argument<'s>,
         relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
     ) -> Result<Self, super::error::Error> {
         let planned_argument = match ir_argument {
-            ir::arguments::Argument::Literal { value } => Argument::Literal {
+            ir::Argument::Literal { value } => Argument::Literal {
                 value: value.clone(),
             },
-            ir::arguments::Argument::BooleanExpression { predicate } => {
+            ir::Argument::BooleanExpression { predicate } => {
                 let expression = super::filter::plan_expression(predicate, relationships)?;
                 Argument::BooleanExpression {
                     predicate: expression,
@@ -66,7 +64,7 @@ impl<'s> UnresolvedArgument<'s> {
     }
 }
 
-pub type UnresolvedMutationArgument<'s> = MutationArgument<ir::filter::expression::Expression<'s>>;
+pub type UnresolvedMutationArgument<'s> = MutationArgument<ir::Expression<'s>>;
 pub type ResolvedMutationArgument = MutationArgument<filter::ResolvedFilterExpression>;
 
 /// Argument plan to express various kinds of arguments
@@ -84,14 +82,14 @@ pub enum MutationArgument<TFilterExpression> {
 impl<'s> UnresolvedMutationArgument<'s> {
     /// Generate the argument plan from IR argument
     pub fn plan<'a>(
-        ir_argument: &'a ir::arguments::Argument<'s>,
+        ir_argument: &'a ir::Argument<'s>,
         relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
     ) -> Result<Self, super::error::Error> {
         let planned_argument = match ir_argument {
-            ir::arguments::Argument::Literal { value } => MutationArgument::Literal {
+            ir::Argument::Literal { value } => MutationArgument::Literal {
                 value: value.clone(),
             },
-            ir::arguments::Argument::BooleanExpression { predicate } => {
+            ir::Argument::BooleanExpression { predicate } => {
                 let expression = super::filter::plan_expression(predicate, relationships)?;
                 MutationArgument::BooleanExpression {
                     predicate: expression,
@@ -119,7 +117,7 @@ impl<'s> UnresolvedMutationArgument<'s> {
 }
 
 pub fn plan_arguments<'s>(
-    arguments: &BTreeMap<DataConnectorArgumentName, ir::arguments::Argument<'s>>,
+    arguments: &BTreeMap<DataConnectorArgumentName, ir::Argument<'s>>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, plan_error::Error> {
     let mut result = BTreeMap::new();
@@ -133,7 +131,7 @@ pub fn plan_arguments<'s>(
 }
 
 pub fn plan_mutation_arguments<'s>(
-    arguments: &BTreeMap<DataConnectorArgumentName, ir::arguments::Argument<'s>>,
+    arguments: &BTreeMap<DataConnectorArgumentName, ir::Argument<'s>>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedMutationArgument<'s>>, plan_error::Error>
 {
@@ -150,10 +148,7 @@ pub fn plan_mutation_arguments<'s>(
 
 pub(crate) async fn resolve_arguments<'s>(
     http_context: &HttpContext,
-    arguments: BTreeMap<
-        DataConnectorArgumentName,
-        Argument<ir::filter::expression::Expression<'s>>,
-    >,
+    arguments: BTreeMap<DataConnectorArgumentName, Argument<ir::Expression<'s>>>,
 ) -> Result<
     BTreeMap<DataConnectorArgumentName, Argument<filter::ResolvedFilterExpression>>,
     error::FieldError,
@@ -167,10 +162,7 @@ pub(crate) async fn resolve_arguments<'s>(
 
 pub(crate) async fn resolve_mutation_arguments<'s>(
     http_context: &HttpContext,
-    arguments: BTreeMap<
-        DataConnectorArgumentName,
-        MutationArgument<ir::filter::expression::Expression<'s>>,
-    >,
+    arguments: BTreeMap<DataConnectorArgumentName, MutationArgument<ir::Expression<'s>>>,
 ) -> Result<
     BTreeMap<DataConnectorArgumentName, MutationArgument<filter::ResolvedFilterExpression>>,
     error::FieldError,

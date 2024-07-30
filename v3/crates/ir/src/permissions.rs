@@ -6,15 +6,13 @@ use open_dds::{
     types::InbuiltType,
 };
 
-use crate::ir::error;
-use crate::ir::filter::expression as filter_expression;
+use crate::error;
+use crate::filter::expression as filter_expression;
 use crate::model_tracking::{count_model, UsagesCounts};
-use metadata_resolve;
 
 use metadata_resolve::{
     QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference, UnaryComparisonOperator,
 };
-use schema;
 use schema::GDS;
 
 use super::relationship::LocalModelRelationshipInfo;

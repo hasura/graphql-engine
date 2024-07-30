@@ -123,13 +123,13 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                 }?;
             }
 
-            let mut usage_counts = execute::model_tracking::UsagesCounts::default();
+            let mut usage_counts = ir::UsagesCounts::default();
             let mut relationships = BTreeMap::new();
 
             let permission_filter = match &select_permission.filter {
                 FilterPermission::AllowAll => Ok::<_, DataFusionError>(None),
                 FilterPermission::Filter(filter) => {
-                    let filter_ir = execute::ir::permissions::process_model_predicate(
+                    let filter_ir = ir::process_model_predicate(
                         filter,
                         &table.session.variables,
                         &mut usage_counts,

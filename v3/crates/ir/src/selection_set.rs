@@ -18,21 +18,20 @@ use super::relationship::{
     self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo, RemoteCommandRelationshipInfo,
     RemoteModelRelationshipInfo,
 };
+use crate::error;
 use crate::global_id;
-use crate::ir::error;
 use crate::model_tracking::UsagesCounts;
-use metadata_resolve;
 use schema::TypeKind;
 use schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
 
 #[derive(Debug, Serialize)]
-pub(crate) enum NestedSelection<'s> {
+pub enum NestedSelection<'s> {
     Object(ResultSelectionSet<'s>),
     Array(Box<NestedSelection<'s>>),
 }
 
 #[derive(Debug, Serialize)]
-pub(crate) enum FieldSelection<'s> {
+pub enum FieldSelection<'s> {
     Column {
         column: DataConnectorColumnName,
         nested_selection: Option<NestedSelection<'s>>,
@@ -81,7 +80,7 @@ pub(crate) enum FieldSelection<'s> {
     PartialOrd,
     Ord,
 )]
-pub struct NdcRelationshipName(pub(crate) SmolStr);
+pub struct NdcRelationshipName(pub SmolStr);
 
 impl NdcRelationshipName {
     pub fn new(
@@ -157,19 +156,16 @@ impl Borrow<SmolStr> for NdcFieldAlias {
 
 /// IR that represents the selected fields of an output type.
 #[derive(Debug, Serialize, Default)]
-pub(crate) struct ResultSelectionSet<'s> {
+pub struct ResultSelectionSet<'s> {
     // The fields in the selection set. They are stored in the form that would
     // be converted and sent over the wire. Serialized the map as ordered to
     // produce deterministic golden files.
-    pub(crate) fields: IndexMap<NdcFieldAlias, FieldSelection<'s>>,
+    pub fields: IndexMap<NdcFieldAlias, FieldSelection<'s>>,
 }
 
 impl<'s> ResultSelectionSet<'s> {
     /// Check if the field is found in existing fields. Returns the alias of the field.
-    pub(crate) fn contains(
-        &self,
-        other_field: &metadata_resolve::FieldMapping,
-    ) -> Option<NdcFieldAlias> {
+    pub fn contains(&self, other_field: &metadata_resolve::FieldMapping) -> Option<NdcFieldAlias> {
         self.fields.iter().find_map(|(alias, field)| match field {
             FieldSelection::Column { column, .. } => {
                 if column.as_str() == other_field.column.as_str() {
@@ -213,7 +209,7 @@ fn build_global_id_fields(
     Ok(())
 }
 
-pub(crate) fn generate_nested_selection<'s>(
+pub fn generate_nested_selection<'s>(
     qualified_type_reference: &metadata_resolve::QualifiedTypeReference,
     field_base_type_kind: TypeKind,
     field: &normalized_ast::Field<'s, GDS>,
@@ -277,7 +273,7 @@ pub(crate) fn generate_nested_selection<'s>(
 /// `field_mappings` is needed separately during IR generation and cannot be embedded
 /// into the annotation itself because the same GraphQL type may have different field
 /// sources depending on the model being queried.
-pub(crate) fn generate_selection_set_ir<'s>(
+pub fn generate_selection_set_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_connector: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<

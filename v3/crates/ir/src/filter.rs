@@ -6,7 +6,7 @@ use lang_graphql::normalized_ast;
 use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified};
 use serde::Serialize;
 
-use crate::ir::error;
+use crate::error;
 use crate::model_tracking::{count_model, UsagesCounts};
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
@@ -18,32 +18,32 @@ use schema::{self};
 use schema::{BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation};
 
 use super::relationship::LocalModelRelationshipInfo;
-use crate::ir::selection_set::NdcRelationshipName;
+use crate::selection_set::NdcRelationshipName;
 
 pub mod expression;
 
 /// Filter expression to be applied on a model/command selection set
 #[derive(Debug, Serialize, Clone)]
-pub(crate) struct FilterExpression<'s> {
+pub struct FilterExpression<'s> {
     /// Filter obtained from the GraphQL query request
-    pub(crate) query_filter: QueryFilter<'s>,
+    pub query_filter: QueryFilter<'s>,
     /// Permission filters
-    pub(crate) permission_filter: Option<expression::Expression<'s>>,
+    pub permission_filter: Option<expression::Expression<'s>>,
     /// Filter for representing local relationship joins
-    pub(crate) relationship_join_filter: Option<expression::Expression<'s>>,
+    pub relationship_join_filter: Option<expression::Expression<'s>>,
 }
 
 /// Filter expression derived from GraphQL query.
 #[derive(Debug, Serialize, Clone)]
-pub(crate) struct QueryFilter<'s> {
+pub struct QueryFilter<'s> {
     /// Filter derived from `where` clause.
-    pub(crate) where_clause: Option<expression::Expression<'s>>,
+    pub where_clause: Option<expression::Expression<'s>>,
     /// Relay global ID or unique field comparisons
-    pub(crate) additional_filter: Option<expression::Expression<'s>>,
+    pub additional_filter: Option<expression::Expression<'s>>,
 }
 
 /// Generate the IR for GraphQL 'where' boolean expression
-pub(crate) fn resolve_filter_expression<'s>(
+pub fn resolve_filter_expression<'s>(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
