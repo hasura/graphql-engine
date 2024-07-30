@@ -40,6 +40,8 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Monoid (Any (..))
 import Data.Text qualified as T
 import Data.Text.Extended (toTxt, (<>>))
+import Hasura.Authentication.Session (SessionVariable, SessionVariableValue, SessionVariables, filterSessionVariables)
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
@@ -95,7 +97,6 @@ import Hasura.Server.Prometheus
 import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (ModelInfoLogState (..), MonadGetPolicies (..), ReadOnlyMode (..), RequestId (..), TraceQueryStatus (TraceQueryEnabled))
 import Hasura.Services
-import Hasura.Session (SessionVariable, SessionVariableValue, SessionVariables, UserInfo (..), filterSessionVariables)
 import Hasura.Tracing (MonadTrace, attachMetadata)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G

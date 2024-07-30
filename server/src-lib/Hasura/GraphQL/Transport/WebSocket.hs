@@ -49,6 +49,8 @@ import Data.Time.Clock qualified as TC
 import Data.Word (Word16)
 import GHC.AssertNF.CPP
 import Hasura.App.State
+import Hasura.Authentication.Session (SessionVariables)
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
@@ -107,7 +109,6 @@ import Hasura.Server.Prometheus
 import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState (..), MonadGetPolicies (..), RequestId, TraceQueryStatus (TraceQueryEnabled), getRequestId)
 import Hasura.Services.Network
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax (Name (..))
 import Language.GraphQL.Draft.Syntax qualified as G

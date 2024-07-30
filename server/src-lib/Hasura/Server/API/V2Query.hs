@@ -16,6 +16,7 @@ import Data.Aeson.Types (Parser)
 import Data.Text qualified as T
 import GHC.Generics.Extended (constrName)
 import Hasura.App.State
+import Hasura.Authentication.User (UserInfoM)
 import Hasura.Backends.BigQuery.DDL.RunSQL qualified as BigQuery
 import Hasura.Backends.DataConnector.Adapter.RunSQL qualified as DataConnector
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName, mkDataConnectorName)
@@ -48,7 +49,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.Server.Types
 import Hasura.Services
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as GQL
 

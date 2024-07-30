@@ -31,10 +31,10 @@ import Data.Bifunctor
 import Data.ByteString (ByteString)
 import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation, fromEither)
+import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class (Template (..), TemplatingEngine (..), TransformErrorBundle (..), UnescapedTemplate, encodeScalar, wrapUnescapedTemplate)
 import Hasura.RQL.Types.Webhook.Transform.Request (RequestTransformCtx (..), Version (..))
-import Hasura.Session (SessionVariables)
 import Kriti.Error qualified as Kriti
 import Kriti.Parser qualified as Kriti
 import Network.HTTP.Client.Transformable qualified as HTTP

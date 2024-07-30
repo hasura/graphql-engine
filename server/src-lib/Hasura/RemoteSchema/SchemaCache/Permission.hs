@@ -44,17 +44,17 @@ import Data.List.Extended (duplicates, getDifference)
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
+import Hasura.Authentication.Role (RoleName, adminRoleName)
+import Hasura.Authentication.Session (isSessionVariable, mkSessionVariable)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata.Instances ()
-import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.RemoteSchema.SchemaCache.Types
-import Hasura.Server.Utils (englishList, isSessionVariable)
-import Hasura.Session (mkSessionVariable)
+import Hasura.Server.Utils (englishList)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data FieldDefinitionType
@@ -485,13 +485,14 @@ parsePresetValue gType varName isStatic value = do
           case value of
             G.VEnum _ -> refute $ pure $ ExpectedScalarValue typeName value
             G.VString t ->
-              case (isSessionVariable t && (not isStatic)) of
-                True ->
+              case (mkSessionVariable t, not isStatic) of
+                (_, False) -> pure $ G.VString t
+                (Nothing, _) -> pure $ G.VString t
+                (Just var, True) ->
                   pure
                     $ G.VVariable
-                    $ SessionPresetVariable (mkSessionVariable t) scalarTypeName
+                    $ SessionPresetVariable var scalarTypeName
                     $ SessionArgumentPresetScalar
-                False -> pure $ G.VString t
             G.VList _ -> refute $ pure $ ExpectedScalarValue typeName value
             G.VObject _ -> refute $ pure $ ExpectedScalarValue typeName value
             v -> pure $ G.literal v
@@ -502,14 +503,14 @@ parsePresetValue gType varName isStatic value = do
                 True -> pure $ G.literal enumVal
                 False -> refute $ pure $ EnumValueNotFound typeName $ G.unEnumValue e
             G.VString t ->
-              case isSessionVariable t of
-                True ->
+              case mkSessionVariable t of
+                Just var ->
                   pure
                     $ G.VVariable
-                    $ SessionPresetVariable (mkSessionVariable t) enumTypeName
+                    $ SessionPresetVariable var enumTypeName
                     $ SessionArgumentPresetEnum
                     $ S.fromList enumVals
-                False -> refute $ pure $ ExpectedEnumValue typeName value
+                Nothing -> refute $ pure $ ExpectedEnumValue typeName value
             _ -> refute $ pure $ ExpectedEnumValue typeName value
         Just (PresetInputObject inputValueDefinitions) ->
           let inpValsMap = mapFromL G._ivdName inputValueDefinitions

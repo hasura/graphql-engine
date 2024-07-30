@@ -11,6 +11,7 @@ where
 
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (ToTxt, toTxt)
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Types.BoolExp
@@ -26,7 +27,6 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.RQL.Types.Session (UserInfo (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types
 import Hasura.Table.Cache ()

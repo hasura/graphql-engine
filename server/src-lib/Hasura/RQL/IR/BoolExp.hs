@@ -58,6 +58,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (hashWithSalt)
 import Data.Monoid
 import Data.Text.Extended
+import Hasura.Authentication.Session (SessionVariable)
 import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate (RemoteRelRHSFetchWhereExp)
@@ -70,7 +71,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Session
 
 ----------------------------------------------------------------------------------------------------
 -- Boolean structure

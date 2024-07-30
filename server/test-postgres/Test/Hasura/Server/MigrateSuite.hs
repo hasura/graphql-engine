@@ -11,6 +11,7 @@ import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.Environment qualified as Env
 import Data.Time.Clock (getCurrentTime)
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.User (UserInfoM)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -32,7 +33,6 @@ import Hasura.Server.Init (DowngradeOptions (..))
 import Hasura.Server.Migrate
 import Hasura.Server.Types
 import Hasura.Services.Network
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Test.Hspec.Core.Spec
 import Test.Hspec.Expectations.Lifted

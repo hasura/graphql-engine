@@ -11,6 +11,7 @@ where
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Text.Encoding qualified as TE
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
@@ -29,7 +30,6 @@ import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.AnyBackend (mkAnyBackend)
-import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G

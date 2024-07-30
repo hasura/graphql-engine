@@ -6,8 +6,10 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Hasura.Authentication.Role (adminRoleName)
+import Hasura.Authentication.Session (SessionVariables)
+import Hasura.Authentication.User (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkUserInfo)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
 import Hasura.CredentialCache
@@ -30,19 +32,17 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR
-import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Session (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkSessionVariablesText, mkUserInfo)
 import Hasura.Tracing (MonadTrace)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
 data GQLExplain = GQLExplain
-  { _gqeQuery :: !GH.GQLReqParsed,
-    _gqeUser :: !(Maybe (HashMap.HashMap Text Text)),
-    _gqeIsRelay :: !(Maybe Bool)
+  { _gqeQuery :: GH.GQLReqParsed,
+    _gqeUser :: Maybe SessionVariables,
+    _gqeIsRelay :: Maybe Bool
   }
   deriving (Show, Eq, Generic)
 
@@ -100,13 +100,13 @@ explainGQLQuery ::
   [HTTP.Header] ->
   GQLExplain ->
   m EncJSON
-explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) = do
+explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExplain query sessionVariables maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <-
     mkUserInfo
       (URBFromSessionVariablesFallback adminRoleName)
       UAdminSecretSent
-      sessionVariables
+      (fromMaybe mempty sessionVariables)
   -- we don't need to check in allow list as we consider it an admin endpoint
   let graphQLContext = E.makeGQLContext userInfo sc queryType
   queryParts <- GH.getSingleOperation query
@@ -146,4 +146,3 @@ explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExp
             encJFromJValue <$> mkSubscriptionExplain execPlan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
-    sessionVariables = mkSessionVariablesText $ fromMaybe mempty userVarsRaw
