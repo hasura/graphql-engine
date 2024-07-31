@@ -132,7 +132,16 @@ macro_rules! subgraph_identifier {
 /// - starts with an alphabet or underscore
 /// - all characters are either alphanumeric or underscore
 #[derive(
-    Clone, Debug, derive_more::Display, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize,
+    Clone,
+    Debug,
+    derive_more::Display,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize,
 )]
 pub struct SubgraphIdentifier(SmolStr);
 

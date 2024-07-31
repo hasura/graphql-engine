@@ -15,6 +15,7 @@ pub mod identifier;
 pub mod models;
 pub mod order_by_expression;
 pub mod permissions;
+pub mod query;
 pub mod relationships;
 pub mod session_variables;
 pub mod test_utils;
