@@ -6,6 +6,7 @@ import styles from './styles.module.scss';
 import { Redirect } from '@docusaurus/router';
 import { AiChatBot } from "@site/src/components/AiChatBot/AiChatBot";
 import BrowserOnly from '@docusaurus/BrowserOnly';
+import { NewVersionModal } from "@site/src/components/NewVersionModal/NewVersionModal";
 const CustomDocItem = props => {
   useEffect(() => {
     // This function is adds <wbr> tags to code blocks within a table
@@ -78,6 +79,9 @@ const CustomDocItem = props => {
         <GraphQLWithHasuraBanner />
         <BrowserOnly fallback={<div>Loading...</div>}>
           {() => <AiChatBot/>}
+        </BrowserOnly>
+        <BrowserOnly fallback={<div>Loading...</div>}>
+          {() => <NewVersionModal/>}
         </BrowserOnly>
         <CustomFooter />
       </div>
