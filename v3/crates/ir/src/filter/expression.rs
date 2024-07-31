@@ -120,7 +120,7 @@ impl<'s> Expression<'s> {
 }
 
 /// Represent a local field (column) comparison
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
 pub enum LocalFieldComparison {
     /// A comparison with just a field without a target value
     UnaryComparison {
@@ -135,7 +135,7 @@ pub enum LocalFieldComparison {
     },
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
 pub enum ComparisonTarget {
     Column {
         /// The name of the column
@@ -145,7 +145,7 @@ pub enum ComparisonTarget {
     },
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
 pub enum ComparisonValue {
     Scalar { value: serde_json::Value },
     Variable { name: VariableName },

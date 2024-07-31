@@ -1,5 +1,5 @@
 use async_recursion::async_recursion;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use std::collections::BTreeMap;
 use tracing_util::SpanVisibility;
 
@@ -163,7 +163,7 @@ fn build_ndc_query_fields<'s>(
 }
 
 /// Filter expression plan to be resolved
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ResolvedFilterExpression {
     And {
         expressions: Vec<ResolvedFilterExpression>,
@@ -391,20 +391,22 @@ where
 /// Utility to store distinct comparisons to avoid duplicate comparison predicates
 /// in the remote relationship comparison expression.
 struct DistinctComparisons {
-    comparisons: Vec<ResolvedFilterExpression>,
+    comparisons: IndexSet<ResolvedFilterExpression>,
 }
 
 impl DistinctComparisons {
     fn new() -> Self {
         DistinctComparisons {
-            comparisons: Vec::new(),
+            comparisons: IndexSet::new(),
         }
     }
 
     fn push(&mut self, expression: ResolvedFilterExpression) {
-        if !self.comparisons.contains(&expression) {
-            self.comparisons.push(expression);
-        }
+        self.comparisons.insert(expression);
+    }
+
+    fn into_vec(self) -> Vec<ResolvedFilterExpression> {
+        self.comparisons.into_iter().collect()
     }
 }
 
@@ -459,5 +461,5 @@ fn build_source_column_comparisons(
     // combine all row comparisons with OR
     // Ex. (source_column_a = target_column_value) AND (source_column_b = target_column_value)
     //     OR (source_column_a = target_column_value) AND (source_column_b = target_column_value)
-    Ok(ResolvedFilterExpression::mk_or(expressions.comparisons))
+    Ok(ResolvedFilterExpression::mk_or(expressions.into_vec()))
 }

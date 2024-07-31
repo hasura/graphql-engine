@@ -64,7 +64,7 @@ pub enum ModelPredicate {
     Not(Box<ModelPredicate>),
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum UnaryComparisonOperator {
     IsNull,
 }
