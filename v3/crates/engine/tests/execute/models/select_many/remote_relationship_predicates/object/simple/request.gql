@@ -1,0 +1,23 @@
+query MyQuery {
+  Track(limit: 2) {
+    AlbumId
+    Name
+    Album {
+      Title
+    }
+  }
+  TrackWithFilterAndPredicate: Track(
+    where: {
+      _and: [
+        { Album: { Title: { _eq: "For Those About To Rock We Salute You" } } }
+        { AlbumId: { _eq: 1 } }
+      ]
+    }
+  ) {
+    AlbumId
+    Name
+    Album {
+      Title
+    }
+  }
+}

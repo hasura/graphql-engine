@@ -1,0 +1,23 @@
+query MyQuery {
+  Album(limit: 2) {
+    AlbumId
+    Tracks {
+      TrackAlbums {
+        AlbumId
+        Title
+      }
+    }
+  }
+  AlbumWithFilterAndPredicate: Album(
+    limit: 2
+    where: { Tracks: { TrackId: { _eq: 3 } } }
+  ) {
+    AlbumId
+    Tracks {
+      TrackAlbums {
+        AlbumId
+        Title
+      }
+    }
+  }
+}

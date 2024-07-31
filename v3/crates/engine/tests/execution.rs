@@ -1396,6 +1396,164 @@ fn test_model_select_many_relationship_predicate_object_two_relationship_fields(
     )
 }
 
+// Tests using remote relationships in predicates
+// Array relationship
+#[test]
+fn test_model_select_many_remote_relationship_predicate_array_simple() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/remote_relationship_predicates/array/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Tests using remote relationships in predicates
+
+// Nested Array relationship
+#[test]
+fn test_model_select_many_remote_relationship_predicate_array_nested() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/remote_relationship_predicates/array/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Nested Array relationship with multiple fields
+#[test]
+fn test_model_select_many_remote_relationship_predicate_array_nested_multiple_fields(
+) -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/remote_relationship_predicates/array/nested_multiple_fields";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Tests using remote relationships in predicates
+// Object relationship
+#[test]
+fn test_model_select_many_remote_relationship_predicate_object_simple() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/remote_relationship_predicates/object/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Tests using remote relationships in predicates
+// Nested object relationship
+#[test]
+fn test_model_select_many_remote_relationship_predicate_object_nested() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/remote_relationship_predicates/object/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Tests using remote relationships in predicates
+// We have the following relationships:
+//  1.  'TracksRemote' array relationship to 'Album' model
+//  2.  'AlbumRemote' object relationship to 'Track' model
+//
+// Predicates using the relationship are defined on both the models as follows:
+// 1. The select permission for 'user' role on 'Album' model is defined as:
+//      Select only those Album whose `TrackId` from the relationship `TracksRemote` is equal to "x-hasura-user-id"
+// 2. The select permission for 'user' role on 'Track' model is defined as:
+//      Select only those Track whose `Title` from the relationship `AlbumRemote` is equal to "x-hasura-album-title"
+//
+// In this test, we test what happens when we query both the `TracksRemote` and `AlbumRemote` relationship in the same query.
+// The query we make is:
+//   query MyQuery {
+//      Album(limit: 1) {
+//          Tracks {
+//              TrackId
+//              Name
+//              Album {
+//                  Title
+//              }
+//          }
+//      }
+//  }
+// We expect the following results:
+//      Fetch all the tracks of the Albums whose `TrackId` is equal to "x-hasura-user-id" and then
+//      filter those tracks based on the "x-hasura-album-title" value.
+#[test]
+fn test_model_select_many_remote_relationship_predicate_on_two_fields() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/remote_relationship_predicates/on_two_fields";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Tests using relationships in predicates
+// We have the following relationships:
+//  1.  'TracksRemote' object relationship to 'Album' model
+//  2.  'AlbumRemote' object relationship to 'Track' model
+//  3.  'GenreRemote' object relationship to 'Track' model
+//
+// We have the following select permission defined for "user" role
+//    It filters only those Albums whose Tracks's Album's AlbumnId is equal to "x-hasura-user-id" and
+//    whose Tracks's Genre's GenreId is equal to "x-hasura-genre-name"
+#[test]
+fn test_model_select_many_remote_relationship_predicate_object_two_relationship_fields(
+) -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/remote_relationship_predicates/object/two_relationship_fields";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
 #[test]
 fn test_graphql_descriptions() -> anyhow::Result<()> {
     common::test_execution_expectation_for_multiple_ndc_versions(

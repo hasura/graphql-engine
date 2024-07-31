@@ -9,11 +9,12 @@ use crate::stages::{
     models_graphql, object_boolean_expressions, object_types, relationships, scalar_types,
     type_permissions,
 };
-use crate::types::error::{Error, RelationshipError, TypeError, TypePredicateError};
+use crate::types::error::{Error, TypeError, TypePredicateError};
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
 use crate::types::subgraph::{
     ArgumentInfo, ArgumentKind, Qualified, QualifiedBaseType, QualifiedTypeReference,
 };
+use crate::FieldMapping;
 use indexmap::IndexMap;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
@@ -501,37 +502,80 @@ pub(crate) fn resolve_model_predicate_with_type(
                             }}
                         })?;
 
-                        // predicates with relationships is currently only supported for local relationships
                         if let Some(target_model_source) = &target_model.inner.source {
-                            if target_model_source.data_connector.name == data_connector_link.name {
-                                let target_source =
-                                    model_permissions::ModelTargetSource::from_model_source(
-                                        target_model_source,
-                                        relationship,
-                                    )
-                                    .map_err(|_| {
-                                        Error::RelationshipError {
-                                    relationship_error:
-                                        RelationshipError::NoRelationshipCapabilitiesDefined {
-                                            relationship_name: relationship.relationship_name.clone(),
-                                            type_name: type_name.clone(),
-                                            data_connector_name: target_model_source
+                            // Only relationships targetting the models within the same subgraph are allowed
+                            if target_model_source.data_connector.name.subgraph
+                                != data_connector_link.name.subgraph
+                            {
+                                return Err(Error::TypePredicateError {
+                                    type_predicate_error:
+                                        TypePredicateError::RelationshipAcrossSubgraphs {
+                                            relationship_name: name.clone(),
+                                            source_data_connector: data_connector_link.name.clone(),
+                                            target_data_connector: target_model_source
                                                 .data_connector
                                                 .name
                                                 .clone(),
                                         },
+                                });
+                            } else if
+                            // If this is a remote relationship predicate
+                            target_model_source.data_connector.name.name
+                                != data_connector_link.name.name
+                            {
+                                // Check for the presence of a equality operator on source field mapped NDC columns
+                                // Reject at build time if no equality operator is found for any source field
+                                // in the remote relationship mapping
+                                for relationship_mapping in mappings {
+                                    let source_field =
+                                        &relationship_mapping.source_field.field_name;
+                                    let FieldMapping {
+                                        column,
+                                        equal_operators,
+                                        ..
+                                    } = data_connector_field_mappings
+                                        .get(source_field)
+                                        .ok_or_else(|| {
+                                            Error::from(
+                                                TypePredicateError::UnknownFieldInTypePredicate {
+                                                    field_name: source_field.clone(),
+                                                    type_name: type_name.clone(),
+                                                },
+                                            )
+                                        })?;
+
+                                    if equal_operators.is_empty() {
+                                        return Err(Error::TypePredicateError {
+                                            type_predicate_error:
+                                                TypePredicateError::MissingEqualOperator {
+                                                    location: format!("While building a remote relationship predicate {name}"),
+                                                    type_name: type_name.clone(),
+                                                    field_name: source_field.clone(),
+                                                    ndc_column: column.clone(),
+                                                    data_connector_name: data_connector_link
+                                                        .name
+                                                        .clone(),
+                                                },
+                                        });
+                                    }
                                 }
-                                    })?;
+                            }
 
-                                let target_object_type_representation = object_types
-                                    .get(&target_model.inner.data_type)
-                                    .ok_or(Error::UnknownType {
-                                        data_type: target_model.inner.data_type.clone(),
-                                    })?;
+                            let target_source =
+                                model_permissions::ModelTargetSource::from_model_source(
+                                    target_model_source,
+                                    relationship,
+                                )?;
 
-                                // look up this type in the context of it's data connector
-                                // so that we use the correct column names for the data source
-                                let data_connector_field_mappings = target_object_type_representation.type_mappings.get(
+                            let target_object_type_representation = object_types
+                                .get(&target_model.inner.data_type)
+                                .ok_or(Error::UnknownType {
+                                    data_type: target_model.inner.data_type.clone(),
+                                })?;
+
+                            // look up this type in the context of it's data connector
+                            // so that we use the correct column names for the data source
+                            let target_data_connector_field_mappings = target_object_type_representation.type_mappings.get(
                                     &target_source.model.data_connector.name,
                                     DataConnectorObjectType::ref_cast(target_source.model.collection.inner())
                                 )
@@ -549,105 +593,96 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     },
                                 }))?;
 
-                                // Collect type mappings.
-                                let mut source_type_mappings = BTreeMap::new();
+                            // Collect type mappings.
+                            let mut source_type_mappings = BTreeMap::new();
 
-                                // get names of collections we want to lookup
-                                let collection_types = object_type_representation
-                                    .type_mappings
-                                    .object_types_for_data_connector(&data_connector_link.name)
-                                    .iter()
-                                    .map(|collection_type| {
-                                        ndc_models::TypeName::from(collection_type.as_str())
-                                    })
-                                    .collect::<Vec<_>>();
+                            // get names of collections we want to lookup
+                            let collection_types = object_type_representation
+                                .type_mappings
+                                .object_types_for_data_connector(&data_connector_link.name)
+                                .iter()
+                                .map(|collection_type| {
+                                    ndc_models::TypeName::from(collection_type.as_str())
+                                })
+                                .collect::<Vec<_>>();
 
-                                for collection_type in &collection_types {
-                                    let type_mapping_to_collect =
-                                        type_mappings::TypeMappingToCollect {
-                                            type_name,
-                                            ndc_object_type_name: collection_type,
-                                        };
-
-                                    type_mappings::collect_type_mapping_for_source(
-                                        &type_mapping_to_collect,
-                                        &data_connector_link.name,
-                                        &remove_object_relationships(object_types),
-                                        scalar_types,
-                                        &mut source_type_mappings,
-                                        &None,
-                                    )
-                                    .map_err(|error| {
-                                        Error::from(
-                                            TypePredicateError::TypeMappingCollectionError {
-                                                type_name: type_name.clone(),
-                                                error,
-                                            },
-                                        )
-                                    })?;
-                                }
-
-                                let annotation = model_permissions::PredicateRelationshipInfo {
-                                    source_type: relationship.source.clone(),
-                                    relationship_name: relationship.relationship_name.clone(),
-                                    target_model_name: model_name.clone(),
-                                    target_source: target_source.clone(),
-                                    target_type: target_typename.clone(),
-                                    relationship_type: relationship_type.clone(),
-                                    mappings: mappings.clone(),
-                                    source_data_connector: data_connector_link.clone(),
-                                    source_type_mappings,
+                            for collection_type in &collection_types {
+                                let type_mapping_to_collect = type_mappings::TypeMappingToCollect {
+                                    type_name,
+                                    ndc_object_type_name: collection_type,
                                 };
 
-                                let target_object_type = object_types
-                                    .get(&target_model.inner.data_type)
-                                    .ok_or_else(|| {
-                                        Error::from(TypePredicateError::ObjectTypeNotFound {
-                                            type_name: target_model.inner.data_type.clone(),
-                                        })
-                                    })?;
-
-                                // if a boolean expression type was provided, we can find the
-                                // target boolean expression type by following the appropriate
-                                // `comparable_relationship` field
-                                let target_boolean_expression_graphql =
-                                    match boolean_expression_graphql {
-                                        Some(graphql) => lookup_relationship_in_boolean_expression(
-                                            graphql,
-                                            type_name,
-                                            &relationship.relationship_name,
-                                            target_model,
-                                            boolean_expression_types,
-                                        ),
-                                        None => Ok(None),
-                                    }?;
-
-                                let target_model_predicate = resolve_model_predicate_with_type(
-                                    nested_predicate,
-                                    &target_model.inner.data_type,
-                                    target_object_type,
-                                    target_boolean_expression_graphql.as_ref(),
-                                    data_connector_field_mappings,
-                                    data_connector_link,
-                                    subgraph,
-                                    scalars,
-                                    object_types,
+                                type_mappings::collect_type_mapping_for_source(
+                                    &type_mapping_to_collect,
+                                    &data_connector_link.name,
+                                    &remove_object_relationships(object_types),
                                     scalar_types,
-                                    boolean_expression_types,
-                                    models,
-                                    &target_model.inner.type_fields,
-                                )?;
-
-                                Ok(model_permissions::ModelPredicate::Relationship {
-                                    relationship_info: annotation,
-                                    predicate: Box::new(target_model_predicate),
-                                })
-                            } else {
-                                Err(Error::UnsupportedFeature {
-                                    message: "Predicate cannot be built using remote relationships"
-                                        .to_string(),
-                                })
+                                    &mut source_type_mappings,
+                                    &None,
+                                )
+                                .map_err(|error| {
+                                    Error::from(TypePredicateError::TypeMappingCollectionError {
+                                        type_name: type_name.clone(),
+                                        error,
+                                    })
+                                })?;
                             }
+
+                            let annotation = model_permissions::PredicateRelationshipInfo {
+                                source_type: relationship.source.clone(),
+                                relationship_name: relationship.relationship_name.clone(),
+                                target_model_name: model_name.clone(),
+                                target_source: target_source.clone(),
+                                target_type: target_typename.clone(),
+                                relationship_type: relationship_type.clone(),
+                                mappings: mappings.clone(),
+                                source_data_connector: data_connector_link.clone(),
+                                source_type_mappings,
+                            };
+
+                            let target_object_type = object_types
+                                .get(&target_model.inner.data_type)
+                                .ok_or_else(|| {
+                                    Error::from(TypePredicateError::ObjectTypeNotFound {
+                                        type_name: target_model.inner.data_type.clone(),
+                                    })
+                                })?;
+
+                            // // if a boolean expression type was provided, we can find the
+                            // // target boolean expression type by following the appropriate
+                            // // `comparable_relationship` field
+                            let target_boolean_expression_graphql = match boolean_expression_graphql
+                            {
+                                Some(graphql) => lookup_relationship_in_boolean_expression(
+                                    graphql,
+                                    type_name,
+                                    &relationship.relationship_name,
+                                    target_model,
+                                    boolean_expression_types,
+                                ),
+                                None => Ok(None),
+                            }?;
+
+                            let target_model_predicate = resolve_model_predicate_with_type(
+                                nested_predicate,
+                                &target_model.inner.data_type,
+                                target_object_type,
+                                target_boolean_expression_graphql.as_ref(),
+                                target_data_connector_field_mappings,
+                                data_connector_link,
+                                subgraph,
+                                scalars,
+                                object_types,
+                                scalar_types,
+                                boolean_expression_types,
+                                models,
+                                &target_model.inner.type_fields,
+                            )?;
+
+                            Ok(model_permissions::ModelPredicate::Relationship {
+                                relationship_info: annotation,
+                                predicate: Box::new(target_model_predicate),
+                            })
                         } else {
                             Err(Error::from(
                                 TypePredicateError::TargetSourceRequiredForRelationshipPredicate {

@@ -82,8 +82,13 @@ pub fn model_selection_ir<'s>(
     request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
-    let permission_filter =
-        build_permissions_filter(permissions_predicate, session_variables, usage_counts)?;
+    let permission_filter = build_permissions_filter(
+        &model_source.data_connector,
+        &model_source.type_mappings,
+        permissions_predicate,
+        session_variables,
+        usage_counts,
+    )?;
 
     let filter_clause = filter::FilterExpression {
         query_filter,
@@ -116,6 +121,8 @@ pub fn model_selection_ir<'s>(
 }
 
 fn build_permissions_filter<'s>(
+    data_connector_link: &'s metadata_resolve::DataConnectorLink,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -123,8 +130,13 @@ fn build_permissions_filter<'s>(
     match permissions_predicate {
         metadata_resolve::FilterPermission::AllowAll => Ok(None),
         metadata_resolve::FilterPermission::Filter(predicate) => {
-            let permission_filter =
-                permissions::process_model_predicate(predicate, session_variables, usage_counts)?;
+            let permission_filter = permissions::process_model_predicate(
+                data_connector_link,
+                type_mappings,
+                predicate,
+                session_variables,
+                usage_counts,
+            )?;
             Ok(Some(permission_filter))
         }
     }
@@ -148,6 +160,8 @@ pub fn generate_aggregate_model_selection_ir<'s>(
         permissions::get_argument_presets(field_call.info.namespaced)?
     {
         arguments::process_model_arguments_presets(
+            &model_source.data_connector,
+            &model_source.type_mappings,
             model_argument_presets,
             session_variables,
             &mut arguments.model_arguments,
@@ -369,8 +383,13 @@ fn model_aggregate_selection_ir<'s>(
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
-    let permission_filter =
-        build_permissions_filter(permissions_predicate, session_variables, usage_counts)?;
+    let permission_filter = build_permissions_filter(
+        &model_source.data_connector,
+        &model_source.type_mappings,
+        permissions_predicate,
+        session_variables,
+        usage_counts,
+    )?;
 
     let filter_clause = filter::FilterExpression {
         query_filter,

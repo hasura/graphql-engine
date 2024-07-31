@@ -82,6 +82,8 @@ pub(crate) fn follow_field_path_and_insert_value(
 /// might be partially filled), and fill values in the existing model arguments
 /// based on the presets
 pub(crate) fn process_model_arguments_presets<'s, 'a>(
+    data_connector_link: &'s metadata_resolve::DataConnectorLink,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     argument_presets: &'a ArgumentPresets,
     session_variables: &SessionVariables,
     model_arguments: &mut BTreeMap<DataConnectorArgumentName, Argument<'s>>,
@@ -106,6 +108,8 @@ where
         })?;
 
         let actual_value = permissions::make_argument_from_value_expression_or_predicate(
+            data_connector_link,
+            type_mappings,
             argument_value,
             field_type,
             session_variables,

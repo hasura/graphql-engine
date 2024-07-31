@@ -1,22 +1,22 @@
 use hasura_authn_core::{SessionVariableValue, SessionVariables};
 use lang_graphql::normalized_ast;
+use std::collections::BTreeMap;
 
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
-    types::InbuiltType,
+    types::{CustomTypeName, InbuiltType},
 };
 
 use crate::error;
 use crate::filter::expression as filter_expression;
 use crate::model_tracking::{count_model, UsagesCounts};
-
 use metadata_resolve::{
-    QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference, UnaryComparisonOperator,
+    Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference, TypeMapping,
+    UnaryComparisonOperator,
 };
 use schema::GDS;
 
-use super::relationship::LocalModelRelationshipInfo;
-use super::{arguments::Argument, selection_set::NdcRelationshipName};
+use super::arguments::Argument;
 
 /// Fetch filter expression from the namespace annotation
 /// of the field call. If the filter predicate namespace annotation
@@ -75,6 +75,8 @@ pub(crate) fn get_argument_presets(
 }
 
 pub fn process_model_predicate<'s>(
+    data_connector_link: &'s metadata_resolve::DataConnectorLink,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     model_predicate: &'s metadata_resolve::ModelPredicate,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -103,7 +105,13 @@ pub fn process_model_predicate<'s>(
             session_variables,
         )?),
         metadata_resolve::ModelPredicate::Not(predicate) => {
-            let expr = process_model_predicate(predicate, session_variables, usage_counts)?;
+            let expr = process_model_predicate(
+                data_connector_link,
+                type_mappings,
+                predicate,
+                session_variables,
+                usage_counts,
+            )?;
             Ok(filter_expression::Expression::Not {
                 expression: Box::new(expr),
             })
@@ -111,14 +119,30 @@ pub fn process_model_predicate<'s>(
         metadata_resolve::ModelPredicate::And(predicates) => {
             let exprs = predicates
                 .iter()
-                .map(|p| process_model_predicate(p, session_variables, usage_counts))
+                .map(|predicate| {
+                    process_model_predicate(
+                        data_connector_link,
+                        type_mappings,
+                        predicate,
+                        session_variables,
+                        usage_counts,
+                    )
+                })
                 .collect::<Result<Vec<_>, error::Error>>()?;
             Ok(filter_expression::Expression::And { expressions: exprs })
         }
         metadata_resolve::ModelPredicate::Or(predicates) => {
             let exprs = predicates
                 .iter()
-                .map(|p| process_model_predicate(p, session_variables, usage_counts))
+                .map(|predicate| {
+                    process_model_predicate(
+                        data_connector_link,
+                        type_mappings,
+                        predicate,
+                        session_variables,
+                        usage_counts,
+                    )
+                })
                 .collect::<Result<Vec<_>, error::Error>>()?;
             Ok(filter_expression::Expression::Or { expressions: exprs })
         }
@@ -129,32 +153,28 @@ pub fn process_model_predicate<'s>(
             // Add the target model being used in the usage counts
             count_model(&relationship_info.target_model_name, usage_counts);
 
-            let relationship_name = (NdcRelationshipName::new(
-                &relationship_info.source_type,
+            let relationship_predicate = process_model_predicate(
+                &relationship_info.target_source.model.data_connector,
+                &relationship_info.target_source.model.type_mappings,
+                predicate,
+                session_variables,
+                usage_counts,
+            )?;
+
+            // build and return relationshp comparison expression
+            super::filter::build_relationship_comparison_expression(
+                type_mappings,
+                &Vec::new(), // Field path is empty for now
+                data_connector_link,
                 &relationship_info.relationship_name,
-            ))?;
-
-            let info = LocalModelRelationshipInfo {
-                relationship_name: &relationship_info.relationship_name,
-                relationship_type: &relationship_info.relationship_type,
-                source_type: &relationship_info.source_type,
-                source_data_connector: &relationship_info.source_data_connector,
-                source_type_mappings: &relationship_info.source_type_mappings,
-                target_source: &relationship_info.target_source,
-                target_type: &relationship_info.target_type,
-                mappings: &relationship_info.mappings,
-            };
-
-            let relationship_predicate =
-                process_model_predicate(predicate, session_variables, usage_counts)?;
-
-            let local_relationship_filter = filter_expression::Expression::LocalRelationship {
-                relationship: relationship_name,
-                predicate: Box::new(relationship_predicate),
-                info,
-            };
-
-            Ok(local_relationship_filter)
+                &relationship_info.relationship_type,
+                &relationship_info.source_type,
+                &relationship_info.target_model_name,
+                &relationship_info.target_source,
+                &relationship_info.target_type,
+                &relationship_info.mappings,
+                relationship_predicate,
+            )
         }
     }
 }
@@ -217,6 +237,8 @@ pub(crate) fn make_argument_from_value_expression(
 }
 
 pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
+    data_connector_link: &'s metadata_resolve::DataConnectorLink,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     val_expr: &'s metadata_resolve::ValueExpressionOrPredicate,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
@@ -238,8 +260,13 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
             })
         }
         metadata_resolve::ValueExpressionOrPredicate::BooleanExpression(model_predicate) => {
-            let filter_expression =
-                process_model_predicate(model_predicate, session_variables, usage_counts)?;
+            let filter_expression = process_model_predicate(
+                data_connector_link,
+                type_mappings,
+                model_predicate,
+                session_variables,
+                usage_counts,
+            )?;
             Ok(Argument::BooleanExpression {
                 predicate: filter_expression,
             })

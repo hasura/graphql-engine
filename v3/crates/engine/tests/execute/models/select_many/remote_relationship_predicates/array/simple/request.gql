@@ -1,0 +1,35 @@
+query MyQuery {
+  Album(limit: 2) {
+    AlbumId
+    Title
+    ArtistId
+    Tracks {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+  AlbumPredicateOrderBy: Album(limit: 2, order_by: [{ AlbumId: Desc }]) {
+    AlbumId
+    Title
+    ArtistId
+    Tracks {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+  AlbumWithFilterAndPredicate: Album(
+    limit: 2
+    where: { Tracks: { TrackId: { _eq: 1 } } }
+  ) {
+    AlbumId
+    Title
+    ArtistId
+    Tracks {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+}

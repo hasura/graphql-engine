@@ -183,6 +183,10 @@ fn validate_data_connector_with_comparable_relationship(
                         if equal_operators.is_empty() {
                             return Err(Error::TypePredicateError {
                                 type_predicate_error: TypePredicateError::MissingEqualOperator {
+                                    location: format!(
+                                        "While resolving comparable relationship {0}",
+                                        comparable_relationship.relationship_name
+                                    ),
                                     type_name: object_boolean_expression_type.object_type.clone(),
                                     field_name: source_field.clone(),
                                     ndc_column: source_ndc_column.clone(),

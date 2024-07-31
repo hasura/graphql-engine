@@ -4,6 +4,38 @@
 
 ### Added
 
+#### Remote Relationships Predicates
+
+We have significantly enhanced our permission capabilities to support remote
+relationships in filter predicates. It is important to note that the
+relationship source and target models should be from the same subgraph.
+
+**Example:** API traces are stored in a separate database. Users should only be
+able to view traces of their own API requests.
+
+```yaml
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: traces
+  permissions:
+    - role: user
+      select:
+        filter:
+          relationship:
+            name: User
+            predicate:
+              fieldComparison:
+                field: user_id
+                operator: _eq
+                value:
+                  sessionVariable: x-hasura-user-id
+```
+
+In the above configuration, a permission filter is defined on the `traces`
+model. The filter predicate employs the `User` remote relationship, ensuring the
+`user_id` field is equal to the `x-hasura-user-id` session variable.
+
 - New `NoAuth` mode in auth config can be used to provide a static role and
   session variables to use whilst running the engine, to make getting started
   easier.

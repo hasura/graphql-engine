@@ -134,6 +134,8 @@ pub fn select_many_generate_ir<'n, 's>(
         {
             // add any preset arguments from model permissions
             arguments::process_model_arguments_presets(
+                &model_source.data_connector,
+                &model_source.type_mappings,
                 argument_presets,
                 session_variables,
                 &mut model_arguments,

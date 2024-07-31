@@ -668,14 +668,25 @@ pub enum TypePredicateError {
         operator_name: OperatorName,
     },
     #[error(
-        "missing equality operator for source column {ndc_column:} in data connector {data_connector_name:} \
+        "{location:} - missing equality operator for source column {ndc_column:} in data connector {data_connector_name:} \
          which is mapped to field {field_name:} in type {type_name:}"
     )]
     MissingEqualOperator {
+        location: String,
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         ndc_column: DataConnectorColumnName,
         data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error(
+        "Relationships across subgraphs are not supported in filter predicates. \
+         Relationship: {relationship_name:} is defined between source data connector: {source_data_connector:} \
+         and target data connector: {target_data_connector:}"
+    )]
+    RelationshipAcrossSubgraphs {
+        relationship_name: RelationshipName,
+        source_data_connector: Qualified<DataConnectorName>,
+        target_data_connector: Qualified<DataConnectorName>,
     },
 }
 

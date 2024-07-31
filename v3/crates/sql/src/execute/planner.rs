@@ -117,9 +117,9 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                     Ok(())
                 } else {
                     Err(DataFusionError::Plan(format!(
-                            "role {} does not have permission to select the field {} from type {} of model {}",
-                            table.session.role, field_name, table.data_type, table.name
-                        )))
+                        "role {} does not have permission to select the field {} from type {} of model {}",
+                        table.session.role, field_name, table.data_type, table.name
+                    )))
                 }?;
             }
 
@@ -130,6 +130,8 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                 FilterPermission::AllowAll => Ok::<_, DataFusionError>(None),
                 FilterPermission::Filter(filter) => {
                     let filter_ir = ir::process_model_predicate(
+                        &model_source.data_connector,
+                        &model_source.type_mappings,
                         filter,
                         &table.session.variables,
                         &mut usage_counts,

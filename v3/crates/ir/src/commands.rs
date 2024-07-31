@@ -131,6 +131,8 @@ pub fn generate_command_info<'n, 's>(
             })?;
 
             let actual_value = permissions::make_argument_from_value_expression_or_predicate(
+                &command_source.data_connector,
+                &command_source.type_mappings,
                 argument_value,
                 field_type,
                 session_variables,

@@ -1,0 +1,10 @@
+[
+  {
+    "x-hasura-role": "admin"
+  },
+  {
+    "x-hasura-role": "user",
+    "x-hasura-user-id": "3",
+    "x-hasura-album-title": "Restless and Wild"
+  }
+]
