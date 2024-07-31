@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.Url</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#Url"><span class="hs-identifier">Url</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#UrlTransformFn"><span class="hs-identifier">UrlTransformFn</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier">TransformCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier">TransformFn</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier">HasCodec</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier">codec</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier">dimapCodec</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html"><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.Class</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier">TransformCtx</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier">TransformFn</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier">UnescapedTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Request.html"><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.Request</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Request.html#RequestTransformCtx"><span class="hs-identifier">RequestTransformCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- | The actual URL string we are transforming.</span><span>
+</span><span id="line-16"></span><span class="hs-comment">--</span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- This newtype is necessary because otherwise we end up with an</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- orphan instance.</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">newtype</span><span> </span><span id="Url"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#Url"><span class="hs-identifier hs-var">Url</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Url"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#Url"><span class="hs-identifier hs-var">Url</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unUrl"><span class="annot"><span class="annottext">Url -&gt; Text
+</span><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#unUrl"><span class="hs-identifier hs-var hs-var">unUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687596501"><span id="local-6989586621687596505"><span class="annot"><span class="annottext">Url -&gt; Url -&gt; Bool
+(Url -&gt; Url -&gt; Bool) -&gt; (Url -&gt; Url -&gt; Bool) -&gt; Eq Url
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Url -&gt; Url -&gt; Bool
+== :: Url -&gt; Url -&gt; Bool
+$c/= :: Url -&gt; Url -&gt; Bool
+/= :: Url -&gt; Url -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687596510"><span id="local-6989586621687596516"><span id="local-6989586621687596520"><span class="annot"><span class="annottext">Int -&gt; Url -&gt; ShowS
+[Url] -&gt; ShowS
+Url -&gt; String
+(Int -&gt; Url -&gt; ShowS)
+-&gt; (Url -&gt; String) -&gt; ([Url] -&gt; ShowS) -&gt; Show Url
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Url -&gt; ShowS
+showsPrec :: Int -&gt; Url -&gt; ShowS
+$cshow :: Url -&gt; String
+show :: Url -&gt; String
+$cshowList :: [Url] -&gt; ShowS
+showList :: [Url] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="annot"><span class="hs-comment">-- | The defunctionalized transformation function on 'Url'</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">newtype</span><span> </span><span id="UrlTransformFn"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#UrlTransformFn"><span class="hs-identifier hs-var">UrlTransformFn</span></a></span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Modify"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#Modify"><span class="hs-identifier hs-var">Modify</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687596525"><span id="local-6989586621687596529"><span class="annot"><span class="annottext">UrlTransformFn -&gt; UrlTransformFn -&gt; Bool
+(UrlTransformFn -&gt; UrlTransformFn -&gt; Bool)
+-&gt; (UrlTransformFn -&gt; UrlTransformFn -&gt; Bool) -&gt; Eq UrlTransformFn
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: UrlTransformFn -&gt; UrlTransformFn -&gt; Bool
+== :: UrlTransformFn -&gt; UrlTransformFn -&gt; Bool
+$c/= :: UrlTransformFn -&gt; UrlTransformFn -&gt; Bool
+/= :: UrlTransformFn -&gt; UrlTransformFn -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687596533"><span id="local-6989586621687596535"><span class="annot"><span class="annottext">(forall x. UrlTransformFn -&gt; Rep UrlTransformFn x)
+-&gt; (forall x. Rep UrlTransformFn x -&gt; UrlTransformFn)
+-&gt; Generic UrlTransformFn
+forall x. Rep UrlTransformFn x -&gt; UrlTransformFn
+forall x. UrlTransformFn -&gt; Rep UrlTransformFn x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. UrlTransformFn -&gt; Rep UrlTransformFn x
+from :: forall x. UrlTransformFn -&gt; Rep UrlTransformFn x
+$cto :: forall x. Rep UrlTransformFn x -&gt; UrlTransformFn
+to :: forall x. Rep UrlTransformFn x -&gt; UrlTransformFn
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687596539"><span id="local-6989586621687596544"><span id="local-6989586621687596548"><span class="annot"><span class="annottext">Int -&gt; UrlTransformFn -&gt; ShowS
+[UrlTransformFn] -&gt; ShowS
+UrlTransformFn -&gt; String
+(Int -&gt; UrlTransformFn -&gt; ShowS)
+-&gt; (UrlTransformFn -&gt; String)
+-&gt; ([UrlTransformFn] -&gt; ShowS)
+-&gt; Show UrlTransformFn
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; UrlTransformFn -&gt; ShowS
+showsPrec :: Int -&gt; UrlTransformFn -&gt; ShowS
+$cshow :: UrlTransformFn -&gt; String
+show :: UrlTransformFn -&gt; String
+$cshowList :: [UrlTransformFn] -&gt; ShowS
+showList :: [UrlTransformFn] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687596551"><span class="annot"><span class="annottext">UrlTransformFn -&gt; ()
+(UrlTransformFn -&gt; ()) -&gt; NFData UrlTransformFn
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: UrlTransformFn -&gt; ()
+rnf :: UrlTransformFn -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687596558"><span id="local-6989586621687596563"><span class="annot"><span class="annottext">Value -&gt; Parser [UrlTransformFn]
+Value -&gt; Parser UrlTransformFn
+(Value -&gt; Parser UrlTransformFn)
+-&gt; (Value -&gt; Parser [UrlTransformFn]) -&gt; FromJSON UrlTransformFn
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser UrlTransformFn
+parseJSON :: Value -&gt; Parser UrlTransformFn
+$cparseJSONList :: Value -&gt; Parser [UrlTransformFn]
+parseJSONList :: Value -&gt; Parser [UrlTransformFn]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687596569"><span id="local-6989586621687596574"><span id="local-6989586621687596578"><span id="local-6989586621687596582"><span class="annot"><span class="annottext">[UrlTransformFn] -&gt; Value
+[UrlTransformFn] -&gt; Encoding
+UrlTransformFn -&gt; Value
+UrlTransformFn -&gt; Encoding
+(UrlTransformFn -&gt; Value)
+-&gt; (UrlTransformFn -&gt; Encoding)
+-&gt; ([UrlTransformFn] -&gt; Value)
+-&gt; ([UrlTransformFn] -&gt; Encoding)
+-&gt; ToJSON UrlTransformFn
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: UrlTransformFn -&gt; Value
+toJSON :: UrlTransformFn -&gt; Value
+$ctoEncoding :: UrlTransformFn -&gt; Encoding
+toEncoding :: UrlTransformFn -&gt; Encoding
+$ctoJSONList :: [UrlTransformFn] -&gt; Value
+toJSONList :: [UrlTransformFn] -&gt; Value
+$ctoEncodingList :: [UrlTransformFn] -&gt; Encoding
+toEncodingList :: [UrlTransformFn] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687596589"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#UrlTransformFn"><span class="hs-identifier hs-type">UrlTransformFn</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621687596596"><span class="annot"><span class="annottext">codec :: JSONCodec UrlTransformFn
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(UnescapedTemplate -&gt; UrlTransformFn)
+-&gt; (UrlTransformFn -&gt; UnescapedTemplate)
+-&gt; Codec Value UnescapedTemplate UnescapedTemplate
+-&gt; JSONCodec UrlTransformFn
+forall oldOutput newOutput newInput oldInput context.
+(oldOutput -&gt; newOutput)
+-&gt; (newInput -&gt; oldInput)
+-&gt; Codec context oldInput oldOutput
+-&gt; Codec context newInput newOutput
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier hs-var">dimapCodec</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate -&gt; UrlTransformFn
+</span><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#Modify"><span class="hs-identifier hs-var">Modify</span></a></span><span> </span><span class="annot"><span class="annottext">UrlTransformFn -&gt; UnescapedTemplate
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">Codec Value UnescapedTemplate UnescapedTemplate
+forall value. HasCodec value =&gt; JSONCodec value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var">codec</span></a></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- NOTE: GHC does not let us attach Haddock documentation to data family</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- instances, so 'UrlTransformFn' is defined separately from this</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- wrapper.</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">newtype</span><span> </span><span class="hs-keyword">instance</span><span> </span><span id="TransformFn"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-var">TransformFn</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#Url"><span class="hs-identifier hs-type">Url</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="UrlTransformFn_"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#UrlTransformFn_"><span class="hs-identifier hs-var">UrlTransformFn_</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#UrlTransformFn"><span class="hs-identifier hs-type">UrlTransformFn</span></a></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687596599"><span id="local-6989586621687596602"><span class="annot"><span class="annottext">TransformFn Url -&gt; TransformFn Url -&gt; Bool
+(TransformFn Url -&gt; TransformFn Url -&gt; Bool)
+-&gt; (TransformFn Url -&gt; TransformFn Url -&gt; Bool)
+-&gt; Eq (TransformFn Url)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: TransformFn Url -&gt; TransformFn Url -&gt; Bool
+== :: TransformFn Url -&gt; TransformFn Url -&gt; Bool
+$c/= :: TransformFn Url -&gt; TransformFn Url -&gt; Bool
+/= :: TransformFn Url -&gt; TransformFn Url -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687596606"><span id="local-6989586621687596608"><span class="annot"><span class="annottext">(forall x. TransformFn Url -&gt; Rep (TransformFn Url) x)
+-&gt; (forall x. Rep (TransformFn Url) x -&gt; TransformFn Url)
+-&gt; Generic (TransformFn Url)
+forall x. Rep (TransformFn Url) x -&gt; TransformFn Url
+forall x. TransformFn Url -&gt; Rep (TransformFn Url) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. TransformFn Url -&gt; Rep (TransformFn Url) x
+from :: forall x. TransformFn Url -&gt; Rep (TransformFn Url) x
+$cto :: forall x. Rep (TransformFn Url) x -&gt; TransformFn Url
+to :: forall x. Rep (TransformFn Url) x -&gt; TransformFn Url
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687596611"><span id="local-6989586621687596615"><span id="local-6989586621687596619"><span class="annot"><span class="annottext">Int -&gt; TransformFn Url -&gt; ShowS
+[TransformFn Url] -&gt; ShowS
+TransformFn Url -&gt; String
+(Int -&gt; TransformFn Url -&gt; ShowS)
+-&gt; (TransformFn Url -&gt; String)
+-&gt; ([TransformFn Url] -&gt; ShowS)
+-&gt; Show (TransformFn Url)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; TransformFn Url -&gt; ShowS
+showsPrec :: Int -&gt; TransformFn Url -&gt; ShowS
+$cshow :: TransformFn Url -&gt; String
+show :: TransformFn Url -&gt; String
+$cshowList :: [TransformFn Url] -&gt; ShowS
+showList :: [TransformFn Url] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687596622"><span class="annot"><span class="annottext">TransformFn Url -&gt; ()
+(TransformFn Url -&gt; ()) -&gt; NFData (TransformFn Url)
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: TransformFn Url -&gt; ()
+rnf :: TransformFn Url -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687596627"><span id="local-6989586621687596631"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn Url]
+Value -&gt; Parser (TransformFn Url)
+(Value -&gt; Parser (TransformFn Url))
+-&gt; (Value -&gt; Parser [TransformFn Url])
+-&gt; FromJSON (TransformFn Url)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser (TransformFn Url)
+parseJSON :: Value -&gt; Parser (TransformFn Url)
+$cparseJSONList :: Value -&gt; Parser [TransformFn Url]
+parseJSONList :: Value -&gt; Parser [TransformFn Url]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687596636"><span id="local-6989586621687596640"><span id="local-6989586621687596644"><span id="local-6989586621687596648"><span class="annot"><span class="annottext">[TransformFn Url] -&gt; Value
+[TransformFn Url] -&gt; Encoding
+TransformFn Url -&gt; Value
+TransformFn Url -&gt; Encoding
+(TransformFn Url -&gt; Value)
+-&gt; (TransformFn Url -&gt; Encoding)
+-&gt; ([TransformFn Url] -&gt; Value)
+-&gt; ([TransformFn Url] -&gt; Encoding)
+-&gt; ToJSON (TransformFn Url)
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: TransformFn Url -&gt; Value
+toJSON :: TransformFn Url -&gt; Value
+$ctoEncoding :: TransformFn Url -&gt; Encoding
+toEncoding :: TransformFn Url -&gt; Encoding
+$ctoJSONList :: [TransformFn Url] -&gt; Value
+toJSONList :: [TransformFn Url] -&gt; Value
+$ctoEncodingList :: [TransformFn Url] -&gt; Encoding
+toEncodingList :: [TransformFn Url] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">newtype</span><span> </span><span class="hs-keyword">instance</span><span> </span><span id="TransformCtx"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier hs-var">TransformCtx</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#Url"><span class="hs-identifier hs-type">Url</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TransformCtx"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Url.html#TransformCtx"><span class="hs-identifier hs-var">TransformCtx</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Request.html#RequestTransformCtx"><span class="hs-identifier hs-type">RequestTransformCtx</span></a></span><span>
+</span><span id="line-39"></span></pre></body></html>
