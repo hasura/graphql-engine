@@ -672,36 +672,5 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             ),
         ],
     },
-    [
-        DataConnectorScalarTypesWarning(
-            PleaseUpgradeToBooleanExpressionType {
-                scalar_type: DataConnectorScalarType(
-                    "String",
-                ),
-                data_connector_name: Qualified {
-                    subgraph: "article_namespace",
-                    name: DataConnectorName(
-                        Identifier(
-                            "db",
-                        ),
-                    ),
-                },
-            },
-        ),
-        DataConnectorScalarTypesWarning(
-            PleaseUpgradeToBooleanExpressionType {
-                scalar_type: DataConnectorScalarType(
-                    "Int",
-                ),
-                data_connector_name: Qualified {
-                    subgraph: "article_namespace",
-                    name: DataConnectorName(
-                        Identifier(
-                            "db",
-                        ),
-                    ),
-                },
-            },
-        ),
-    ],
+    [],
 )

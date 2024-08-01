@@ -75,15 +75,12 @@ pub fn resolve(
     let data_connector_scalar_types::DataConnectorWithScalarsOutput {
         data_connector_scalars,
         graphql_types,
-        warnings,
     } = data_connector_scalar_types::resolve(
         &metadata_accessor,
         &data_connectors,
         &scalar_types,
         &graphql_types,
     )?;
-
-    all_warnings.extend(warnings.into_iter().map(Warning::from));
 
     // Fetch and validate permissions, and attach them to the relevant object types
     let object_types_with_permissions =

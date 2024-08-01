@@ -2687,36 +2687,5 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
         },
         roles: [],
     },
-    [
-        DataConnectorScalarTypesWarning(
-            PleaseUpgradeToBooleanExpressionType {
-                scalar_type: DataConnectorScalarType(
-                    "int4",
-                ),
-                data_connector_name: Qualified {
-                    subgraph: "default",
-                    name: DataConnectorName(
-                        Identifier(
-                            "mypg",
-                        ),
-                    ),
-                },
-            },
-        ),
-        DataConnectorScalarTypesWarning(
-            PleaseUpgradeToBooleanExpressionType {
-                scalar_type: DataConnectorScalarType(
-                    "int8",
-                ),
-                data_connector_name: Qualified {
-                    subgraph: "default",
-                    name: DataConnectorName(
-                        Identifier(
-                            "mypg",
-                        ),
-                    ),
-                },
-            },
-        ),
-    ],
+    [],
 )
