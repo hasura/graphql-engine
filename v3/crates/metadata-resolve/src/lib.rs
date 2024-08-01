@@ -32,8 +32,8 @@ pub use stages::commands::Command;
 pub use stages::data_connectors;
 pub use stages::data_connectors::DataConnectorLink;
 pub use stages::model_permissions::{
-    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions, SelectPermission,
-    UnaryComparisonOperator,
+    ArgumentPresets, FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
+    SelectPermission, UnaryComparisonOperator,
 };
 pub use stages::models::{Model, ModelSource};
 pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;

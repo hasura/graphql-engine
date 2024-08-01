@@ -13,7 +13,6 @@ use tracing_util::{ErrorVisibility, SpanVisibility, Successful, TraceableError};
 
 pub use datafusion::execution::context::SessionContext;
 
-pub(crate) mod analyzer;
 pub(crate) mod optimizer;
 pub(crate) mod planner;
 
@@ -51,7 +50,7 @@ impl TraceableError for SqlExecutionError {
 
 /// Executes an SQL Request using the Apache DataFusion query engine.
 pub async fn execute_sql(
-    context: &crate::catalog::Context,
+    catalog: Arc<crate::catalog::Catalog>,
     session: Arc<Session>,
     http_context: Arc<execute::HttpContext>,
     request: &SqlRequest,
@@ -63,7 +62,7 @@ pub async fn execute_sql(
             "Create a datafusion SessionContext",
             SpanVisibility::Internal,
             || {
-                let session = context.create_session_context(&session, &http_context);
+                let session = catalog.create_session_context(&session, &http_context);
                 Successful::new(session)
             },
         )

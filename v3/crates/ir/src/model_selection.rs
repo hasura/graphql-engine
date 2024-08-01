@@ -159,12 +159,12 @@ pub fn generate_aggregate_model_selection_ir<'s>(
     if let Some(model_argument_presets) =
         permissions::get_argument_presets(field_call.info.namespaced)?
     {
-        arguments::process_model_arguments_presets(
+        arguments.model_arguments = arguments::process_model_arguments_presets(
             &model_source.data_connector,
             &model_source.type_mappings,
             model_argument_presets,
             session_variables,
-            &mut arguments.model_arguments,
+            arguments.model_arguments,
             usage_counts,
         )?;
     }

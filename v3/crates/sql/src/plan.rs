@@ -1,4 +1,6 @@
 use core::fmt;
+use std::{any::Any, collections::BTreeMap, hash::Hash, sync::Arc};
+
 use datafusion::{
     arrow::{
         array::RecordBatch, datatypes::SchemaRef, error::ArrowError, json::reader as arrow_json,
@@ -11,17 +13,21 @@ use datafusion::{
         stream::RecordBatchStreamAdapter, DisplayAs, DisplayFormatType, ExecutionMode,
         ExecutionPlan, Partitioning, PlanProperties,
     },
-    sql::TableReference,
 };
 use futures::TryFutureExt;
 use indexmap::IndexMap;
-use std::{any::Any, collections::BTreeMap, hash::Hash, sync::Arc};
+use metadata_resolve::{self as resolved};
+use open_dds::identifier::Identifier;
+use open_dds::{
+    arguments::ArgumentName,
+    types::{DataConnectorArgumentName, FieldName},
+};
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 use execute::{
     plan::{
-        self, Relationship, ResolvedField, ResolvedFilterExpression, ResolvedQueryExecutionPlan,
-        ResolvedQueryNode,
+        self, Argument, Relationship, ResolvedField, ResolvedFilterExpression,
+        ResolvedQueryExecutionPlan, ResolvedQueryNode,
     },
     HttpContext,
 };
@@ -54,23 +60,92 @@ impl TraceableError for ExecutionPlanError {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct NDCQuery {
-    pub(crate) table: TableReference,
+    pub(crate) model: Arc<crate::catalog::model::Model>,
+    pub(crate) model_source: Arc<resolved::ModelSource>,
+    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
+    pub(crate) permission: Arc<resolved::SelectPermission>,
     pub(crate) fields: IndexMap<NdcFieldAlias, DataConnectorColumnName>,
-    pub(crate) data_source_name: Arc<CollectionName>,
     pub(crate) schema: DFSchemaRef,
 }
 
+// TODO: fix this
 impl Hash for NDCQuery {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.data_source_name.hash(state);
+        self.model_source.data_connector.name.hash(state);
+        self.model_source.collection.hash(state);
         format!("{:#?}", self.fields).hash(state);
-        self.schema.hash(state);
     }
 }
 
 impl Eq for NDCQuery {}
 
 impl NDCQuery {
+    pub(crate) fn new(
+        model: Arc<crate::catalog::model::Model>,
+        model_source: Arc<resolved::ModelSource>,
+        // TODO: wip: arguments have to be converted to ndc arguments using argument mapping
+        _arguments: &BTreeMap<ArgumentName, serde_json::Value>,
+        permission: Arc<resolved::SelectPermission>,
+        projected_schema: DFSchemaRef,
+    ) -> datafusion::error::Result<Self> {
+        let mut ndc_fields = IndexMap::new();
+        let base_type_fields = {
+            let base_type_mapping = model_source
+                .type_mappings
+                .get(&model.data_type)
+                .ok_or_else(|| {
+                    DataFusionError::Internal(format!(
+                        "couldn't fetch type_mapping of type {} for model {}",
+                        model.data_type, model.name
+                    ))
+                })?;
+            match base_type_mapping {
+                resolved::TypeMapping::Object {
+                    ndc_object_type_name: _,
+                    field_mappings,
+                } => field_mappings,
+            }
+        };
+        for field in projected_schema.fields() {
+            let field_name = {
+                let field_name = Identifier::new(field.name().clone()).map_err(|e| {
+                    DataFusionError::Internal(format!(
+                        "field name conversion failed {}: {}",
+                        field.name(),
+                        e
+                    ))
+                })?;
+                FieldName::new(field_name)
+            };
+            let ndc_field = {
+                base_type_fields
+                    .get(&field_name)
+                    .ok_or_else(|| {
+                        DataFusionError::Internal(format!(
+                            "couldn't fetch field mapping of field {} in type {} for model {}",
+                            field_name, model.data_type, model.name
+                        ))
+                    })
+                    .map(|field_mapping| field_mapping.column.clone())
+            }?;
+            ndc_fields.insert(
+                NdcFieldAlias::from(field.name().as_str()),
+                DataConnectorColumnName::from(ndc_field.as_str()),
+            );
+        }
+
+        let ndc_query_node = NDCQuery {
+            model,
+            model_source,
+            // TODO, use source mapping to construct this
+            arguments: BTreeMap::new(),
+            fields: ndc_fields,
+            schema: projected_schema,
+            permission,
+        };
+        Ok(ndc_query_node)
+    }
+
     pub(crate) fn project(
         mut self,
         schema: DFSchemaRef,
@@ -115,10 +190,20 @@ impl UserDefinedLogicalNodeCore for NDCQuery {
 
     /// For example: `TopK: k=10`
     fn fmt_for_explain(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let projection = format!(
+            ", projection=[{}]",
+            self.fields
+                .keys()
+                .map(std::string::ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(",")
+        );
         write!(
             f,
-            "NDCQuery: data_source_name={}, fields={:#?}",
-            self.data_source_name, self.fields
+            "NDCQuery: collection={}:{}:{}{projection}",
+            self.model_source.data_connector.name.subgraph,
+            self.model_source.data_connector.name.name,
+            self.model_source.collection,
         )
     }
 
@@ -135,6 +220,7 @@ impl UserDefinedLogicalNodeCore for NDCQuery {
 pub(crate) struct NDCPushDown {
     http_context: Arc<execute::HttpContext>,
     collection_name: CollectionName,
+    arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
     fields: IndexMap<NdcFieldAlias, DataConnectorColumnName>,
     filter: Option<ResolvedFilterExpression>,
     collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
@@ -148,6 +234,7 @@ impl NDCPushDown {
         http_context: Arc<HttpContext>,
         schema: SchemaRef,
         collection_name: CollectionName,
+        arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
         fields: IndexMap<NdcFieldAlias, DataConnectorColumnName>,
         filter: Option<ResolvedFilterExpression>,
         collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
@@ -157,6 +244,7 @@ impl NDCPushDown {
         Self {
             http_context,
             collection_name,
+            arguments,
             fields,
             filter,
             collection_relationships,
@@ -243,7 +331,18 @@ impl ExecutionPlan for NDCPushDown {
                 predicate: self.filter.clone(),
             },
             collection: self.collection_name.clone(),
-            arguments: BTreeMap::new(),
+            arguments: self
+                .arguments
+                .iter()
+                .map(|(argument, value)| {
+                    (
+                        argument.clone(),
+                        Argument::Literal {
+                            value: value.clone(),
+                        },
+                    )
+                })
+                .collect(),
             collection_relationships: self.collection_relationships.clone(),
             variables: None,
             data_connector: &self.data_connector,

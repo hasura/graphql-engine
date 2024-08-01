@@ -31,12 +31,14 @@ pub enum FilterPermission {
     Filter(ModelPredicate),
 }
 
+pub type ArgumentPresets =
+    BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct SelectPermission {
     pub filter: FilterPermission,
     // pub allow_aggregations: bool,
-    pub argument_presets:
-        BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>,
+    pub argument_presets: ArgumentPresets,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

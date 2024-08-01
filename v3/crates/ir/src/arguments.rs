@@ -86,9 +86,9 @@ pub(crate) fn process_model_arguments_presets<'s, 'a>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     argument_presets: &'a ArgumentPresets,
     session_variables: &SessionVariables,
-    model_arguments: &mut BTreeMap<DataConnectorArgumentName, Argument<'s>>,
+    mut model_arguments: BTreeMap<DataConnectorArgumentName, Argument<'s>>,
     usage_counts: &mut UsagesCounts,
-) -> Result<(), error::Error>
+) -> Result<BTreeMap<DataConnectorArgumentName, Argument<'s>>, error::Error>
 where
     'a: 's,
 {
@@ -154,7 +154,7 @@ where
             }
         }
     }
-    Ok(())
+    Ok(model_arguments)
 }
 
 // fetch input values from annotations and turn them into either JSON or an Expression

@@ -1,3 +1,4 @@
+use hasura_authn_core::Session;
 use std::{collections::BTreeMap, sync::Arc};
 
 use datafusion::{
@@ -16,13 +17,14 @@ use crate::plan::NDCPushDown;
 
 use async_trait::async_trait;
 
-pub(crate) struct NDCQueryPlanner {
-    pub(crate) default_schema: Option<Arc<String>>,
-    pub(crate) catalog: Arc<crate::catalog::OpenDDCatalogProvider>,
+pub(crate) struct OpenDDQueryPlanner {
+    pub(crate) session: Arc<Session>,
+    pub(crate) http_context: Arc<execute::HttpContext>,
+    pub(crate) catalog: Arc<crate::catalog::Catalog>,
 }
 
 #[async_trait]
-impl QueryPlanner for NDCQueryPlanner {
+impl QueryPlanner for OpenDDQueryPlanner {
     /// Given a `LogicalPlan` created from above, create an
     /// `ExecutionPlan` suitable for execution
     async fn create_physical_plan(
@@ -33,7 +35,8 @@ impl QueryPlanner for NDCQueryPlanner {
         // Teach the default physical planner how to plan TopK nodes.
         let physical_planner =
             DefaultPhysicalPlanner::with_extension_planners(vec![Arc::new(NDCPushDownPlanner {
-                default_schema: self.default_schema.clone(),
+                session: self.session.clone(),
+                http_context: self.http_context.clone(),
                 catalog: self.catalog.clone(),
             })]);
         // Delegate most work of physical planning to the default physical planner
@@ -44,8 +47,9 @@ impl QueryPlanner for NDCQueryPlanner {
 }
 
 pub(crate) struct NDCPushDownPlanner {
-    pub(crate) default_schema: Option<Arc<String>>,
-    pub(crate) catalog: Arc<crate::catalog::OpenDDCatalogProvider>,
+    pub(crate) session: Arc<Session>,
+    pub(crate) http_context: Arc<execute::HttpContext>,
+    pub(crate) catalog: Arc<crate::catalog::Catalog>,
 }
 
 #[async_trait]
@@ -62,44 +66,24 @@ impl ExtensionPlanner for NDCPushDownPlanner {
         if let Some(ndc_node) = node.as_any().downcast_ref::<crate::plan::NDCQuery>() {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
-            let table = self
+            let type_permissions = self
                 .catalog
-                .get(
-                    self.default_schema.as_ref().map(|s| s.as_str()),
-                    &ndc_node.table,
-                )
+                .type_permissions
+                .get(&self.session.role)
                 .ok_or_else(|| {
-                    DataFusionError::Internal(format!(
-                        "table provider not found for replace_table_scan: {}",
-                        &ndc_node.table
+                    DataFusionError::Plan(format!(
+                        "role {} does not have permission to select any fields of model {}",
+                        self.session.role, ndc_node.model.name
                     ))
                 })?;
-            let model_source = table.source.as_ref().ok_or_else(|| {
-                DataFusionError::Plan(format!(
-                    "model source should be configured for {}",
-                    table.name
-                ))
-            })?;
-            let select_permission = table.select_permission.as_ref().ok_or_else(|| {
-                DataFusionError::Plan(format!(
-                    "role {} does not have select permission for model {}",
-                    table.session.role, table.name
-                ))
-            })?;
-            let type_permissions = table.type_permissions.as_ref().ok_or_else(|| {
-                DataFusionError::Plan(format!(
-                    "role {} does not have permission to select any fields of model {}",
-                    table.session.role, table.name
-                ))
-            })?;
             let base_type_allowed_fields = &type_permissions
                 .permissions
-                .get(&table.data_type)
+                .get(&ndc_node.model.data_type)
                 .ok_or_else(|| {
                     DataFusionError::Plan(format!(
                         "role {} has permission to select model {} but does not have permission \
                             to select fields of the model's underlying type {}",
-                        table.session.role, table.name, table.data_type
+                        self.session.role, ndc_node.model.name, ndc_node.model.data_type
                     ))
                 })?
                 .output
@@ -117,23 +101,23 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                     Ok(())
                 } else {
                     Err(DataFusionError::Plan(format!(
-                        "role {} does not have permission to select the field {} from type {} of model {}",
-                        table.session.role, field_name, table.data_type, table.name
-                    )))
+                            "role {} does not have permission to select the field {} from type {} of model {}",
+                            self.session.role, field_name, ndc_node.model.data_type, ndc_node.model.name
+                        )))
                 }?;
             }
 
             let mut usage_counts = ir::UsagesCounts::default();
             let mut relationships = BTreeMap::new();
 
-            let permission_filter = match &select_permission.filter {
+            let permission_filter = match &ndc_node.permission.filter {
                 FilterPermission::AllowAll => Ok::<_, DataFusionError>(None),
                 FilterPermission::Filter(filter) => {
                     let filter_ir = ir::process_model_predicate(
-                        &model_source.data_connector,
-                        &model_source.type_mappings,
+                        &ndc_node.model_source.data_connector,
+                        &ndc_node.model_source.type_mappings,
                         filter,
-                        &table.session.variables,
+                        &self.session.variables,
                         &mut usage_counts,
                     )
                     .map_err(|e| {
@@ -150,8 +134,10 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                                 ))
                             },
                         )?;
+                    // TODO: this thing has to change, need to be pushed into the
+                    // execution plan. We shouldn't be running this in the planning phase
                     let filter =
-                        execute::plan::resolve_expression(filter_plan, &table.http_context.clone())
+                        execute::plan::resolve_expression(filter_plan, &self.http_context.clone())
                             .await
                             .map_err(|e| {
                                 DataFusionError::Internal(format!(
@@ -165,13 +151,14 @@ impl ExtensionPlanner for NDCPushDownPlanner {
             // ndc_node.filter = permission_filter;
             // ndc_node.collection_relationships = relationships;
             let ndc_pushdown = NDCPushDown::new(
-                table.http_context.clone(),
+                self.http_context.clone(),
                 ndc_node.schema.inner().clone(),
-                ndc_node.data_source_name.as_ref().clone(),
+                ndc_node.model_source.collection.clone(),
+                ndc_node.arguments.clone(),
                 ndc_node.fields.clone(),
                 permission_filter,
                 relationships,
-                Arc::new(model_source.data_connector.clone()),
+                Arc::new(ndc_node.model_source.data_connector.clone()),
             );
             Ok(Some(Arc::new(ndc_pushdown)))
         } else {

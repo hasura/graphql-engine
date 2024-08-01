@@ -116,7 +116,7 @@ struct EngineState {
     schema: gql::schema::Schema<GDS>,
     auth_config: AuthConfig,
     pre_execution_plugins_config: Vec<PrePluginConfig>,
-    sql_context: sql::catalog::Context,
+    sql_context: Arc<sql::catalog::Catalog>,
 }
 
 #[tokio::main]
@@ -695,7 +695,7 @@ async fn handle_sql_request(
             || {
                 Box::pin(async {
                     sql::execute::execute_sql(
-                        &state.sql_context,
+                        state.sql_context.clone(),
                         Arc::new(session),
                         Arc::new(state.http_context.clone()),
                         &request,
@@ -765,7 +765,7 @@ fn build_state(
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
-    let sql_context = sql::catalog::Context::from_metadata(&resolved_metadata);
+    let sql_context = sql::catalog::Catalog::from_metadata(&resolved_metadata);
     let schema = schema::GDS {
         metadata: resolved_metadata,
     }
@@ -776,7 +776,7 @@ fn build_state(
         schema,
         auth_config,
         pre_execution_plugins_config,
-        sql_context,
+        sql_context: sql_context.into(),
     });
     Ok(state)
 }

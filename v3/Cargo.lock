@@ -4403,6 +4403,7 @@ dependencies = [
  "open-dds",
  "schema",
  "serde",
+ "serde_json",
  "thiserror",
  "tracing-util",
 ]

@@ -5,7 +5,7 @@ use std::{any::Any, sync::Arc};
 use async_trait::async_trait;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved, ModelRelationshipTarget};
-mod df {
+mod datafusion {
     pub(super) use datafusion::{
         arrow::{
             array::RecordBatch,
@@ -33,26 +33,26 @@ pub const INFERRED_FOREIGN_KEY_CONSTRAINTS: &str = "inferred_foreign_key_constra
 pub(crate) struct Introspection {
     pub(crate) table_metadata: TableMetadata,
     pub(crate) column_metadata: ColumnMetadata,
-    pub(crate) inferred_foreign_key_constraints: InferredForeignKeys,
+    pub(crate) inferred_foreign_key_constraints: InferredatafusionoreignKeys,
 }
 
 impl Introspection {
     /// Derive SQL schema from the Open DDS metadata.
     pub fn from_metadata(
         metadata: &resolved::Metadata,
-        schemas: &IndexMap<String, crate::catalog::schema::Subgraph>,
+        schemas: &IndexMap<String, crate::catalog::subgraph::Subgraph>,
     ) -> Self {
         let mut table_metadata_rows = Vec::new();
         let mut column_metadata_rows = Vec::new();
         let mut foreign_key_constraint_rows = Vec::new();
         for (schema_name, schema) in schemas {
-            for (table_name, table) in &schema.models {
+            for (table_name, table) in &schema.tables {
                 table_metadata_rows.push(TableRow::new(
                     schema_name.clone(),
                     table_name.to_string(),
-                    table.description.clone(),
+                    table.model.description.clone(),
                 ));
-                for (column_name, column_description) in &table.columns {
+                for (column_name, column_description) in &table.model.columns {
                     column_metadata_rows.push(ColumnRow {
                         schema_name: schema_name.clone(),
                         table_name: table_name.clone(),
@@ -65,7 +65,7 @@ impl Introspection {
                 // 1. Need to check if the target_model is part of subgraphs
                 // 2. Need to also check for array relationships in case the corresponding
                 //    object relationship isn't present
-                if let Some(object_type) = metadata.object_types.get(&table.data_type) {
+                if let Some(object_type) = metadata.object_types.get(&table.model.data_type) {
                     for relationship in object_type.relationship_fields.values() {
                         if let metadata_resolve::RelationshipTarget::Model(
                             ModelRelationshipTarget {
@@ -94,24 +94,29 @@ impl Introspection {
         Introspection {
             table_metadata: TableMetadata::new(table_metadata_rows),
             column_metadata: ColumnMetadata::new(column_metadata_rows),
-            inferred_foreign_key_constraints: InferredForeignKeys::new(foreign_key_constraint_rows),
+            inferred_foreign_key_constraints: InferredatafusionoreignKeys::new(
+                foreign_key_constraint_rows,
+            ),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub(crate) struct TableMetadata {
-    schema: df::SchemaRef,
+    schema: datafusion::SchemaRef,
     rows: Vec<TableRow>,
 }
 
 impl TableMetadata {
     pub(crate) fn new(rows: Vec<TableRow>) -> Self {
-        let schema_name = df::Field::new("schema_name", df::DataType::Utf8, false);
-        let table_name = df::Field::new("table_name", df::DataType::Utf8, false);
-        let description = df::Field::new("description", df::DataType::Utf8, true);
-        let schema =
-            df::SchemaRef::new(df::Schema::new(vec![schema_name, table_name, description]));
+        let schema_name = datafusion::Field::new("schema_name", datafusion::DataType::Utf8, false);
+        let table_name = datafusion::Field::new("table_name", datafusion::DataType::Utf8, false);
+        let description = datafusion::Field::new("description", datafusion::DataType::Utf8, true);
+        let schema = datafusion::SchemaRef::new(datafusion::Schema::new(vec![
+            schema_name,
+            table_name,
+            description,
+        ]));
         TableMetadata { schema, rows }
     }
 }
@@ -125,9 +130,9 @@ impl TableMetadata {
                 .iter()
                 .map(|row| {
                     vec![
-                        df::ScalarValue::Utf8(Some(row.schema_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.table_name.clone())),
-                        df::ScalarValue::Utf8(row.description.clone()),
+                        ScalarValue::Utf8(Some(row.schema_name.clone())),
+                        ScalarValue::Utf8(Some(row.table_name.clone())),
+                        ScalarValue::Utf8(row.description.clone()),
                     ]
                 })
                 .collect(),
@@ -158,17 +163,17 @@ impl TableRow {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub(crate) struct ColumnMetadata {
-    pub(crate) schema: df::SchemaRef,
+    pub(crate) schema: datafusion::SchemaRef,
     pub(crate) rows: Vec<ColumnRow>,
 }
 
 impl ColumnMetadata {
     fn new(rows: Vec<ColumnRow>) -> Self {
-        let schema_name = df::Field::new("schema_name", df::DataType::Utf8, false);
-        let table_name = df::Field::new("table_name", df::DataType::Utf8, false);
-        let column_name = df::Field::new("column_name", df::DataType::Utf8, false);
-        let description = df::Field::new("description", df::DataType::Utf8, true);
-        let schema = df::SchemaRef::new(df::Schema::new(vec![
+        let schema_name = datafusion::Field::new("schema_name", datafusion::DataType::Utf8, false);
+        let table_name = datafusion::Field::new("table_name", datafusion::DataType::Utf8, false);
+        let column_name = datafusion::Field::new("column_name", datafusion::DataType::Utf8, false);
+        let description = datafusion::Field::new("description", datafusion::DataType::Utf8, true);
+        let schema = datafusion::SchemaRef::new(datafusion::Schema::new(vec![
             schema_name,
             table_name,
             column_name,
@@ -184,10 +189,10 @@ impl ColumnMetadata {
                 .iter()
                 .map(|row| {
                     vec![
-                        df::ScalarValue::Utf8(Some(row.schema_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.table_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.column_name.clone())),
-                        df::ScalarValue::Utf8(row.description.clone()),
+                        ScalarValue::Utf8(Some(row.schema_name.clone())),
+                        ScalarValue::Utf8(Some(row.table_name.clone())),
+                        ScalarValue::Utf8(Some(row.column_name.clone())),
+                        ScalarValue::Utf8(row.description.clone()),
                     ]
                 })
                 .collect(),
@@ -204,20 +209,26 @@ pub(crate) struct ColumnRow {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct InferredForeignKeys {
-    schema: df::SchemaRef,
+pub(crate) struct InferredatafusionoreignKeys {
+    schema: datafusion::SchemaRef,
     rows: Vec<ForeignKeyRow>,
 }
 
-impl InferredForeignKeys {
+impl InferredatafusionoreignKeys {
     fn new(rows: Vec<ForeignKeyRow>) -> Self {
-        let from_schema_name = df::Field::new("from_schema_name", df::DataType::Utf8, false);
-        let from_table_name = df::Field::new("from_table_name", df::DataType::Utf8, false);
-        let from_column_name = df::Field::new("from_column_name", df::DataType::Utf8, false);
-        let to_schema_name = df::Field::new("to_schema_name", df::DataType::Utf8, false);
-        let to_table_name = df::Field::new("to_table_name", df::DataType::Utf8, false);
-        let to_column_name = df::Field::new("to_column_name", df::DataType::Utf8, false);
-        let schema = df::SchemaRef::new(df::Schema::new(vec![
+        let from_schema_name =
+            datafusion::Field::new("from_schema_name", datafusion::DataType::Utf8, false);
+        let from_table_name =
+            datafusion::Field::new("from_table_name", datafusion::DataType::Utf8, false);
+        let from_column_name =
+            datafusion::Field::new("from_column_name", datafusion::DataType::Utf8, false);
+        let to_schema_name =
+            datafusion::Field::new("to_schema_name", datafusion::DataType::Utf8, false);
+        let to_table_name =
+            datafusion::Field::new("to_table_name", datafusion::DataType::Utf8, false);
+        let to_column_name =
+            datafusion::Field::new("to_column_name", datafusion::DataType::Utf8, false);
+        let schema = datafusion::SchemaRef::new(datafusion::Schema::new(vec![
             from_schema_name,
             from_table_name,
             from_column_name,
@@ -225,7 +236,7 @@ impl InferredForeignKeys {
             to_table_name,
             to_column_name,
         ]));
-        InferredForeignKeys { schema, rows }
+        InferredatafusionoreignKeys { schema, rows }
     }
     fn to_values_table(&self) -> ValuesTable {
         ValuesTable {
@@ -235,15 +246,28 @@ impl InferredForeignKeys {
                 .iter()
                 .map(|row| {
                     vec![
-                        df::ScalarValue::Utf8(Some(row.from_schema_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.from_table_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.from_column_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.to_schema_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.to_table_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.to_column_name.clone())),
+                        ScalarValue::Utf8(Some(row.from_schema_name.clone())),
+                        ScalarValue::Utf8(Some(row.from_table_name.clone())),
+                        ScalarValue::Utf8(Some(row.from_column_name.clone())),
+                        ScalarValue::Utf8(Some(row.to_schema_name.clone())),
+                        ScalarValue::Utf8(Some(row.to_table_name.clone())),
+                        ScalarValue::Utf8(Some(row.to_column_name.clone())),
                     ]
                 })
                 .collect(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+enum ScalarValue {
+    Utf8(Option<String>),
+}
+
+impl ScalarValue {
+    fn into_datafusion_scalar_value(self) -> datafusion::ScalarValue {
+        match self {
+            ScalarValue::Utf8(value) => datafusion::ScalarValue::Utf8(value),
         }
     }
 }
@@ -258,8 +282,9 @@ struct ForeignKeyRow {
     to_column_name: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub(crate) struct IntrospectionSchemaProvider {
-    tables: IndexMap<String, Arc<dyn df::TableProvider>>,
+    tables: IndexMap<String, Arc<ValuesTable>>,
 }
 
 impl IntrospectionSchemaProvider {
@@ -281,14 +306,14 @@ impl IntrospectionSchemaProvider {
             ),
         ]
         .into_iter()
-        .map(|(k, table)| (k.to_string(), Arc::new(table) as Arc<dyn df::TableProvider>))
+        .map(|(k, table)| (k.to_string(), Arc::new(table)))
         .collect();
         IntrospectionSchemaProvider { tables }
     }
 }
 
 #[async_trait]
-impl df::SchemaProvider for IntrospectionSchemaProvider {
+impl datafusion::SchemaProvider for IntrospectionSchemaProvider {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -300,8 +325,12 @@ impl df::SchemaProvider for IntrospectionSchemaProvider {
     async fn table(
         &self,
         name: &str,
-    ) -> datafusion::error::Result<Option<Arc<dyn df::TableProvider>>> {
-        Ok(self.tables.get(name).cloned())
+    ) -> datafusion::Result<Option<Arc<dyn datafusion::TableProvider>>> {
+        Ok(self
+            .tables
+            .get(name)
+            .cloned()
+            .map(|table| table as Arc<dyn datafusion::TableProvider>))
     }
 
     fn table_exist(&self, name: &str) -> bool {
@@ -310,42 +339,47 @@ impl df::SchemaProvider for IntrospectionSchemaProvider {
 }
 
 // A table with static rows
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 struct ValuesTable {
-    schema: df::SchemaRef,
-    rows: Vec<Vec<df::ScalarValue>>,
+    schema: datafusion::SchemaRef,
+    rows: Vec<Vec<ScalarValue>>,
 }
 
 #[async_trait]
-impl df::TableProvider for ValuesTable {
+impl datafusion::TableProvider for ValuesTable {
     fn as_any(&self) -> &dyn Any {
         self
     }
 
-    fn schema(&self) -> df::SchemaRef {
+    fn schema(&self) -> datafusion::SchemaRef {
         self.schema.clone()
     }
 
-    fn table_type(&self) -> df::TableType {
-        df::TableType::View
+    fn table_type(&self) -> datafusion::TableType {
+        datafusion::TableType::View
     }
     async fn scan(
         &self,
-        _state: &df::SessionState,
+        _state: &datafusion::SessionState,
         projection: Option<&Vec<usize>>,
         // filters and limit can be used here to inject some push-down operations if needed
-        _filters: &[df::Expr],
+        _filters: &[datafusion::Expr],
         _limit: Option<usize>,
-    ) -> datafusion::error::Result<Arc<dyn df::ExecutionPlan>> {
+    ) -> datafusion::Result<Arc<dyn datafusion::ExecutionPlan>> {
         let projected_schema = Arc::new(self.schema.project(projection.unwrap_or(&vec![]))?);
         let columnar_projection = projection
             .unwrap_or(&vec![])
             .iter()
-            .map(|j| self.rows.iter().map(|row| row[*j].clone()))
-            .map(df::ScalarValue::iter_to_array)
-            .collect::<df::Result<Vec<_>>>()?;
-        Ok(Arc::new(df::ValuesExec::try_new_from_batches(
+            .map(|j| {
+                self.rows
+                    .iter()
+                    .map(|row| row[*j].clone().into_datafusion_scalar_value())
+            })
+            .map(datafusion::ScalarValue::iter_to_array)
+            .collect::<datafusion::Result<Vec<_>>>()?;
+        Ok(Arc::new(datafusion::ValuesExec::try_new_from_batches(
             projected_schema.clone(),
-            vec![df::RecordBatch::try_new(
+            vec![datafusion::RecordBatch::try_new(
                 projected_schema,
                 columnar_projection,
             )?],

@@ -7,7 +7,7 @@ use indexmap::IndexMap;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
 pub use types::{
-    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
+    ArgumentPresets, FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
     PredicateRelationshipInfo, SelectPermission, UnaryComparisonOperator,
 };
 mod model_permission;

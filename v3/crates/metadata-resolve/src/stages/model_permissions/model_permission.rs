@@ -107,7 +107,7 @@ fn resolve_model_predicate_with_model(
 }
 
 // get the ndc_models::Type for an argument if it is available
-fn get_model_source_argument<'a>(
+pub fn get_model_source_argument<'a>(
     argument_name: &'a ArgumentName,
     model: &'a models::Model,
 ) -> Option<&'a ndc_models::Type> {
