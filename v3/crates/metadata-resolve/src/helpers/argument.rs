@@ -788,10 +788,10 @@ fn lookup_relationship_in_boolean_expression(
                 relationship_name: relationship_name.clone(),
             })
         })?;
+
     // lookup the boolean expression type for this comparable
     // relationship
     // if it is defined, we fetch it from metadata
-
     match &comparable_relationship.boolean_expression_type {
         Some(target_bool_exp_name) => boolean_expression_types
             .objects
@@ -808,6 +808,9 @@ fn lookup_relationship_in_boolean_expression(
                 Some(models_graphql::ModelExpressionType::BooleanExpressionType(bool_exp)) => {
                     Ok(bool_exp.graphql.clone())
                 }
+                Some(models_graphql::ModelExpressionType::ObjectBooleanExpressionType(
+                    bool_exp,
+                )) => Ok(bool_exp.graphql.clone()),
                 _ => Ok(None),
             }
         }
