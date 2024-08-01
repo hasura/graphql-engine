@@ -35,3 +35,11 @@ The following types of mutation requests are possible:
 - [Update](/mutations/postgres/update.mdx)
 - [Delete](/mutations/postgres/delete.mdx)
 - [Multiple mutations in a request](/mutations/postgres/multiple-mutations.mdx)
+
+## Other configuration
+
+By default, Hasura treats unset nullable variables with no default as being
+nulls. However, according to the GraphQL specification, these values should be
+removed from the query. Thus, with the experimental feature flag
+[`no_null_unbound_variable_default`](/deployment/graphql-engine-flags/reference.mdx#experimental-features),
+users can opt into this behavior.
