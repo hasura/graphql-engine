@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
-input_file: crates/metadata-resolve/tests/failing/boolean_expression/nested_array_not_allowed/metadata.json
----
-field 'staff' in object boolean expression type institution_bool_exp (in subgraph default) is a nested array and cannot be used for comparison

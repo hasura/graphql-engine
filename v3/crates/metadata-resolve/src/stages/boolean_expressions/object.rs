@@ -1,7 +1,10 @@
 use super::error::BooleanExpressionError;
 use super::graphql;
 use super::helpers;
-pub use super::{BooleanExpressionComparableRelationship, ResolvedObjectBooleanExpressionType};
+pub use super::{
+    BooleanExpressionComparableRelationship, BooleanExpressionIssue,
+    ResolvedObjectBooleanExpressionType,
+};
 use crate::stages::{graphql_config, object_types, scalar_boolean_expressions, type_permissions};
 use crate::types::subgraph::mk_qualified_type_name;
 use crate::{Qualified, QualifiedBaseType};
@@ -23,6 +26,11 @@ pub(crate) type RawBooleanExpressionTypes<'a> = BTreeMap<
     ),
 >;
 
+pub struct ObjectBooleanExpressionTypeOutput {
+    pub object_boolean_expression: ResolvedObjectBooleanExpressionType,
+    pub issues: Vec<BooleanExpressionIssue>,
+}
+
 /// Resolves a given object boolean expression type
 pub(crate) fn resolve_object_boolean_expression_type(
     boolean_expression_type_name: &Qualified<CustomTypeName>,
@@ -37,7 +45,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     >,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<ResolvedObjectBooleanExpressionType, BooleanExpressionError> {
+) -> Result<ObjectBooleanExpressionTypeOutput, BooleanExpressionError> {
     let qualified_object_type_name = Qualified::new(
         subgraph.to_string(),
         object_boolean_expression_operand.r#type.clone(),
@@ -54,7 +62,10 @@ pub(crate) fn resolve_object_boolean_expression_type(
             )?;
 
     // resolve any comparable fields
-    let comparable_fields = resolve_comparable_fields(
+    let ComparableFieldsOutput {
+        comparable_fields,
+        issues,
+    } = resolve_comparable_fields(
         &object_boolean_expression_operand.comparable_fields,
         &object_type_representation.object_type,
         boolean_expression_type_name,
@@ -92,7 +103,10 @@ pub(crate) fn resolve_object_boolean_expression_type(
         object_type: qualified_object_type_name.clone(),
         graphql: resolved_graphql,
     };
-    Ok(resolved_boolean_expression)
+    Ok(ObjectBooleanExpressionTypeOutput {
+        object_boolean_expression: resolved_boolean_expression,
+        issues,
+    })
 }
 
 // resolve comparable relationships. These should only be local relationships (ie, in the same data
@@ -138,6 +152,12 @@ fn resolve_comparable_relationships(
 
     Ok(resolved_comparable_relationships)
 }
+
+pub struct ComparableFieldsOutput {
+    pub comparable_fields: BTreeMap<FieldName, Qualified<CustomTypeName>>,
+    pub issues: Vec<BooleanExpressionIssue>,
+}
+
 // comparable_fields don't do much, all we can do is ensure that the other BooleanExpressionTypes
 // they refer to exist
 fn resolve_comparable_fields(
@@ -146,8 +166,9 @@ fn resolve_comparable_fields(
     boolean_expression_type_name: &Qualified<CustomTypeName>,
     subgraph: &str,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
-) -> Result<BTreeMap<FieldName, Qualified<CustomTypeName>>, BooleanExpressionError> {
+) -> Result<ComparableFieldsOutput, BooleanExpressionError> {
     let mut resolved_comparable_fields = BTreeMap::new();
+    let mut issues = vec![];
 
     // validate comparable fields all exist in underlying object
     for comparable_field in comparable_fields {
@@ -161,15 +182,14 @@ fn resolve_comparable_fields(
                 },
             )?;
 
-        // throw an error if attempting to match a nested array
+        // raise a warning if trying to use a nested array for filtering
         // this is not yet supported by ndc-spec
-        match field.field_type.underlying_type {
-            QualifiedBaseType::List(_) => Err(BooleanExpressionError::CannotCompareNestedArray {
+        if let QualifiedBaseType::List(_) = field.field_type.underlying_type {
+            issues.push(BooleanExpressionIssue::CannotCompareNestedArray {
                 field_name: comparable_field.field_name.clone(),
                 object_boolean_expression_type: boolean_expression_type_name.clone(),
-            }),
-            QualifiedBaseType::Named(_) => Ok(()),
-        }?;
+            });
+        };
 
         // fields with field arguments are not allowed in boolean expressions
         if !field.field_arguments.is_empty() {
@@ -220,5 +240,8 @@ fn resolve_comparable_fields(
         );
     }
 
-    Ok(resolved_comparable_fields)
+    Ok(ComparableFieldsOutput {
+        comparable_fields: resolved_comparable_fields,
+        issues,
+    })
 }

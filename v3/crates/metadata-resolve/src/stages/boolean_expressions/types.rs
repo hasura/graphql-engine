@@ -9,6 +9,14 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
+#[derive(Debug, thiserror::Error, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub enum BooleanExpressionIssue {
+    #[error("field '{field_name:}' in object boolean expression type {object_boolean_expression_type:} is a nested array and cannot be used for comparison")]
+    CannotCompareNestedArray {
+        field_name: FieldName,
+        object_boolean_expression_type: Qualified<CustomTypeName>,
+    },
+}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionTypes {
     pub objects: BTreeMap<Qualified<CustomTypeName>, ResolvedObjectBooleanExpressionType>,
@@ -19,10 +27,10 @@ pub struct BooleanExpressionTypes {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-
 pub struct BooleanExpressionsOutput {
     pub boolean_expression_types: BooleanExpressionTypes,
     pub graphql_types: BTreeSet<ast::TypeName>,
+    pub issues: Vec<BooleanExpressionIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

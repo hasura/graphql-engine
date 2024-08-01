@@ -42,6 +42,9 @@ model. The filter predicate employs the `User` remote relationship, ensuring the
 
 ### Fixed
 
+- Reduce error for using nested arrays in boolean expressions to a warning to
+  maintain backwards compatibility
+
 - Fix use of object types as comparison operator arguments by correctly
   utilising user-provided OpenDD types.
 
