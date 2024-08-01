@@ -14,7 +14,7 @@
 import: dev-sh.project.local
 
 ---- (reminder: top-level means apply these to all local packages)
-flags: +optimize-hasura
+-- flags: +optimize-hasura
 -- be faster:
 documentation: false
 

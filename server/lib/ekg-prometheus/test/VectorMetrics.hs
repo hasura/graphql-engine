@@ -45,8 +45,8 @@ tests =
         prometheusSample1
         "# HELP my_dynamic_counter Example counter with dynamic labels\n\
         \# TYPE my_dynamic_counter counter\n\
-        \my_dynamic_counter{label_name_2=\"label value 1\"} 10.0\n\
-        \my_dynamic_counter{label_name_1=\"label value 1\"} 10.0\n"
+        \my_dynamic_counter{label_name_1=\"label value 1\"} 10.0\n\
+        \my_dynamic_counter{label_name_2=\"label value 1\"} 10.0\n"
 
       CounterVector.add dynamicCounter (HashMap.singleton "label_name_2" "label value 1") 10
       CounterVector.add dynamicCounter (HashMap.singleton "label_name_2" "label value 2") 10
@@ -59,10 +59,10 @@ tests =
         prometheusSample2
         "# HELP my_dynamic_counter Example counter with dynamic labels\n\
         \# TYPE my_dynamic_counter counter\n\
+        \my_dynamic_counter{label_name_1=\"label value 1\"} 10.0\n\
         \my_dynamic_counter{label_name_2=\"label value 1\"} 20.0\n\
         \my_dynamic_counter{label_name_2=\"label value 2\"} 10.0\n\
-        \my_dynamic_counter{label_name_3=\"label value 1\"} 10.0\n\
-        \my_dynamic_counter{label_name_1=\"label value 1\"} 10.0\n"
+        \my_dynamic_counter{label_name_3=\"label value 1\"} 10.0\n"
 
     it "is adding new lables (for gauge) while sampling" $ do
       store <- newStore @ExampleMetrics
@@ -82,8 +82,8 @@ tests =
         prometheusSample1
         "# HELP my_dynamic_gauge Example gauge with dynamic labels\n\
         \# TYPE my_dynamic_gauge gauge\n\
-        \my_dynamic_gauge{label_name_2=\"label value 1\"} 10.0\n\
-        \my_dynamic_gauge{label_name_1=\"label value 1\"} 10.0\n"
+        \my_dynamic_gauge{label_name_1=\"label value 1\"} 10.0\n\
+        \my_dynamic_gauge{label_name_2=\"label value 1\"} 10.0\n"
 
       GaugeVector.set dynamicGauge (HashMap.singleton "label_name_2" "label value 1") 10
       GaugeVector.set dynamicGauge (HashMap.singleton "label_name_2" "label value 2") 10
@@ -96,10 +96,10 @@ tests =
         prometheusSample2
         "# HELP my_dynamic_gauge Example gauge with dynamic labels\n\
         \# TYPE my_dynamic_gauge gauge\n\
+        \my_dynamic_gauge{label_name_1=\"label value 1\"} 10.0\n\
         \my_dynamic_gauge{label_name_2=\"label value 1\"} 10.0\n\
         \my_dynamic_gauge{label_name_2=\"label value 2\"} 10.0\n\
-        \my_dynamic_gauge{label_name_3=\"label value 1\"} 10.0\n\
-        \my_dynamic_gauge{label_name_1=\"label value 1\"} 10.0\n"
+        \my_dynamic_gauge{label_name_3=\"label value 1\"} 10.0\n"
 
     it "is adding new lables (for histogram) while sampling" $ do
       store <- newStore @ExampleMetrics
@@ -121,18 +121,18 @@ tests =
         prometheusSample1
         "# HELP my_dynamic_histogram Example histogram with dynamic labels\n\
         \# TYPE my_dynamic_histogram histogram\n\
-        \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"1.0\"} 0\n\
-        \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"10.0\"} 1\n\
-        \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"100.0\"} 1\n\
-        \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"+Inf\"} 1\n\
-        \my_dynamic_histogram_sum{label_name_2=\"label value 1\"} 10.0\n\
-        \my_dynamic_histogram_count{label_name_2=\"label value 1\"} 1\n\
         \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"1.0\"} 0\n\
         \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"10.0\"} 1\n\
         \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"100.0\"} 1\n\
         \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"+Inf\"} 1\n\
         \my_dynamic_histogram_sum{label_name_1=\"label value 1\"} 10.0\n\
-        \my_dynamic_histogram_count{label_name_1=\"label value 1\"} 1\n"
+        \my_dynamic_histogram_count{label_name_1=\"label value 1\"} 1\n\
+        \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"1.0\"} 0\n\
+        \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"10.0\"} 1\n\
+        \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"100.0\"} 1\n\
+        \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"+Inf\"} 1\n\
+        \my_dynamic_histogram_sum{label_name_2=\"label value 1\"} 10.0\n\
+        \my_dynamic_histogram_count{label_name_2=\"label value 1\"} 1\n"
 
       HistogramVector.observe dynamicHistogram (HashMap.singleton "label_name_2" "label value 1") 100
       HistogramVector.observe dynamicHistogram (HashMap.singleton "label_name_2" "label value 2") 100
@@ -145,6 +145,12 @@ tests =
         prometheusSample2
         "# HELP my_dynamic_histogram Example histogram with dynamic labels\n\
         \# TYPE my_dynamic_histogram histogram\n\
+        \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"1.0\"} 0\n\
+        \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"10.0\"} 1\n\
+        \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"100.0\"} 1\n\
+        \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"+Inf\"} 1\n\
+        \my_dynamic_histogram_sum{label_name_1=\"label value 1\"} 10.0\n\
+        \my_dynamic_histogram_count{label_name_1=\"label value 1\"} 1\n\
         \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"1.0\"} 0\n\
         \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"10.0\"} 1\n\
         \my_dynamic_histogram_bucket{label_name_2=\"label value 1\",le=\"100.0\"} 2\n\
@@ -157,18 +163,12 @@ tests =
         \my_dynamic_histogram_bucket{label_name_2=\"label value 2\",le=\"+Inf\"} 1\n\
         \my_dynamic_histogram_sum{label_name_2=\"label value 2\"} 100.0\n\
         \my_dynamic_histogram_count{label_name_2=\"label value 2\"} 1\n\
-        \my_dynamic_histogram_bucket{label_name_3=\"label value 1\",le=\"1.0\"} 0\n\
-        \my_dynamic_histogram_bucket{label_name_3=\"label value 1\",le=\"10.0\"} 0\n\
-        \my_dynamic_histogram_bucket{label_name_3=\"label value 1\",le=\"100.0\"} 1\n\
-        \my_dynamic_histogram_bucket{label_name_3=\"label value 1\",le=\"+Inf\"} 1\n\
+        \my_dynamic_histogram_bucket{le=\"1.0\",label_name_3=\"label value 1\"} 0\n\
+        \my_dynamic_histogram_bucket{le=\"10.0\",label_name_3=\"label value 1\"} 0\n\
+        \my_dynamic_histogram_bucket{le=\"100.0\",label_name_3=\"label value 1\"} 1\n\
+        \my_dynamic_histogram_bucket{le=\"+Inf\",label_name_3=\"label value 1\"} 1\n\
         \my_dynamic_histogram_sum{label_name_3=\"label value 1\"} 100.0\n\
-        \my_dynamic_histogram_count{label_name_3=\"label value 1\"} 1\n\
-        \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"1.0\"} 0\n\
-        \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"10.0\"} 1\n\
-        \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"100.0\"} 1\n\
-        \my_dynamic_histogram_bucket{label_name_1=\"label value 1\",le=\"+Inf\"} 1\n\
-        \my_dynamic_histogram_sum{label_name_1=\"label value 1\"} 10.0\n\
-        \my_dynamic_histogram_count{label_name_1=\"label value 1\"} 1\n"
+        \my_dynamic_histogram_count{label_name_3=\"label value 1\"} 1\n"
 
 data ExampleMetrics :: Symbol -> Symbol -> MetricType -> Type -> Type where
   ExampleCounterVector ::

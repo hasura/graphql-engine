@@ -33,7 +33,7 @@ import Control.Exception.Lifted (ErrorCall (..), catch)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson hiding (json)
+import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as J
 import Data.Aeson.Key qualified as K

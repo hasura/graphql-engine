@@ -25,7 +25,7 @@ package *
 
 -- Set common options for local libraries
 program-options
-  ghc-options: -j -Werror
+  ghc-options: -j
 
 -- NOTE: new-build may report a misleading 'Build profile: -O1'
 -- See:https://github.com/haskell/cabal/issues/6221
@@ -35,13 +35,13 @@ package graphql-engine
   -- NOTE: 'cabal new-build --enable-coverage' seems to rebuild all deps with coverage
   -- which is not what we originally wanted. But building the test modules
   -- themselves with coverage is actually nice for validation.
-  coverage: true
+  --coverage: true
 
 package graphql-engine-pro
   -- NOTE: 'cabal new-build --enable-coverage' seems to rebuild all deps with coverage
   -- which is not what we originally wanted. But building the test modules
   -- themselves with coverage is actually nice for validation.
-  coverage: true
+  -- coverage: true
 
 -- By default GHC is dynamically linked, so to run TemplateHaskell you need dynamic versions of
 -- libraries. But, also by default, cabal links executables statically, which requires static

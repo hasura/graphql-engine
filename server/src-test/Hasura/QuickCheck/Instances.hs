@@ -40,16 +40,6 @@ import Test.QuickCheck.Extended
 -------------------------------------------------------------------------------
 -- Orphan instances for third-party libraries types
 
-instance Arbitrary Text where
-  arbitrary = T.pack <$> listOf arbitraryUnicodeChar
-
-instance
-  (Arbitrary k, Hashable k, Arbitrary v) =>
-  Arbitrary (HashMap k v)
-  where
-  arbitrary = HashMap.fromList <$> arbitrary
-  shrink = fmap HashMap.fromList . shrink . HashMap.toList
-
 instance
   (Arbitrary k, Hashable k, Arbitrary v) =>
   Arbitrary (InsOrdHashMap k v)

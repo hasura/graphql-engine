@@ -82,8 +82,8 @@ exit 1
 }
 
 # See: TODO
-cabal --version | grep -q ' 3\.10' || { 
-    echo_error "Please use cabal 3.10, as cabal broke 'import' and we can't make it compatible"
+cabal --version | grep -q -E ' 3\.10|3\.12' || { 
+    echo_error "Please use cabal >=3.10, as cabal broke 'import' and we can't make it compatible"
     exit 1
 }
 
@@ -167,9 +167,9 @@ case "${1-}" in
 
       --prof-ghc-debug)
       # Used by ghc-debug-stub:
-      export GHC_DEBUG_SOCKET=/tmp/ghc-debug
+      # export GHC_DEBUG_SOCKET=/tmp/ghc-debug
       echo_warn "This will require significant recompilation unless you just ran with --prof-heap-infomap "
-      echo_warn "A GHC debug socket will be opened at $GHC_DEBUG_SOCKET"
+      # echo_warn "A GHC debug socket will be opened at $GHC_DEBUG_SOCKET"
       echo_warn "See examples of client code here: https://github.com/hasura/hasura-debug/"
       echo_warn  "Press enter to continue [will proceed in 10s]"
       read -r -t10 || true

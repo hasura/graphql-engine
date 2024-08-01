@@ -80,6 +80,7 @@ module System.Metrics.Prometheus.Internal.Store
   )
 where
 
+import Data.List (foldl')
 import Control.Exception (Exception, throwIO)
 import Control.Monad (unless)
 import Data.Bifunctor (first)
@@ -87,7 +88,6 @@ import Data.Foldable (for_, traverse_)
 import Data.Functor (void)
 import qualified Data.HashMap.Strict as HashMap
 import Data.IORef (IORef, atomicModifyIORef', newIORef, readIORef)
-import Data.List (foldl')
 import qualified Data.Map.Strict as M
 import Data.Maybe (maybeToList)
 import Data.Text (Text)

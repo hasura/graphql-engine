@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -ddump-simpl -dsuppress-all -ddump-to-file #-}
 
 -- | Boolean Expressions
 --
@@ -547,15 +548,28 @@ data AnnBoolExpFld (backend :: BackendType) leaf
   | AVRemoteRelationship (RemoteRelPermBoolExp backend leaf)
   deriving (Functor, Foldable, Traversable, Generic)
 
-deriving instance
-  ( Backend b,
-    Eq (AggregationPredicates b a),
-    Eq (AnnBoolExp b a),
-    Eq (AnnComputedFieldBoolExp b a),
-    Eq (OpExpG b a),
-    Eq (RemoteRelPermBoolExp b a)
-  ) =>
-  Eq (AnnBoolExpFld b a)
+-- =====================================================================================
+
+------------------------ The original, formerly working instance, which now hangs:
+-- deriving instance
+--   ( Backend b,
+--     Eq (AggregationPredicates b a),
+--     Eq (AnnBoolExp b a),   -- unused?
+--     Eq (AnnComputedFieldBoolExp b a),
+--     Eq (OpExpG b a)
+--     Eq (RemoteRelPermBoolExp b a)  -- unused?
+--   ) =>
+--   Eq (AnnBoolExpFld b a)
+
+------------------------ With this the operation still hangs at runtime:
+instance ( Eq (AnnBoolExp b a)) =>  Eq (AnnBoolExpFld b a) where
+  _ == _ = False
+
+------------------------ But removing the constraint it no longer hangs:
+-- instance Eq (AnnBoolExpFld b a) where
+--   _ == _ = False
+
+-- =====================================================================================
 
 deriving instance
   ( Backend b,

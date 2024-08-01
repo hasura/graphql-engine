@@ -229,7 +229,7 @@ instance HasCodec FieldName where
 type Fields a = [(FieldName, a)]
 
 class ToAesonPairs a where
-  toAesonPairs :: (KeyValue v) => a -> [v]
+  toAesonPairs :: (KeyValue e v) => a -> [v]
 
 data SourceName
   = SNDefault
