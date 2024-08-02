@@ -91,5 +91,5 @@ pub struct BooleanExpressionGraphqlConfig {
     pub object_fields: BTreeMap<FieldName, ObjectComparisonExpressionInfo>,
     pub scalar_fields: BTreeMap<FieldName, ComparisonExpressionInfo>,
     pub relationship_fields: BTreeMap<FieldName, BooleanExpressionComparableRelationship>,
-    pub graphql_config: BooleanExpressionGraphqlFieldConfig,
+    pub field_config: BooleanExpressionGraphqlFieldConfig,
 }

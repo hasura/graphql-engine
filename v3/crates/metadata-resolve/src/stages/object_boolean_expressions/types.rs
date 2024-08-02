@@ -8,7 +8,7 @@ use std::collections::BTreeSet;
 
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType},
-    types::CustomTypeName,
+    types::{CustomTypeName, FieldName},
 };
 use serde::{Deserialize, Serialize};
 
@@ -30,8 +30,15 @@ pub struct ObjectBooleanExpressionDataConnector {
 pub struct ObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
     pub object_type: Qualified<CustomTypeName>,
-    pub graphql: Option<boolean_expressions::BooleanExpressionGraphqlConfig>,
+    pub graphql: Option<ObjectBooleanExpressionGraphqlConfig>,
     pub data_connector: ObjectBooleanExpressionDataConnector,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ObjectBooleanExpressionGraphqlConfig {
+    pub type_name: ast::TypeName,
+    pub scalar_fields: BTreeMap<FieldName, boolean_expressions::ComparisonExpressionInfo>,
+    pub field_config: boolean_expressions::BooleanExpressionGraphqlFieldConfig,
 }
 
 #[derive(Debug, thiserror::Error)]

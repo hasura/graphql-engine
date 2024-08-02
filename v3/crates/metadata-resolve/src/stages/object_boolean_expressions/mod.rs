@@ -14,8 +14,8 @@ use lang_graphql::ast::common as ast;
 use open_dds::{data_connector::DataConnectorName, types::OperatorName};
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
-    ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
-    ObjectBooleanExpressionWarning, ObjectBooleanExpressionsOutput,
+    ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionGraphqlConfig,
+    ObjectBooleanExpressionType, ObjectBooleanExpressionWarning, ObjectBooleanExpressionsOutput,
 };
 
 /// resolve object boolean expression types
@@ -267,10 +267,7 @@ pub fn resolve_boolean_expression_graphql_config(
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
     fields: &IndexMap<open_dds::types::FieldName, object_types::FieldDefinition>,
-) -> Result<
-    boolean_expressions::BooleanExpressionGraphqlConfig,
-    boolean_expressions::BooleanExpressionError,
-> {
+) -> Result<ObjectBooleanExpressionGraphqlConfig, boolean_expressions::BooleanExpressionError> {
     let mut scalar_fields = BTreeMap::new();
 
     let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
@@ -332,12 +329,10 @@ pub fn resolve_boolean_expression_graphql_config(
         }
     }
 
-    Ok(boolean_expressions::BooleanExpressionGraphqlConfig {
+    Ok(ObjectBooleanExpressionGraphqlConfig {
         type_name: where_type_name,
         scalar_fields,
-        object_fields: BTreeMap::new(),
-        relationship_fields: BTreeMap::new(),
-        graphql_config: (boolean_expressions::BooleanExpressionGraphqlFieldConfig {
+        field_config: (boolean_expressions::BooleanExpressionGraphqlFieldConfig {
             where_field_name: filter_graphql_config.where_field_name.clone(),
             and_operator_name: filter_graphql_config.operator_names.and.clone(),
             or_operator_name: filter_graphql_config.operator_names.or.clone(),

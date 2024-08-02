@@ -123,7 +123,7 @@ pub(crate) fn resolve_object_boolean_graphql(
         scalar_fields,
         object_fields,
         relationship_fields: comparable_relationships.clone(),
-        graphql_config: (BooleanExpressionGraphqlFieldConfig {
+        field_config: (BooleanExpressionGraphqlFieldConfig {
             where_field_name: filter_graphql_config.where_field_name.clone(),
             and_operator_name: filter_graphql_config.operator_names.and.clone(),
             or_operator_name: filter_graphql_config.operator_names.or.clone(),

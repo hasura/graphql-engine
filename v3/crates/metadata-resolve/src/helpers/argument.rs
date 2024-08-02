@@ -879,13 +879,11 @@ fn lookup_relationship_in_boolean_expression(
             }),
         None => {
             // if it is not defined we fall back to the one defined on the model
+            // we ignore `ObjectBooleanExpressionType` as we should not be using a mixture
             match &target_model.filter_expression_type {
                 Some(models_graphql::ModelExpressionType::BooleanExpressionType(bool_exp)) => {
                     Ok(bool_exp.graphql.clone())
                 }
-                Some(models_graphql::ModelExpressionType::ObjectBooleanExpressionType(
-                    bool_exp,
-                )) => Ok(bool_exp.graphql.clone()),
                 _ => Ok(None),
             }
         }

@@ -223,3 +223,19 @@ fn test_introspect_relationship_comparison_capabilities_with_boolean_expression_
         &["execute/relationships/no_relationship_comparison_capability/metadata.json"],
     )
 }
+
+#[test]
+fn test_introspect_model_select_many_where_object_boolean_array_relationship_simple(
+) -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/relationships/object_boolean_expression_type/array/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/where/relationships/object_boolean_expression_type/common_metadata.json";
+    common::test_introspection_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}

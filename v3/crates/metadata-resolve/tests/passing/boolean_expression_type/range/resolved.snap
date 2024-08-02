@@ -752,7 +752,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         },
                                     },
                                     relationship_fields: {},
-                                    graphql_config: BooleanExpressionGraphqlFieldConfig {
+                                    field_config: BooleanExpressionGraphqlFieldConfig {
                                         where_field_name: Name(
                                             "where",
                                         ),
@@ -972,7 +972,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                 },
                             },
                             relationship_fields: {},
-                            graphql_config: BooleanExpressionGraphqlFieldConfig {
+                            field_config: BooleanExpressionGraphqlFieldConfig {
                                 where_field_name: Name(
                                     "where",
                                 ),
