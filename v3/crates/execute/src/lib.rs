@@ -169,6 +169,13 @@ pub async fn execute_query_internal(
             "Execute query request",
             SpanVisibility::User,
             || {
+                if let Some(name) = &raw_request.operation_name {
+                    tracing_util::set_attribute_on_active_span(
+                        AttributeVisibility::Default,
+                        "operation_name",
+                        name.to_string(),
+                    );
+                }
                 tracing_util::set_attribute_on_active_span(
                     AttributeVisibility::Default,
                     "session.role",
