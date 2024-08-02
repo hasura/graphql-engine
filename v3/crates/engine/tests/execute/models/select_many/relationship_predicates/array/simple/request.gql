@@ -32,4 +32,14 @@ query MyQuery {
       TrackId
     }
   }
+
+  Track(limit: 10) {
+    TrackId
+    Name
+    Album {
+      AlbumId
+      Title
+      ArtistId
+    }
+  }
 }

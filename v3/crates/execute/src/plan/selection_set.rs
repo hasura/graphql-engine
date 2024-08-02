@@ -116,10 +116,15 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
             FieldSelection::ModelRelationshipLocal {
                 query,
                 name,
-                relationship_info: _,
+                relationship_info,
             } => {
+                // collect local model relationship
+                relationships.insert(
+                    name.clone(),
+                    relationships::process_model_relationship_definition(relationship_info)?,
+                );
                 let (relationship_query, jl) =
-                    model_selection::plan_query_node(query, &mut BTreeMap::new(), join_id_counter)?;
+                    model_selection::plan_query_node(query, relationships, join_id_counter)?;
                 let ndc_field = field::Field::Relationship {
                     query_node: Box::new(relationship_query),
                     relationship: name.clone(),
@@ -139,8 +144,13 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
             FieldSelection::CommandRelationshipLocal {
                 ir,
                 name,
-                relationship_info: _,
+                relationship_info,
             } => {
+                // collect local command relationship
+                relationships.insert(
+                    name.clone(),
+                    relationships::process_command_relationship_definition(relationship_info)?,
+                );
                 let (relationship_query, jl) =
                     commands::plan_query_node(&ir.command_info, join_id_counter, relationships)?;
 
@@ -281,66 +291,4 @@ fn process_remote_relationship_field_mapping(
 
 fn make_hasura_phantom_field(field_name: &DataConnectorColumnName) -> String {
     format!("__hasura_phantom_field__{}", field_name.as_str())
-}
-
-pub(crate) fn collect_relationships_from_nested_selection(
-    selection: &NestedSelection,
-    relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<(), error::Error> {
-    match selection {
-        NestedSelection::Object(selection_set) => {
-            collect_relationships_from_selection(selection_set, relationships)
-        }
-        NestedSelection::Array(nested_selection) => {
-            collect_relationships_from_nested_selection(nested_selection, relationships)
-        }
-    }
-}
-
-/// From the fields in `ResultSelectionSet`, collect relationships recursively
-/// and create NDC relationship definitions
-pub(crate) fn collect_relationships_from_selection(
-    selection: &ResultSelectionSet,
-    relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<(), error::Error> {
-    for field in selection.fields.values() {
-        match field {
-            FieldSelection::Column {
-                nested_selection, ..
-            } => {
-                if let Some(nested_selection) = nested_selection {
-                    collect_relationships_from_nested_selection(nested_selection, relationships)?;
-                }
-            }
-            FieldSelection::ModelRelationshipLocal {
-                query,
-                name,
-                relationship_info,
-            } => {
-                relationships.insert(
-                    name.clone(),
-                    relationships::process_model_relationship_definition(relationship_info)?,
-                );
-                relationships::collect_relationships(query, relationships)?;
-            }
-            FieldSelection::CommandRelationshipLocal {
-                ir,
-                name,
-                relationship_info,
-            } => {
-                relationships.insert(
-                    name.clone(),
-                    relationships::process_command_relationship_definition(relationship_info)?,
-                );
-                if let Some(nested_selection) = &ir.command_info.selection {
-                    collect_relationships_from_nested_selection(nested_selection, relationships)?;
-                }
-            }
-            // we ignore remote relationships as we are generating relationship
-            // definition for one data connector
-            FieldSelection::ModelRelationshipRemote { .. }
-            | FieldSelection::CommandRelationshipRemote { .. } => (),
-        };
-    }
-    Ok(())
 }

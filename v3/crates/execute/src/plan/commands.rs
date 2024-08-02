@@ -88,12 +88,6 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
         join_id_counter,
         &mut collection_relationships,
     )?;
-    if let Some(nested_selection) = &ir.command_info.selection {
-        selection_set::collect_relationships_from_nested_selection(
-            nested_selection,
-            &mut collection_relationships,
-        )?;
-    }
 
     let query_request = query::UnresolvedQueryExecutionPlan {
         query_node,
@@ -132,12 +126,6 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
         )?;
         ndc_nested_field = Some(fields);
         jl = locations;
-    }
-    if let Some(nested_selection) = &ir.command_info.selection {
-        selection_set::collect_relationships_from_nested_selection(
-            nested_selection,
-            &mut collection_relationships,
-        )?;
     }
     let mutation_request = mutation::MutationExecutionPlan {
         procedure_name: procedure_name.clone(),

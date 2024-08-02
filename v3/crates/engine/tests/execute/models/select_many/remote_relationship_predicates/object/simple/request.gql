@@ -20,4 +20,15 @@ query MyQuery {
       Title
     }
   }
+
+  Album(limit: 2) {
+    AlbumId
+    Title
+    ArtistId
+    Tracks {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
 }

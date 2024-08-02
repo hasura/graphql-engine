@@ -42,6 +42,9 @@ model. The filter predicate employs the `User` remote relationship, ensuring the
 
 ### Fixed
 
+- Fixes a bug where queries with nested relationship selection and filter
+  predicates fail due to an issue with NDC relationship collection
+
 - Reduce error for using nested arrays in boolean expressions to a warning to
   maintain backwards compatibility
 

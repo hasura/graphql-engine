@@ -5,10 +5,9 @@ use open_dds::relationships::RelationshipType;
 use open_dds::types::DataConnectorArgumentName;
 use std::collections::BTreeMap;
 
-use super::selection_set;
 use crate::plan::error;
 use ir::ModelSelection;
-use ir::{FieldSelection, NdcRelationshipName};
+use ir::NdcRelationshipName;
 use ir::{LocalCommandRelationshipInfo, LocalModelRelationshipInfo};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -27,64 +26,11 @@ pub enum RelationshipArgument {
     Column { name: DataConnectorColumnName },
 }
 
-/// collect relationships recursively from IR components containing relationships,
-/// and create NDC relationship definitions which will be added to the `relationships`
-/// variable.
-pub(crate) fn collect_relationships(
+/// collect relationships from OrderBy IR component containing relationships.
+pub(crate) fn collect_relationships_from_order_by(
     ir: &ModelSelection<'_>,
     relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
 ) -> Result<(), error::Error> {
-    // from selection fields
-    if let Some(selection) = &ir.selection {
-        for field in selection.fields.values() {
-            match field {
-                FieldSelection::ModelRelationshipLocal {
-                    query,
-                    name,
-                    relationship_info,
-                } => {
-                    relationships.insert(
-                        name.clone(),
-                        process_model_relationship_definition(relationship_info)?,
-                    );
-                    collect_relationships(query, relationships)?;
-                }
-                FieldSelection::CommandRelationshipLocal {
-                    ir,
-                    name,
-                    relationship_info,
-                } => {
-                    relationships.insert(
-                        name.clone(),
-                        process_command_relationship_definition(relationship_info)?,
-                    );
-                    if let Some(nested_selection) = &ir.command_info.selection {
-                        selection_set::collect_relationships_from_nested_selection(
-                            nested_selection,
-                            relationships,
-                        )?;
-                    }
-                }
-                FieldSelection::Column {
-                    arguments: _,
-                    column: _,
-                    nested_selection,
-                } => {
-                    if let Some(nested_selection) = &nested_selection {
-                        selection_set::collect_relationships_from_nested_selection(
-                            nested_selection,
-                            relationships,
-                        )?;
-                    }
-                }
-                // we ignore remote relationships as we are generating relationship
-                // definition for one data connector
-                FieldSelection::ModelRelationshipRemote { .. }
-                | FieldSelection::CommandRelationshipRemote { .. } => (),
-            };
-        }
-    }
-
     // from order by clause
     if let Some(order_by) = &ir.order_by {
         for (name, relationship) in &order_by.relationships {
@@ -92,7 +38,6 @@ pub(crate) fn collect_relationships(
             relationships.insert(name.clone(), result);
         }
     };
-
     Ok(())
 }
 

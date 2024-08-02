@@ -63,10 +63,10 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
     error::Error,
 > {
     let mut collection_relationships = BTreeMap::new();
-    relationships::collect_relationships(ir, &mut collection_relationships)?;
-
     let (query, join_locations) =
         plan_query_node(ir, &mut collection_relationships, join_id_counter)?;
+    // collection relationships from order_by clause
+    relationships::collect_relationships_from_order_by(ir, &mut collection_relationships)?;
     let execution_node = query::UnresolvedQueryExecutionPlan {
         query_node: query,
         collection: ir.collection.clone(),
