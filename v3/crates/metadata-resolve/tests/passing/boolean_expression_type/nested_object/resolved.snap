@@ -857,7 +857,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 headers: SerializableHeaderMap(
                                     {},
                                 ),
-                                argument_presets: [],
                                 response_config: None,
                                 capabilities: DataConnectorCapabilities {
                                     supported_ndc_version: V01,
@@ -1149,6 +1148,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                 },
                             },
                             argument_mappings: {},
+                            data_connector_link_argument_presets: {},
                             source_arguments: {},
                         },
                     ),

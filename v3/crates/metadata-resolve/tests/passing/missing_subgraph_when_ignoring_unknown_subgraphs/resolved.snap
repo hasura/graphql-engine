@@ -353,7 +353,6 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                 headers: SerializableHeaderMap(
                                     {},
                                 ),
-                                argument_presets: [],
                                 response_config: None,
                                 capabilities: DataConnectorCapabilities {
                                     supported_ndc_version: V01,
@@ -449,6 +448,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                 },
                             },
                             argument_mappings: {},
+                            data_connector_link_argument_presets: {},
                             source_arguments: {},
                         },
                     ),

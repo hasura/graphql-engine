@@ -11,7 +11,7 @@ use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 
 use open_dds::commands::CommandName;
-pub use types::{Command, CommandSource};
+pub use types::{Command, CommandSource, CommandsIssue, CommandsOutput};
 
 use open_dds::types::CustomTypeName;
 
@@ -28,8 +28,9 @@ pub fn resolve(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-) -> Result<IndexMap<Qualified<CommandName>, Command>, Error> {
+) -> Result<CommandsOutput, Error> {
     let mut commands: IndexMap<Qualified<CommandName>, Command> = IndexMap::new();
+    let mut issues = vec![];
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: command,
@@ -44,7 +45,7 @@ pub fn resolve(
             boolean_expression_types,
         )?;
         if let Some(command_source) = &command.source {
-            let command_source = source::resolve_command_source(
+            let (command_source, command_source_issues) = source::resolve_command_source(
                 command_source,
                 &resolved_command,
                 subgraph,
@@ -55,6 +56,7 @@ pub fn resolve(
                 boolean_expression_types,
             )?;
             resolved_command.source = Some(command_source);
+            issues.extend(command_source_issues);
         }
         let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
         if commands
@@ -66,5 +68,5 @@ pub fn resolve(
             });
         }
     }
-    Ok(commands)
+    Ok(CommandsOutput { commands, issues })
 }

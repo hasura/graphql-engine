@@ -87,6 +87,7 @@
                                   }
                                 },
                                 "argument_mappings": {},
+                                "data_connector_link_argument_presets": {},
                                 "source_arguments": {}
                               },
                               "capabilities": {
@@ -215,6 +216,7 @@
                                         }
                                       },
                                       "argument_mappings": {},
+                                      "data_connector_link_argument_presets": {},
                                       "source_arguments": {}
                                     },
                                     "capabilities": {
@@ -349,6 +351,7 @@
                                               }
                                             },
                                             "argument_mappings": {},
+                                            "data_connector_link_argument_presets": {},
                                             "source_arguments": {}
                                           },
                                           "capabilities": {
@@ -810,6 +813,7 @@
                                                   }
                                                 },
                                                 "argument_mappings": {},
+                                                "data_connector_link_argument_presets": {},
                                                 "source_arguments": {}
                                               },
                                               "capabilities": {
@@ -972,6 +976,7 @@
                                         }
                                       },
                                       "argument_mappings": {},
+                                      "data_connector_link_argument_presets": {},
                                       "source_arguments": {}
                                     },
                                     "capabilities": {
@@ -1134,6 +1139,7 @@
                               }
                             },
                             "argument_mappings": {},
+                            "data_connector_link_argument_presets": {},
                             "source_arguments": {}
                           },
                           "capabilities": {

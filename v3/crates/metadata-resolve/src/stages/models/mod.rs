@@ -1,4 +1,4 @@
-pub use types::{Model, ModelRaw, ModelSource, ModelsOutput, NDCFieldSourceMapping};
+pub use types::{Model, ModelRaw, ModelSource, ModelsIssue, ModelsOutput, NDCFieldSourceMapping};
 mod aggregation;
 mod helpers;
 mod ordering;
@@ -58,6 +58,7 @@ pub fn resolve(
     let mut global_id_models = BTreeMap::new();
     let mut global_id_enabled_types = global_id_enabled_types.clone();
     let mut apollo_federation_entity_enabled_types = apollo_federation_entity_enabled_types.clone();
+    let mut issues = vec![];
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -93,7 +94,7 @@ pub fn resolve(
         }
 
         if let Some(model_source) = &model.source {
-            let resolved_model_source = source::resolve_model_source(
+            let (resolved_model_source, model_source_issues) = source::resolve_model_source(
                 model_source,
                 &mut resolved_model,
                 subgraph,
@@ -105,6 +106,7 @@ pub fn resolve(
                 boolean_expression_types,
             )?;
             resolved_model.source = Some(resolved_model_source);
+            issues.extend(model_source_issues);
         }
 
         let qualified_aggregate_expression_name = model
@@ -137,6 +139,7 @@ pub fn resolve(
         models,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
+        issues,
     })
 }
 

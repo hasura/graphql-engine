@@ -149,6 +149,7 @@ pub fn generate_aggregate_model_selection_ir<'s>(
     model_source: &'s metadata_resolve::ModelSource,
     model_name: &Qualified<open_dds::models::ModelName>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
     count_model(model_name, usage_counts);
@@ -156,18 +157,18 @@ pub fn generate_aggregate_model_selection_ir<'s>(
     let mut arguments =
         read_model_select_aggregate_arguments(field_call, model_source, usage_counts)?;
 
-    if let Some(model_argument_presets) =
-        permissions::get_argument_presets(field_call.info.namespaced)?
-    {
-        arguments.model_arguments = arguments::process_model_arguments_presets(
-            &model_source.data_connector,
-            &model_source.type_mappings,
-            model_argument_presets,
-            session_variables,
-            arguments.model_arguments,
-            usage_counts,
-        )?;
-    }
+    let model_argument_presets = permissions::get_argument_presets(field_call.info.namespaced)?;
+
+    arguments.model_arguments = arguments::process_argument_presets(
+        &model_source.data_connector,
+        &model_source.type_mappings,
+        model_argument_presets,
+        &model_source.data_connector_link_argument_presets,
+        session_variables,
+        request_headers,
+        arguments.model_arguments,
+        usage_counts,
+    )?;
 
     let query_filter = filter::QueryFilter {
         where_clause: arguments.filter_input_arguments.filter_clause,

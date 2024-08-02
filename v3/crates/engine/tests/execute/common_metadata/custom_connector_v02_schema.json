@@ -837,6 +837,13 @@
                     "name": "movies_by_actor_name",
                     "description": "Movies filtered by actor name search parameters",
                     "arguments": {
+                      "_headers": {
+                        "description": "headers required",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
                       "actor_name": {
                         "description": "the actor name components to search by",
                         "type": {

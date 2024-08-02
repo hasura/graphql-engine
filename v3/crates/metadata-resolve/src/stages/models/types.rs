@@ -1,3 +1,5 @@
+use crate::data_connectors::ArgumentPresetValue;
+use crate::helpers::argument::ArgumentMappingIssue;
 use crate::helpers::types::NdcColumnForComparison;
 use crate::stages::{data_connectors, object_types};
 use crate::types::subgraph::{
@@ -5,7 +7,7 @@ use crate::types::subgraph::{
 };
 
 use indexmap::IndexMap;
-use open_dds::data_connector::CollectionName;
+use open_dds::data_connector::{CollectionName, DataConnectorName};
 use open_dds::{
     aggregates::AggregateExpressionName,
     arguments::ArgumentName,
@@ -27,6 +29,8 @@ pub struct ModelSource {
     )]
     pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    pub data_connector_link_argument_presets:
+        BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     pub source_arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Type>,
 }
 
@@ -35,6 +39,7 @@ pub struct ModelsOutput {
     pub global_id_enabled_types: BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     pub apollo_federation_entity_enabled_types:
         BTreeMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
+    pub issues: Vec<ModelsIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -62,4 +67,15 @@ pub struct ModelRaw {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct NDCFieldSourceMapping {
     pub ndc_mapping: BTreeMap<FieldName, NdcColumnForComparison>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ModelsIssue {
+    #[error("An issue occurred while mapping arguments in the model {model_name:} to the collection {collection_name:} in the data connector {data_connector_name:}: {issue:}")]
+    FunctionArgumentMappingIssue {
+        data_connector_name: Qualified<DataConnectorName>,
+        model_name: Qualified<ModelName>,
+        collection_name: CollectionName,
+        issue: ArgumentMappingIssue,
+    },
 }

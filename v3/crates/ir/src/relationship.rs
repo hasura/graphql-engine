@@ -215,6 +215,7 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
     source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let field_call = field.field_call()?;
@@ -240,6 +241,7 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
         &target_source.model,
         &relationship_annotation.model_name,
         session_variables,
+        request_headers,
         usage_counts,
     )?;
 

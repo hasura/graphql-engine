@@ -142,6 +142,7 @@ pub fn resolve(
         models,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
+        issues,
     } = models::resolve(
         &metadata_accessor,
         &data_connectors,
@@ -155,7 +156,9 @@ pub fn resolve(
         &aggregate_expressions,
     )?;
 
-    let commands = commands::resolve(
+    all_warnings.extend(issues.into_iter().map(Warning::from));
+
+    let commands::CommandsOutput { commands, issues } = commands::resolve(
         &metadata_accessor,
         &data_connectors,
         &object_types_with_permissions,
@@ -163,6 +166,8 @@ pub fn resolve(
         &object_boolean_expression_types,
         &boolean_expression_types,
     )?;
+
+    all_warnings.extend(issues.into_iter().map(Warning::from));
 
     apollo::resolve(&apollo_federation_entity_enabled_types)?;
 

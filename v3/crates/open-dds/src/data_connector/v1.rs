@@ -4,7 +4,7 @@ use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{arguments::ArgumentName, permissions::ValueExpression, EnvironmentValue};
+use crate::{permissions::ValueExpression, types::DataConnectorArgumentName, EnvironmentValue};
 
 use super::{DataConnectorColumnName, DataConnectorName, VersionedSchemaAndCapabilities};
 
@@ -72,7 +72,7 @@ pub struct DataConnectorLinkV1 {
 /// An argument preset that can be applied to all functions/procedures of a
 /// connector
 pub struct DataConnectorArgumentPreset {
-    pub argument: ArgumentName,
+    pub argument: DataConnectorArgumentName,
     pub value: DataConnectorArgumentPresetValue,
 }
 

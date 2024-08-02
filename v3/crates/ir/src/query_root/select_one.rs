@@ -102,17 +102,18 @@ pub fn select_one_generate_ir<'n, 's>(
         model_arguments.insert(ndc_arg_name, ndc_val);
     }
 
-    if let Some(argument_presets) = permissions::get_argument_presets(field_call.info.namespaced)? {
-        // add any preset arguments from model permissions
-        model_arguments = arguments::process_model_arguments_presets(
-            &model_source.data_connector,
-            &model_source.type_mappings,
-            argument_presets,
-            session_variables,
-            model_arguments,
-            &mut usage_counts,
-        )?;
-    }
+    let argument_presets = permissions::get_argument_presets(field_call.info.namespaced)?;
+    // add any preset arguments from model permissions
+    model_arguments = arguments::process_argument_presets(
+        &model_source.data_connector,
+        &model_source.type_mappings,
+        argument_presets,
+        &model_source.data_connector_link_argument_presets,
+        session_variables,
+        request_headers,
+        model_arguments,
+        &mut usage_counts,
+    )?;
 
     let query_filter = filter::QueryFilter {
         where_clause: None,

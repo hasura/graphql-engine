@@ -1,5 +1,4 @@
 use std::{
-    borrow::Borrow,
     cmp::{Ord, Ordering},
     collections::{BTreeMap, HashSet},
 };
@@ -82,38 +81,6 @@ fn execute_query_with_variables(
         Root::CurrentRow,
         collection,
     )
-}
-
-pub(crate) fn parse_object_argument<'a, Arg>(
-    argument_name: &Arg,
-    arguments: &'a BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
-) -> Result<&'a serde_json::Map<String, serde_json::Value>>
-where
-    ndc_models::ArgumentName: Borrow<Arg>,
-    Arg: Ord + ?Sized,
-{
-    let name_object = arguments
-        .get(argument_name)
-        .ok_or_else(|| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: "missing argument name".into(),
-                    details: serde_json::Value::Null,
-                }),
-            )
-        })?
-        .as_object()
-        .ok_or_else(|| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: "name must be an object".into(),
-                    details: serde_json::Value::Null,
-                }),
-            )
-        })?;
-    Ok(name_object)
 }
 
 #[derive(Clone, Copy)]

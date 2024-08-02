@@ -1136,7 +1136,7 @@
       ],
       "properties": {
         "argument": {
-          "$ref": "#/definitions/ArgumentName"
+          "$ref": "#/definitions/DataConnectorArgumentName"
         },
         "value": {
           "$ref": "#/definitions/DataConnectorArgumentPresetValue"

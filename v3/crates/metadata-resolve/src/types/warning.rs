@@ -1,6 +1,5 @@
-use crate::{
-    data_connectors,
-    stages::{boolean_expressions, object_boolean_expressions},
+use crate::stages::{
+    boolean_expressions, commands, data_connectors, models, object_boolean_expressions,
 };
 
 /// Warnings for the user raised during metadata generation
@@ -15,4 +14,8 @@ pub enum Warning {
     DataConnectorIssue(#[from] data_connectors::NamedDataConnectorIssue),
     #[error("{0}")]
     BooleanExpressionIssue(#[from] boolean_expressions::BooleanExpressionIssue),
+    #[error("{0}")]
+    ModelIssue(#[from] models::ModelsIssue),
+    #[error("{0}")]
+    CommandIssue(#[from] commands::CommandsIssue),
 }

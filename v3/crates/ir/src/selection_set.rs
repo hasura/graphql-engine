@@ -416,6 +416,7 @@ pub fn generate_selection_set_ir<'s>(
                             data_connector,
                             type_mappings,
                             session_variables,
+                            request_headers,
                             usage_counts,
                         )?,
                     );

@@ -19,10 +19,10 @@ use open_dds::{
 };
 
 use metadata_resolve::{
-    self, deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
-    serialize_non_string_key_btreemap, serialize_qualified_btreemap, DataConnectorLink,
-    NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping,
-    ValueExpressionOrPredicate,
+    self, data_connectors::ArgumentPresetValue, deserialize_non_string_key_btreemap,
+    deserialize_qualified_btreemap, serialize_non_string_key_btreemap,
+    serialize_qualified_btreemap, DataConnectorLink, NdcColumnForComparison, Qualified,
+    QualifiedTypeReference, TypeMapping, ValueExpressionOrPredicate,
 };
 
 use json_ext::HashMapWithJsonKey;
@@ -106,6 +106,8 @@ pub struct CommandSourceDetail {
     )]
     pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    pub data_connector_link_argument_presets:
+        BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     pub ndc_type_opendd_type_same: bool,
 }
 
@@ -292,7 +294,7 @@ pub enum Annotation {
     Input(InputAnnotation),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 /// Preset arguments for models or commands
 pub struct ArgumentPresets {
     #[serde(

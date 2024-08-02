@@ -48,6 +48,22 @@ model. The filter predicate employs the `User` remote relationship, ensuring the
 - Fix use of object types as comparison operator arguments by correctly
   utilising user-provided OpenDD types.
 
+- Fixes a bug where argument presets set in the DataConnectorLink were sent to
+  every connector function/procedure regardless of whether the
+  function/procedure actually declared that argument
+
+- Fixes a bug where argument presets set in the DataConnectorLink were not sent
+  to connector collections that backed Models
+
+- Fixes a bug where the type of the argument name in the DataConnectorLink's
+  argument presets was incorrect in the Open DD schema. It was `ArgumentName`
+  but should have been `DataConnectorArgumentName`
+
+- Fixes a bug where the check to ensure that argument presets in the
+  DataConnectorLink does not overlap with arguments defined on Models/Commands
+  was comparing against the Model/Command argument name not the data connector
+  argument name
+
 ### Changed
 
 - Introduced `AuthConfig` `v2`. This new version removes role emulation in
@@ -56,6 +72,10 @@ model. The filter predicate employs the `User` remote relationship, ensuring the
 - Raise a warning when an invalid data connector capabilities version is used in
   in a `DataConnectorLink` and prevent the usage of incompatible data connector
   capabilities versions
+
+- Models and commands that do not define all the necessary arguments to satisfy
+  the underlying data connector collection/function/procedure now cause warnings
+  to be raised. The warnings will be turned into errors in the future.
 
 ## [v2024.07.25]
 

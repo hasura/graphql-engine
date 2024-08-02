@@ -128,21 +128,23 @@ pub fn select_many_generate_ir<'n, 's>(
     }
 
     // the first and only argument seemingly being "args"
-    if let Some((_, field_call_argument)) = &field_call.arguments.first() {
-        if let Some(argument_presets) =
-            permissions::get_argument_presets(field_call_argument.info.namespaced)?
-        {
-            // add any preset arguments from model permissions
-            model_arguments = arguments::process_model_arguments_presets(
-                &model_source.data_connector,
-                &model_source.type_mappings,
-                argument_presets,
-                session_variables,
-                model_arguments,
-                &mut usage_counts,
-            )?;
-        }
-    }
+    let argument_presets = if let Some((_, field_call_argument)) = &field_call.arguments.first() {
+        permissions::get_argument_presets(field_call_argument.info.namespaced)?
+    } else {
+        None
+    };
+
+    // add any preset arguments from model permissions
+    model_arguments = arguments::process_argument_presets(
+        &model_source.data_connector,
+        &model_source.type_mappings,
+        argument_presets,
+        &model_source.data_connector_link_argument_presets,
+        session_variables,
+        request_headers,
+        model_arguments,
+        &mut usage_counts,
+    )?;
 
     let query_filter = filter::QueryFilter {
         where_clause,

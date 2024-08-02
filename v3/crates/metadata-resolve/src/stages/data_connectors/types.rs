@@ -12,8 +12,8 @@ use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::OperationType;
 use ndc_models;
-use open_dds::arguments::ArgumentName;
 use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::types::DataConnectorArgumentName;
 use open_dds::{
     commands::{FunctionName, ProcedureName},
     data_connector::{
@@ -242,10 +242,6 @@ pub struct DataConnectorLink {
     pub url: ResolvedDataConnectorUrl,
     /// These are headers used in the protocol level
     pub headers: SerializableHeaderMap,
-    /// Presets for arguments that applies to all functions/procedures of the
-    /// data connector
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub argument_presets: Vec<ArgumentPreset>,
     /// HTTP response headers configuration that is forwarded from a NDC
     /// function/procedure to the client.
     #[serde(skip_serializing_if = "Option::is_none", default)]
@@ -318,7 +314,6 @@ impl DataConnectorLink {
             url,
             headers,
             capabilities,
-            argument_presets: context.argument_presets.clone(),
             response_config: context.response_headers.clone(),
         })
     }
@@ -354,7 +349,7 @@ impl ResolvedDataConnectorUrl {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ArgumentPreset {
-    pub name: ArgumentName,
+    pub name: DataConnectorArgumentName,
     pub value: ArgumentPresetValue,
 }
 

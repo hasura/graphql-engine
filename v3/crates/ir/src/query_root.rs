@@ -224,6 +224,7 @@ fn generate_model_rootfield_ir<'n, 's>(
                 data_type,
                 source,
                 &session.variables,
+                request_headers,
                 model_name,
             )?,
         },

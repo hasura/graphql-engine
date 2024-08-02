@@ -40,6 +40,7 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
     data_type: &Qualified<open_dds::types::CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
     session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
     model_name: &'s Qualified<open_dds::models::ModelName>,
 ) -> Result<ModelSelectAggregate<'n, 's>, error::Error> {
     let mut usage_counts = UsagesCounts::new();
@@ -51,6 +52,7 @@ pub(crate) fn select_aggregate_generate_ir<'n, 's>(
         model_source,
         model_name,
         session_variables,
+        request_headers,
         &mut usage_counts,
     )?;
 

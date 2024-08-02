@@ -1,3 +1,4 @@
+use crate::data_connectors::DataConnectorContext;
 use crate::helpers::ndc_validation;
 use crate::helpers::type_mappings;
 use crate::helpers::types::{
@@ -28,6 +29,7 @@ use open_dds::types::DataConnectorArgumentName;
 use open_dds::types::{BaseType, CustomTypeName, FieldName, OperatorName, TypeName, TypeReference};
 use ref_cast::RefCast;
 use std::collections::BTreeMap;
+use std::collections::HashSet;
 
 use super::ndc_validation::NDCValidationError;
 
@@ -45,6 +47,15 @@ pub enum ArgumentMappingError {
     },
     #[error("the mapping for argument {argument_name:} has been defined more than once")]
     DuplicateCommandArgumentMapping { argument_name: ArgumentName },
+    #[error("the data connector argument {ndc_argument_name} has been mapped to more than once")]
+    DuplicateNdcArgumentMapping {
+        ndc_argument_name: DataConnectorArgumentName,
+    },
+    #[error("the argument {argument_name} is mapped to the data connector argument {ndc_argument_name} which is already used as an argument preset in the DataConnectorLink")]
+    ArgumentAlreadyPresetInDataConnectorLink {
+        argument_name: ArgumentName,
+        ndc_argument_name: DataConnectorArgumentName,
+    },
     #[error("{argument_name:} has the data type {data_type:} that has not been defined")]
     UnknownType {
         argument_name: ArgumentName,
@@ -63,10 +74,30 @@ pub enum ArgumentMappingError {
     NDCValidationError(NDCValidationError),
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum ArgumentMappingIssue {
+    #[error(
+        "the following data connector arguments are not mapped to an argument: {}",
+        ndc_argument_names.join(", ")
+    )]
+    UnmappedNdcArguments {
+        ndc_argument_names: Vec<DataConnectorArgumentName>,
+    },
+}
+
+pub struct ArgumentMappingResults<'a> {
+    pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    pub data_connector_link_argument_presets:
+        BTreeMap<DataConnectorArgumentName, data_connectors::ArgumentPresetValue>,
+    pub argument_type_mappings_to_resolve: Vec<type_mappings::TypeMappingToCollect<'a>>,
+    pub issues: Vec<ArgumentMappingIssue>,
+}
+
 pub fn get_argument_mappings<'a>(
     arguments: &'a IndexMap<ArgumentName, ArgumentInfo>,
     argument_mapping: &BTreeMap<ArgumentName, DataConnectorArgumentName>,
     ndc_arguments_types: &'a BTreeMap<DataConnectorArgumentName, ndc_models::Type>,
+    data_connector_context: &DataConnectorContext,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,
@@ -77,15 +108,11 @@ pub fn get_argument_mappings<'a>(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &'a boolean_expressions::BooleanExpressionTypes,
-) -> Result<
-    (
-        BTreeMap<ArgumentName, DataConnectorArgumentName>,
-        Vec<type_mappings::TypeMappingToCollect<'a>>,
-    ),
-    ArgumentMappingError,
-> {
+) -> Result<ArgumentMappingResults<'a>, ArgumentMappingError> {
     let mut unconsumed_argument_mappings: BTreeMap<&ArgumentName, &DataConnectorArgumentName> =
         argument_mapping.iter().collect();
+    let mut unmapped_ndc_arguments: HashSet<&DataConnectorArgumentName> =
+        ndc_arguments_types.keys().collect();
 
     let mut resolved_argument_mappings = BTreeMap::<ArgumentName, DataConnectorArgumentName>::new();
 
@@ -108,6 +135,11 @@ pub fn get_argument_mappings<'a>(
                 argument_name: argument_name.clone(),
                 ndc_argument_name: mapped_to_ndc_argument_name.clone(),
             })?;
+        if !unmapped_ndc_arguments.remove(&mapped_to_ndc_argument_name) {
+            return Err(ArgumentMappingError::DuplicateNdcArgumentMapping {
+                ndc_argument_name: mapped_to_ndc_argument_name.clone(),
+            });
+        }
 
         let existing_mapping = resolved_argument_mappings
             .insert(argument_name.clone(), mapped_to_ndc_argument_name.clone());
@@ -176,7 +208,50 @@ pub fn get_argument_mappings<'a>(
         });
     }
 
-    Ok((resolved_argument_mappings, type_mappings_to_collect))
+    // Mark off any ndc arguments that are preset at the data connector level via
+    // DataConnectorLink argument presets
+    let mut data_connector_link_argument_presets = BTreeMap::new();
+    for argument_preset in &data_connector_context.argument_presets {
+        if let Some((argument_name, ndc_argument_name)) = resolved_argument_mappings
+            .iter()
+            .find(|(_, ndc_argument_name)| *ndc_argument_name == &argument_preset.name)
+        {
+            return Err(
+                ArgumentMappingError::ArgumentAlreadyPresetInDataConnectorLink {
+                    argument_name: argument_name.clone(),
+                    ndc_argument_name: ndc_argument_name.clone(),
+                },
+            );
+        }
+
+        // We don't care if the argument preset is for an argument that doesn't exist.
+        // These presets are set for the whole connector and are skipped when the
+        // function/procedure/collection doesn't take that argument.
+        if unmapped_ndc_arguments.remove(&argument_preset.name) {
+            data_connector_link_argument_presets
+                .insert(argument_preset.name.clone(), argument_preset.value.clone());
+        }
+    }
+
+    // If any unmapped ndc arguments, we have missing arguments or data connector link argument presets
+    // We raise this as an issue because existing projects have this issue and we need to be backwards
+    // compatible. Those existing projects will probably fail at query time, but they do build and start 😭
+    let issues = if unmapped_ndc_arguments.is_empty() {
+        vec![]
+    } else {
+        vec![
+            (ArgumentMappingIssue::UnmappedNdcArguments {
+                ndc_argument_names: unmapped_ndc_arguments.into_iter().cloned().collect(),
+            }),
+        ]
+    };
+
+    Ok(ArgumentMappingResults {
+        argument_mappings: resolved_argument_mappings,
+        data_connector_link_argument_presets,
+        argument_type_mappings_to_resolve: type_mappings_to_collect,
+        issues,
+    })
 }
 
 /// resolve a value expression

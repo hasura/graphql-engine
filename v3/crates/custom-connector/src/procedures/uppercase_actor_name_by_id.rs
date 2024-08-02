@@ -4,6 +4,7 @@ use axum::{http::StatusCode, Json};
 use ndc_models;
 
 use crate::{
+    arguments::{check_all_arguments_used, parse_i32_argument},
     query::{eval_nested_field, Result},
     state::AppState,
 };
@@ -33,32 +34,13 @@ pub(crate) fn execute(
     collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
-    let id = arguments.get("id").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "required argument field 'id' is missing".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-    let id_int = id
-        .as_i64()
-        .ok_or((
-            StatusCode::BAD_REQUEST,
-            Json(ndc_models::ErrorResponse {
-                message: "argument 'id' is not an integer".into(),
-                details: serde_json::Value::Null,
-            }),
-        ))?
-        .try_into()
-        .map_err(|_| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: "argument 'id' is out of range".into(),
-                    details: serde_json::Value::Null,
-                }),
-            )
-        })?;
+    let mut arguments = arguments
+        .iter()
+        .map(|(k, v)| (k.clone(), v))
+        .collect::<BTreeMap<_, _>>();
+    let id_int = parse_i32_argument("id", &mut arguments)?;
+    check_all_arguments_used(&arguments)?;
+
     let current_state = state.actors.clone();
     let old_row = current_state.get(&id_int);
     match &old_row {

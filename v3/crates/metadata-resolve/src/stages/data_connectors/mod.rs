@@ -8,8 +8,9 @@ pub use error::{
 };
 use std::collections::BTreeMap;
 pub use types::{
-    ArgumentPreset, CommandsResponseConfig, DataConnectorCapabilities, DataConnectorContext,
-    DataConnectorLink, DataConnectorSchema, DataConnectors, DataConnectorsOutput, NdcVersion,
+    ArgumentPreset, ArgumentPresetValue, CommandsResponseConfig, DataConnectorCapabilities,
+    DataConnectorContext, DataConnectorLink, DataConnectorSchema, DataConnectors,
+    DataConnectorsOutput, NdcVersion,
 };
 
 /// Resolve data connectors.

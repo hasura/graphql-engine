@@ -1,4 +1,4 @@
-use crate::helpers::argument::get_argument_mappings;
+use crate::helpers::argument::{get_argument_mappings, ArgumentMappingResults};
 use crate::helpers::ndc_validation::{self};
 use crate::helpers::types::{object_type_exists, unwrap_custom_type_name};
 use crate::stages::{
@@ -8,9 +8,11 @@ use crate::stages::{
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
+use super::types::CommandsIssue;
 pub use super::types::{Command, CommandSource};
 use open_dds::commands::{self, DataConnectorCommand};
 
+use open_dds::identifier::SubgraphIdentifier;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName};
 
 use std::collections::BTreeMap;
@@ -25,7 +27,7 @@ struct CommandSourceResponse {
 pub fn resolve_command_source(
     command_source: &commands::CommandSource,
     command: &Command,
-    subgraph: &str,
+    subgraph: &SubgraphIdentifier,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -34,7 +36,7 @@ pub fn resolve_command_source(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-) -> Result<CommandSource, Error> {
+) -> Result<(CommandSource, Vec<CommandsIssue>), Error> {
     if command.source.is_some() {
         return Err(Error::DuplicateCommandSourceDefinition {
             command_name: command.name.clone(),
@@ -111,10 +113,16 @@ pub fn resolve_command_source(
     };
 
     // Get the mappings of arguments and any type mappings that need resolving from the arguments
-    let (argument_mappings, argument_type_mappings_to_resolve) = get_argument_mappings(
+    let ArgumentMappingResults {
+        argument_mappings,
+        data_connector_link_argument_presets,
+        argument_type_mappings_to_resolve,
+        issues,
+    } = get_argument_mappings(
         &command.arguments,
         &command_source.argument_mapping,
         &command_source_response.arguments,
+        data_connector_context,
         object_types,
         scalar_types,
         object_boolean_expression_types,
@@ -138,6 +146,28 @@ pub fn resolve_command_source(
             }
         }
     })?;
+
+    let issues = issues
+        .into_iter()
+        .map(|issue| match &command_source.data_connector_command {
+            DataConnectorCommand::Function(function_name) => {
+                CommandsIssue::FunctionArgumentMappingIssue {
+                    data_connector_name: qualified_data_connector_name.clone(),
+                    command_name: command.name.clone(),
+                    function_name: function_name.clone(),
+                    issue,
+                }
+            }
+            DataConnectorCommand::Procedure(procedure_name) => {
+                CommandsIssue::ProcedureArgumentMappingIssue {
+                    data_connector_name: qualified_data_connector_name.clone(),
+                    command_name: command.name.clone(),
+                    procedure_name: procedure_name.clone(),
+                    issue,
+                }
+            }
+        })
+        .collect();
 
     // get object type name if it exists for the output type, and refers to a valid object
     let command_result_base_object_type_name = unwrap_custom_type_name(&command.output_type)
@@ -218,6 +248,7 @@ pub fn resolve_command_source(
         ndc_type_opendd_type_same: true,
         type_mappings,
         argument_mappings,
+        data_connector_link_argument_presets,
         source_arguments: command_source_response.arguments,
     };
 
@@ -232,5 +263,5 @@ pub fn resolve_command_source(
 
     command_source.ndc_type_opendd_type_same = source_type_opendd_type_same;
 
-    Ok(command_source)
+    Ok((command_source, issues))
 }

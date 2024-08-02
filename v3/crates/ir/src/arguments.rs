@@ -7,6 +7,8 @@ use crate::model_tracking::UsagesCounts;
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
+use metadata_resolve::data_connectors::ArgumentPresetValue;
+use metadata_resolve::http::SerializableHeaderMap;
 use metadata_resolve::{
     ArgumentKind, DataConnectorLink, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference, TypeMapping,
@@ -22,6 +24,7 @@ use schema::{
 };
 use serde::Serialize;
 
+use super::error::InternalDeveloperError;
 use super::permissions;
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
@@ -78,83 +81,131 @@ pub(crate) fn follow_field_path_and_insert_value(
     Ok(())
 }
 
-/// Takes 'ArgumentPresets' annotations and existing model arguments (which
-/// might be partially filled), and fill values in the existing model arguments
-/// based on the presets
-pub(crate) fn process_model_arguments_presets<'s, 'a>(
+/// Takes 'ArgumentPresets' annotations, data connector link argument presets, and
+/// existing arguments (which might be partially filled), and fill values in the
+/// existing arguments based on the presets
+pub(crate) fn process_argument_presets<'s, 'a>(
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-    argument_presets: &'a ArgumentPresets,
+    argument_presets: Option<&'a ArgumentPresets>,
+    data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     session_variables: &SessionVariables,
-    mut model_arguments: BTreeMap<DataConnectorArgumentName, Argument<'s>>,
+    request_headers: &reqwest::header::HeaderMap,
+    mut arguments: BTreeMap<DataConnectorArgumentName, Argument<'s>>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, Argument<'s>>, error::Error>
 where
     'a: 's,
 {
-    let ArgumentPresets { argument_presets } = argument_presets;
-    for (argument_name_and_path, (field_type, argument_value)) in argument_presets {
-        let ArgumentNameAndPath {
-            ndc_argument_name,
-            field_path,
-        } = argument_name_and_path;
+    if let Some(ArgumentPresets { argument_presets }) = argument_presets {
+        for (argument_name_and_path, (field_type, argument_value)) in argument_presets {
+            let ArgumentNameAndPath {
+                ndc_argument_name,
+                field_path,
+            } = argument_name_and_path;
 
-        let argument_name = ndc_argument_name.as_ref().ok_or_else(|| {
-            // this can only happen when no argument mapping was not found
-            // during annotation generation
-            error::InternalEngineError::ArgumentPresetExecution {
-                description: "unexpected; ndc argument name not preset".to_string(),
-            }
-        })?;
+            let argument_name = ndc_argument_name.as_ref().ok_or_else(|| {
+                // this can only happen when no argument mapping was not found
+                // during annotation generation
+                error::InternalEngineError::ArgumentPresetExecution {
+                    description: "unexpected; ndc argument name not preset".to_string(),
+                }
+            })?;
 
-        let actual_value = permissions::make_argument_from_value_expression_or_predicate(
-            data_connector_link,
-            type_mappings,
-            argument_value,
-            field_type,
-            session_variables,
-            usage_counts,
-        )?;
+            let actual_value = permissions::make_argument_from_value_expression_or_predicate(
+                data_connector_link,
+                type_mappings,
+                argument_value,
+                field_type,
+                session_variables,
+                usage_counts,
+            )?;
 
-        match NonEmpty::from_slice(field_path) {
-            // if field path is empty, then the entire argument has to preset
-            None => {
-                model_arguments.insert(argument_name.clone(), actual_value);
-            }
-            // if there is some field path, preset the argument partially based on the field path
-            Some(field_path) => {
-                if let Some(current_arg) = model_arguments.get_mut(&argument_name.clone()) {
-                    let current_arg = match current_arg {
-                        Argument::Literal { value } => Ok(value),
-                        Argument::BooleanExpression { predicate: _ } => {
-                            Err(error::InternalEngineError::ArgumentPresetExecution {
-                                description: "unexpected; can't merge an argument preset into an argument that has a boolean expression value"
-                                    .to_owned(),
-                            })
+            match NonEmpty::from_slice(field_path) {
+                // if field path is empty, then the entire argument has to preset
+                None => {
+                    arguments.insert(argument_name.clone(), actual_value);
+                }
+                // if there is some field path, preset the argument partially based on the field path
+                Some(field_path) => {
+                    if let Some(current_arg) = arguments.get_mut(&argument_name.clone()) {
+                        let current_arg = match current_arg {
+                            Argument::Literal { value } => Ok(value),
+                            Argument::BooleanExpression { predicate: _ } => {
+                                Err(error::InternalEngineError::ArgumentPresetExecution {
+                                    description: "unexpected; can't merge an argument preset into an argument that has a boolean expression value"
+                                        .to_owned(),
+                                })
+                            }
+                        }?;
+                        let preset_value = match actual_value {
+                            Argument::Literal { value } => Ok(value),
+                            Argument::BooleanExpression { predicate: _ } => {
+                                // See schema::Error::BooleanExpressionInTypePresetArgument
+                                Err(error::InternalEngineError::ArgumentPresetExecution {
+                                    description: "unexpected; type input presets cannot contain a boolean expression preset value"
+                                        .to_owned(),
+                                })
+                            }
+                        }?;
+                        if let Some(current_arg_object) = current_arg.as_object_mut() {
+                            follow_field_path_and_insert_value(
+                                &field_path,
+                                current_arg_object,
+                                preset_value,
+                            )?;
                         }
-                    }?;
-                    let preset_value = match actual_value {
-                        Argument::Literal { value } => Ok(value),
-                        Argument::BooleanExpression { predicate: _ } => {
-                            // See schema::Error::BooleanExpressionInTypePresetArgument
-                            Err(error::InternalEngineError::ArgumentPresetExecution {
-                                description: "unexpected; type input presets cannot contain a boolean expression preset value"
-                                    .to_owned(),
-                            })
-                        }
-                    }?;
-                    if let Some(current_arg_object) = current_arg.as_object_mut() {
-                        follow_field_path_and_insert_value(
-                            &field_path,
-                            current_arg_object,
-                            preset_value,
-                        )?;
                     }
                 }
             }
         }
     }
-    Ok(model_arguments)
+
+    // preset arguments from `DataConnectorLink` argument presets
+    for (dc_argument_preset_name, dc_argument_preset_value) in data_connector_link_argument_presets
+    {
+        let mut headers_argument = reqwest::header::HeaderMap::new();
+
+        // add headers from the request to be forwarded
+        for header_name in &dc_argument_preset_value.http_headers.forward {
+            if let Some(header_value) = request_headers.get(&header_name.0) {
+                headers_argument.insert(header_name.0.clone(), header_value.clone());
+            }
+        }
+
+        // add additional headers from `ValueExpression`
+        for (header_name, value_expression) in &dc_argument_preset_value.http_headers.additional {
+            // TODO: have helper functions to create types
+            let string_type = QualifiedTypeReference {
+                nullable: false,
+                underlying_type: metadata_resolve::QualifiedBaseType::Named(
+                    metadata_resolve::QualifiedTypeName::Inbuilt(
+                        open_dds::types::InbuiltType::String,
+                    ),
+                ),
+            };
+            let value = permissions::make_argument_from_value_expression(
+                value_expression,
+                &string_type,
+                session_variables,
+            )?;
+            let header_value =
+                reqwest::header::HeaderValue::from_str(serde_json::to_string(&value)?.as_str())
+                    .map_err(|_e| {
+                        InternalDeveloperError::UnableToConvertValueExpressionToHeaderValue
+                    })?;
+            headers_argument.insert(header_name.0.clone(), header_value);
+        }
+
+        arguments.insert(
+            dc_argument_preset_name.clone(),
+            Argument::Literal {
+                value: serde_json::to_value(SerializableHeaderMap(headers_argument))?,
+            },
+        );
+    }
+
+    Ok(arguments)
 }
 
 // fetch input values from annotations and turn them into either JSON or an Expression

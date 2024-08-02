@@ -8,7 +8,6 @@ use lang_graphql::ast::common::TypeContainer;
 use lang_graphql::ast::common::TypeName;
 use lang_graphql::normalized_ast;
 
-use nonempty::NonEmpty;
 use open_dds::commands;
 use open_dds::commands::FunctionName;
 use open_dds::commands::ProcedureName;
@@ -17,7 +16,6 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 
 use super::arguments;
-use super::error::InternalDeveloperError;
 use super::selection_set;
 use super::selection_set::FieldSelection;
 use super::selection_set::NdcFieldAlias;
@@ -26,10 +24,7 @@ use super::selection_set::ResultSelectionSet;
 use crate::error;
 use crate::model_tracking::{count_command, UsagesCounts};
 use crate::permissions;
-use metadata_resolve::http::SerializableHeaderMap;
 use metadata_resolve::{Qualified, QualifiedTypeReference};
-use schema::ArgumentNameAndPath;
-use schema::ArgumentPresets;
 use schema::CommandSourceDetail;
 use schema::TypeKind;
 use schema::GDS;
@@ -110,117 +105,20 @@ pub fn generate_command_info<'n, 's>(
         command_arguments.insert(ndc_arg_name, ndc_val);
     }
 
+    let command_argument_presets = permissions::get_argument_presets(field_call.info.namespaced)?;
+
     // preset arguments from permissions presets (both command permission argument
     // presets and input field presets)
-    if let Some(ArgumentPresets { argument_presets }) =
-        permissions::get_argument_presets(field_call.info.namespaced)?
-    {
-        // add any preset arguments from command permissions or input type permissions
-        for (argument_name_and_path, (field_type, argument_value)) in argument_presets {
-            let ArgumentNameAndPath {
-                field_path,
-                ndc_argument_name,
-            } = argument_name_and_path;
-
-            let argument_name = ndc_argument_name.as_ref().ok_or_else(|| {
-                // this can only happen when no argument mapping was not found
-                // during annotation generation
-                error::InternalEngineError::ArgumentPresetExecution {
-                    description: "unexpected; ndc argument name not preset".to_string(),
-                }
-            })?;
-
-            let actual_value = permissions::make_argument_from_value_expression_or_predicate(
-                &command_source.data_connector,
-                &command_source.type_mappings,
-                argument_value,
-                field_type,
-                session_variables,
-                usage_counts,
-            )?;
-
-            match NonEmpty::from_slice(field_path) {
-                // if field path is empty, then the entire argument has to preset
-                None => {
-                    command_arguments.insert(argument_name.clone(), actual_value);
-                }
-                // if there is some field path, preset the argument partially based on the field path
-                Some(field_path) => {
-                    if let Some(current_arg) = command_arguments.get_mut(argument_name) {
-                        let current_arg = match current_arg {
-                            arguments::Argument::Literal { value } => Ok(value),
-                            arguments::Argument::BooleanExpression { predicate: _ } => {
-                                Err(error::InternalEngineError::ArgumentPresetExecution {
-                                    description: "unexpected; can't merge an argument preset into an argument that has a boolean expression value"
-                                        .to_owned(),
-                                })
-                            }
-                        }?;
-                        let preset_value = match actual_value {
-                            arguments::Argument::Literal { value } => Ok(value),
-                            arguments::Argument::BooleanExpression { predicate: _ } => {
-                                // See schema::Error::BooleanExpressionInTypePresetArgument
-                                Err(error::InternalEngineError::ArgumentPresetExecution {
-                                    description: "unexpected; type input presets cannot contain a boolean expression preset value"
-                                        .to_owned(),
-                                })
-                            }
-                        }?;
-                        if let Some(current_arg_object) = current_arg.as_object_mut() {
-                            arguments::follow_field_path_and_insert_value(
-                                &field_path,
-                                current_arg_object,
-                                preset_value,
-                            )?;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // preset arguments from `DataConnectorLink` argument presets
-    for dc_argument_preset in &command_source.data_connector.argument_presets {
-        let mut headers_argument = reqwest::header::HeaderMap::new();
-
-        // add headers from the request to be forwarded
-        for header_name in &dc_argument_preset.value.http_headers.forward {
-            if let Some(header_value) = request_headers.get(&header_name.0) {
-                headers_argument.insert(header_name.0.clone(), header_value.clone());
-            }
-        }
-
-        // add additional headers from `ValueExpression`
-        for (header_name, value_expression) in &dc_argument_preset.value.http_headers.additional {
-            // TODO: have helper functions to create types
-            let string_type = QualifiedTypeReference {
-                nullable: false,
-                underlying_type: metadata_resolve::QualifiedBaseType::Named(
-                    metadata_resolve::QualifiedTypeName::Inbuilt(
-                        open_dds::types::InbuiltType::String,
-                    ),
-                ),
-            };
-            let value = permissions::make_argument_from_value_expression(
-                value_expression,
-                &string_type,
-                session_variables,
-            )?;
-            let header_value =
-                reqwest::header::HeaderValue::from_str(serde_json::to_string(&value)?.as_str())
-                    .map_err(|_e| {
-                        InternalDeveloperError::UnableToConvertValueExpressionToHeaderValue
-                    })?;
-            headers_argument.insert(header_name.0.clone(), header_value);
-        }
-
-        command_arguments.insert(
-            DataConnectorArgumentName::from(dc_argument_preset.name.as_str()),
-            arguments::Argument::Literal {
-                value: serde_json::to_value(SerializableHeaderMap(headers_argument))?,
-            },
-        );
-    }
+    command_arguments = arguments::process_argument_presets(
+        &command_source.data_connector,
+        &command_source.type_mappings,
+        command_argument_presets,
+        &command_source.data_connector_link_argument_presets,
+        session_variables,
+        request_headers,
+        command_arguments,
+        usage_counts,
+    )?;
 
     // Add the name of the root command
     let mut usage_counts = UsagesCounts::new();
