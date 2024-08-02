@@ -1,4 +1,6 @@
-use super::error::{DataConnectorError, NamedDataConnectorError};
+use super::error::{
+    DataConnectorError, DataConnectorIssue, NamedDataConnectorError, NamedDataConnectorIssue,
+};
 use crate::configuration::UnstableFeatures;
 use crate::helpers::http::{
     HeaderError, SerializableHeaderMap, SerializableHeaderName, SerializableUrl,
@@ -21,6 +23,11 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use strum_macros::EnumIter;
+
+pub struct DataConnectorsOutput<'a> {
+    pub data_connectors: DataConnectors<'a>,
+    pub issues: Vec<NamedDataConnectorIssue>,
+}
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Serialize, Deserialize, EnumIter)]
 pub enum NdcVersion {
@@ -57,15 +64,15 @@ impl<'a> DataConnectorContext<'a> {
     pub fn new(
         data_connector: &'a data_connector::DataConnectorLinkV1,
         unstable_features: &UnstableFeatures,
-    ) -> Result<Self, DataConnectorError> {
-        let (resolved_schema, capabilities, supported_ndc_version) = match &data_connector.schema {
+    ) -> Result<(Self, Vec<DataConnectorIssue>), DataConnectorError> {
+        let (resolved_schema, capabilities, supported_ndc_version, issues) = match &data_connector
+            .schema
+        {
             VersionedSchemaAndCapabilities::V01(schema_and_capabilities) => {
-                // this check is breaking artifact build, skip until we can resolve
-                /*
-                validate_ndc_version(
+                let issues = validate_ndc_version(
                     NdcVersion::V01,
                     &schema_and_capabilities.capabilities.version,
-                )?;*/
+                )?;
                 let schema =
                     DataConnectorSchema::new(ndc_migration::v02::migrate_schema_response_from_v01(
                         schema_and_capabilities.schema.clone(),
@@ -73,17 +80,16 @@ impl<'a> DataConnectorContext<'a> {
                 let capabilities = ndc_migration::v02::migrate_capabilities_from_v01(
                     schema_and_capabilities.capabilities.capabilities.clone(),
                 );
-                (schema, capabilities, NdcVersion::V01)
+                (schema, capabilities, NdcVersion::V01, issues)
             }
             VersionedSchemaAndCapabilities::V02(schema_and_capabilities) => {
-                // this check is breaking artifact build, skip until we can resolve
-                /*validate_ndc_version(
+                let issues = validate_ndc_version(
                     NdcVersion::V02,
                     &schema_and_capabilities.capabilities.version,
-                )?;*/
+                )?;
                 let schema = DataConnectorSchema::new(schema_and_capabilities.schema.clone());
                 let capabilities = schema_and_capabilities.capabilities.capabilities.clone();
-                (schema, capabilities, NdcVersion::V02)
+                (schema, capabilities, NdcVersion::V02, issues)
             }
         };
 
@@ -115,7 +121,7 @@ impl<'a> DataConnectorContext<'a> {
             None
         };
 
-        Ok(DataConnectorContext {
+        let context = DataConnectorContext {
             url: &data_connector.url,
             headers: data_connector
                 .headers
@@ -127,21 +133,39 @@ impl<'a> DataConnectorContext<'a> {
             supported_ndc_version,
             argument_presets,
             response_headers,
-        })
+        };
+
+        Ok((context, issues))
     }
 }
 
-#[allow(dead_code)]
 fn validate_ndc_version(
     ndc_version: NdcVersion,
     capabilities_version: &str,
-) -> Result<(), DataConnectorError> {
-    let capabilities_semver = semver::Version::parse(capabilities_version).map_err(|error| {
-        DataConnectorError::InvalidNdcVersion {
-            version: capabilities_version.to_owned(),
-            error,
+) -> Result<Vec<DataConnectorIssue>, DataConnectorError> {
+    let capabilities_semver_result = semver::Version::parse(capabilities_version);
+
+    let capabilities_semver = match ndc_version {
+        NdcVersion::V01 => match capabilities_semver_result {
+            Ok(semver) => semver,
+            // Old builds with V01 capabilities contain invalid capabilities versions such as
+            // "", "*", "^0.1.1". In order to be backwards compatible we'll allow these and assume
+            // they are NDC v0.1.x connectors (they were back then, there were no v0.2.x connectors)
+            // and we'll just log an issue
+            Err(error) => {
+                return Ok(vec![DataConnectorIssue::InvalidNdcV01Version {
+                    version: capabilities_version.to_owned(),
+                    error,
+                }]);
+            }
+        },
+        NdcVersion::V02 => {
+            capabilities_semver_result.map_err(|error| DataConnectorError::InvalidNdcVersion {
+                version: capabilities_version.to_owned(),
+                error,
+            })?
         }
-    })?;
+    };
 
     let requirement = match ndc_version {
         NdcVersion::V01 => semver::VersionReq::parse("^0.1.0").unwrap(),
@@ -149,7 +173,7 @@ fn validate_ndc_version(
     };
 
     if requirement.matches(&capabilities_semver) {
-        Ok(())
+        Ok(vec![])
     } else {
         Err(DataConnectorError::IncompatibleNdcVersion {
             version: capabilities_version.to_owned(),
@@ -442,7 +466,8 @@ mod tests {
     use strum::IntoEnumIterator;
 
     use crate::{
-        configuration::UnstableFeatures, data_connectors::types::NdcVersion,
+        configuration::UnstableFeatures,
+        data_connectors::{error::DataConnectorIssue, types::NdcVersion},
         stages::data_connectors::types::DataConnectorContext,
     };
 
@@ -497,11 +522,12 @@ mod tests {
             enable_ndc_v02_support: true,
             ..Default::default()
         };
-        let context =
+        let (context, issues) =
             DataConnectorContext::new(&data_connector_with_capabilities, &unstable_features)
                 .unwrap();
         assert_eq!(context.capabilities, explicit_capabilities);
         assert_eq!(context.supported_ndc_version, NdcVersion::V01);
+        assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
     }
 
     #[test]
@@ -537,11 +563,18 @@ mod tests {
             enable_ndc_v02_support: true,
             ..Default::default()
         };
-        let context =
+        let (context, issues) =
             DataConnectorContext::new(&data_connector_with_capabilities, &unstable_features)
                 .unwrap();
         assert_eq!(context.capabilities, explicit_capabilities);
         assert_eq!(context.supported_ndc_version, NdcVersion::V02);
+        assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
+    }
+
+    enum AssertNdcVersionShould {
+        Validate,
+        HaveIssue,
+        FailToValidate,
     }
 
     #[test]
@@ -552,27 +585,47 @@ mod tests {
             // here that tell the developer to add more test cases here
             let test_cases = match ndc_version {
                 NdcVersion::V01 => vec![
-                    ("0.1.0", true),
-                    ("0.1.1", true),
-                    ("0.2.0", false),
-                    ("0.2.1", false),
-                    ("1.0.0", false),
+                    ("0.1.0", AssertNdcVersionShould::Validate),
+                    ("0.1.1", AssertNdcVersionShould::Validate),
+                    ("0.2.0", AssertNdcVersionShould::FailToValidate),
+                    ("0.2.1", AssertNdcVersionShould::FailToValidate),
+                    ("1.0.0", AssertNdcVersionShould::FailToValidate),
+                    ("", AssertNdcVersionShould::HaveIssue),
+                    ("*", AssertNdcVersionShould::HaveIssue),
+                    ("^0.1.1", AssertNdcVersionShould::HaveIssue),
                 ],
                 NdcVersion::V02 => vec![
-                    ("0.1.0", false),
-                    ("0.1.1", false),
-                    ("0.2.0", true),
-                    ("0.2.1", true),
-                    ("1.0.0", false),
+                    ("0.1.0", AssertNdcVersionShould::FailToValidate),
+                    ("0.1.1", AssertNdcVersionShould::FailToValidate),
+                    ("0.2.0", AssertNdcVersionShould::Validate),
+                    ("0.2.1", AssertNdcVersionShould::Validate),
+                    ("1.0.0", AssertNdcVersionShould::FailToValidate),
+                    ("", AssertNdcVersionShould::FailToValidate),
+                    ("*", AssertNdcVersionShould::FailToValidate),
+                    ("^0.1.1", AssertNdcVersionShould::FailToValidate),
                 ],
             };
 
-            for (version, should_validate) in test_cases {
+            for (version, assertion) in test_cases {
                 let result = validate_ndc_version(ndc_version, version);
-                if should_validate {
-                    assert!(result.is_ok(), "When testing ndc version {ndc_version:?}, the version {version} failed to validate: {result:?}");
-                } else {
-                    assert!(result.is_err(), "When testing ndc version {ndc_version:?}, the version {version} validated when it shouldn't have");
+                match assertion {
+                    AssertNdcVersionShould::Validate => {
+                        match result {
+                            Ok(issues) => {
+                                assert!(issues.is_empty(), "When testing ndc version {ndc_version:?}, the version '{version}' validated but had issues: {issues:#?}");
+                            },
+                            Err(error) => panic!("When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"),
+                        }
+                    },
+                    AssertNdcVersionShould::HaveIssue => {
+                        match result {
+                            Ok(issues) => {
+                                assert!(issues.iter().any(|i| matches!(i, DataConnectorIssue::InvalidNdcV01Version { .. })), "When testing ndc version {ndc_version:?}, the version '{version}' validated but did not have the InvalidNdcV1Version issue. Issues: {issues:#?}");
+                            },
+                            Err(error) => panic!("When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"),
+                        }
+                    },
+                    AssertNdcVersionShould::FailToValidate => assert!(result.is_err(), "When testing ndc version {ndc_version:?}, the version '{version}' validated when it shouldn't have: {result:#?}"),
                 }
             }
         }

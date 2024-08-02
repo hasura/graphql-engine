@@ -53,6 +53,10 @@ model. The filter predicate employs the `User` remote relationship, ensuring the
 - Introduced `AuthConfig` `v2`. This new version removes role emulation in
   engine (`allowRoleEmulationBy`) field.
 
+- Raise a warning when an invalid data connector capabilities version is used in
+  in a `DataConnectorLink` and prevent the usage of incompatible data connector
+  capabilities versions
+
 ## [v2024.07.25]
 
 ### Fixed

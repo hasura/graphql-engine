@@ -3,19 +3,10 @@ use crate::types::subgraph::Qualified;
 use open_dds::data_connector::DataConnectorName;
 
 #[derive(Debug, thiserror::Error)]
+#[error("The data connector {data_connector_name} has an error: {error}")]
 pub struct NamedDataConnectorError {
     pub data_connector_name: Qualified<DataConnectorName>,
     pub error: DataConnectorError,
-}
-
-impl std::fmt::Display for NamedDataConnectorError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "The data connector {} has an error: {}",
-            self.data_connector_name, self.error
-        )
-    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -43,5 +34,23 @@ pub enum DataConnectorError {
     IncompatibleNdcVersion {
         version: String,
         requirement: semver::VersionReq,
+    },
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error("The data connector {data_connector_name} has an issue: {issue}")]
+pub struct NamedDataConnectorIssue {
+    pub data_connector_name: Qualified<DataConnectorName>,
+    pub issue: DataConnectorIssue,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum DataConnectorIssue {
+    #[error(
+        "The version specified in the capabilities (\"{version}\") is an invalid version: {error}. Consider upgrading the data connector to the latest version to fix this."
+    )]
+    InvalidNdcV01Version {
+        version: String,
+        error: semver::Error,
     },
 }
