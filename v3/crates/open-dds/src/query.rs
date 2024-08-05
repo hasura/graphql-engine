@@ -15,7 +15,7 @@ use crate::{
 
 str_newtype!(Alias over Identifier | doc "Alias to refer to a particular query or selection in the response.");
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "version")]
 /// Representation of a set of data queries on an OpenDD graph
@@ -24,7 +24,7 @@ pub enum QueryRequest {
     V1(QueryRequestV1),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryRequestV1 {
     /// Queries to execute. Each query has an alias that will be used to identify it in the response.
@@ -32,7 +32,7 @@ pub struct QueryRequestV1 {
 }
 
 /// Representation of a data query on an OpenDD graph
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum Query {
     Model(ModelSelection),
@@ -43,7 +43,7 @@ pub enum Query {
     // CommandGroups(CommandGroupsSelection),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Query selecting objects from a model.
 pub struct ModelSelection {
@@ -53,7 +53,7 @@ pub struct ModelSelection {
     pub selection: IndexMap<Alias, ObjectSubSelection>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Query selecting metrics aggregated over the objects of a model.
 pub struct ModelAggregateSelection {
@@ -63,7 +63,7 @@ pub struct ModelAggregateSelection {
     pub selection: IndexMap<Alias, Aggregate>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Query executing a command and if applicable, selecting part of the output.
 pub struct CommandSelection {
@@ -73,7 +73,7 @@ pub struct CommandSelection {
     selection: Option<IndexMap<Alias, ObjectSubSelection>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Selection of a part of an OpenDD object.
 pub enum ObjectSubSelection {
@@ -85,42 +85,44 @@ pub enum ObjectSubSelection {
     // RelationshipGroups(RelationshipGroupsSelection),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Selection of a field of an OpenDD object type.
 pub struct ObjectFieldSelection {
     #[serde(flatten)]
-    target: ObjectFieldTarget,
+    pub target: ObjectFieldTarget,
     /// If the field has an object type or an array of object types, what to select from that/those object(s).
-    selection: Option<IndexMap<String, ObjectSubSelection>>,
+    pub selection: Option<IndexMap<String, ObjectSubSelection>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Selection of a relationship on an OpenDD object type.
 pub struct RelationshipSelection {
     #[serde(flatten)]
-    target: RelationshipTarget,
+    pub target: RelationshipTarget,
     /// If the relationship output produces an object type or an array of object types, what to select from that/those object(s).
-    selection: Option<IndexMap<String, ObjectSubSelection>>,
+    pub selection: Option<IndexMap<String, ObjectSubSelection>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Selection of metrics aggregated over related values.
 pub struct RelationshipAggregateSelection {
     #[serde(flatten)]
-    target: RelationshipTarget,
+    pub target: RelationshipTarget,
     /// What aggregated metrics to select.
-    selection: IndexMap<String, Aggregate>,
+    pub selection: IndexMap<String, Aggregate>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// The model lookup to target in a query.
 pub struct ModelTarget {
     pub subgraph: SubgraphName,
     pub model_name: ModelName,
+    #[serde(default)]
+    pub arguments: IndexMap<ArgumentName, Value>,
     pub filter: Option<BooleanExpression>,
     #[serde(default)]
     pub order_by: Vec<OrderByElement>,
@@ -128,7 +130,7 @@ pub struct ModelTarget {
     pub offset: Option<usize>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// The field lookup of an OpenDD Object type to target in a query.
 pub struct ObjectFieldTarget {
@@ -139,7 +141,7 @@ pub struct ObjectFieldTarget {
     // or consider merging FieldTarget and RelationshipTarget.
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// The relationship lookup on an OpenDD Object type to target in a query.
 pub struct RelationshipTarget {
@@ -155,7 +157,7 @@ pub struct RelationshipTarget {
     pub offset: Option<usize>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// The command execution to to target in a query.
 pub struct CommandTarget {
@@ -165,7 +167,7 @@ pub struct CommandTarget {
     pub arguments: IndexMap<ArgumentName, Value>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// A value that can be passed for an argument.
 pub enum Value {
@@ -173,7 +175,7 @@ pub enum Value {
     Literal(serde_json::Value),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// A boolean expression value that can be used for model filters or boolean expression arguments.
 pub enum BooleanExpression {
@@ -188,7 +190,7 @@ pub enum BooleanExpression {
     },
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// A single ordering condition composed of an ordering key and ordering direction.
 pub struct OrderByElement {
@@ -196,7 +198,7 @@ pub struct OrderByElement {
     pub direction: OrderByDirection,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// An aggregate function to execute.
 pub enum AggregationFunction {
@@ -206,7 +208,7 @@ pub enum AggregationFunction {
 }
 
 /// An aggregate metric computed over a set of values in whose context this is used.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Aggregate {
     pub function: AggregationFunction,
@@ -214,7 +216,7 @@ pub struct Aggregate {
     pub operand: Option<Operand>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Within the context of an OpenDD object, which specific key to target for filtering / ordering / aggregating.
 pub enum Operand {
@@ -224,7 +226,7 @@ pub enum Operand {
     RelationshipAggregate(RelationshipAggregateOperand),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Operand targeting a particular OpenDD object field or an operand nested within that field.
 pub struct ObjectFieldOperand {
@@ -233,7 +235,7 @@ pub struct ObjectFieldOperand {
     nested: Option<Box<Operand>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Operand targeting a particular relationship or an operand nested within that relationship.
 pub struct RelationshipOperand {
@@ -242,7 +244,7 @@ pub struct RelationshipOperand {
     nested: Option<Box<Operand>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Operand targeting a metric aggregated over related values of an OpenDD object.
 pub struct RelationshipAggregateOperand {

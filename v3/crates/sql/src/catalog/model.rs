@@ -9,7 +9,7 @@ use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved, Qualified};
 use open_dds::arguments::ArgumentName;
-use open_dds::permissions::Role;
+use open_dds::identifier::SubgraphName;
 use open_dds::{
     models::ModelName,
     types::{CustomTypeName, FieldName},
@@ -17,7 +17,7 @@ use open_dds::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::plan::NDCQuery;
+use crate::plan::ModelQuery;
 mod datafusion {
     pub(super) use datafusion::{
         arrow::datatypes::{DataType, Field, Schema, SchemaBuilder, SchemaRef, TimeUnit},
@@ -43,17 +43,6 @@ pub(crate) struct TypePermissionsOfRole {
     pub(crate) permissions: HashMap<Qualified<CustomTypeName>, TypePermission>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct ModelWithPermissions {
-    pub(crate) model: Arc<Model>,
-    // Permisisons for the model. Note that the type permissions will need to be retrieved from the
-    // global context
-    pub(crate) permissions: HashMap<Role, Arc<resolved::SelectPermission>>,
-
-    // The underlying source to execute ndc queries
-    pub source: Option<Arc<metadata_resolve::ModelSource>>,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ArgumentInfo {
     pub argument_type: datafusion::DataType,
@@ -62,7 +51,7 @@ pub struct ArgumentInfo {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub(crate) struct Model {
-    pub subgraph: String,
+    pub subgraph: SubgraphName,
     pub name: ModelName,
 
     pub description: Option<String>,
@@ -80,7 +69,7 @@ pub(crate) struct Model {
     pub data_type: Qualified<CustomTypeName>,
 }
 
-impl ModelWithPermissions {
+impl Model {
     pub fn from_resolved_model(model: &resolved::ModelWithPermissions) -> Self {
         let (schema, columns) = {
             let mut columns = IndexMap::new();
@@ -120,30 +109,14 @@ impl ModelWithPermissions {
             )
         };
 
-        let permissions = model
-            .select_permissions
-            .iter()
-            .map(|(role, select_permission)| (role.clone(), Arc::new(select_permission.clone())))
-            .collect();
-        let model_source = model
-            .model
-            .source
-            .as_ref()
-            .map(|source| Arc::new(source.clone()));
-
-        let model = Model {
-            subgraph: model.model.name.subgraph.to_string(),
+        Model {
+            subgraph: model.model.name.subgraph.clone(),
             name: model.model.name.name.clone(),
             description: model.model.raw.description.clone(),
             arguments: IndexMap::new(),
             schema,
             data_type: model.model.data_type.clone(),
             columns,
-        };
-        ModelWithPermissions {
-            model: model.into(),
-            source: model_source,
-            permissions,
         }
     }
 }
@@ -159,26 +132,14 @@ pub(crate) struct WithSession<T> {
 pub(crate) struct TableValuedFunction {
     /// Metadata about the model
     pub(crate) model: Arc<Model>,
-    pub(crate) source: Arc<resolved::ModelSource>,
     pub(crate) session: Arc<Session>,
-    pub(crate) permission: Arc<resolved::SelectPermission>,
 }
 
 impl TableValuedFunction {
     // TODO: this will be removed when table valued functions are fully supported
     #[allow(dead_code)]
-    pub(crate) fn new(
-        model: Arc<Model>,
-        source: Arc<resolved::ModelSource>,
-        session: Arc<Session>,
-        permission: Arc<resolved::SelectPermission>,
-    ) -> Self {
-        TableValuedFunction {
-            model,
-            source,
-            session,
-            permission,
-        }
+    pub(crate) fn new(model: Arc<Model>, session: Arc<Session>) -> Self {
+        TableValuedFunction { model, session }
     }
 }
 
@@ -189,12 +150,7 @@ impl datafusion::TableFunctionImpl for TableValuedFunction {
         _exprs: &[datafusion::Expr],
     ) -> datafusion::Result<Arc<dyn datafusion::TableProvider>> {
         let arguments = BTreeMap::new();
-        let table = Table::new(
-            self.model.clone(),
-            arguments,
-            self.source.clone(),
-            self.permission.clone(),
-        );
+        let table = Table::new(self.model.clone(), arguments);
         Ok(Arc::new(table) as Arc<dyn datafusion::TableProvider>)
     }
 }
@@ -207,49 +163,28 @@ pub(crate) struct Table {
     pub(crate) model: Arc<Model>,
     /// This will be empty if the model doesn't take any arguments
     pub(crate) arguments: BTreeMap<ArgumentName, serde_json::Value>,
-    pub(crate) source: Arc<resolved::ModelSource>,
-    pub(crate) permission: Arc<resolved::SelectPermission>,
 }
 
 impl Table {
     pub(crate) fn new(
         model: Arc<Model>,
         arguments: BTreeMap<ArgumentName, serde_json::Value>,
-        source: Arc<resolved::ModelSource>,
-        permission: Arc<resolved::SelectPermission>,
     ) -> Self {
-        Table {
-            model,
-            arguments,
-            source,
-            permission,
-        }
+        Table { model, arguments }
     }
-    pub(crate) fn new_no_args(
-        model: Arc<Model>,
-        source: Arc<resolved::ModelSource>,
-        permission: Arc<resolved::SelectPermission>,
-    ) -> Self {
+    pub(crate) fn new_no_args(model: Arc<Model>) -> Self {
         Table {
             model,
             arguments: BTreeMap::new(),
-            source,
-            permission,
         }
     }
     pub(crate) fn to_logical_plan(
         &self,
         projected_schema: datafusion::DFSchemaRef,
     ) -> datafusion::Result<datafusion::LogicalPlan> {
-        let ndc_query_node = NDCQuery::new(
-            self.model.clone(),
-            self.source.clone(),
-            &self.arguments,
-            self.permission.clone(),
-            projected_schema,
-        )?;
+        let model_query_node = ModelQuery::new(&self.model, &self.arguments, projected_schema)?;
         let logical_plan = datafusion::LogicalPlan::Extension(datafusion::Extension {
-            node: Arc::new(ndc_query_node),
+            node: Arc::new(model_query_node),
         });
         Ok(logical_plan)
     }

@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 mod datafusion {
-    pub(super) use datafusion::error::{DataFusionError, Result};
+    pub(super) use datafusion::error::Result;
     pub(super) use datafusion::{catalog::schema::SchemaProvider, datasource::TableProvider};
 }
 
@@ -15,7 +15,7 @@ use super::model;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub(crate) struct Subgraph {
-    pub tables: IndexMap<String, Arc<catalog::model::ModelWithPermissions>>,
+    pub tables: IndexMap<String, Arc<catalog::model::Model>>,
 }
 
 #[async_trait]
@@ -33,23 +33,7 @@ impl datafusion::SchemaProvider for catalog::model::WithSession<Subgraph> {
         name: &str,
     ) -> datafusion::Result<Option<Arc<dyn datafusion::TableProvider>>> {
         if let Some(model) = self.value.tables.get(name) {
-            let permission = model.permissions.get(&self.session.role).ok_or_else(|| {
-                datafusion::DataFusionError::Plan(format!(
-                    "role {} does not have select permission for model {}",
-                    self.session.role, model.model.name
-                ))
-            })?;
-            let model_source = model.source.as_ref().ok_or_else(|| {
-                datafusion::DataFusionError::Plan(format!(
-                    "model source should be configured for {}",
-                    model.model.name
-                ))
-            })?;
-            let table = model::Table::new_no_args(
-                model.model.clone(),
-                model_source.clone(),
-                permission.clone(),
-            );
+            let table = model::Table::new_no_args(model.clone());
             Ok(Some(Arc::new(table) as Arc<dyn datafusion::TableProvider>))
         } else {
             Ok(None)

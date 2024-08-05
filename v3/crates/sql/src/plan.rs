@@ -16,11 +16,16 @@ use datafusion::{
 };
 use futures::TryFutureExt;
 use indexmap::IndexMap;
-use metadata_resolve::{self as resolved};
-use open_dds::identifier::Identifier;
 use open_dds::{
     arguments::ArgumentName,
+    query::Alias,
     types::{DataConnectorArgumentName, FieldName},
+};
+use open_dds::{
+    identifier::Identifier,
+    query::{
+        ModelSelection, ModelTarget, ObjectFieldSelection, ObjectFieldTarget, ObjectSubSelection,
+    },
 };
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
@@ -59,53 +64,30 @@ impl TraceableError for ExecutionPlanError {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct NDCQuery {
-    pub(crate) model: Arc<crate::catalog::model::Model>,
-    pub(crate) model_source: Arc<resolved::ModelSource>,
-    pub(crate) arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
-    pub(crate) permission: Arc<resolved::SelectPermission>,
-    pub(crate) fields: IndexMap<NdcFieldAlias, DataConnectorColumnName>,
+pub(crate) struct ModelQuery {
+    pub(crate) model_selection: ModelSelection,
     pub(crate) schema: DFSchemaRef,
 }
 
-// TODO: fix this
-impl Hash for NDCQuery {
+impl Hash for ModelQuery {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.model_source.data_connector.name.hash(state);
-        self.model_source.collection.hash(state);
-        format!("{:#?}", self.fields).hash(state);
+        self.model_selection.target.subgraph.hash(state);
+        self.model_selection.target.model_name.hash(state);
+        // Implementing a full hash function is hard because
+        // you want to ignore the order of keys in hash maps.
+        // So, for now, we only hash some basic information.
     }
 }
 
-impl Eq for NDCQuery {}
+impl Eq for ModelQuery {}
 
-impl NDCQuery {
+impl ModelQuery {
     pub(crate) fn new(
-        model: Arc<crate::catalog::model::Model>,
-        model_source: Arc<resolved::ModelSource>,
-        // TODO: wip: arguments have to be converted to ndc arguments using argument mapping
-        _arguments: &BTreeMap<ArgumentName, serde_json::Value>,
-        permission: Arc<resolved::SelectPermission>,
+        model: &crate::catalog::model::Model,
+        arguments: &BTreeMap<ArgumentName, serde_json::Value>,
         projected_schema: DFSchemaRef,
     ) -> datafusion::error::Result<Self> {
-        let mut ndc_fields = IndexMap::new();
-        let base_type_fields = {
-            let base_type_mapping = model_source
-                .type_mappings
-                .get(&model.data_type)
-                .ok_or_else(|| {
-                    DataFusionError::Internal(format!(
-                        "couldn't fetch type_mapping of type {} for model {}",
-                        model.data_type, model.name
-                    ))
-                })?;
-            match base_type_mapping {
-                resolved::TypeMapping::Object {
-                    ndc_object_type_name: _,
-                    field_mappings,
-                } => field_mappings,
-            }
-        };
+        let mut field_selection = IndexMap::new();
         for field in projected_schema.fields() {
             let field_name = {
                 let field_name = Identifier::new(field.name().clone()).map_err(|e| {
@@ -117,62 +99,57 @@ impl NDCQuery {
                 })?;
                 FieldName::new(field_name)
             };
-            let ndc_field = {
-                base_type_fields
-                    .get(&field_name)
-                    .ok_or_else(|| {
-                        DataFusionError::Internal(format!(
-                            "couldn't fetch field mapping of field {} in type {} for model {}",
-                            field_name, model.data_type, model.name
-                        ))
-                    })
-                    .map(|field_mapping| field_mapping.column.clone())
-            }?;
-            ndc_fields.insert(
-                NdcFieldAlias::from(field.name().as_str()),
-                DataConnectorColumnName::from(ndc_field.as_str()),
+            field_selection.insert(
+                Alias::new(field_name.as_ref().clone()),
+                ObjectSubSelection::Field(ObjectFieldSelection {
+                    target: ObjectFieldTarget {
+                        field_name,
+                        arguments: IndexMap::new(),
+                    },
+                    selection: None,
+                }),
             );
         }
 
-        let ndc_query_node = NDCQuery {
-            model,
-            model_source,
-            // TODO, use source mapping to construct this
-            arguments: BTreeMap::new(),
-            fields: ndc_fields,
-            schema: projected_schema,
-            permission,
-        };
-        Ok(ndc_query_node)
-    }
-
-    pub(crate) fn project(
-        mut self,
-        schema: DFSchemaRef,
-        projection: &[String],
-    ) -> datafusion::error::Result<Self> {
-        let new_fields = projection
-            .iter()
-            .map(|projected_field| {
-                self.fields
-                    .swap_remove(projected_field.as_str())
-                    .map(|field| (NdcFieldAlias::from(projected_field.as_str()), field))
-                    .ok_or_else(|| {
-                        DataFusionError::Internal(
-                            "failed to lookup projectd field in ndcscan".to_string(),
+        let model_selection = ModelSelection {
+            target: ModelTarget {
+                subgraph: model.subgraph.clone(),
+                model_name: model.name.clone(),
+                arguments: arguments
+                    .iter()
+                    .map(|(argument_name, value)| {
+                        (
+                            argument_name.clone(),
+                            open_dds::query::Value::Literal(value.clone()),
                         )
                     })
-            })
-            .collect::<Result<_, DataFusionError>>()?;
-        self.fields = new_fields;
+                    .collect(),
+                filter: None,
+                order_by: vec![],
+                limit: None,
+                offset: None,
+            },
+            selection: field_selection,
+        };
+        let model_query_node = ModelQuery {
+            model_selection,
+            schema: projected_schema,
+        };
+        Ok(model_query_node)
+    }
+
+    pub(crate) fn project(mut self, schema: DFSchemaRef, projection: &[String]) -> Self {
+        self.model_selection
+            .selection
+            .retain(|k, _v| projection.iter().any(|column| column == k.as_str()));
         self.schema = schema;
-        Ok(self)
+        self
     }
 }
 
-impl UserDefinedLogicalNodeCore for NDCQuery {
+impl UserDefinedLogicalNodeCore for ModelQuery {
     fn name(&self) -> &str {
-        "NDCQuery"
+        "ModelQuery"
     }
 
     fn inputs(&self) -> Vec<&LogicalPlan> {
@@ -192,7 +169,8 @@ impl UserDefinedLogicalNodeCore for NDCQuery {
     fn fmt_for_explain(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let projection = format!(
             ", projection=[{}]",
-            self.fields
+            self.model_selection
+                .selection
                 .keys()
                 .map(std::string::ToString::to_string)
                 .collect::<Vec<_>>()
@@ -200,10 +178,8 @@ impl UserDefinedLogicalNodeCore for NDCQuery {
         );
         write!(
             f,
-            "NDCQuery: collection={}:{}:{}{projection}",
-            self.model_source.data_connector.name.subgraph,
-            self.model_source.data_connector.name.name,
-            self.model_source.collection,
+            "ModelQuery: model={}:{}{projection}",
+            self.model_selection.target.subgraph, self.model_selection.target.model_name,
         )
     }
 

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 #[derive(Debug, thiserror::Error)]
 pub enum BuildError {
     #[error("invalid metadata: {0}")]
@@ -20,7 +22,7 @@ pub fn build_schema(
     let (resolved_metadata, warnings) =
         metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
     let gds = schema::GDS {
-        metadata: resolved_metadata,
+        metadata: Arc::new(resolved_metadata),
     };
     Ok((gds.build_schema()?, warnings))
 }

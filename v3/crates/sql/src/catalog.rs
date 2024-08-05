@@ -1,10 +1,9 @@
-use std::{any::Any, collections::HashMap, sync::Arc};
+use std::{any::Any, sync::Arc};
 
 use ::datafusion::execution::{context::SessionState, runtime_env::RuntimeEnv};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
-use open_dds::permissions::Role;
 use serde::{Deserialize, Serialize};
 
 mod datafusion {
@@ -22,15 +21,15 @@ pub mod subgraph;
 /// The context in which to compile and execute SQL queries.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Catalog {
+    pub(crate) metadata: Arc<resolved::Metadata>,
     pub(crate) subgraphs: IndexMap<String, Arc<subgraph::Subgraph>>,
-    pub(crate) type_permissions: HashMap<Role, Arc<model::TypePermissionsOfRole>>,
     pub(crate) introspection: Arc<introspection::IntrospectionSchemaProvider>,
     pub(crate) default_schema: Option<String>,
 }
 
 impl Catalog {
     /// Derive a SQL Context from resolved Open DDS metadata.
-    pub fn from_metadata(metadata: &resolved::Metadata) -> Self {
+    pub fn from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
         let mut subgraphs = IndexMap::new();
         for (model_name, model) in &metadata.models {
             let schema_name = &model_name.subgraph;
@@ -43,29 +42,12 @@ impl Catalog {
                     });
             subgraph.tables.insert(
                 table_name.to_string(),
-                Arc::new(model::ModelWithPermissions::from_resolved_model(model)),
+                Arc::new(model::Model::from_resolved_model(model)),
             );
         }
 
-        let mut type_permissions = HashMap::new();
-        for (type_name, object_type) in &metadata.object_types {
-            for (role, output_permission) in &object_type.type_output_permissions {
-                let output_permission = model::TypePermission {
-                    output: output_permission.clone(),
-                };
-                let role_permissions =
-                    type_permissions
-                        .entry(role)
-                        .or_insert_with(|| model::TypePermissionsOfRole {
-                            permissions: HashMap::new(),
-                        });
-                role_permissions
-                    .permissions
-                    .insert(type_name.clone(), output_permission);
-            }
-        }
         let introspection = introspection::IntrospectionSchemaProvider::new(
-            &introspection::Introspection::from_metadata(metadata, &subgraphs),
+            &introspection::Introspection::from_metadata(&metadata, &subgraphs),
         );
 
         let default_schema = if subgraphs.len() == 1 {
@@ -74,13 +56,10 @@ impl Catalog {
             None
         };
         Catalog {
+            metadata,
             subgraphs: subgraphs
                 .into_iter()
                 .map(|(k, v)| (k, Arc::new(v)))
-                .collect(),
-            type_permissions: type_permissions
-                .into_iter()
-                .map(|(role, role_permissions)| (role.clone(), Arc::new(role_permissions)))
                 .collect(),
             introspection: Arc::new(introspection),
             default_schema,
@@ -160,7 +139,7 @@ impl Catalog {
                 .with_query_planner(query_planner)
                 .add_optimizer_rule(Arc::new(super::execute::optimizer::ReplaceTableScan {}))
                 .add_optimizer_rule(Arc::new(
-                    super::execute::optimizer::NDCPushDownProjection {},
+                    super::execute::optimizer::OpenDdPushDownProjection {},
                 ));
         let session_context = datafusion::SessionContext::new_with_state(session_state);
         session_context.register_catalog(

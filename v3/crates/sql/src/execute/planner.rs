@@ -1,7 +1,10 @@
 use hasura_authn_core::Session;
+use indexmap::IndexMap;
+use ir::NdcFieldAlias;
 use std::{collections::BTreeMap, sync::Arc};
 
 use datafusion::{
+    common::{internal_err, plan_err},
     error::{DataFusionError, Result},
     execution::context::{QueryPlanner, SessionState},
     logical_expr::{LogicalPlan, UserDefinedLogicalNode},
@@ -10,8 +13,7 @@ use datafusion::{
 };
 
 use metadata_resolve::FilterPermission;
-use open_dds::identifier::Identifier;
-use open_dds::types::FieldName;
+use open_dds::query::ObjectSubSelection;
 
 use crate::plan::NDCPushDown;
 
@@ -63,59 +65,114 @@ impl ExtensionPlanner for NDCPushDownPlanner {
         physical_inputs: &[Arc<dyn ExecutionPlan>],
         _session_state: &SessionState,
     ) -> Result<Option<Arc<dyn ExecutionPlan>>> {
-        if let Some(ndc_node) = node.as_any().downcast_ref::<crate::plan::NDCQuery>() {
+        if let Some(model_query) = node.as_any().downcast_ref::<crate::plan::ModelQuery>() {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
-            let type_permissions = self
+
+            let model_target = &model_query.model_selection.target;
+            let qualified_model_name = metadata_resolve::Qualified::new(
+                model_target.subgraph.clone(),
+                model_target.model_name.clone(),
+            );
+
+            let model = self
                 .catalog
-                .type_permissions
+                .metadata
+                .models
+                .get(&qualified_model_name)
+                .ok_or_else(|| {
+                    DataFusionError::Internal(format!(
+                        "model {qualified_model_name} not found in metadata"
+                    ))
+                })?;
+
+            let model_source = model.model.source.as_ref().ok_or_else(|| {
+                DataFusionError::Internal(format!("model {qualified_model_name} has no source"))
+            })?;
+
+            let metadata_resolve::TypeMapping::Object { field_mappings, .. } = model_source
+                .type_mappings
+                .get(&model.model.data_type)
+                .ok_or_else(|| {
+                    DataFusionError::Internal(format!(
+                        "couldn't fetch type_mapping of type {} for model {}",
+                        model.model.data_type, qualified_model_name
+                    ))
+                })?;
+
+            let model_object_type = self
+                .catalog
+                .metadata
+                .object_types
+                .get(&model.model.data_type)
+                .ok_or_else(|| {
+                    DataFusionError::Internal(format!(
+                        "object type {} not found in metadata",
+                        model.model.data_type
+                    ))
+                })?;
+
+            let type_permissions = model_object_type
+                .type_output_permissions
                 .get(&self.session.role)
                 .ok_or_else(|| {
                     DataFusionError::Plan(format!(
                         "role {} does not have permission to select any fields of model {}",
-                        self.session.role, ndc_node.model.name
+                        self.session.role, qualified_model_name
                     ))
                 })?;
-            let base_type_allowed_fields = &type_permissions
-                .permissions
-                .get(&ndc_node.model.data_type)
-                .ok_or_else(|| {
-                    DataFusionError::Plan(format!(
-                        "role {} has permission to select model {} but does not have permission \
-                            to select fields of the model's underlying type {}",
-                        self.session.role, ndc_node.model.name, ndc_node.model.data_type
-                    ))
-                })?
-                .output
-                .allowed_fields;
-            for (field_name, _field) in &ndc_node.fields {
-                let field_name = {
-                    let field_name = Identifier::new(field_name.as_str()).map_err(|e| {
+
+            let mut ndc_fields = IndexMap::new();
+
+            for (field_alias, object_sub_selection) in &model_query.model_selection.selection {
+                let ObjectSubSelection::Field(field_selection) = object_sub_selection else {
+                    return internal_err!(
+                        "only normal field selections are supported in NDCPushDownPlanner."
+                    );
+                };
+                if !type_permissions
+                    .allowed_fields
+                    .contains(&field_selection.target.field_name)
+                {
+                    return plan_err!("role {} does not have permission to select the field {} from type {} of model {}",
+                            self.session.role, field_selection.target.field_name, model.model.data_type, qualified_model_name);
+                }
+
+                let ndc_column = field_mappings
+                    .get(&field_selection.target.field_name)
+                    .map(|field_mapping| field_mapping.column.clone())
+                    .ok_or_else(|| {
                         DataFusionError::Internal(format!(
-                            "field name conversion failed {field_name}: {e}"
+                            "couldn't fetch field mapping of field {} in type {} for model {}",
+                            field_selection.target.field_name,
+                            model.model.data_type,
+                            qualified_model_name
                         ))
                     })?;
-                    FieldName::new(field_name)
-                };
-                if base_type_allowed_fields.contains(&field_name) {
-                    Ok(())
-                } else {
-                    Err(DataFusionError::Plan(format!(
-                            "role {} does not have permission to select the field {} from type {} of model {}",
-                            self.session.role, field_name, ndc_node.model.data_type, ndc_node.model.name
-                        )))
-                }?;
+
+                ndc_fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_column);
             }
 
-            let mut usage_counts = ir::UsagesCounts::default();
-            let mut relationships = BTreeMap::new();
+            let model_select_permission = model
+                .select_permissions
+                .get(&self.session.role)
+                .ok_or_else(|| {
+                    DataFusionError::Plan(format!(
+                        "role {} does not have select permission for model {}",
+                        self.session.role, qualified_model_name
+                    ))
+                })?;
 
-            let permission_filter = match &ndc_node.permission.filter {
+            let mut usage_counts = ir::UsagesCounts::default();
+            let mut relationships: BTreeMap<ir::NdcRelationshipName, execute::plan::Relationship> =
+                BTreeMap::new();
+
+            let permission_filter = match &model_select_permission.filter {
                 FilterPermission::AllowAll => Ok::<_, DataFusionError>(None),
                 FilterPermission::Filter(filter) => {
                     let filter_ir = ir::process_model_predicate(
-                        &ndc_node.model_source.data_connector,
-                        &ndc_node.model_source.type_mappings,
+                        &model_source.data_connector,
+                        &model_source.type_mappings,
                         filter,
                         &self.session.variables,
                         &mut usage_counts,
@@ -148,17 +205,27 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                 }
             }?;
 
-            // ndc_node.filter = permission_filter;
-            // ndc_node.collection_relationships = relationships;
+            let mut ndc_arguments = BTreeMap::new();
+            for (argument_name, argument_value) in &model_query.model_selection.target.arguments {
+                let ndc_argument_name = model_source.argument_mappings.get(argument_name).ok_or_else(|| DataFusionError::Internal(format!("couldn't fetch argument mapping for argument {argument_name} of model {qualified_model_name}")))?;
+                let ndc_argument_value = match argument_value {
+                    open_dds::query::Value::BooleanExpression(_) => {
+                        return internal_err!("unexpected boolean expression as value for argument {argument_name} of model {qualified_model_name}");
+                    }
+                    open_dds::query::Value::Literal(value) => value,
+                };
+                ndc_arguments.insert(ndc_argument_name.clone(), ndc_argument_value.clone());
+            }
+
             let ndc_pushdown = NDCPushDown::new(
                 self.http_context.clone(),
-                ndc_node.schema.inner().clone(),
-                ndc_node.model_source.collection.clone(),
-                ndc_node.arguments.clone(),
-                ndc_node.fields.clone(),
+                model_query.schema.inner().clone(),
+                model_source.collection.clone(),
+                ndc_arguments,
+                ndc_fields,
                 permission_filter,
                 relationships,
-                Arc::new(ndc_node.model_source.data_connector.clone()),
+                Arc::new(model_source.data_connector.clone()),
             );
             Ok(Some(Arc::new(ndc_pushdown)))
         } else {

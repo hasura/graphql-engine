@@ -767,6 +767,7 @@ fn build_state(
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
     let (resolved_metadata, warnings) =
         metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
+    let resolved_metadata = Arc::new(resolved_metadata);
 
     print_warnings(auth_warnings);
     print_warnings(warnings);
@@ -775,7 +776,7 @@ fn build_state(
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
-    let sql_context = sql::catalog::Catalog::from_metadata(&resolved_metadata);
+    let sql_context = sql::catalog::Catalog::from_metadata(resolved_metadata.clone());
     let schema = schema::GDS {
         metadata: resolved_metadata,
     }

@@ -15,6 +15,7 @@ mod relay;
 mod types;
 
 use std::str::FromStr;
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
@@ -82,7 +83,7 @@ impl lang_graphql::schema::NamespacedGetter<GDS> for GDSNamespaceGetterAgnostic 
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct GDS {
-    pub metadata: metadata_resolve::Metadata,
+    pub metadata: Arc<metadata_resolve::Metadata>,
 }
 
 impl GDS {
@@ -93,7 +94,7 @@ impl GDS {
         let (resolved_metadata, _) =
             metadata_resolve::resolve(user_metadata, metadata_resolve_configuration)?;
         Ok(GDS {
-            metadata: resolved_metadata,
+            metadata: Arc::new(resolved_metadata),
         })
     }
 
@@ -103,7 +104,7 @@ impl GDS {
             metadata_resolve::configuration::Configuration::default(),
         )?;
         Ok(GDS {
-            metadata: resolved_metadata,
+            metadata: Arc::new(resolved_metadata),
         })
     }
 

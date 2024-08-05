@@ -50,9 +50,9 @@ impl Introspection {
                 table_metadata_rows.push(TableRow::new(
                     schema_name.to_string(),
                     table_name.to_string(),
-                    table.model.description.clone(),
+                    table.description.clone(),
                 ));
-                for (column_name, column_description) in &table.model.columns {
+                for (column_name, column_description) in &table.columns {
                     column_metadata_rows.push(ColumnRow {
                         schema_name: schema_name.to_string(),
                         table_name: table_name.clone(),
@@ -65,7 +65,7 @@ impl Introspection {
                 // 1. Need to check if the target_model is part of subgraphs
                 // 2. Need to also check for array relationships in case the corresponding
                 //    object relationship isn't present
-                if let Some(object_type) = metadata.object_types.get(&table.model.data_type) {
+                if let Some(object_type) = metadata.object_types.get(&table.data_type) {
                     for relationship in object_type.relationship_fields.values() {
                         if let metadata_resolve::RelationshipTarget::Model(
                             ModelRelationshipTarget {

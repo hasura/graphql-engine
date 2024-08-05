@@ -7,19 +7,19 @@ use datafusion::{
     optimizer::{optimizer::ApplyOrder, OptimizerConfig, OptimizerRule},
 };
 
-pub(crate) struct NDCPushDownProjection {}
+pub(crate) struct OpenDdPushDownProjection {}
 
-impl OptimizerRule for NDCPushDownProjection {
+impl OptimizerRule for OpenDdPushDownProjection {
     fn try_optimize(
         &self,
         _plan: &LogicalPlan,
         _config: &dyn OptimizerConfig,
     ) -> Result<Option<LogicalPlan>> {
-        internal_err!("Should have called NDCPushDownProjection::rewrite")
+        internal_err!("Should have called OpenDdPushDownProjection::rewrite")
     }
 
     fn name(&self) -> &str {
-        "ndc_pushdown_projection"
+        "open_dd_pushdown_projection"
     }
     fn apply_order(&self) -> Option<ApplyOrder> {
         Some(ApplyOrder::BottomUp)
@@ -34,22 +34,23 @@ impl OptimizerRule for NDCPushDownProjection {
         plan: LogicalPlan,
         _config: &dyn OptimizerConfig,
     ) -> Result<Transformed<LogicalPlan>> {
-        if let Some((projections, projected_schema, ndc_query)) = {
+        if let Some((projections, projected_schema, model_query)) = {
             match plan {
                 LogicalPlan::Projection(ref projection) => match projection.input.as_ref() {
                     LogicalPlan::Extension(Extension { node }) => node
                         .as_ref()
                         .as_any()
-                        .downcast_ref::<crate::plan::NDCQuery>()
-                        .map(|ndc_query| (&projection.expr, &projection.schema, ndc_query.clone())),
+                        .downcast_ref::<crate::plan::ModelQuery>()
+                        .map(|model_query| {
+                            (&projection.expr, &projection.schema, model_query.clone())
+                        }),
                     _ => None,
                 },
                 _ => None,
             }
         } {
             let projected_columns = projections_to_columns(projections)?;
-            let projected_query =
-                ndc_query.project(projected_schema.clone(), &projected_columns)?;
+            let projected_query = model_query.project(projected_schema.clone(), &projected_columns);
             let plan = LogicalPlan::Extension(Extension {
                 node: Arc::new(projected_query),
             });
@@ -65,7 +66,7 @@ fn projections_to_columns(projections: &[Expr]) -> Result<Vec<String>> {
         .iter()
         .map(|expr| match expr {
             Expr::Column(column) => Ok(column.name.clone()),
-            _ => internal_err!("non-column found in projection of ndcscan: {}", expr),
+            _ => internal_err!("non-column found in projection of OpenDD query: {}", expr),
         })
         .collect()
 }
