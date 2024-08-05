@@ -508,7 +508,7 @@ fn make_aggregates(
                             Some(nested_field_path)
                         },
                         function: ndc_models_v01::AggregateFunctionName::from(
-                            function_name.0.as_str(),
+                            function_name.as_str(),
                         ),
                     }
                 }

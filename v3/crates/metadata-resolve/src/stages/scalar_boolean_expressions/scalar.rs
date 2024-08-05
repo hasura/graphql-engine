@@ -4,6 +4,7 @@ use crate::helpers::types::unwrap_qualified_type_name;
 use crate::stages::{data_connectors, object_types, scalar_types};
 use crate::types::subgraph::mk_qualified_type_reference;
 use crate::{Qualified, QualifiedTypeName};
+use open_dds::identifier::SubgraphName;
 use open_dds::{
     boolean_expression::{
         BooleanExpressionIsNull, BooleanExpressionScalarOperand,
@@ -18,7 +19,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     boolean_expression_type_name: &Qualified<CustomTypeName>,
     scalar_boolean_expression_operand: &BooleanExpressionScalarOperand,
     is_null: &BooleanExpressionIsNull,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &object_types::ObjectTypesWithTypeMappings,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -34,7 +35,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
 
         // scope the data connector to the current subgraph
         let qualified_data_connector_name = Qualified::new(
-            subgraph.to_string(),
+            subgraph.clone(),
             data_connector_operator_mapping.data_connector_name.clone(),
         );
 

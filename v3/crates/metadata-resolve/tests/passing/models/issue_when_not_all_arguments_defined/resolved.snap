@@ -7,7 +7,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
     Metadata {
         object_types: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "RowType",
@@ -46,7 +48,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                 type_mappings: DataConnectorTypeMappingsForObject(
                     {
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "myconnector",
@@ -88,7 +92,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
         },
         scalar_types: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "Headers",
@@ -109,7 +115,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
         },
         models: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: ModelName(
                     Identifier(
                         "collection_with_args",
@@ -118,7 +126,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
             }: ModelWithPermissions {
                 model: Model {
                     name: Qualified {
-                        subgraph: "default",
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
                         name: ModelName(
                             Identifier(
                                 "collection_with_args",
@@ -126,7 +136,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                         ),
                     },
                     data_type: Qualified {
-                        subgraph: "default",
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "RowType",
@@ -191,7 +203,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                         ModelSource {
                             data_connector: DataConnectorLink {
                                 name: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: DataConnectorName(
                                         Identifier(
                                             "myconnector",
@@ -260,7 +274,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                             ),
                             type_mappings: {
                                 Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "RowType",
@@ -411,7 +427,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                     order_by_expression: Some(
                         ModelOrderByExpression {
                             data_connector_name: Qualified {
-                                subgraph: "default",
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
                                 name: DataConnectorName(
                                     Identifier(
                                         "myconnector",
@@ -498,7 +516,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
         ModelIssue(
             FunctionArgumentMappingIssue {
                 data_connector_name: Qualified {
-                    subgraph: "default",
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
                     name: DataConnectorName(
                         Identifier(
                             "myconnector",
@@ -506,7 +526,9 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                     ),
                 },
                 model_name: Qualified {
-                    subgraph: "default",
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
                     name: ModelName(
                         Identifier(
                             "collection_with_args",

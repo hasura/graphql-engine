@@ -26,7 +26,7 @@ pub fn resolve<'a>(
     } in &metadata_accessor.data_connectors
     {
         let qualified_data_connector_name =
-            Qualified::new(subgraph.to_string(), data_connector.name.clone());
+            Qualified::new(subgraph.clone(), data_connector.name.clone());
 
         let (data_connector_context, connector_issues) =
             types::DataConnectorContext::new(data_connector, &configuration.unstable_features)

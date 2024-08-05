@@ -1,6 +1,7 @@
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 
+use open_dds::identifier::SubgraphName;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 
 use crate::stages::{
@@ -52,7 +53,7 @@ pub fn resolve_command_permissions(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    subgraph: &str,
+    subgraph: &SubgraphName,
 ) -> Result<BTreeMap<Role, CommandPermission>, Error> {
     let mut validated_permissions = BTreeMap::new();
     for command_permission in &permissions.permissions {

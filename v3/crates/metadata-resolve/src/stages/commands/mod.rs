@@ -58,7 +58,7 @@ pub fn resolve(
             resolved_command.source = Some(command_source);
             issues.extend(command_source_issues);
         }
-        let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
+        let qualified_command_name = Qualified::new(subgraph.clone(), command.name.clone());
         if commands
             .insert(qualified_command_name.clone(), resolved_command)
             .is_some()

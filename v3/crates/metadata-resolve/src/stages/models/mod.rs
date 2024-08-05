@@ -1,3 +1,4 @@
+use open_dds::identifier::SubgraphName;
 pub use types::{Model, ModelRaw, ModelSource, ModelsIssue, ModelsOutput, NDCFieldSourceMapping};
 mod aggregation;
 mod helpers;
@@ -65,7 +66,7 @@ pub fn resolve(
         object: model,
     } in &metadata_accessor.models
     {
-        let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
+        let qualified_model_name = Qualified::new(subgraph.clone(), model.name.clone());
         let mut resolved_model = resolve_model(
             subgraph,
             model,
@@ -114,7 +115,7 @@ pub fn resolve(
             .as_ref()
             .map(|aggregate_expression_name| {
                 aggregation::resolve_aggregate_expression(
-                    &Qualified::new(subgraph.to_string(), aggregate_expression_name.clone()),
+                    &Qualified::new(subgraph.clone(), aggregate_expression_name.clone()),
                     &qualified_model_name,
                     &resolved_model.data_type,
                     &resolved_model.source,
@@ -144,7 +145,7 @@ pub fn resolve(
 }
 
 fn resolve_model(
-    subgraph: &str,
+    subgraph: &SubgraphName,
     model: &ModelV1,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     object_boolean_expression_types: &BTreeMap<
@@ -158,9 +159,8 @@ fn resolve_model(
         Option<Qualified<ModelName>>,
     >,
 ) -> Result<Model, Error> {
-    let qualified_object_type_name =
-        Qualified::new(subgraph.to_string(), model.object_type.clone());
-    let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
+    let qualified_object_type_name = Qualified::new(subgraph.clone(), model.object_type.clone());
+    let qualified_model_name = Qualified::new(subgraph.clone(), model.name.clone());
     let object_type_representation = source::get_model_object_type_representation(
         object_types,
         &qualified_object_type_name,
@@ -294,7 +294,7 @@ fn resolve_model(
         filter_expression_type: model
             .filter_expression_type
             .as_ref()
-            .map(|filter_name| Qualified::new(subgraph.to_string(), filter_name.clone())),
+            .map(|filter_name| Qualified::new(subgraph.clone(), filter_name.clone())),
         graphql: model.graphql.clone(),
     };
 

@@ -12,7 +12,7 @@ use super::types::CommandsIssue;
 pub use super::types::{Command, CommandSource};
 use open_dds::commands::{self, DataConnectorCommand};
 
-use open_dds::identifier::SubgraphIdentifier;
+use open_dds::identifier::SubgraphName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName};
 
 use std::collections::BTreeMap;
@@ -27,7 +27,7 @@ struct CommandSourceResponse {
 pub fn resolve_command_source(
     command_source: &commands::CommandSource,
     command: &Command,
-    subgraph: &SubgraphIdentifier,
+    subgraph: &SubgraphName,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -44,10 +44,8 @@ pub fn resolve_command_source(
     }
 
     // check if data_connector for the command exists
-    let qualified_data_connector_name = Qualified::new(
-        subgraph.to_string(),
-        command_source.data_connector_name.clone(),
-    );
+    let qualified_data_connector_name =
+        Qualified::new(subgraph.clone(), command_source.data_connector_name.clone());
 
     let data_connector_context = data_connectors
         .0

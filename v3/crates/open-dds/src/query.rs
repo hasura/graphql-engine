@@ -6,7 +6,7 @@ use crate::{
     aggregates::AggregationFunctionName,
     arguments::ArgumentName,
     commands::CommandName,
-    identifier::{Identifier, SubgraphIdentifier},
+    identifier::{Identifier, SubgraphName},
     models::{ModelName, OrderByDirection},
     relationships::RelationshipName,
     str_newtype,
@@ -119,7 +119,7 @@ pub struct RelationshipAggregateSelection {
 #[serde(rename_all = "camelCase")]
 /// The model lookup to target in a query.
 pub struct ModelTarget {
-    pub subgraph: SubgraphIdentifier,
+    pub subgraph: SubgraphName,
     pub model_name: ModelName,
     pub filter: Option<BooleanExpression>,
     #[serde(default)]
@@ -159,7 +159,7 @@ pub struct RelationshipTarget {
 #[serde(rename_all = "camelCase")]
 /// The command execution to to target in a query.
 pub struct CommandTarget {
-    pub subgraph: SubgraphIdentifier,
+    pub subgraph: SubgraphName,
     pub command_name: CommandName,
     #[serde(default)]
     pub arguments: IndexMap<ArgumentName, Value>,

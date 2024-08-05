@@ -44,7 +44,7 @@ pub fn resolve(
     } in &metadata_accessor.boolean_expression_types
     {
         raw_boolean_expression_types.insert(
-            Qualified::new(subgraph.to_string(), boolean_expression_type.name.clone()),
+            Qualified::new(subgraph.clone(), boolean_expression_type.name.clone()),
             (subgraph, boolean_expression_type),
         );
     }

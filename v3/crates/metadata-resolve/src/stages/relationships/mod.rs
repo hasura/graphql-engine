@@ -6,6 +6,7 @@ use indexmap::IndexMap;
 
 use lang_graphql::ast::common::{self as ast};
 use open_dds::aggregates::AggregateExpressionName;
+use open_dds::identifier::SubgraphName;
 use open_dds::relationships::{
     self, FieldAccess, RelationshipName, RelationshipType, RelationshipV1,
 };
@@ -77,7 +78,7 @@ pub fn resolve(
     } in &metadata_accessor.relationships
     {
         let qualified_relationship_source_type_name =
-            Qualified::new(subgraph.to_string(), relationship.source_type.clone());
+            Qualified::new(subgraph.clone(), relationship.source_type.clone());
         let object_representation = object_types_with_relationships
             .get_mut(&qualified_relationship_source_type_name)
             .ok_or_else(|| Error::RelationshipDefinedOnUnknownType {
@@ -467,7 +468,7 @@ fn resolve_aggregate_relationship_field(
             // Validate its usage with the relationship's target model
             let aggregate_expression_name = models::resolve_aggregate_expression(
                 &Qualified::new(
-                    resolved_target_model.name.subgraph.to_string(),
+                    resolved_target_model.name.subgraph.clone(),
                     aggregate.aggregate_expression.clone(),
                 ),
                 &resolved_target_model.name,
@@ -530,7 +531,7 @@ fn resolve_aggregate_relationship_field(
 
 fn resolve_model_relationship_fields(
     target_model: &relationships::ModelRelationshipTarget,
-    subgraph: &open_dds::identifier::SubgraphIdentifier,
+    subgraph: &open_dds::identifier::SubgraphName,
     models: &IndexMap<Qualified<ModelName>, crate::Model>,
     data_connectors: &data_connectors::DataConnectors,
     source_type_name: &Qualified<CustomTypeName>,
@@ -548,7 +549,7 @@ fn resolve_model_relationship_fields(
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<Vec<RelationshipField>, Error> {
     let qualified_target_model_name = Qualified::new(
-        target_model.subgraph().unwrap_or(subgraph).to_string(),
+        target_model.subgraph().unwrap_or(subgraph.clone()),
         target_model.name.clone(),
     );
     let resolved_target_model = models.get(&qualified_target_model_name).ok_or_else(|| {
@@ -623,7 +624,7 @@ pub fn make_relationship_field_name(
 
 fn resolve_command_relationship_field(
     target_command: &relationships::CommandRelationshipTarget,
-    subgraph: &open_dds::identifier::SubgraphIdentifier,
+    subgraph: &open_dds::identifier::SubgraphName,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connectors::DataConnectors,
     source_type_name: &Qualified<CustomTypeName>,
@@ -631,7 +632,7 @@ fn resolve_command_relationship_field(
     source_type: &object_types::ObjectTypeRepresentation,
 ) -> Result<RelationshipField, Error> {
     let qualified_target_command_name = Qualified::new(
-        target_command.subgraph().unwrap_or(subgraph).to_string(),
+        target_command.subgraph().unwrap_or(subgraph.clone()),
         target_command.name.clone(),
     );
     let resolved_target_command =
@@ -683,8 +684,8 @@ fn resolve_command_relationship_field(
 fn resolve_relationships(
     configuration: Configuration,
     relationship: &RelationshipV1,
-    subgraph: &open_dds::identifier::SubgraphIdentifier,
-    known_subgraphs: &HashSet<open_dds::identifier::SubgraphIdentifier>,
+    subgraph: &open_dds::identifier::SubgraphName,
+    known_subgraphs: &HashSet<open_dds::identifier::SubgraphName>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connectors::DataConnectors,
@@ -700,10 +701,14 @@ fn resolve_relationships(
     graphql_config: &graphql_config::GraphqlConfig,
     source_type: &object_types::ObjectTypeRepresentation,
 ) -> Result<Vec<RelationshipField>, Error> {
-    let source_type_name = Qualified::new(subgraph.to_string(), relationship.source_type.clone());
+    let source_type_name = Qualified::new(subgraph.clone(), relationship.source_type.clone());
     match &relationship.target {
         relationships::RelationshipTarget::Model(target_model) => {
-            if should_skip(configuration, known_subgraphs, target_model.subgraph()) {
+            if should_skip(
+                configuration,
+                known_subgraphs,
+                target_model.subgraph().as_ref(),
+            ) {
                 return Ok(vec![]);
             }
             resolve_model_relationship_fields(
@@ -721,7 +726,11 @@ fn resolve_relationships(
             )
         }
         relationships::RelationshipTarget::Command(target_command) => {
-            if should_skip(configuration, known_subgraphs, target_command.subgraph()) {
+            if should_skip(
+                configuration,
+                known_subgraphs,
+                target_command.subgraph().as_ref(),
+            ) {
                 return Ok(vec![]);
             }
             let command_relationship_field = resolve_command_relationship_field(
@@ -746,8 +755,8 @@ fn resolve_relationships(
 // abstraction for that purpose.
 fn should_skip(
     configuration: Configuration,
-    known_subgraphs: &HashSet<open_dds::identifier::SubgraphIdentifier>,
-    target_subgraph: Option<&str>,
+    known_subgraphs: &HashSet<open_dds::identifier::SubgraphName>,
+    target_subgraph: Option<&SubgraphName>,
 ) -> bool {
     configuration.allow_unknown_subgraphs
         && target_subgraph.is_some_and(|subgraph| !known_subgraphs.contains(subgraph))

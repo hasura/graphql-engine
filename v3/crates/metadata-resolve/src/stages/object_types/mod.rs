@@ -2,6 +2,7 @@ mod error;
 pub mod types;
 
 pub use error::{ObjectTypesError, TypeMappingValidationError};
+use open_dds::identifier::SubgraphName;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -41,7 +42,7 @@ pub(crate) fn resolve(
     } in &metadata_accessor.object_types
     {
         let qualified_object_type_name =
-            Qualified::new(subgraph.to_string(), object_type_definition.name.clone());
+            Qualified::new(subgraph.clone(), object_type_definition.name.clone());
 
         let resolved_object_type = resolve_object_type(
             object_type_definition,
@@ -57,7 +58,7 @@ pub(crate) fn resolve(
         // resolve object types' type mappings
         for dc_type_mapping in &object_type_definition.data_connector_type_mapping {
             let qualified_data_connector_name = Qualified::new(
-                subgraph.to_string(),
+                subgraph.clone(),
                 dc_type_mapping.data_connector_name.clone(),
             );
             let type_mapping = resolve_data_connector_type_mapping(
@@ -108,7 +109,7 @@ pub(crate) fn resolve(
 
 fn resolve_field(
     field: &open_dds::types::FieldDefinition,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     qualified_type_name: &Qualified<CustomTypeName>,
 ) -> Result<FieldDefinition, ObjectTypesError> {
     let mut field_arguments = IndexMap::new();
@@ -140,7 +141,7 @@ pub fn resolve_object_type(
     object_type_definition: &open_dds::types::ObjectTypeV1,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     qualified_type_name: &Qualified<CustomTypeName>,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     global_id_enabled_types: &mut BTreeMap<
         Qualified<CustomTypeName>,
         Vec<Qualified<open_dds::models::ModelName>>,
@@ -282,12 +283,12 @@ pub fn resolve_object_type(
 pub fn resolve_data_connector_type_mapping(
     data_connector_type_mapping: &open_dds::types::DataConnectorTypeMapping,
     qualified_type_name: &Qualified<CustomTypeName>,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     type_representation: &ObjectTypeRepresentation,
     data_connectors: &data_connectors::DataConnectors,
 ) -> Result<TypeMapping, TypeMappingValidationError> {
     let qualified_data_connector_name = Qualified::new(
-        subgraph.to_string(),
+        subgraph.clone(),
         data_connector_type_mapping.data_connector_name.clone(),
     );
 

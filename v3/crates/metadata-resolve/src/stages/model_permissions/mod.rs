@@ -56,7 +56,7 @@ pub fn resolve(
         object: permissions,
     } in &metadata_accessor.model_permissions
     {
-        let model_name = Qualified::new(subgraph.to_string(), permissions.model_name.clone());
+        let model_name = Qualified::new(subgraph.clone(), permissions.model_name.clone());
         let model = models_with_permissions
             .get_mut(&model_name)
             .ok_or_else(|| Error::UnknownModelInModelSelectPermissions {

@@ -302,7 +302,7 @@ fn is_model_used_in_any_aggregate_relationship(
                 // And the target of the relationship is this model
                 target
                     .subgraph()
-                    .is_some_and(|subgraph| subgraph == model_name.subgraph.as_str())
+                    .is_some_and(|subgraph| subgraph == model_name.subgraph)
                     && *name == model_name.name
             }
             _ => false,

@@ -8,7 +8,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when
         object_types: {},
         scalar_types: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "Headers",
@@ -30,7 +32,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when
         models: {},
         commands: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CommandName(
                     Identifier(
                         "procedure_with_args",
@@ -39,7 +43,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when
             }: CommandWithPermissions {
                 command: Command {
                     name: Qualified {
-                        subgraph: "default",
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
                         name: CommandName(
                             Identifier(
                                 "procedure_with_args",
@@ -93,7 +99,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when
                         CommandSource {
                             data_connector: DataConnectorLink {
                                 name: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: DataConnectorName(
                                         Identifier(
                                             "myconnector",
@@ -248,7 +256,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when
         CommandIssue(
             ProcedureArgumentMappingIssue {
                 data_connector_name: Qualified {
-                    subgraph: "default",
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
                     name: DataConnectorName(
                         Identifier(
                             "myconnector",
@@ -256,7 +266,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/issue_when
                     ),
                 },
                 command_name: Qualified {
-                    subgraph: "default",
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
                     name: CommandName(
                         Identifier(
                             "procedure_with_args",

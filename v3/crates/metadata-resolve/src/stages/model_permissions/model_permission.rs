@@ -5,6 +5,7 @@ use crate::stages::{
     object_boolean_expressions, object_types, relationships, scalar_types,
 };
 use indexmap::IndexMap;
+use open_dds::identifier::SubgraphName;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
 
@@ -26,7 +27,7 @@ use open_dds::{
 fn resolve_model_predicate_with_model(
     model_predicate: &open_dds::permissions::ModelPredicate,
     model: &models::Model,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     boolean_expression_graphql: Option<&boolean_expressions::BooleanExpressionGraphqlConfig>,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
@@ -125,7 +126,7 @@ pub fn get_model_source_argument<'a>(
 
 pub fn resolve_model_select_permissions(
     model: &models::Model,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     model_permissions: &ModelPermissionsV1,
     boolean_expression_graphql: Option<&boolean_expressions::BooleanExpressionGraphqlConfig>,
     data_connectors: &data_connectors::DataConnectors,

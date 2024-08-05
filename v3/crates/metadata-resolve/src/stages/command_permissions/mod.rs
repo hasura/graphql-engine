@@ -55,7 +55,7 @@ pub fn resolve(
     } in &metadata_accessor.command_permissions
     {
         let command_name = &command_permissions.command_name;
-        let qualified_command_name = Qualified::new(subgraph.to_string(), command_name.to_owned());
+        let qualified_command_name = Qualified::new(subgraph.clone(), command_name.to_owned());
         let command = commands_with_permissions
             .get_mut(&qualified_command_name)
             .ok_or_else(|| Error::UnknownCommandInCommandPermissions {

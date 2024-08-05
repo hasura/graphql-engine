@@ -1,5 +1,6 @@
 use super::types::{Model, ModelSource, ModelsIssue};
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
+use open_dds::identifier::SubgraphName;
 use open_dds::types::DataConnectorArgumentName;
 
 use crate::helpers::argument::{get_argument_mappings, ArgumentMappingResults};
@@ -25,7 +26,7 @@ use std::iter;
 pub(crate) fn resolve_model_source(
     model_source: &models::ModelSource,
     model: &mut Model,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -44,10 +45,8 @@ pub(crate) fn resolve_model_source(
             model_name: model.name.clone(),
         });
     }
-    let qualified_data_connector_name = Qualified::new(
-        subgraph.to_string(),
-        model_source.data_connector_name.clone(),
-    );
+    let qualified_data_connector_name =
+        Qualified::new(subgraph.clone(), model_source.data_connector_name.clone());
 
     let data_connector_context = data_connectors
         .0

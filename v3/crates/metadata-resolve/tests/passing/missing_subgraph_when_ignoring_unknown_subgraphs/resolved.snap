@@ -7,7 +7,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
     Metadata {
         object_types: {
             Qualified {
-                subgraph: "article_namespace",
+                subgraph: SubgraphName(
+                    "article_namespace",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "article",
@@ -146,7 +148,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                 type_mappings: DataConnectorTypeMappingsForObject(
                     {
                         Qualified {
-                            subgraph: "article_namespace",
+                            subgraph: SubgraphName(
+                                "article_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "db",
@@ -233,7 +237,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
         scalar_types: {},
         models: {
             Qualified {
-                subgraph: "article_namespace",
+                subgraph: SubgraphName(
+                    "article_namespace",
+                ),
                 name: ModelName(
                     Identifier(
                         "Articles",
@@ -242,7 +248,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             }: ModelWithPermissions {
                 model: Model {
                     name: Qualified {
-                        subgraph: "article_namespace",
+                        subgraph: SubgraphName(
+                            "article_namespace",
+                        ),
                         name: ModelName(
                             Identifier(
                                 "Articles",
@@ -250,7 +258,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                         ),
                     },
                     data_type: Qualified {
-                        subgraph: "article_namespace",
+                        subgraph: SubgraphName(
+                            "article_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "article",
@@ -322,7 +332,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                         ModelSource {
                             data_connector: DataConnectorLink {
                                 name: Qualified {
-                                    subgraph: "article_namespace",
+                                    subgraph: SubgraphName(
+                                        "article_namespace",
+                                    ),
                                     name: DataConnectorName(
                                         Identifier(
                                             "db",
@@ -370,7 +382,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                             ),
                             type_mappings: {
                                 Qualified {
-                                    subgraph: "article_namespace",
+                                    subgraph: SubgraphName(
+                                        "article_namespace",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "article",
@@ -546,7 +560,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                     ),
                                 ),
                                 field_parent_type: Qualified {
-                                    subgraph: "article_namespace",
+                                    subgraph: SubgraphName(
+                                        "article_namespace",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "article",

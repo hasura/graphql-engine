@@ -22,6 +22,7 @@ use open_dds::arguments::ArgumentName;
 use open_dds::data_connector::{
     DataConnectorName, DataConnectorObjectType, DataConnectorOperatorName,
 };
+use open_dds::identifier::SubgraphName;
 use open_dds::models::ModelName;
 use open_dds::permissions;
 use open_dds::relationships::RelationshipName;
@@ -264,7 +265,7 @@ pub(crate) fn resolve_value_expression_for_argument(
     argument_type: &QualifiedTypeReference,
     source_argument_type: Option<&ndc_models::Type>,
     data_connector_link: &data_connectors::DataConnectorLink,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
@@ -401,7 +402,7 @@ pub(crate) fn resolve_model_predicate_with_type(
     boolean_expression_graphql: Option<&boolean_expressions::BooleanExpressionGraphqlConfig>,
     data_connector_field_mappings: &BTreeMap<FieldName, object_types::FieldMapping>,
     data_connector_link: &data_connectors::DataConnectorLink,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -916,7 +917,7 @@ fn resolve_binary_operator_for_type<'a>(
     fields: &'a IndexMap<FieldName, object_types::FieldDefinition>,
     scalars: &'a data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     ndc_scalar_type: &'a ndc_models::ScalarType,
-    subgraph: &'a str,
+    subgraph: &'a SubgraphName,
 ) -> Result<(DataConnectorOperatorName, QualifiedTypeReference), Error> {
     let field_definition = fields
         .get(field_name)
@@ -1004,7 +1005,7 @@ fn remove_object_relationships(
 // in short, should we convert this to an NDC expression before sending it
 pub fn get_argument_kind(
     type_obj: &TypeReference,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
@@ -1021,8 +1022,7 @@ pub fn get_argument_kind(
         BaseType::Named(type_name) => match type_name {
             TypeName::Inbuilt(_) => ArgumentKind::Other,
             TypeName::Custom(type_name) => {
-                let qualified_type_name =
-                    Qualified::new(subgraph.to_string(), type_name.to_owned());
+                let qualified_type_name = Qualified::new(subgraph.clone(), type_name.to_owned());
 
                 match get_type_representation::<type_permissions::ObjectTypesWithPermissions>(
                     &qualified_type_name,

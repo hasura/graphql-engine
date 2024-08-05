@@ -1,14 +1,16 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: resolved
-input_file: crates/metadata-resolve/tests/passing/commands/all_procedure_args_are_set_include_connector_link_presets/metadata.json
+input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_are_set_including_connector_link_presets/metadata.json
 ---
 (
     Metadata {
         object_types: {},
         scalar_types: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "Headers",
@@ -30,7 +32,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/all_procedure_args_ar
         models: {},
         commands: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CommandName(
                     Identifier(
                         "procedure_with_args",
@@ -39,7 +43,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/all_procedure_args_ar
             }: CommandWithPermissions {
                 command: Command {
                     name: Qualified {
-                        subgraph: "default",
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
                         name: CommandName(
                             Identifier(
                                 "procedure_with_args",
@@ -93,7 +99,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/all_procedure_args_ar
                         CommandSource {
                             data_connector: DataConnectorLink {
                                 name: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: DataConnectorName(
                                         Identifier(
                                             "myconnector",

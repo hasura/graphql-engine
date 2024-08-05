@@ -904,7 +904,8 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "pattern": "^(?!__)[_a-zA-Z][_a-zA-Z0-9]*$"
         }
       },
       "additionalProperties": false
@@ -2386,7 +2387,8 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "pattern": "^(?!__)[_a-zA-Z][_a-zA-Z0-9]*$"
         },
         "relationshipType": {
           "description": "Type of the relationship - object or array.",

@@ -7,7 +7,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
     Metadata {
         object_types: {
             Qualified {
-                subgraph: "__unknown_namespace",
+                subgraph: SubgraphName(
+                    "__unknown_namespace",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "int_range",
@@ -69,7 +71,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                 type_mappings: DataConnectorTypeMappingsForObject(
                     {
                         Qualified {
-                            subgraph: "__unknown_namespace",
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "elastic",
@@ -128,7 +132,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                 ),
             },
             Qualified {
-                subgraph: "__unknown_namespace",
+                subgraph: SubgraphName(
+                    "__unknown_namespace",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "movie",
@@ -229,7 +235,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                 type_mappings: DataConnectorTypeMappingsForObject(
                     {
                         Qualified {
-                            subgraph: "__unknown_namespace",
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "elastic",
@@ -310,7 +318,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
         scalar_types: {},
         models: {
             Qualified {
-                subgraph: "__unknown_namespace",
+                subgraph: SubgraphName(
+                    "__unknown_namespace",
+                ),
                 name: ModelName(
                     Identifier(
                         "movies",
@@ -319,7 +329,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
             }: ModelWithPermissions {
                 model: Model {
                     name: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: ModelName(
                             Identifier(
                                 "movies",
@@ -327,7 +339,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                         ),
                     },
                     data_type: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "movie",
@@ -393,7 +407,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                         ModelSource {
                             data_connector: DataConnectorLink {
                                 name: Qualified {
-                                    subgraph: "__unknown_namespace",
+                                    subgraph: SubgraphName(
+                                        "__unknown_namespace",
+                                    ),
                                     name: DataConnectorName(
                                         Identifier(
                                             "elastic",
@@ -441,7 +457,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             ),
                             type_mappings: {
                                 Qualified {
-                                    subgraph: "__unknown_namespace",
+                                    subgraph: SubgraphName(
+                                        "__unknown_namespace",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "movie",
@@ -555,7 +573,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     raw: ModelRaw {
                         filter_expression_type: Some(
                             Qualified {
-                                subgraph: "__unknown_namespace",
+                                subgraph: SubgraphName(
+                                    "__unknown_namespace",
+                                ),
                                 name: CustomTypeName(
                                     Identifier(
                                         "movie_bool_exp",
@@ -597,7 +617,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     BooleanExpressionType(
                         ResolvedObjectBooleanExpressionType {
                             name: Qualified {
-                                subgraph: "__unknown_namespace",
+                                subgraph: SubgraphName(
+                                    "__unknown_namespace",
+                                ),
                                 name: CustomTypeName(
                                     Identifier(
                                         "movie_bool_exp",
@@ -605,7 +627,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                 ),
                             },
                             object_type: Qualified {
-                                subgraph: "__unknown_namespace",
+                                subgraph: SubgraphName(
+                                    "__unknown_namespace",
+                                ),
                                 name: CustomTypeName(
                                     Identifier(
                                         "movie",
@@ -628,7 +652,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         ): ComparisonExpressionInfo {
                                             object_type_name: Some(
                                                 Qualified {
-                                                    subgraph: "__unknown_namespace",
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
                                                     name: CustomTypeName(
                                                         Identifier(
                                                             "int_bool_exp",
@@ -644,7 +670,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             operators: {},
                                             operator_mapping: {
                                                 Qualified {
-                                                    subgraph: "__unknown_namespace",
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
                                                     name: DataConnectorName(
                                                         Identifier(
                                                             "elastic",
@@ -665,7 +693,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         ): ComparisonExpressionInfo {
                                             object_type_name: Some(
                                                 Qualified {
-                                                    subgraph: "__unknown_namespace",
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
                                                     name: CustomTypeName(
                                                         Identifier(
                                                             "int_bool_exp_with_range",
@@ -685,7 +715,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                     underlying_type: Named(
                                                         Custom(
                                                             Qualified {
-                                                                subgraph: "__unknown_namespace",
+                                                                subgraph: SubgraphName(
+                                                                    "__unknown_namespace",
+                                                                ),
                                                                 name: CustomTypeName(
                                                                     Identifier(
                                                                         "int_range",
@@ -699,7 +731,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             },
                                             operator_mapping: {
                                                 Qualified {
-                                                    subgraph: "__unknown_namespace",
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
                                                     name: DataConnectorName(
                                                         Identifier(
                                                             "elastic",
@@ -720,7 +754,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         ): ComparisonExpressionInfo {
                                             object_type_name: Some(
                                                 Qualified {
-                                                    subgraph: "__unknown_namespace",
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
                                                     name: CustomTypeName(
                                                         Identifier(
                                                             "string_bool_exp",
@@ -736,7 +772,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             operators: {},
                                             operator_mapping: {
                                                 Qualified {
-                                                    subgraph: "__unknown_namespace",
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
                                                     name: DataConnectorName(
                                                         Identifier(
                                                             "elastic",
@@ -809,7 +847,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
         boolean_expression_types: BooleanExpressionTypes {
             objects: {
                 Qualified {
-                    subgraph: "__unknown_namespace",
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
                     name: CustomTypeName(
                         Identifier(
                             "movie_bool_exp",
@@ -817,7 +857,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     ),
                 }: ResolvedObjectBooleanExpressionType {
                     name: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "movie_bool_exp",
@@ -825,7 +867,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                         ),
                     },
                     object_type: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "movie",
@@ -848,7 +892,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                 ): ComparisonExpressionInfo {
                                     object_type_name: Some(
                                         Qualified {
-                                            subgraph: "__unknown_namespace",
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "int_bool_exp",
@@ -864,7 +910,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     operators: {},
                                     operator_mapping: {
                                         Qualified {
-                                            subgraph: "__unknown_namespace",
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
                                             name: DataConnectorName(
                                                 Identifier(
                                                     "elastic",
@@ -885,7 +933,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                 ): ComparisonExpressionInfo {
                                     object_type_name: Some(
                                         Qualified {
-                                            subgraph: "__unknown_namespace",
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "int_bool_exp_with_range",
@@ -905,7 +955,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             underlying_type: Named(
                                                 Custom(
                                                     Qualified {
-                                                        subgraph: "__unknown_namespace",
+                                                        subgraph: SubgraphName(
+                                                            "__unknown_namespace",
+                                                        ),
                                                         name: CustomTypeName(
                                                             Identifier(
                                                                 "int_range",
@@ -919,7 +971,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     },
                                     operator_mapping: {
                                         Qualified {
-                                            subgraph: "__unknown_namespace",
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
                                             name: DataConnectorName(
                                                 Identifier(
                                                     "elastic",
@@ -940,7 +994,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                 ): ComparisonExpressionInfo {
                                     object_type_name: Some(
                                         Qualified {
-                                            subgraph: "__unknown_namespace",
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "string_bool_exp",
@@ -956,7 +1012,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     operators: {},
                                     operator_mapping: {
                                         Qualified {
-                                            subgraph: "__unknown_namespace",
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
                                             name: DataConnectorName(
                                                 Identifier(
                                                     "elastic",
@@ -993,7 +1051,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
             },
             scalars: {
                 Qualified {
-                    subgraph: "__unknown_namespace",
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
                     name: CustomTypeName(
                         Identifier(
                             "int_bool_exp",
@@ -1001,7 +1061,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     ),
                 }: ResolvedScalarBooleanExpressionType {
                     name: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "int_bool_exp",
@@ -1014,7 +1076,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     comparison_operators: {},
                     data_connector_operator_mappings: {
                         Qualified {
-                            subgraph: "__unknown_namespace",
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "elastic",
@@ -1040,7 +1104,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     include_is_null: Yes,
                 },
                 Qualified {
-                    subgraph: "__unknown_namespace",
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
                     name: CustomTypeName(
                         Identifier(
                             "int_bool_exp_with_range",
@@ -1048,7 +1114,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     ),
                 }: ResolvedScalarBooleanExpressionType {
                     name: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "int_bool_exp_with_range",
@@ -1065,7 +1133,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             underlying_type: Named(
                                 Custom(
                                     Qualified {
-                                        subgraph: "__unknown_namespace",
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
                                         name: CustomTypeName(
                                             Identifier(
                                                 "int_range",
@@ -1079,7 +1149,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     },
                     data_connector_operator_mappings: {
                         Qualified {
-                            subgraph: "__unknown_namespace",
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "elastic",
@@ -1105,7 +1177,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     include_is_null: Yes,
                 },
                 Qualified {
-                    subgraph: "__unknown_namespace",
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
                     name: CustomTypeName(
                         Identifier(
                             "string_bool_exp",
@@ -1113,7 +1187,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     ),
                 }: ResolvedScalarBooleanExpressionType {
                     name: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "string_bool_exp",
@@ -1126,7 +1202,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     comparison_operators: {},
                     data_connector_operator_mappings: {
                         Qualified {
-                            subgraph: "__unknown_namespace",
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "elastic",

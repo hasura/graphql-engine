@@ -108,7 +108,7 @@ pub(crate) fn resolve_object_boolean_graphql(
                     ObjectComparisonExpressionInfo {
                         object_type_name: comparable_field_type_name.clone(),
                         underlying_object_type_name: Qualified::new(
-                            (*field_subgraph).to_string(),
+                            (*field_subgraph).clone(),
                             object_operand.r#type.clone(),
                         ),
                         graphql_type_name: graphql_type_name.clone(),

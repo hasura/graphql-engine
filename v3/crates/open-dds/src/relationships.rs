@@ -5,7 +5,7 @@ use crate::{
     aggregates::AggregateExpressionName,
     arguments::ArgumentName,
     commands::CommandName,
-    identifier::Identifier,
+    identifier::{Identifier, SubgraphName, SubgraphNameInput},
     impl_JsonSchema_with_OpenDd_for,
     models::ModelName,
     permissions::ValueExpression,
@@ -35,7 +35,7 @@ pub struct ModelRelationshipTarget {
     /// The name of the data model.
     pub name: ModelName,
     /// The subgraph of the target model. Defaults to the current subgraph.
-    subgraph: Option<String>,
+    subgraph: Option<SubgraphNameInput>,
     /// Type of the relationship - object or array.
     pub relationship_type: RelationshipType,
     /// How to aggregate over the relationship. Only valid for array relationships
@@ -46,8 +46,8 @@ pub struct ModelRelationshipTarget {
 impl_JsonSchema_with_OpenDd_for!(ModelRelationshipTarget);
 
 impl ModelRelationshipTarget {
-    pub fn subgraph(&self) -> Option<&str> {
-        self.subgraph.as_deref()
+    pub fn subgraph(&self) -> Option<SubgraphName> {
+        self.subgraph.as_ref().map(std::convert::Into::into)
     }
 }
 
@@ -72,12 +72,12 @@ pub struct CommandRelationshipTarget {
     /// The name of the command.
     pub name: CommandName,
     /// The subgraph of the target command. Defaults to the current subgraph.
-    pub subgraph: Option<String>,
+    pub subgraph: Option<SubgraphNameInput>,
 }
 
 impl CommandRelationshipTarget {
-    pub fn subgraph(&self) -> Option<&str> {
-        self.subgraph.as_deref()
+    pub fn subgraph(&self) -> Option<SubgraphName> {
+        self.subgraph.as_ref().map(std::convert::Into::into)
     }
 }
 

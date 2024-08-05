@@ -5,6 +5,7 @@ use crate::stages::{
     object_types, type_permissions,
 };
 pub use helpers::resolve_ndc_type;
+use open_dds::identifier::SubgraphName;
 
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::types::subgraph::Qualified;
@@ -78,7 +79,7 @@ pub fn resolve(
 /// Resolves a given object boolean expression type
 pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression: &open_dds::types::ObjectBooleanExpressionTypeV1,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -89,12 +90,11 @@ pub(crate) fn resolve_object_boolean_expression_type(
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionType, boolean_expressions::BooleanExpressionError> {
     // name of the boolean expression
-    let qualified_name =
-        Qualified::new(subgraph.to_string(), object_boolean_expression.name.clone());
+    let qualified_name = Qualified::new(subgraph.clone(), object_boolean_expression.name.clone());
 
     // name of the object type backing the boolean expression
     let qualified_object_type_name = Qualified::new(
-        subgraph.to_string(),
+        subgraph.clone(),
         object_boolean_expression.object_type.clone(),
     );
     let object_type_representation =
@@ -105,7 +105,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         })?;
 
     let qualified_data_connector_name = Qualified::new(
-        subgraph.to_string(),
+        subgraph.clone(),
         object_boolean_expression.data_connector_name.clone(),
     );
 
@@ -189,10 +189,10 @@ pub(crate) fn resolve_object_boolean_expression_type(
     }
 
     let object_boolean_expression_type =
-        Qualified::new(subgraph.to_string(), object_boolean_expression.name.clone());
+        Qualified::new(subgraph.clone(), object_boolean_expression.name.clone());
 
     let data_connector_name = Qualified::new(
-        subgraph.to_string(),
+        subgraph.clone(),
         object_boolean_expression.data_connector_name.clone(),
     );
 
@@ -262,7 +262,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
 pub fn resolve_boolean_expression_graphql_config(
     data_connector_name: &Qualified<open_dds::data_connector::DataConnectorName>,
     where_type_name: ast::TypeName,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,

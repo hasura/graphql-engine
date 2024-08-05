@@ -37,7 +37,7 @@ impl Catalog {
             let table_name = &model_name.name;
             let subgraph =
                 subgraphs
-                    .entry(schema_name.clone())
+                    .entry(schema_name.to_string())
                     .or_insert_with(|| subgraph::Subgraph {
                         tables: IndexMap::new(),
                     });

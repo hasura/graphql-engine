@@ -1,6 +1,7 @@
 mod error;
 mod types;
 pub use error::DataConnectorScalarTypesError;
+use open_dds::identifier::SubgraphName;
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
     ComparisonOperators, DataConnectorWithScalarsOutput, ScalarTypeWithRepresentationInfo,
@@ -43,7 +44,7 @@ pub fn resolve<'a>(
         let scalar_type_name = &scalar_type_representation.data_connector_scalar_type;
 
         let qualified_data_connector_name = Qualified::new(
-            subgraph.to_string(),
+            subgraph.clone(),
             scalar_type_representation.data_connector_name.clone(),
         );
 
@@ -106,14 +107,14 @@ pub fn resolve<'a>(
 
 fn validate_type_name(
     type_name: &TypeName,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     scalar_type_name: &DataConnectorScalarType,
 ) -> Result<(), DataConnectorScalarTypesError> {
     match type_name {
         TypeName::Inbuilt(_) => {} // TODO: Validate Nullable and Array types in Inbuilt
         TypeName::Custom(type_name) => {
-            let qualified_type_name = Qualified::new(subgraph.to_string(), type_name.to_owned());
+            let qualified_type_name = Qualified::new(subgraph.clone(), type_name.to_owned());
             let _representation = scalar_types.get(&qualified_type_name).ok_or_else(|| {
                 DataConnectorScalarTypesError::ScalarTypeUnknownRepresentation {
                     scalar_type: scalar_type_name.clone(),

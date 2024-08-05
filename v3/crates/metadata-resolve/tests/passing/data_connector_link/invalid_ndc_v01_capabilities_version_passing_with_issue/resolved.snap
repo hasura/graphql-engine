@@ -49,7 +49,9 @@ input_file: crates/metadata-resolve/tests/passing/data_connector_link/invalid_nd
         DataConnectorIssue(
             NamedDataConnectorIssue {
                 data_connector_name: Qualified {
-                    subgraph: "default",
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
                     name: DataConnectorName(
                         Identifier(
                             "myconnector",

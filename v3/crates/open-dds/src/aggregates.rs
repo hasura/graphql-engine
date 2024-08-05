@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     data_connector::{DataConnectorName, DataConnectorScalarType},
     identifier::Identifier,
-    impl_JsonSchema_with_OpenDd_for, str_newtype,
+    str_newtype,
     types::{CustomTypeName, Deprecated, FieldName, GraphQlTypeName, TypeName, TypeReference},
 };
 
@@ -157,41 +157,9 @@ pub struct AggregationFunctionDefinition {
     pub return_type: TypeReference,
 }
 
-#[repr(transparent)]
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    ref_cast::RefCast,
-    derive_more::Display,
-    opendds_derive::OpenDd,
-)]
-/// The name of an aggregation function.
-pub struct AggregationFunctionName(pub Identifier);
+str_newtype!(AggregationFunctionName over Identifier | doc "The name of an aggregation function.");
 
-impl_JsonSchema_with_OpenDd_for!(AggregationFunctionName);
-
-#[repr(transparent)]
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    ref_cast::RefCast,
-    derive_more::Display,
-    opendds_derive::OpenDd,
-)]
-/// The name of an aggregation function in a data connector
-pub struct DataConnectorAggregationFunctionName(pub String);
-
-impl_JsonSchema_with_OpenDd_for!(DataConnectorAggregationFunctionName);
+str_newtype!(DataConnectorAggregationFunctionName | doc "The name of an aggregation function in a data connector");
 
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,

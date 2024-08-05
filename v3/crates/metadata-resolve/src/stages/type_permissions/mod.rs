@@ -37,10 +37,8 @@ pub fn resolve(
         object: output_type_permission,
     } in &metadata_accessor.type_permissions
     {
-        let qualified_type_name = Qualified::new(
-            subgraph.to_string(),
-            output_type_permission.type_name.clone(),
-        );
+        let qualified_type_name =
+            Qualified::new(subgraph.clone(), output_type_permission.type_name.clone());
         match object_types_with_permissions.get_mut(&qualified_type_name) {
             None => {
                 return Err(TypePermissionError::from(

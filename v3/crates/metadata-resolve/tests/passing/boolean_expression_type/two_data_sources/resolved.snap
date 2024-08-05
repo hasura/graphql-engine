@@ -7,7 +7,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
     Metadata {
         object_types: {
             Qualified {
-                subgraph: "__unknown_namespace",
+                subgraph: SubgraphName(
+                    "__unknown_namespace",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "author",
@@ -129,7 +131,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                 type_mappings: DataConnectorTypeMappingsForObject(
                     {
                         Qualified {
-                            subgraph: "__unknown_namespace",
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "postgres_db",
@@ -216,7 +220,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
         boolean_expression_types: BooleanExpressionTypes {
             objects: {
                 Qualified {
-                    subgraph: "__unknown_namespace",
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
                     name: CustomTypeName(
                         Identifier(
                             "author_bool_exp",
@@ -224,7 +230,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                     ),
                 }: ResolvedObjectBooleanExpressionType {
                     name: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "author_bool_exp",
@@ -232,7 +240,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                         ),
                     },
                     object_type: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "author",
@@ -245,7 +255,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
             },
             scalars: {
                 Qualified {
-                    subgraph: "__unknown_namespace",
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
                     name: CustomTypeName(
                         Identifier(
                             "postgres_int_comparison_bool_exp",
@@ -253,7 +265,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                     ),
                 }: ResolvedScalarBooleanExpressionType {
                     name: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "postgres_int_comparison_bool_exp",
@@ -292,7 +306,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                     },
                     data_connector_operator_mappings: {
                         Qualified {
-                            subgraph: "__unknown_namespace",
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "postgres_db",
@@ -316,7 +332,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                             },
                         },
                         Qualified {
-                            subgraph: "__unknown_namespace",
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "postgres_db_2",
@@ -344,7 +362,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                     include_is_null: Yes,
                 },
                 Qualified {
-                    subgraph: "__unknown_namespace",
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
                     name: CustomTypeName(
                         Identifier(
                             "postgres_string_comparison_bool_exp",
@@ -352,7 +372,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                     ),
                 }: ResolvedScalarBooleanExpressionType {
                     name: Qualified {
-                        subgraph: "__unknown_namespace",
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "postgres_string_comparison_bool_exp",
@@ -391,7 +413,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                     },
                     data_connector_operator_mappings: {
                         Qualified {
-                            subgraph: "__unknown_namespace",
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "postgres_db",
@@ -415,7 +439,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/two_da
                             },
                         },
                         Qualified {
-                            subgraph: "__unknown_namespace",
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "postgres_db_2",

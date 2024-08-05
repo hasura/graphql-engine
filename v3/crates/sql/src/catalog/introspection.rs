@@ -48,13 +48,13 @@ impl Introspection {
         for (schema_name, schema) in schemas {
             for (table_name, table) in &schema.tables {
                 table_metadata_rows.push(TableRow::new(
-                    schema_name.clone(),
+                    schema_name.to_string(),
                     table_name.to_string(),
                     table.model.description.clone(),
                 ));
                 for (column_name, column_description) in &table.model.columns {
                     column_metadata_rows.push(ColumnRow {
-                        schema_name: schema_name.clone(),
+                        schema_name: schema_name.to_string(),
                         table_name: table_name.clone(),
                         column_name: column_name.clone(),
                         description: column_description.clone(),
@@ -78,10 +78,10 @@ impl Introspection {
                         {
                             for mapping in mappings {
                                 foreign_key_constraint_rows.push(ForeignKeyRow {
-                                    from_schema_name: schema_name.clone(),
+                                    from_schema_name: schema_name.to_string(),
                                     from_table_name: table_name.clone(),
                                     from_column_name: mapping.source_field.field_name.to_string(),
-                                    to_schema_name: model_name.subgraph.clone(),
+                                    to_schema_name: model_name.subgraph.to_string(),
                                     to_table_name: model_name.name.to_string(),
                                     to_column_name: mapping.target_field.field_name.to_string(),
                                 });

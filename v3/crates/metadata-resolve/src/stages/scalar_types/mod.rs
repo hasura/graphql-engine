@@ -29,8 +29,7 @@ pub fn resolve(
                 .map(Some),
         }?;
 
-        let qualified_scalar_type_name =
-            Qualified::new(subgraph.to_string(), scalar_type.name.clone());
+        let qualified_scalar_type_name = Qualified::new(subgraph.clone(), scalar_type.name.clone());
 
         if scalar_types
             .insert(

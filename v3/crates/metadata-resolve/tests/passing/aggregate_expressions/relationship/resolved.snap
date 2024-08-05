@@ -7,7 +7,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
     Metadata {
         object_types: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "Invoice",
@@ -25,7 +27,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -49,7 +53,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -73,7 +79,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -97,7 +105,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -121,7 +131,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -145,7 +157,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -169,7 +183,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Timestamp",
@@ -193,7 +209,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -217,7 +235,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Numeric",
@@ -266,7 +286,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ),
                         source: Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: CustomTypeName(
                                 Identifier(
                                     "Invoice",
@@ -276,7 +298,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         target: Model(
                             ModelRelationshipTarget {
                                 model_name: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: ModelName(
                                         Identifier(
                                             "InvoiceLine",
@@ -285,7 +309,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 },
                                 relationship_type: Array,
                                 target_typename: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "InvoiceLine",
@@ -344,7 +370,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ),
                         source: Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: CustomTypeName(
                                 Identifier(
                                     "Invoice",
@@ -354,7 +382,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         target: ModelAggregate(
                             ModelAggregateRelationshipTarget {
                                 model_name: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: ModelName(
                                         Identifier(
                                             "InvoiceLine",
@@ -362,7 +392,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                     ),
                                 },
                                 target_typename: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "InvoiceLine",
@@ -398,7 +430,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                     },
                                 ],
                                 aggregate_expression: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: AggregateExpressionName(
                                         Identifier(
                                             "InvoiceLine_aggregate_exp",
@@ -424,7 +458,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 type_mappings: DataConnectorTypeMappingsForObject(
                     {
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "mypg",
@@ -662,7 +698,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 ),
             },
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "InvoiceLine",
@@ -680,7 +718,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -704,7 +744,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -728,7 +770,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -752,7 +796,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -776,7 +822,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Numeric",
@@ -816,7 +864,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 type_mappings: DataConnectorTypeMappingsForObject(
                     {
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "mypg",
@@ -954,7 +1004,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
         },
         scalar_types: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "Int4",
@@ -971,7 +1023,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 description: None,
             },
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "Int8",
@@ -990,7 +1044,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
         },
         models: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: ModelName(
                     Identifier(
                         "Invoice",
@@ -999,7 +1055,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
             }: ModelWithPermissions {
                 model: Model {
                     name: Qualified {
-                        subgraph: "default",
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
                         name: ModelName(
                             Identifier(
                                 "Invoice",
@@ -1007,7 +1065,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         ),
                     },
                     data_type: Qualified {
-                        subgraph: "default",
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "Invoice",
@@ -1024,7 +1084,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -1048,7 +1110,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -1072,7 +1136,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -1096,7 +1162,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -1120,7 +1188,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -1144,7 +1214,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -1168,7 +1240,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Timestamp",
@@ -1192,7 +1266,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -1216,7 +1292,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Numeric",
@@ -1238,7 +1316,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         ModelSource {
                             data_connector: DataConnectorLink {
                                 name: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: DataConnectorName(
                                         Identifier(
                                             "mypg",
@@ -1307,7 +1387,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                             type_mappings: {
                                 Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "Invoice",
@@ -1639,7 +1721,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                     ],
                     aggregate_expression: Some(
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: AggregateExpressionName(
                                 Identifier(
                                     "Invoice_aggregate_exp",
@@ -1717,7 +1801,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         underlying_type: Named(
                                             Custom(
                                                 Qualified {
-                                                    subgraph: "default",
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
                                                     name: CustomTypeName(
                                                         Identifier(
                                                             "Int4",
@@ -1761,7 +1847,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             description: None,
                             deprecated: None,
                             aggregate_expression_name: Qualified {
-                                subgraph: "default",
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
                                 name: AggregateExpressionName(
                                     Identifier(
                                         "Invoice_aggregate_exp",
@@ -1798,7 +1886,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 },
             },
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: ModelName(
                     Identifier(
                         "InvoiceLine",
@@ -1807,7 +1897,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
             }: ModelWithPermissions {
                 model: Model {
                     name: Qualified {
-                        subgraph: "default",
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
                         name: ModelName(
                             Identifier(
                                 "InvoiceLine",
@@ -1815,7 +1907,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         ),
                     },
                     data_type: Qualified {
-                        subgraph: "default",
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "InvoiceLine",
@@ -1832,7 +1926,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -1856,7 +1952,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -1880,7 +1978,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -1904,7 +2004,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -1928,7 +2030,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Numeric",
@@ -1950,7 +2054,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                         ModelSource {
                             data_connector: DataConnectorLink {
                                 name: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: DataConnectorName(
                                         Identifier(
                                             "mypg",
@@ -2019,7 +2125,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                             type_mappings: {
                                 Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "InvoiceLine",
@@ -2209,7 +2317,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                     ],
                     aggregate_expression: Some(
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: AggregateExpressionName(
                                 Identifier(
                                     "InvoiceLine_aggregate_exp",
@@ -2287,7 +2397,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                         underlying_type: Named(
                                             Custom(
                                                 Qualified {
-                                                    subgraph: "default",
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
                                                     name: CustomTypeName(
                                                         Identifier(
                                                             "Int4",
@@ -2331,7 +2443,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             description: None,
                             deprecated: None,
                             aggregate_expression_name: Qualified {
-                                subgraph: "default",
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
                                 name: AggregateExpressionName(
                                     Identifier(
                                         "InvoiceLine_aggregate_exp",
@@ -2376,7 +2490,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
         },
         aggregate_expressions: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: AggregateExpressionName(
                     Identifier(
                         "Int4_aggregate_exp",
@@ -2384,7 +2500,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 ),
             }: AggregateExpression {
                 name: Qualified {
-                    subgraph: "default",
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
                     name: AggregateExpressionName(
                         Identifier(
                             "Int4_aggregate_exp",
@@ -2394,7 +2512,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 operand: AggregateOperand {
                     aggregated_type: Custom(
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: CustomTypeName(
                                 Identifier(
                                     "Int4",
@@ -2415,7 +2535,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int8",
@@ -2429,7 +2551,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             data_connector_functions: [
                                 DataConnectorAggregationFunctionInfo {
                                     data_connector_name: Qualified {
-                                        subgraph: "default",
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
                                         name: DataConnectorName(
                                             Identifier(
                                                 "mypg",
@@ -2456,7 +2580,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -2470,7 +2596,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             data_connector_functions: [
                                 DataConnectorAggregationFunctionInfo {
                                     data_connector_name: Qualified {
-                                        subgraph: "default",
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
                                         name: DataConnectorName(
                                             Identifier(
                                                 "mypg",
@@ -2497,7 +2625,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -2511,7 +2641,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             data_connector_functions: [
                                 DataConnectorAggregationFunctionInfo {
                                     data_connector_name: Qualified {
-                                        subgraph: "default",
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
                                         name: DataConnectorName(
                                             Identifier(
                                                 "mypg",
@@ -2541,7 +2673,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 description: None,
             },
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: AggregateExpressionName(
                     Identifier(
                         "InvoiceLine_aggregate_exp",
@@ -2549,7 +2683,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 ),
             }: AggregateExpression {
                 name: Qualified {
-                    subgraph: "default",
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
                     name: AggregateExpressionName(
                         Identifier(
                             "InvoiceLine_aggregate_exp",
@@ -2559,7 +2695,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 operand: AggregateOperand {
                     aggregated_type: Custom(
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: CustomTypeName(
                                 Identifier(
                                     "InvoiceLine",
@@ -2576,7 +2714,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                             description: None,
                             aggregate_expression: Qualified {
-                                subgraph: "default",
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
                                 name: AggregateExpressionName(
                                     Identifier(
                                         "Int4_aggregate_exp",
@@ -2599,7 +2739,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 description: None,
             },
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: AggregateExpressionName(
                     Identifier(
                         "Invoice_aggregate_exp",
@@ -2607,7 +2749,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 ),
             }: AggregateExpression {
                 name: Qualified {
-                    subgraph: "default",
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
                     name: AggregateExpressionName(
                         Identifier(
                             "Invoice_aggregate_exp",
@@ -2617,7 +2761,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 operand: AggregateOperand {
                     aggregated_type: Custom(
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: CustomTypeName(
                                 Identifier(
                                     "Invoice",
@@ -2634,7 +2780,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                             description: None,
                             aggregate_expression: Qualified {
-                                subgraph: "default",
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
                                 name: AggregateExpressionName(
                                     Identifier(
                                         "Int4_aggregate_exp",

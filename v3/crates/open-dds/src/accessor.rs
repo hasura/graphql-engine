@@ -1,23 +1,22 @@
 use std::collections::HashSet;
 
-use crate::identifier::SubgraphIdentifier;
+use crate::identifier::SubgraphName;
 use crate::{
     aggregates, boolean_expression, commands, data_connector, flags, graphql_config, models,
     order_by_expression, permissions, relationships, types, Metadata, MetadataWithVersion,
     OpenDdSubgraphObject, OpenDdSupergraphObject,
 };
 
-const GLOBALS_SUBGRAPH: SubgraphIdentifier = SubgraphIdentifier::new_inline_static("__globals");
-const UNKNOWN_SUBGRAPH: SubgraphIdentifier =
-    SubgraphIdentifier::new_inline_static("__unknown_namespace");
+const GLOBALS_SUBGRAPH: SubgraphName = SubgraphName::new_inline_static("__globals");
+const UNKNOWN_SUBGRAPH: SubgraphName = SubgraphName::new_inline_static("__unknown_namespace");
 
 pub struct QualifiedObject<T> {
-    pub subgraph: SubgraphIdentifier,
+    pub subgraph: SubgraphName,
     pub object: T,
 }
 
 impl<T> QualifiedObject<T> {
-    pub fn new(subgraph: &SubgraphIdentifier, object: T) -> Self {
+    pub fn new(subgraph: &SubgraphName, object: T) -> Self {
         QualifiedObject {
             subgraph: subgraph.clone(),
             object,
@@ -28,7 +27,7 @@ impl<T> QualifiedObject<T> {
 const DEFAULT_FLAGS: flags::Flags = flags::Flags::new();
 
 pub struct MetadataAccessor {
-    pub subgraphs: HashSet<SubgraphIdentifier>,
+    pub subgraphs: HashSet<SubgraphName>,
     pub data_connectors: Vec<QualifiedObject<data_connector::DataConnectorLinkV1>>,
     pub object_types: Vec<QualifiedObject<types::ObjectTypeV1>>,
     pub object_boolean_expression_types: Vec<QualifiedObject<types::ObjectBooleanExpressionTypeV1>>,
@@ -51,7 +50,7 @@ pub struct MetadataAccessor {
 
 fn load_metadata_objects(
     metadata_objects: Vec<OpenDdSubgraphObject>,
-    subgraph: &SubgraphIdentifier,
+    subgraph: &SubgraphName,
     accessor: &mut MetadataAccessor,
 ) {
     accessor.subgraphs.insert(subgraph.clone());
@@ -170,8 +169,7 @@ impl MetadataAccessor {
                 let mut accessor: MetadataAccessor =
                     MetadataAccessor::new_empty(Some(metadata.flags));
                 for namespaced_metadata in metadata.namespaces {
-                    let subgraph =
-                        SubgraphIdentifier::new_without_validation(&namespaced_metadata.name);
+                    let subgraph = SubgraphName::new_without_validation(&namespaced_metadata.name);
                     load_metadata_objects(namespaced_metadata.objects, &subgraph, &mut accessor);
                 }
                 accessor
@@ -183,7 +181,7 @@ impl MetadataAccessor {
                     load_metadata_supergraph_object(supergraph_object, &mut accessor);
                 }
                 for subgraph in metadata.subgraphs {
-                    load_metadata_objects(subgraph.objects, &subgraph.name, &mut accessor);
+                    load_metadata_objects(subgraph.objects, &subgraph.name.into(), &mut accessor);
                 }
                 accessor
             }
@@ -191,7 +189,7 @@ impl MetadataAccessor {
                 let mut accessor: MetadataAccessor =
                     MetadataAccessor::new_empty(Some(metadata.flags));
                 for subgraph in metadata.subgraphs {
-                    load_metadata_objects(subgraph.objects, &subgraph.name, &mut accessor);
+                    load_metadata_objects(subgraph.objects, &subgraph.name.into(), &mut accessor);
                 }
                 accessor
             }

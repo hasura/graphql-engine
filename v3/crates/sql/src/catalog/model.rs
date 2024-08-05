@@ -132,7 +132,7 @@ impl ModelWithPermissions {
             .map(|source| Arc::new(source.clone()));
 
         let model = Model {
-            subgraph: model.model.name.subgraph.clone(),
+            subgraph: model.model.name.subgraph.to_string(),
             name: model.model.name.name.clone(),
             description: model.model.raw.description.clone(),
             arguments: IndexMap::new(),
