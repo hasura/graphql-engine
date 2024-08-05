@@ -1,6 +1,6 @@
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast::{self, Operation};
-use metadata_resolve::{FilterPermission, ModelPredicate};
+use metadata_resolve::{FieldPresetInfo, FilterPermission, ModelPredicate};
 use open_dds::relationships::RelationshipType;
 use query_usage_analytics::{
     self, ArgumentPresetsUsage, FieldPresetsUsage, FieldUsage, FilterPredicateUsage, GqlField,
@@ -119,11 +119,13 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
         schema::InputAnnotation::InputObjectField {
             field_name,
             parent_type,
+            deprecated,
             ..
         } => {
             result.push(OpenddObject::Field(FieldUsage {
                 name: field_name.to_owned(),
                 opendd_type: parent_type.to_owned(),
+                deprecated: deprecated.to_owned(),
             }));
         }
         schema::InputAnnotation::BooleanExpression(
@@ -132,10 +134,12 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
             schema::ModelFilterArgument::Field {
                 field_name,
                 object_type,
+                deprecated,
             } => {
                 result.push(OpenddObject::Field(FieldUsage {
                     name: field_name.to_owned(),
                     opendd_type: object_type.to_owned(),
+                    deprecated: deprecated.to_owned(),
                 }));
             }
             schema::ModelFilterArgument::RelationshipField(relationship_annotation) => {
@@ -169,11 +173,13 @@ fn analyze_model_input_annotation(annotation: &schema::ModelInputAnnotation) -> 
         schema::ModelInputAnnotation::ModelOrderByArgument {
             field_name,
             parent_type,
+            deprecated,
             ..
         } => {
             result.push(OpenddObject::Field(FieldUsage {
                 name: field_name.to_owned(),
                 opendd_type: parent_type.to_owned(),
+                deprecated: deprecated.to_owned(),
             }));
         }
         schema::ModelInputAnnotation::ModelOrderByRelationshipArgument(relationship_orderby) => {
@@ -220,11 +226,15 @@ fn analyze_output_annotation(annotation: &schema::OutputAnnotation) -> Vec<Opend
             | schema::RootFieldAnnotation::ApolloFederation(_) => {}
         },
         schema::OutputAnnotation::Field {
-            name, parent_type, ..
+            name,
+            parent_type,
+            deprecated,
+            ..
         } => {
             result.push(OpenddObject::Field(FieldUsage {
                 name: name.to_owned(),
                 opendd_type: parent_type.to_owned(),
+                deprecated: deprecated.to_owned(),
             }));
         }
         schema::OutputAnnotation::RelationshipToModel(relationship) => {
@@ -284,10 +294,19 @@ fn analyze_namespace_annotation(annotation: &schema::NamespaceAnnotation) -> Vec
             FieldPresetsUsage {
                 fields: presets_fields
                     .iter()
-                    .map(|field_name| FieldUsage {
-                        name: field_name.to_owned(),
-                        opendd_type: type_name.clone(),
-                    })
+                    .map(
+                        |(
+                            field_name,
+                            FieldPresetInfo {
+                                value: _,
+                                deprecated,
+                            },
+                        )| FieldUsage {
+                            name: field_name.to_owned(),
+                            opendd_type: type_name.clone(),
+                            deprecated: deprecated.to_owned(),
+                        },
+                    )
                     .collect(),
             },
         ))),
@@ -347,15 +366,18 @@ fn analyze_model_predicate(
         ModelPredicate::UnaryFieldComparison {
             field,
             field_parent_type,
+            deprecated,
             ..
         }
         | ModelPredicate::BinaryFieldComparison {
             field,
             field_parent_type,
+            deprecated,
             ..
         } => fields.push(FieldUsage {
             name: field.to_owned(),
             opendd_type: field_parent_type.to_owned(),
+            deprecated: deprecated.to_owned(),
         }),
         ModelPredicate::Relationship {
             relationship_info,

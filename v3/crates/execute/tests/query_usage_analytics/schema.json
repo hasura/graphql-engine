@@ -2912,7 +2912,10 @@
               },
               {
                 "name": "Fax",
-                "type": "varchar"
+                "type": "varchar",
+                "deprecated": {
+                  "reason": "Fax is no more used; Use Email instead"
+                }
               },
               {
                 "name": "FirstName",

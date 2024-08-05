@@ -285,6 +285,7 @@
     "FieldUsage": {
       "type": "object",
       "required": [
+        "deprecated",
         "name",
         "opendd_type"
       ],
@@ -294,6 +295,9 @@
         },
         "opendd_type": {
           "$ref": "#/definitions/Qualified_for_CustomTypeName"
+        },
+        "deprecated": {
+          "type": "boolean"
         }
       }
     },

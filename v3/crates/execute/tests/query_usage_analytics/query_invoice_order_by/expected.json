@@ -19,7 +19,8 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Invoice"
-                      }
+                      },
+                      "deprecated": false
                     }
                   }
                 ]
@@ -37,7 +38,8 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "Customer"
-                          }
+                          },
+                          "deprecated": false
                         }
                       }
                     ]
@@ -81,7 +83,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Invoice"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -103,7 +106,8 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "InvoiceLine"
-                          }
+                          },
+                          "deprecated": false
                         }
                       }
                     ]
@@ -125,7 +129,8 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "InvoiceLine"
-                      }
+                      },
+                      "deprecated": false
                     }
                   }
                 ]

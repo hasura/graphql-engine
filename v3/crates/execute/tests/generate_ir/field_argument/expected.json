@@ -32,7 +32,8 @@
                               "subgraph": "default",
                               "name": "Artist"
                             },
-                            "argument_types": {}
+                            "argument_types": {},
+                            "deprecated": false
                           }
                         }
                       },
@@ -93,7 +94,8 @@
                                 },
                                 "nullable": true
                               }
-                            }
+                            },
+                            "deprecated": false
                           }
                         }
                       },

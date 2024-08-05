@@ -61,7 +61,8 @@
                               "subgraph": "default",
                               "name": "article"
                             },
-                            "argument_types": {}
+                            "argument_types": {},
+                            "deprecated": false
                           }
                         }
                       },
@@ -215,7 +216,8 @@
                               "subgraph": "default",
                               "name": "author"
                             },
-                            "argument_types": {}
+                            "argument_types": {},
+                            "deprecated": false
                           }
                         }
                       },
@@ -261,7 +263,8 @@
                               "subgraph": "default",
                               "name": "author"
                             },
-                            "argument_types": {}
+                            "argument_types": {},
+                            "deprecated": false
                           }
                         }
                       },

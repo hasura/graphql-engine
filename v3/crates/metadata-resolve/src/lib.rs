@@ -57,7 +57,7 @@ pub use stages::relationships::{
     RelationshipModelMapping, RelationshipTarget,
 };
 pub use stages::scalar_types::ScalarTypeRepresentation;
-pub use stages::type_permissions::TypeInputPermission;
+pub use stages::type_permissions::{FieldPresetInfo, TypeInputPermission};
 pub use stages::{resolve, Metadata};
 pub use types::configuration;
 pub use types::error::Error;

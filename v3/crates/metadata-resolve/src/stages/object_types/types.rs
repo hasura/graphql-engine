@@ -130,6 +130,12 @@ pub struct FieldDefinition {
     pub field_arguments: IndexMap<ArgumentName, FieldArgumentInfo>,
 }
 
+impl FieldDefinition {
+    pub fn is_deprecated(&self) -> bool {
+        self.deprecated.is_some()
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldArgumentInfo {
     pub argument_type: QualifiedTypeReference,

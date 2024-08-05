@@ -28,7 +28,8 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "article"
-                          }
+                          },
+                          "deprecated": false
                         }
                       }
                     ]
@@ -49,7 +50,8 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "article"
-                          }
+                          },
+                          "deprecated": false
                         }
                       }
                     ]
@@ -74,7 +76,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "article"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -91,7 +94,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "article"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -139,7 +143,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "commandAuthor"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -156,7 +161,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "commandAuthor"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -173,7 +179,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "commandAuthor"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]

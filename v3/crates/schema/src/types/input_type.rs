@@ -157,6 +157,7 @@ fn input_object_type_input_fields(
                     field_name: field_name.clone(),
                     field_type: field_definition.field_type.clone(),
                     parent_type: type_name.to_owned(),
+                    deprecated: field_definition.is_deprecated(),
                 }),
                 get_input_type(gds, builder, &field_definition.field_type)?,
                 None, // Default value
@@ -229,11 +230,7 @@ pub(crate) fn build_input_field_presets_annotation(
                 .type_input_permissions
                 .get(role)
                 .map(|input_permissions| {
-                    let presets_fields = input_permissions
-                        .field_presets
-                        .clone()
-                        .into_keys()
-                        .collect();
+                    let presets_fields = input_permissions.field_presets.clone();
                     NamespaceAnnotation::InputFieldPresets {
                         presets_fields,
                         type_name: field_type_name.clone(),

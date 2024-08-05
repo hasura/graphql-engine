@@ -155,12 +155,23 @@ fn build_comparable_fields_schema(
             get_scalar_comparison_input_type(builder, comparison_expression)?;
         let field_type = ast::TypeContainer::named_null(registered_type_name);
 
+        // Get internal field definition
+        let field_definition = object_type_representation
+            .object_type
+            .fields
+            .get(field_name)
+            .ok_or_else(|| Error::InternalObjectTypeFieldNotFound {
+                field_name: field_name.clone(),
+                type_name: object_type_name.clone(),
+            })?;
+
         // create Field annotation for this field
         let annotation = types::Annotation::Input(InputAnnotation::BooleanExpression(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
                 field: types::ModelFilterArgument::Field {
                     field_name: field_name.clone(),
                     object_type: object_type_name.clone(),
+                    deprecated: field_definition.is_deprecated(),
                 },
             },
         ));
@@ -206,12 +217,23 @@ fn build_comparable_fields_schema(
 
         let field_type = ast::TypeContainer::named_null(registered_type_name);
 
+        // Get internal field definition
+        let field_definition = object_type_representation
+            .object_type
+            .fields
+            .get(field_name)
+            .ok_or_else(|| Error::InternalObjectTypeFieldNotFound {
+                field_name: field_name.clone(),
+                type_name: object_type_name.clone(),
+            })?;
+
         // create Field annotation for field
         let annotation = types::Annotation::Input(InputAnnotation::BooleanExpression(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
                 field: types::ModelFilterArgument::Field {
                     field_name: field_name.clone(),
                     object_type: object_type_name.clone(),
+                    deprecated: field_definition.is_deprecated(),
                 },
             },
         ));

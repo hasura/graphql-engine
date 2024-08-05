@@ -371,7 +371,7 @@ fn build_preset_map_from_input_object_type_permission(
 
             let value = (
                 type_reference.clone(),
-                match preset {
+                match &preset.value {
                     open_dds::permissions::ValueExpression::Literal(literal) => {
                         ValueExpressionOrPredicate::Literal(literal.clone())
                     }

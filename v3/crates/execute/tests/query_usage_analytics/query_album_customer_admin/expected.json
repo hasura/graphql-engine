@@ -25,7 +25,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Album"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -42,7 +43,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Album"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -64,7 +66,8 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Track"
-                      }
+                      },
+                      "deprecated": false
                     }
                   }
                 ]
@@ -81,7 +84,8 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Track"
-                      }
+                      },
+                      "deprecated": false
                     }
                   }
                 ]
@@ -103,7 +107,8 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "PlaylistTrack"
-                          }
+                          },
+                          "deprecated": false
                         }
                       }
                     ]
@@ -187,7 +192,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Customer"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -204,7 +210,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Customer"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -221,7 +228,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Customer"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -238,7 +246,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Customer"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -260,7 +269,8 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Employee"
-                      }
+                      },
+                      "deprecated": false
                     }
                   }
                 ]
@@ -277,7 +287,26 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Employee"
-                      }
+                      },
+                      "deprecated": false
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "Fax",
+                "alias": "Fax",
+                "arguments": [],
+                "fields": [],
+                "used": [
+                  {
+                    "field": {
+                      "name": "Fax",
+                      "opendd_type": {
+                        "subgraph": "default",
+                        "name": "Employee"
+                      },
+                      "deprecated": true
                     }
                   }
                 ]
@@ -294,7 +323,8 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Employee"
-                      }
+                      },
+                      "deprecated": false
                     }
                   }
                 ]
@@ -322,7 +352,8 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "Employee"
-                          }
+                          },
+                          "deprecated": false
                         }
                       }
                     ]
@@ -339,7 +370,8 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "Employee"
-                          }
+                          },
+                          "deprecated": false
                         }
                       }
                     ]

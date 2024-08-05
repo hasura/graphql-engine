@@ -83,20 +83,18 @@ pub fn process_model_predicate<'s>(
 ) -> Result<filter_expression::Expression<'s>, error::Error> {
     match model_predicate {
         metadata_resolve::ModelPredicate::UnaryFieldComparison {
-            field: _,
-            field_parent_type: _,
             ndc_column,
             operator,
+            ..
         } => Ok(make_permission_unary_boolean_expression(
             ndc_column, *operator,
         )),
         metadata_resolve::ModelPredicate::BinaryFieldComparison {
-            field: _,
-            field_parent_type: _,
             ndc_column,
             argument_type,
             operator,
             value,
+            ..
         } => Ok(make_permission_binary_boolean_expression(
             ndc_column,
             argument_type,

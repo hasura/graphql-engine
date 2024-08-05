@@ -131,6 +131,17 @@ pub fn build_model_order_by_input_schema(
                 permissions::get_allowed_roles_for_field(object_type_representation, field_name)
                     .map(|role| (role.clone(), None))
                     .collect();
+
+            // Get internal field definition
+            let field_definition = object_type_representation
+                .object_type
+                .fields
+                .get(field_name)
+                .ok_or_else(|| Error::InternalObjectTypeFieldNotFound {
+                    field_name: field_name.clone(),
+                    type_name: model.model.data_type.clone(),
+                })?;
+
             let input_field = builder.conditional_namespaced(
                 gql_schema::InputField::new(
                     graphql_field_name.clone(),
@@ -140,6 +151,7 @@ pub fn build_model_order_by_input_schema(
                             field_name: field_name.clone(),
                             parent_type: model.model.data_type.clone(),
                             ndc_column: order_by_expression.ndc_column.clone(),
+                            deprecated: field_definition.is_deprecated(),
                         },
                     )),
                     input_type,

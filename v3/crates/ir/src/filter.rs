@@ -147,6 +147,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
                 schema::ModelFilterArgument::Field {
                     field_name,
                     object_type,
+                    ..
                 },
         } => {
             let FieldMapping { column, .. } =
@@ -363,6 +364,7 @@ fn build_comparison_expression<'s>(
                         schema::ModelFilterArgument::Field {
                             field_name: inner_field_name,
                             object_type: inner_object_type,
+                            ..
                         },
                 },
             )) => {

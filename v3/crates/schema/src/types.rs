@@ -21,8 +21,8 @@ use open_dds::{
 use metadata_resolve::{
     self, data_connectors::ArgumentPresetValue, deserialize_non_string_key_btreemap,
     deserialize_qualified_btreemap, serialize_non_string_key_btreemap,
-    serialize_qualified_btreemap, DataConnectorLink, NdcColumnForComparison, Qualified,
-    QualifiedTypeReference, TypeMapping, ValueExpressionOrPredicate,
+    serialize_qualified_btreemap, DataConnectorLink, FieldPresetInfo, NdcColumnForComparison,
+    Qualified, QualifiedTypeReference, TypeMapping, ValueExpressionOrPredicate,
 };
 
 use json_ext::HashMapWithJsonKey;
@@ -86,6 +86,8 @@ pub enum ModelFilterArgument {
     Field {
         field_name: types::FieldName,
         object_type: Qualified<types::CustomTypeName>,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: bool,
     },
     RelationshipField(FilterRelationshipAnnotation),
 }
@@ -177,6 +179,8 @@ pub enum OutputAnnotation {
         /// Field usage is reported with the name of object type where the field is defined.
         parent_type: Qualified<types::CustomTypeName>,
         argument_types: BTreeMap<ast::Name, QualifiedTypeReference>,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: bool,
     },
     GlobalIDField {
         /// The `global_id_fields` are required to calculate the
@@ -223,6 +227,8 @@ pub enum ModelInputAnnotation {
         /// Field usage is reported with the name of object type where the field is defined.
         parent_type: Qualified<types::CustomTypeName>,
         ndc_column: DataConnectorColumnName,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: bool,
     },
     ModelOrderByRelationshipArgument(OrderByRelationshipAnnotation),
 
@@ -265,6 +271,8 @@ pub enum InputAnnotation {
         field_name: types::FieldName,
         field_type: QualifiedTypeReference,
         parent_type: Qualified<types::CustomTypeName>,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: bool,
     },
     BooleanExpression(BooleanExpressionAnnotation),
     CommandArgument {
@@ -338,7 +346,7 @@ pub enum NamespaceAnnotation {
     /// AST is used to analyze query usage, and additional context is not available.
     /// Therefore, the field presets are annotated to track their usage.
     InputFieldPresets {
-        presets_fields: Vec<types::FieldName>,
+        presets_fields: BTreeMap<types::FieldName, FieldPresetInfo>,
         type_name: Qualified<types::CustomTypeName>,
     },
     /// The `NodeFieldTypeMappings` contains a Hashmap of typename to the filter permission.

@@ -70,6 +70,7 @@ pub enum OpenddObject {
 pub struct FieldUsage {
     pub name: FieldName,
     pub opendd_type: Qualified<CustomTypeName>,
+    pub deprecated: bool,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -182,6 +183,7 @@ mod tests {
                     "app".to_string(),
                     CustomTypeName(identifier!("Order")),
                 ),
+                deprecated: false,
             })],
             fields: vec![GqlInputField {
                 name: "_eq".to_string(),
@@ -200,6 +202,7 @@ mod tests {
                         "app".to_string(),
                         CustomTypeName(identifier!("Product")),
                     ),
+                    deprecated: false,
                 })],
                 fields: vec![GqlInputField {
                     name: "_gt".to_string(),
@@ -230,6 +233,7 @@ mod tests {
                             "app".to_string(),
                             CustomTypeName(identifier!("Product")),
                         ),
+                        deprecated: false,
                     })],
                 }],
                 used: vec![product_relationship.clone()],
@@ -246,6 +250,7 @@ mod tests {
                     "app".to_string(),
                     CustomTypeName(identifier!("Product")),
                 ),
+                deprecated: false,
             })],
             fields: vec![GqlInputField {
                 name: "_gt".to_string(),
@@ -271,6 +276,7 @@ mod tests {
                         "app".to_string(),
                         CustomTypeName(identifier!("Product")),
                     ),
+                    deprecated: false,
                 })],
             }],
             used: vec![],
@@ -297,6 +303,7 @@ mod tests {
                                     "app".to_string(),
                                     CustomTypeName(identifier!("Order")),
                                 ),
+                                deprecated: false,
                             }],
                             relationships: vec![],
                         },
@@ -312,6 +319,7 @@ mod tests {
                                 "app".to_string(),
                                 CustomTypeName(identifier!("Order")),
                             ),
+                            deprecated: false,
                         })],
                         fields: vec![],
                         arguments: vec![],
@@ -332,6 +340,7 @@ mod tests {
                                         "app".to_string(),
                                         CustomTypeName(identifier!("Address")),
                                     ),
+                                    deprecated: false,
                                 })],
                             },
                             GqlField {
@@ -345,6 +354,7 @@ mod tests {
                                         "app".to_string(),
                                         CustomTypeName(identifier!("Address")),
                                     ),
+                                    deprecated: false,
                                 })],
                             },
                         ],
@@ -354,6 +364,7 @@ mod tests {
                                 "app".to_string(),
                                 CustomTypeName(identifier!("Order")),
                             ),
+                            deprecated: false,
                         })],
                     },
                     GqlField {
@@ -370,6 +381,7 @@ mod tests {
                                     "app".to_string(),
                                     CustomTypeName(identifier!("Product")),
                                 ),
+                                deprecated: false,
                             })],
                             arguments: vec![],
                             fields: vec![],

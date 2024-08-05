@@ -4,7 +4,9 @@ mod error;
 mod types;
 pub use error::{TypeInputPermissionError, TypeOutputPermissionError, TypePermissionError};
 use open_dds::permissions::{FieldPreset, Role, TypeOutputPermission, TypePermissionsV1};
-pub use types::{ObjectTypeWithPermissions, ObjectTypesWithPermissions, TypeInputPermission};
+pub use types::{
+    FieldPresetInfo, ObjectTypeWithPermissions, ObjectTypesWithPermissions, TypeInputPermission,
+};
 
 use crate::types::subgraph::Qualified;
 
@@ -110,7 +112,7 @@ pub(crate) fn resolve_input_type_permission(
             } in &input.field_presets
             {
                 // check if the field exists on this type
-                match object_type_representation.fields.get(field_name) {
+                let field_definition = match object_type_representation.fields.get(field_name) {
                     Some(field_definition) => {
                         // check if the value is provided typechecks
                         typecheck::typecheck_value_expression(&field_definition.field_type, value)
@@ -121,6 +123,7 @@ pub(crate) fn resolve_input_type_permission(
                                     type_error,
                                 }
                             })?;
+                        field_definition
                     }
                     None => {
                         return Err(
@@ -130,8 +133,14 @@ pub(crate) fn resolve_input_type_permission(
                             },
                         );
                     }
-                }
-                resolved_field_presets.insert(field_name.clone(), value.clone());
+                };
+                resolved_field_presets.insert(
+                    field_name.clone(),
+                    FieldPresetInfo {
+                        value: value.clone(),
+                        deprecated: field_definition.is_deprecated(),
+                    },
+                );
             }
             if resolved_type_permissions
                 .insert(

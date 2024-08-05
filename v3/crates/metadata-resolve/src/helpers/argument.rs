@@ -501,6 +501,13 @@ pub(crate) fn resolve_model_predicate_with_type(
                 }
             };
 
+            let field_definition = fields.get(field).ok_or_else(|| Error::TypePredicateError {
+                type_predicate_error: TypePredicateError::UnknownFieldInTypePredicate {
+                    field_name: field.clone(),
+                    type_name: type_name.clone(),
+                },
+            })?;
+
             Ok(model_permissions::ModelPredicate::BinaryFieldComparison {
                 field: field.clone(),
                 field_parent_type: type_name.to_owned(),
@@ -508,6 +515,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                 operator: resolved_operator,
                 argument_type,
                 value: value_expression,
+                deprecated: field_definition.is_deprecated(),
             })
         }
         permissions::ModelPredicate::FieldIsNull(permissions::FieldIsNullPredicate { field }) => {
@@ -521,11 +529,19 @@ pub(crate) fn resolve_model_predicate_with_type(
                 }
             })?;
 
+            let field_definition = fields.get(field).ok_or_else(|| Error::TypePredicateError {
+                type_predicate_error: TypePredicateError::UnknownFieldInTypePredicate {
+                    field_name: field.clone(),
+                    type_name: type_name.clone(),
+                },
+            })?;
+
             Ok(model_permissions::ModelPredicate::UnaryFieldComparison {
                 field: field.clone(),
                 field_parent_type: type_name.to_owned(),
                 ndc_column: field_mapping.column.clone(),
                 operator: model_permissions::UnaryComparisonOperator::IsNull,
+                deprecated: field_definition.is_deprecated(),
             })
         }
 

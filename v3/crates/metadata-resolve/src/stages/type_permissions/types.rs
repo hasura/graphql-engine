@@ -35,7 +35,13 @@ impl ObjectTypesWithPermissions {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct TypeInputPermission {
-    pub field_presets: BTreeMap<FieldName, ValueExpression>,
+    pub field_presets: BTreeMap<FieldName, FieldPresetInfo>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct FieldPresetInfo {
+    pub value: ValueExpression,
+    pub deprecated: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
