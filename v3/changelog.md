@@ -4,6 +4,10 @@
 
 ### Added
 
+- A new CLI flag (`--export-traces-stdout`) and env var (`EXPORT_TRACES_STDOUT`)
+  is introduced to enable logging of traces to STDOUT. By default, logging is
+  disabled.
+
 #### Remote Relationships Predicates
 
 We have significantly enhanced our permission capabilities to support remote

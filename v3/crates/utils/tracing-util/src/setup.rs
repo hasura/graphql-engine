@@ -10,6 +10,20 @@ use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
 use opentelemetry_sdk::trace::{SpanProcessor, TracerProvider};
 use opentelemetry_semantic_conventions as semcov;
 
+/// A configuration type to enable/disable baggage propagation
+#[derive(Debug, Copy, Clone)]
+pub enum PropagateBaggage {
+    Enable,
+    Disable,
+}
+
+/// A configuration type to enable/disable exporting traces to stdout
+#[derive(Debug, Copy, Clone)]
+pub enum ExportTracesStdout {
+    Enable,
+    Disable,
+}
+
 /// Initialize the tracing setup.
 ///
 /// This includes setting the global tracer and propagators:
@@ -34,7 +48,8 @@ pub fn initialize_tracing(
     endpoint: Option<&str>,
     service_name: &'static str,
     service_version: Option<&'static str>,
-    propagate_caller_baggage: bool,
+    propagate_caller_baggage: PropagateBaggage,
+    enable_stdout_export: ExportTracesStdout,
 ) -> Result<(), TraceError> {
     // install global collector configured based on RUST_LOG env var.
     tracing_subscriber::fmt::init();
@@ -42,10 +57,11 @@ pub fn initialize_tracing(
     global::set_text_map_propagator(TextMapCompositePropagator::new(vec![
         Box::new(TraceContextPropagator::new()),
         Box::new(opentelemetry_zipkin::Propagator::new()),
-        if propagate_caller_baggage {
-            Box::new(BaggagePropagator::new())
-        } else {
-            Box::new(InjectOnlyTextMapPropagator(BaggagePropagator::new()))
+        match propagate_caller_baggage {
+            PropagateBaggage::Enable => Box::new(BaggagePropagator::new()),
+            PropagateBaggage::Disable => {
+                Box::new(InjectOnlyTextMapPropagator(BaggagePropagator::new()))
+            }
         },
         Box::new(TraceContextResponsePropagator::new()),
     ]));
@@ -67,13 +83,17 @@ pub fn initialize_tracing(
     )
     .build_span_exporter()?;
 
-    let stdout_exporter = opentelemetry_stdout::SpanExporter::default();
-    let tracer_provider = TracerProvider::builder()
-        .with_simple_exporter(stdout_exporter)
+    let mut tracer_provider_builder = TracerProvider::builder()
         .with_batch_exporter(otlp_exporter, opentelemetry_sdk::runtime::Tokio)
         .with_span_processor(BaggageSpanProcessor())
-        .with_config(config)
-        .build();
+        .with_config(config);
+
+    if let ExportTracesStdout::Enable = enable_stdout_export {
+        let stdout_exporter = opentelemetry_stdout::SpanExporter::default();
+        tracer_provider_builder = tracer_provider_builder.with_simple_exporter(stdout_exporter);
+    }
+
+    let tracer_provider = tracer_provider_builder.build();
 
     // Set the global tracer provider so everyone gets this setup.
     global::set_tracer_provider(tracer_provider);

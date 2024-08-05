@@ -53,7 +53,7 @@ const MB: usize = 1_048_576;
 #[derive(Parser, Serialize)]
 #[command(version = VERSION)]
 struct ServerOptions {
-    /// The path to the metadata file, used to construct the schema.g
+    /// The path to the metadata file, used to construct the schema.
     #[arg(long, value_name = "PATH", env = "METADATA_PATH")]
     metadata_path: PathBuf,
     /// An introspection metadata file, served over `/metadata` if provided.
@@ -108,6 +108,10 @@ struct ServerOptions {
     /// sensitve information.
     #[arg(long, env = "EXPOSE_INTERNAL_ERRORS")]
     expose_internal_errors: bool,
+
+    /// Log traces to stdout.
+    #[arg(long, env = "EXPORT_TRACES_STDOUT")]
+    export_traces_stdout: bool,
 }
 
 struct EngineState {
@@ -122,13 +126,19 @@ struct EngineState {
 #[tokio::main]
 #[allow(clippy::print_stdout)]
 async fn main() {
-    let server = ServerOptions::parse();
+    let server_options = ServerOptions::parse();
+    let export_traces_stdout = if server_options.export_traces_stdout {
+        tracing_util::ExportTracesStdout::Enable
+    } else {
+        tracing_util::ExportTracesStdout::Disable
+    };
 
     tracing_util::initialize_tracing(
-        server.otlp_endpoint.as_deref(),
+        server_options.otlp_endpoint.as_deref(),
         "graphql-engine",
         Some(VERSION),
-        false,
+        tracing_util::PropagateBaggage::Disable,
+        export_traces_stdout,
     )
     .unwrap();
 
@@ -137,7 +147,7 @@ async fn main() {
             "app init",
             "App initialization",
             SpanVisibility::Internal,
-            || Box::pin(start_engine(&server)),
+            || Box::pin(start_engine(&server_options)),
         )
         .await
     {

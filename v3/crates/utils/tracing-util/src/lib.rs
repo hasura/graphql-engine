@@ -7,7 +7,7 @@ mod tracer;
 // Avoid conflicts with `http` crate
 pub use crate::http::TraceableHttpResponse;
 pub use request::get_trace_headers;
-pub use setup::{initialize_tracing, shutdown_tracer};
+pub use setup::{initialize_tracing, shutdown_tracer, ExportTracesStdout, PropagateBaggage};
 pub use traceable::{ErrorVisibility, Successful, Traceable, TraceableError};
 pub use tracer::{
     add_event_on_active_span, global_tracer, set_attribute_on_active_span,

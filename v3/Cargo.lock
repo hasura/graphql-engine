@@ -1598,7 +1598,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
+ "clap",
  "http 0.2.12",
+ "serde",
  "serde_json",
  "tokio",
  "tower-http",
