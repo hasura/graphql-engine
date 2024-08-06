@@ -20,7 +20,7 @@ pub struct MutationExecutionPlan<'s, TFilterExpression> {
     pub procedure_arguments:
         BTreeMap<DataConnectorArgumentName, arguments::MutationArgument<TFilterExpression>>,
     /// The fields to return from the result, or null to return everything
-    pub procedure_fields: Option<field::NestedField<'s, TFilterExpression>>,
+    pub procedure_fields: Option<field::NestedField<TFilterExpression>>,
     /// Any relationships between collections involved in the query request
     pub collection_relationships: BTreeMap<NdcRelationshipName, relationships::Relationship>,
     /// The data connector used to fetch the data

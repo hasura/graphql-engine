@@ -5,7 +5,7 @@ use lang_graphql::{ast::common::Alias, normalized_ast};
 use metadata_resolve::{Qualified, QualifiedTypeName, TypeMapping};
 use open_dds::{
     aggregates::DataConnectorAggregationFunctionName,
-    data_connector::DataConnectorName,
+    data_connector::{DataConnectorColumnName, DataConnectorName},
     types::{CustomTypeName, FieldName},
 };
 use schema::{
@@ -19,24 +19,24 @@ use super::selection_set::NdcFieldAlias;
 
 /// IR that represents the selected fields of an output type.
 #[derive(Debug, Serialize, Default, PartialEq, Clone)]
-pub struct AggregateSelectionSet<'s> {
+pub struct AggregateSelectionSet {
     // The fields in the selection set. They are stored in the form that would
     // be converted and sent over the wire. Serialized the map as ordered to
     // produce deterministic golden files.
-    pub fields: IndexMap<NdcFieldAlias, AggregateFieldSelection<'s>>,
+    pub fields: IndexMap<NdcFieldAlias, AggregateFieldSelection>,
 }
 
 #[derive(Debug, Serialize, PartialEq, Clone)]
-pub enum AggregateFieldSelection<'s> {
+pub enum AggregateFieldSelection {
     Count {
-        column_path: Vec<&'s str>,
+        column_path: Vec<DataConnectorColumnName>,
     },
     CountDistinct {
-        column_path: Vec<&'s str>,
+        column_path: Vec<DataConnectorColumnName>,
     },
     AggregationFunction {
-        function_name: &'s DataConnectorAggregationFunctionName,
-        column_path: nonempty::NonEmpty<&'s str>,
+        function_name: DataConnectorAggregationFunctionName,
+        column_path: nonempty::NonEmpty<DataConnectorColumnName>,
     },
 }
 
@@ -46,7 +46,7 @@ pub fn generate_aggregate_selection_set_ir<'s>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     field_mappings: &'s BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     aggregate_operand_type: &QualifiedTypeName,
-) -> Result<AggregateSelectionSet<'s>, error::Error> {
+) -> Result<AggregateSelectionSet, error::Error> {
     let mut aggregate_field_selections = IndexMap::new();
 
     add_aggregate_selections(
@@ -66,7 +66,7 @@ pub fn generate_aggregate_selection_set_ir<'s>(
 }
 
 fn add_aggregate_selections<'s>(
-    aggregate_field_selections: &mut IndexMap<NdcFieldAlias, AggregateFieldSelection<'s>>,
+    aggregate_field_selections: &mut IndexMap<NdcFieldAlias, AggregateFieldSelection>,
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     aggregate_operand_type: &QualifiedTypeName,
     data_connector_name: &Qualified<DataConnectorName>,
@@ -91,7 +91,7 @@ fn add_aggregate_selections<'s>(
                     let selection_field_name =
                         mk_alias_from_graphql_field_path(&graphql_field_path);
                     let selection = AggregateFieldSelection::Count {
-                        column_path: column_path.iter().map(|m| m.column.as_str()).collect(),
+                        column_path: column_path.iter().map(|m| m.column.clone()).collect(),
                     };
                     aggregate_field_selections.insert(selection_field_name, selection);
                 }
@@ -100,7 +100,7 @@ fn add_aggregate_selections<'s>(
                     let selection_field_name =
                         mk_alias_from_graphql_field_path(&graphql_field_path);
                     let selection = AggregateFieldSelection::CountDistinct {
-                        column_path: column_path.iter().map(|m| m.column.as_str()).collect(),
+                        column_path: column_path.iter().map(|m| m.column.clone()).collect(),
                     };
                     aggregate_field_selections.insert(selection_field_name, selection);
                 }
@@ -136,8 +136,8 @@ fn add_aggregate_selections<'s>(
                         })?;
 
                     let selection = AggregateFieldSelection::AggregationFunction {
-                        function_name: &data_connector_function_info.function_name,
-                        column_path: column_path.map(|m| m.column.as_str()),
+                        function_name: data_connector_function_info.function_name.clone(),
+                        column_path: column_path.map(|m| m.column.clone()),
                     };
                     aggregate_field_selections.insert(selection_field_name, selection);
                 }

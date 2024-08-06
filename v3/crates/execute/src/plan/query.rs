@@ -16,7 +16,7 @@ pub type ResolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, filter::Resolve
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QueryExecutionPlan<'s, TFilterExpression> {
-    pub query_node: QueryNode<'s, TFilterExpression>,
+    pub query_node: QueryNode<TFilterExpression>,
     /// The name of a collection
     pub collection: CollectionName,
     /// Values to be provided to any collection arguments
@@ -55,12 +55,12 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
     }
 }
 
-pub type UnresolvedQueryNode<'s> = QueryNode<'s, ir::Expression<'s>>;
-pub type ResolvedQueryNode<'s> = QueryNode<'s, filter::ResolvedFilterExpression>;
+pub type UnresolvedQueryNode<'s> = QueryNode<ir::Expression<'s>>;
+pub type ResolvedQueryNode = QueryNode<filter::ResolvedFilterExpression>;
 
 /// Query plan for fetching data
 #[derive(Debug, Clone, PartialEq)]
-pub struct QueryNode<'s, TFilterExpression> {
+pub struct QueryNode<TFilterExpression> {
     /// Optionally limit to N results
     pub limit: Option<u32>,
     /// Optionally offset from the Nth result
@@ -70,9 +70,9 @@ pub struct QueryNode<'s, TFilterExpression> {
     /// Optionally filter results
     pub predicate: Option<TFilterExpression>,
     /// Aggregate fields of the query
-    pub aggregates: Option<AggregateSelectionSet<'s>>,
+    pub aggregates: Option<AggregateSelectionSet>,
     /// Fields of the query
-    pub fields: Option<IndexMap<NdcFieldAlias, field::Field<'s, TFilterExpression>>>,
+    pub fields: Option<IndexMap<NdcFieldAlias, field::Field<TFilterExpression>>>,
 }
 
 impl<'s> UnresolvedQueryNode<'s> {
@@ -80,7 +80,7 @@ impl<'s> UnresolvedQueryNode<'s> {
     pub async fn resolve(
         self,
         http_context: &'s HttpContext,
-    ) -> Result<ResolvedQueryNode<'s>, error::FieldError>
+    ) -> Result<ResolvedQueryNode, error::FieldError>
     where
         's: 'async_recursion,
     {

@@ -146,7 +146,7 @@ pub fn plan_remote_predicate<'s, 'a>(
 /// These field values are fetched from the remote data connector.
 fn build_ndc_query_fields<'s>(
     ndc_column_mapping: &[ir::RelationshipColumnMapping],
-) -> IndexMap<NdcFieldAlias, field::Field<'s, ir::Expression<'s>>> {
+) -> IndexMap<NdcFieldAlias, field::Field<ir::Expression<'s>>> {
     let mut fields = IndexMap::new();
     for mapping in ndc_column_mapping {
         let field = field::Field::Column {

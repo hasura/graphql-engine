@@ -51,7 +51,7 @@ pub struct ModelSelection<'s> {
     pub selection: Option<selection_set::ResultSelectionSet<'s>>,
 
     // Aggregates requested of the model
-    pub aggregate_selection: Option<aggregates::AggregateSelectionSet<'s>>,
+    pub aggregate_selection: Option<aggregates::AggregateSelectionSet>,
 }
 
 struct ModelSelectAggregateArguments<'s> {

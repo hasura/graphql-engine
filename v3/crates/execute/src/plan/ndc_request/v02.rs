@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 use ndc_models as ndc_models_v02;
+use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::types::DataConnectorArgumentName;
 
 use super::super::arguments;
@@ -46,9 +47,7 @@ fn make_variables(
     })
 }
 
-fn make_query(
-    query_node: query::ResolvedQueryNode<'_>,
-) -> Result<ndc_models_v02::Query, FieldError> {
+fn make_query(query_node: query::ResolvedQueryNode) -> Result<ndc_models_v02::Query, FieldError> {
     let ndc_predicate = query_node.predicate.map(make_expression).transpose()?;
 
     let ndc_fields = query_node
@@ -501,10 +500,12 @@ fn make_aggregates(
                     } = column_path;
                     let nested_field_path = field_path
                         .into_iter()
-                        .map(ndc_models_v02::FieldName::from)
+                        .map(|column_name| {
+                            ndc_models_v02::FieldName::from(column_name.into_inner())
+                        })
                         .collect::<Vec<_>>();
                     ndc_models_v02::Aggregate::SingleColumn {
-                        column: ndc_models_v02::FieldName::from(column),
+                        column: ndc_models_v02::FieldName::from(column.into_inner()),
                         field_path: if nested_field_path.is_empty() {
                             None
                         } else {
@@ -526,11 +527,14 @@ fn make_aggregates(
 
 /// Creates the appropriate NDC count aggregation based on whether we're selecting
 /// a column (nested or otherwise) or not
-fn make_count_aggregate(column_path: Vec<&str>, distinct: bool) -> ndc_models_v02::Aggregate {
+fn make_count_aggregate(
+    column_path: Vec<DataConnectorColumnName>,
+    distinct: bool,
+) -> ndc_models_v02::Aggregate {
     let mut column_path_iter = column_path.into_iter();
     if let Some(first_path_element) = column_path_iter.next() {
         let remaining_path = column_path_iter
-            .map(ndc_models_v02::FieldName::from)
+            .map(|column_name| ndc_models_v02::FieldName::from(column_name.into_inner()))
             .collect::<Vec<_>>();
         let nested_field_path = if remaining_path.is_empty() {
             None
@@ -538,7 +542,7 @@ fn make_count_aggregate(column_path: Vec<&str>, distinct: bool) -> ndc_models_v0
             Some(remaining_path)
         };
         ndc_models_v02::Aggregate::ColumnCount {
-            column: ndc_models_v02::FieldName::from(first_path_element),
+            column: ndc_models_v02::FieldName::from(first_path_element.into_inner()),
             field_path: nested_field_path,
             distinct,
         }
