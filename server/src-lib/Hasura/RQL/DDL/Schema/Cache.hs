@@ -1051,7 +1051,7 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
                           _lmiDescription = _nqmDescription,
                           _lmiPermissions = logicalModelPermissions
                         }
-                nqmCode <- validateNativeQuery @b disableNativeQueryValidation env sourceName (_smConfiguration sourceMetadata) sourceConfig logicalModel preValidationNativeQuery
+                nqmCode <- validateNativeQuery @b disableNativeQueryValidation sourceConfig logicalModel preValidationNativeQuery
 
                 case maybeDependency of
                   Just dependency ->
