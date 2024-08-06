@@ -90,24 +90,76 @@ impl Model {
         })
     }
 
-    pub fn upgrade(self) -> ModelV1 {
-        match self {
-            Model::V1(v1) => v1,
-            Model::V2(_) => todo!("ModelV2 not yet supported"), // TODO(dmoverton) see comment below
-        }
-    }
-
-    // TODO(dmoverton):
     // Upgrading from ModelV1 to ModelV2 requires creating a new OrderByExpression
     // We don't want to confuse the user by generating the new types and then validating against them
     // instead of the original types.
-    // Therefore, we want to defer the upgrade until the metadata resolve step.
-    // To do this, the input to metadata resolve will need to be `Model` rather than `ModelV1` or `ModelV2`.
-    // The `upgrade` function should change to the below, and the
-    // type of `MetadataAccessor.models` should become `Vec<QualifiedObject<models::Model>>`
-    // pub fn upgrade(self) -> Model {
-    //     self
-    // }
+    // Therefore, we defer the upgrade until the metadata resolve step.
+    pub fn upgrade(self) -> Model {
+        self
+    }
+
+    pub fn name(&self) -> &ModelName {
+        match self {
+            Model::V1(v1) => &v1.name,
+            Model::V2(v2) => &v2.name,
+        }
+    }
+
+    pub fn object_type(&self) -> &CustomTypeName {
+        match self {
+            Model::V1(v1) => &v1.object_type,
+            Model::V2(v2) => &v2.object_type,
+        }
+    }
+
+    pub fn global_id_source(&self) -> bool {
+        match self {
+            Model::V1(v1) => v1.global_id_source,
+            Model::V2(v2) => v2.global_id_source,
+        }
+    }
+
+    pub fn arguments(&self) -> &Vec<ArgumentDefinition> {
+        match self {
+            Model::V1(v1) => &v1.arguments,
+            Model::V2(v2) => &v2.arguments,
+        }
+    }
+
+    pub fn source(&self) -> &Option<ModelSource> {
+        match self {
+            Model::V1(v1) => &v1.source,
+            Model::V2(v2) => &v2.source,
+        }
+    }
+
+    pub fn filter_expression_type(&self) -> &Option<CustomTypeName> {
+        match self {
+            Model::V1(v1) => &v1.filter_expression_type,
+            Model::V2(v2) => &v2.filter_expression_type,
+        }
+    }
+
+    pub fn aggregate_expression(&self) -> &Option<AggregateExpressionName> {
+        match self {
+            Model::V1(v1) => &v1.aggregate_expression,
+            Model::V2(v2) => &v2.aggregate_expression,
+        }
+    }
+
+    pub fn graphql(&self) -> Option<ModelGraphQlDefinitionV2> {
+        match self {
+            Model::V1(v1) => v1.graphql.clone().map(ModelGraphQlDefinition::upgrade),
+            Model::V2(v2) => v2.graphql.clone(),
+        }
+    }
+
+    pub fn description(&self) -> &Option<String> {
+        match self {
+            Model::V1(v1) => &v1.description,
+            Model::V2(v2) => &v2.description,
+        }
+    }
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
@@ -250,6 +302,17 @@ impl ModelGraphQlDefinition {
                 "description": "Aggregate over Articles"
             }
         })
+    }
+
+    pub fn upgrade(self) -> ModelGraphQlDefinitionV2 {
+        ModelGraphQlDefinitionV2 {
+            select_uniques: self.select_uniques,
+            select_many: self.select_many,
+            arguments_input_type: self.arguments_input_type,
+            apollo_federation: self.apollo_federation,
+            filter_input_type_name: self.filter_input_type_name,
+            aggregate: self.aggregate,
+        }
     }
 }
 

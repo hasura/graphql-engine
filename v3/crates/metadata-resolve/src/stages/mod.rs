@@ -12,6 +12,7 @@ pub mod models;
 pub mod models_graphql;
 pub mod object_boolean_expressions;
 pub mod object_types;
+pub mod order_by_expressions;
 pub mod relationships;
 pub mod relay;
 pub mod roles;
@@ -106,6 +107,15 @@ pub fn resolve(
 
     all_warnings.extend(issues.into_iter().map(Warning::from));
 
+    let order_by_expressions::OrderByExpressionsOutput {
+        order_by_expressions,
+        graphql_types,
+    } = order_by_expressions::resolve(
+        &metadata_accessor,
+        &object_types_with_permissions,
+        graphql_types,
+    )?;
+
     // Check aggregate expressions
     let aggregates::AggregateExpressionsOutput {
         aggregate_expressions,
@@ -142,6 +152,8 @@ pub fn resolve(
         models,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
+        order_by_expressions,
+        graphql_types,
         issues,
     } = models::resolve(
         &metadata_accessor,
@@ -154,6 +166,8 @@ pub fn resolve(
         &object_boolean_expression_types,
         &boolean_expression_types,
         &aggregate_expressions,
+        order_by_expressions,
+        graphql_types,
     )?;
 
     all_warnings.extend(issues.into_iter().map(Warning::from));
@@ -205,6 +219,7 @@ pub fn resolve(
         &object_types_with_relationships,
         &object_boolean_expression_types,
         &boolean_expression_types,
+        &order_by_expressions,
         &graphql_types,
         &graphql_config,
     )?;
@@ -246,6 +261,7 @@ pub fn resolve(
             commands: commands_with_permissions,
             object_boolean_expression_types,
             boolean_expression_types,
+            order_by_expressions,
             aggregate_expressions,
             graphql_config: graphql_config.global,
             roles,

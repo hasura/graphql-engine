@@ -50,6 +50,7 @@ pub use stages::object_types::{
     FieldArgumentInfo, FieldMapping, ObjectTypeRepresentation,
     ResolvedObjectApolloFederationConfig, TypeMapping,
 };
+pub use stages::order_by_expressions::{OrderByExpression, OrderByExpressions};
 pub use stages::relationships::{
     relationship_execution_category, CommandRelationshipTarget, ModelAggregateRelationshipTarget,
     ModelRelationshipTarget, ObjectTypeWithRelationships, RelationshipCapabilities,

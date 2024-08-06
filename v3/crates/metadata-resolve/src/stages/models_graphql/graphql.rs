@@ -1,6 +1,6 @@
 use open_dds::aggregates::AggregateExpressionName;
 use open_dds::data_connector::DataConnectorName;
-use open_dds::models::{ModelGraphQlDefinition, ModelName};
+use open_dds::models::{ModelGraphQlDefinitionV2, ModelName};
 use open_dds::relationships::{ModelRelationshipTarget, RelationshipTarget};
 
 use super::types::{
@@ -10,6 +10,7 @@ use super::types::{
     UniqueIdentifierField,
 };
 use crate::helpers::types::{mk_name, store_new_graphql_type};
+use crate::stages::order_by_expressions::OrderByExpressions;
 use crate::stages::{data_connector_scalar_types, graphql_config, models, object_types};
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
@@ -20,7 +21,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) fn resolve_model_graphql_api(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    model_graphql_definition: &ModelGraphQlDefinition,
+    model_graphql_definition: &ModelGraphQlDefinitionV2,
     model: &models::Model,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     data_connector_scalars: &BTreeMap<
@@ -29,6 +30,7 @@ pub(crate) fn resolve_model_graphql_api(
     >,
     model_description: &Option<String>,
     aggregate_expression_name: &Option<Qualified<AggregateExpressionName>>,
+    order_by_expressions: &OrderByExpressions,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ModelGraphQlApi, Error> {
     let model_name = &model.name;
@@ -99,16 +101,21 @@ pub(crate) fn resolve_model_graphql_api(
         .as_ref()
         .map(
             |model_source: &models::ModelSource| -> Result<Option<ModelOrderByExpression>, Error> {
-                let order_by_expression_type_name =
-                    match &model_graphql_definition.order_by_expression_type {
+                let order_by_expression = model.order_by_expression.as_ref().map(|n|
+                    order_by_expressions.0.get(n)
+                    .ok_or_else(|| Error::UnknownOrderByExpressionIdentifier {
+                        model_name: model.name.clone(),
+                        order_by_expression_identifier: n.clone()
+                    })).transpose()?;
+                let order_by_expression_type_name = {
+                    let order_by_expression_type = order_by_expression
+                        .and_then(|e| e.graphql.as_ref())
+                        .map(|g| &g.expression_type_name);
+                    match &order_by_expression_type {
                         None => Ok(None),
                         Some(type_name) => mk_name(type_name.as_str()).map(ast::TypeName).map(Some),
-                    }?;
+                    }}?;
                 // TODO: (paritosh) should we check for conflicting graphql types for default order_by type name as well?
-                store_new_graphql_type(
-                    existing_graphql_types,
-                    order_by_expression_type_name.as_ref(),
-                )?;
                 order_by_expression_type_name
                     .map(|order_by_type_name| {
                         let object_types::TypeMapping::Object { field_mappings, .. } = model_source

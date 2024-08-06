@@ -485,43 +485,25 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                         },
                     ),
                     apollo_federation_key_source: None,
-                    orderable_fields: [
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "article_id",
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "article_namespace",
+                            ),
+                            name: FromModel(
+                                ModelName(
+                                    Identifier(
+                                        "Articles",
+                                    ),
                                 ),
                             ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
                         },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "title",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "author_id",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                    ],
+                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: None,
                         graphql: Some(
-                            ModelGraphQlDefinition {
+                            ModelGraphQlDefinitionV2 {
                                 select_uniques: [],
                                 select_many: Some(
                                     SelectManyGraphQlDefinition {
@@ -533,7 +515,6 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                     },
                                 ),
                                 arguments_input_type: None,
-                                order_by_expression_type: None,
                                 apollo_federation: None,
                                 filter_input_type_name: None,
                                 aggregate: None,
@@ -639,6 +620,88 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             objects: {},
             scalars: {},
         },
+        order_by_expressions: OrderByExpressions(
+            {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "article_namespace",
+                    ),
+                    name: FromModel(
+                        ModelName(
+                            Identifier(
+                                "Articles",
+                            ),
+                        ),
+                    ),
+                }: OrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "article_namespace",
+                        ),
+                        name: FromModel(
+                            ModelName(
+                                Identifier(
+                                    "Articles",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "article_namespace",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "article",
+                            ),
+                        ),
+                    },
+                    orderable_fields: [
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "article_id",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "author_id",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                    ],
+                    orderable_relationships: [],
+                    graphql: None,
+                    description: Some(
+                        "OrderByExpression for Model Articles (in subgraph article_namespace)",
+                    ),
+                },
+            },
+        ),
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(

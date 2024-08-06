@@ -537,38 +537,20 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    orderable_fields: [
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "id",
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
+                            name: FromModel(
+                                ModelName(
+                                    Identifier(
+                                        "movies",
+                                    ),
                                 ),
                             ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
                         },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "title",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "rating",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                    ],
+                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: Some(
@@ -584,7 +566,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             },
                         ),
                         graphql: Some(
-                            ModelGraphQlDefinition {
+                            ModelGraphQlDefinitionV2 {
                                 select_uniques: [],
                                 select_many: Some(
                                     SelectManyGraphQlDefinition {
@@ -596,7 +578,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     },
                                 ),
                                 arguments_input_type: None,
-                                order_by_expression_type: None,
                                 apollo_federation: None,
                                 filter_input_type_name: None,
                                 aggregate: None,
@@ -1231,6 +1212,88 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                 },
             },
         },
+        order_by_expressions: OrderByExpressions(
+            {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
+                    name: FromModel(
+                        ModelName(
+                            Identifier(
+                                "movies",
+                            ),
+                        ),
+                    ),
+                }: OrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
+                        name: FromModel(
+                            ModelName(
+                                Identifier(
+                                    "movies",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "movie",
+                            ),
+                        ),
+                    },
+                    orderable_fields: [
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "id",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "rating",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                    ],
+                    orderable_relationships: [],
+                    graphql: None,
+                    description: Some(
+                        "OrderByExpression for Model movies (in subgraph __unknown_namespace)",
+                    ),
+                },
+            },
+        ),
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(

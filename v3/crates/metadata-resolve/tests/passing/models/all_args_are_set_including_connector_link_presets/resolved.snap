@@ -372,23 +372,25 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    orderable_fields: [
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "test",
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: FromModel(
+                                ModelName(
+                                    Identifier(
+                                        "collection_with_args",
+                                    ),
                                 ),
                             ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
                         },
-                    ],
+                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: None,
                         graphql: Some(
-                            ModelGraphQlDefinition {
+                            ModelGraphQlDefinitionV2 {
                                 select_uniques: [],
                                 select_many: Some(
                                     SelectManyGraphQlDefinition {
@@ -402,11 +404,6 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                                 arguments_input_type: Some(
                                     GraphQlTypeName(
                                         "collection_with_args_input_args",
-                                    ),
-                                ),
-                                order_by_expression_type: Some(
-                                    GraphQlTypeName(
-                                        "collection_with_args_order_by",
                                     ),
                                 ),
                                 apollo_federation: None,
@@ -500,6 +497,72 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
             objects: {},
             scalars: {},
         },
+        order_by_expressions: OrderByExpressions(
+            {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromModel(
+                        ModelName(
+                            Identifier(
+                                "collection_with_args",
+                            ),
+                        ),
+                    ),
+                }: OrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromModel(
+                            ModelName(
+                                Identifier(
+                                    "collection_with_args",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "RowType",
+                            ),
+                        ),
+                    },
+                    orderable_fields: [
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "test",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                    ],
+                    orderable_relationships: [],
+                    graphql: Some(
+                        OrderByExpressionGraphqlConfig {
+                            expression_type_name: TypeName(
+                                Name(
+                                    "collection_with_args_order_by",
+                                ),
+                            ),
+                        },
+                    ),
+                    description: Some(
+                        "OrderByExpression for Model collection_with_args (in subgraph default)",
+                    ),
+                },
+            },
+        ),
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(

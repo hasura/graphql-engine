@@ -1,10 +1,13 @@
+use crate::stages::order_by_expressions::OrderByExpressionIdentifier;
 use crate::stages::{
     aggregates::AggregateExpressionError, apollo, boolean_expressions, data_connector_scalar_types,
     data_connectors, graphql_config, object_types, relay, scalar_boolean_expressions,
     type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
+use crate::QualifiedBaseType;
 use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::order_by_expression::OrderByExpressionName;
 use open_dds::{
     aggregates::AggregateExpressionName,
     arguments::ArgumentName,
@@ -41,11 +44,6 @@ pub enum Error {
     },
     #[error("unknown field {field_name:} in filterable fields defined for model {model_name:}")]
     UnknownFieldInFilterableFields {
-        model_name: ModelName,
-        field_name: FieldName,
-    },
-    #[error("unknown field {field_name:} in orderable fields defined for model {model_name:}")]
-    UnknownFieldInOrderableFields {
         model_name: ModelName,
         field_name: FieldName,
     },
@@ -452,6 +450,61 @@ pub enum Error {
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,
     ),
+    #[error("Error in order by expression {order_by_expression_name}: {error}")]
+    OrderByExpressionError {
+        order_by_expression_name: Qualified<OrderByExpressionName>,
+        error: OrderByExpressionError,
+    },
+    #[error("Error in orderable fields of model {model_name}: {error}")]
+    ModelV1OrderableFieldsError {
+        model_name: Qualified<ModelName>,
+        error: OrderByExpressionError,
+    },
+    #[error(
+        "Unknown order by expression {order_by_expression_identifier} in in model {model_name}"
+    )]
+    UnknownOrderByExpressionIdentifier {
+        model_name: Qualified<ModelName>,
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
+    },
+    #[error("Type of order by expression {order_by_expression_name} does not match object type of model {model_name}.  Model type: {model_type}; order by expression type: {order_by_expression_type}")]
+    OrderByExpressionTypeMismatch {
+        model_name: Qualified<ModelName>,
+        model_type: Qualified<CustomTypeName>,
+        order_by_expression_name: Qualified<OrderByExpressionName>,
+        order_by_expression_type: Qualified<CustomTypeName>,
+    },
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum OrderByExpressionError {
+    #[error("unknown field {field_name} in orderable fields")]
+    UnknownFieldInOrderByExpression { field_name: FieldName },
+    #[error("The data type {data_type} has not been defined")]
+    UnknownOrderableType {
+        data_type: Qualified<CustomTypeName>,
+    },
+    #[error("Invalid orderable field {field_name}. Exactly one of `enable_order_by_directions` or `order_by_expression_name` must be specified.")]
+    InvalidOrderByExpressionOrderableField { field_name: FieldName },
+    #[error("The order by expression {order_by_expression_name} referenced in field {field_name} has not been defined")]
+    UnknownOrderByExpressionNameInOrderableField {
+        order_by_expression_name: OrderByExpressionName,
+        field_name: FieldName,
+    },
+    #[error("The order by expression {order_by_expression_name} referenced in orderable relationship {relationship_name} has not been defined")]
+    UnknownOrderByExpressionNameInOrderableRelationship {
+        order_by_expression_name: OrderByExpressionName,
+        relationship_name: RelationshipName,
+    },
+    #[error("The type of the order by expression {order_by_expression_name} referenced in field {field_name} does not match the field type. Order by expression type: {order_by_expression_type}; field type: {field_type}. ")]
+    OrderableFieldTypeError {
+        order_by_expression_name: OrderByExpressionName,
+        order_by_expression_type: CustomTypeName,
+        field_type: QualifiedBaseType,
+        field_name: FieldName,
+    },
+    #[error("{message}")]
+    UnsupportedFeature { message: String },
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -1142,98 +1142,20 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    orderable_fields: [
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "billingAddress",
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: FromModel(
+                                ModelName(
+                                    Identifier(
+                                        "Invoice",
+                                    ),
                                 ),
                             ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
                         },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "billingCity",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "billingCountry",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "billingPostalCode",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "billingState",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "customerId",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "invoiceDate",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "invoiceId",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "total",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                    ],
+                    ),
                     aggregate_expression: Some(
                         Qualified {
                             subgraph: SubgraphName(
@@ -1249,7 +1171,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                     raw: ModelRaw {
                         filter_expression_type: None,
                         graphql: Some(
-                            ModelGraphQlDefinition {
+                            ModelGraphQlDefinitionV2 {
                                 select_uniques: [
                                     SelectUniqueGraphQlDefinition {
                                         query_root_field: GraphQlFieldName(
@@ -1276,7 +1198,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                     },
                                 ),
                                 arguments_input_type: None,
-                                order_by_expression_type: None,
                                 apollo_federation: None,
                                 filter_input_type_name: Some(
                                     GraphQlTypeName(
@@ -1407,6 +1328,160 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
             objects: {},
             scalars: {},
         },
+        order_by_expressions: OrderByExpressions(
+            {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromModel(
+                        ModelName(
+                            Identifier(
+                                "Invoice",
+                            ),
+                        ),
+                    ),
+                }: OrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromModel(
+                            ModelName(
+                                Identifier(
+                                    "Invoice",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Invoice",
+                            ),
+                        ),
+                    },
+                    orderable_fields: [
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "billingAddress",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "billingCity",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "billingCountry",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "billingPostalCode",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "billingState",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "customerId",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "invoiceDate",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "invoiceId",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "total",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                    ],
+                    orderable_relationships: [],
+                    graphql: None,
+                    description: Some(
+                        "OrderByExpression for Model Invoice (in subgraph default)",
+                    ),
+                },
+            },
+        ),
         aggregate_expressions: {
             Qualified {
                 subgraph: SubgraphName(

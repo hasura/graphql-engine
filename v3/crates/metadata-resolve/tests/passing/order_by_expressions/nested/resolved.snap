@@ -1,0 +1,673 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: resolved
+input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/metadata.json
+---
+(
+    Metadata {
+        object_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Foo",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "foo",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject(
+                    {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "foo",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "foo",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "foo",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "foo",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "String",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        equal_operators: [],
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ),
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "RowType",
+                    ),
+                ),
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
+                            Identifier(
+                                "test",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Foo",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: None,
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject(
+                    {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "myconnector",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "row_type",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "row_type",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "test",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "test",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "foo",
+                                            ),
+                                        },
+                                        column_type_representation: None,
+                                        equal_operators: [],
+                                        argument_mappings: {},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ),
+            },
+        },
+        scalar_types: {},
+        models: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: ModelName(
+                    Identifier(
+                        "mymodel",
+                    ),
+                ),
+            }: ModelWithPermissions {
+                model: Model {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: ModelName(
+                            Identifier(
+                                "mymodel",
+                            ),
+                        ),
+                    },
+                    data_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "RowType",
+                            ),
+                        ),
+                    },
+                    type_fields: {
+                        FieldName(
+                            Identifier(
+                                "test",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Custom(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "Foo",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    arguments: {},
+                    source: Some(
+                        ModelSource {
+                            data_connector: DataConnectorLink {
+                                name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: DataConnectorName(
+                                        Identifier(
+                                            "myconnector",
+                                        ),
+                                    ),
+                                },
+                                url: ReadWriteUrls(
+                                    ResolvedReadWriteUrls {
+                                        read: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                        write: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                    },
+                                ),
+                                headers: SerializableHeaderMap(
+                                    {},
+                                ),
+                                response_config: None,
+                                capabilities: DataConnectorCapabilities {
+                                    supported_ndc_version: V01,
+                                    supports_explaining_queries: true,
+                                    supports_explaining_mutations: true,
+                                    supports_nested_object_filtering: false,
+                                    supports_nested_object_aggregations: false,
+                                },
+                            },
+                            collection: CollectionName(
+                                "mycollection",
+                            ),
+                            collection_type: DataConnectorObjectType(
+                                "row_type",
+                            ),
+                            type_mappings: {
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "Foo",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "foo",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "foo",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "foo",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "String",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            equal_operators: [],
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "RowType",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "row_type",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "test",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "test",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "foo",
+                                                ),
+                                            },
+                                            column_type_representation: None,
+                                            equal_operators: [],
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                            },
+                            argument_mappings: {},
+                            data_connector_link_argument_presets: {},
+                            source_arguments: {},
+                        },
+                    ),
+                    global_id_source: None,
+                    apollo_federation_key_source: None,
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: FromOrderByExpression(
+                                OrderByExpressionName(
+                                    Identifier(
+                                        "MyOrderByExpression",
+                                    ),
+                                ),
+                            ),
+                        },
+                    ),
+                    aggregate_expression: None,
+                    raw: ModelRaw {
+                        filter_expression_type: None,
+                        graphql: Some(
+                            ModelGraphQlDefinitionV2 {
+                                select_uniques: [],
+                                select_many: Some(
+                                    SelectManyGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "mycollection",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                    },
+                                ),
+                                arguments_input_type: None,
+                                apollo_federation: None,
+                                filter_input_type_name: None,
+                                aggregate: None,
+                            },
+                        ),
+                        description: None,
+                    },
+                },
+                select_permissions: {},
+                filter_expression_type: None,
+                graphql_api: ModelGraphQlApi {
+                    arguments_input_config: None,
+                    select_uniques: [],
+                    select_many: Some(
+                        SelectManyGraphQlDefinition {
+                            query_root_field: Name(
+                                "mycollection",
+                            ),
+                            description: None,
+                            deprecated: None,
+                        },
+                    ),
+                    select_aggregate: None,
+                    order_by_expression: Some(
+                        ModelOrderByExpression {
+                            data_connector_name: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: DataConnectorName(
+                                    Identifier(
+                                        "myconnector",
+                                    ),
+                                ),
+                            },
+                            order_by_type_name: TypeName(
+                                Name(
+                                    "mycollection_order_by",
+                                ),
+                            ),
+                            order_by_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "test",
+                                    ),
+                                ): OrderByExpressionInfo {
+                                    ndc_column: DataConnectorColumnName(
+                                        "test",
+                                    ),
+                                },
+                            },
+                            order_by_field_name: Name(
+                                "order_by",
+                            ),
+                        },
+                    ),
+                    limit_field: Some(
+                        LimitFieldGraphqlConfig {
+                            field_name: Name(
+                                "limit",
+                            ),
+                        },
+                    ),
+                    offset_field: Some(
+                        OffsetFieldGraphqlConfig {
+                            field_name: Name(
+                                "offset",
+                            ),
+                        },
+                    ),
+                    filter_input_type_name: None,
+                },
+            },
+        },
+        commands: {},
+        object_boolean_expression_types: {},
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {},
+            scalars: {},
+        },
+        order_by_expressions: OrderByExpressions(
+            {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromOrderByExpression(
+                        OrderByExpressionName(
+                            Identifier(
+                                "FooOrderByExpression",
+                            ),
+                        ),
+                    ),
+                }: OrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromOrderByExpression(
+                            OrderByExpressionName(
+                                Identifier(
+                                    "FooOrderByExpression",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Foo",
+                            ),
+                        ),
+                    },
+                    orderable_fields: [
+                        Scalar(
+                            OrderableScalarField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "foo",
+                                    ),
+                                ),
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                    ],
+                    orderable_relationships: [],
+                    graphql: Some(
+                        OrderByExpressionGraphqlConfig {
+                            expression_type_name: TypeName(
+                                Name(
+                                    "foo_order_by",
+                                ),
+                            ),
+                        },
+                    ),
+                    description: Some(
+                        "Order by expression for Foo",
+                    ),
+                },
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromOrderByExpression(
+                        OrderByExpressionName(
+                            Identifier(
+                                "MyOrderByExpression",
+                            ),
+                        ),
+                    ),
+                }: OrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromOrderByExpression(
+                            OrderByExpressionName(
+                                Identifier(
+                                    "MyOrderByExpression",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "RowType",
+                            ),
+                        ),
+                    },
+                    orderable_fields: [
+                        Object(
+                            OrderableObjectField {
+                                field_name: FieldName(
+                                    Identifier(
+                                        "test",
+                                    ),
+                                ),
+                                order_by_expression: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: OrderByExpressionName(
+                                        Identifier(
+                                            "FooOrderByExpression",
+                                        ),
+                                    ),
+                                },
+                            },
+                        ),
+                    ],
+                    orderable_relationships: [],
+                    graphql: Some(
+                        OrderByExpressionGraphqlConfig {
+                            expression_type_name: TypeName(
+                                Name(
+                                    "mycollection_order_by",
+                                ),
+                            ),
+                        },
+                    ),
+                    description: Some(
+                        "Order by expression for mycollection RowType",
+                    ),
+                },
+            },
+        ),
+        aggregate_expressions: {},
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "order_by",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+        },
+        roles: [],
+    },
+    [],
+)

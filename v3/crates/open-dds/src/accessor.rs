@@ -37,7 +37,7 @@ pub struct MetadataAccessor {
     pub data_connector_scalar_representations:
         Vec<QualifiedObject<types::DataConnectorScalarRepresentationV1>>,
     pub aggregate_expressions: Vec<QualifiedObject<aggregates::AggregateExpressionV1>>,
-    pub models: Vec<QualifiedObject<models::ModelV1>>,
+    pub models: Vec<QualifiedObject<models::Model>>,
     pub type_permissions: Vec<QualifiedObject<permissions::TypePermissionsV1>>,
     pub model_permissions: Vec<QualifiedObject<permissions::ModelPermissionsV1>>,
     pub relationships: Vec<QualifiedObject<relationships::RelationshipV1>>,
