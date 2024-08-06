@@ -404,15 +404,16 @@
         "relationships": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/RelationshipUsage"
+            "$ref": "#/definitions/PredicateRelationshipUsage"
           }
         }
       }
     },
-    "RelationshipUsage": {
+    "PredicateRelationshipUsage": {
       "type": "object",
       "required": [
         "name",
+        "predicate_usage",
         "source",
         "target"
       ],
@@ -425,6 +426,9 @@
         },
         "target": {
           "$ref": "#/definitions/RelationshipTarget"
+        },
+        "predicate_usage": {
+          "$ref": "#/definitions/FilterPredicateUsage"
         }
       }
     },
@@ -522,6 +526,25 @@
       "title": "DataConnectorArgumentName",
       "description": "The name of an argument as defined by a data connector.",
       "type": "string"
+    },
+    "RelationshipUsage": {
+      "type": "object",
+      "required": [
+        "name",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/RelationshipName"
+        },
+        "source": {
+          "$ref": "#/definitions/Qualified_for_CustomTypeName"
+        },
+        "target": {
+          "$ref": "#/definitions/RelationshipTarget"
+        }
+      }
     }
   }
 }

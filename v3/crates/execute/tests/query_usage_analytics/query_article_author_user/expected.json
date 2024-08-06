@@ -113,8 +113,55 @@
           {
             "permission": {
               "filter_predicate": {
-                "fields": [],
-                "relationships": []
+                "fields": [
+                  {
+                    "name": "title",
+                    "opendd_type": {
+                      "subgraph": "default",
+                      "name": "article"
+                    },
+                    "deprecated": false
+                  },
+                  {
+                    "name": "author_id",
+                    "opendd_type": {
+                      "subgraph": "default",
+                      "name": "article"
+                    },
+                    "deprecated": false
+                  }
+                ],
+                "relationships": [
+                  {
+                    "name": "Author",
+                    "source": {
+                      "subgraph": "default",
+                      "name": "article"
+                    },
+                    "target": {
+                      "model": {
+                        "model_name": {
+                          "subgraph": "default",
+                          "name": "Authors"
+                        },
+                        "relationship_type": "Object"
+                      }
+                    },
+                    "predicate_usage": {
+                      "fields": [
+                        {
+                          "name": "author_id",
+                          "opendd_type": {
+                            "subgraph": "default",
+                            "name": "author"
+                          },
+                          "deprecated": false
+                        }
+                      ],
+                      "relationships": []
+                    }
+                  }
+                ]
               }
             }
           }

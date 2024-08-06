@@ -4,8 +4,8 @@ use metadata_resolve::{FieldPresetInfo, FilterPermission, ModelPredicate};
 use open_dds::relationships::RelationshipType;
 use query_usage_analytics::{
     self, ArgumentPresetsUsage, FieldPresetsUsage, FieldUsage, FilterPredicateUsage, GqlField,
-    GqlInputField, GqlOperation, OpenddObject, PermissionUsage, RelationshipTarget,
-    RelationshipUsage,
+    GqlInputField, GqlOperation, OpenddObject, PermissionUsage, PredicateRelationshipUsage,
+    RelationshipTarget, RelationshipUsage,
 };
 use schema::GDS;
 
@@ -339,30 +339,34 @@ fn analyze_argument_presets(argument_presets: &schema::ArgumentPresets) -> Optio
 fn analyze_filter_permission(filter: &FilterPermission) -> Option<OpenddObject> {
     match filter {
         FilterPermission::AllowAll => None,
-        FilterPermission::Filter(predicate) => {
-            let mut fields = Vec::new();
-            let mut relationships = Vec::new();
-            analyze_model_predicate(predicate, &mut fields, &mut relationships);
-            Some(OpenddObject::Permission(PermissionUsage::FilterPredicate(
-                FilterPredicateUsage {
-                    fields,
-                    relationships,
-                },
-            )))
-        }
+        FilterPermission::Filter(predicate) => Some(OpenddObject::Permission(
+            PermissionUsage::FilterPredicate(analyze_model_predicate(predicate)),
+        )),
     }
 }
 
-fn analyze_model_predicate(
+fn analyze_model_predicate(predicate: &ModelPredicate) -> FilterPredicateUsage {
+    let mut fields = Vec::new();
+    let mut relationships = Vec::new();
+    analyze_model_predicate_internal(predicate, &mut fields, &mut relationships);
+    FilterPredicateUsage {
+        fields,
+        relationships,
+    }
+}
+
+fn analyze_model_predicate_internal(
     predicate: &ModelPredicate,
     fields: &mut Vec<FieldUsage>,
-    relationships: &mut Vec<RelationshipUsage>,
+    relationships: &mut Vec<PredicateRelationshipUsage>,
 ) {
     match predicate {
         ModelPredicate::And(predicates) | ModelPredicate::Or(predicates) => {
             analyze_model_predicate_list(predicates, fields, relationships);
         }
-        ModelPredicate::Not(predicate) => analyze_model_predicate(predicate, fields, relationships),
+        ModelPredicate::Not(predicate) => {
+            analyze_model_predicate_internal(predicate, fields, relationships);
+        }
         ModelPredicate::UnaryFieldComparison {
             field,
             field_parent_type,
@@ -383,15 +387,15 @@ fn analyze_model_predicate(
             relationship_info,
             predicate,
         } => {
-            relationships.push(RelationshipUsage {
+            relationships.push(PredicateRelationshipUsage {
                 name: relationship_info.relationship_name.clone(),
                 source: relationship_info.source_type.clone(),
                 target: RelationshipTarget::Model {
                     model_name: relationship_info.target_model_name.clone(),
                     relationship_type: relationship_info.relationship_type.clone(),
                 },
+                predicate_usage: Box::new(analyze_model_predicate(predicate)),
             });
-            analyze_model_predicate(predicate, fields, relationships);
         }
     }
 }
@@ -399,9 +403,9 @@ fn analyze_model_predicate(
 fn analyze_model_predicate_list(
     predicates: &[ModelPredicate],
     fields: &mut Vec<FieldUsage>,
-    relationships: &mut Vec<RelationshipUsage>,
+    relationships: &mut Vec<PredicateRelationshipUsage>,
 ) {
-    let _ = predicates
-        .iter()
-        .map(|predicate| analyze_model_predicate(predicate, fields, relationships));
+    for predicate in predicates {
+        analyze_model_predicate_internal(predicate, fields, relationships);
+    }
 }

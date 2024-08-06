@@ -89,7 +89,7 @@ pub struct FieldPresetsUsage {
 #[derive(Serialize, JsonSchema, Clone)]
 pub struct FilterPredicateUsage {
     pub fields: Vec<FieldUsage>,
-    pub relationships: Vec<RelationshipUsage>,
+    pub relationships: Vec<PredicateRelationshipUsage>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -102,6 +102,14 @@ pub struct RelationshipUsage {
     pub name: RelationshipName,
     pub source: Qualified<CustomTypeName>,
     pub target: RelationshipTarget,
+}
+
+#[derive(Serialize, JsonSchema, Clone)]
+pub struct PredicateRelationshipUsage {
+    pub name: RelationshipName,
+    pub source: Qualified<CustomTypeName>,
+    pub target: RelationshipTarget,
+    pub predicate_usage: Box<FilterPredicateUsage>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]

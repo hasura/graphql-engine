@@ -2298,6 +2298,20 @@
                             "field": "author_id"
                           }
                         }
+                      },
+                      {
+                        "relationship": {
+                          "name": "Author",
+                          "predicate": {
+                            "fieldComparison": {
+                              "field": "author_id",
+                              "operator": "_eq",
+                              "value": {
+                                "sessionVariable": "x-hasura-user-id"
+                              }
+                            }
+                          }
+                        }
                       }
                     ]
                   }
