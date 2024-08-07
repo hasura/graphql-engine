@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2024.08.07]
+
+### Added
+
 - A new CLI flag (`--export-traces-stdout`) and env var (`EXPORT_TRACES_STDOUT`)
   is introduced to enable logging of traces to STDOUT. By default, logging is
   disabled.
@@ -337,7 +345,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.07.25...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.08.07...HEAD
+[v2024.08.07]: https://github.com/hasura/v3-engine/releases/tag/v2024.08.07
 [v2024.07.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.25
 [v2024.07.24]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.24
 [v2024.07.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.18
