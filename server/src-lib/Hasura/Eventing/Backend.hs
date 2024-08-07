@@ -230,7 +230,7 @@ class (Backend b) => BackendEventTrigger (b :: BackendType) where
   addCleanupSchedules ::
     (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
-    [(TriggerName, AutoTriggerLogCleanupConfig)] ->
+    NonEmpty (TriggerName, AutoTriggerLogCleanupConfig) ->
     m ()
 
   -- | @deleteAllScheduledCleanups@ deletes all scheduled cleanup logs for a given event trigger
