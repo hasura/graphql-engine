@@ -148,7 +148,7 @@ mod tests {
             let mut path_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             path_buf.pop();
             path_buf.pop();
-            path_buf.join("auth_config.json")
+            path_buf.join("static/auth/auth_config.json")
         };
         let auth_config_from_json = <super::AuthConfig as open_dds::traits::OpenDd>::deserialize(
             serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap(),

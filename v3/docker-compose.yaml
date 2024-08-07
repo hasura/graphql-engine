@@ -21,7 +21,7 @@ services:
       auth_hook:
         condition: service_started
     volumes:
-      - ./auth_config.json:/app/auth_config.json
+      - ./static/auth/auth_config.json:/app/auth_config.json
       - ./crates/engine/tests/schema.json:/app/crates/engine/tests/schema.json
       - ./crates/open-dds/examples/reference.json:/app/crates/open-dds/examples/reference.json
 
