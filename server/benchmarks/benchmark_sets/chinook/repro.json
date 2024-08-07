@@ -1,0 +1,69 @@
+{
+   "type": "replace_metadata",
+   "version": 2,
+   "args": {
+     "metadata": {
+       "version": 3,
+       "sources": [
+         {
+           "name": "default",
+           "kind": "postgres",
+           "tables": [
+             {
+               "table": {
+                 "schema": "public",
+                 "name": "author"
+               },
+               "insert_permissions": [
+                 {
+                   "role": "user1",
+                   "permission": {
+                     "check": {},
+                     "columns": [
+                       "id",
+                       "name"
+                     ],
+                     "backend_only": false
+                   }
+                 }
+                 ,
+                 {
+                   "role": "user2",
+                   "permission": {
+                     "check": {
+                       "id": {
+                         "_eq": "X-Hasura-User-Id"
+                       }
+                     },
+                     "columns": [
+                       "id",
+                       "name"
+                     ],
+                     "backend_only": false
+                   }
+                 }
+               ]
+             }
+           ],
+            "configuration": 
+                {
+                    "connection_info": {
+                        "database_url": "postgresql://postgres:postgres@127.0.0.1:25432/postgres",
+                        "isolation_level": "read-committed",
+                        "use_prepared_statements": false
+                    }
+                }
+         }
+       ],
+       "inherited_roles": [
+         {
+           "role_name": "users",
+           "role_set": [
+             "user2",
+             "user1"
+           ]
+         }
+       ]
+     }
+   }
+ }
