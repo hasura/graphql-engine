@@ -1,9 +1,10 @@
 use super::error::ScalarBooleanExpressionTypeError;
 use super::types::{IncludeIsNull, ResolvedScalarBooleanExpressionType};
-use crate::helpers::types::unwrap_qualified_type_name;
+use crate::helpers::types::{mk_name, store_new_graphql_type, unwrap_qualified_type_name};
 use crate::stages::{data_connectors, object_types, scalar_types};
 use crate::types::subgraph::mk_qualified_type_reference;
 use crate::{Qualified, QualifiedTypeName};
+use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
 use open_dds::{
     boolean_expression::{
@@ -12,7 +13,7 @@ use open_dds::{
     },
     types::CustomTypeName,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Resolves a given scalar boolean expression type
 pub(crate) fn resolve_scalar_boolean_expression_type(
@@ -24,6 +25,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     object_types: &object_types::ObjectTypesWithTypeMappings,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
+    graphql_types: &mut BTreeSet<ast::TypeName>,
 ) -> Result<ResolvedScalarBooleanExpressionType, ScalarBooleanExpressionTypeError> {
     let mut data_connector_operator_mappings = BTreeMap::new();
 
@@ -100,6 +102,13 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     }
 
     let graphql_name = graphql.as_ref().map(|gql| gql.type_name.clone());
+
+    let graphql_type = graphql_name
+        .as_ref()
+        .map(|name| mk_name(name.as_str()).map(ast::TypeName))
+        .transpose()?;
+
+    store_new_graphql_type(graphql_types, graphql_type.as_ref())?;
 
     Ok(ResolvedScalarBooleanExpressionType {
         name: boolean_expression_type_name.clone(),

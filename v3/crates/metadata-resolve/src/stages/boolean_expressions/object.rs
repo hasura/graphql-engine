@@ -8,6 +8,7 @@ pub use super::{
 use crate::stages::{graphql_config, object_types, scalar_boolean_expressions, type_permissions};
 use crate::types::subgraph::mk_qualified_type_name;
 use crate::{Qualified, QualifiedBaseType};
+use lang_graphql::ast::common::{self as ast};
 use open_dds::identifier::SubgraphName;
 use open_dds::{
     boolean_expression::{
@@ -17,7 +18,7 @@ use open_dds::{
     },
     types::{CustomTypeName, FieldName, TypeName},
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) type RawBooleanExpressionTypes<'a> = BTreeMap<
     Qualified<CustomTypeName>,
@@ -46,6 +47,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     >,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
     graphql_config: &graphql_config::GraphqlConfig,
+    graphql_types: &mut BTreeSet<ast::TypeName>,
 ) -> Result<ObjectBooleanExpressionTypeOutput, BooleanExpressionError> {
     let qualified_object_type_name = Qualified::new(
         subgraph.clone(),
@@ -94,6 +96,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 scalar_boolean_expression_types,
                 raw_boolean_expression_types,
                 graphql_config,
+                graphql_types,
             )
         })
         .transpose()?;

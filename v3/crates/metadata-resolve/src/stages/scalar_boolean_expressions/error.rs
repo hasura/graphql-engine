@@ -1,3 +1,4 @@
+use crate::stages::graphql_config;
 use crate::Qualified;
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorScalarType},
@@ -31,4 +32,6 @@ pub enum ScalarBooleanExpressionTypeError {
     },
     #[error("Predicate types in data connectors are unsupported")]
     PredicateTypesUnsupported,
+    #[error("{0}")]
+    GraphqlError(#[from] graphql_config::GraphqlConfigError),
 }

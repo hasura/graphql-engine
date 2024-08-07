@@ -26,7 +26,7 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
-    graphql_types: BTreeSet<ast::TypeName>,
+    mut graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
     object_types: &type_permissions::ObjectTypesWithPermissions,
 ) -> Result<BooleanExpressionsOutput, BooleanExpressionError> {
@@ -67,6 +67,7 @@ pub fn resolve(
                 boolean_expression_scalar_types,
                 &raw_boolean_expression_types,
                 graphql_config,
+                &mut graphql_types,
             )?;
 
             issues.extend(object_issues);

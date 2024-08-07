@@ -17,7 +17,7 @@ pub use types::{
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    graphql_types: BTreeSet<ast::TypeName>,
+    mut graphql_types: BTreeSet<ast::TypeName>,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &object_types::ObjectTypesWithTypeMappings,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -56,6 +56,7 @@ pub fn resolve(
                 object_types,
                 scalar_types,
                 &boolean_expression_type.graphql,
+                &mut graphql_types,
             )?;
 
             boolean_expression_scalar_types.insert(
