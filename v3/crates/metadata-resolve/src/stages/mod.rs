@@ -62,7 +62,7 @@ pub fn resolve(
     let scalar_types::ScalarTypesOutput {
         scalar_types,
         graphql_types,
-    } = scalar_types::resolve(&metadata_accessor, &graphql_types)?;
+    } = scalar_types::resolve(&metadata_accessor, graphql_types)?;
 
     // Validate scalar `BooleanExpressionType`s
     let scalar_boolean_expressions::ScalarBooleanExpressionsOutput {
@@ -70,7 +70,7 @@ pub fn resolve(
         boolean_expression_scalar_types,
     } = scalar_boolean_expressions::resolve(
         &metadata_accessor,
-        &graphql_types,
+        graphql_types,
         &data_connectors,
         &object_types,
         &scalar_types,
@@ -85,12 +85,12 @@ pub fn resolve(
         &metadata_accessor,
         &data_connectors,
         &scalar_types,
-        &graphql_types,
+        graphql_types,
     )?;
 
     // Fetch and validate permissions, and attach them to the relevant object types
     let object_types_with_permissions =
-        type_permissions::resolve(&metadata_accessor, &object_types)?;
+        type_permissions::resolve(&metadata_accessor, object_types)?;
 
     // Resolve fancy new boolean expression types
     let boolean_expressions::BooleanExpressionsOutput {
@@ -100,7 +100,7 @@ pub fn resolve(
     } = boolean_expressions::resolve(
         &metadata_accessor,
         &boolean_expression_scalar_types,
-        &graphql_types,
+        graphql_types,
         &graphql_config,
         &object_types_with_permissions,
     )?;
@@ -141,7 +141,7 @@ pub fn resolve(
         &data_connectors,
         &data_connector_scalars,
         &object_types_with_permissions,
-        &graphql_types,
+        graphql_types,
         &graphql_config,
     )?;
 
@@ -159,8 +159,8 @@ pub fn resolve(
         &metadata_accessor,
         &data_connectors,
         &data_connector_scalars,
-        &global_id_enabled_types,
-        &apollo_federation_entity_enabled_types,
+        global_id_enabled_types,
+        apollo_federation_entity_enabled_types,
         &object_types_with_permissions,
         &scalar_types,
         &object_boolean_expression_types,
@@ -183,9 +183,9 @@ pub fn resolve(
 
     all_warnings.extend(issues.into_iter().map(Warning::from));
 
-    apollo::resolve(&apollo_federation_entity_enabled_types)?;
+    apollo::resolve(apollo_federation_entity_enabled_types)?;
 
-    relay::resolve(&global_id_enabled_types)?;
+    relay::resolve(global_id_enabled_types)?;
 
     let object_types_with_relationships = relationships::resolve(
         &metadata_accessor,

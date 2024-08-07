@@ -12,10 +12,9 @@ pub use types::{ScalarTypeRepresentation, ScalarTypesOutput};
 /// resolve scalar types
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    existing_graphql_types: &BTreeSet<ast::TypeName>,
+    mut graphql_types: BTreeSet<ast::TypeName>,
 ) -> Result<ScalarTypesOutput, Error> {
     let mut scalar_types = BTreeMap::new();
-    let mut graphql_types = existing_graphql_types.clone();
 
     for open_dds::accessor::QualifiedObject {
         subgraph,

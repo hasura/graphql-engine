@@ -27,10 +27,8 @@ pub fn resolve<'a>(
     metadata_accessor: &'a open_dds::accessor::MetadataAccessor,
     data_connectors: &'a data_connectors::DataConnectors,
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    existing_graphql_types: &'a BTreeSet<ast::TypeName>,
+    mut graphql_types: BTreeSet<ast::TypeName>,
 ) -> Result<DataConnectorWithScalarsOutput<'a>, DataConnectorScalarTypesError> {
-    let mut graphql_types = existing_graphql_types.clone();
-
     // we convert data from the old types to the new types and then start mutating everything
     // there is no doubt room for improvement here, but at least we are keeping the mutation
     // contained to this resolving stage

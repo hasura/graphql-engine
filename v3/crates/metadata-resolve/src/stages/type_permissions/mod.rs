@@ -16,15 +16,15 @@ use crate::stages::object_types;
 /// resolve type permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    object_types: &object_types::ObjectTypesWithTypeMappings,
+    object_types: object_types::ObjectTypesWithTypeMappings,
 ) -> Result<ObjectTypesWithPermissions, TypePermissionError> {
     let mut object_types_with_permissions = BTreeMap::new();
-    for (object_type_name, object_type) in object_types.iter() {
+    for (object_type_name, object_type) in object_types.0 {
         object_types_with_permissions.insert(
             object_type_name.clone(),
             ObjectTypeWithPermissions {
-                object_type: object_type.object_type.clone(),
-                type_mappings: object_type.type_mappings.clone(),
+                object_type: object_type.object_type,
+                type_mappings: object_type.type_mappings,
                 type_input_permissions: BTreeMap::new(),
                 type_output_permissions: BTreeMap::new(),
             },

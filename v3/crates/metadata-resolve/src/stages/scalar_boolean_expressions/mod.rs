@@ -17,15 +17,12 @@ pub use types::{
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    existing_graphql_types: &BTreeSet<ast::TypeName>,
+    graphql_types: BTreeSet<ast::TypeName>,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &object_types::ObjectTypesWithTypeMappings,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<ScalarBooleanExpressionsOutput, ScalarBooleanExpressionTypeError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
-
-    // TODO: make sure we are adding new types here, we are almost certainly not doing this atm
-    let graphql_types = existing_graphql_types.clone();
 
     // first we collect all the boolean_expression_types
     // so we have a full set to refer to when resolving them
@@ -70,6 +67,7 @@ pub fn resolve(
 
     Ok(ScalarBooleanExpressionsOutput {
         boolean_expression_scalar_types,
+        // TODO: make sure we are adding new types to graphql_types
         graphql_types,
     })
 }

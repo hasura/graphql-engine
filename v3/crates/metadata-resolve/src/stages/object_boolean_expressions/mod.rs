@@ -28,11 +28,10 @@ pub fn resolve(
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
-    existing_graphql_types: &BTreeSet<ast::TypeName>,
+    mut graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionsOutput, boolean_expressions::BooleanExpressionError> {
     let mut object_boolean_expression_types = BTreeMap::new();
-    let mut graphql_types = existing_graphql_types.clone();
     let mut warnings = vec![];
 
     for open_dds::accessor::QualifiedObject {

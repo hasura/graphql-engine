@@ -42,8 +42,8 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    global_id_enabled_types: &BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
-    apollo_federation_entity_enabled_types: &BTreeMap<
+    mut global_id_enabled_types: BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    mut apollo_federation_entity_enabled_types: BTreeMap<
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,
@@ -65,8 +65,6 @@ pub fn resolve(
     // TODO: validate types
     let mut models = IndexMap::new();
     let mut global_id_models = BTreeMap::new();
-    let mut global_id_enabled_types = global_id_enabled_types.clone();
-    let mut apollo_federation_entity_enabled_types = apollo_federation_entity_enabled_types.clone();
     let mut issues = vec![];
 
     let order_by_expression_names_and_types: BTreeMap<OrderByExpressionName, CustomTypeName> =

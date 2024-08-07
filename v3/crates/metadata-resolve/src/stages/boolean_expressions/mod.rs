@@ -26,15 +26,12 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
-    existing_graphql_types: &BTreeSet<ast::TypeName>,
+    graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
     object_types: &type_permissions::ObjectTypesWithPermissions,
 ) -> Result<BooleanExpressionsOutput, BooleanExpressionError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
     let mut issues = vec![];
-
-    // TODO: make sure we are adding new types here, we are almost certainly not doing this atm
-    let graphql_types = existing_graphql_types.clone();
 
     // first we collect all the boolean_expression_types
     // so we have a full set to refer to when resolving them
@@ -86,6 +83,7 @@ pub fn resolve(
             objects: boolean_expression_object_types,
             scalars: boolean_expression_scalar_types.clone(),
         },
+        // TODO: make sure we are adding new types to graphql_types
         graphql_types,
         issues,
     })

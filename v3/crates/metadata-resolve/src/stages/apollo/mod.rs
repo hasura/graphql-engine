@@ -12,7 +12,7 @@ use crate::types::subgraph::Qualified;
 /// Ideally, we could move more Apollo-based resolving into this discreet step, haven't
 /// investigated this too deeply yet.
 pub fn resolve(
-    apollo_federation_entity_enabled_types: &BTreeMap<
+    apollo_federation_entity_enabled_types: BTreeMap<
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,
@@ -22,9 +22,7 @@ pub fn resolve(
     //   - Throw an error if no model with apolloFederation.entitySource:true is found for the object type.
     for (object_type, model_name_list) in apollo_federation_entity_enabled_types {
         if model_name_list.is_none() {
-            return Err(ApolloError::ApolloFederationEntitySourceNotDefined {
-                object_type: object_type.clone(),
-            });
+            return Err(ApolloError::ApolloFederationEntitySourceNotDefined { object_type });
         }
     }
     Ok(())
