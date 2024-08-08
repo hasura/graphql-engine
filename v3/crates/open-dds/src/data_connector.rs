@@ -7,7 +7,8 @@ mod v1;
 
 pub use v1::{
     DataConnectorArgumentPreset, DataConnectorArgumentPresetValue, DataConnectorLinkV1,
-    DataConnectorUrlV1 as DataConnectorUrl, HttpHeadersPreset, ReadWriteUrls, ResponseHeaders,
+    DataConnectorUrlV1 as DataConnectorUrl, HttpHeaders, HttpHeadersPreset, ReadWriteUrls,
+    ResponseHeaders,
 };
 
 use crate::{identifier::Identifier, impl_OpenDd_default_for, str_newtype};

@@ -13,6 +13,7 @@ pub mod models_graphql;
 pub mod object_boolean_expressions;
 pub mod object_types;
 pub mod order_by_expressions;
+pub mod plugins;
 pub mod relationships;
 pub mod relay;
 pub mod roles;
@@ -253,6 +254,8 @@ pub fn resolve(
         &commands_with_permissions,
     );
 
+    let pre_parse_plugins = plugins::resolve(&metadata_accessor);
+
     Ok((
         Metadata {
             scalar_types,
@@ -265,6 +268,7 @@ pub fn resolve(
             aggregate_expressions,
             graphql_config: graphql_config.global,
             roles,
+            pre_parse_plugins,
         },
         all_warnings,
     ))

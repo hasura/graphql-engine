@@ -29,7 +29,9 @@ pub enum DataConnectorUrlV1 {
     ReadWriteUrls(ReadWriteUrls),
 }
 
-#[derive(Serialize, Default, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(
+    Serialize, Deserialize, Default, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd, JsonSchema,
+)]
 /// Key value map of HTTP headers to be sent with an HTTP request. The key is the
 /// header name and the value is a potential reference to an environment variable.
 // We wrap maps into newtype structs so that we have a type and title for them in the JSONSchema which

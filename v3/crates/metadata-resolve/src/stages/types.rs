@@ -9,6 +9,8 @@ use open_dds::{
     types::CustomTypeName,
 };
 
+use open_dds::plugins::LifecyclePluginHookPreParse;
+
 use crate::types::subgraph::Qualified;
 
 use crate::stages::{
@@ -33,5 +35,6 @@ pub struct Metadata {
     pub aggregate_expressions:
         BTreeMap<Qualified<AggregateExpressionName>, aggregates::AggregateExpression>,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
+    pub pre_parse_plugins: Vec<LifecyclePluginHookPreParse>,
     pub roles: Vec<Role>,
 }

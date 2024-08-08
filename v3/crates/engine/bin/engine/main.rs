@@ -16,6 +16,8 @@ use axum::{
 };
 use base64::engine::Engine;
 use clap::Parser;
+use open_dds::plugins::LifecyclePluginHookPreParse;
+use pre_execution_plugin::execute::pre_execution_plugins_handler;
 use reqwest::header::CONTENT_TYPE;
 use serde::Serialize;
 use tower_http::cors::CorsLayer;
@@ -24,7 +26,6 @@ use tower_http::trace::TraceLayer;
 use engine::{
     authentication::{resolve_auth_config, AuthConfig, AuthModeConfig},
     internal_flags::{resolve_unstable_features, UnstableFeature},
-    plugins::read_pre_execution_plugins_config,
     VERSION,
 };
 use execute::HttpContext;
@@ -34,9 +35,6 @@ use hasura_authn_jwt::jwt;
 use hasura_authn_noauth as noauth;
 use hasura_authn_webhook::webhook;
 use lang_graphql as gql;
-use pre_execution_plugin::{
-    configuration::PrePluginConfig, execute::pre_execution_plugins_handler,
-};
 use schema::GDS;
 use tracing_util::{
     add_event_on_active_span, set_attribute_on_active_span, set_status_on_current_span,
@@ -99,9 +97,6 @@ struct ServerOptions {
         value_delimiter = ','
     )]
     unstable_features: Vec<UnstableFeature>,
-    /// The configuration file used for authentication.
-    #[arg(long, value_name = "PATH", env = "pre_execution_plugins_path")]
-    pre_execution_plugins_path: Option<PathBuf>,
 
     /// Whether internal errors should be shown or censored.
     /// It is recommended to only show errors while developing since internal errors may contain
@@ -119,8 +114,8 @@ struct EngineState {
     http_context: HttpContext,
     schema: gql::schema::Schema<GDS>,
     auth_config: AuthConfig,
-    pre_execution_plugins_config: Vec<PrePluginConfig>,
     sql_context: Arc<sql::catalog::Catalog>,
+    pre_parse_plugins: Vec<LifecyclePluginHookPreParse>,
 }
 
 #[tokio::main]
@@ -199,8 +194,6 @@ enum StartupError {
     ReadAuth(anyhow::Error),
     #[error("failed to build engine state - {0}")]
     ReadSchema(anyhow::Error),
-    #[error("could not read the pre-execution plugins config - {0}")]
-    ReadPrePlugin(anyhow::Error),
 }
 
 impl TraceableError for StartupError {
@@ -367,7 +360,6 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         expose_internal_errors,
         &server.authn_config_path,
         &server.metadata_path,
-        &server.pre_execution_plugins_path,
         metadata_resolve_configuration,
     )
     .map_err(StartupError::ReadSchema)?;
@@ -676,7 +668,7 @@ where
     B::Error: Display,
 {
     let (request, response) = pre_execution_plugins_handler(
-        &engine_state.pre_execution_plugins_config,
+        &engine_state.pre_parse_plugins,
         &engine_state.http_context.client,
         session,
         request,
@@ -749,18 +741,12 @@ fn build_state(
     expose_internal_errors: execute::ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
-    pre_execution_plugins_path: &Option<PathBuf>,
     metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
 ) -> Result<Arc<EngineState>, anyhow::Error> {
     // Auth Config
     let raw_auth_config = std::fs::read_to_string(authn_config_path)?;
     let (auth_config, auth_warnings) =
         resolve_auth_config(&raw_auth_config).map_err(StartupError::ReadAuth)?;
-
-    // Plugins
-    let pre_execution_plugins_config =
-        read_pre_execution_plugins_config(pre_execution_plugins_path)
-            .map_err(StartupError::ReadPrePlugin)?;
 
     // Metadata
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
@@ -776,6 +762,7 @@ fn build_state(
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
+    let pre_parse_plugins = resolved_metadata.pre_parse_plugins.clone();
     let sql_context = sql::catalog::Catalog::from_metadata(resolved_metadata.clone());
     let schema = schema::GDS {
         metadata: resolved_metadata,
@@ -786,8 +773,8 @@ fn build_state(
         http_context,
         schema,
         auth_config,
-        pre_execution_plugins_config,
         sql_context: sql_context.into(),
+        pre_parse_plugins,
     });
     Ok(state)
 }

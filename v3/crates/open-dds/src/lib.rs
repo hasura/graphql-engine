@@ -15,6 +15,7 @@ pub mod identifier;
 pub mod models;
 pub mod order_by_expression;
 pub mod permissions;
+pub mod plugins;
 pub mod query;
 pub mod relationships;
 pub mod session_variables;
@@ -115,6 +116,9 @@ pub enum OpenDdSubgraphObject {
     TypePermissions(permissions::TypePermissions),
     ModelPermissions(permissions::ModelPermissions),
     CommandPermissions(permissions::CommandPermissions),
+
+    // Plugin
+    LifecyclePluginHook(plugins::LifecyclePluginHook),
 }
 
 /// All of the metadata required to run Hasura v3 engine.

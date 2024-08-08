@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use crate::identifier::SubgraphName;
 use crate::{
     aggregates, boolean_expression, commands, data_connector, flags, graphql_config, models,
-    order_by_expression, permissions, relationships, types, Metadata, MetadataWithVersion,
+    order_by_expression, permissions, plugins, relationships, types, Metadata, MetadataWithVersion,
     OpenDdSubgraphObject, OpenDdSupergraphObject,
 };
 
@@ -46,6 +46,7 @@ pub struct MetadataAccessor {
     pub flags: flags::Flags,
     // `graphql_config` is a vector because we want to do some validation depending on the presence of the object
     pub graphql_config: Vec<QualifiedObject<graphql_config::GraphqlConfig>>,
+    pub plugins: Vec<QualifiedObject<plugins::LifecyclePluginHookV1>>,
 }
 
 fn load_metadata_objects(
@@ -140,6 +141,11 @@ fn load_metadata_objects(
                     .command_permissions
                     .push(QualifiedObject::new(subgraph, permissions.upgrade()));
             }
+            OpenDdSubgraphObject::LifecyclePluginHook(plugin) => {
+                accessor
+                    .plugins
+                    .push(QualifiedObject::new(subgraph, plugin.upgrade()));
+            }
         }
     }
 }
@@ -215,6 +221,7 @@ impl MetadataAccessor {
             command_permissions: vec![],
             flags: flags.unwrap_or(DEFAULT_FLAGS),
             graphql_config: vec![],
+            plugins: vec![],
         }
     }
 }
