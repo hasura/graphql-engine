@@ -42,30 +42,8 @@ Once you create a project on Hasura Cloud, hit the "Launch Console" button to op
 
 ### Step 2: Deploy a data connector agent
 
-**We'll use the Hasura CLI to deploy a custom data connector agent to Hasura Cloud. If you haven't already done so,
-install the [data connector plugin](/hasura-cli/connector-plugin/index.mdx).**
-
-Below, we're using the `create` command and naming our connector `clickhouse-connector:v1`. We're also passing in the
-GitHub repo URL for the connector agent using the `--github-repo-url` flag:
-
-```bash
-hasura connector create clickhouse-connector:v1 --github-repo-url https://github.com/hasura/clickhouse_gdc_v2/tree/main
-```
-
-We can check on the progress of the deployment using the `status` command:
-
-```bash
-hasura connector status clickhouse-connector:v1
-```
-
-Once the `DONE` status is returned, we can grab the URL for our data connector agent using the `list` command:
-
-```bash
-hasura connector list
-```
-
-This will return a list of all the custom data connector agents you own. **The second value returned is the URL which
-we'll use in the next step; copy it to your clipboard.**
+As these connectors are HTTP services built with Docker, you can deploy your data connector to your service of choice.
+Once you've deployed it, use the URL to access it in the next step.
 
 ### Step 3: Add the data connector agent to your Hasura Cloud project
 
