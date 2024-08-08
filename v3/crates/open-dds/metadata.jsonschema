@@ -17,6 +17,7 @@
     "AdditionalHttpHeaders": {
       "$id": "https://hasura.io/jsonschemas/metadata/AdditionalHttpHeaders",
       "title": "AdditionalHttpHeaders",
+      "description": "Key value map of HTTP headers to be forwarded in the headers argument of a data connector request.",
       "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/ValueExpression"
@@ -216,6 +217,7 @@
     "AggregateGraphqlConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/AggregateGraphqlConfig",
       "title": "AggregateGraphqlConfig",
+      "description": "Configuration for the GraphQL schema for aggregates.",
       "type": "object",
       "required": [
         "countDistinctFieldName",
@@ -335,6 +337,7 @@
     "ApolloFederationObjectKey": {
       "$id": "https://hasura.io/jsonschemas/metadata/ApolloFederationObjectKey",
       "title": "ApolloFederationObjectKey",
+      "description": "The definition of a key for an apollo federation object.",
       "type": "object",
       "required": [
         "fields"
@@ -386,6 +389,7 @@
     "ArgumentMappingTarget": {
       "$id": "https://hasura.io/jsonschemas/metadata/ArgumentMappingTarget",
       "title": "ArgumentMappingTarget",
+      "description": "An argument target for a relationship mapping.",
       "type": "object",
       "required": [
         "argumentName"
@@ -456,6 +460,7 @@
     "BooleanExpressionComparableField": {
       "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionComparableField",
       "title": "BooleanExpressionComparableField",
+      "description": "Comparison configuration definition for a field that can be used for a comparison",
       "type": "object",
       "required": [
         "booleanExpressionType",
@@ -1026,6 +1031,7 @@
     "ComparableField": {
       "$id": "https://hasura.io/jsonschemas/metadata/ComparableField",
       "title": "ComparableField",
+      "description": "A field of an object type that can be used for comparison when evaluating a boolean expression.",
       "type": "object",
       "required": [
         "fieldName",
@@ -1044,6 +1050,7 @@
     "ComparisonOperator": {
       "$id": "https://hasura.io/jsonschemas/metadata/ComparisonOperator",
       "title": "ComparisonOperator",
+      "description": "Definition of a comparison operator for a scalar type",
       "type": "object",
       "required": [
         "argumentType",
@@ -1148,6 +1155,7 @@
     "DataConnectorArgumentPresetValue": {
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorArgumentPresetValue",
       "title": "DataConnectorArgumentPresetValue",
+      "description": "The value of a data connector argument preset.",
       "type": "object",
       "required": [
         "httpHeaders"
@@ -1176,6 +1184,7 @@
       "oneOf": [
         {
           "title": "Function",
+          "description": "A function as data connector command.",
           "type": "object",
           "required": [
             "function"
@@ -1189,6 +1198,7 @@
         },
         {
           "title": "Procedure",
+          "description": "A procedure as data connector command.",
           "type": "object",
           "required": [
             "procedure"
@@ -1284,6 +1294,7 @@
     "DataConnectorOperatorMapping": {
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorOperatorMapping",
       "title": "DataConnectorOperatorMapping",
+      "description": "Mapping between OpenDD operator names and the names used in the data connector schema",
       "type": "object",
       "required": [
         "dataConnectorName",
@@ -1438,6 +1449,7 @@
     "DataConnectorUrlV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorUrlV1",
       "title": "DataConnectorUrlV1",
+      "description": "A URL to access a data connector. This can be a single URL or a pair of read and write URLs.",
       "oneOf": [
         {
           "type": "object",
@@ -1484,6 +1496,7 @@
     "EnableAllOrSpecific_for_OperatorName": {
       "$id": "https://hasura.io/jsonschemas/metadata/EnableAllOrSpecific_for_OperatorName",
       "title": "EnableAllOrSpecific",
+      "description": "Enable all or specific values.",
       "oneOf": [
         {
           "type": "object",
@@ -1517,6 +1530,7 @@
     "EnableAllOrSpecific_for_OrderByDirection": {
       "$id": "https://hasura.io/jsonschemas/metadata/EnableAllOrSpecific_for_OrderByDirection",
       "title": "EnableAllOrSpecific",
+      "description": "Enable all or specific values.",
       "oneOf": [
         {
           "type": "object",
@@ -1581,6 +1595,7 @@
     "FieldAccess": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldAccess",
       "title": "RelationshipSourceFieldAccess",
+      "description": "A field access in a relationship mapping.",
       "type": "object",
       "required": [
         "fieldName"
@@ -1595,6 +1610,7 @@
     "FieldArgumentDefinition": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldArgumentDefinition",
       "title": "FieldArgumentDefinition",
+      "description": "The definition of an argument for a field in a user-defined object type.",
       "type": "object",
       "required": [
         "argumentType",
@@ -2014,6 +2030,7 @@
     "ModelAggregateGraphQlDefinition": {
       "$id": "https://hasura.io/jsonschemas/metadata/ModelAggregateGraphQlDefinition",
       "title": "ModelAggregateGraphQlDefinition",
+      "description": "The definition of the GraphQL API for aggregating over a model.",
       "type": "object",
       "required": [
         "queryRootField"
@@ -2051,6 +2068,7 @@
     "ModelApolloFederationConfiguration": {
       "$id": "https://hasura.io/jsonschemas/metadata/ModelApolloFederationConfiguration",
       "title": "ModelApolloFederationConfiguration",
+      "description": "Apollo Federation configuration for a model.",
       "type": "object",
       "required": [
         "entitySource"
@@ -2607,6 +2625,7 @@
     "NamespacedObjects": {
       "$id": "https://hasura.io/jsonschemas/metadata/NamespacedObjects",
       "title": "NamespacedObjects",
+      "description": "A collection of objects that are related to each other.",
       "type": "object",
       "required": [
         "name",
@@ -2666,6 +2685,7 @@
     "ObjectApolloFederationConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/ObjectApolloFederationConfig",
       "title": "ObjectApolloFederationConfig",
+      "description": "Configuration for apollo federation related types and directives.",
       "type": "object",
       "required": [
         "keys"
@@ -2895,6 +2915,7 @@
     "OpenDdFlags": {
       "$id": "https://hasura.io/jsonschemas/metadata/OpenDdFlags",
       "title": "OpenDdFlags",
+      "description": "Flags to configure the OpenDD metadata build.",
       "type": "object",
       "properties": {
         "require_graphql_config": {
@@ -2907,10 +2928,12 @@
     "OpenDdMetadataWithVersion": {
       "$id": "https://hasura.io/jsonschemas/metadata/OpenDdMetadataWithVersion",
       "title": "OpenDdMetadataWithVersion",
+      "description": "Metadata with versioning.",
       "oneOf": [
         {
           "$id": "https://hasura.io/jsonschemas/metadata/OpenDdMetadataV1",
           "title": "OpenDdMetadataV1",
+          "description": "The v1 metadata.",
           "type": "object",
           "required": [
             "namespaces",
@@ -2945,6 +2968,7 @@
         {
           "$id": "https://hasura.io/jsonschemas/metadata/OpenDdMetadataV2",
           "title": "OpenDdMetadataV2",
+          "description": "The v2 metadata.",
           "type": "object",
           "required": [
             "version"
@@ -2989,6 +3013,7 @@
         {
           "$id": "https://hasura.io/jsonschemas/metadata/OpenDdMetadataV3",
           "title": "OpenDdMetadataV3",
+          "description": "The v3 metadata.",
           "type": "object",
           "required": [
             "version"
@@ -3029,6 +3054,7 @@
     "OpenDdSubgraph": {
       "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSubgraph",
       "title": "OpenDdSubgraph",
+      "description": "A subgraph is a collection of objects that belong to the same data domain.",
       "type": "object",
       "required": [
         "name",
@@ -3482,6 +3508,7 @@
         {
           "$id": "https://hasura.io/jsonschemas/metadata/AggregateExpression",
           "title": "AggregateExpression",
+          "description": "Definition of an aggregate expression on an OpenDD type.",
           "examples": [
             {
               "kind": "AggregateExpression",
@@ -3935,6 +3962,7 @@
     "OpenDdSupergraph": {
       "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSupergraph",
       "title": "OpenDdSupergraph",
+      "description": "A collection of objects that apply to the entire supergraph.",
       "type": "object",
       "properties": {
         "objects": {
@@ -4054,6 +4082,7 @@
     "OrderByEnumTypeName": {
       "$id": "https://hasura.io/jsonschemas/metadata/OrderByEnumTypeName",
       "title": "OrderByEnumTypeName",
+      "description": "Type name for a sort directions enum, with the given set of possible directions.",
       "type": "object",
       "required": [
         "directions",
@@ -4111,6 +4140,7 @@
     "OrderableField": {
       "$id": "https://hasura.io/jsonschemas/metadata/OrderableField",
       "title": "OrderableField",
+      "description": "A field that can be used to order the objects in a model.",
       "type": "object",
       "required": [
         "fieldName",
@@ -4221,6 +4251,7 @@
     "ReadWriteUrls": {
       "$id": "https://hasura.io/jsonschemas/metadata/ReadWriteUrls",
       "title": "ReadWriteUrls",
+      "description": "A pair of URLs to access a data connector, one for reading and one for writing.",
       "type": "object",
       "required": [
         "read",
@@ -5021,9 +5052,11 @@
     "VersionedSchemaAndCapabilities": {
       "$id": "https://hasura.io/jsonschemas/metadata/VersionedSchemaAndCapabilities",
       "title": "VersionedSchemaAndCapabilities",
+      "description": "Versioned schema and capabilities for a data connector.",
       "oneOf": [
         {
           "title": "SchemaAndCapabilitiesV01",
+          "description": "Version 0.1 of schema and capabilities for a data connector.",
           "type": "object",
           "required": [
             "capabilities",

@@ -13,6 +13,7 @@ use crate::{
 
 str_newtype!(AggregateExpressionName over Identifier | doc "The name of an aggregate expression.");
 
+/// Definition of an aggregate expression on an OpenDD type.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]

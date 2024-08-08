@@ -154,6 +154,7 @@ pub enum OrderByDirection {
     Desc,
 }
 
+/// Type name for a sort directions enum, with the given set of possible directions.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "OrderByEnumTypeName"))]
@@ -181,6 +182,7 @@ pub struct GraphqlApolloFederationConfig {
     pub enable_root_fields: bool,
 }
 
+/// Configuration for the GraphQL schema for aggregates.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]

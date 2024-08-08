@@ -114,6 +114,7 @@ impl RelationshipTarget {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "RelationshipSourceFieldAccess")]
+/// A field access in a relationship mapping.
 pub struct FieldAccess {
     pub field_name: FieldName,
     // #[serde(default)]
@@ -133,6 +134,7 @@ pub enum RelationshipMappingSource {
     FieldPath(Vec<FieldAccess>),
 }
 
+/// An argument target for a relationship mapping.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]

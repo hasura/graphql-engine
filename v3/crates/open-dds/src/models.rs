@@ -400,6 +400,7 @@ pub struct SelectManyGraphQlDefinition {
     pub deprecated: Option<Deprecated>,
 }
 
+/// A field that can be used to order the objects in a model.
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -409,6 +410,7 @@ pub struct OrderableField {
     pub order_by_directions: EnableAllOrSpecific<OrderByDirection>,
 }
 
+/// Enable all or specific values.
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[schemars(title = "EnableAllOrSpecific")]
@@ -447,6 +449,7 @@ pub enum OrderByDirection {
     Desc,
 }
 
+/// Apollo Federation configuration for a model.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -456,6 +459,7 @@ pub struct ModelApolloFederationConfiguration {
     pub entity_source: bool,
 }
 
+/// The definition of the GraphQL API for aggregating over a model.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]

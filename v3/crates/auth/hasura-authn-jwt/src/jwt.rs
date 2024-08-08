@@ -216,6 +216,7 @@ fn json_pointer_schema(gen: &mut SchemaGenerator) -> Schema {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "JWTClaimsMappingPathEntry")]
+/// Entry to lookup the Hasura claims at the specified JSON Pointer
 pub struct JWTClaimsMappingPathEntry<T> {
     /// JSON pointer to find the particular claim in the decoded
     /// JWT token.

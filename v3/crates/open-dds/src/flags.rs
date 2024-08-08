@@ -1,5 +1,6 @@
 use serde::Serialize;
 
+/// Flags to configure the OpenDD metadata build.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdFlags"))]
 pub struct Flags {

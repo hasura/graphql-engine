@@ -200,6 +200,7 @@ impl Metadata {
     }
 }
 
+/// Metadata with versioning.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", rename_all = "camelCase")]
 #[opendd(
@@ -218,6 +219,7 @@ pub enum MetadataWithVersion {
     V3(MetadataV3),
 }
 
+/// The v1 metadata.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdMetadataV1"))]
 pub struct MetadataV1 {
@@ -226,12 +228,14 @@ pub struct MetadataV1 {
     pub flags: flags::Flags,
 }
 
+/// A collection of objects that are related to each other.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 pub struct NamespacedObjects {
     pub name: String,
     pub objects: Vec<OpenDdSubgraphObject>,
 }
 
+/// The v2 metadata.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdMetadataV2"))]
 pub struct MetadataV2 {
@@ -243,6 +247,7 @@ pub struct MetadataV2 {
     pub flags: flags::Flags,
 }
 
+/// The v3 metadata.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdMetadataV3"))]
 pub struct MetadataV3 {
@@ -258,10 +263,11 @@ pub struct MetadataV3 {
 #[serde(tag = "kind")]
 #[opendd(as_kind)]
 pub enum OpenDdSupergraphObject {
-    // GraphQL schema configuration
+    /// GraphQL schema configuration
     GraphqlConfig(graphql_config::GraphqlConfig),
 }
 
+/// A collection of objects that apply to the entire supergraph.
 #[derive(Serialize, Default, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdSupergraph"))]
 pub struct Supergraph {
@@ -277,6 +283,7 @@ impl Supergraph {
     }
 }
 
+/// A subgraph is a collection of objects that belong to the same data domain.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdSubgraph"))]
 pub struct Subgraph {

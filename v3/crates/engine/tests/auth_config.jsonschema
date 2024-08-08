@@ -356,6 +356,7 @@
     "JWTClaimsMappingPathEntry_for_Role": {
       "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingPathEntry_for_Role",
       "title": "JWTClaimsMappingPathEntry",
+      "description": "Entry to lookup the Hasura claims at the specified JSON Pointer",
       "type": "object",
       "required": [
         "path"
@@ -418,6 +419,7 @@
     "JWTClaimsMappingPathEntry_for_Array_of_Role": {
       "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingPathEntry_for_Array_of_Role",
       "title": "JWTClaimsMappingPathEntry",
+      "description": "Entry to lookup the Hasura claims at the specified JSON Pointer",
       "type": "object",
       "required": [
         "path"
@@ -480,6 +482,7 @@
     "JWTClaimsMappingPathEntry_for_SessionVariableValue": {
       "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingPathEntry_for_SessionVariableValue",
       "title": "JWTClaimsMappingPathEntry",
+      "description": "Entry to lookup the Hasura claims at the specified JSON Pointer",
       "type": "object",
       "required": [
         "path"

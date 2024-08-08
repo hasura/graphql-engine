@@ -8,6 +8,7 @@ use crate::{permissions::ValueExpression, types::DataConnectorArgumentName, Envi
 
 use super::{DataConnectorColumnName, DataConnectorName, VersionedSchemaAndCapabilities};
 
+/// A pair of URLs to access a data connector, one for reading and one for writing.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -17,6 +18,7 @@ pub struct ReadWriteUrls {
     pub write: EnvironmentValue,
 }
 
+/// A URL to access a data connector. This can be a single URL or a pair of read and write URLs.
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
 )]
@@ -78,6 +80,7 @@ pub struct DataConnectorArgumentPreset {
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
+/// The value of a data connector argument preset.
 pub struct DataConnectorArgumentPresetValue {
     /// HTTP headers that can be preset from request
     pub http_headers: HttpHeadersPreset,
@@ -95,6 +98,7 @@ pub struct HttpHeadersPreset {
 }
 
 #[derive(Serialize, Default, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+/// Key value map of HTTP headers to be forwarded in the headers argument of a data connector request.
 // We wrap maps into newtype structs so that we have a type and title for them
 // in the JSONSchema which makes it easier to auto-generate documentation.
 pub struct AdditionalHttpHeaders(pub IndexMap<String, ValueExpression>);
