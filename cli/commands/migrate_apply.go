@@ -307,8 +307,8 @@ func (o *MigrateApplyOptions) Exec() error {
 	return nil
 }
 
-// Only one flag out of up, down and version can be set at a time. This function
-// checks whether that is the case and returns an error is not
+// getMigrationTypeAndStep ensures that only one flag out of up, down and version
+// can be set at a time.
 func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType, gotoVersion string, skipExecution bool) (string, int64, error) {
 	var op herrors.Op = "commands.getMigrationTypeAndStep"
 	var flagCount = 0
