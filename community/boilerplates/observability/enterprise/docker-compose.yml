@@ -1,5 +1,3 @@
-version: "3.6"
-
 volumes:
   prometheus_data: {}
   grafana_data: {}
@@ -55,18 +53,21 @@ services:
       - postgres
       - postgres-replica
       - redis
+      - auth-hook
     restart: always
     ## uncomment the auto migration image and volumes to explore the example
     volumes:
       - ./examples/hasura/migrations:/hasura-migrations
       - ./examples/hasura/metadata:/hasura-metadata
     environment:
+      # HASURA_GRAPHQL_PRO_KEY: ${HGE_PRO_KEY}
       HASURA_GRAPHQL_EE_LICENSE_KEY: ${HGE_EE_LICENSE_KEY}
       HASURA_GRAPHQL_ADMIN_SECRET: ${HGE_ADMIN_SECRET}
       ## The metadata database for this Hasura GraphQL project. Can be changed to a managed postgres instance
       HASURA_GRAPHQL_METADATA_DATABASE_URL: ${HGE_METADATA_DATABASE_URL}
       HGE_DATABASE_URL: ${HGE_DATABASE_URL}
       HGE_DATABASE_REPLICA_URL: ${HGE_DATABASE_REPLICA_URL}
+      HASURA_GRAPHQL_AUTH_HOOK: http://auth-hook:4200
 
       ## Optional settings:
       ## enable the console served by server
@@ -81,7 +82,7 @@ services:
       HASURA_GRAPHQL_CACHE_MAX_ENTRY_SIZE: "200"
       # HASURA_GRAPHQL_SERVER_PORT: "8080"
       HASURA_GRAPHQL_ENABLED_APIS: ${HGE_ENABLED_APIS}
-      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
+      # HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
 
       JAEGER_HOST: http://jaeger:4318
       OTEL_COLLECTOR_HOST: http://otel-collector:4318
@@ -171,19 +172,8 @@ services:
     image: ${JAEGER_IMAGE}
     restart: always
     ports:
-      - 5775:5775/udp
-      - 6831:6831/udp
-      - 6832:6832/udp
-      - 5778:5778
-      - 4002:16686
-      - 14250:14250
-      - 14268:14268
-      - 14269:14269
-      - 4317:4317 # OTLP gRPC
-      - 4318:4318 # OTLP HTTP
-      - 9411:9411
+      - ${JAEGER_UI_PORT}:16686
     environment:
-      COLLECTOR_ZIPKIN_HOST_PORT: ":9411"
       COLLECTOR_OTLP_ENABLED: "true"
 
   loki:
@@ -205,11 +195,16 @@ services:
       - "8888" # Prometheus metrics exposed by the collector
       - "8889" # Prometheus exporter metrics
       - "13133" # health_check extension
-      - "4317" # OTLP gRPC receiver
-      - "4318" # OTLP http receiver
+      - "4317:4317" # OTLP gRPC receiver
+      - "4318:4318" # OTLP http receiver
       - "55679" # zpages extension
     environment:
       DD_API_KEY: ${DD_API_KEY}
+      NEW_RELIC_API_KEY: ${NEW_RELIC_API_KEY}
       HONEYCOMB_API_KEY: ${HONEYCOMB_API_KEY}
       HONEYCOMB_DATASET: ${HONEYCOMB_DATASET}
       # GOOGLE_APPLICATION_CREDENTIALS: /etc/otel/gcp-sa.json
+
+  auth-hook:
+    build:
+      context: examples/auth-hook

@@ -11,11 +11,13 @@ import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.Environment qualified as Env
 import Data.Time.Clock (getCurrentTime)
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.User (UserInfoM)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging
 import Hasura.Metadata.Class
+import Hasura.NativeQuery.Validation (DisableNativeQueryValidation (AlwaysValidateNativeQueries))
 import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
@@ -32,7 +34,6 @@ import Hasura.Server.Init (DowngradeOptions (..))
 import Hasura.Server.Migrate
 import Hasura.Server.Types
 import Hasura.Services.Network
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Test.Hspec.Core.Spec
 import Test.Hspec.Expectations.Lifted
@@ -136,7 +137,7 @@ suite srcConfig pgExecCtx pgConnInfo = do
       migrateCatalogAndBuildCache env time = do
         dynamicConfig <- asks fst
         (migrationResult, metadataWithVersion) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) (ExtensionsSchema "public") MaintenanceModeDisabled time
-        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadataWithVersion dynamicConfig Nothing)
+        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env AlwaysValidateNativeQueries metadataWithVersion dynamicConfig Nothing)
 
       dropAndInit env time = lift do
         scVar <- asks snd

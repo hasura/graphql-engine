@@ -10,12 +10,13 @@ where
 import Data.HashSet qualified as Set
 import Data.Time (NominalDiffTime)
 import Database.PG.Query qualified as Query
+import Hasura.Authentication.Role qualified as Roles
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.Logging (Hasura)
 import Hasura.Logging qualified as Logging
+import Hasura.NativeQuery.Validation qualified as NativeQuery
 import Hasura.Prelude
 import Hasura.RQL.Types.NamingCase qualified as NamingCase
-import Hasura.RQL.Types.Roles qualified as Roles
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.Types qualified as MonadTx
 import Hasura.Server.Auth qualified as Auth
@@ -102,7 +103,8 @@ emptyServeOptionsRaw =
       rsoPersistedQueriesTtl = Nothing,
       rsoRemoteSchemaResponsePriority = Nothing,
       rsoHeaderPrecedence = Nothing,
-      rsoTraceQueryStatus = Nothing
+      rsoTraceQueryStatus = Nothing,
+      rsoDisableNativeQueryValidation = NativeQuery.AlwaysValidateNativeQueries
     }
 
 mkServeOptionsSpec :: Hspec.Spec

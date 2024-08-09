@@ -54,6 +54,9 @@ import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Encoding qualified as TL
 import GHC.Stats.Extended qualified as RTS
 import Hasura.App.State
+import Hasura.Authentication.Headers
+import Hasura.Authentication.Role (adminRoleName, roleNameToTxt)
+import Hasura.Authentication.User (ExtraUserInfo (..), UserInfo (..), UserInfoM, askUserInfo)
 import Hasura.Backends.DataConnector.API (openApiSchema)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Execute.Types
@@ -79,10 +82,9 @@ import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.BackendType
-import Hasura.RQL.Types.Common (SQLGenCtx (nullInNonNullableVariables))
+import Hasura.RQL.Types.Common (SQLGenCtx (..))
 import Hasura.RQL.Types.Endpoint as EP
 import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
-import Hasura.RQL.Types.Roles (adminRoleName, roleNameToTxt)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.Server.API.Config (runGetConfig)
@@ -109,7 +111,6 @@ import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Server.Version
 import Hasura.Services
-import Hasura.Session (ExtraUserInfo (..), UserInfo (..), UserInfoM, askUserInfo)
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Types qualified as HTTP
@@ -409,7 +410,11 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
     let queryTime = Just (ioWaitTime, serviceTime)
 
     -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/span-general/#general-identity-attributes
-    lift $ Tracing.attachMetadata [("enduser.role", roleNameToTxt $ _uiRole userInfo)]
+    lift
+      $ Tracing.attachMetadata
+        [ ("enduser.role", roleNameToTxt $ _uiRole userInfo),
+          ("session_variables", lbsToTxt $ J.encode (_uiSession userInfo))
+        ]
 
     -- apply the error modifier
     let modResult = fmapL qErrModifier result
@@ -517,7 +522,7 @@ v1MetadataHandler ::
   WS.WebsocketCloseOnMetadataChangeAction ->
   RQLMetadata ->
   m (HttpResponse EncJSON)
-v1MetadataHandler schemaCacheRefUpdater closeWebsocketsOnMetadataChangeAction query = Tracing.newSpan "Metadata" $ do
+v1MetadataHandler schemaCacheRefUpdater closeWebsocketsOnMetadataChangeAction query = Tracing.newSpan "Metadata" Tracing.SKInternal $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   appContext <- asks hcAppContext
   r <-
@@ -547,7 +552,7 @@ v2QueryHandler ::
   ((RebuildableSchemaCache -> m (EncJSON, RebuildableSchemaCache)) -> m EncJSON) ->
   V2Q.RQLQuery ->
   m (HttpResponse EncJSON)
-v2QueryHandler schemaCacheRefUpdater query = Tracing.newSpan "v2 Query" $ do
+v2QueryHandler schemaCacheRefUpdater query = Tracing.newSpan "v2 Query" Tracing.SKInternal $ do
   schemaCache <- asks hcSchemaCache
   (liftEitherM . authorizeV2QueryApi query) =<< ask
   res <-
@@ -653,8 +658,8 @@ gqlExplainHandler query = do
   reqHeaders <- asks hcReqHeaders
   responseErrorsConfig <- asks (acResponseInternalErrorsConfig . hcAppContext)
   licenseKeyCache <- asks hcLicenseKeyCache
-  nullInNonNullableVariables <- asks (nullInNonNullableVariables . acSQLGenCtx . hcAppContext)
-  res <- GE.explainGQLQuery nullInNonNullableVariables (lastBuiltSchemaCache schemaCache) licenseKeyCache reqHeaders query responseErrorsConfig
+  SQLGenCtx {nullInNonNullableVariables, noNullUnboundVariableDefault, removeEmptySubscriptionResponses} <- asks (acSQLGenCtx . hcAppContext)
+  res <- GE.explainGQLQuery removeEmptySubscriptionResponses nullInNonNullableVariables noNullUnboundVariableDefault (lastBuiltSchemaCache schemaCache) licenseKeyCache reqHeaders query responseErrorsConfig
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m) => PGD.PGDumpReqBody -> m APIResp

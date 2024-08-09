@@ -21,6 +21,7 @@ import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation qualified as PGE
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
@@ -50,7 +51,6 @@ import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Types (HeaderPrecedence)
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 
@@ -119,7 +119,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
               mutationOutput
               columnInfos
           rowCount = tshow . length $ IR._aiInsertObject multiObjIns
-      Tracing.newSpan ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
+      Tracing.newSpan ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) Tracing.SKInternal do
         Tracing.attachMetadata [("count", rowCount)]
         PGE.execInsertQuery stringifyNum tCase userInfo (insertQuery, planVars)
 
@@ -158,7 +158,7 @@ insertObject ::
   Maybe NamingCase ->
   m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
 insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase =
-  Tracing.newSpan ("Insert " <> qualifiedObjectToText table) do
+  Tracing.newSpan ("Insert " <> qualifiedObjectToText table) Tracing.SKInternal do
     validateInsert (HashMap.keys columns) (map IR._riRelationInfo objectRels) (HashMap.keys additionalColumns)
 
     -- insert all object relations and fetch this insert dependent column values

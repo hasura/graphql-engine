@@ -1,0 +1,112 @@
+---
+sidebar_label: Grafana Cloud Integration
+description: Learn how to integrate Hasura with Grafana Cloud free tier using OpenTelemetry
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - opentelemetry
+  - open telemetry
+  - traces
+  - metrics
+  - logs
+sidebar_position: 4
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Integration Guide for Grafana Cloud
+
+## Introduction
+
+Grafana Cloud provides a free tier that allows you to monitor and visualize your traces, metrics, and logs. By
+integrating Grafana Cloud with Hasura Cloud using OpenTelemetry, you can effectively monitor your Hasura GraphQL Engine
+and data connectors. This guide will walk you through the steps to integrate Grafana Cloud's OTLP endpoint with Hasura
+Cloud, enabling you to visualize and analyze your telemetry data effectively.
+
+## Step 1: Set up Grafana Cloud
+
+Begin by logging into your existing Grafana Cloud account, or create a new one
+[here](https://grafana.com/auth/sign-up/create-user).
+
+<Thumbnail src="/img/observability/hge_otlp_integration_grafana_1.png" alt="Grafana Cloud Login" width="1400px" />
+
+After logging in, you will be prompted to create a new stack if you don't have one.
+
+<Thumbnail
+  src="/img/observability/hge_otlp_integration_grafana_2.png"
+  alt="Create a New Stack in Grafana Cloud"
+  width="1400px"
+/>
+
+Get the OTLP Endpoint Details by going to your stack's details and then locatin gthe OTLP ednpoint URL and instance ID.
+Then, create an API token:
+
+<Thumbnail src="/img/observability/hge_otlp_integration_grafana_3.png" alt="OTLP Endpoint Details" width="1400px" />
+
+## Step 2: Configure Hasura Cloud
+
+After logging into your Hasura Cloud account at [hasura.io](https://cloud.hasura.io/), go to your project's settings
+page and navigate to the project you want to configure. Then, open the settings page and add the OTLP Endpoint as an
+environment variable in Hasura Cloud.
+
+- Key: `OTLP_ENDPOINT`
+- Value: `https://your-grafana-cloud-otlp-endpoint`
+
+<Thumbnail
+  src="/img/observability/hge_otlp_integration_grafana_4.png"
+  alt="Add Environment Variable for OTLP Endpoint"
+  width="1400px"
+/>
+
+Next, add the OTLP authorization header as an environment variable in Hasura Cloud.
+
+- Key: `OTLP_AUTH_HEADER`
+- Value: `Basic <base64(InstanceID:APIToken)>`
+
+<Thumbnail
+  src="/img/observability/hge_otlp_integration_grafana_5.png"
+  alt="Add Environment Variable for OTLP Authorization Header"
+  width="1400px"
+/>
+
+Then, configure the OpenTelemetry Exporter in Hasura Cloud by opening the project's Console and navigating to the
+`OpenTelemetry Exporter` section of the settings tab.
+
+Set the status to enabled and enter the details for the OTLP exporter:
+
+- **Traces Endpoint:** `{{OTLP_ENDPOINT}}/v1/traces`
+- **Metrics Endpoint:** `{{OTLP_ENDPOINT}}/v1/metrics`
+- **Logs Endpoint:** `{{OTLP_ENDPOINT}}/v1/logs`
+- **Headers:** Add the environment variable `OTLP_AUTH_HEADER` as the value for the `Authorization` header.
+
+  <Thumbnail
+    src="/img/observability/hge_otlp_integration_grafana_6.png"
+    alt="OpenTelemetry Configuration"
+    width="1400px"
+  />
+
+Finally, save and apply the configuration changes by clicking "Connect".
+
+## Step 3: Verify the integration
+
+Perform some operations on your Hasura API to generate traces, metrics, and logs. Then log into you Grafana Cloud
+instance and navigate to the explore section to view the traces, metrics, and logs.
+
+<Thumbnail src="/img/observability/hge_otlp_integration_grafana_7.png" alt="Grafana Cloud Logs" width="1400px" />
+
+## Step 4: Set up dashboards and alerts
+
+There are some ready-made dashboards available for Hasura Cloud on Grafana's website
+[here](https://grafana.com/grafana/dashboards/?search=hasura). Import these dashboards into your Grafana Cloud instance
+for immediate visualization of your Hasura Cloud metrics.
+
+Additionally, you can use the Grafana UI to create additional custom dashboards that visualize the traces and metrics
+from Hasura.
+
+You can also set up alerts on this data in Grafana Cloud to monitor your Hasura Cloud instance effectively.
+
+For more detailed information, refer to the
+[Hasura OpenTelemetry documentation](/observability/opentelemetry/graphql-engine.mdx). By following these steps, you can
+successfully integrate Grafana Cloud's OTLP endpoint with Hasura Cloud, import ready-made dashboards, and start
+monitoring your distributed traces effectively.

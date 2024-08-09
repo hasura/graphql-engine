@@ -1,38 +1,44 @@
 {
-  "__elements": {},
   "__inputs": [
     {
-      "description": "",
-      "label": "Prometheus",
       "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
       "pluginId": "prometheus",
-      "pluginName": "Prometheus",
-      "type": "datasource"
+      "pluginName": "Prometheus"
     }
   ],
+  "__elements": {},
   "__requires": [
     {
+      "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "type": "grafana",
-      "version": "9.5.2"
+      "version": "10.4.2"
     },
     {
+      "type": "datasource",
       "id": "prometheus",
       "name": "Prometheus",
-      "type": "datasource",
       "version": "1.0.0"
     },
     {
+      "type": "panel",
       "id": "stat",
       "name": "Stat",
-      "type": "panel",
       "version": ""
     },
     {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
       "id": "timeseries",
       "name": "Time series",
-      "type": "panel",
       "version": ""
     }
   ],
@@ -120,13 +126,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -194,13 +204,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -257,13 +271,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -333,13 +351,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -393,13 +415,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -457,13 +483,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -522,13 +552,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -598,13 +632,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -663,13 +701,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -739,13 +781,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -804,13 +850,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -870,13 +920,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -949,13 +1003,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -1023,13 +1081,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -1089,13 +1151,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -1163,13 +1229,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -1225,13 +1295,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -1293,13 +1367,17 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
@@ -1335,6 +1413,283 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Operation Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 126
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Query Hash"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 233
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "id": 62,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "10.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "topk(20 , sum by (job,operation_name,operation_type,parameterized_query_hash) (increase(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\"}[$__range]))) > 0",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Top Operations",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "operation_name",
+                "operation_type",
+                "parameterized_query_hash",
+                "Value",
+                "job"
+              ]
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Value"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "Value": 4,
+              "job": 2,
+              "operation_name": 0,
+              "operation_type": 1,
+              "parameterized_query_hash": 3
+            },
+            "renameByName": {
+              "Value": "Count",
+              "job": "Service",
+              "operation_name": "Operation Name",
+              "operation_type": "Operation Type",
+              "parameterized_query_hash": "Query Hash"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false,
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "NaN": {
+                  "index": 0,
+                  "text": "0"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 64,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": [],
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "topk(20, sum by (job, operation_type, operation_name) (increase(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",response_status=\"failed\"}[$__range]) / increase(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\"}[$__range])) > 0)",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Top Error Rate",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "operation_name",
+                "operation_type",
+                "Value",
+                "job"
+              ]
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Value"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "Value": 3,
+              "job": 2,
+              "operation_name": 0,
+              "operation_type": 1
+            },
+            "renameByName": {
+              "Value": "Ratio",
+              "job": "Service",
+              "operation_name": "Operation Name",
+              "operation_type": "Operation Type",
+              "parameterized_query_hash": "Parameterized Query Hash"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
       "description": "The rate of GraphQL Query requests processed",
       "fieldConfig": {
         "defaults": {
@@ -1342,6 +1697,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1355,6 +1711,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1420,7 +1777,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 15
+        "y": 23
       },
       "id": 10,
       "maxDataPoints": 120,
@@ -1480,6 +1837,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1493,6 +1851,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1527,7 +1886,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 15
+        "y": 23
       },
       "id": 46,
       "maxDataPoints": 120,
@@ -1573,6 +1932,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1586,6 +1946,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1650,7 +2011,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 22
+        "y": 30
       },
       "id": 45,
       "maxDataPoints": 120,
@@ -1708,6 +2069,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1721,6 +2083,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1755,7 +2118,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 30
       },
       "id": 11,
       "maxDataPoints": 120,
@@ -1792,13 +2155,14 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "Current number of active subscriptions",
+      "description": "The rate of GraphQL Subscription & Streaming processed requests",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1812,6 +2176,144 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Errors"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Requests"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 6,
+        "y": 37
+      },
+      "id": 65,
+      "maxDataPoints": 120,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"subscription\",response_status=\"failed\"}[$__rate_interval]))",
+          "hide": false,
+          "legendFormat": "Errors",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum(increase(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"subscription\"}[$__rate_interval]))",
+          "instant": false,
+          "legendFormat": "Requests",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Subscription Request Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "Current number of active subscriptions",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1845,7 +2347,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 29
+        "y": 44
       },
       "id": 44,
       "maxDataPoints": 120,
@@ -1869,9 +2371,9 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(hasura_active_subscriptions{job=~\"$job\",instance=~\"$instance\",subscription_kind=\"live-query\"})",
+          "expr": "sum by (job) (hasura_active_subscriptions{job=~\"$job\",instance=~\"$instance\",subscription_kind=\"live-query\"})",
           "instant": false,
-          "legendFormat": "Subscriptions",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
@@ -1891,6 +2393,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1904,6 +2407,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1938,7 +2442,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 29
+        "y": 44
       },
       "id": 15,
       "interval": "1m",
@@ -1983,6 +2487,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1996,6 +2501,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -2029,7 +2535,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 36
+        "y": 51
       },
       "id": 47,
       "maxDataPoints": 120,
@@ -2053,7 +2559,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(hasura_active_subscriptions{job=~\"$job\",instance=~\"$instance\",subscription_kind=\"streaming\"})",
+          "expr": "sum by (job) (hasura_active_subscriptions{job=~\"$job\",instance=~\"$instance\",subscription_kind=\"streaming\"})",
           "instant": false,
           "legendFormat": "Streamings",
           "range": true,
@@ -2075,6 +2581,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -2088,6 +2595,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -2105,7 +2613,6 @@
             }
           },
           "mappings": [],
-          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -2123,7 +2630,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 36
+        "y": 51
       },
       "id": 48,
       "interval": "1m",
@@ -2162,7 +2669,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 58
       },
       "id": 49,
       "panels": [],
@@ -2181,6 +2688,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -2194,6 +2702,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -2259,7 +2768,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 44
+        "y": 59
       },
       "id": 50,
       "maxDataPoints": 120,
@@ -2319,6 +2828,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -2332,6 +2842,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -2367,7 +2878,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 44
+        "y": 59
       },
       "id": 51,
       "interval": "1m",
@@ -2412,6 +2923,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -2425,6 +2937,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -2490,7 +3003,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 51
+        "y": 66
       },
       "id": 52,
       "maxDataPoints": 120,
@@ -2550,6 +3063,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -2563,6 +3077,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -2598,7 +3113,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 51
+        "y": 66
       },
       "id": 53,
       "interval": "1m",
@@ -2623,7 +3138,7 @@
           },
           "editorMode": "code",
           "expr": "histogram_quantile(0.95, sum(rate(hasura_event_queue_time_seconds_bucket{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])) by (job,le))",
-          "legendFormat": "{{job}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "Count"
         }
@@ -2637,7 +3152,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 58
+        "y": 73
       },
       "id": 55,
       "panels": [],
@@ -2656,6 +3171,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -2669,6 +3185,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineStyle": {
               "fill": "solid"
@@ -2706,7 +3223,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 59
+        "y": 74
       },
       "id": 58,
       "options": {
@@ -2729,7 +3246,7 @@
           },
           "editorMode": "code",
           "expr": "sum by (job) (hasura_http_connections{job=~\"$job\",instance=~\"$instance\"})",
-          "legendFormat": "{{job}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "Total"
         }
@@ -2749,6 +3266,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -2762,6 +3280,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineStyle": {
               "fill": "solid"
@@ -2799,7 +3318,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 59
+        "y": 74
       },
       "id": 59,
       "options": {
@@ -2822,7 +3341,7 @@
           },
           "editorMode": "code",
           "expr": "sum by (job) (hasura_websocket_connections{job=~\"$job\",instance=~\"$instance\"}) ",
-          "legendFormat": "{{job}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "Total"
         }
@@ -2842,6 +3361,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -2855,6 +3375,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineStyle": {
               "fill": "solid"
@@ -2896,7 +3417,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 66
+        "y": 81
       },
       "id": 56,
       "options": {
@@ -2918,7 +3439,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (role,conn_info,source_name) (hasura_postgres_connections{job=~\"$job\",instance=~\"$instance\"})",
+          "expr": "sum by (job, role,conn_info,source_name) (hasura_postgres_connections{job=~\"$job\",instance=~\"$instance\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -2939,6 +3460,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -2952,6 +3474,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineStyle": {
               "fill": "solid"
@@ -2989,7 +3512,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 66
+        "y": 81
       },
       "id": 57,
       "options": {
@@ -3044,6 +3567,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -3057,6 +3581,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -3095,7 +3620,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 73
+        "y": 88
       },
       "id": 60,
       "interval": "1m",
@@ -3120,8 +3645,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(hasura_postgres_connection_init_time_bucket{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])) by (role,conn_info,source_name,le))",
-          "legendFormat": "{{job}}",
+          "expr": "histogram_quantile(0.95, sum(rate(hasura_postgres_connection_init_time_bucket{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])) by (job,role,conn_info,source_name,le))",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "Count"
         }
@@ -3141,6 +3666,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -3154,6 +3680,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -3188,7 +3715,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 73
+        "y": 88
       },
       "id": 61,
       "interval": "1m",
@@ -3213,8 +3740,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(hasura_postgres_pool_wait_time_bucket{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])) by (role,conn_info,source_name,le))",
-          "legendFormat": "{{job}}",
+          "expr": "histogram_quantile(0.95, sum(rate(hasura_postgres_pool_wait_time_bucket{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])) by (job,role,conn_info,source_name,le))",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "Count"
         }
@@ -3224,16 +3751,17 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 38,
-  "style": "dark",
-  "tags": ["hasura"],
+  "schemaVersion": 39,
+  "tags": [
+    "hasura"
+  ],
   "templating": {
     "list": [
       {
         "current": {
           "selected": false,
           "text": "Prometheus",
-          "value": "Prometheus"
+          "value": "PBFA97CFB590B2093"
         },
         "description": "Prometheus source",
         "hide": 0,
@@ -3297,7 +3825,7 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},

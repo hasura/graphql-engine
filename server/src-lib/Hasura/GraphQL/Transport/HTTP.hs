@@ -42,6 +42,8 @@ import Data.Monoid (Any (..))
 import Data.Text qualified as T
 import Data.Text.Extended (toTxt, (<>>))
 import Data.Vector qualified as Vec
+import Hasura.Authentication.Session (SessionVariable, SessionVariableValue, SessionVariables, filterSessionVariables)
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
@@ -95,9 +97,8 @@ import Hasura.Server.Prometheus
     recordGraphqlOperationMetric,
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), ReadOnlyMode (..), RemoteSchemaResponsePriority (..), RequestId (..), TraceQueryStatus)
+import Hasura.Server.Types (HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), ReadOnlyMode (..), RemoteSchemaResponsePriority (..), RequestId (..), TraceQueryStatus (TraceQueryEnabled))
 import Hasura.Services
-import Hasura.Session (SessionVariable, SessionVariableValue, SessionVariables, UserInfo (..), filterSessionVariables)
 import Hasura.Tracing (MonadTrace, attachMetadata)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -339,7 +340,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
   let gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
   (totalTime, (response, parameterizedQueryHash, gqlOpType, gqlOperationName, modelInfoListForLogging, queryCachedStatus)) <- withElapsedTime $ do
-    (reqParsed, runLimits, queryParts) <- Tracing.newSpan "Parse GraphQL" $ observeGQLQueryError granularPrometheusMetricsState gqlMetrics Nothing (_grOperationName reqUnparsed) Nothing $ do
+    (reqParsed, runLimits, queryParts) <- Tracing.newSpan "Parse GraphQL" Tracing.SKInternal $ observeGQLQueryError granularPrometheusMetricsState gqlMetrics Nothing (_grOperationName reqUnparsed) Nothing $ do
       -- 1. Run system authorization on the 'reqUnparsed :: GQLReqUnparsed' query.
       reqParsed <-
         E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
@@ -360,6 +361,8 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
       for_ maybeOperationName $ \nm ->
         -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
         attachMetadata [("graphql.operation.name", G.unName nm)]
+      when (traceQueryStatus == TraceQueryEnabled)
+        $ attachMetadata [("graphql.query", _unGQLQueryText (_grQuery reqUnparsed))]
       (parameterizedQueryHash, execPlan, modelInfoList) <-
         E.getResolvedExecPlan
           env
@@ -570,7 +573,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority header
         let (allResponses, allModelInfo) = unzip _all
         pure $ (AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses)) [], concat allModelInfo)
 
-    runRemoteGQ fieldName rsi resultCustomizer gqlReq remoteJoins = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
+    runRemoteGQ fieldName rsi resultCustomizer gqlReq remoteJoins = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) Tracing.SKInternal $ do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
         doQErr $ E.execRemoteGQ env tracesPropagator userInfo reqHeaders (rsDef rsi) gqlReq
       value <- extractFieldFromResponse remoteSchemaResponsePriority fieldName resultCustomizer resp

@@ -33,6 +33,7 @@ import Data.Scientific qualified as Scientific
 import Data.Text qualified as T
 import Data.Text.Extended ((<<>), (<>>))
 import Data.Text.Read qualified as TR
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Instances ()
@@ -46,7 +47,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types
-import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -74,7 +74,7 @@ makeSourceJoinCall ::
   -- | The resulting join index (see 'buildJoinIndex') if any.
   m (Maybe (IntMap.IntMap AO.Value, [ModelInfoPart]))
 makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArguments reqHeaders operationName traceQueryStatus =
-  Tracing.newSpan ("Remote join to data source " <> sourceName <<> " for field " <>> jaFieldName) do
+  Tracing.newSpan ("Remote join to data source " <> sourceName <<> " for field " <>> jaFieldName) Tracing.SKClient do
     -- step 1: create the SourceJoinCall
     -- maybeSourceCall <-
     --   AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin \(sjc :: SourceJoinCall b) ->
@@ -87,7 +87,7 @@ makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArg
       -- step 2: send this call over the network
       sourceResponse <- networkFunction sourceCall
       -- step 3: build the join index
-      Tracing.newSpan "Build remote join index"
+      Tracing.newSpan "Build remote join index" Tracing.SKInternal
         $ (,(modelInfoList))
         <$> buildJoinIndex sourceResponse
   where
@@ -120,7 +120,7 @@ buildSourceJoinCall ::
   RemoteSourceJoin b ->
   m (Maybe (AB.AnyBackend SourceJoinCall, [ModelInfoPart]))
 buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName traceQueryStatus remoteSourceJoin = do
-  Tracing.newSpan "Resolve execution step for remote join field" do
+  Tracing.newSpan "Resolve execution step for remote join field" Tracing.SKInternal do
     let rows =
           IntMap.toList joinArguments <&> \(argumentId, argument) ->
             KM.insert "__argument_id__" (J.toJSON argumentId)

@@ -31,6 +31,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     enableTelemetryOption,
     wsReadCookieOption,
     stringifyNumOption,
+    disableNativeQueryValidationOption,
     dangerousBooleanCollapseOption,
     backwardsCompatibleNullInNonNullableVariablesOption,
     remoteNullForwardingPolicyOption,
@@ -84,15 +85,16 @@ import Data.HashSet qualified as HashSet
 import Data.Text qualified as Text
 import Data.Time qualified as Time
 import Database.PG.Query qualified as Query
+import Hasura.Authentication.Role (RoleName)
+import Hasura.Authentication.Role qualified as Roles
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Bounded
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.Logging qualified as Logging
+import Hasura.NativeQuery.Validation qualified as NativeQuery
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (MetadataDefaults, emptyMetadataDefaults)
 import Hasura.RQL.Types.NamingCase qualified as NC
-import Hasura.RQL.Types.Roles (RoleName)
-import Hasura.RQL.Types.Roles qualified as Roles
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
@@ -169,6 +171,7 @@ serveCommandParser =
     <*> parseRemoteSchemaResponsePriority
     <*> parseConfiguredHeaderPrecedence
     <*> parseTraceQueryStatus
+    <*> parseDisableNativeQueryValidation
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -625,6 +628,22 @@ stringifyNumOption =
     { Config._default = Options.Don'tStringifyNumbers,
       Config._envVar = "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES",
       Config._helpMessage = "Stringify numeric types (default: false)"
+    }
+
+parseDisableNativeQueryValidation :: Opt.Parser NativeQuery.DisableNativeQueryValidation
+parseDisableNativeQueryValidation =
+  fmap (bool NativeQuery.AlwaysValidateNativeQueries NativeQuery.NeverValidateNativeQueries)
+    $ Opt.switch
+      ( Opt.long "disable-native-query-validation"
+          <> Opt.help (Config._helpMessage disableNativeQueryValidationOption)
+      )
+
+disableNativeQueryValidationOption :: Config.Option NativeQuery.DisableNativeQueryValidation
+disableNativeQueryValidationOption =
+  Config.Option
+    { Config._default = NativeQuery.AlwaysValidateNativeQueries,
+      Config._envVar = "HASURA_GRAPHQL_DISABLE_NATIVE_QUERY_VALIDATION",
+      Config._helpMessage = "Disable Native Query validation (default: false)"
     }
 
 parseDangerousBooleanCollapse :: Opt.Parser (Maybe Options.DangerouslyCollapseBooleans)

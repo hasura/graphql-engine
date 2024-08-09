@@ -58,7 +58,7 @@
       }
     ]
   },
-  "description": "Hasura dashboards for HTTP GraphQL requests",
+  "description": "Hasura GraphQL Engine dashboards for monitoring OpenTelemetry exporter",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,

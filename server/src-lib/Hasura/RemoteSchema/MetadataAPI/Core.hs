@@ -18,6 +18,8 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as S
 import Data.Text.Extended
+import Hasura.Authentication.Role (RoleName)
+import Hasura.Authentication.User (UserInfoM)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.RemoteServer
@@ -26,7 +28,6 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
@@ -34,7 +35,6 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Build (addRemoteSchemaP2Setup)
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Services
-import Hasura.Session (UserInfoM)
 import Hasura.Tracing qualified as Tracing
 
 -- | The payload for 'add_remote_schema', and a component of 'Metadata'.

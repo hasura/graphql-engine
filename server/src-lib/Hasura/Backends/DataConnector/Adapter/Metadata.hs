@@ -21,6 +21,7 @@ import Data.Semigroup.Foldable (Foldable1 (..))
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended (toTxt, (<<>), (<>>))
+import Hasura.Authentication.Session (SessionVariable, isSessionVariable, unsafeMkSessionVariable, userIdHeader)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0 (FunctionInfo (_fiDescription, _fiName))
 import Hasura.Backends.DataConnector.API.V0.Table qualified as DC (TableType (..))
@@ -83,7 +84,6 @@ import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Utils qualified as HSU
 import Hasura.Services.Network
-import Hasura.Session (SessionVariable, mkSessionVariable)
 import Hasura.Table.Cache (ForeignKey (_fkConstraint))
 import Hasura.Table.Cache qualified as RQL.T.T
 import Hasura.Tracing (ignoreTraceT)
@@ -117,7 +117,7 @@ instance BackendMetadata 'DataConnector where
   getTableInfo = getTableInfo'
   supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
 
-  validateNativeQuery _ _ _ sc _ nq = do
+  validateNativeQuery _disableNativeQueryValidation sc _ nq = do
     unless (isJust (API._cInterpolatedQueries (DC._scCapabilities sc))) do
       let nqName = _nqmRootFieldName nq
       throw400 NotSupported $ "validateNativeQuery: " <> toTxt nqName <> " - Native Queries not implemented for this Data Connector backend."
@@ -610,8 +610,8 @@ parseCollectableType' ::
   m (PartialSQLExp 'DataConnector)
 parseCollectableType' collectableType = \case
   J.String t
-    | HSU.isSessionVariable t -> pure $ mkTypedSessionVar collectableType $ mkSessionVariable t
-    | HSU.isReqUserId t -> pure $ mkTypedSessionVar collectableType HSU.userIdHeader
+    | isSessionVariable t -> pure . mkTypedSessionVar collectableType $ unsafeMkSessionVariable t
+    | HSU.isReqUserId t -> pure $ mkTypedSessionVar collectableType userIdHeader
   val -> case collectableType of
     CollectableTypeScalar columnType ->
       PSESQLExp . DC.ValueLiteral (columnTypeToScalarType columnType) <$> RQL.T.C.parseScalarValueColumnType columnType val

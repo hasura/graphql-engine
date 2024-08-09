@@ -26,6 +26,8 @@ import Data.HashSet qualified as HS
 import Data.List (elemIndex)
 import Data.Monoid (Endo (..))
 import Data.Tagged qualified as Tagged
+import Hasura.Authentication.Role (adminRoleName)
+import Hasura.Authentication.User (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -57,7 +59,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
-import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Schema.Options (RemoveEmptySubscriptionResponses (..))
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
@@ -65,7 +67,6 @@ import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, ReadOnlyMode (..), RequestId (..), TraceQueryStatus)
 import Hasura.Services
-import Hasura.Session (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
@@ -126,6 +127,7 @@ data SubscriptionExecution
 buildSubscriptionPlan ::
   forall m.
   (MonadError QErr m, MonadQueryTags m, MonadIO m, MonadBaseControl IO m) =>
+  RemoveEmptySubscriptionResponses ->
   UserInfo ->
   RootFieldMap (IR.QueryRootField IR.UnpreparedValue) ->
   ParameterizedQueryHash ->
@@ -133,7 +135,7 @@ buildSubscriptionPlan ::
   Maybe G.Name ->
   Init.ResponseInternalErrorsConfig ->
   m ((SubscriptionExecution, Maybe (Endo JO.Value)), [ModelInfoPart])
-buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders operationName responseErrorsConfig = do
+buildSubscriptionPlan removeEmptySubscriptionResponses userInfo rootFields parameterizedQueryHash reqHeaders operationName responseErrorsConfig = do
   (((liveQueryOnSourceFields, noRelationActionFields), streamingFields), modifier) <- foldlM go (((mempty, mempty), mempty), mempty) (InsOrdHashMap.toList rootFields)
 
   if
@@ -195,6 +197,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
                           queryDB = case EA._aaqseJsonAggSelect dbExecution of
                             JASMultipleRows -> IR.QDBMultipleRows selectAST
                             JASSingleObject -> IR.QDBSingleRow selectAST
+
                       pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig Nothing (IR.QDBR queryDB))
 
                   case InsOrdHashMap.toList sourceSubFields of
@@ -293,7 +296,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
                 . AB.mkAnyBackend
                 . MultiplexedSubscriptionQueryPlan
             )
-            <$> runReaderT (EB.mkLiveQuerySubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs reqHeaders operationName) queryTagsComment
+            <$> runReaderT (EB.mkLiveQuerySubscriptionPlan removeEmptySubscriptionResponses userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs reqHeaders operationName) queryTagsComment
       pure ((sourceName, subscriptionPlan), modelInfo)
 
     checkField ::
@@ -389,7 +392,7 @@ getResolvedExecPlan
     -- Construct the full 'ResolvedExecutionPlan' from the 'queryParts :: SingleOperation'.
     (parameterizedQueryHash, resolvedExecPlan, modelInfoList') <-
       case queryParts of
-        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve query execution plan" $ do
+        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve query execution plan" Tracing.SKInternal $ do
           (executionPlan, queryRootFields, dirMap, parameterizedQueryHash, modelInfoList) <-
             EQ.convertQuerySelSet
               env
@@ -412,7 +415,7 @@ getResolvedExecPlan
               traceQueryStatus
           Tracing.attachMetadata [("graphql.operation.type", "query"), ("parameterized_query_hash", bsToTxt $ unParamQueryHash parameterizedQueryHash)]
           pure (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap, modelInfoList)
-        G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve mutation execution plan" $ do
+        G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve mutation execution plan" Tracing.SKInternal $ do
           when (readOnlyMode == ReadOnlyModeEnabled)
             $ throw400 NotSupported "Mutations are not allowed when read-only mode is enabled"
           (executionPlan, parameterizedQueryHash, modelInfoList) <-
@@ -436,16 +439,17 @@ getResolvedExecPlan
               traceQueryStatus
           Tracing.attachMetadata [("graphql.operation.type", "mutation")]
           pure (parameterizedQueryHash, MutationExecutionPlan executionPlan, modelInfoList)
-        G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve subscription execution plan" $ do
+        G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve subscription execution plan" Tracing.SKInternal $ do
           (normalizedDirectives, normalizedSelectionSet) <-
             ER.resolveVariables
               (nullInNonNullableVariables sqlGenCtx)
+              (noNullUnboundVariableDefault sqlGenCtx)
               varDefs
               (fromMaybe mempty (_grVariables reqUnparsed))
               directives
               inlinedSelSet
           subscriptionParser <- C.gqlSubscriptionParser gCtx `onNothing` throw400 ValidationFailed "no subscriptions exist"
-          unpreparedAST <- Tracing.newSpan "Parse subscription IR" $ liftEither $ subscriptionParser normalizedSelectionSet
+          unpreparedAST <- Tracing.newSpan "Parse subscription IR" Tracing.SKInternal $ liftEither $ subscriptionParser normalizedSelectionSet
           let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
           -- Process directives on the subscription
           dirMap <-
@@ -462,7 +466,7 @@ getResolvedExecPlan
             _ ->
               unless (allowMultipleRootFields && isSingleNamespace unpreparedAST)
                 $ throw400 ValidationFailed "subscriptions must select one top level field"
-          (subscriptionPlan, modelInfoList) <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash reqHeaders maybeOperationName responseErrorsConfig
+          (subscriptionPlan, modelInfoList) <- buildSubscriptionPlan (removeEmptySubscriptionResponses sqlGenCtx) userInfo unpreparedAST parameterizedQueryHash reqHeaders maybeOperationName responseErrorsConfig
           Tracing.attachMetadata [("graphql.operation.type", "subscription")]
           pure (parameterizedQueryHash, SubscriptionExecutionPlan subscriptionPlan, modelInfoList)
     -- the parameterized query hash is calculated here because it is used in multiple

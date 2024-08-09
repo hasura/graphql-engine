@@ -87,6 +87,8 @@ import Database.PG.Query qualified as PG
 import Database.PG.Query qualified as Q
 import GHC.AssertNF.CPP
 import Hasura.App.State
+import Hasura.Authentication.Role (adminRoleName)
+import Hasura.Authentication.User (ExtraUserInfo (..), UserInfo (..))
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
@@ -115,6 +117,7 @@ import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.GraphQL.Transport.WebSocket.Types (WSServerEnv (..))
 import Hasura.Logging
 import Hasura.Metadata.Class
+import Hasura.NativeQuery.Validation (DisableNativeQueryValidation)
 import Hasura.PingSources
 import Hasura.Prelude
 import Hasura.QueryTags
@@ -130,7 +133,6 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.ResizePool
-import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
@@ -156,7 +158,6 @@ import Hasura.Server.Telemetry
 import Hasura.Server.Types
 import Hasura.Server.Version
 import Hasura.Services
-import Hasura.Session
 import Hasura.ShutdownLatch
 import Hasura.Tracing
 import Network.HTTP.Client qualified as HTTP
@@ -538,6 +539,7 @@ initialiseAppContext env serveOptions AppInit {..} = do
   -- Create the schema cache
   rebuildableSchemaCache <-
     buildFirstSchemaCache
+      (soDisableNativeQueryValidation serveOptions)
       env
       logger
       (mkPgSourceResolver pgLogger)
@@ -601,6 +603,7 @@ migrateCatalogAndFetchMetadata
 -- and avoid a breaking change.
 buildFirstSchemaCache ::
   (MonadIO m) =>
+  DisableNativeQueryValidation ->
   Env.Environment ->
   Logger Hasura ->
   SourceResolver ('Postgres 'Vanilla) ->
@@ -612,6 +615,7 @@ buildFirstSchemaCache ::
   Maybe SchemaRegistry.SchemaRegistryContext ->
   m RebuildableSchemaCache
 buildFirstSchemaCache
+  disableNativeQueryValidation
   env
   logger
   pgSourceResolver
@@ -625,7 +629,7 @@ buildFirstSchemaCache
     result <-
       runExceptT
         $ runCacheBuild cacheBuildParams
-        $ buildRebuildableSchemaCache logger env metadataWithVersion cacheDynamicConfig mSchemaRegistryContext
+        $ buildRebuildableSchemaCache logger env disableNativeQueryValidation metadataWithVersion cacheDynamicConfig mSchemaRegistryContext
     result `onLeft` \err -> do
       -- TODO: we used to bundle the first schema cache build with the catalog
       -- migration, using the same error handler for both, meaning that an
@@ -693,7 +697,7 @@ instance HasCacheStaticConfig AppM where
 
 instance MonadTrace AppM where
   newTraceWith c p n (AppM a) = AppM $ newTraceWith c p n a
-  newSpanWith i n (AppM a) = AppM $ newSpanWith i n a
+  newSpanWith i n k (AppM a) = AppM $ newSpanWith i n k a
   attachMetadata = AppM . attachMetadata
 
 instance MonadTraceContext AppM where
@@ -883,10 +887,16 @@ updateJwkCtxThread ::
   HTTP.Manager ->
   Logger Hasura ->
   m Void
-updateJwkCtxThread getAppCtx httpManager logger = forever $ do
-  authMode <- liftIO $ acAuthMode <$> getAppCtx
-  updateJwkCtx authMode httpManager logger
-  liftIO $ sleep $ seconds 1
+updateJwkCtxThread getAppCtx httpManager logger = do
+  let sleepSeconds = 60
+  forever $ do
+    authMode <- liftIO $ acAuthMode <$> getAppCtx
+    updateJwkCtx
+      (ContextAdvice $ "retrying again after " <> tshow sleepSeconds <> " seconds")
+      authMode
+      httpManager
+      logger
+    liftIO $ sleep $ seconds sleepSeconds
 
 -- | Event triggers live in the user's DB and other events
 --  (cron, one-off and async actions)

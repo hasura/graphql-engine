@@ -16,6 +16,7 @@ import Data.Aeson.Types (JSONPathElement)
 import Data.Has (Has (..))
 import Data.Text qualified as T
 import GHC.Stack
+import Hasura.Authentication.Role (adminRoleName)
 import Hasura.Base.Error (QErr)
 import Hasura.Base.ErrorMessage
 import Hasura.GraphQL.Parser.Class
@@ -25,7 +26,6 @@ import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.NamingCase
-import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options (SchemaOptions (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source (SourceInfo)
@@ -72,7 +72,9 @@ defaultSchemaOptions =
       soIncludeStreamFields = Options.IncludeStreamFields,
       soBigQueryStringNumericInput = Options.EnableBigQueryStringNumericInput,
       soIncludeGroupByAggregateFields = Options.IncludeGroupByAggregateFields,
-      soPostgresArrays = Options.UsePostgresArrays
+      soPostgresArrays = Options.UsePostgresArrays,
+      soNoNullUnboundVariableDefault = Options.DefaultUnboundNullableVariablesToNull,
+      soRemoveEmptySubscriptionResponses = Options.PreserveEmptyResponses
     }
 
 instance Has NamingCase SchemaEnvironment where

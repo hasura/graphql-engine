@@ -1,4 +1,3 @@
-version: "3.6"
 services:
   postgres:
     image: postgres:15
@@ -23,7 +22,7 @@ services:
       - yugabyte-data:/var/lib/postgresql/data
 
   graphql-engine:
-    image: hasura/graphql-engine:v2.40.0
+    image: hasura/graphql-engine:v2.42.0
     ports:
       - "8080:8080"
     depends_on:

@@ -150,7 +150,7 @@ export const QueryCollectionsOperationsHeader: React.FC<
             )}
             <Button
               onClick={() => {
-                const confirmMessage = `This will permanently delete the selected operations"`;
+                const confirmMessage = `This will permanently delete the selected operations and related restified endpoints if exists.`;
                 const isOk = getConfirmation(confirmMessage, true, 'delete');
                 if (isOk) {
                   removeOperationsFromQueryCollection(

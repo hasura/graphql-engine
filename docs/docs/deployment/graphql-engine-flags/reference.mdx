@@ -355,6 +355,21 @@ headers on any request.
 | **Default**         | `false`                       |
 | **Supported in**    | CE, Enterprise Edition        |
 
+
+### Disable Native Query validation
+
+Disable validation of Native Queries against the database.
+
+|                     |                                                     |
+| ------------------- | --------------------------------------------------- |
+| **Flag**            | `--disable-native-query-validation`                 |
+| **Env var**         | `HASURA_GRAPHQL_DISABLE_NATIVE_QUERY_VALIDATION`    |
+| **Accepted values** | Boolean                                             |
+| **Options**         | `true` or `false`                                   |
+| **Default**         | `false`                                             |
+| **Supported in**    | CE, Enterprise Edition, Cloud                       |
+
+
 ### Dynamic Secrets Allowed Path Prefix
 
 Enables the ability to source Postgres connection strings from files on disk using
@@ -617,7 +632,7 @@ List of experimental features to be enabled.
 | **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                                              |
 | **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                                            |
 | **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                                                     |
-| **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays` |
+| **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays`, `remove_empty_subscription_responses`, `no_null_unbound_variable_default` |
 | **Default**         | `null`                                                                                                                                                                                                                                                            |
 | **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                     |
 
@@ -1117,7 +1132,7 @@ List of third-party identity providers to enable Single Sign-on authentication f
 | **Accepted values** | JSON array of objects (containing identity provider configs and the JWK used for verification)                                                                                                                                                                                                                       |
 | **Default**         | `null`                                                                                                                                                                                                                                                                                                               |
 | **Example**         | `[{\"client_id\": \"<client-id-from-idp>\", \"name\": \"<display-name>\", \"scope\": \"openid\", \"authorization_url\": \"<login-url>\", \"request_token_url\": \"<request-token-url>\", \"admin_roles\": [\"admin\"], \"jwt_secret\": {\"type\": \"RS256\", \"jwk_url\": \"https://...\", \"issuer\": \"myapp\"}}]` |
-| **Supported in**    | EE                                                                                                                                                                                                                                                                                                                   |
+| **Supported in**    | Enterprise Edition                                                                                                                                                                                                                                                                                                   |
 
 ### Skip Arguments with `null` Values for Remote Schema
 
@@ -1229,9 +1244,9 @@ This sets transaction isolation.
 | **Default**         | `read-committed`                                    |
 | **Supported in**    | Deprecated in versions > `v2.0.0`                   |
 
-### Trace SQL Queries
+### Trace SQL and GraphQL Queries
 
-Add SQL queries to the OTLP traces.
+Add SQL and GraphQL queries to the OTLP traces.
 
 |                     |                                          |
 | ------------------- | ---------------------------------------- |
@@ -1240,7 +1255,7 @@ Add SQL queries to the OTLP traces.
 | **Accepted values** | Boolean                                  |
 | **Options**         | `true` or `false`                        |
 | **Default**         | `false`                                  |
-| **Supported in**    | CE, Enterprise Edition                   |
+| **Supported in**    | Enterprise Edition, Cloud                |
 
 ### Unauthorized Role
 

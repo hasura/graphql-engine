@@ -32,6 +32,7 @@
     "clsx": "^1.2.1",
     "cspell": "^6.18.1",
     "docusaurus-plugin-sass": "^0.2.2",
+    "dompurify": "^3.1.5",
     "graphiql": "^1.5.1",
     "graphql": "^15.7.2",
     "graphql-ws": "^5.11.2",

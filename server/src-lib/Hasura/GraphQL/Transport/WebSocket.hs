@@ -49,6 +49,8 @@ import Data.Time.Clock qualified as TC
 import Data.Word (Word16)
 import GHC.AssertNF.CPP
 import Hasura.App.State
+import Hasura.Authentication.Session (SessionVariables)
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
@@ -105,9 +107,8 @@ import Hasura.Server.Prometheus
     recordGraphqlOperationMetric,
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (GranularPrometheusMetricsState (..), HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), RemoteSchemaResponsePriority, RequestId, TraceQueryStatus, getRequestId)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), RemoteSchemaResponsePriority, RequestId, TraceQueryStatus (TraceQueryEnabled), getRequestId)
 import Hasura.Services.Network
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax (Name (..))
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -490,7 +491,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
   enableAL <- liftIO $ acEnableAllowlist <$> getAppContext appStateRef
   remoteSchemaResponsePriority <- liftIO $ acRemoteSchemaResponsePriority <$> getAppContext appStateRef
 
-  (reqParsed, queryParts) <- Tracing.newSpan "Parse GraphQL" $ do
+  (reqParsed, queryParts) <- Tracing.newSpan "Parse GraphQL" Tracing.SKInternal $ do
     reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
     reqParsed <- onLeft reqParsedE (withComplete . preExecErr granularPrometheusMetricsState requestId Nothing (_grOperationName q) Nothing)
     queryPartsE <- runExceptT $ getSingleOperation reqParsed
@@ -503,7 +504,12 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig sc
   for_ maybeOperationName $ \nm ->
     -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
-    Tracing.attachMetadata [("graphql.operation.name", unName nm)]
+    Tracing.attachMetadata
+      [ ("graphql.operation.name", unName nm),
+        ("session_variables", lbsToTxt $ J.encode (_uiSession userInfo))
+      ]
+  when (traceQueryStatus == TraceQueryEnabled)
+    $ Tracing.attachMetadata [("graphql.query", _unGQLQueryText (_grQuery q))]
   execPlanE <-
     runExceptT
       $ E.getResolvedExecPlan
@@ -841,7 +847,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       Tracing.HttpPropagator ->
       RemoteSchemaResponsePriority ->
       ExceptT (Either GQExecError QErr) (ExceptT () m) (AnnotatedResponsePart, [ModelInfoPart])
-    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator remoteSchemaResponsePriority = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
+    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator remoteSchemaResponsePriority = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) Tracing.SKInternal $ do
       env <- liftIO $ acEnvironment <$> getAppContext appStateRef
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr

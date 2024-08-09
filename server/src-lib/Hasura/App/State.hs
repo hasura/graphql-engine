@@ -28,6 +28,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Environment qualified as E
 import Data.HashSet qualified as Set
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.Role (RoleName)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
 import Hasura.CredentialCache
@@ -44,7 +45,6 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.NamingCase
-import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache (MetadataResourceVersion)
 import Hasura.Server.Auth
@@ -351,7 +351,15 @@ initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse nullInN
       bigqueryStringNumericInput
         | EFBigQueryStringNumericInput `elem` experimentalFeatures = Options.EnableBigQueryStringNumericInput
         | otherwise = Options.DisableBigQueryStringNumericInput
-   in SQLGenCtx stringifyNum dangerousBooleanCollapse nullInNonNullableVariables remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput
+
+      noNullUnboundVariableDefault
+        | EFNoNullUnboundVariableDefault `elem` experimentalFeatures = Options.RemoveUnboundNullableVariablesFromTheQuery
+        | otherwise = Options.DefaultUnboundNullableVariablesToNull
+
+      removeEmptySubscriptionResponses
+        | EFRemoveEmptySubscriptionResponses `elem` experimentalFeatures = Options.RemoveEmptyResponses
+        | otherwise = Options.PreserveEmptyResponses
+   in SQLGenCtx stringifyNum dangerousBooleanCollapse nullInNonNullableVariables noNullUnboundVariableDefault removeEmptySubscriptionResponses remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput
 
 buildCacheStaticConfig :: AppEnv -> CacheStaticConfig
 buildCacheStaticConfig AppEnv {..} =

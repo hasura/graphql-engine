@@ -17,6 +17,7 @@ import Data.IntMap.Strict qualified as IntMap
 import Data.Text qualified as T
 import Data.Text.Extended (ToTxt (..))
 import Data.Tuple (swap)
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
 import Hasura.CredentialCache
@@ -40,7 +41,6 @@ import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (MonadGetPolicies, RequestId, TraceQueryStatus)
 import Hasura.Services.Network
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
@@ -81,7 +81,7 @@ processRemoteJoins ::
   TraceQueryStatus ->
   m (EncJSON, [ModelInfoPart])
 processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo lhs maybeJoinTree gqlreq tracesPropagator traceQueryStatus =
-  Tracing.newSpan "Process remote joins" $ forRemoteJoins maybeJoinTree (lhs, []) \joinTree -> do
+  Tracing.newSpan "Process remote joins" Tracing.SKInternal $ forRemoteJoins maybeJoinTree (lhs, []) \joinTree -> do
     lhsParsed <-
       JO.eitherDecode (encJToLBS lhs)
         `onLeft` (throw500 . T.pack)
@@ -190,7 +190,7 @@ foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders op
       (intMap, model) = unzip compositeValue'
       joinIndices' = IntMap.fromList $ zip key intMap
       modelInfoList = concat model
-  Tracing.newSpan "Join remote join results"
+  Tracing.newSpan "Join remote join results" Tracing.SKInternal
     $ (,(modelInfoList))
     <$> (joinResults joinIndices' compositeValue)
 

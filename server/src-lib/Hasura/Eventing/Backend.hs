@@ -7,6 +7,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Set.NonEmpty qualified as NE
 import Data.Time.Clock qualified as Time
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.MSSQL.DDL.EventTrigger qualified as MSSQL
 import Hasura.Backends.Postgres.DDL.EventTrigger qualified as Postgres
 import Hasura.Base.Error
@@ -17,7 +18,6 @@ import Hasura.RQL.Types.Column (ColumnInfo)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
-import Hasura.RQL.Types.Session (UserInfo)
 import Hasura.RQL.Types.Source
 import Hasura.Server.Types (MaintenanceMode)
 import Hasura.Table.Cache (PrimaryKey)
@@ -230,7 +230,7 @@ class (Backend b) => BackendEventTrigger (b :: BackendType) where
   addCleanupSchedules ::
     (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
-    [(TriggerName, AutoTriggerLogCleanupConfig)] ->
+    NonEmpty (TriggerName, AutoTriggerLogCleanupConfig) ->
     m ()
 
   -- | @deleteAllScheduledCleanups@ deletes all scheduled cleanup logs for a given event trigger
