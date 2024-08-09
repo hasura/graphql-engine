@@ -656,29 +656,34 @@ async fn handle_explain_request(
     response
 }
 
-async fn pre_execution_plugins_middleware<'a, B>(
+async fn pre_execution_plugins_middleware<'a>(
     State(engine_state): State<Arc<EngineState>>,
     Extension(session): Extension<Session>,
     headers_map: HeaderMap,
-    request: Request<B>,
+    request: Request<axum::body::Body>,
     next: Next<axum::body::Body>,
-) -> axum::response::Result<axum::response::Response>
-where
-    B: HttpBody,
-    B::Error: Display,
-{
-    let (request, response) = pre_execution_plugins_handler(
-        &engine_state.pre_parse_plugins,
-        &engine_state.http_context.client,
-        session,
-        request,
-        headers_map,
-    )
-    .await?;
+) -> axum::response::Result<axum::response::Response> {
+    // Check if the pre_execution_plugins_config is empty
+    match nonempty::NonEmpty::from_slice(&engine_state.pre_parse_plugins) {
+        None => {
+            // If empty, do nothing and pass the request to the next middleware
+            Ok(next.run(request).await)
+        }
+        Some(pre_parse_plugins) => {
+            let (request, response) = pre_execution_plugins_handler(
+                &pre_parse_plugins,
+                &engine_state.http_context.client,
+                session,
+                request,
+                headers_map,
+            )
+            .await?;
 
-    match response {
-        Some(response) => Ok(response),
-        None => Ok(next.run(request).await),
+            match response {
+                Some(response) => Ok(response),
+                None => Ok(next.run(request).await),
+            }
+        }
     }
 }
 

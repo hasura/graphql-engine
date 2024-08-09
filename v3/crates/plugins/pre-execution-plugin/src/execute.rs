@@ -212,7 +212,7 @@ pub async fn execute_plugin(
 }
 
 pub async fn pre_execution_plugins_handler<'a, B>(
-    pre_execution_plugins_config: &Vec<LifecyclePluginHookPreParse>,
+    pre_execution_plugins_config: &nonempty::NonEmpty<LifecyclePluginHookPreParse>,
     http_client: &reqwest::Client,
     session: Session,
     request: Request<B>,
