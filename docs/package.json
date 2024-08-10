@@ -30,7 +30,7 @@
     "algoliasearch": "^4.14.2",
     "algoliasearch-helper": "^3.7.4",
     "clsx": "^1.2.1",
-    "cspell": "^6.18.1",
+    "cspell": "^8.2.0",
     "docusaurus-plugin-sass": "^0.2.2",
     "dompurify": "^3.1.5",
     "graphiql": "^1.5.1",
