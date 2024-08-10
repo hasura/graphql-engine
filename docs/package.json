@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@docusaurus/core": "^2.2.0",
-    "@docusaurus/preset-classic": "^2.2.0",
+    "@docusaurus/preset-classic": "^3.5.0",
     "@mdx-js/react": "^1.6.22",
     "algoliasearch": "^4.14.2",
     "algoliasearch-helper": "^3.7.4",
