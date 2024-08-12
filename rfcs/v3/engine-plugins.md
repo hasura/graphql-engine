@@ -1,27 +1,25 @@
 # Engine-plugins in Hasura V3
 
-This document is going to focus on the implementation details for HTTP-based
-engine plugins.
+This document focuses on the implementation details for HTTP-based engine
+plugins.
 
 ## Pre-parse Hook
 
-For a pre-parse plugin, the request to the plugin would be performed just after
+For a pre-parse plugin, the request to the plugin is performed just after
 receiving the request to the engine.
 
 ### Configuration
 
-The pre-parse plugin can be configured using an OpenDD object of kind
-`LifecyclePluginHook`. It will include the following information:
+The pre-parse plugin can be configured using an OpenDD object of kind `LifecyclePluginHook`. It includes the following information:
 
 1. The engine-plugin URL
 2. Request Includes (this can be used to optimize critical engine plugins):
-   1. Request Headers(?)
-   2. Graphql request(?)
-   3. Variables(?)
+    1. Request Headers
+    2. Graphql request
+    3. Variables
 
-Please note that the presence of `operationName` is not configurable (as we
-already have too much fine-grained control), and including/excluding operation
-name won't have much impact on the request size.
+Please note that the presence of `operationName` is not configurable, and
+including/excluding operation name won't have much impact on the request size.
 
 An example of configuration JSON is:
 
@@ -55,8 +53,8 @@ An example of configuration JSON is:
 
 ### Request
 
-The request to the pre-parse hook should have sufficient information to
-cater to the following planned use cases:
+The request to the pre-parse hook should have sufficient information to cater to
+the following planned use cases:
 
 1. Rate limits
 2. Depth limits
@@ -67,7 +65,7 @@ The request should have the following:
 
 1. Headers: Include information for the uniqueness of the request (origin,
    session variables, etc.), cache control information, etc.
-2. Hasura’s session information: Role and session variables (?)
+2. Hasura’s session information: Role and session variables
 3. Raw request: Raw request received by graphql-engine (including variables)
 
 ```json
@@ -82,9 +80,8 @@ The request should have the following:
 The response of a pre-parse hook can be of three types:
 
 1. Return with a response: The engine-plugin has handled the request, and the
-   graphql-engine should return the response provided by the engine-plugin (the
-   engine will short-circuit here). Should we check if the response is valid
-   according to the spec?
+   graphql-engine should return the response provided by the engine-plugin.
+   (Should we check if the response is valid according to the spec?)
 2. Continue with the execution: The graphql-engine should proceed with the
    request handling.
 3. Error response: Abort the request with the error response.
@@ -114,31 +111,31 @@ HTTP code: 204 There should be no response body for this case
 
 A pre-plugin response can be of two types:
 
-1.  User error: This will include errors that can be propagated to the user.
+1. User error: This will include errors that can be propagated to the user.
 
-    HTTP code: 400
+     HTTP code: 400
 
-    ```
-    <The user error json value>
-    ```
+     ```
+     <The user error json value>
+     ```
 
-2.  Internal error: Internal errors are encountered while handling the request.
-    The engine-plugin can dictate the engine to either abort the execution or
-    continue with the request (?). The internal errors will not be propagated to
-    the users; they will only be part of the traces.
+2. Internal error: Internal errors are encountered while handling the request.
+   The engine-plugin can dictate the engine to either abort the execution or
+   continue with the request. The internal errors will not be propagated to the
+   users; they will only be part of the traces.
 
-        HTTP code: 500
-        ```json
-        {
-          "details": <The internal error json value>,
-          "action": <abort/continue>
-        }
-        ```
+     HTTP code: 500
+     ```json
+     {
+        "details": <The internal error json value>,
+        "action": <abort/continue>
+     }
+     ```
 
 ## Pre-response hook
 
-A pre-response hook will be called just before returning a response to the
-user. For now, we will have asynchronous pre-response hooks only.
+A pre-response hook is called just before returning a response to the user. For
+now, we will have asynchronous pre-response hooks only.
 
 An asynchronous hook will be useful for the following use cases:
 
@@ -242,7 +239,7 @@ For example, multiple pre-plugins can be thought of as a pipeline:
 
 For plugin 2, we will do the following:
 
-- If plugin 1 responds successfully/ error, we will NOT call plugin 2, and there
+- If plugin 1 responds successfully/error, we will NOT call plugin 2, and there
   will be a short-circuit.
 - Only for the continued execution case will we call plugin 2.
 - The request to all the pre-plugin will be the same (the raw request and
@@ -275,7 +272,7 @@ Engine plugins will be part of the metadata (OpenDD). This will be more like the
 
 The engine-plugin artifacts will be similar to how we store `AuthConfig`
 artifacts right now. We will have new artifacts (pre-parse and pre-response
-plugin artifacts)
+plugin artifacts).
 
 Each artifact will have a list of engine plugins in the order of execution. For
 example:
@@ -302,20 +299,18 @@ always be executed first).
 
 ### Synchronous pre-response hook
 
-A synchronous hook can be useful for response transformation (should we even do
-this?) using something like kriti-lang.
+A synchronous hook can be useful for response transformation using something
+like kriti-lang.
 
-For synchronous pre-response hooks, the response can be similar to the
-pre-parse hook. I.e., it can be one of the three: Return with a response:
-The engine plugin has handled the request, and the graphql-engine should return
-the response provided by the engine plugin (and ignore the response generated by
-the engine). Return with engine’s response: The graphql-engine should proceed
-with the engine’s response. Error response: Abort the request with the error
+For synchronous pre-response hooks, the response can be similar to the pre-parse
+hook. I.e., it can be one of the three: Return with a response: The engine
+plugin has handled the request, and the graphql-engine should return the
+response provided by the engine plugin (and ignore the response generated by the
+engine). Return with engine’s response: The graphql-engine should proceed with
+the engine’s response. Error response: Abort the request with the error
 response.
 
-Synchronous pre-response engine-plugins will be
-[daisy-chained](<https://en.wikipedia.org/wiki/Daisy_chain_(electrical_engineering)>)
-with one another:
+Synchronous pre-response engine-plugins will be daisy-chained with one another:
 
 ```
                       __________________       __________________
