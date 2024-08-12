@@ -15,6 +15,7 @@ mod datafusion {
 }
 
 pub mod introspection;
+pub mod mem_table;
 pub mod model;
 pub mod subgraph;
 

@@ -3,37 +3,33 @@
 use std::{any::Any, sync::Arc};
 
 use async_trait::async_trait;
+use column_metadata::{ColumnMetadata, ColumnMetadataRow, COLUMN_METADATA};
+use foreign_keys::{InferredForeignKeys, InferredForeignKeysRow, INFERRED_FOREIGN_KEY_CONSTRAINTS};
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved, ModelRelationshipTarget};
+use table_metadata::{TableMetadata, TableMetadataRow, TABLE_METADATA};
 mod datafusion {
     pub(super) use datafusion::{
-        arrow::{
-            array::RecordBatch,
-            datatypes::{DataType, Field, Schema, SchemaRef},
-        },
-        catalog::schema::SchemaProvider,
-        common::ScalarValue,
-        datasource::{TableProvider, TableType},
-        error::Result,
-        execution::context::SessionState,
-        logical_expr::Expr,
-        physical_plan::{values::ValuesExec, ExecutionPlan},
+        catalog::schema::SchemaProvider, datasource::TableProvider, error::Result,
     };
 }
 use open_dds::relationships::RelationshipType;
 use serde::{Deserialize, Serialize};
 
+use super::mem_table::MemTable;
+
+mod column_metadata;
+mod foreign_keys;
+mod table_metadata;
+
 pub const HASURA_METADATA_SCHEMA: &str = "hasura";
-pub const TABLE_METADATA: &str = "table_metadata";
-pub const COLUMN_METADATA: &str = "column_metadata";
-pub const INFERRED_FOREIGN_KEY_CONSTRAINTS: &str = "inferred_foreign_key_constraints";
 
 /// Describes the database schema structure and metadata.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub(crate) struct Introspection {
-    pub(crate) table_metadata: TableMetadata,
-    pub(crate) column_metadata: ColumnMetadata,
-    pub(crate) inferred_foreign_key_constraints: InferredatafusionoreignKeys,
+    table_metadata: TableMetadata,
+    column_metadata: ColumnMetadata,
+    inferred_foreign_key_constraints: InferredForeignKeys,
 }
 
 impl Introspection {
@@ -47,18 +43,18 @@ impl Introspection {
         let mut foreign_key_constraint_rows = Vec::new();
         for (schema_name, schema) in schemas {
             for (table_name, table) in &schema.tables {
-                table_metadata_rows.push(TableRow::new(
+                table_metadata_rows.push(TableMetadataRow::new(
                     schema_name.to_string(),
                     table_name.to_string(),
                     table.description.clone(),
                 ));
                 for (column_name, column_description) in &table.columns {
-                    column_metadata_rows.push(ColumnRow {
-                        schema_name: schema_name.to_string(),
-                        table_name: table_name.clone(),
-                        column_name: column_name.clone(),
-                        description: column_description.clone(),
-                    });
+                    column_metadata_rows.push(ColumnMetadataRow::new(
+                        schema_name.to_string(),
+                        table_name.clone(),
+                        column_name.clone(),
+                        column_description.clone(),
+                    ));
                 }
 
                 // TODO:
@@ -77,14 +73,14 @@ impl Introspection {
                         ) = &relationship.target
                         {
                             for mapping in mappings {
-                                foreign_key_constraint_rows.push(ForeignKeyRow {
-                                    from_schema_name: schema_name.to_string(),
-                                    from_table_name: table_name.clone(),
-                                    from_column_name: mapping.source_field.field_name.to_string(),
-                                    to_schema_name: model_name.subgraph.to_string(),
-                                    to_table_name: model_name.name.to_string(),
-                                    to_column_name: mapping.target_field.field_name.to_string(),
-                                });
+                                foreign_key_constraint_rows.push(InferredForeignKeysRow::new(
+                                    schema_name.to_string(),
+                                    table_name.clone(),
+                                    mapping.source_field.field_name.to_string(),
+                                    model_name.subgraph.to_string(),
+                                    model_name.name.to_string(),
+                                    mapping.target_field.field_name.to_string(),
+                                ));
                             }
                         }
                     }
@@ -94,197 +90,14 @@ impl Introspection {
         Introspection {
             table_metadata: TableMetadata::new(table_metadata_rows),
             column_metadata: ColumnMetadata::new(column_metadata_rows),
-            inferred_foreign_key_constraints: InferredatafusionoreignKeys::new(
-                foreign_key_constraint_rows,
-            ),
+            inferred_foreign_key_constraints: InferredForeignKeys::new(foreign_key_constraint_rows),
         }
     }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct TableMetadata {
-    schema: datafusion::SchemaRef,
-    rows: Vec<TableRow>,
-}
-
-impl TableMetadata {
-    pub(crate) fn new(rows: Vec<TableRow>) -> Self {
-        let schema_name = datafusion::Field::new("schema_name", datafusion::DataType::Utf8, false);
-        let table_name = datafusion::Field::new("table_name", datafusion::DataType::Utf8, false);
-        let description = datafusion::Field::new("description", datafusion::DataType::Utf8, true);
-        let schema = datafusion::SchemaRef::new(datafusion::Schema::new(vec![
-            schema_name,
-            table_name,
-            description,
-        ]));
-        TableMetadata { schema, rows }
-    }
-}
-
-impl TableMetadata {
-    fn to_values_table(&self) -> ValuesTable {
-        ValuesTable {
-            schema: self.schema.clone(),
-            rows: self
-                .rows
-                .iter()
-                .map(|row| {
-                    vec![
-                        ScalarValue::Utf8(Some(row.schema_name.clone())),
-                        ScalarValue::Utf8(Some(row.table_name.clone())),
-                        ScalarValue::Utf8(row.description.clone()),
-                    ]
-                })
-                .collect(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct TableRow {
-    schema_name: String,
-    table_name: String,
-    description: Option<String>,
-}
-
-impl TableRow {
-    pub(crate) fn new(
-        schema_name: String,
-        table_name: String,
-        description: Option<String>,
-    ) -> Self {
-        Self {
-            schema_name,
-            table_name,
-            description,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct ColumnMetadata {
-    pub(crate) schema: datafusion::SchemaRef,
-    pub(crate) rows: Vec<ColumnRow>,
-}
-
-impl ColumnMetadata {
-    fn new(rows: Vec<ColumnRow>) -> Self {
-        let schema_name = datafusion::Field::new("schema_name", datafusion::DataType::Utf8, false);
-        let table_name = datafusion::Field::new("table_name", datafusion::DataType::Utf8, false);
-        let column_name = datafusion::Field::new("column_name", datafusion::DataType::Utf8, false);
-        let description = datafusion::Field::new("description", datafusion::DataType::Utf8, true);
-        let schema = datafusion::SchemaRef::new(datafusion::Schema::new(vec![
-            schema_name,
-            table_name,
-            column_name,
-            description,
-        ]));
-        ColumnMetadata { schema, rows }
-    }
-    fn to_values_table(&self) -> ValuesTable {
-        ValuesTable {
-            schema: self.schema.clone(),
-            rows: self
-                .rows
-                .iter()
-                .map(|row| {
-                    vec![
-                        ScalarValue::Utf8(Some(row.schema_name.clone())),
-                        ScalarValue::Utf8(Some(row.table_name.clone())),
-                        ScalarValue::Utf8(Some(row.column_name.clone())),
-                        ScalarValue::Utf8(row.description.clone()),
-                    ]
-                })
-                .collect(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct ColumnRow {
-    schema_name: String,
-    table_name: String,
-    column_name: String,
-    description: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct InferredatafusionoreignKeys {
-    schema: datafusion::SchemaRef,
-    rows: Vec<ForeignKeyRow>,
-}
-
-impl InferredatafusionoreignKeys {
-    fn new(rows: Vec<ForeignKeyRow>) -> Self {
-        let from_schema_name =
-            datafusion::Field::new("from_schema_name", datafusion::DataType::Utf8, false);
-        let from_table_name =
-            datafusion::Field::new("from_table_name", datafusion::DataType::Utf8, false);
-        let from_column_name =
-            datafusion::Field::new("from_column_name", datafusion::DataType::Utf8, false);
-        let to_schema_name =
-            datafusion::Field::new("to_schema_name", datafusion::DataType::Utf8, false);
-        let to_table_name =
-            datafusion::Field::new("to_table_name", datafusion::DataType::Utf8, false);
-        let to_column_name =
-            datafusion::Field::new("to_column_name", datafusion::DataType::Utf8, false);
-        let schema = datafusion::SchemaRef::new(datafusion::Schema::new(vec![
-            from_schema_name,
-            from_table_name,
-            from_column_name,
-            to_schema_name,
-            to_table_name,
-            to_column_name,
-        ]));
-        InferredatafusionoreignKeys { schema, rows }
-    }
-    fn to_values_table(&self) -> ValuesTable {
-        ValuesTable {
-            schema: self.schema.clone(),
-            rows: self
-                .rows
-                .iter()
-                .map(|row| {
-                    vec![
-                        ScalarValue::Utf8(Some(row.from_schema_name.clone())),
-                        ScalarValue::Utf8(Some(row.from_table_name.clone())),
-                        ScalarValue::Utf8(Some(row.from_column_name.clone())),
-                        ScalarValue::Utf8(Some(row.to_schema_name.clone())),
-                        ScalarValue::Utf8(Some(row.to_table_name.clone())),
-                        ScalarValue::Utf8(Some(row.to_column_name.clone())),
-                    ]
-                })
-                .collect(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-enum ScalarValue {
-    Utf8(Option<String>),
-}
-
-impl ScalarValue {
-    fn into_datafusion_scalar_value(self) -> datafusion::ScalarValue {
-        match self {
-            ScalarValue::Utf8(value) => datafusion::ScalarValue::Utf8(value),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-struct ForeignKeyRow {
-    from_schema_name: String,
-    from_table_name: String,
-    from_column_name: String,
-    to_schema_name: String,
-    to_table_name: String,
-    to_column_name: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub(crate) struct IntrospectionSchemaProvider {
-    tables: IndexMap<String, Arc<ValuesTable>>,
+    tables: IndexMap<String, Arc<MemTable>>,
 }
 
 impl IntrospectionSchemaProvider {
@@ -292,17 +105,17 @@ impl IntrospectionSchemaProvider {
         let tables = [
             (
                 TABLE_METADATA,
-                introspection.table_metadata.to_values_table(),
+                introspection.table_metadata.to_table_provider(),
             ),
             (
                 COLUMN_METADATA,
-                introspection.column_metadata.to_values_table(),
+                introspection.column_metadata.to_table_provider(),
             ),
             (
                 INFERRED_FOREIGN_KEY_CONSTRAINTS,
                 introspection
                     .inferred_foreign_key_constraints
-                    .to_values_table(),
+                    .to_table_provider(),
             ),
         ]
         .into_iter()
@@ -338,51 +151,145 @@ impl datafusion::SchemaProvider for IntrospectionSchemaProvider {
     }
 }
 
-// A table with static rows
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-struct ValuesTable {
-    schema: datafusion::SchemaRef,
-    rows: Vec<Vec<ScalarValue>>,
-}
+#[cfg(test)]
+mod tests {
+    use ::datafusion::catalog::{CatalogProvider, MemoryCatalogProvider, SchemaProvider};
 
-#[async_trait]
-impl datafusion::TableProvider for ValuesTable {
-    fn as_any(&self) -> &dyn Any {
-        self
+    use super::*;
+    use ::datafusion::prelude::*;
+    use std::sync::Arc;
+
+    fn create_test_introspection() -> Introspection {
+        let table_metadata = TableMetadata::new(vec![
+            TableMetadataRow::new(
+                "public".to_string(),
+                "users".to_string(),
+                Some("Users table".to_string()),
+            ),
+            TableMetadataRow::new(
+                "public".to_string(),
+                "posts".to_string(),
+                Some("Posts table".to_string()),
+            ),
+        ]);
+
+        let column_metadata = ColumnMetadata::new(vec![
+            ColumnMetadataRow::new(
+                "public".to_string(),
+                "users".to_string(),
+                "id".to_string(),
+                Some("User ID".to_string()),
+            ),
+            ColumnMetadataRow::new(
+                "public".to_string(),
+                "users".to_string(),
+                "name".to_string(),
+                Some("User name".to_string()),
+            ),
+            ColumnMetadataRow::new(
+                "public".to_string(),
+                "posts".to_string(),
+                "id".to_string(),
+                Some("Post ID".to_string()),
+            ),
+            ColumnMetadataRow::new(
+                "public".to_string(),
+                "posts".to_string(),
+                "user_id".to_string(),
+                Some("Author's user ID".to_string()),
+            ),
+        ]);
+
+        let inferred_foreign_keys = InferredForeignKeys::new(vec![InferredForeignKeysRow::new(
+            "public".to_string(),
+            "posts".to_string(),
+            "user_id".to_string(),
+            "public".to_string(),
+            "users".to_string(),
+            "id".to_string(),
+        )]);
+
+        Introspection {
+            table_metadata,
+            column_metadata,
+            inferred_foreign_key_constraints: inferred_foreign_keys,
+        }
     }
 
-    fn schema(&self) -> datafusion::SchemaRef {
-        self.schema.clone()
+    #[tokio::test]
+    async fn test_introspection_schema_provider_table() {
+        let introspection = create_test_introspection();
+        let schema_provider = IntrospectionSchemaProvider::new(&introspection);
+
+        let table_metadata = schema_provider.table(TABLE_METADATA).await.unwrap();
+        assert!(table_metadata.is_some());
+
+        let column_metadata = schema_provider.table(COLUMN_METADATA).await.unwrap();
+        assert!(column_metadata.is_some());
+
+        let foreign_keys = schema_provider
+            .table(INFERRED_FOREIGN_KEY_CONSTRAINTS)
+            .await
+            .unwrap();
+        assert!(foreign_keys.is_some());
+
+        let non_existent_table = schema_provider.table("non_existent").await.unwrap();
+        assert!(non_existent_table.is_none());
     }
 
-    fn table_type(&self) -> datafusion::TableType {
-        datafusion::TableType::View
+    // ... (keep the create_test_introspection function and other existing tests)
+
+    fn create_test_context(introspection: &Introspection) -> SessionContext {
+        let config = SessionConfig::new().with_default_catalog_and_schema("default", "default");
+        let schema_provider = Arc::new(IntrospectionSchemaProvider::new(introspection));
+        let ctx = SessionContext::new_with_config(config);
+        let catalog = MemoryCatalogProvider::new();
+        catalog
+            .register_schema(HASURA_METADATA_SCHEMA, schema_provider)
+            .unwrap();
+        ctx.register_catalog("default", Arc::new(catalog));
+        ctx
     }
-    async fn scan(
-        &self,
-        _state: &datafusion::SessionState,
-        projection: Option<&Vec<usize>>,
-        // filters and limit can be used here to inject some push-down operations if needed
-        _filters: &[datafusion::Expr],
-        _limit: Option<usize>,
-    ) -> datafusion::Result<Arc<dyn datafusion::ExecutionPlan>> {
-        let projected_schema = Arc::new(self.schema.project(projection.unwrap_or(&vec![]))?);
-        let columnar_projection = projection
-            .unwrap_or(&vec![])
-            .iter()
-            .map(|j| {
-                self.rows
-                    .iter()
-                    .map(|row| row[*j].clone().into_datafusion_scalar_value())
-            })
-            .map(datafusion::ScalarValue::iter_to_array)
-            .collect::<datafusion::Result<Vec<_>>>()?;
-        Ok(Arc::new(datafusion::ValuesExec::try_new_from_batches(
-            projected_schema.clone(),
-            vec![datafusion::RecordBatch::try_new(
-                projected_schema,
-                columnar_projection,
-            )?],
-        )?))
+
+    #[tokio::test]
+    async fn test_query_table_metadata() {
+        let introspection = create_test_introspection();
+        let ctx = create_test_context(&introspection);
+
+        let sql = format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{TABLE_METADATA}");
+        let df = ctx.sql(&sql).await.unwrap();
+        let results = df.collect().await.unwrap();
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_rows(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_query_column_metadata() {
+        let introspection = create_test_introspection();
+        let ctx = create_test_context(&introspection);
+
+        let sql = format!(
+            "SELECT * FROM {HASURA_METADATA_SCHEMA}.{COLUMN_METADATA} WHERE table_name = 'users'",
+        );
+        let df = ctx.sql(&sql).await.unwrap();
+        let results = df.collect().await.unwrap();
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_rows(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_query_inferred_foreign_keys() {
+        let introspection = create_test_introspection();
+        let ctx = create_test_context(&introspection);
+
+        let sql =
+            format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{INFERRED_FOREIGN_KEY_CONSTRAINTS}",);
+        let df = ctx.sql(&sql).await.unwrap();
+        let results = df.collect().await.unwrap();
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_rows(), 1);
     }
 }
