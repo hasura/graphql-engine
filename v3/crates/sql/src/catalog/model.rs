@@ -19,14 +19,11 @@ use crate::plan::ModelQuery;
 mod datafusion {
     pub(super) use datafusion::{
         arrow::datatypes::{DataType, Field, Schema, SchemaBuilder, SchemaRef, TimeUnit},
+        catalog::Session,
         common::{DFSchema, DFSchemaRef},
-        datasource::function::TableFunctionImpl,
-        datasource::{TableProvider, TableType},
+        datasource::{function::TableFunctionImpl, TableProvider, TableType},
         error::Result,
-        execution::context::SessionState,
-        logical_expr::Expr,
-        logical_expr::Extension,
-        logical_expr::LogicalPlan,
+        logical_expr::{Expr, Extension, LogicalPlan},
         physical_plan::ExecutionPlan,
     };
 }
@@ -222,7 +219,7 @@ impl datafusion::TableProvider for Table {
 
     async fn scan(
         &self,
-        state: &datafusion::SessionState,
+        state: &dyn datafusion::Session,
         projection: Option<&Vec<usize>>,
         // filters and limit can be used here to inject some push-down operations if needed
         _filters: &[datafusion::Expr],

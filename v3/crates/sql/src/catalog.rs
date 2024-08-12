@@ -1,6 +1,5 @@
 use std::{any::Any, sync::Arc};
 
-use ::datafusion::execution::{context::SessionState, runtime_env::RuntimeEnv};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
@@ -8,7 +7,8 @@ use serde::{Deserialize, Serialize};
 
 mod datafusion {
     pub(super) use datafusion::{
-        catalog::{schema::SchemaProvider, CatalogProvider},
+        catalog::{CatalogProvider, SchemaProvider},
+        execution::{session_state::SessionStateBuilder, SessionStateDefaults},
         prelude::{SessionConfig, SessionContext},
         scalar::ScalarValue,
     };
@@ -135,13 +135,19 @@ impl Catalog {
             session: session.clone(),
             http_context: http_context.clone(),
         });
-        let session_state =
-            SessionState::new_with_config_rt(session_config, Arc::new(RuntimeEnv::default()))
-                .with_query_planner(query_planner)
-                .add_optimizer_rule(Arc::new(super::execute::optimizer::ReplaceTableScan {}))
-                .add_optimizer_rule(Arc::new(
-                    super::execute::optimizer::OpenDdPushDownProjection {},
-                ));
+        let session_state = datafusion::SessionStateBuilder::new()
+            .with_config(session_config)
+            .with_query_planner(query_planner)
+            .with_optimizer_rule(Arc::new(super::execute::optimizer::ReplaceTableScan {}))
+            .with_optimizer_rule(Arc::new(
+                super::execute::optimizer::OpenDdPushDownProjection {},
+            ))
+            .with_expr_planners(datafusion::SessionStateDefaults::default_expr_planners())
+            .with_scalar_functions(datafusion::SessionStateDefaults::default_scalar_functions())
+            .with_aggregate_functions(
+                datafusion::SessionStateDefaults::default_aggregate_functions(),
+            )
+            .build();
         let session_context = datafusion::SessionContext::new_with_state(session_state);
         session_context.register_catalog(
             "default",

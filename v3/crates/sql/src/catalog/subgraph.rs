@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 mod datafusion {
     pub(super) use datafusion::error::Result;
-    pub(super) use datafusion::{catalog::schema::SchemaProvider, datasource::TableProvider};
+    pub(super) use datafusion::{catalog::SchemaProvider, datasource::TableProvider};
 }
 
 use crate::catalog;

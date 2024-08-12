@@ -10,9 +10,9 @@ mod datafusion {
             array::{ArrayRef, BooleanArray, Int64Array, RecordBatch, StringArray},
             datatypes::{DataType, Field, SchemaBuilder, SchemaRef},
         },
+        catalog::Session,
         datasource::{TableProvider, TableType},
         error::Result,
-        execution::context::SessionState,
         logical_expr::Expr,
         physical_plan::{values::ValuesExec, ExecutionPlan},
     };
@@ -139,7 +139,7 @@ impl datafusion::TableProvider for MemTable {
     }
     async fn scan(
         &self,
-        _state: &datafusion::SessionState,
+        _state: &dyn datafusion::Session,
         projection: Option<&Vec<usize>>,
         // filters and limit can be used here to inject some push-down operations if needed
         _filters: &[datafusion::Expr],

@@ -10,7 +10,7 @@ use metadata_resolve::{self as resolved, ModelRelationshipTarget};
 use table_metadata::{TableMetadata, TableMetadataRow, TABLE_METADATA};
 mod datafusion {
     pub(super) use datafusion::{
-        catalog::schema::SchemaProvider, datasource::TableProvider, error::Result,
+        catalog::SchemaProvider, datasource::TableProvider, error::Result,
     };
 }
 use open_dds::relationships::RelationshipType;
@@ -153,7 +153,10 @@ impl datafusion::SchemaProvider for IntrospectionSchemaProvider {
 
 #[cfg(test)]
 mod tests {
-    use ::datafusion::catalog::{CatalogProvider, MemoryCatalogProvider, SchemaProvider};
+    use ::datafusion::{
+        catalog::{CatalogProvider, SchemaProvider},
+        catalog_common::MemoryCatalogProvider,
+    };
 
     use super::*;
     use ::datafusion::prelude::*;
