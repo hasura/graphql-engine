@@ -71,8 +71,9 @@ pub fn bench_execute(
     let mut group = c.benchmark_group(benchmark_group);
 
     // these numbers are fairly low, optimising for runtime of benchmark suite
-    group.warm_up_time(Duration::from_millis(500));
-    group.sample_size(20);
+    group.warm_up_time(Duration::from_millis(100));
+    group.sample_size(1000);
+    group.measurement_time(Duration::from_secs(5));
     group.sampling_mode(SamplingMode::Flat);
 
     // Parse request
