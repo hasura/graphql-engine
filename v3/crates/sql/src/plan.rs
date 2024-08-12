@@ -30,6 +30,7 @@ use open_dds::{
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 use execute::{
+    ndc::NdcQueryResponse,
     plan::{
         self, Argument, Relationship, ResolvedField, ResolvedFilterExpression,
         ResolvedQueryExecutionPlan, ResolvedQueryNode,
@@ -357,27 +358,160 @@ pub async fn fetch_from_data_connector(
         "ndc_response_to_record_batch",
         "Converts NDC Response into datafusion's RecordBatch",
         SpanVisibility::Internal,
-        || {
-            let rows = ndc_response
-                .as_latest_rowsets()
-                .pop()
-                .ok_or_else(|| {
-                    ExecutionPlanError::NDCResponseFormat("no row sets found".to_string())
-                })?
-                .rows
-                .ok_or_else(|| {
-                    ExecutionPlanError::NDCResponseFormat(
-                        "no rows found for the row set".to_string(),
-                    )
-                })?;
-            let mut decoder = arrow_json::ReaderBuilder::new(schema.clone()).build_decoder()?;
-            decoder.serialize(&rows)?;
-            decoder.flush()?.ok_or_else(|| {
-                ExecutionPlanError::RecordBatchConstruction(
-                    "json to arrow decoder did not return any rows".to_string(),
-                )
-            })
-        },
+        || ndc_response_to_record_batch(schema, ndc_response),
     )?;
     Ok(batch)
+}
+
+pub fn ndc_response_to_record_batch(
+    schema: SchemaRef,
+    ndc_response: NdcQueryResponse,
+) -> Result<RecordBatch, ExecutionPlanError> {
+    let rows = ndc_response
+        .as_latest_rowsets()
+        .pop()
+        .ok_or_else(|| ExecutionPlanError::NDCResponseFormat("no row sets found".to_string()))?
+        .rows
+        .ok_or_else(|| {
+            ExecutionPlanError::NDCResponseFormat("no rows found for the row set".to_string())
+        })?;
+    let mut decoder = arrow_json::ReaderBuilder::new(schema.clone()).build_decoder()?;
+    decoder.serialize(&rows)?;
+    // flush will return `None` if there are no rows in the response
+    let record_batch = decoder
+        .flush()?
+        .unwrap_or_else(|| RecordBatch::new_empty(schema));
+    Ok(record_batch)
+}
+
+// use super::*;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use datafusion::arrow::array::{Int32Array, StringArray};
+    use datafusion::arrow::datatypes::{DataType, Field, Schema};
+    use execute::ndc::NdcQueryResponse;
+    use ndc_models::{QueryResponse, RowFieldValue, RowSet};
+    use std::sync::Arc;
+
+    fn create_test_schema() -> SchemaRef {
+        Arc::new(Schema::new(vec![
+            Field::new("id", DataType::Int32, false),
+            Field::new("name", DataType::Utf8, false),
+        ]))
+    }
+
+    #[test]
+    fn test_ndc_response_to_record_batch_success() {
+        let schema = create_test_schema();
+
+        let query_response = QueryResponse(vec![RowSet {
+            rows: Some(vec![
+                IndexMap::from([
+                    ("id".into(), RowFieldValue(serde_json::json!(1))),
+                    ("name".into(), RowFieldValue(serde_json::json!("Alice"))),
+                ]),
+                IndexMap::from([
+                    ("id".into(), RowFieldValue(serde_json::json!(2))),
+                    ("name".into(), RowFieldValue(serde_json::json!("Bob"))),
+                ]),
+            ]),
+            aggregates: None,
+            groups: None,
+        }]);
+
+        let result = ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response));
+        assert!(result.is_ok());
+
+        let record_batch = result.unwrap();
+        assert_eq!(record_batch.num_rows(), 2);
+        assert_eq!(record_batch.num_columns(), 2);
+
+        let id_array = record_batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<Int32Array>()
+            .unwrap();
+        let name_array = record_batch
+            .column(1)
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+
+        assert_eq!(id_array.value(0), 1);
+        assert_eq!(id_array.value(1), 2);
+        assert_eq!(name_array.value(0), "Alice");
+        assert_eq!(name_array.value(1), "Bob");
+    }
+
+    #[test]
+    fn test_ndc_response_to_record_batch_empty_response() {
+        let schema = create_test_schema();
+
+        let query_response = QueryResponse(vec![RowSet {
+            rows: Some(vec![]),
+            aggregates: None,
+            groups: None,
+        }]);
+
+        let result = ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response));
+        assert!(result.is_ok());
+
+        let record_batch = result.unwrap();
+        assert_eq!(record_batch.num_rows(), 0);
+        assert_eq!(record_batch.num_columns(), 2);
+    }
+
+    #[test]
+    fn test_ndc_response_to_record_batch_no_rowsets() {
+        let schema = create_test_schema();
+
+        let query_response = QueryResponse(vec![]);
+
+        let result = ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response));
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            ExecutionPlanError::NDCResponseFormat(_)
+        ));
+    }
+
+    #[test]
+    fn test_ndc_response_to_record_batch_no_rows() {
+        let schema = create_test_schema();
+
+        let query_response = QueryResponse(vec![RowSet {
+            rows: None,
+            aggregates: None,
+            groups: None,
+        }]);
+
+        let result = ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response));
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            ExecutionPlanError::NDCResponseFormat(_)
+        ));
+    }
+
+    #[test]
+    fn test_ndc_response_to_record_batch_mismatched_schema() {
+        let schema = create_test_schema();
+
+        let query_response = QueryResponse(vec![RowSet {
+            rows: Some(vec![IndexMap::from([
+                (
+                    "id".into(),
+                    RowFieldValue(serde_json::json!("not an integer")),
+                ),
+                ("name".into(), RowFieldValue(serde_json::json!("Alice"))),
+            ])]),
+            aggregates: None,
+            groups: None,
+        }]);
+
+        let result = ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response));
+        assert!(result.is_err());
+    }
 }
