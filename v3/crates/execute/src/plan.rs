@@ -1,7 +1,7 @@
 mod arguments;
 mod commands;
 pub mod error;
-pub(crate) mod field;
+pub mod field;
 pub(crate) mod filter;
 mod model_selection;
 mod mutation;

@@ -38,7 +38,7 @@ use execute::{
     HttpContext,
 };
 use ir::{NdcFieldAlias, NdcRelationshipName};
-use open_dds::data_connector::{CollectionName, DataConnectorColumnName};
+use open_dds::data_connector::CollectionName;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ExecutionPlanError {
@@ -198,7 +198,7 @@ pub(crate) struct NDCPushDown {
     http_context: Arc<execute::HttpContext>,
     collection_name: CollectionName,
     arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
-    fields: IndexMap<NdcFieldAlias, DataConnectorColumnName>,
+    fields: IndexMap<NdcFieldAlias, ResolvedField<'static>>,
     filter: Option<ResolvedFilterExpression>,
     collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
@@ -212,7 +212,7 @@ impl NDCPushDown {
         schema: SchemaRef,
         collection_name: CollectionName,
         arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
-        fields: IndexMap<NdcFieldAlias, DataConnectorColumnName>,
+        fields: IndexMap<NdcFieldAlias, ResolvedField<'static>>,
         filter: Option<ResolvedFilterExpression>,
         collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
         data_connector: Arc<metadata_resolve::DataConnectorLink>,
@@ -289,16 +289,7 @@ impl ExecutionPlan for NDCPushDown {
                 fields: Some(
                     self.fields
                         .iter()
-                        .map(|(field_name, connector_column_name)| {
-                            (
-                                field_name.clone(),
-                                ResolvedField::Column {
-                                    column: connector_column_name.clone(),
-                                    fields: None,
-                                    arguments: BTreeMap::new(),
-                                },
-                            )
-                        })
+                        .map(|(field_name, field)| (field_name.clone(), field.clone()))
                         .collect(),
                 ),
                 aggregates: None,

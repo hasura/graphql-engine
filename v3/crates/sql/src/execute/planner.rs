@@ -1,3 +1,7 @@
+use execute::plan::{
+    field::{NestedArray, NestedField},
+    ResolvedField, ResolvedFilterExpression,
+};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use ir::NdcFieldAlias;
@@ -12,8 +16,8 @@ use datafusion::{
     physical_planner::{DefaultPhysicalPlanner, ExtensionPlanner, PhysicalPlanner},
 };
 
-use metadata_resolve::FilterPermission;
-use open_dds::query::ObjectSubSelection;
+use metadata_resolve::{FilterPermission, Qualified, QualifiedTypeReference, TypeMapping};
+use open_dds::{query::ObjectSubSelection, types::CustomTypeName};
 
 use crate::plan::NDCPushDown;
 
@@ -138,9 +142,9 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                             self.session.role, field_selection.target.field_name, model.model.data_type, qualified_model_name);
                 }
 
-                let ndc_column = field_mappings
+                let field_mapping = field_mappings
                     .get(&field_selection.target.field_name)
-                    .map(|field_mapping| field_mapping.column.clone())
+                    // .map(|field_mapping| field_mapping.column.clone())
                     .ok_or_else(|| {
                         DataFusionError::Internal(format!(
                             "couldn't fetch field mapping of field {} in type {} for model {}",
@@ -150,7 +154,31 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                         ))
                     })?;
 
-                ndc_fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_column);
+                let field_type = &model_object_type
+                    .object_type
+                    .fields
+                    .get(&field_selection.target.field_name)
+                    .ok_or_else(|| {
+                        DataFusionError::Internal(format!(
+                            "could not look up type of field {}",
+                            field_selection.target.field_name
+                        ))
+                    })?
+                    .field_type;
+
+                let fields = ndc_nested_field_selection_for(
+                    &self.catalog,
+                    field_type,
+                    &model_source.type_mappings,
+                )?;
+
+                let ndc_field = ResolvedField::Column {
+                    column: field_mapping.column.clone(),
+                    fields,
+                    arguments: BTreeMap::new(),
+                };
+
+                ndc_fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_field);
             }
 
             let model_select_permission = model
@@ -230,6 +258,71 @@ impl ExtensionPlanner for NDCPushDownPlanner {
             Ok(Some(Arc::new(ndc_pushdown)))
         } else {
             Ok(None)
+        }
+    }
+}
+
+fn ndc_nested_field_selection_for(
+    catalog: &Arc<crate::catalog::Catalog>,
+    column_type: &QualifiedTypeReference,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+) -> Result<Option<NestedField<ResolvedFilterExpression>>> {
+    match &column_type.underlying_type {
+        metadata_resolve::QualifiedBaseType::Named(name) => match name {
+            metadata_resolve::QualifiedTypeName::Custom(name) => {
+                if let Some(_scalar_type) = catalog.metadata.scalar_types.get(name) {
+                    return Ok(None);
+                }
+                if let Some(object_type) = catalog.metadata.object_types.get(name) {
+                    let TypeMapping::Object {
+                        ndc_object_type_name: _,
+                        field_mappings,
+                    } = type_mappings.get(name).ok_or_else(|| {
+                        DataFusionError::Internal(format!(
+                            "can't find mapping object for type: {name}"
+                        ))
+                    })?;
+
+                    let mut fields = IndexMap::new();
+
+                    for (field_name, field_mapping) in field_mappings {
+                        let field_def = object_type.object_type.fields.get(field_name).ok_or_else(|| DataFusionError::Internal(format!(
+                            "can't find object field definition for field {field_name} in type: {name}"
+                        )))?;
+                        let nested_fields: Option<NestedField<ResolvedFilterExpression>> =
+                            ndc_nested_field_selection_for(
+                                catalog,
+                                &field_def.field_type,
+                                type_mappings,
+                            )?;
+                        fields.insert(
+                            NdcFieldAlias::from(field_name.as_str()),
+                            ResolvedField::Column {
+                                column: field_mapping.column.clone(),
+                                fields: nested_fields,
+                                arguments: BTreeMap::new(),
+                            },
+                        );
+                    }
+
+                    return Ok(Some(NestedField::Object(
+                        execute::plan::field::NestedObject { fields },
+                    )));
+                }
+
+                internal_err!("named type was neither a scalar nor an object: {}", name)
+            }
+            metadata_resolve::QualifiedTypeName::Inbuilt(_) => Ok(None),
+        },
+        metadata_resolve::QualifiedBaseType::List(list_type) => {
+            let fields =
+                ndc_nested_field_selection_for(catalog, list_type.as_ref(), type_mappings)?;
+
+            Ok(fields.map(|fields| {
+                NestedField::Array(NestedArray {
+                    fields: Box::new(fields),
+                })
+            }))
         }
     }
 }

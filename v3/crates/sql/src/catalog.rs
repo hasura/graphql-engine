@@ -42,7 +42,7 @@ impl Catalog {
                     });
             subgraph.tables.insert(
                 table_name.to_string(),
-                Arc::new(model::Model::from_resolved_model(model)),
+                Arc::new(model::Model::from_resolved_model(&metadata, model)),
             );
         }
 
