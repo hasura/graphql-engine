@@ -154,8 +154,8 @@ pub fn generate_command_info<'n, 's>(
 /// containing headers and response fields; and the response field is also an
 /// object type -
 /// 1. Engine needs to generate fields selection IR such that it contains
-/// `{"headers": ..., "response": ...}` shape, and the actual selection from the
-/// user-facing query goes inside the `response` field
+///    `{"headers": ..., "response": ...}` shape, and the actual selection from the
+///    user-facing query goes inside the `response` field
 fn wrap_selection_in_response_config<'a>(
     command_source: &CommandSourceDetail,
     original_selection: Option<NestedSelection<'a>>,

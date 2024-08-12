@@ -57,17 +57,17 @@
 //! 1. Make the first top-level NDC query, and call the response as LHS response.
 //!
 //! 2. Traverse the join tree to get to the next remote join. Iterate through
-//! all the rows in the LHS response, use the field mapping in the remote join node
-//! to collect the values of those fields. In the above example, these would be
-//! collecting the city codes from the LHS city query.
+//!    all the rows in the LHS response, use the field mapping in the remote join node
+//!    to collect the values of those fields. In the above example, these would be
+//!    collecting the city codes from the LHS city query.
 //!
 //! 3. Get the NDC query from the remote join node, and attach the values in the
-//! above step as variables in the NDC query. This NDC query already has a
-//! "where" filter clause with a variable on the join mapping field. Make the
-//! NDC query, and call the response as RHS response.
+//!    above step as variables in the NDC query. This NDC query already has a
+//!    "where" filter clause with a variable on the join mapping field. Make the
+//!    NDC query, and call the response as RHS response.
 //!
 //! 4. If there is a sub-tree from this remote join node, recursively perform
-//! this algorithm.
+//!    this algorithm.
 //!
 //! 5. Perform join on LHS response and RHS response
 //!

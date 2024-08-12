@@ -35,7 +35,7 @@ pub fn query_root_schema(
             )?;
             fields.insert(field_name, field);
         }
-        for select_many in &model.graphql_api.select_many {
+        if let Some(select_many) = &model.graphql_api.select_many {
             let (field_name, field) = select_many::select_many_field(
                 gds,
                 builder,

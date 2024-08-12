@@ -113,11 +113,11 @@ pub struct RemoteJoin<'s, 'ir> {
     /// The HashMap has the following info -
     ///   - key: is the field name in the source
     ///   - value->first item: is the alias we create for the
-    ///   source field. If the user did not request the join field in the
-    ///   selection set, we include the join mapping field and call it a phantom
-    ///   field.
+    ///     source field. If the user did not request the join field in the
+    ///     selection set, we include the join mapping field and call it a phantom
+    ///     field.
     ///   - value->second item: is the target NDC field. This could be a model
-    ///   field or an argument name.
+    ///     field or an argument name.
     pub join_mapping: HashMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
     /// Represents how to process the join response.
     pub process_response_as: ProcessResponseAs<'ir>,

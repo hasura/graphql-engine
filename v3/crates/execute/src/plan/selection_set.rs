@@ -264,9 +264,9 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
 /// the NDC IR for that field
 ///
 /// - if the selection set DOES NOT contain the field, insert it into the NDC IR
-/// (with an internal alias), and return the alias
+///   (with an internal alias), and return the alias
 /// - if the selection set already contains the field, do not insert the field
-/// in NDC IR, and return the existing alias
+///   in NDC IR, and return the existing alias
 fn process_remote_relationship_field_mapping(
     selection: &ResultSelectionSet<'_>,
     field_mapping: &FieldMapping,
