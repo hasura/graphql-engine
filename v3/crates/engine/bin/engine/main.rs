@@ -43,6 +43,9 @@ use tracing_util::{
 
 mod cors;
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 const DEFAULT_PORT: u16 = 3000;
 
 const MB: usize = 1_048_576;

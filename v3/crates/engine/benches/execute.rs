@@ -19,6 +19,10 @@ use std::path::Path;
 
 use lang_graphql as gql;
 
+// match allocator used by engine binary
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 pub fn merge_with_common_metadata(
     common_metadata_path: &Path,
     metadata_path_string: &Path,

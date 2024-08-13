@@ -89,6 +89,7 @@ jsonptr = "0.4"
 jsonwebkey = "0.3"
 jsonwebtoken = "8"
 lexical-core = "0.8"
+mimalloc = "0.1"
 mockito = { version = "~1.4", default-features = false } # v1.5+ depends on http v1
 nonempty = "0.10"
 openssl = "0.10"
