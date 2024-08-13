@@ -138,14 +138,6 @@ impl ModelQuery {
         };
         Ok(model_query_node)
     }
-
-    pub(crate) fn project(mut self, schema: DFSchemaRef, projection: &[String]) -> Self {
-        self.model_selection
-            .selection
-            .retain(|k, _v| projection.iter().any(|column| column == k.as_str()));
-        self.schema = schema;
-        self
-    }
 }
 
 impl UserDefinedLogicalNodeCore for ModelQuery {
