@@ -841,6 +841,14 @@
             "nullable": "nullable",
             "description": null
           },
+          "songs": {
+            "name": "songs",
+            "type": {
+              "compositeType": "institution_songs"
+            },
+            "nullable": "nullable",
+            "description": null
+          },
           "staff": {
             "name": "staff",
             "type": {
@@ -2572,6 +2580,27 @@
             "fieldName": "name",
             "type": {
               "scalarType": "text"
+            },
+            "description": null
+          }
+        },
+        "description": null
+      },
+      "institution_songs": {
+        "typeName": "institution_songs",
+        "schemaName": "public",
+        "fields": {
+          "primary_anthem_track_id": {
+            "fieldName": "primary_anthem_track_id",
+            "type": {
+              "scalarType": "int4"
+            },
+            "description": null
+          },
+          "secondary_anthem_track_id": {
+            "fieldName": "secondary_anthem_track_id",
+            "type": {
+              "scalarType": "int4"
             },
             "description": null
           }

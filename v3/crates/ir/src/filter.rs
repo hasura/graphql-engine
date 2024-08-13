@@ -358,6 +358,7 @@ fn build_comparison_expression<'s>(
                 );
                 expressions.push(expression);
             }
+            // Nested field comparison
             schema::Annotation::Input(InputAnnotation::BooleanExpression(
                 BooleanExpressionAnnotation::BooleanExpressionArgument {
                     field:
@@ -391,6 +392,20 @@ fn build_comparison_expression<'s>(
 
                 expressions.push(inner_expression);
             }
+            // Nested relationship comparison
+            schema::Annotation::Input(InputAnnotation::BooleanExpression(
+                BooleanExpressionAnnotation::BooleanExpressionArgument {
+                    field:
+                        schema::ModelFilterArgument::RelationshipField(FilterRelationshipAnnotation {
+                            relationship_name,
+                            ..
+                        }),
+                },
+            )) => Err(
+                error::InternalDeveloperError::NestedObjectRelationshipInPredicate {
+                    relationship_name: relationship_name.clone(),
+                },
+            )?,
 
             annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
                 annotation: annotation.clone(),

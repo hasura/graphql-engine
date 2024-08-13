@@ -76,6 +76,15 @@ pub enum BooleanExpressionError {
         nested_type_name: Qualified<CustomTypeName>,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error(
+        "The nested object field '{field_name}' within '{parent_boolean_expression_type_name}' cannot be used for comparison \
+         because its boolean expression type '{nested_boolean_expression_type_name}' involves a relationship comparison field."
+    )]
+    NestedObjectFieldContainsRelationshipComparison {
+        field_name: FieldName,
+        parent_boolean_expression_type_name: Qualified<CustomTypeName>,
+        nested_boolean_expression_type_name: Qualified<CustomTypeName>,
+    },
     #[error("The field {field_name:} has type {field_type:} but the field's boolean expression type {field_boolean_expression_type_name:} has type {underlying_type:}")]
     FieldTypeMismatch {
         field_name: FieldName,

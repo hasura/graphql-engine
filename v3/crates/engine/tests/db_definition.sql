@@ -114,16 +114,22 @@ CREATE TYPE public.staff AS (
   favourite_artist_id int
 );
 
+CREATE TYPE public.institution_songs AS (
+  primary_anthem_track_id int,
+  secondary_anthem_track_id int
+);
+
 CREATE TABLE public.institution (
   id integer NOT NULL,
   name text,
   location location,
   staff staff [],
   departments text [],
+  songs institution_songs,
   CONSTRAINT institution_pkey PRIMARY KEY (id)
 );
 
-INSERT INTO public.institution (id, name, location, staff, departments)
+INSERT INTO public.institution (id, name, location, staff, departments, songs)
 VALUES (
     1,
     'Queen Mary University of London',
@@ -135,7 +141,11 @@ VALUES (
     ARRAY [ROW('Peter','Landin',ARRAY['Computer Science','Education'],
     1
   )::staff ],
-  ARRAY ['Humanities and Social Sciences','Science and Engineering','Medicine and Dentistry']
+  ARRAY ['Humanities and Social Sciences','Science and Engineering','Medicine and Dentistry'],
+  ROW(
+    2270,
+    2271
+  )::institution_songs
 ),
 (
   2,
@@ -154,12 +164,17 @@ ROW(
   ARRAY ['Computer Science','Functional Programming','Automated Reasoning'],
   3
 )::staff ],
-ARRAY ['Architecture and Civil Engineering','Computer Science and Engineering','Electrical Engineering','Physics','Industrial and Materials Science']
+ARRAY ['Architecture and Civil Engineering','Computer Science and Engineering','Electrical Engineering','Physics','Industrial and Materials Science'],
+ROW(
+    3421,
+    NULL
+  )::institution_songs
 ),
 (
   3,
   'University of Nowhere',
   null,
   null,
-  ARRAY ['nothing',null]
+  ARRAY ['nothing',null],
+  NULL
 );

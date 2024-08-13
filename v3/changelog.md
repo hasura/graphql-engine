@@ -6,6 +6,9 @@
 
 ### Fixed
 
+- Disallow model filter boolean expressions having relationship comparisons in
+  their nested object filters.
+
 ### Changed
 
 ## [v2024.08.07]

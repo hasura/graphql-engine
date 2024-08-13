@@ -499,6 +499,15 @@
                           "element_type": { "type": "named", "name": "staff" }
                         }
                       },
+                      "songs": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "institution_songs"
+                          }
+                        }
+                      },
                       "departments": {
                         "description": "The institution's departments",
                         "arguments": {},
@@ -510,6 +519,22 @@
                       "id": {
                         "description": "The institutions's primary key",
                         "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    }
+                  },
+                  "institution_songs": {
+                    "fields": {
+                      "primary_anthem_track_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "secondary_anthem_track_id": {
                         "type": {
                           "type": "named",
                           "name": "int4"

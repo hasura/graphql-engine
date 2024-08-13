@@ -180,6 +180,9 @@ pub enum InternalDeveloperError {
         aggregate_operand_type: QualifiedTypeName,
         aggregation_function: AggregationFunctionName,
     },
+
+    #[error("The relationship '{relationship_name}' is from a nested object and cannot be used in a predicate")]
+    NestedObjectRelationshipInPredicate { relationship_name: RelationshipName },
 }
 
 #[derive(Debug, thiserror::Error)]
