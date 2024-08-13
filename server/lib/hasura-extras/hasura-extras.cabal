@@ -19,6 +19,9 @@ library
     -fmax-simplifier-iterations=2
     -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
     -Weverything
+    -Wno-missing-role-annotations
+    -Wno-term-variable-capture
+    -Wno-missing-poly-kind-signatures
     -Wno-missing-exported-signatures
     -Wno-missing-import-lists
     -Wno-missed-specialisations
@@ -61,7 +64,7 @@ library
     , byteorder
     , bytestring
     , case-insensitive
-    , connection
+    , crypton-connection
     , containers
     , data-default
     , data-default-class
@@ -101,10 +104,10 @@ library
     , websockets
     , wide-word
     , witherable
-    , x509
-    , x509-store
-    , x509-system
-    , x509-validation
+    , crypton-x509
+    , crypton-x509-store
+    , crypton-x509-system
+    , crypton-x509-validation
     , vector
     , extra
 

@@ -62,7 +62,9 @@ library
   hs-source-dirs:   src
   ghc-options:      -Wall -fwarn-tabs
   if impl(ghc >= 8.6.0)
+    -- NOTE: many uses of head and tail here
     ghc-options:    -Wno-warnings-deprecations
+                    -Wno-x-partial
   if flag(dev)
     ghc-options:    -Werror
   if flag(dev)

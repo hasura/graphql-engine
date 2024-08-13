@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 -- | This modules defines the tree of Select types: how we represent a query internally, from its top
 --   level 'QueryDB' down to each individual field. Most of those types have three type arguments:
@@ -128,7 +127,7 @@ data QueryDB (b :: BackendType) (r :: Type) v
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 deriving stock instance
-  (Backend b, Show r, Show v, Show (AggregationPredicates b v), Show (BooleanOperators b v), Show (FunctionArgumentExp b v), Show (CountType b v)) =>
+  (Backend b, Show r, Show v) =>
   Show (QueryDB b r v)
 
 instance (Backend b) => Bifoldable (QueryDB b) where
@@ -166,19 +165,15 @@ data ConnectionSelect (b :: BackendType) (r :: Type) v = ConnectionSelect
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnSelectG b (ConnectionField b r) v),
-    Eq (ConnectionSlice),
-    Eq (ConnectionSplit b v),
-    Eq (PrimaryKeyColumns b)
+    Eq r,
+    Eq v
   ) =>
   Eq (ConnectionSelect b r v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnSelectG b (ConnectionField b r) v),
-    Show (ConnectionSlice),
-    Show (ConnectionSplit b v),
-    Show (PrimaryKeyColumns b)
+    Show r,
+    Show v
   ) =>
   Show (ConnectionSelect b r v)
 
@@ -196,22 +191,19 @@ data ConnectionSplit (b :: BackendType) v = ConnectionSplit
 
 deriving stock instance
   ( Backend b,
-    Eq v,
-    Eq (OrderByItemG b (AnnotatedOrderByElement b v))
+    Eq v
   ) =>
   Eq (ConnectionSplit b v)
 
 deriving stock instance
   ( Backend b,
-    Show v,
-    Show (OrderByItemG b (AnnotatedOrderByElement b v))
+    Show v
   ) =>
   Show (ConnectionSplit b v)
 
 instance
   ( Backend b,
-    Hashable v,
-    Hashable (OrderByItemG b (AnnotatedOrderByElement b v))
+    Hashable v
   ) =>
   Hashable (ConnectionSplit b v)
 
@@ -259,25 +251,15 @@ data AnnFieldG (b :: BackendType) (r :: Type) v
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnColumnField b v),
-    Eq (ArraySelectG b r v),
-    Eq (ComputedFieldSelect b r v),
-    Eq (ObjectRelationSelectG b r v),
-    Eq (RemoteRelationshipSelect b r),
-    Eq (AnnNestedObjectSelectG b r v),
-    Eq (AnnNestedArraySelectG b r v)
+    Eq r,
+    Eq v
   ) =>
   Eq (AnnFieldG b r v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnColumnField b v),
-    Show (ArraySelectG b r v),
-    Show (ComputedFieldSelect b r v),
-    Show (ObjectRelationSelectG b r v),
-    Show (RemoteRelationshipSelect b r),
-    Show (AnnNestedObjectSelectG b r v),
-    Show (AnnNestedArraySelectG b r v)
+    Show r,
+    Show v
   ) =>
   Show (AnnFieldG b r v)
 
@@ -336,17 +318,15 @@ data TableAggregateFieldG (b :: BackendType) (r :: Type) v
 
 deriving stock instance
   ( Backend b,
-    Eq (AggregateFields b v),
-    Eq (AnnFieldsG b r v),
-    Eq (GroupByG b r v)
+    Eq r,
+    Eq v
   ) =>
   Eq (TableAggregateFieldG b r v)
 
 deriving stock instance
   ( Backend b,
-    Show (AggregateFields b v),
-    Show (AnnFieldsG b r v),
-    Show (GroupByG b r v)
+    Show r,
+    Show v
   ) =>
   Show (TableAggregateFieldG b r v)
 
@@ -370,11 +350,11 @@ deriving stock instance (Backend b) => Foldable (AggregateField b)
 deriving stock instance (Backend b) => Traversable (AggregateField b)
 
 deriving stock instance
-  (Backend b, Eq (CountType b v), Eq (AggregateOp b v), Eq v) =>
+  (Backend b, Eq v) =>
   Eq (AggregateField b v)
 
 deriving stock instance
-  (Backend b, Show (CountType b v), Show (AggregateOp b v), Show v) =>
+  (Backend b, Show v) =>
   Show (AggregateField b v)
 
 data AggregateOp (b :: BackendType) v = AggregateOp
@@ -384,11 +364,11 @@ data AggregateOp (b :: BackendType) v = AggregateOp
   deriving (Functor, Foldable, Traversable)
 
 deriving stock instance
-  (Backend b, Eq (SelectionFields b v), Eq v) =>
+  (Backend b, Eq v) =>
   Eq (AggregateOp b v)
 
 deriving stock instance
-  (Backend b, Show (SelectionFields b v), Show v) =>
+  (Backend b, Show v) =>
   Show (AggregateOp b v)
 
 data GroupByG (b :: BackendType) r v = GroupByG
@@ -397,9 +377,9 @@ data GroupByG (b :: BackendType) r v = GroupByG
   }
   deriving (Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b, Eq (GroupByField b r v), Eq (GroupKeyField b)) => Eq (GroupByG b r v)
+deriving stock instance (Backend b, Eq r, Eq v) => Eq (GroupByG b r v)
 
-deriving stock instance (Backend b, Show (GroupByField b r v), Show (GroupKeyField b)) => Show (GroupByG b r v)
+deriving stock instance (Backend b, Show r, Show v) => Show (GroupByG b r v)
 
 instance (Backend b) => Bifoldable (GroupByG b) where
   bifoldMap :: (Monoid m) => (r -> m) -> (v -> m) -> GroupByG b r v -> m
@@ -413,9 +393,9 @@ data GroupByField (b :: BackendType) r v
   | GBFExp Text
   deriving (Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b, Eq (GroupKeyField b), Eq (AggregateField b v), Eq (AnnFieldG b r v)) => Eq (GroupByField b r v)
+deriving stock instance (Backend b, Eq r, Eq v) => Eq (GroupByField b r v)
 
-deriving stock instance (Backend b, Show (GroupKeyField b), Show (AggregateField b v), Show (AnnFieldG b r v)) => Show (GroupByField b r v)
+deriving stock instance (Backend b, Show r, Show v) => Show (GroupByField b r v)
 
 instance (Backend b) => Bifoldable (GroupByField b) where
   bifoldMap :: (Monoid m) => (r -> m) -> (v -> m) -> GroupByField b r v -> m
@@ -446,11 +426,11 @@ data SelectionField (b :: BackendType) v
   deriving (Functor, Foldable, Traversable)
 
 deriving stock instance
-  (Backend b, Eq (FunctionArgumentExp b v), Eq (AnnRedactionExp b v), Eq v) =>
+  (Backend b, Eq v) =>
   Eq (SelectionField b v)
 
 deriving stock instance
-  (Backend b, Show (FunctionArgumentExp b v), Show (AnnRedactionExp b v), Show v) =>
+  (Backend b, Show v) =>
   Show (SelectionField b v)
 
 type TableAggregateField b = TableAggregateFieldG b Void (SQLExpression b)
@@ -474,12 +454,16 @@ data ConnectionField (b :: BackendType) (r :: Type) v
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
-  ( Eq (EdgeFields b r v)
+  ( Backend b,
+    Eq r,
+    Eq v
   ) =>
   Eq (ConnectionField b r v)
 
 deriving stock instance
-  ( Show (EdgeFields b r v)
+  ( Backend b,
+    Show r,
+    Show v
   ) =>
   Show (ConnectionField b r v)
 
@@ -504,12 +488,16 @@ data EdgeField (b :: BackendType) (r :: Type) v
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
-  ( Eq (AnnFieldsG b r v)
+  ( Backend b,
+    Eq r,
+    Eq v
   ) =>
   Eq (EdgeField b r v)
 
 deriving stock instance
-  ( Show (AnnFieldsG b r v)
+  ( Backend b,
+    Show r,
+    Show v
   ) =>
   Show (EdgeField b r v)
 
@@ -542,13 +530,13 @@ data AnnColumnField (b :: BackendType) v = AnnColumnField
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnRedactionExp b v)
+    Eq v
   ) =>
   Eq (AnnColumnField b v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnRedactionExp b v)
+    Show v
   ) =>
   Show (AnnColumnField b v)
 
@@ -566,17 +554,13 @@ data ComputedFieldScalarSelect (b :: BackendType) v = ComputedFieldScalarSelect
 
 deriving stock instance
   ( Backend b,
-    Show v,
-    Show (FunctionArgumentExp b v),
-    Show (AnnRedactionExp b v)
+    Show v
   ) =>
   Show (ComputedFieldScalarSelect b v)
 
 deriving stock instance
   ( Backend b,
-    Eq v,
-    Eq (FunctionArgumentExp b v),
-    Eq (AnnRedactionExp b v)
+    Eq v
   ) =>
   Eq (ComputedFieldScalarSelect b v)
 
@@ -589,15 +573,15 @@ data ComputedFieldSelect (b :: BackendType) (r :: Type) v
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnSimpleSelectG b r v),
-    Eq (ComputedFieldScalarSelect b v)
+    Eq r,
+    Eq v
   ) =>
   Eq (ComputedFieldSelect b r v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnSimpleSelectG b r v),
-    Show (ComputedFieldScalarSelect b v)
+    Show r,
+    Show v
   ) =>
   Show (ComputedFieldSelect b r v)
 
@@ -625,17 +609,15 @@ data AnnObjectSelectG (b :: BackendType) (r :: Type) v = AnnObjectSelectG
 
 deriving stock instance
   ( Backend b,
-    Eq (SelectFromG b v),
-    Eq (AnnBoolExp b v),
-    Eq (AnnFieldsG b r v)
+    Eq r,
+    Eq v
   ) =>
   Eq (AnnObjectSelectG b r v)
 
 deriving stock instance
   ( Backend b,
-    Show (SelectFromG b v),
-    Show (AnnBoolExp b v),
-    Show (AnnFieldsG b r v)
+    Show r,
+    Show v
   ) =>
   Show (AnnObjectSelectG b r v)
 
@@ -656,16 +638,16 @@ data ArraySelectG (b :: BackendType) (r :: Type) v
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
-  ( Eq (ArrayRelationSelectG b r v),
-    Eq (ArrayAggregateSelectG b r v),
-    Eq (ArrayConnectionSelect b r v)
+  ( Backend b,
+    Eq r,
+    Eq v
   ) =>
   Eq (ArraySelectG b r v)
 
 deriving stock instance
-  ( Show (ArrayRelationSelectG b r v),
-    Show (ArrayAggregateSelectG b r v),
-    Show (ArrayConnectionSelect b r v)
+  ( Backend b,
+    Show r,
+    Show v
   ) =>
   Show (ArraySelectG b r v)
 
@@ -691,17 +673,15 @@ data
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnAggregateSelectG b r (vf b)),
-    Eq (AnnObjectSelectG b r (vf b)),
-    Eq (AnnSimpleSelectG b r (vf b))
+    Eq r,
+    Eq (vf b)
   ) =>
   Eq (SourceRelationshipSelection b r vf)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnAggregateSelectG b r (vf b)),
-    Show (AnnObjectSelectG b r (vf b)),
-    Show (AnnSimpleSelectG b r (vf b))
+    Show r,
+    Show (vf b)
   ) =>
   Show (SourceRelationshipSelection b r vf)
 
@@ -729,14 +709,15 @@ data
 
 deriving stock instance
   ( Backend tgt,
-    Eq (SourceRelationshipSelection tgt r vf)
+    Eq r,
+    Eq (vf tgt)
   ) =>
   Eq (RemoteSourceSelect r vf tgt)
 
 deriving stock instance
   ( Backend tgt,
-    Show (SourceRelationshipSelection tgt r vf),
-    Show (SourceConfig tgt)
+    Show r,
+    Show (vf tgt)
   ) =>
   Show (RemoteSourceSelect r vf tgt)
 
@@ -751,13 +732,15 @@ data AnnNestedObjectSelectG (b :: BackendType) (r :: Type) v = AnnNestedObjectSe
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnFieldsG b r v)
+    Eq r,
+    Eq v
   ) =>
   Eq (AnnNestedObjectSelectG b r v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnFieldsG b r v)
+    Show v,
+    Show r
   ) =>
   Show (AnnNestedObjectSelectG b r v)
 
@@ -775,10 +758,10 @@ data AnnNestedArraySelectG (b :: BackendType) (r :: Type) v
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
-  (Backend b, Eq (AnnFieldG b r v), Eq (AnnAggregateSelectG b r v)) => Eq (AnnNestedArraySelectG b r v)
+  (Backend b, Eq r, Eq v) => Eq (AnnNestedArraySelectG b r v)
 
 deriving stock instance
-  (Backend b, Show (AnnFieldG b r v), Show (AnnAggregateSelectG b r v)) => Show (AnnNestedArraySelectG b r v)
+  (Backend b, Show v, Show r) => Show (AnnNestedArraySelectG b r v)
 
 instance (Backend b) => Bifoldable (AnnNestedArraySelectG b) where
   bifoldMap f g = \case
