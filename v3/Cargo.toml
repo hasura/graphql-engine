@@ -22,6 +22,10 @@ members = [
   "crates/utils/*",
 ]
 
+# generally following guidance from https://nnethercote.github.io/perf-book/build-configuration.html
+[profile.release]
+codegen-units = 1 # reduce parallelisation to increase optimisations
+
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
