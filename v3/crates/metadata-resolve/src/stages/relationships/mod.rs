@@ -382,10 +382,13 @@ fn get_relationship_capabilities(
             .0
             .get(&data_connector.name)
             .ok_or_else(|| match target_name {
-                RelationshipTargetName::Model(model_name) => Error::UnknownModelDataConnector {
-                    model_name: model_name.clone(),
-                    data_connector: data_connector.name.clone(),
-                },
+                RelationshipTargetName::Model(model_name) => {
+                    models::ModelsError::UnknownModelDataConnector {
+                        model_name: model_name.clone(),
+                        data_connector: data_connector.name.clone(),
+                    }
+                    .into()
+                }
                 RelationshipTargetName::Command(command_name) => {
                     Error::UnknownCommandDataConnector {
                         command_name: command_name.clone(),

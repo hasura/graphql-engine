@@ -5,7 +5,6 @@ use open_dds::types::DataConnectorArgumentName;
 
 use crate::helpers::argument::{get_argument_mappings, ArgumentMappingResults};
 use crate::helpers::ndc_validation;
-use crate::types::error::Error;
 
 use super::helpers;
 use crate::helpers::type_mappings;
@@ -15,11 +14,11 @@ use crate::stages::{
 };
 use crate::types::subgraph::Qualified;
 
+use super::error::ModelsError;
 use open_dds::{
     models::{self, ModelName},
     types::CustomTypeName,
 };
-
 use std::collections::BTreeMap;
 use std::iter;
 
@@ -39,9 +38,9 @@ pub(crate) fn resolve_model_source(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-) -> Result<(ModelSource, Vec<ModelsIssue>), Error> {
+) -> Result<(ModelSource, Vec<ModelsIssue>), ModelsError> {
     if model.source.is_some() {
-        return Err(Error::DuplicateModelSourceDefinition {
+        return Err(ModelsError::DuplicateModelSourceDefinition {
             model_name: model.name.clone(),
         });
     }
@@ -51,7 +50,7 @@ pub(crate) fn resolve_model_source(
     let data_connector_context = data_connectors
         .0
         .get(&qualified_data_connector_name)
-        .ok_or_else(|| Error::UnknownModelDataConnector {
+        .ok_or_else(|| ModelsError::UnknownModelDataConnector {
             model_name: model.name.clone(),
             data_connector: qualified_data_connector_name.clone(),
         })?;
@@ -60,7 +59,7 @@ pub(crate) fn resolve_model_source(
         .schema
         .collections
         .get(model_source.collection.as_str())
-        .ok_or_else(|| Error::UnknownModelCollection {
+        .ok_or_else(|| ModelsError::UnknownModelCollection {
             model_name: model.name.clone(),
             data_connector: qualified_data_connector_name.clone(),
             collection: model_source.collection.clone(),
@@ -91,7 +90,7 @@ pub(crate) fn resolve_model_source(
         object_boolean_expression_types,
         boolean_expression_types,
     )
-    .map_err(|err| Error::ModelCollectionArgumentMappingError {
+    .map_err(|err| ModelsError::ModelCollectionArgumentMappingError {
         data_connector_name: qualified_data_connector_name.clone(),
         model_name: model.name.clone(),
         collection_name: model_source.collection.clone(),
@@ -125,7 +124,7 @@ pub(crate) fn resolve_model_source(
             &mut type_mappings,
             &None,
         )
-        .map_err(|error| Error::ModelTypeMappingCollectionError {
+        .map_err(|error| ModelsError::ModelTypeMappingCollectionError {
             model_name: model.name.clone(),
             error,
         })?;
@@ -201,10 +200,10 @@ pub(crate) fn get_model_object_type_representation<'s>(
     object_types: &'s type_permissions::ObjectTypesWithPermissions,
     data_type: &Qualified<CustomTypeName>,
     model_name: &Qualified<ModelName>,
-) -> Result<&'s type_permissions::ObjectTypeWithPermissions, crate::Error> {
+) -> Result<&'s type_permissions::ObjectTypeWithPermissions, ModelsError> {
     object_types
         .get(data_type)
-        .map_err(|_| Error::UnknownModelDataType {
+        .map_err(|_| ModelsError::UnknownModelDataType {
             model_name: model_name.clone(),
             data_type: data_type.clone(),
         })

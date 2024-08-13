@@ -35,7 +35,7 @@ pub use stages::model_permissions::{
     ArgumentPresets, FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
     SelectPermission, UnaryComparisonOperator,
 };
-pub use stages::models::{Model, ModelSource};
+pub use stages::models::{Model, ModelSource, ModelsError};
 pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;
 pub use types::warning::Warning;
 

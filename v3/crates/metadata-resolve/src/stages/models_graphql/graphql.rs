@@ -103,7 +103,7 @@ pub(crate) fn resolve_model_graphql_api(
             |model_source: &models::ModelSource| -> Result<Option<ModelOrderByExpression>, Error> {
                 let order_by_expression = model.order_by_expression.as_ref().map(|n|
                     order_by_expressions.0.get(n)
-                    .ok_or_else(|| Error::UnknownOrderByExpressionIdentifier {
+                    .ok_or_else(|| models::ModelsError::UnknownOrderByExpressionIdentifier {
                         model_name: model.name.clone(),
                         order_by_expression_identifier: n.clone()
                     })).transpose()?;
@@ -121,7 +121,7 @@ pub(crate) fn resolve_model_graphql_api(
                         let object_types::TypeMapping::Object { field_mappings, .. } = model_source
                             .type_mappings
                             .get(&model.data_type)
-                            .ok_or(Error::TypeMappingRequired {
+                            .ok_or(models::ModelsError::TypeMappingRequired {
                                 model_name: model_name.clone(),
                                 type_name: model.data_type.clone(),
                                 data_connector: model_source.data_connector.name.clone(),

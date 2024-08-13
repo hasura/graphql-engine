@@ -60,4 +60,8 @@ pub enum ApolloError {
         type_name: Qualified<CustomTypeName>,
         model_name: ModelName,
     },
+    #[error("multiple models are marked as entity source for the object type {type_name:}")]
+    MultipleEntitySourcesForType {
+        type_name: Qualified<CustomTypeName>,
+    },
 }

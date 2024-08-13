@@ -72,14 +72,14 @@ fn resolve_model_predicate_with_model(
     let object_types::TypeMapping::Object { field_mappings, .. } = model_source
         .type_mappings
         .get(&model.data_type)
-        .ok_or(Error::TypeMappingRequired {
+        .ok_or(models::ModelsError::TypeMappingRequired {
             model_name: model.name.clone(),
             type_name: model.data_type.clone(),
             data_connector: model_source.data_connector.name.clone(),
         })?;
 
     let data_connector_core_info = data_connectors.0.get(data_connector_name).ok_or_else(|| {
-        Error::UnknownModelDataConnector {
+        models::ModelsError::UnknownModelDataConnector {
             model_name: model.name.clone(),
             data_connector: data_connector_name.clone(),
         }
