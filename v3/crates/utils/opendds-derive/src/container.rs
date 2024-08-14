@@ -54,13 +54,23 @@ struct EnumOpts {
     json_schema: JsonSchemaOpts,
 }
 
+/// Variant JSON schema attributes
+#[derive(Default, FromMeta)]
+#[darling(default)]
+pub struct JsonSchemaVariantOpts {
+    pub title: Option<String>,
+    pub example: Option<syn::Path>,
+}
+
 /// Variant attributes
-#[derive(FromAttributes, Debug, Default)]
+#[derive(FromAttributes, Default)]
 #[darling(default, attributes(opendd))]
 struct VariantOpts {
     rename: Option<String>,
     alias: Option<String>,
     hidden: Option<bool>,
+    #[darling(default)]
+    json_schema: JsonSchemaVariantOpts,
 }
 
 pub struct Container<'a> {
@@ -274,6 +284,8 @@ pub struct EnumVariant<'a> {
     pub alias: Option<String>,
     pub field: &'a syn::Field,
     pub hidden: bool,
+    pub doc_description: Option<String>,
+    pub json_schema_opts: JsonSchemaVariantOpts,
 }
 
 impl<'a> EnumVariant<'a> {
@@ -307,6 +319,11 @@ impl<'a> EnumVariant<'a> {
             }
         };
         let hidden = variant_opts.hidden == Some(true);
+        let (doc_title, doc_description) =
+            crate::helpers::get_title_and_desc_from_doc(&variant.attrs);
+        let mut json_schema_opts = variant_opts.json_schema;
+        // consider doc_title as title if title is not provided
+        json_schema_opts.title = json_schema_opts.title.or(doc_title);
 
         Ok(Self {
             name: variant_name,
@@ -314,6 +331,8 @@ impl<'a> EnumVariant<'a> {
             alias,
             field,
             hidden,
+            doc_description,
+            json_schema_opts,
         })
     }
 }

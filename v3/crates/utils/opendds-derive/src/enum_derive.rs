@@ -336,8 +336,13 @@ fn impl_json_schema_tagged(
                     let content_schema = quote! {
                         open_dds::traits::gen_subschema_for::<#ty>(gen)
                     };
+                    let metadata_expr = build_variant_json_schema_metadata(
+                        variant.doc_description.as_ref(),
+                        &variant.json_schema_opts,
+                    );
                     Some(helpers::schema_object(&quote! {
                         instance_type: Some(schemars::schema::InstanceType::Object.into()),
+                        metadata: Some(Box::new(#metadata_expr)),
                         object: Some(Box::new(schemars::schema::ObjectValidation {
                             properties: {
                                 let mut props = schemars::Map::new();
@@ -359,6 +364,46 @@ fn impl_json_schema_tagged(
                 .collect::<Vec<_>>();
 
             helpers::variant_subschemas(unique_names.len() == count, &variant_schemas)
+        }
+    }
+}
+
+fn build_variant_json_schema_metadata(
+    doc_description: Option<&String>,
+    json_schema_opts: &JsonSchemaVariantOpts,
+) -> proc_macro2::TokenStream {
+    let description_expr = doc_description
+        .map(|description| {
+            quote! {
+                metadata.description = Some(#description.to_string());
+            }
+        })
+        .unwrap_or_default();
+    let title_expr = json_schema_opts
+        .title
+        .as_ref()
+        .map(|title| {
+            quote! {
+                metadata.title = Some(#title.to_string());
+            }
+        })
+        .unwrap_or_default();
+    let example_expr = json_schema_opts
+        .example
+        .as_ref()
+        .map(|example| {
+            quote! {
+                metadata.examples = [#example()].to_vec();
+            }
+        })
+        .unwrap_or_default();
+    quote! {
+        {
+            let mut metadata = schemars::schema::Metadata::default();
+            #title_expr
+            #description_expr
+            #example_expr
+            metadata
         }
     }
 }
