@@ -1,5 +1,7 @@
 set positional-arguments
 
+set shell := ["bash", "-c"]
+
 default:
   just --list
 
