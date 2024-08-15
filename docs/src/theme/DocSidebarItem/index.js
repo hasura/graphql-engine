@@ -8,12 +8,12 @@ export default function DocSidebarItem({ item, ...props }) {
     case 'category':
       if (item.customProps?.sidebar_pathname) {
         // if there is a custom sidebar_pathname, use it
-        item.href = `/${item.customProps.sidebar_pathname}/overview/`;
+        item.href = `/docs/2.0/${item.customProps.sidebar_pathname}/overview/`;
       } else if (item.href === undefined) {
         // if there is no custom sidebar_pathname, use the label with our regex
         // and apparently deal with the Wiki as a special case
         if (item.label != 'Docs Wiki') {
-          item.href = `/${item.label
+          item.href = `/docs/2.0/${item.label
             .toLowerCase()
             .replace(/\s/g, '-')}/overview/`;
         }
