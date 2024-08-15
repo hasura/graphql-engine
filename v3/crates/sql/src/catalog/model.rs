@@ -1,7 +1,7 @@
 //! Describe a model for a SQL table and how to translate datafusion operations on the table
 //! to ndc-spec queries.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::{any::Any, sync::Arc};
 
 use async_trait::async_trait;
@@ -15,7 +15,7 @@ use open_dds::{models::ModelName, types::CustomTypeName};
 use resolved::TypeMapping;
 use serde::{Deserialize, Serialize};
 
-use crate::plan::ModelQuery;
+use crate::execute::planner::model::ModelQuery;
 mod datafusion {
     pub(super) use datafusion::{
         arrow::datatypes::{DataType, Field, Schema, SchemaBuilder, SchemaRef, TimeUnit},
@@ -26,16 +26,6 @@ mod datafusion {
         logical_expr::{Expr, Extension, LogicalPlan},
         physical_plan::ExecutionPlan,
     };
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub(crate) struct TypePermission {
-    pub output: open_dds::permissions::TypeOutputPermission,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct TypePermissionsOfRole {
-    pub(crate) permissions: HashMap<Qualified<CustomTypeName>, TypePermission>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -237,7 +227,7 @@ impl datafusion::TableProvider for Table {
 
 /// Converts an opendd type to an arrow type.
 #[allow(clippy::match_same_arms)]
-fn to_arrow_type(
+pub(super) fn to_arrow_type(
     metadata: &resolved::Metadata,
     ty: &resolved::QualifiedBaseType,
     type_mappings: Option<&BTreeMap<Qualified<CustomTypeName>, TypeMapping>>,
@@ -315,7 +305,7 @@ fn from_named_type(
                 "bigdecimal" => Some(datafusion::DataType::Float64),
                 "varchar" |
                 "text" => Some(datafusion::DataType::Utf8),
-                "timestamp" 
+                "timestamp"
                 |
                 "timestamptz" => Some(datafusion::DataType::Timestamp(
                     datafusion::TimeUnit::Microsecond,

@@ -5,8 +5,8 @@ use datafusion::{
     arrow::{
         array::RecordBatch, datatypes::SchemaRef, error::ArrowError, json::reader as arrow_json,
     },
-    common::DFSchemaRef,
-    error::DataFusionError,
+    common::{internal_err, plan_err, DFSchemaRef},
+    error::{DataFusionError, Result},
     logical_expr::{LogicalPlan, UserDefinedLogicalNodeCore},
     physical_expr::EquivalenceProperties,
     physical_plan::{
@@ -15,7 +15,9 @@ use datafusion::{
     },
 };
 use futures::TryFutureExt;
+use hasura_authn_core::Session;
 use indexmap::IndexMap;
+use metadata_resolve::{FilterPermission, Qualified, QualifiedTypeReference, TypeMapping};
 use open_dds::{
     arguments::ArgumentName,
     query::Alias,
@@ -26,13 +28,16 @@ use open_dds::{
     query::{
         ModelSelection, ModelTarget, ObjectFieldSelection, ObjectFieldTarget, ObjectSubSelection,
     },
+    types::CustomTypeName,
 };
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 use execute::{
     ndc::NdcQueryResponse,
     plan::{
-        self, Argument, Relationship, ResolvedField, ResolvedFilterExpression,
+        self,
+        field::{NestedArray, NestedField},
+        Argument, Relationship, ResolvedField, ResolvedFilterExpression,
         ResolvedQueryExecutionPlan, ResolvedQueryNode,
     },
     HttpContext,
@@ -50,9 +55,6 @@ pub enum ExecutionPlanError {
 
     #[error("Arrow error: {0}")]
     ArrowError(#[from] ArrowError),
-
-    #[error("Couldn't construct a RecordBatch: {0}")]
-    RecordBatchConstruction(String),
 
     #[error("Couldn't fetch otel tracing context")]
     TracingContextNotFound,
@@ -140,6 +142,252 @@ impl ModelQuery {
     }
 }
 
+impl ModelQuery {
+    pub(super) async fn to_physical_node(
+        &self,
+        session: &Arc<Session>,
+        http_context: &Arc<execute::HttpContext>,
+        metadata: &metadata_resolve::Metadata,
+    ) -> Result<NDCQueryPushDown> {
+        let model_target = &self.model_selection.target;
+        let qualified_model_name = metadata_resolve::Qualified::new(
+            model_target.subgraph.clone(),
+            model_target.model_name.clone(),
+        );
+
+        let model = metadata.models.get(&qualified_model_name).ok_or_else(|| {
+            DataFusionError::Internal(format!(
+                "model {qualified_model_name} not found in metadata"
+            ))
+        })?;
+
+        let model_source = model.model.source.as_ref().ok_or_else(|| {
+            DataFusionError::Internal(format!("model {qualified_model_name} has no source"))
+        })?;
+
+        let metadata_resolve::TypeMapping::Object { field_mappings, .. } = model_source
+            .type_mappings
+            .get(&model.model.data_type)
+            .ok_or_else(|| {
+                DataFusionError::Internal(format!(
+                    "couldn't fetch type_mapping of type {} for model {}",
+                    model.model.data_type, qualified_model_name
+                ))
+            })?;
+
+        let model_object_type = metadata
+            .object_types
+            .get(&model.model.data_type)
+            .ok_or_else(|| {
+                DataFusionError::Internal(format!(
+                    "object type {} not found in metadata",
+                    model.model.data_type
+                ))
+            })?;
+
+        let type_permissions = model_object_type
+            .type_output_permissions
+            .get(&session.role)
+            .ok_or_else(|| {
+                DataFusionError::Plan(format!(
+                    "role {} does not have permission to select any fields of model {}",
+                    session.role, qualified_model_name
+                ))
+            })?;
+
+        let mut ndc_fields = IndexMap::new();
+
+        for (field_alias, object_sub_selection) in &self.model_selection.selection {
+            let ObjectSubSelection::Field(field_selection) = object_sub_selection else {
+                return internal_err!(
+                    "only normal field selections are supported in NDCPushDownPlanner."
+                );
+            };
+            if !type_permissions
+                .allowed_fields
+                .contains(&field_selection.target.field_name)
+            {
+                return plan_err!(
+                "role {} does not have permission to select the field {} from type {} of model {}",
+                session.role,
+                field_selection.target.field_name,
+                model.model.data_type,
+                qualified_model_name
+            );
+            }
+
+            let field_mapping = field_mappings
+                .get(&field_selection.target.field_name)
+                // .map(|field_mapping| field_mapping.column.clone())
+                .ok_or_else(|| {
+                    DataFusionError::Internal(format!(
+                        "couldn't fetch field mapping of field {} in type {} for model {}",
+                        field_selection.target.field_name,
+                        model.model.data_type,
+                        qualified_model_name
+                    ))
+                })?;
+
+            let field_type = &model_object_type
+                .object_type
+                .fields
+                .get(&field_selection.target.field_name)
+                .ok_or_else(|| {
+                    DataFusionError::Internal(format!(
+                        "could not look up type of field {}",
+                        field_selection.target.field_name
+                    ))
+                })?
+                .field_type;
+
+            let fields =
+                ndc_nested_field_selection_for(metadata, field_type, &model_source.type_mappings)?;
+
+            let ndc_field = ResolvedField::Column {
+                column: field_mapping.column.clone(),
+                fields,
+                arguments: BTreeMap::new(),
+            };
+
+            ndc_fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_field);
+        }
+
+        let model_select_permission =
+            model.select_permissions.get(&session.role).ok_or_else(|| {
+                DataFusionError::Plan(format!(
+                    "role {} does not have select permission for model {}",
+                    session.role, qualified_model_name
+                ))
+            })?;
+
+        let mut usage_counts = ir::UsagesCounts::default();
+        let mut relationships: BTreeMap<ir::NdcRelationshipName, execute::plan::Relationship> =
+            BTreeMap::new();
+
+        let permission_filter = match &model_select_permission.filter {
+            FilterPermission::AllowAll => Ok::<_, DataFusionError>(None),
+            FilterPermission::Filter(filter) => {
+                let filter_ir = ir::process_model_predicate(
+                    &model_source.data_connector,
+                    &model_source.type_mappings,
+                    filter,
+                    &session.variables,
+                    &mut usage_counts,
+                )
+                .map_err(|e| {
+                    DataFusionError::Internal(format!("error when processing model predicate: {e}"))
+                })?;
+
+                let filter_plan = execute::plan::plan_expression(&filter_ir, &mut relationships)
+                    .map_err(|e| {
+                        DataFusionError::Internal(format!(
+                            "error constructing permission filter plan: {e}"
+                        ))
+                    })?;
+                // TODO: this thing has to change, need to be pushed into the
+                // execution plan. We shouldn't be running this in the planning phase
+                let filter = execute::plan::resolve_expression(filter_plan, &http_context.clone())
+                    .await
+                    .map_err(|e| {
+                        DataFusionError::Internal(format!(
+                            "error resolving permission filter plan: {e}"
+                        ))
+                    })?;
+                Ok(Some(filter))
+            }
+        }?;
+
+        let mut ndc_arguments = BTreeMap::new();
+        for (argument_name, argument_value) in &self.model_selection.target.arguments {
+            let ndc_argument_name = model_source.argument_mappings.get(argument_name).ok_or_else(|| DataFusionError::Internal(format!("couldn't fetch argument mapping for argument {argument_name} of model {qualified_model_name}")))?;
+            let ndc_argument_value = match argument_value {
+                open_dds::query::Value::BooleanExpression(_) => {
+                    return internal_err!("unexpected boolean expression as value for argument {argument_name} of model {qualified_model_name}");
+                }
+                open_dds::query::Value::Literal(value) => value,
+            };
+            ndc_arguments.insert(ndc_argument_name.clone(), ndc_argument_value.clone());
+        }
+
+        let ndc_pushdown = NDCQueryPushDown::new(
+            http_context.clone(),
+            self.schema.inner().clone(),
+            model_source.collection.clone(),
+            ndc_arguments,
+            ndc_fields,
+            permission_filter,
+            relationships,
+            Arc::new(model_source.data_connector.clone()),
+        );
+        Ok(ndc_pushdown)
+    }
+}
+
+pub(super) fn ndc_nested_field_selection_for(
+    metadata: &metadata_resolve::Metadata,
+    column_type: &QualifiedTypeReference,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+) -> Result<Option<NestedField<ResolvedFilterExpression>>> {
+    match &column_type.underlying_type {
+        metadata_resolve::QualifiedBaseType::Named(name) => match name {
+            metadata_resolve::QualifiedTypeName::Custom(name) => {
+                if let Some(_scalar_type) = metadata.scalar_types.get(name) {
+                    return Ok(None);
+                }
+                if let Some(object_type) = metadata.object_types.get(name) {
+                    let TypeMapping::Object {
+                        ndc_object_type_name: _,
+                        field_mappings,
+                    } = type_mappings.get(name).ok_or_else(|| {
+                        DataFusionError::Internal(format!(
+                            "can't find mapping object for type: {name}"
+                        ))
+                    })?;
+
+                    let mut fields = IndexMap::new();
+
+                    for (field_name, field_mapping) in field_mappings {
+                        let field_def = object_type.object_type.fields.get(field_name).ok_or_else(|| DataFusionError::Internal(format!(
+                            "can't find object field definition for field {field_name} in type: {name}"
+                        )))?;
+                        let nested_fields: Option<NestedField<ResolvedFilterExpression>> =
+                            ndc_nested_field_selection_for(
+                                metadata,
+                                &field_def.field_type,
+                                type_mappings,
+                            )?;
+                        fields.insert(
+                            NdcFieldAlias::from(field_name.as_str()),
+                            ResolvedField::Column {
+                                column: field_mapping.column.clone(),
+                                fields: nested_fields,
+                                arguments: BTreeMap::new(),
+                            },
+                        );
+                    }
+
+                    return Ok(Some(NestedField::Object(
+                        execute::plan::field::NestedObject { fields },
+                    )));
+                }
+
+                internal_err!("named type was neither a scalar nor an object: {}", name)
+            }
+            metadata_resolve::QualifiedTypeName::Inbuilt(_) => Ok(None),
+        },
+        metadata_resolve::QualifiedBaseType::List(list_type) => {
+            let fields =
+                ndc_nested_field_selection_for(metadata, list_type.as_ref(), type_mappings)?;
+
+            Ok(fields.map(|fields| {
+                NestedField::Array(NestedArray {
+                    fields: Box::new(fields),
+                })
+            }))
+        }
+    }
+}
+
 impl UserDefinedLogicalNodeCore for ModelQuery {
     fn name(&self) -> &str {
         "ModelQuery"
@@ -186,7 +434,7 @@ impl UserDefinedLogicalNodeCore for ModelQuery {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct NDCPushDown {
+pub(crate) struct NDCQueryPushDown {
     http_context: Arc<execute::HttpContext>,
     collection_name: CollectionName,
     arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
@@ -198,7 +446,7 @@ pub(crate) struct NDCPushDown {
     cache: PlanProperties,
 }
 
-impl NDCPushDown {
+impl NDCQueryPushDown {
     pub(crate) fn new(
         http_context: Arc<HttpContext>,
         schema: SchemaRef,
@@ -234,13 +482,13 @@ impl NDCPushDown {
     }
 }
 
-impl DisplayAs for NDCPushDown {
+impl DisplayAs for NDCQueryPushDown {
     fn fmt_as(&self, _t: DisplayFormatType, f: &mut fmt::Formatter) -> std::fmt::Result {
-        write!(f, "NDCPushDown")
+        write!(f, "NDCQueryPushDown")
     }
 }
 
-impl ExecutionPlan for NDCPushDown {
+impl ExecutionPlan for NDCQueryPushDown {
     fn name(&self) -> &'static str {
         "NDCPushdown"
     }
