@@ -20,7 +20,6 @@ const config = {
   staticDirectories: ['static', 'public'],
   customFields: {
     docsBotEndpointURL: (() => {
-      console.log('process.env.release_mode docs-bot', process.env.release_mode);
       switch (process.env.release_mode) {
         case 'development':
           return 'ws://localhost:8000/hasura-docs-ai';
@@ -72,7 +71,7 @@ const config = {
             current: {
               label: 'v2.x',
               badge: true,
-              //path: 'latest',
+              path: '',
             },
           },
         },
@@ -201,13 +200,13 @@ const config = {
             position: 'left',
           },
           {
-            to: '/latest/hasura-cloud/overview',
+            to: '/hasura-cloud/overview',
             label: 'Hasura Cloud',
             className: 'header-hasura-cloud-link',
             position: 'left',
           },
           {
-            to: '/latest/enterprise/overview',
+            to: '/enterprise/overview',
             label: 'Hasura Enterprise',
             className: 'header-hasura-ee-link',
             position: 'left',

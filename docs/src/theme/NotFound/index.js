@@ -93,7 +93,7 @@ export default function NotFound() {
                   </Translate>
                 </p>
                 <div className={styles['homeLink']}>
-                  <Link to="/latest/index">Hasura Docs Home</Link>
+                  <Link to="/index">Hasura Docs Home</Link>
                 </div>
                 <ul className={styles['results']}>
                   {searchResults &&
