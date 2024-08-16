@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use metadata_resolve::Metadata;
 use std::{any::Any, sync::Arc};
 
 use indexmap::IndexMap;
@@ -15,6 +16,7 @@ use super::model;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub(crate) struct Subgraph {
+    pub metadata: Arc<Metadata>,
     pub tables: IndexMap<String, Arc<catalog::model::Model>>,
 }
 
@@ -33,7 +35,7 @@ impl datafusion::SchemaProvider for catalog::model::WithSession<Subgraph> {
         name: &str,
     ) -> datafusion::Result<Option<Arc<dyn datafusion::TableProvider>>> {
         if let Some(model) = self.value.tables.get(name) {
-            let table = model::Table::new_no_args(model.clone());
+            let table = model::Table::new_no_args(self.value.metadata.clone(), model.clone());
             Ok(Some(Arc::new(table) as Arc<dyn datafusion::TableProvider>))
         } else {
             Ok(None)

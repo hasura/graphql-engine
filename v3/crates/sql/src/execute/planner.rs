@@ -1,7 +1,8 @@
+pub(crate) mod filter;
+pub(crate) mod model;
+
 use hasura_authn_core::Session;
 use std::sync::Arc;
-
-pub(crate) mod model;
 
 use datafusion::{
     error::Result,

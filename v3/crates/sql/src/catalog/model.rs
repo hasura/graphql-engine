@@ -1,13 +1,15 @@
 //! Describe a model for a SQL table and how to translate datafusion operations on the table
 //! to ndc-spec queries.
+pub(crate) mod filter;
 
 use std::collections::BTreeMap;
 use std::{any::Any, sync::Arc};
 
+use ::datafusion::logical_expr::{Expr, TableProviderFilterPushDown};
 use async_trait::async_trait;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
-use metadata_resolve::{self as resolved, Qualified};
+use metadata_resolve::{self as resolved, Metadata, Qualified};
 use open_dds::arguments::ArgumentName;
 use open_dds::identifier::SubgraphName;
 use open_dds::{models::ModelName, types::CustomTypeName};
@@ -15,7 +17,9 @@ use open_dds::{models::ModelName, types::CustomTypeName};
 use resolved::TypeMapping;
 use serde::{Deserialize, Serialize};
 
+use crate::catalog::model::filter::can_pushdown_filters;
 use crate::execute::planner::model::ModelQuery;
+
 mod datafusion {
     pub(super) use datafusion::{
         arrow::datatypes::{DataType, Field, Schema, SchemaBuilder, SchemaRef, TimeUnit},
@@ -133,6 +137,7 @@ pub(crate) struct WithSession<T> {
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct TableValuedFunction {
+    pub(crate) metadata: Arc<Metadata>,
     /// Metadata about the model
     pub(crate) model: Arc<Model>,
     pub(crate) session: Arc<Session>,
@@ -141,8 +146,12 @@ pub(crate) struct TableValuedFunction {
 impl TableValuedFunction {
     // TODO: this will be removed when table valued functions are fully supported
     #[allow(dead_code)]
-    pub(crate) fn new(model: Arc<Model>, session: Arc<Session>) -> Self {
-        TableValuedFunction { model, session }
+    pub(crate) fn new(metadata: Arc<Metadata>, model: Arc<Model>, session: Arc<Session>) -> Self {
+        TableValuedFunction {
+            metadata,
+            model,
+            session,
+        }
     }
 }
 
@@ -153,7 +162,7 @@ impl datafusion::TableFunctionImpl for TableValuedFunction {
         _exprs: &[datafusion::Expr],
     ) -> datafusion::Result<Arc<dyn datafusion::TableProvider>> {
         let arguments = BTreeMap::new();
-        let table = Table::new(self.model.clone(), arguments);
+        let table = Table::new(self.metadata.clone(), self.model.clone(), arguments);
         Ok(Arc::new(table) as Arc<dyn datafusion::TableProvider>)
     }
 }
@@ -162,6 +171,7 @@ impl datafusion::TableFunctionImpl for TableValuedFunction {
 /// Currently, this is an instatation of a model with concrete arguments
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Table {
+    pub(crate) metadata: Arc<Metadata>,
     /// Metadata about the model
     pub(crate) model: Arc<Model>,
     /// This will be empty if the model doesn't take any arguments
@@ -170,13 +180,19 @@ pub(crate) struct Table {
 
 impl Table {
     pub(crate) fn new(
+        metadata: Arc<Metadata>,
         model: Arc<Model>,
         arguments: BTreeMap<ArgumentName, serde_json::Value>,
     ) -> Self {
-        Table { model, arguments }
-    }
-    pub(crate) fn new_no_args(model: Arc<Model>) -> Self {
         Table {
+            metadata,
+            model,
+            arguments,
+        }
+    }
+    pub(crate) fn new_no_args(metadata: Arc<Metadata>, model: Arc<Model>) -> Self {
+        Table {
+            metadata,
             model,
             arguments: BTreeMap::new(),
         }
@@ -184,8 +200,10 @@ impl Table {
     pub(crate) fn to_logical_plan(
         &self,
         projected_schema: datafusion::DFSchemaRef,
+        filters: &[datafusion::Expr],
     ) -> datafusion::Result<datafusion::LogicalPlan> {
-        let model_query_node = ModelQuery::new(&self.model, &self.arguments, projected_schema)?;
+        let model_query_node =
+            ModelQuery::new(&self.model, &self.arguments, projected_schema, filters)?;
         let logical_plan = datafusion::LogicalPlan::Extension(datafusion::Extension {
             node: Arc::new(model_query_node),
         });
@@ -212,7 +230,7 @@ impl datafusion::TableProvider for Table {
         state: &dyn datafusion::Session,
         projection: Option<&Vec<usize>>,
         // filters and limit can be used here to inject some push-down operations if needed
-        _filters: &[datafusion::Expr],
+        filters: &[datafusion::Expr],
         _limit: Option<usize>,
     ) -> datafusion::Result<Arc<dyn datafusion::ExecutionPlan>> {
         let projected_schema = self.model.schema.project(projection.unwrap_or(&vec![]))?;
@@ -220,8 +238,15 @@ impl datafusion::TableProvider for Table {
             projected_schema.fields,
             projected_schema.metadata,
         )?;
-        let logical_plan = self.to_logical_plan(Arc::new(qualified_projected_schema))?;
+        let logical_plan = self.to_logical_plan(Arc::new(qualified_projected_schema), filters)?;
         state.create_physical_plan(&logical_plan).await
+    }
+
+    fn supports_filters_pushdown(
+        &self,
+        filters: &[&Expr],
+    ) -> datafusion::Result<Vec<TableProviderFilterPushDown>> {
+        Ok(can_pushdown_filters(&self.metadata, &self.model, filters))
     }
 }
 

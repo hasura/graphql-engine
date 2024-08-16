@@ -45,6 +45,10 @@ use execute::{
 use ir::{NdcFieldAlias, NdcRelationshipName};
 use open_dds::data_connector::CollectionName;
 
+use crate::catalog::model::filter;
+
+use super::filter::to_resolved_filter_expr;
+
 #[derive(Debug, thiserror::Error)]
 pub enum ExecutionPlanError {
     #[error("{0}")]
@@ -89,6 +93,7 @@ impl ModelQuery {
         model: &crate::catalog::model::Model,
         arguments: &BTreeMap<ArgumentName, serde_json::Value>,
         projected_schema: DFSchemaRef,
+        filters: &[datafusion::logical_expr::Expr],
     ) -> datafusion::error::Result<Self> {
         let mut field_selection = IndexMap::new();
         for field in projected_schema.fields() {
@@ -114,6 +119,17 @@ impl ModelQuery {
             );
         }
 
+        let filter = match filters {
+            [] => None,
+            [expr] => Some(filter::pushdown_filter(expr)?),
+            _ => Some(open_dds::query::BooleanExpression::And(
+                filters
+                    .iter()
+                    .map(filter::pushdown_filter)
+                    .collect::<datafusion::error::Result<Vec<_>>>()?,
+            )),
+        };
+
         let model_selection = ModelSelection {
             target: ModelTarget {
                 subgraph: model.subgraph.clone(),
@@ -127,7 +143,7 @@ impl ModelQuery {
                         )
                     })
                     .collect(),
-                filter: None,
+                filter,
                 order_by: vec![],
                 limit: None,
                 offset: None,
@@ -209,11 +225,11 @@ impl ModelQuery {
             {
                 return plan_err!(
                 "role {} does not have permission to select the field {} from type {} of model {}",
-                session.role,
-                field_selection.target.field_name,
-                model.model.data_type,
-                qualified_model_name
-            );
+                    session.role,
+                    field_selection.target.field_name,
+                    model.model.data_type,
+                    qualified_model_name
+                );
             }
 
             let field_mapping = field_mappings
@@ -309,16 +325,41 @@ impl ModelQuery {
             ndc_arguments.insert(ndc_argument_name.clone(), ndc_argument_value.clone());
         }
 
+        let model_filter = model_target
+            .filter
+            .as_ref()
+            .map(|expr| {
+                to_resolved_filter_expr(
+                    metadata,
+                    &model_source.type_mappings,
+                    &model.model.data_type,
+                    model_object_type,
+                    expr,
+                )
+            })
+            .transpose()?;
+
+        let filter = match (model_filter, permission_filter) {
+            (None, filter) | (filter, None) => filter,
+            (Some(filter), Some(permission_filter)) => {
+                Some(ResolvedFilterExpression::mk_and(vec![
+                    filter,
+                    permission_filter,
+                ]))
+            }
+        };
+
         let ndc_pushdown = NDCQueryPushDown::new(
             http_context.clone(),
             self.schema.inner().clone(),
             model_source.collection.clone(),
             ndc_arguments,
             ndc_fields,
-            permission_filter,
+            filter,
             relationships,
             Arc::new(model_source.data_connector.clone()),
         );
+
         Ok(ndc_pushdown)
     }
 }

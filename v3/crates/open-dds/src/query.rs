@@ -231,8 +231,8 @@ pub enum Operand {
 /// Operand targeting a particular OpenDD object field or an operand nested within that field.
 pub struct ObjectFieldOperand {
     #[serde(flatten)]
-    target: Box<ObjectFieldTarget>,
-    nested: Option<Box<Operand>>,
+    pub target: Box<ObjectFieldTarget>,
+    pub nested: Option<Box<Operand>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
