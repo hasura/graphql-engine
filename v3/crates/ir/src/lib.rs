@@ -36,7 +36,7 @@ pub use global_id::{global_id_col_format, GLOBAL_ID_VERSION};
 pub use model_selection::ModelSelection;
 pub use model_tracking::{get_all_usage_counts_in_query, UsagesCounts};
 pub use mutation_root::generate_ir as generate_mutation_ir;
-pub use order_by::{OrderByElement, OrderByTarget};
+pub use order_by::{OrderByElement, OrderByTarget, ResolvedOrderBy};
 pub use permissions::process_model_predicate;
 pub use query_root::generate_ir as generate_query_ir;
 pub use relationship::{

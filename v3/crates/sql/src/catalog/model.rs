@@ -1,5 +1,6 @@
 //! Describe a model for a SQL table and how to translate datafusion operations on the table
 //! to ndc-spec queries.
+pub(crate) mod common;
 pub(crate) mod filter;
 
 use std::collections::BTreeMap;

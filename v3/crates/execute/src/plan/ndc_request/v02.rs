@@ -429,6 +429,7 @@ fn make_order_by_target(target: ir::OrderByTarget) -> ndc_models_v02::OrderByTar
     match target {
         ir::OrderByTarget::Column {
             name,
+            field_path,
             relationship_path,
         } => {
             let mut order_by_element_path = Vec::new();
@@ -469,7 +470,12 @@ fn make_order_by_target(target: ir::OrderByTarget) -> ndc_models_v02::OrderByTar
             ndc_models_v02::OrderByTarget::Column {
                 name: ndc_models_v02::FieldName::new(name.into_inner()),
                 path: order_by_element_path,
-                field_path: None,
+                field_path: field_path.map(|field_path| {
+                    field_path
+                        .iter()
+                        .map(|name| ndc_models_v02::FieldName::from(name.as_str()))
+                        .collect()
+                }),
             }
         }
     }

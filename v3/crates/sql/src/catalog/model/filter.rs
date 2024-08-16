@@ -1,19 +1,9 @@
 use std::sync::Arc;
 
 use crate::catalog::model::Model;
-use datafusion::{
-    common::Column,
-    error::{DataFusionError, Result},
-    logical_expr::{expr::ScalarFunction, BinaryExpr, Expr, Operator, TableProviderFilterPushDown},
-    scalar::ScalarValue,
-};
-use indexmap::IndexMap;
+use datafusion::logical_expr::{BinaryExpr, Expr, Operator, TableProviderFilterPushDown};
 use metadata_resolve::Metadata;
-use open_dds::{
-    identifier::Identifier,
-    query::{ObjectFieldOperand, ObjectFieldTarget},
-    types::{FieldName, OperatorName},
-};
+use open_dds::types::OperatorName;
 
 pub(crate) fn can_pushdown_filters(
     _metadata: &Arc<Metadata>,
@@ -62,36 +52,6 @@ pub(crate) fn can_pushdown_filter(expr: &Expr) -> bool {
     pushdown_filter(expr).is_ok()
 }
 
-pub(crate) fn try_into_column(expr: &Expr) -> Result<Option<(Vec<FieldName>, &Column)>> {
-    let mut path = vec![];
-    let mut expr = expr;
-
-    loop {
-        match expr {
-            Expr::Column(column) => {
-                return Ok(Some((path, column)));
-            }
-            Expr::ScalarFunction(ScalarFunction { func, args }) if func.name() == "get_field" => {
-                let [inner_expr, Expr::Literal(ScalarValue::Utf8(Some(field_name)))] =
-                    args.as_slice()
-                else {
-                    return Ok(None);
-                };
-
-                let ident = Identifier::new(field_name).map_err(|e| {
-                    DataFusionError::Internal(format!("invalid identifier in path: {e}"))
-                })?;
-
-                path.push(FieldName::new(ident));
-                expr = inner_expr;
-            }
-            _ => {
-                return Ok(None);
-            }
-        }
-    }
-}
-
 pub(crate) fn pushdown_filter(
     expr: &datafusion::prelude::Expr,
 ) -> datafusion::error::Result<open_dds::query::BooleanExpression> {
@@ -103,7 +63,8 @@ pub(crate) fn pushdown_filter(
                     // | Operator::LtEq
                     // | Operator::Gt
                     // | Operator::GtEq
-                    let Some((path, column)) = try_into_column(left.as_ref())? else {
+                    let Some((path, column)) = super::common::try_into_column(left.as_ref())?
+                    else {
                         return Err(datafusion::error::DataFusionError::Internal(format!(
                             "unsupported left-hand-side in binary expression: {left:?}"
                         )));
@@ -115,7 +76,7 @@ pub(crate) fn pushdown_filter(
                         )));
                     };
 
-                    let operand = to_operand(column, path)?;
+                    let operand = super::common::to_operand(column, path)?;
 
                     // TODO: here we pretend the _eq, _neq etc. operators exist
                     // in OpenDD, which are then mapped to the underlying NDC
@@ -128,7 +89,9 @@ pub(crate) fn pushdown_filter(
                         _ => panic!("operator not handled in pushdown_filter"),
                     };
 
-                    let argument = Box::new(open_dds::query::Value::Literal(to_value(value)?));
+                    let argument = Box::new(open_dds::query::Value::Literal(
+                        super::common::to_value(value)?,
+                    ));
 
                     Ok(open_dds::query::BooleanExpression::Comparison {
                         operand,
@@ -161,13 +124,13 @@ pub(crate) fn pushdown_filter(
             Ok(open_dds::query::BooleanExpression::Not(Box::new(expr)))
         }
         Expr::IsNull(expr_inner) | Expr::IsNotNull(expr_inner) => {
-            let Some((path, column)) = try_into_column(expr_inner.as_ref())? else {
+            let Some((path, column)) = super::common::try_into_column(expr_inner.as_ref())? else {
                 return Err(datafusion::error::DataFusionError::Internal(format!(
                     "unsupported argument in IS NULL expression: {expr_inner:?}"
                 )));
             };
 
-            let operand = to_operand(column, path)?;
+            let operand = super::common::to_operand(column, path)?;
 
             Ok(match expr {
                 Expr::IsNull(_) => open_dds::query::BooleanExpression::IsNull(operand),
@@ -180,86 +143,6 @@ pub(crate) fn pushdown_filter(
         // Expr::Like(_) => todo!(),
         _ => Err(datafusion::error::DataFusionError::Internal(format!(
             "unable to push down filter expression: {expr:?}"
-        ))),
-    }
-}
-
-pub(crate) fn to_operand(
-    column: &datafusion::prelude::Column,
-    path: Vec<FieldName>,
-) -> ::datafusion::error::Result<open_dds::query::Operand> {
-    let mut nested = None;
-
-    let mut path_rev = path;
-    path_rev.reverse();
-
-    for field_name in path_rev {
-        nested = Some(Box::new(open_dds::query::Operand::Field(
-            ObjectFieldOperand {
-                target: Box::new(ObjectFieldTarget {
-                    field_name,
-                    arguments: IndexMap::new(),
-                }),
-                nested: None,
-            },
-        )));
-    }
-
-    Ok(open_dds::query::Operand::Field(ObjectFieldOperand {
-        target: Box::new(ObjectFieldTarget {
-            field_name: FieldName::new(Identifier::new(column.name.clone()).map_err(|e| {
-                datafusion::error::DataFusionError::Internal(format!(
-                    "cannot convert binary expr left-hand-side: {e}"
-                ))
-            })?),
-            arguments: IndexMap::new(),
-        }),
-        nested,
-    }))
-}
-
-pub(crate) fn to_value(
-    value: &datafusion::scalar::ScalarValue,
-) -> datafusion::error::Result<serde_json::Value> {
-    match value {
-        datafusion::scalar::ScalarValue::Null => Ok(serde_json::Value::Null),
-        datafusion::scalar::ScalarValue::Boolean(b) => {
-            Ok(b.map_or(serde_json::Value::Null, serde_json::Value::Bool))
-        }
-        datafusion::scalar::ScalarValue::Float32(f) => {
-            Ok(f.map_or(serde_json::Value::Null, serde_json::Value::from))
-        }
-        datafusion::scalar::ScalarValue::Int32(i) => {
-            Ok(i.map_or(serde_json::Value::Null, serde_json::Value::from))
-        }
-        datafusion::scalar::ScalarValue::Utf8(s) => {
-            Ok(s.as_ref().map_or(serde_json::Value::Null, |s| {
-                serde_json::Value::from(s.clone())
-            }))
-        }
-        // datafusion::scalar::ScalarValue::Float16(f) => todo!(),
-        // datafusion::scalar::ScalarValue::Float64(f) => todo!(),
-        // datafusion::scalar::ScalarValue::Decimal128(_, _, _) => todo!(),
-        // datafusion::scalar::ScalarValue::Decimal256(_, _, _) => todo!(),
-        // datafusion::scalar::ScalarValue::Int8(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Int16(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Int64(_) => todo!(),
-        // datafusion::scalar::ScalarValue::UInt8(_) => todo!(),
-        // datafusion::scalar::ScalarValue::UInt16(_) => todo!(),
-        // datafusion::scalar::ScalarValue::UInt32(_) => todo!(),
-        // datafusion::scalar::ScalarValue::UInt64(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Date32(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Date64(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Time32Second(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Time32Millisecond(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Time64Microsecond(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Time64Nanosecond(_) => todo!(),
-        // datafusion::scalar::ScalarValue::TimestampSecond(_, _) => todo!(),
-        // datafusion::scalar::ScalarValue::TimestampMillisecond(_, _) => todo!(),
-        // datafusion::scalar::ScalarValue::TimestampMicrosecond(_, _) => todo!(),
-        // datafusion::scalar::ScalarValue::TimestampNanosecond(_, _) => todo!(),
-        _ => Err(DataFusionError::Internal(format!(
-            "cannot convert literal to OpenDD literal: {value:?}"
         ))),
     }
 }

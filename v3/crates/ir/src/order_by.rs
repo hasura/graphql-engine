@@ -31,6 +31,7 @@ pub struct OrderByElement {
 pub enum OrderByTarget {
     Column {
         name: DataConnectorColumnName,
+        field_path: Option<Vec<DataConnectorColumnName>>,
         relationship_path: Vec<NdcRelationshipName>,
     },
 }
@@ -143,6 +144,7 @@ pub fn build_ndc_order_by_element<'s>(
                 // TODO(naveen): When aggregates are supported, extend this to support other ndc_models::OrderByTarget
                 target: OrderByTarget::Column {
                     name: ndc_column.clone(),
+                    field_path: None,
                     relationship_path: relationship_paths,
                 },
             };

@@ -1,13 +1,14 @@
 use core::fmt;
 use std::{any::Any, collections::BTreeMap, hash::Hash, sync::Arc};
 
+use crate::catalog::model::common::{to_operand, try_into_column};
 use datafusion::{
     arrow::{
         array::RecordBatch, datatypes::SchemaRef, error::ArrowError, json::reader as arrow_json,
     },
     common::{internal_err, plan_err, DFSchemaRef},
     error::{DataFusionError, Result},
-    logical_expr::{LogicalPlan, UserDefinedLogicalNodeCore},
+    logical_expr::{Expr, LogicalPlan, UserDefinedLogicalNodeCore},
     physical_expr::EquivalenceProperties,
     physical_plan::{
         stream::RecordBatchStreamAdapter, DisplayAs, DisplayFormatType, ExecutionMode,
@@ -20,7 +21,8 @@ use indexmap::IndexMap;
 use metadata_resolve::{FilterPermission, Qualified, QualifiedTypeReference, TypeMapping};
 use open_dds::{
     arguments::ArgumentName,
-    query::Alias,
+    models::OrderByDirection,
+    query::{Alias, OrderByElement},
     types::{DataConnectorArgumentName, FieldName},
 };
 use open_dds::{
@@ -42,12 +44,10 @@ use execute::{
     },
     HttpContext,
 };
-use ir::{NdcFieldAlias, NdcRelationshipName};
+use ir::{NdcFieldAlias, NdcRelationshipName, ResolvedOrderBy};
 use open_dds::data_connector::CollectionName;
 
 use crate::catalog::model::filter;
-
-use super::filter::to_resolved_filter_expr;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ExecutionPlanError {
@@ -155,6 +155,62 @@ impl ModelQuery {
             schema: projected_schema,
         };
         Ok(model_query_node)
+    }
+
+    pub(crate) fn sort(
+        &self,
+        sort_by: &[Expr],
+        limit: Option<usize>,
+    ) -> datafusion::error::Result<Option<Self>> {
+        let mut new_order_by_elements: Vec<OrderByElement> = vec![];
+
+        for expr in sort_by {
+            let Expr::Sort(sort) = expr else {
+                return Ok(None);
+            };
+            let Some((column, path)) = try_into_column(&sort.expr)? else {
+                return Ok(None);
+            };
+
+            let operand = to_operand(path, column)?;
+
+            match operand {
+                open_dds::query::Operand::Field(_) => {
+                    new_order_by_elements.push(OrderByElement {
+                        direction: if sort.asc {
+                            OrderByDirection::Asc
+                        } else {
+                            OrderByDirection::Desc
+                        },
+                        operand,
+                    });
+                }
+                _ => {
+                    return Ok(None);
+                }
+            }
+        }
+
+        let order_by = [
+            new_order_by_elements,
+            self.model_selection.target.order_by.clone(),
+        ]
+        .concat();
+
+        let new_query = ModelQuery {
+            model_selection: ModelSelection {
+                target: ModelTarget {
+                    order_by,
+                    limit,
+                    offset: None,
+                    ..self.model_selection.target.clone()
+                },
+                selection: self.model_selection.selection.clone(),
+            },
+            schema: self.schema.clone(),
+        };
+
+        Ok(Some(new_query))
     }
 }
 
@@ -329,7 +385,7 @@ impl ModelQuery {
             .filter
             .as_ref()
             .map(|expr| {
-                to_resolved_filter_expr(
+                super::filter::to_resolved_filter_expr(
                     metadata,
                     &model_source.type_mappings,
                     &model.model.data_type,
@@ -349,6 +405,26 @@ impl ModelQuery {
             }
         };
 
+        let order_by_elements = model_target
+            .order_by
+            .iter()
+            .map(|element| {
+                super::order_by::to_resolved_order_by_element(
+                    metadata,
+                    &model_source.type_mappings,
+                    &model.model.data_type,
+                    model_object_type,
+                    element,
+                )
+            })
+            .collect::<datafusion::error::Result<Vec<_>>>()?;
+
+        let limit = model_target
+            .limit
+            .map(u32::try_from)
+            .transpose()
+            .map_err(|_| DataFusionError::Internal("limit out of range".into()))?;
+
         let ndc_pushdown = NDCQueryPushDown::new(
             http_context.clone(),
             self.schema.inner().clone(),
@@ -356,6 +432,11 @@ impl ModelQuery {
             ndc_arguments,
             ndc_fields,
             filter,
+            ir::ResolvedOrderBy {
+                order_by_elements,
+                relationships: BTreeMap::new(),
+            },
+            limit,
             relationships,
             Arc::new(model_source.data_connector.clone()),
         );
@@ -481,6 +562,8 @@ pub(crate) struct NDCQueryPushDown {
     arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
     fields: IndexMap<NdcFieldAlias, ResolvedField<'static>>,
     filter: Option<ResolvedFilterExpression>,
+    order_by: ResolvedOrderBy<'static>,
+    limit: Option<u32>,
     collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
     projected_schema: SchemaRef,
@@ -495,6 +578,8 @@ impl NDCQueryPushDown {
         arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
         fields: IndexMap<NdcFieldAlias, ResolvedField<'static>>,
         filter: Option<ResolvedFilterExpression>,
+        order_by: ResolvedOrderBy<'static>,
+        limit: Option<u32>,
         collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
         data_connector: Arc<metadata_resolve::DataConnectorLink>,
     ) -> Self {
@@ -505,6 +590,8 @@ impl NDCQueryPushDown {
             arguments,
             fields,
             filter,
+            order_by,
+            limit,
             collection_relationships,
             data_connector,
             projected_schema: schema,
@@ -574,9 +661,9 @@ impl ExecutionPlan for NDCQueryPushDown {
                         .collect(),
                 ),
                 aggregates: None,
-                limit: None,
+                limit: self.limit,
                 offset: None,
-                order_by: None,
+                order_by: Some(self.order_by.order_by_elements.clone()),
                 predicate: self.filter.clone(),
             },
             collection: self.collection_name.clone(),

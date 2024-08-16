@@ -5,6 +5,8 @@ use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
 use serde::{Deserialize, Serialize};
 
+use crate::execute::optimizer;
+
 mod datafusion {
     pub(super) use datafusion::{
         catalog::{CatalogProvider, SchemaProvider},
@@ -139,7 +141,8 @@ impl Catalog {
         let session_state = datafusion::SessionStateBuilder::new()
             .with_config(session_config)
             .with_query_planner(query_planner)
-            .with_optimizer_rule(Arc::new(super::execute::optimizer::ReplaceTableScan {}))
+            .with_optimizer_rule(Arc::new(optimizer::ReplaceTableScan {}))
+            .with_optimizer_rule(Arc::new(optimizer::NDCPushDownSort {}))
             .with_expr_planners(datafusion::SessionStateDefaults::default_expr_planners())
             .with_scalar_functions(datafusion::SessionStateDefaults::default_scalar_functions())
             .with_aggregate_functions(
