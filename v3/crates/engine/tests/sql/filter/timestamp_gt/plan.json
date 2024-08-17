@@ -1,0 +1,10 @@
+[
+  {
+    "plan_type": "logical_plan",
+    "plan": "Limit: skip=0, fetch=10\n  ModelQuery: model=default:Invoice, projection=[billingAddress,billingCity,billingCountry,billingPostalCode,billingState,invoiceDate,total], filter=[invoiceDate(_gt, {literal})]"
+  },
+  {
+    "plan_type": "physical_plan",
+    "plan": "GlobalLimitExec: skip=0, fetch=10\n  NDCQueryPushDown\n"
+  }
+]

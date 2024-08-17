@@ -1,0 +1,92 @@
+[
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Authors",
+    "column_name": "author_id"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Authors",
+    "column_name": "first_name"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Authors",
+    "column_name": "last_name"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "institutions",
+    "column_name": "id"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "institutions",
+    "column_name": "name"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "institutions",
+    "column_name": "location"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "institutions",
+    "column_name": "staff"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "institutions",
+    "column_name": "departments"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Invoice",
+    "column_name": "billingAddress"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Invoice",
+    "column_name": "billingCity"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Invoice",
+    "column_name": "billingCountry"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Invoice",
+    "column_name": "billingPostalCode"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Invoice",
+    "column_name": "billingState"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Invoice",
+    "column_name": "invoiceDate"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Invoice",
+    "column_name": "total"
+  }
+]

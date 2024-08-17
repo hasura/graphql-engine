@@ -85,38 +85,81 @@ pub(crate) fn to_value(
         datafusion::scalar::ScalarValue::Boolean(b) => {
             Ok(b.map_or(serde_json::Value::Null, serde_json::Value::Bool))
         }
+
+        datafusion::scalar::ScalarValue::Float16(f) => Ok(f.map_or(serde_json::Value::Null, |f| {
+            serde_json::Value::from(f.to_f32())
+        })),
         datafusion::scalar::ScalarValue::Float32(f) => {
             Ok(f.map_or(serde_json::Value::Null, serde_json::Value::from))
+        }
+        datafusion::scalar::ScalarValue::Float64(f) => Ok(f.map_or(serde_json::Value::Null, |f| {
+            serde_json::Value::from(f.to_string())
+        })),
+        datafusion::scalar::ScalarValue::Int8(i) => {
+            Ok(i.map_or(serde_json::Value::Null, serde_json::Value::from))
+        }
+        datafusion::scalar::ScalarValue::Int16(i) => {
+            Ok(i.map_or(serde_json::Value::Null, serde_json::Value::from))
         }
         datafusion::scalar::ScalarValue::Int32(i) => {
             Ok(i.map_or(serde_json::Value::Null, serde_json::Value::from))
         }
+        datafusion::scalar::ScalarValue::Int64(i) => Ok(i.map_or(serde_json::Value::Null, |i| {
+            serde_json::Value::from(i.to_string())
+        })),
+        datafusion::scalar::ScalarValue::UInt8(u) => {
+            Ok(u.map_or(serde_json::Value::Null, serde_json::Value::from))
+        }
+        datafusion::scalar::ScalarValue::UInt16(u) => {
+            Ok(u.map_or(serde_json::Value::Null, serde_json::Value::from))
+        }
+        datafusion::scalar::ScalarValue::UInt32(u) => {
+            Ok(u.map_or(serde_json::Value::Null, serde_json::Value::from))
+        }
+        datafusion::scalar::ScalarValue::UInt64(u) => Ok(u.map_or(serde_json::Value::Null, |u| {
+            serde_json::Value::from(u.to_string())
+        })),
         datafusion::scalar::ScalarValue::Utf8(s) => {
             Ok(s.as_ref().map_or(serde_json::Value::Null, |s| {
                 serde_json::Value::from(s.clone())
             }))
         }
-        // datafusion::scalar::ScalarValue::Float16(f) => todo!(),
-        // datafusion::scalar::ScalarValue::Float64(f) => todo!(),
         // datafusion::scalar::ScalarValue::Decimal128(_, _, _) => todo!(),
         // datafusion::scalar::ScalarValue::Decimal256(_, _, _) => todo!(),
-        // datafusion::scalar::ScalarValue::Int8(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Int16(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Int64(_) => todo!(),
-        // datafusion::scalar::ScalarValue::UInt8(_) => todo!(),
-        // datafusion::scalar::ScalarValue::UInt16(_) => todo!(),
-        // datafusion::scalar::ScalarValue::UInt32(_) => todo!(),
-        // datafusion::scalar::ScalarValue::UInt64(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Date32(_) => todo!(),
-        // datafusion::scalar::ScalarValue::Date64(_) => todo!(),
+        datafusion::scalar::ScalarValue::Date32(days) => {
+            let d = chrono::DateTime::UNIX_EPOCH.date_naive()
+                + chrono::Duration::days(days.unwrap_or_default().into());
+            Ok(serde_json::Value::String(format!("{}", d.format("%F"))))
+        }
+        datafusion::scalar::ScalarValue::Date64(secs) => {
+            let d = chrono::DateTime::UNIX_EPOCH.date_naive()
+                + chrono::Duration::seconds(secs.unwrap_or_default());
+            Ok(serde_json::Value::String(format!("{}", d.format("%F"))))
+        }
         // datafusion::scalar::ScalarValue::Time32Second(_) => todo!(),
         // datafusion::scalar::ScalarValue::Time32Millisecond(_) => todo!(),
         // datafusion::scalar::ScalarValue::Time64Microsecond(_) => todo!(),
         // datafusion::scalar::ScalarValue::Time64Nanosecond(_) => todo!(),
-        // datafusion::scalar::ScalarValue::TimestampSecond(_, _) => todo!(),
-        // datafusion::scalar::ScalarValue::TimestampMillisecond(_, _) => todo!(),
-        // datafusion::scalar::ScalarValue::TimestampMicrosecond(_, _) => todo!(),
-        // datafusion::scalar::ScalarValue::TimestampNanosecond(_, _) => todo!(),
+        datafusion::scalar::ScalarValue::TimestampSecond(secs, None) => {
+            let td =
+                chrono::DateTime::UNIX_EPOCH + chrono::Duration::seconds(secs.unwrap_or_default());
+            Ok(serde_json::Value::String(format!("{}", td.format("%+"))))
+        }
+        datafusion::scalar::ScalarValue::TimestampMillisecond(ms, None) => {
+            let td = chrono::DateTime::UNIX_EPOCH
+                + chrono::Duration::milliseconds(ms.unwrap_or_default());
+            Ok(serde_json::Value::String(format!("{}", td.format("%+"))))
+        }
+        datafusion::scalar::ScalarValue::TimestampMicrosecond(ms, None) => {
+            let td = chrono::DateTime::UNIX_EPOCH
+                + chrono::Duration::microseconds(ms.unwrap_or_default());
+            Ok(serde_json::Value::String(format!("{}", td.format("%+"))))
+        }
+        datafusion::scalar::ScalarValue::TimestampNanosecond(ns, None) => {
+            let td = chrono::DateTime::UNIX_EPOCH
+                + chrono::Duration::nanoseconds(ns.unwrap_or_default());
+            Ok(serde_json::Value::String(format!("{}", td.format("%+"))))
+        }
         _ => Err(DataFusionError::Internal(format!(
             "cannot convert literal to OpenDD literal: {value:?}"
         ))),

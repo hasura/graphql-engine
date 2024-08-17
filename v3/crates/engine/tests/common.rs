@@ -5,7 +5,10 @@ use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::data_connectors::NdcVersion;
 use open_dds::session_variables::{SessionVariable, SESSION_VARIABLE_ROLE};
 use serde_json as json;
+use sql::execute::SqlRequest;
 use std::collections::BTreeMap;
+use std::iter;
+use std::sync::Arc;
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -22,8 +25,8 @@ use json_value_merge::Merge;
 use serde_json::Value;
 
 pub struct GoldenTestContext {
-    http_context: HttpContext,
-    mint: Mint,
+    pub(crate) http_context: HttpContext,
+    pub(crate) mint: Mint,
 }
 
 pub fn setup(test_dir: &Path) -> GoldenTestContext {
@@ -35,7 +38,7 @@ pub fn setup(test_dir: &Path) -> GoldenTestContext {
     GoldenTestContext { http_context, mint }
 }
 
-fn resolve_session(
+pub(crate) fn resolve_session(
     session_variables: HashMap<SessionVariable, SessionVariableValue>,
 ) -> Result<Session, SessionError> {
     //return an arbitrary identity with role emulation enabled
@@ -50,6 +53,7 @@ fn resolve_session(
 
 // This function is deprecated in favour of test_execution_expectation
 // TODO: Remove this function after all tests are moved to use test_execution_expectation
+#[allow(dead_code)]
 pub fn test_execution_expectation_legacy(
     test_path_string: &str,
     common_metadata_paths: &[&str],
@@ -239,6 +243,7 @@ pub(crate) fn test_introspection_expectation(
     })
 }
 
+#[allow(dead_code)]
 pub fn test_execution_expectation(
     test_path_string: &str,
     common_metadata_paths: &[&str],
@@ -250,7 +255,7 @@ pub fn test_execution_expectation(
     )
 }
 
-#[allow(clippy::print_stdout)]
+#[allow(clippy::print_stdout, dead_code)]
 pub fn test_execution_expectation_for_multiple_ndc_versions(
     test_path_string: &str,
     common_metadata_paths: &[&str],
@@ -535,7 +540,8 @@ pub fn test_execute_explain(
 }
 
 // This is where we'll want to enable pre-release features in tests
-fn test_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration {
+pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration
+{
     metadata_resolve::configuration::Configuration {
         allow_unknown_subgraphs: false,
         unstable_features: metadata_resolve::configuration::UnstableFeatures {
@@ -543,4 +549,104 @@ fn test_metadata_resolve_configuration() -> metadata_resolve::configuration::Con
             enable_ndc_v02_support: true,
         },
     }
+}
+
+#[allow(dead_code)]
+pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
+    tokio_test::block_on(async {
+        // Setup test context
+        let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+        let mut test_ctx = setup(&root_test_dir);
+        let test_path = root_test_dir.join(test_path_string);
+
+        let request_path = test_path.join("query.sql");
+        let response_path = test_path_string.to_string() + "/expected.json";
+        let explain_path = test_path_string.to_string() + "/plan.json";
+        let metadata_path = root_test_dir.join("sql/metadata.json");
+
+        let metadata_json_value = merge_with_common_metadata(&metadata_path, iter::empty())?;
+
+        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
+
+        // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
+        assert_eq!(
+            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata)?)?,
+            metadata
+        );
+
+        let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
+        let schema = GDS::build_schema(&gds)?;
+
+        // Ensure schema is serialized successfully.
+        serde_json::to_string(&schema)?;
+
+        let query = fs::read_to_string(request_path)?;
+
+        let session = Arc::new({
+            let session_vars_path = &test_path.join("session_variables.json");
+            let session_variables: HashMap<SessionVariable, SessionVariableValue> =
+                serde_json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
+            resolve_session(session_variables)
+        }?);
+
+        let catalog = Arc::new(sql::catalog::Catalog::from_metadata(gds.metadata));
+        let http_context = Arc::new(test_ctx.http_context);
+
+        // Execute the test
+
+        snapshot(
+            &catalog,
+            &session,
+            &http_context,
+            &mut test_ctx.mint,
+            explain_path,
+            &format!("EXPLAIN {query}"),
+        )
+        .await?;
+
+        snapshot(
+            &catalog,
+            &session,
+            &http_context,
+            &mut test_ctx.mint,
+            response_path,
+            &query,
+        )
+        .await?;
+
+        Ok(())
+    })
+}
+
+async fn snapshot(
+    catalog: &Arc<sql::catalog::Catalog>,
+    session: &Arc<hasura_authn_core::Session>,
+    http_context: &Arc<execute::HttpContext>,
+    mint: &mut Mint,
+    response_path: String,
+    query: &str,
+) -> Result<(), anyhow::Error> {
+    let request = SqlRequest::new(query.to_owned());
+    let response = sql::execute::execute_sql(
+        catalog.clone(),
+        session.clone(),
+        http_context.clone(),
+        &request,
+    )
+    .await?;
+    let response = serde_json::from_reader::<_, serde_json::Value>(response.as_slice())?;
+    let mut expected = mint.new_goldenfile_with_differ(
+        response_path,
+        Box::new(|file1, file2| {
+            let json1: serde_json::Value =
+                serde_json::from_reader(File::open(file1).unwrap()).unwrap();
+            let json2: serde_json::Value =
+                serde_json::from_reader(File::open(file2).unwrap()).unwrap();
+            if json1 != json2 {
+                text_diff(file1, file2);
+            }
+        }),
+    )?;
+    write!(expected, "{}", serde_json::to_string_pretty(&response)?)?;
+    Ok(())
 }

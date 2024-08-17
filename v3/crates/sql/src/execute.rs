@@ -22,6 +22,12 @@ pub struct SqlRequest {
     sql: String,
 }
 
+impl SqlRequest {
+    pub fn new(sql: String) -> Self {
+        SqlRequest { sql }
+    }
+}
+
 #[derive(Error, Debug, Clone)]
 pub enum SqlExecutionError {
     #[error("error in data fusion: {0}")]

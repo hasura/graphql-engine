@@ -175,6 +175,15 @@ pub enum Value {
     Literal(serde_json::Value),
 }
 
+impl Value {
+    pub fn fmt_for_explain(&self) -> &str {
+        match &self {
+            Value::BooleanExpression(_) => "{expr}",
+            Value::Literal(_) => "{literal}",
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// A boolean expression value that can be used for model filters or boolean expression arguments.
@@ -190,12 +199,67 @@ pub enum BooleanExpression {
     },
 }
 
+impl BooleanExpression {
+    pub fn fmt_for_explain(&self) -> String {
+        match &self {
+            BooleanExpression::And(exprs) => format!(
+                "({})",
+                exprs
+                    .iter()
+                    .map(BooleanExpression::fmt_for_explain)
+                    .collect::<Vec<_>>()
+                    .join(" AND ")
+            ),
+            BooleanExpression::Or(exprs) => format!(
+                "({})",
+                exprs
+                    .iter()
+                    .map(BooleanExpression::fmt_for_explain)
+                    .collect::<Vec<_>>()
+                    .join(" OR ")
+            ),
+            BooleanExpression::Not(expr) => format!("(NOT {})", expr.fmt_for_explain()),
+            BooleanExpression::IsNull(operand) => format!("{} IS NULL", operand.fmt_for_explain()),
+            BooleanExpression::Comparison {
+                operand,
+                operator,
+                argument,
+            } => match operator.as_str() {
+                "_eq" => format!(
+                    "{} = {}",
+                    operand.fmt_for_explain(),
+                    argument.fmt_for_explain()
+                ),
+                op => format!(
+                    "{}({}, {})",
+                    operand.fmt_for_explain(),
+                    op,
+                    argument.fmt_for_explain()
+                ),
+            },
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// A single ordering condition composed of an ordering key and ordering direction.
 pub struct OrderByElement {
     pub operand: Operand,
     pub direction: OrderByDirection,
+}
+
+impl OrderByElement {
+    pub fn fmt_for_explain(&self) -> String {
+        format!(
+            "{} {}",
+            self.operand.fmt_for_explain(),
+            match self.direction {
+                OrderByDirection::Asc => "asc",
+                OrderByDirection::Desc => "desc",
+            }
+        )
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -226,6 +290,16 @@ pub enum Operand {
     RelationshipAggregate(RelationshipAggregateOperand),
 }
 
+impl Operand {
+    pub fn fmt_for_explain(&self) -> String {
+        match &self {
+            Operand::Field(field) => field.fmt_for_explain(),
+            Operand::Relationship(_) => "{rel}".into(),
+            Operand::RelationshipAggregate(_) => "{rel_agg}".into(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Operand targeting a particular OpenDD object field or an operand nested within that field.
@@ -233,6 +307,19 @@ pub struct ObjectFieldOperand {
     #[serde(flatten)]
     pub target: Box<ObjectFieldTarget>,
     pub nested: Option<Box<Operand>>,
+}
+
+impl ObjectFieldOperand {
+    pub fn fmt_for_explain(&self) -> String {
+        format!(
+            "{}{}",
+            self.target.field_name.as_str(),
+            match &self.nested {
+                None => String::new(),
+                Some(nested) => format!(".{}", nested.fmt_for_explain()),
+            }
+        )
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

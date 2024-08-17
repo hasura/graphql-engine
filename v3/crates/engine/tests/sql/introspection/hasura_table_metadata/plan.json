@@ -1,0 +1,10 @@
+[
+  {
+    "plan_type": "logical_plan",
+    "plan": "Projection: hasura.table_metadata.description, hasura.column_metadata.schema_name, hasura.column_metadata.table_name, hasura.column_metadata.column_name, hasura.column_metadata.description\n  Inner Join: hasura.table_metadata.schema_name = hasura.column_metadata.schema_name, hasura.table_metadata.table_name = hasura.column_metadata.table_name\n    TableScan: hasura.table_metadata projection=[schema_name, table_name, description]\n    TableScan: hasura.column_metadata projection=[schema_name, table_name, column_name, description]"
+  },
+  {
+    "plan_type": "physical_plan",
+    "plan": "CoalesceBatchesExec: target_batch_size=8192\n  HashJoinExec: mode=CollectLeft, join_type=Inner, on=[(schema_name@0, schema_name@0), (table_name@1, table_name@1)], projection=[description@2, schema_name@3, table_name@4, column_name@5, description@6]\n    ValuesExec\n    ValuesExec\n"
+  }
+]

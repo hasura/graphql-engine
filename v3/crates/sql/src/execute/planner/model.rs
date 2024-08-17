@@ -539,9 +539,37 @@ impl UserDefinedLogicalNodeCore for ModelQuery {
                 .collect::<Vec<_>>()
                 .join(",")
         );
+        let filter = self
+            .model_selection
+            .target
+            .filter
+            .as_ref()
+            .map_or(String::new(), |filter| {
+                format!(", filter=[{}]", filter.fmt_for_explain())
+            });
+        let sort = if self.model_selection.target.order_by.is_empty() {
+            String::new()
+        } else {
+            format!(
+                ", sort=[{}]",
+                self.model_selection
+                    .target
+                    .order_by
+                    .iter()
+                    .map(|element| { element.fmt_for_explain() })
+                    .collect::<Vec<_>>()
+                    .join(",")
+            )
+        };
+        let limit = self
+            .model_selection
+            .target
+            .limit
+            .as_ref()
+            .map_or(String::new(), |limit| format!(", limit={limit}"));
         write!(
             f,
-            "ModelQuery: model={}:{}{projection}",
+            "ModelQuery: model={}:{}{projection}{filter}{sort}{limit}",
             self.model_selection.target.subgraph, self.model_selection.target.model_name,
         )
     }
