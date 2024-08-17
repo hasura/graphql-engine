@@ -72,16 +72,6 @@ pub(crate) fn to_resolved_filter_expr(
                 field_mapping,
             } = to_resolved_column(metadata, type_mappings, type_name, model_object_type, field)?;
 
-            let ndc_operator = field_mapping
-                .equal_operators
-                .first()
-                .ok_or_else(|| {
-                    DataFusionError::Internal(format!(
-                        "no equality operator(s) found for type: {type_name:?}"
-                    ))
-                })?
-                .clone();
-
             let value = match argument.as_ref() {
                 open_dds::query::Value::Literal(value) => Ok(ir::ComparisonValue::Scalar {
                     value: value.clone(),
@@ -91,25 +81,76 @@ pub(crate) fn to_resolved_filter_expr(
                 )),
             }?;
 
-            let eq_expr = ResolvedFilterExpression::LocalFieldComparison(
-                ir::LocalFieldComparison::BinaryComparison {
-                    column: ir::ComparisonTarget::Column {
-                        name: column_name,
-                        field_path,
-                    },
-                    operator: ndc_operator,
-                    value,
-                },
-            );
+            let comparison_operators = field_mapping.comparison_operators.ok_or_else(|| {
+                DataFusionError::Internal(format!(
+                    "no comparisons operators found for type: {type_name:?}"
+                ))
+            })?;
 
             match operator.as_str() {
-                "_eq" => Ok(eq_expr),
-                "_neq" => Ok(ResolvedFilterExpression::Not {
-                    expression: Box::new(eq_expr),
-                }),
-                _ => Err(DataFusionError::Internal(format!(
-                    "unsupported comparison operator expression: {operator:?}"
-                ))),
+                op @ ("_eq" | "_neq") => {
+                    let operator = comparison_operators
+                        .equality_operators
+                        .first()
+                        .ok_or_else(|| {
+                            DataFusionError::Internal(format!(
+                                "no equality operator(s) found for type: {type_name:?}"
+                            ))
+                        })?
+                        .clone();
+
+                    let eq_expr = ResolvedFilterExpression::LocalFieldComparison(
+                        ir::LocalFieldComparison::BinaryComparison {
+                            column: ir::ComparisonTarget::Column {
+                                name: column_name,
+                                field_path,
+                            },
+                            operator,
+                            value,
+                        },
+                    );
+
+                    match op {
+                        "_eq" => Ok(eq_expr),
+                        "_neq" => Ok(ResolvedFilterExpression::Not {
+                            expression: Box::new(eq_expr),
+                        }),
+                        _ => panic!("invalid pattern match in to_resolved_filter_expr: {op}"),
+                    }
+                }
+                other => {
+                    // TODO: this is a very crude lookup for operators, we ought
+                    // to be finding these based on NDC operator meanings
+                    // when those exist.
+                    let operator = comparison_operators
+                        .other_operators
+                        .iter()
+                        .find(|op| {
+                            op.as_str() == other
+                                || other
+                                    .strip_prefix("_")
+                                    .is_some_and(|other| op.as_str() == other)
+                        })
+                        .ok_or_else(|| {
+                            DataFusionError::Internal(format!(
+                                "no operator found matching name {other} for type: {type_name:?}"
+                            ))
+                        })?
+                        .clone();
+
+                    let expr = ResolvedFilterExpression::LocalFieldComparison(
+                        ir::LocalFieldComparison::BinaryComparison {
+                            column: ir::ComparisonTarget::Column {
+                                name: column_name,
+                                field_path,
+                            },
+                            operator,
+                            value,
+                        },
+                    );
+
+                    Ok(expr)
+                }
             }
         }
         _ => Err(DataFusionError::Internal(format!(

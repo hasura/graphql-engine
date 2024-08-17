@@ -183,7 +183,7 @@ fn validate_data_connector_with_comparable_relationship(
                         let source_field = &relationship_mapping.source_field.field_name;
                         let object_types::FieldMapping {
                             column: source_ndc_column,
-                            equal_operators,
+                            comparison_operators,
                             ..
                         } = field_mappings.get(source_field).ok_or_else(|| {
                             Error::TypePredicateError {
@@ -194,6 +194,11 @@ fn validate_data_connector_with_comparable_relationship(
                                 },
                             }
                         })?;
+
+                        let equal_operators = comparison_operators
+                            .clone()
+                            .map(|ops| ops.equality_operators)
+                            .unwrap_or_default();
 
                         if equal_operators.is_empty() {
                             return Err(Error::TypePredicateError {

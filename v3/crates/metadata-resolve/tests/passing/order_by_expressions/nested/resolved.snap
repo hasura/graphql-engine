@@ -1,5 +1,6 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+assertion_line: 33
 expression: resolved
 input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/metadata.json
 ---
@@ -80,7 +81,13 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                         column_type_representation: Some(
                                             String,
                                         ),
-                                        equal_operators: [],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
@@ -170,7 +177,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [],
+                                        comparison_operators: None,
                                         argument_mappings: {},
                                     },
                                 },
@@ -347,7 +354,13 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                             column_type_representation: Some(
                                                 String,
                                             ),
-                                            equal_operators: [],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [],
+                                                    in_operators: [],
+                                                    other_operators: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -380,7 +393,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [],
+                                            comparison_operators: None,
                                             argument_mappings: {},
                                         },
                                     },

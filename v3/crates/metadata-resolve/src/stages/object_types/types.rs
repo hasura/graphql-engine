@@ -158,8 +158,19 @@ pub struct FieldMapping {
     pub column: DataConnectorColumnName,
     pub column_type: ndc_models::Type,
     pub column_type_representation: Option<ndc_models::TypeRepresentation>,
-    pub equal_operators: Vec<DataConnectorOperatorName>,
+    pub comparison_operators: Option<ComparisonOperators>,
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
+}
+
+/// Mapping from a column to its type.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct ComparisonOperators {
+    pub equality_operators: Vec<DataConnectorOperatorName>,
+    pub in_operators: Vec<DataConnectorOperatorName>,
+
+    // TODO: for now, put other operators here. Later, once we have NDC
+    // operator meanings, categorize these by their meaning:
+    pub other_operators: Vec<DataConnectorOperatorName>,
 }
 
 /// Mapping from an object to their fields, which contain types.

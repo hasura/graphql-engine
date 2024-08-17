@@ -272,9 +272,13 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
                 let source_field = &relationship_mapping.source_field.field_name;
                 let FieldMapping {
                     column: source_column,
-                    equal_operators,
+                    comparison_operators,
                     ..
                 } = get_field_mapping_of_field_name(type_mappings, source_type, source_field)?;
+
+                let equal_operators = comparison_operators
+                    .map(|ops| ops.equality_operators)
+                    .unwrap_or_default();
 
                 let eq_operator = equal_operators.first().ok_or_else(|| {
                     error::InternalEngineError::InternalGeneric {

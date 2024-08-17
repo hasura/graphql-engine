@@ -5,6 +5,7 @@ pub use error::{ObjectTypesError, TypeMappingValidationError};
 use open_dds::identifier::SubgraphName;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
+use types::ComparisonOperators;
 
 use open_dds::commands::ArgumentMapping;
 use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
@@ -352,15 +353,20 @@ pub fn resolve_data_connector_type_mapping(
 
         let column_type_representation = scalar_type.and_then(|ty| ty.representation.clone());
 
-        let equal_operators = scalar_type
-            .map(|ty| get_comparison_operators(ty).equal_operators)
-            .unwrap_or_default();
+        let comparison_operators = scalar_type.map(|ty| {
+            let c = get_comparison_operators(ty);
+            ComparisonOperators {
+                equality_operators: c.equal_operators,
+                in_operators: c.in_operators,
+                other_operators: c.other_operators,
+            }
+        });
 
         let resolved_field_mapping = FieldMapping {
             column: resolved_field_mapping_column.into_owned(),
             column_type: source_column.r#type.clone(),
             column_type_representation,
-            equal_operators,
+            comparison_operators,
             argument_mappings: resolved_argument_mappings.0,
         };
 

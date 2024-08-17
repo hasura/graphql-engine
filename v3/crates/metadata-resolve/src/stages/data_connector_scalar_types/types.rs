@@ -34,4 +34,5 @@ pub struct ScalarTypeWithRepresentationInfoMap<'a>(
 pub struct ComparisonOperators {
     pub equal_operators: Vec<DataConnectorOperatorName>,
     pub in_operators: Vec<DataConnectorOperatorName>,
+    pub other_operators: Vec<DataConnectorOperatorName>,
 }

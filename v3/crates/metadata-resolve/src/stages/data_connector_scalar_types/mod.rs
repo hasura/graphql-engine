@@ -174,7 +174,13 @@ pub(crate) fn get_comparison_operators(
                         operator_name.inner().clone(),
                     ));
             }
-            ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {}
+            ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {
+                comparison_operators
+                    .other_operators
+                    .push(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+            }
         };
     }
     comparison_operators

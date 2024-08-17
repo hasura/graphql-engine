@@ -58,11 +58,12 @@ pub(crate) fn pushdown_filter(
     match expr {
         Expr::BinaryExpr(BinaryExpr { left, op, right }) => {
             match op {
-                Operator::Eq | Operator::NotEq => {
-                    // | Operator::Lt
-                    // | Operator::LtEq
-                    // | Operator::Gt
-                    // | Operator::GtEq
+                Operator::Eq
+                | Operator::NotEq
+                | Operator::Lt
+                | Operator::LtEq
+                | Operator::Gt
+                | Operator::GtEq => {
                     let Some((path, column)) = super::common::try_into_column(left.as_ref())?
                     else {
                         return Err(datafusion::error::DataFusionError::Internal(format!(
@@ -86,6 +87,10 @@ pub(crate) fn pushdown_filter(
                     let operator = match op {
                         Operator::Eq => OperatorName::from("_eq"),
                         Operator::NotEq => OperatorName::from("_neq"),
+                        Operator::Gt => OperatorName::from("_gt"),
+                        Operator::GtEq => OperatorName::from("_gte"),
+                        Operator::Lt => OperatorName::from("_lt"),
+                        Operator::LtEq => OperatorName::from("_lte"),
                         _ => panic!("operator not handled in pushdown_filter"),
                     };
 
