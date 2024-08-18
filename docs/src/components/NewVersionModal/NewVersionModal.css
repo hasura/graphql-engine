@@ -60,9 +60,6 @@
     margin-bottom: 0.3rem;
 }
 
-.subhead {
-
-}
 
 .body-text {
 font-size: .95rem;
@@ -84,4 +81,16 @@ font-size: .95rem;
     color: white;
     font-weight: bold;
     text-decoration: none;
+}
+
+html[data-theme='dark'] {
+    .headline {
+        color: #141c22;
+    }
+    .subhead {
+        color: #141c22;
+    }
+    .body-text {
+        color: #141c22;
+    }
 }
