@@ -59,62 +59,78 @@ pub(crate) struct Model {
     pub data_type: Qualified<CustomTypeName>,
 }
 
+pub(super) fn object_type_table_schema(
+    metadata: &resolved::Metadata,
+    object_type: &Qualified<CustomTypeName>,
+    // TODO: get rid of this option
+    type_mappings: Option<&BTreeMap<Qualified<CustomTypeName>, TypeMapping>>,
+) -> (
+    // datafusion's table schema
+    datafusion::SchemaRef,
+    // description of the fields
+    IndexMap<String, Option<String>>,
+) {
+    let object_type_fields = metadata
+        .object_types
+        .get(object_type)
+        .map(|ty| &ty.object_type.fields);
+    let mut columns = IndexMap::new();
+    let mut builder = datafusion::SchemaBuilder::new();
+    let type_mapping = type_mappings.and_then(|type_mappings| type_mappings.get(object_type));
+    for (field_name, field_definition) in object_type_fields.into_iter().flatten() {
+        let type_representation = type_mapping.and_then(|type_mapping| {
+            let resolved::TypeMapping::Object { field_mappings, .. } = type_mapping;
+            field_mappings
+                .get(field_name)?
+                .column_type_representation
+                .as_ref()
+        });
+        let field_type = to_arrow_type(
+            metadata,
+            &field_definition.field_type.underlying_type,
+            type_mappings,
+            type_representation,
+        );
+        if let Some(field_type) = field_type {
+            builder.push(datafusion::Field::new(
+                field_name.to_string(),
+                field_type,
+                field_definition.field_type.nullable,
+            ));
+
+            let description = if let Some(ndc_models::TypeRepresentation::Enum { one_of }) =
+                type_representation
+            {
+                // TODO: Instead of stuffing the possible enum values in description,
+                // surface them in the metadata tables.
+                Some(
+                    field_definition
+                        .description
+                        .clone()
+                        .unwrap_or_else(String::new)
+                        + &format!(" Possible values: {}", one_of.join(", ")),
+                )
+            } else {
+                field_definition.description.clone()
+            };
+            columns.insert(field_name.to_string(), description);
+        }
+    }
+    let fields = builder.finish().fields;
+    (
+        datafusion::SchemaRef::new(datafusion::Schema::new(fields)),
+        columns,
+    )
+}
+
 impl Model {
     pub fn from_resolved_model(
         metadata: &resolved::Metadata,
         model: &resolved::ModelWithPermissions,
     ) -> Self {
         let (schema, columns) = {
-            let mut columns = IndexMap::new();
-            let mut builder = datafusion::SchemaBuilder::new();
-
             let type_mappings = model.model.source.as_ref().map(|o| &o.type_mappings);
-            let type_mapping =
-                type_mappings.and_then(|type_mappings| type_mappings.get(&model.model.data_type));
-            for (field_name, field_definition) in &model.model.type_fields {
-                let type_representation = type_mapping.and_then(|type_mapping| {
-                    let resolved::TypeMapping::Object { field_mappings, .. } = type_mapping;
-                    field_mappings
-                        .get(field_name)?
-                        .column_type_representation
-                        .as_ref()
-                });
-                let field_type = to_arrow_type(
-                    metadata,
-                    &field_definition.field_type.underlying_type,
-                    type_mappings,
-                    type_representation,
-                );
-                if let Some(field_type) = field_type {
-                    builder.push(datafusion::Field::new(
-                        field_name.to_string(),
-                        field_type,
-                        field_definition.field_type.nullable,
-                    ));
-
-                    let description = if let Some(ndc_models::TypeRepresentation::Enum { one_of }) =
-                        type_representation
-                    {
-                        // TODO: Instead of stuffing the possible enum values in description,
-                        // surface them in the metadata tables.
-                        Some(
-                            field_definition
-                                .description
-                                .clone()
-                                .unwrap_or_else(String::new)
-                                + &format!(" Possible values: {}", one_of.join(", ")),
-                        )
-                    } else {
-                        field_definition.description.clone()
-                    };
-                    columns.insert(field_name.to_string(), description);
-                }
-            }
-            let fields = builder.finish().fields;
-            (
-                datafusion::SchemaRef::new(datafusion::Schema::new(fields)),
-                columns,
-            )
+            object_type_table_schema(metadata, &model.model.data_type, type_mappings)
         };
 
         Model {

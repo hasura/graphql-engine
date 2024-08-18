@@ -3,6 +3,7 @@ use std::{any::Any, sync::Arc};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
+use model::WithSession;
 use serde::{Deserialize, Serialize};
 
 use crate::execute::optimizer;
@@ -16,6 +17,7 @@ mod datafusion {
     };
 }
 
+pub mod command;
 pub mod introspection;
 pub mod mem_table;
 pub mod model;
@@ -26,6 +28,7 @@ pub mod subgraph;
 pub struct Catalog {
     pub(crate) metadata: Arc<resolved::Metadata>,
     pub(crate) subgraphs: IndexMap<String, Arc<subgraph::Subgraph>>,
+    pub(crate) table_valued_functions: IndexMap<String, Arc<command::Command>>,
     pub(crate) introspection: Arc<introspection::IntrospectionSchemaProvider>,
     pub(crate) default_schema: Option<String>,
 }
@@ -33,6 +36,7 @@ pub struct Catalog {
 impl Catalog {
     /// Derive a SQL Context from resolved Open DDS metadata.
     pub fn from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
+        // process models
         let mut subgraphs = IndexMap::new();
         for (model_name, model) in &metadata.models {
             let schema_name = &model_name.subgraph;
@@ -50,21 +54,43 @@ impl Catalog {
             );
         }
 
-        let introspection = introspection::IntrospectionSchemaProvider::new(
-            &introspection::Introspection::from_metadata(&metadata, &subgraphs),
-        );
-
+        // derive default schema
         let default_schema = if subgraphs.len() == 1 {
             subgraphs.get_index(0).map(|v| v.0.clone())
         } else {
             None
         };
+
+        // process commands
+        let mut table_valued_functions = IndexMap::new();
+        for (command_name, command) in &metadata.commands {
+            if let Some(command) = command::Command::from_resolved_command(&metadata, command) {
+                let schema_name = command_name.subgraph.to_string();
+                let command_name = &command_name.name;
+                let table_valued_function_name = if Some(&schema_name) == default_schema.as_ref() {
+                    format!("{command_name}")
+                } else {
+                    format!("{schema_name}_{command_name}")
+                };
+                table_valued_functions.insert(table_valued_function_name, Arc::new(command));
+            }
+        }
+
+        let introspection = introspection::IntrospectionSchemaProvider::new(
+            &introspection::Introspection::from_metadata(
+                &metadata,
+                &subgraphs,
+                &table_valued_functions,
+            ),
+        );
+
         Catalog {
             metadata,
             subgraphs: subgraphs
                 .into_iter()
                 .map(|(k, v)| (k, Arc::new(v)))
                 .collect(),
+            table_valued_functions,
             introspection: Arc::new(introspection),
             default_schema,
         }
@@ -150,6 +176,13 @@ impl Catalog {
             )
             .build();
         let session_context = datafusion::SessionContext::new_with_state(session_state);
+        for (function_name, function) in &self.table_valued_functions {
+            let function_impl = WithSession {
+                session: session.clone(),
+                value: function.clone(),
+            };
+            session_context.register_udtf(function_name, Arc::new(function_impl));
+        }
         session_context.register_catalog(
             "default",
             Arc::new(model::WithSession {

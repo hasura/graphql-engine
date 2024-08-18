@@ -301,7 +301,7 @@ fn make_comparison_value(comparison_value: ir::ComparisonValue) -> ndc_models_v0
     }
 }
 
-fn make_field(field: field::ResolvedField<'_>) -> Result<ndc_models_v02::Field, FieldError> {
+fn make_field(field: field::ResolvedField) -> Result<ndc_models_v02::Field, FieldError> {
     match field {
         field::ResolvedField::Column {
             column,

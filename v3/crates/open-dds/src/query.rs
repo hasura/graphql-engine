@@ -68,9 +68,9 @@ pub struct ModelAggregateSelection {
 /// Query executing a command and if applicable, selecting part of the output.
 pub struct CommandSelection {
     #[serde(flatten)]
-    target: CommandTarget,
+    pub target: CommandTarget,
     /// If the command result is an object type or an array of object types, what to select from that/those object(s).
-    selection: Option<IndexMap<Alias, ObjectSubSelection>>,
+    pub selection: Option<IndexMap<Alias, ObjectSubSelection>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

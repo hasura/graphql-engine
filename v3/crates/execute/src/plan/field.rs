@@ -10,7 +10,7 @@ use super::filter;
 use super::query;
 
 pub type UnresolvedField<'s> = Field<ir::Expression<'s>>;
-pub type ResolvedField<'s> = Field<filter::ResolvedFilterExpression>;
+pub type ResolvedField = Field<filter::ResolvedFilterExpression>;
 
 /// Field plan
 #[derive(Debug, Clone, PartialEq)]
@@ -38,7 +38,7 @@ impl<'s> UnresolvedField<'s> {
     pub async fn resolve(
         self,
         http_context: &'s HttpContext,
-    ) -> Result<ResolvedField<'s>, error::FieldError> {
+    ) -> Result<ResolvedField, error::FieldError> {
         match self {
             Field::Column {
                 column,

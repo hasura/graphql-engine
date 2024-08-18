@@ -37,6 +37,24 @@
   },
   {
     "table_catalog": "default",
+    "table_schema": "hasura",
+    "table_name": "table_valued_function",
+    "table_type": "VIEW"
+  },
+  {
+    "table_catalog": "default",
+    "table_schema": "hasura",
+    "table_name": "table_valued_function_field",
+    "table_type": "VIEW"
+  },
+  {
+    "table_catalog": "default",
+    "table_schema": "hasura",
+    "table_name": "table_valued_function_argument",
+    "table_type": "VIEW"
+  },
+  {
+    "table_catalog": "default",
     "table_schema": "information_schema",
     "table_name": "tables",
     "table_type": "VIEW"

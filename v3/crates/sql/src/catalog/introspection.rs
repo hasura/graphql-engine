@@ -8,6 +8,7 @@ use foreign_keys::{InferredForeignKeys, InferredForeignKeysRow, INFERRED_FOREIGN
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved, ModelRelationshipTarget};
 use table_metadata::{TableMetadata, TableMetadataRow, TABLE_METADATA};
+use table_valued_function::*;
 mod datafusion {
     pub(super) use datafusion::{
         catalog::SchemaProvider, datasource::TableProvider, error::Result,
@@ -21,6 +22,7 @@ use super::mem_table::MemTable;
 mod column_metadata;
 mod foreign_keys;
 mod table_metadata;
+mod table_valued_function;
 
 pub const HASURA_METADATA_SCHEMA: &str = "hasura";
 
@@ -30,6 +32,9 @@ pub(crate) struct Introspection {
     table_metadata: TableMetadata,
     column_metadata: ColumnMetadata,
     inferred_foreign_key_constraints: InferredForeignKeys,
+    functions: TableValuedFunction,
+    function_fields: TableValuedFunctionField,
+    function_arguments: TableValuedFunctionArgument,
 }
 
 impl Introspection {
@@ -37,6 +42,7 @@ impl Introspection {
     pub fn from_metadata(
         metadata: &resolved::Metadata,
         schemas: &IndexMap<String, crate::catalog::subgraph::Subgraph>,
+        functions: &IndexMap<String, Arc<super::command::Command>>,
     ) -> Self {
         let mut table_metadata_rows = Vec::new();
         let mut column_metadata_rows = Vec::new();
@@ -87,10 +93,43 @@ impl Introspection {
                 }
             }
         }
+        let mut function_rows = Vec::new();
+        let mut function_field_rows = Vec::new();
+        let mut function_argument_rows = Vec::new();
+        for (function_name, function) in functions {
+            function_rows.push(TableValuedFunctionRow::new(
+                function_name.clone(),
+                function.description.clone(),
+            ));
+            for field in function.schema.fields() {
+                function_field_rows.push(TableValuedFunctionFieldRow::new(
+                    function_name.clone(),
+                    field.name().clone(),
+                    field.data_type(),
+                    field.data_type().is_null(),
+                    function.columns.get(field.name()).cloned().flatten(),
+                ));
+            }
+
+            #[allow(clippy::cast_possible_wrap)]
+            for (position, (argument_name, argument)) in function.arguments.iter().enumerate() {
+                function_argument_rows.push(TableValuedFunctionArgumentRow::new(
+                    function_name.clone(),
+                    argument_name.to_string(),
+                    position as i64,
+                    &argument.argument_type,
+                    argument.is_nullable,
+                    argument.description.clone(),
+                ));
+            }
+        }
         Introspection {
             table_metadata: TableMetadata::new(table_metadata_rows),
             column_metadata: ColumnMetadata::new(column_metadata_rows),
             inferred_foreign_key_constraints: InferredForeignKeys::new(foreign_key_constraint_rows),
+            functions: TableValuedFunction::new(function_rows),
+            function_fields: TableValuedFunctionField::new(function_field_rows),
+            function_arguments: TableValuedFunctionArgument::new(function_argument_rows),
         }
     }
 }
@@ -116,6 +155,18 @@ impl IntrospectionSchemaProvider {
                 introspection
                     .inferred_foreign_key_constraints
                     .to_table_provider(),
+            ),
+            (
+                TABLE_VALUED_FUNCTION,
+                introspection.functions.to_table_provider(),
+            ),
+            (
+                TABLE_VALUED_FUNCTION_FIELD,
+                introspection.function_fields.to_table_provider(),
+            ),
+            (
+                TABLE_VALUED_FUNCTION_ARGUMENT,
+                introspection.function_arguments.to_table_provider(),
             ),
         ]
         .into_iter()
@@ -211,11 +262,44 @@ mod tests {
             "users".to_string(),
             "id".to_string(),
         )]);
+        let functions = TableValuedFunction::new(vec![TableValuedFunctionRow::new(
+            "get_user_posts".to_string(),
+            Some("Get posts for a specific user".to_string()),
+        )]);
 
+        let function_fields = TableValuedFunctionField::new(vec![
+            TableValuedFunctionFieldRow::new(
+                "get_user_posts".to_string(),
+                "post_id".to_string(),
+                &::datafusion::arrow::datatypes::DataType::Int32,
+                false,
+                Some("Post ID".to_string()),
+            ),
+            TableValuedFunctionFieldRow::new(
+                "get_user_posts".to_string(),
+                "title".to_string(),
+                &::datafusion::arrow::datatypes::DataType::Utf8,
+                false,
+                Some("Post title".to_string()),
+            ),
+        ]);
+
+        let function_arguments =
+            TableValuedFunctionArgument::new(vec![TableValuedFunctionArgumentRow::new(
+                "get_user_posts".to_string(),
+                "user_id".to_string(),
+                0,
+                &::datafusion::arrow::datatypes::DataType::Int32,
+                false,
+                Some("User ID".to_string()),
+            )]);
         Introspection {
             table_metadata,
             column_metadata,
             inferred_foreign_key_constraints: inferred_foreign_keys,
+            functions,
+            function_fields,
+            function_arguments,
         }
     }
 
@@ -289,6 +373,46 @@ mod tests {
 
         let sql =
             format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{INFERRED_FOREIGN_KEY_CONSTRAINTS}",);
+        let df = ctx.sql(&sql).await.unwrap();
+        let results = df.collect().await.unwrap();
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_rows(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_query_table_valued_function() {
+        let introspection = create_test_introspection();
+        let ctx = create_test_context(&introspection);
+
+        let sql = format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{TABLE_VALUED_FUNCTION}");
+        let df = ctx.sql(&sql).await.unwrap();
+        let results = df.collect().await.unwrap();
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_rows(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_query_table_valued_function_field() {
+        let introspection = create_test_introspection();
+        let ctx = create_test_context(&introspection);
+
+        let sql = format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{TABLE_VALUED_FUNCTION_FIELD}");
+        let df = ctx.sql(&sql).await.unwrap();
+        let results = df.collect().await.unwrap();
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].num_rows(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_query_table_valued_function_argument() {
+        let introspection = create_test_introspection();
+        let ctx = create_test_context(&introspection);
+
+        let sql =
+            format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{TABLE_VALUED_FUNCTION_ARGUMENT}");
         let df = ctx.sql(&sql).await.unwrap();
         let results = df.collect().await.unwrap();
 

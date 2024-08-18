@@ -27,9 +27,6 @@ pub use stages::boolean_expressions::{
     BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,
     IncludeLogicalOperators, ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
 };
-pub use stages::command_permissions::CommandWithPermissions;
-pub use stages::commands::Command;
-pub use stages::data_connectors;
 pub use stages::data_connectors::DataConnectorLink;
 pub use stages::model_permissions::{
     ArgumentPresets, FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
@@ -37,6 +34,11 @@ pub use stages::model_permissions::{
 };
 pub use stages::models::{Model, ModelSource, ModelsError};
 pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;
+pub use stages::{
+    command_permissions::CommandWithPermissions,
+    commands::{Command, CommandSource},
+    data_connectors,
+};
 pub use types::warning::Warning;
 
 pub use stages::models_graphql::{
