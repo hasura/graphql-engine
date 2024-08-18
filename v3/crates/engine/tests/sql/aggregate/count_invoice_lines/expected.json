@@ -1,0 +1,1650 @@
+[
+  {
+    "invoiceId": 1,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 2,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 3,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 4,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 5,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 6,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 7,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 8,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 9,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 10,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 11,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 12,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 13,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 14,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 15,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 16,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 17,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 18,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 19,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 20,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 21,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 22,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 23,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 24,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 25,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 26,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 27,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 28,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 29,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 30,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 31,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 32,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 33,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 34,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 35,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 36,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 37,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 38,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 39,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 40,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 41,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 42,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 43,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 44,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 45,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 46,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 47,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 48,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 49,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 50,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 51,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 52,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 53,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 54,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 55,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 56,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 57,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 58,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 59,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 60,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 61,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 62,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 63,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 64,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 65,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 66,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 67,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 68,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 69,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 70,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 71,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 72,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 73,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 74,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 75,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 76,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 77,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 78,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 79,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 80,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 81,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 82,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 83,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 84,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 85,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 86,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 87,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 88,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 89,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 90,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 91,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 92,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 93,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 94,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 95,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 96,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 97,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 98,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 99,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 100,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 101,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 102,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 103,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 104,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 105,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 106,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 107,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 108,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 109,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 110,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 111,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 112,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 113,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 114,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 115,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 116,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 117,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 118,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 119,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 120,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 121,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 122,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 123,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 124,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 125,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 126,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 127,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 128,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 129,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 130,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 131,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 132,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 133,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 134,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 135,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 136,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 137,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 138,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 139,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 140,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 141,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 142,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 143,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 144,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 145,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 146,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 147,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 148,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 149,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 150,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 151,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 152,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 153,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 154,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 155,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 156,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 157,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 158,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 159,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 160,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 161,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 162,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 163,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 164,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 165,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 166,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 167,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 168,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 169,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 170,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 171,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 172,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 173,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 174,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 175,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 176,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 177,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 178,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 179,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 180,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 181,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 182,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 183,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 184,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 185,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 186,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 187,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 188,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 189,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 190,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 191,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 192,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 193,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 194,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 195,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 196,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 197,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 198,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 199,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 200,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 201,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 202,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 203,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 204,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 205,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 206,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 207,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 208,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 209,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 210,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 211,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 212,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 213,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 214,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 215,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 216,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 217,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 218,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 219,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 220,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 221,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 222,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 223,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 224,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 225,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 226,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 227,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 228,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 229,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 230,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 231,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 232,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 233,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 234,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 235,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 236,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 237,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 238,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 239,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 240,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 241,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 242,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 243,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 244,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 245,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 246,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 247,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 248,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 249,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 250,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 251,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 252,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 253,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 254,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 255,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 256,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 257,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 258,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 259,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 260,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 261,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 262,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 263,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 264,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 265,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 266,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 267,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 268,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 269,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 270,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 271,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 272,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 273,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 274,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 275,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 276,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 277,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 278,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 279,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 280,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 281,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 282,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 283,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 284,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 285,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 286,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 287,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 288,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 289,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 290,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 291,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 292,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 293,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 294,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 295,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 296,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 297,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 298,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 299,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 300,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 301,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 302,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 303,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 304,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 305,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 306,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 307,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 308,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 309,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 310,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 311,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 312,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 313,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 314,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 315,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 316,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 317,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 318,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 319,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 320,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 321,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 322,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 323,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 324,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 325,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 326,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 327,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 328,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 329,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 330,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 331,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 332,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 333,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 334,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 335,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 336,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 337,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 338,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 339,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 340,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 341,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 342,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 343,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 344,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 345,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 346,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 347,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 348,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 349,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 350,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 351,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 352,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 353,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 354,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 355,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 356,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 357,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 358,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 359,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 360,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 361,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 362,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 363,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 364,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 365,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 366,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 367,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 368,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 369,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 370,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 371,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 372,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 373,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 374,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 375,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 376,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 377,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 378,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 379,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 380,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 381,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 382,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 383,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 384,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 385,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 386,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 387,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 388,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 389,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 390,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 391,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 392,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 393,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 394,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 395,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 396,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 397,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 398,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 399,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 400,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 401,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 402,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 403,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 404,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 405,
+    "count(*)": 1
+  },
+  {
+    "invoiceId": 406,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 407,
+    "count(*)": 2
+  },
+  {
+    "invoiceId": 408,
+    "count(*)": 4
+  },
+  {
+    "invoiceId": 409,
+    "count(*)": 6
+  },
+  {
+    "invoiceId": 410,
+    "count(*)": 9
+  },
+  {
+    "invoiceId": 411,
+    "count(*)": 14
+  },
+  {
+    "invoiceId": 412,
+    "count(*)": 1
+  }
+]

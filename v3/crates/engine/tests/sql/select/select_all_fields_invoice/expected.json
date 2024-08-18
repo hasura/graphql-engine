@@ -5,7 +5,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "70174",
     "billingState": null,
+    "customerId": 2,
     "invoiceDate": "2009-01-01T00:00:00",
+    "invoiceId": 1,
     "total": 1
   },
   {
@@ -14,7 +16,9 @@
     "billingCountry": "Norway",
     "billingPostalCode": "0171",
     "billingState": null,
+    "customerId": 4,
     "invoiceDate": "2009-01-02T00:00:00",
+    "invoiceId": 2,
     "total": 3
   },
   {
@@ -23,7 +27,9 @@
     "billingCountry": "Belgium",
     "billingPostalCode": "1000",
     "billingState": null,
+    "customerId": 8,
     "invoiceDate": "2009-01-03T00:00:00",
+    "invoiceId": 3,
     "total": 5
   },
   {
@@ -32,7 +38,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "T6G 2C7",
     "billingState": "AB",
+    "customerId": 14,
     "invoiceDate": "2009-01-06T00:00:00",
+    "invoiceId": 4,
     "total": 8
   },
   {
@@ -41,7 +49,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "2113",
     "billingState": "MA",
+    "customerId": 23,
     "invoiceDate": "2009-01-11T00:00:00",
+    "invoiceId": 5,
     "total": 13
   },
   {
@@ -50,7 +60,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "60316",
     "billingState": null,
+    "customerId": 37,
     "invoiceDate": "2009-01-19T00:00:00",
+    "invoiceId": 6,
     "total": 0
   },
   {
@@ -59,7 +71,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10779",
     "billingState": null,
+    "customerId": 38,
     "invoiceDate": "2009-02-01T00:00:00",
+    "invoiceId": 7,
     "total": 1
   },
   {
@@ -68,7 +82,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75002",
     "billingState": null,
+    "customerId": 40,
     "invoiceDate": "2009-02-01T00:00:00",
+    "invoiceId": 8,
     "total": 1
   },
   {
@@ -77,7 +93,9 @@
     "billingCountry": "France",
     "billingPostalCode": "33000",
     "billingState": null,
+    "customerId": 42,
     "invoiceDate": "2009-02-02T00:00:00",
+    "invoiceId": 9,
     "total": 3
   },
   {
@@ -86,7 +104,9 @@
     "billingCountry": "Ireland",
     "billingPostalCode": null,
     "billingState": "Dublin",
+    "customerId": 46,
     "invoiceDate": "2009-02-03T00:00:00",
+    "invoiceId": 10,
     "total": 5
   },
   {
@@ -95,7 +115,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "N1 5LH",
     "billingState": null,
+    "customerId": 52,
     "invoiceDate": "2009-02-06T00:00:00",
+    "invoiceId": 11,
     "total": 8
   },
   {
@@ -104,7 +126,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "70174",
     "billingState": null,
+    "customerId": 2,
     "invoiceDate": "2009-02-11T00:00:00",
+    "invoiceId": 12,
     "total": 13
   },
   {
@@ -113,7 +137,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94043-1351",
     "billingState": "CA",
+    "customerId": 16,
     "invoiceDate": "2009-02-19T00:00:00",
+    "invoiceId": 13,
     "total": 0
   },
   {
@@ -122,7 +148,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "98052-8300",
     "billingState": "WA",
+    "customerId": 17,
     "invoiceDate": "2009-03-04T00:00:00",
+    "invoiceId": 14,
     "total": 1
   },
   {
@@ -131,7 +159,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "95014",
     "billingState": "CA",
+    "customerId": 19,
     "invoiceDate": "2009-03-04T00:00:00",
+    "invoiceId": 15,
     "total": 1
   },
   {
@@ -140,7 +170,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "89503",
     "billingState": "NV",
+    "customerId": 21,
     "invoiceDate": "2009-03-05T00:00:00",
+    "invoiceId": 16,
     "total": 3
   },
   {
@@ -149,7 +181,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "53703",
     "billingState": "WI",
+    "customerId": 25,
     "invoiceDate": "2009-03-06T00:00:00",
+    "invoiceId": 17,
     "total": 5
   },
   {
@@ -158,7 +192,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "B3S 1C5",
     "billingState": "NS",
+    "customerId": 31,
     "invoiceDate": "2009-03-09T00:00:00",
+    "invoiceId": 18,
     "total": 8
   },
   {
@@ -167,7 +203,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75002",
     "billingState": null,
+    "customerId": 40,
     "invoiceDate": "2009-03-14T00:00:00",
+    "invoiceId": 19,
     "total": 13
   },
   {
@@ -176,7 +214,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "EH4 1HH",
     "billingState": null,
+    "customerId": 54,
     "invoiceDate": "2009-03-22T00:00:00",
+    "invoiceId": 20,
     "total": 0
   },
   {
@@ -185,7 +225,9 @@
     "billingCountry": "Australia",
     "billingPostalCode": "2010",
     "billingState": "NSW",
+    "customerId": 55,
     "invoiceDate": "2009-04-04T00:00:00",
+    "invoiceId": 21,
     "total": 1
   },
   {
@@ -194,7 +236,9 @@
     "billingCountry": "Chile",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 57,
     "invoiceDate": "2009-04-04T00:00:00",
+    "invoiceId": 22,
     "total": 1
   },
   {
@@ -203,7 +247,9 @@
     "billingCountry": "India",
     "billingPostalCode": "560001",
     "billingState": null,
+    "customerId": 59,
     "invoiceDate": "2009-04-05T00:00:00",
+    "invoiceId": 23,
     "total": 3
   },
   {
@@ -212,7 +258,9 @@
     "billingCountry": "Norway",
     "billingPostalCode": "0171",
     "billingState": null,
+    "customerId": 4,
     "invoiceDate": "2009-04-06T00:00:00",
+    "invoiceId": 24,
     "total": 5
   },
   {
@@ -221,7 +269,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01007-010",
     "billingState": "SP",
+    "customerId": 10,
     "invoiceDate": "2009-04-09T00:00:00",
+    "invoiceId": 25,
     "total": 8
   },
   {
@@ -230,7 +280,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "95014",
     "billingState": "CA",
+    "customerId": 19,
     "invoiceDate": "2009-04-14T00:00:00",
+    "invoiceId": 26,
     "total": 13
   },
   {
@@ -239,7 +291,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "X1A 1N6",
     "billingState": "NT",
+    "customerId": 33,
     "invoiceDate": "2009-04-22T00:00:00",
+    "invoiceId": 27,
     "total": 0
   },
   {
@@ -248,7 +302,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 34,
     "invoiceDate": "2009-05-05T00:00:00",
+    "invoiceId": 28,
     "total": 1
   },
   {
@@ -257,7 +313,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10789",
     "billingState": null,
+    "customerId": 36,
     "invoiceDate": "2009-05-05T00:00:00",
+    "invoiceId": 29,
     "total": 1
   },
   {
@@ -266,7 +324,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10779",
     "billingState": null,
+    "customerId": 38,
     "invoiceDate": "2009-05-06T00:00:00",
+    "invoiceId": 30,
     "total": 3
   },
   {
@@ -275,7 +335,9 @@
     "billingCountry": "France",
     "billingPostalCode": "33000",
     "billingState": null,
+    "customerId": 42,
     "invoiceDate": "2009-05-07T00:00:00",
+    "invoiceId": 31,
     "total": 5
   },
   {
@@ -284,7 +346,9 @@
     "billingCountry": "Netherlands",
     "billingPostalCode": "1016",
     "billingState": "VV",
+    "customerId": 48,
     "invoiceDate": "2009-05-10T00:00:00",
+    "invoiceId": 32,
     "total": 8
   },
   {
@@ -293,7 +357,9 @@
     "billingCountry": "Chile",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 57,
     "invoiceDate": "2009-05-15T00:00:00",
+    "invoiceId": 33,
     "total": 13
   },
   {
@@ -302,7 +368,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "20040-020",
     "billingState": "RJ",
+    "customerId": 12,
     "invoiceDate": "2009-05-23T00:00:00",
+    "invoiceId": 34,
     "total": 0
   },
   {
@@ -311,7 +379,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "71020-677",
     "billingState": "DF",
+    "customerId": 13,
     "invoiceDate": "2009-06-05T00:00:00",
+    "invoiceId": 35,
     "total": 1
   },
   {
@@ -320,7 +390,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "V6C 1G8",
     "billingState": "BC",
+    "customerId": 15,
     "invoiceDate": "2009-06-05T00:00:00",
+    "invoiceId": 36,
     "total": 1
   },
   {
@@ -329,7 +401,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "98052-8300",
     "billingState": "WA",
+    "customerId": 17,
     "invoiceDate": "2009-06-06T00:00:00",
+    "invoiceId": 37,
     "total": 3
   },
   {
@@ -338,7 +412,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "89503",
     "billingState": "NV",
+    "customerId": 21,
     "invoiceDate": "2009-06-07T00:00:00",
+    "invoiceId": 38,
     "total": 5
   },
   {
@@ -347,7 +423,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "85719",
     "billingState": "AZ",
+    "customerId": 27,
     "invoiceDate": "2009-06-10T00:00:00",
+    "invoiceId": 39,
     "total": 8
   },
   {
@@ -356,7 +434,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10789",
     "billingState": null,
+    "customerId": 36,
     "invoiceDate": "2009-06-15T00:00:00",
+    "invoiceId": 40,
     "total": 13
   },
   {
@@ -365,7 +445,9 @@
     "billingCountry": "Spain",
     "billingPostalCode": "28015",
     "billingState": null,
+    "customerId": 50,
     "invoiceDate": "2009-06-23T00:00:00",
+    "invoiceId": 41,
     "total": 0
   },
   {
@@ -374,7 +456,9 @@
     "billingCountry": "Sweden",
     "billingPostalCode": "11230",
     "billingState": null,
+    "customerId": 51,
     "invoiceDate": "2009-07-06T00:00:00",
+    "invoiceId": 42,
     "total": 1
   },
   {
@@ -383,7 +467,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "SW1V 3EE",
     "billingState": null,
+    "customerId": 53,
     "invoiceDate": "2009-07-06T00:00:00",
+    "invoiceId": 43,
     "total": 1
   },
   {
@@ -392,7 +478,9 @@
     "billingCountry": "Australia",
     "billingPostalCode": "2010",
     "billingState": "NSW",
+    "customerId": 55,
     "invoiceDate": "2009-07-07T00:00:00",
+    "invoiceId": 44,
     "total": 3
   },
   {
@@ -401,7 +489,9 @@
     "billingCountry": "India",
     "billingPostalCode": "560001",
     "billingState": null,
+    "customerId": 59,
     "invoiceDate": "2009-07-08T00:00:00",
+    "invoiceId": 45,
     "total": 5
   },
   {
@@ -410,7 +500,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14300",
     "billingState": null,
+    "customerId": 6,
     "invoiceDate": "2009-07-11T00:00:00",
+    "invoiceId": 46,
     "total": 8
   },
   {
@@ -419,7 +511,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "V6C 1G8",
     "billingState": "BC",
+    "customerId": 15,
     "invoiceDate": "2009-07-16T00:00:00",
+    "invoiceId": 47,
     "total": 13
   },
   {
@@ -428,7 +522,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "M6J 1V1",
     "billingState": "OE",
+    "customerId": 29,
     "invoiceDate": "2009-07-24T00:00:00",
+    "invoiceId": 48,
     "total": 0
   },
   {
@@ -437,7 +533,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "K2P 1L7",
     "billingState": "OE",
+    "customerId": 30,
     "invoiceDate": "2009-08-06T00:00:00",
+    "invoiceId": 49,
     "total": 1
   },
   {
@@ -446,7 +544,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "R3L 2B9",
     "billingState": "MB",
+    "customerId": 32,
     "invoiceDate": "2009-08-06T00:00:00",
+    "invoiceId": 50,
     "total": 1
   },
   {
@@ -455,7 +555,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 34,
     "invoiceDate": "2009-08-07T00:00:00",
+    "invoiceId": 51,
     "total": 3
   },
   {
@@ -464,7 +566,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10779",
     "billingState": null,
+    "customerId": 38,
     "invoiceDate": "2009-08-08T00:00:00",
+    "invoiceId": 52,
     "total": 5
   },
   {
@@ -473,7 +577,9 @@
     "billingCountry": "Finland",
     "billingPostalCode": "00530",
     "billingState": null,
+    "customerId": 44,
     "invoiceDate": "2009-08-11T00:00:00",
+    "invoiceId": 53,
     "total": 8
   },
   {
@@ -482,7 +588,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "SW1V 3EE",
     "billingState": null,
+    "customerId": 53,
     "invoiceDate": "2009-08-16T00:00:00",
+    "invoiceId": 54,
     "total": 13
   },
   {
@@ -491,7 +599,9 @@
     "billingCountry": "Belgium",
     "billingPostalCode": "1000",
     "billingState": null,
+    "customerId": 8,
     "invoiceDate": "2009-08-24T00:00:00",
+    "invoiceId": 55,
     "total": 0
   },
   {
@@ -500,7 +610,9 @@
     "billingCountry": "Denmark",
     "billingPostalCode": "1720",
     "billingState": null,
+    "customerId": 9,
     "invoiceDate": "2009-09-06T00:00:00",
+    "invoiceId": 56,
     "total": 1
   },
   {
@@ -509,7 +621,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01310-200",
     "billingState": "SP",
+    "customerId": 11,
     "invoiceDate": "2009-09-06T00:00:00",
+    "invoiceId": 57,
     "total": 1
   },
   {
@@ -518,7 +632,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "71020-677",
     "billingState": "DF",
+    "customerId": 13,
     "invoiceDate": "2009-09-07T00:00:00",
+    "invoiceId": 58,
     "total": 3
   },
   {
@@ -527,7 +643,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "98052-8300",
     "billingState": "WA",
+    "customerId": 17,
     "invoiceDate": "2009-09-08T00:00:00",
+    "invoiceId": 59,
     "total": 5
   },
   {
@@ -536,7 +654,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "2113",
     "billingState": "MA",
+    "customerId": 23,
     "invoiceDate": "2009-09-11T00:00:00",
+    "invoiceId": 60,
     "total": 8
   },
   {
@@ -545,7 +665,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "R3L 2B9",
     "billingState": "MB",
+    "customerId": 32,
     "invoiceDate": "2009-09-16T00:00:00",
+    "invoiceId": 61,
     "total": 13
   },
   {
@@ -554,7 +676,9 @@
     "billingCountry": "Ireland",
     "billingPostalCode": null,
     "billingState": "Dublin",
+    "customerId": 46,
     "invoiceDate": "2009-09-24T00:00:00",
+    "invoiceId": 62,
     "total": 0
   },
   {
@@ -563,7 +687,9 @@
     "billingCountry": "Italy",
     "billingPostalCode": "00192",
     "billingState": "RM",
+    "customerId": 47,
     "invoiceDate": "2009-10-07T00:00:00",
+    "invoiceId": 63,
     "total": 1
   },
   {
@@ -572,7 +698,9 @@
     "billingCountry": "Poland",
     "billingPostalCode": "00-358",
     "billingState": null,
+    "customerId": 49,
     "invoiceDate": "2009-10-07T00:00:00",
+    "invoiceId": 64,
     "total": 1
   },
   {
@@ -581,7 +709,9 @@
     "billingCountry": "Sweden",
     "billingPostalCode": "11230",
     "billingState": null,
+    "customerId": 51,
     "invoiceDate": "2009-10-08T00:00:00",
+    "invoiceId": 65,
     "total": 3
   },
   {
@@ -590,7 +720,9 @@
     "billingCountry": "Australia",
     "billingPostalCode": "2010",
     "billingState": "NSW",
+    "customerId": 55,
     "invoiceDate": "2009-10-09T00:00:00",
+    "invoiceId": 66,
     "total": 5
   },
   {
@@ -599,7 +731,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "70174",
     "billingState": null,
+    "customerId": 2,
     "invoiceDate": "2009-10-12T00:00:00",
+    "invoiceId": 67,
     "total": 8
   },
   {
@@ -608,7 +742,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01310-200",
     "billingState": "SP",
+    "customerId": 11,
     "invoiceDate": "2009-10-17T00:00:00",
+    "invoiceId": 68,
     "total": 13
   },
   {
@@ -617,7 +753,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "53703",
     "billingState": "WI",
+    "customerId": 25,
     "invoiceDate": "2009-10-25T00:00:00",
+    "invoiceId": 69,
     "total": 0
   },
   {
@@ -626,7 +764,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "76110",
     "billingState": "TX",
+    "customerId": 26,
     "invoiceDate": "2009-11-07T00:00:00",
+    "invoiceId": 70,
     "total": 1
   },
   {
@@ -635,7 +775,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "84102",
     "billingState": "UT",
+    "customerId": 28,
     "invoiceDate": "2009-11-07T00:00:00",
+    "invoiceId": 71,
     "total": 1
   },
   {
@@ -644,7 +786,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "K2P 1L7",
     "billingState": "OE",
+    "customerId": 30,
     "invoiceDate": "2009-11-08T00:00:00",
+    "invoiceId": 72,
     "total": 3
   },
   {
@@ -653,7 +797,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 34,
     "invoiceDate": "2009-11-09T00:00:00",
+    "invoiceId": 73,
     "total": 5
   },
   {
@@ -662,7 +808,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75002",
     "billingState": null,
+    "customerId": 40,
     "invoiceDate": "2009-11-12T00:00:00",
+    "invoiceId": 74,
     "total": 8
   },
   {
@@ -671,7 +819,9 @@
     "billingCountry": "Poland",
     "billingPostalCode": "00-358",
     "billingState": null,
+    "customerId": 49,
     "invoiceDate": "2009-11-17T00:00:00",
+    "invoiceId": 75,
     "total": 13
   },
   {
@@ -680,7 +830,9 @@
     "billingCountry": "Norway",
     "billingPostalCode": "0171",
     "billingState": null,
+    "customerId": 4,
     "invoiceDate": "2009-11-25T00:00:00",
+    "invoiceId": 76,
     "total": 0
   },
   {
@@ -689,7 +841,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14700",
     "billingState": null,
+    "customerId": 5,
     "invoiceDate": "2009-12-08T00:00:00",
+    "invoiceId": 77,
     "total": 1
   },
   {
@@ -698,7 +852,9 @@
     "billingCountry": "Austria",
     "billingPostalCode": "1010",
     "billingState": null,
+    "customerId": 7,
     "invoiceDate": "2009-12-08T00:00:00",
+    "invoiceId": 78,
     "total": 1
   },
   {
@@ -707,7 +863,9 @@
     "billingCountry": "Denmark",
     "billingPostalCode": "1720",
     "billingState": null,
+    "customerId": 9,
     "invoiceDate": "2009-12-09T00:00:00",
+    "invoiceId": 79,
     "total": 3
   },
   {
@@ -716,7 +874,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "71020-677",
     "billingState": "DF",
+    "customerId": 13,
     "invoiceDate": "2009-12-10T00:00:00",
+    "invoiceId": 80,
     "total": 5
   },
   {
@@ -725,7 +885,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "95014",
     "billingState": "CA",
+    "customerId": 19,
     "invoiceDate": "2009-12-13T00:00:00",
+    "invoiceId": 81,
     "total": 8
   },
   {
@@ -734,7 +896,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "84102",
     "billingState": "UT",
+    "customerId": 28,
     "invoiceDate": "2009-12-18T00:00:00",
+    "invoiceId": 82,
     "total": 13
   },
   {
@@ -743,7 +907,9 @@
     "billingCountry": "France",
     "billingPostalCode": "33000",
     "billingState": null,
+    "customerId": 42,
     "invoiceDate": "2009-12-26T00:00:00",
+    "invoiceId": 83,
     "total": 0
   },
   {
@@ -752,7 +918,9 @@
     "billingCountry": "France",
     "billingPostalCode": "21000",
     "billingState": null,
+    "customerId": 43,
     "invoiceDate": "2010-01-08T00:00:00",
+    "invoiceId": 84,
     "total": 1
   },
   {
@@ -761,7 +929,9 @@
     "billingCountry": "Hungary",
     "billingPostalCode": "H-1073",
     "billingState": null,
+    "customerId": 45,
     "invoiceDate": "2010-01-08T00:00:00",
+    "invoiceId": 85,
     "total": 1
   },
   {
@@ -770,7 +940,9 @@
     "billingCountry": "Italy",
     "billingPostalCode": "00192",
     "billingState": "RM",
+    "customerId": 47,
     "invoiceDate": "2010-01-09T00:00:00",
+    "invoiceId": 86,
     "total": 3
   },
   {
@@ -779,7 +951,9 @@
     "billingCountry": "Sweden",
     "billingPostalCode": "11230",
     "billingState": null,
+    "customerId": 51,
     "invoiceDate": "2010-01-10T00:00:00",
+    "invoiceId": 87,
     "total": 6
   },
   {
@@ -788,7 +962,9 @@
     "billingCountry": "Chile",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 57,
     "invoiceDate": "2010-01-13T00:00:00",
+    "invoiceId": 88,
     "total": 17
   },
   {
@@ -797,7 +973,9 @@
     "billingCountry": "Austria",
     "billingPostalCode": "1010",
     "billingState": null,
+    "customerId": 7,
     "invoiceDate": "2010-01-18T00:00:00",
+    "invoiceId": 89,
     "total": 18
   },
   {
@@ -806,7 +984,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "89503",
     "billingState": "NV",
+    "customerId": 21,
     "invoiceDate": "2010-01-26T00:00:00",
+    "invoiceId": 90,
     "total": 0
   },
   {
@@ -815,7 +995,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "32801",
     "billingState": "FL",
+    "customerId": 22,
     "invoiceDate": "2010-02-08T00:00:00",
+    "invoiceId": 91,
     "total": 1
   },
   {
@@ -824,7 +1006,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "60611",
     "billingState": "IL",
+    "customerId": 24,
     "invoiceDate": "2010-02-08T00:00:00",
+    "invoiceId": 92,
     "total": 1
   },
   {
@@ -833,7 +1017,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "76110",
     "billingState": "TX",
+    "customerId": 26,
     "invoiceDate": "2010-02-09T00:00:00",
+    "invoiceId": 93,
     "total": 3
   },
   {
@@ -842,7 +1028,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "K2P 1L7",
     "billingState": "OE",
+    "customerId": 30,
     "invoiceDate": "2010-02-10T00:00:00",
+    "invoiceId": 94,
     "total": 5
   },
   {
@@ -851,7 +1039,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10789",
     "billingState": null,
+    "customerId": 36,
     "invoiceDate": "2010-02-13T00:00:00",
+    "invoiceId": 95,
     "total": 8
   },
   {
@@ -860,7 +1050,9 @@
     "billingCountry": "Hungary",
     "billingPostalCode": "H-1073",
     "billingState": null,
+    "customerId": 45,
     "invoiceDate": "2010-02-18T00:00:00",
+    "invoiceId": 96,
     "total": 21
   },
   {
@@ -869,7 +1061,9 @@
     "billingCountry": "India",
     "billingPostalCode": "560001",
     "billingState": null,
+    "customerId": 59,
     "invoiceDate": "2010-02-26T00:00:00",
+    "invoiceId": 97,
     "total": 1
   },
   {
@@ -878,7 +1072,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "12227-000",
     "billingState": "SP",
+    "customerId": 1,
     "invoiceDate": "2010-03-11T00:00:00",
+    "invoiceId": 98,
     "total": 3
   },
   {
@@ -887,7 +1083,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "H2G 1A7",
     "billingState": "QC",
+    "customerId": 3,
     "invoiceDate": "2010-03-11T00:00:00",
+    "invoiceId": 99,
     "total": 3
   },
   {
@@ -896,7 +1094,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14700",
     "billingState": null,
+    "customerId": 5,
     "invoiceDate": "2010-03-12T00:00:00",
+    "invoiceId": 100,
     "total": 3
   },
   {
@@ -905,7 +1105,9 @@
     "billingCountry": "Denmark",
     "billingPostalCode": "1720",
     "billingState": null,
+    "customerId": 9,
     "invoiceDate": "2010-03-13T00:00:00",
+    "invoiceId": 101,
     "total": 5
   },
   {
@@ -914,7 +1116,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "V6C 1G8",
     "billingState": "BC",
+    "customerId": 15,
     "invoiceDate": "2010-03-16T00:00:00",
+    "invoiceId": 102,
     "total": 9
   },
   {
@@ -923,7 +1127,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "60611",
     "billingState": "IL",
+    "customerId": 24,
     "invoiceDate": "2010-03-21T00:00:00",
+    "invoiceId": 103,
     "total": 15
   },
   {
@@ -932,7 +1138,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10779",
     "billingState": null,
+    "customerId": 38,
     "invoiceDate": "2010-03-29T00:00:00",
+    "invoiceId": 104,
     "total": 0
   },
   {
@@ -941,7 +1149,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75009",
     "billingState": null,
+    "customerId": 39,
     "invoiceDate": "2010-04-11T00:00:00",
+    "invoiceId": 105,
     "total": 1
   },
   {
@@ -950,7 +1160,9 @@
     "billingCountry": "France",
     "billingPostalCode": "69002",
     "billingState": null,
+    "customerId": 41,
     "invoiceDate": "2010-04-11T00:00:00",
+    "invoiceId": 106,
     "total": 1
   },
   {
@@ -959,7 +1171,9 @@
     "billingCountry": "France",
     "billingPostalCode": "21000",
     "billingState": null,
+    "customerId": 43,
     "invoiceDate": "2010-04-12T00:00:00",
+    "invoiceId": 107,
     "total": 3
   },
   {
@@ -968,7 +1182,9 @@
     "billingCountry": "Italy",
     "billingPostalCode": "00192",
     "billingState": "RM",
+    "customerId": 47,
     "invoiceDate": "2010-04-13T00:00:00",
+    "invoiceId": 108,
     "total": 5
   },
   {
@@ -977,7 +1193,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "SW1V 3EE",
     "billingState": null,
+    "customerId": 53,
     "invoiceDate": "2010-04-16T00:00:00",
+    "invoiceId": 109,
     "total": 8
   },
   {
@@ -986,7 +1204,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "H2G 1A7",
     "billingState": "QC",
+    "customerId": 3,
     "invoiceDate": "2010-04-21T00:00:00",
+    "invoiceId": 110,
     "total": 13
   },
   {
@@ -995,7 +1215,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "98052-8300",
     "billingState": "WA",
+    "customerId": 17,
     "invoiceDate": "2010-04-29T00:00:00",
+    "invoiceId": 111,
     "total": 0
   },
   {
@@ -1004,7 +1226,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "10012-2612",
     "billingState": "NY",
+    "customerId": 18,
     "invoiceDate": "2010-05-12T00:00:00",
+    "invoiceId": 112,
     "total": 1
   },
   {
@@ -1013,7 +1237,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94040-111",
     "billingState": "CA",
+    "customerId": 20,
     "invoiceDate": "2010-05-12T00:00:00",
+    "invoiceId": 113,
     "total": 1
   },
   {
@@ -1022,7 +1248,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "32801",
     "billingState": "FL",
+    "customerId": 22,
     "invoiceDate": "2010-05-13T00:00:00",
+    "invoiceId": 114,
     "total": 3
   },
   {
@@ -1031,7 +1259,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "76110",
     "billingState": "TX",
+    "customerId": 26,
     "invoiceDate": "2010-05-14T00:00:00",
+    "invoiceId": 115,
     "total": 5
   },
   {
@@ -1040,7 +1270,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "R3L 2B9",
     "billingState": "MB",
+    "customerId": 32,
     "invoiceDate": "2010-05-17T00:00:00",
+    "invoiceId": 116,
     "total": 8
   },
   {
@@ -1049,7 +1281,9 @@
     "billingCountry": "France",
     "billingPostalCode": "69002",
     "billingState": null,
+    "customerId": 41,
     "invoiceDate": "2010-05-22T00:00:00",
+    "invoiceId": 117,
     "total": 13
   },
   {
@@ -1058,7 +1292,9 @@
     "billingCountry": "Australia",
     "billingPostalCode": "2010",
     "billingState": "NSW",
+    "customerId": 55,
     "invoiceDate": "2010-05-30T00:00:00",
+    "invoiceId": 118,
     "total": 0
   },
   {
@@ -1067,7 +1303,9 @@
     "billingCountry": "Argentina",
     "billingPostalCode": "1106",
     "billingState": null,
+    "customerId": 56,
     "invoiceDate": "2010-06-12T00:00:00",
+    "invoiceId": 119,
     "total": 1
   },
   {
@@ -1076,7 +1314,9 @@
     "billingCountry": "India",
     "billingPostalCode": "110017",
     "billingState": null,
+    "customerId": 58,
     "invoiceDate": "2010-06-12T00:00:00",
+    "invoiceId": 120,
     "total": 1
   },
   {
@@ -1085,7 +1325,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "12227-000",
     "billingState": "SP",
+    "customerId": 1,
     "invoiceDate": "2010-06-13T00:00:00",
+    "invoiceId": 121,
     "total": 3
   },
   {
@@ -1094,7 +1336,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14700",
     "billingState": null,
+    "customerId": 5,
     "invoiceDate": "2010-06-14T00:00:00",
+    "invoiceId": 122,
     "total": 5
   },
   {
@@ -1103,7 +1347,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01310-200",
     "billingState": "SP",
+    "customerId": 11,
     "invoiceDate": "2010-06-17T00:00:00",
+    "invoiceId": 123,
     "total": 8
   },
   {
@@ -1112,7 +1358,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94040-111",
     "billingState": "CA",
+    "customerId": 20,
     "invoiceDate": "2010-06-22T00:00:00",
+    "invoiceId": 124,
     "total": 13
   },
   {
@@ -1121,7 +1369,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 34,
     "invoiceDate": "2010-06-30T00:00:00",
+    "invoiceId": 125,
     "total": 0
   },
   {
@@ -1130,7 +1380,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 35,
     "invoiceDate": "2010-07-13T00:00:00",
+    "invoiceId": 126,
     "total": 1
   },
   {
@@ -1139,7 +1391,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "60316",
     "billingState": null,
+    "customerId": 37,
     "invoiceDate": "2010-07-13T00:00:00",
+    "invoiceId": 127,
     "total": 1
   },
   {
@@ -1148,7 +1402,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75009",
     "billingState": null,
+    "customerId": 39,
     "invoiceDate": "2010-07-14T00:00:00",
+    "invoiceId": 128,
     "total": 3
   },
   {
@@ -1157,7 +1413,9 @@
     "billingCountry": "France",
     "billingPostalCode": "21000",
     "billingState": null,
+    "customerId": 43,
     "invoiceDate": "2010-07-15T00:00:00",
+    "invoiceId": 129,
     "total": 5
   },
   {
@@ -1166,7 +1424,9 @@
     "billingCountry": "Poland",
     "billingPostalCode": "00-358",
     "billingState": null,
+    "customerId": 49,
     "invoiceDate": "2010-07-18T00:00:00",
+    "invoiceId": 130,
     "total": 8
   },
   {
@@ -1175,7 +1435,9 @@
     "billingCountry": "India",
     "billingPostalCode": "110017",
     "billingState": null,
+    "customerId": 58,
     "invoiceDate": "2010-07-23T00:00:00",
+    "invoiceId": 131,
     "total": 13
   },
   {
@@ -1184,7 +1446,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "71020-677",
     "billingState": "DF",
+    "customerId": 13,
     "invoiceDate": "2010-07-31T00:00:00",
+    "invoiceId": 132,
     "total": 0
   },
   {
@@ -1193,7 +1457,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "T6G 2C7",
     "billingState": "AB",
+    "customerId": 14,
     "invoiceDate": "2010-08-13T00:00:00",
+    "invoiceId": 133,
     "total": 1
   },
   {
@@ -1202,7 +1468,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94043-1351",
     "billingState": "CA",
+    "customerId": 16,
     "invoiceDate": "2010-08-13T00:00:00",
+    "invoiceId": 134,
     "total": 1
   },
   {
@@ -1211,7 +1479,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "10012-2612",
     "billingState": "NY",
+    "customerId": 18,
     "invoiceDate": "2010-08-14T00:00:00",
+    "invoiceId": 135,
     "total": 3
   },
   {
@@ -1220,7 +1490,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "32801",
     "billingState": "FL",
+    "customerId": 22,
     "invoiceDate": "2010-08-15T00:00:00",
+    "invoiceId": 136,
     "total": 5
   },
   {
@@ -1229,7 +1501,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "84102",
     "billingState": "UT",
+    "customerId": 28,
     "invoiceDate": "2010-08-18T00:00:00",
+    "invoiceId": 137,
     "total": 8
   },
   {
@@ -1238,7 +1512,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "60316",
     "billingState": null,
+    "customerId": 37,
     "invoiceDate": "2010-08-23T00:00:00",
+    "invoiceId": 138,
     "total": 13
   },
   {
@@ -1247,7 +1523,9 @@
     "billingCountry": "Sweden",
     "billingPostalCode": "11230",
     "billingState": null,
+    "customerId": 51,
     "invoiceDate": "2010-08-31T00:00:00",
+    "invoiceId": 139,
     "total": 0
   },
   {
@@ -1256,7 +1534,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "N1 5LH",
     "billingState": null,
+    "customerId": 52,
     "invoiceDate": "2010-09-13T00:00:00",
+    "invoiceId": 140,
     "total": 1
   },
   {
@@ -1265,7 +1545,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "EH4 1HH",
     "billingState": null,
+    "customerId": 54,
     "invoiceDate": "2010-09-13T00:00:00",
+    "invoiceId": 141,
     "total": 1
   },
   {
@@ -1274,7 +1556,9 @@
     "billingCountry": "Argentina",
     "billingPostalCode": "1106",
     "billingState": null,
+    "customerId": 56,
     "invoiceDate": "2010-09-14T00:00:00",
+    "invoiceId": 142,
     "total": 3
   },
   {
@@ -1283,7 +1567,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "12227-000",
     "billingState": "SP",
+    "customerId": 1,
     "invoiceDate": "2010-09-15T00:00:00",
+    "invoiceId": 143,
     "total": 5
   },
   {
@@ -1292,7 +1578,9 @@
     "billingCountry": "Austria",
     "billingPostalCode": "1010",
     "billingState": null,
+    "customerId": 7,
     "invoiceDate": "2010-09-18T00:00:00",
+    "invoiceId": 144,
     "total": 8
   },
   {
@@ -1301,7 +1589,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94043-1351",
     "billingState": "CA",
+    "customerId": 16,
     "invoiceDate": "2010-09-23T00:00:00",
+    "invoiceId": 145,
     "total": 13
   },
   {
@@ -1310,7 +1600,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "K2P 1L7",
     "billingState": "OE",
+    "customerId": 30,
     "invoiceDate": "2010-10-01T00:00:00",
+    "invoiceId": 146,
     "total": 0
   },
   {
@@ -1319,7 +1611,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "B3S 1C5",
     "billingState": "NS",
+    "customerId": 31,
     "invoiceDate": "2010-10-14T00:00:00",
+    "invoiceId": 147,
     "total": 1
   },
   {
@@ -1328,7 +1622,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "X1A 1N6",
     "billingState": "NT",
+    "customerId": 33,
     "invoiceDate": "2010-10-14T00:00:00",
+    "invoiceId": 148,
     "total": 1
   },
   {
@@ -1337,7 +1633,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 35,
     "invoiceDate": "2010-10-15T00:00:00",
+    "invoiceId": 149,
     "total": 3
   },
   {
@@ -1346,7 +1644,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75009",
     "billingState": null,
+    "customerId": 39,
     "invoiceDate": "2010-10-16T00:00:00",
+    "invoiceId": 150,
     "total": 5
   },
   {
@@ -1355,7 +1655,9 @@
     "billingCountry": "Hungary",
     "billingPostalCode": "H-1073",
     "billingState": null,
+    "customerId": 45,
     "invoiceDate": "2010-10-19T00:00:00",
+    "invoiceId": 151,
     "total": 8
   },
   {
@@ -1364,7 +1666,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "EH4 1HH",
     "billingState": null,
+    "customerId": 54,
     "invoiceDate": "2010-10-24T00:00:00",
+    "invoiceId": 152,
     "total": 13
   },
   {
@@ -1373,7 +1677,9 @@
     "billingCountry": "Denmark",
     "billingPostalCode": "1720",
     "billingState": null,
+    "customerId": 9,
     "invoiceDate": "2010-11-01T00:00:00",
+    "invoiceId": 153,
     "total": 0
   },
   {
@@ -1382,7 +1688,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01007-010",
     "billingState": "SP",
+    "customerId": 10,
     "invoiceDate": "2010-11-14T00:00:00",
+    "invoiceId": 154,
     "total": 1
   },
   {
@@ -1391,7 +1699,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "20040-020",
     "billingState": "RJ",
+    "customerId": 12,
     "invoiceDate": "2010-11-14T00:00:00",
+    "invoiceId": 155,
     "total": 1
   },
   {
@@ -1400,7 +1710,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "T6G 2C7",
     "billingState": "AB",
+    "customerId": 14,
     "invoiceDate": "2010-11-15T00:00:00",
+    "invoiceId": 156,
     "total": 3
   },
   {
@@ -1409,7 +1721,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "10012-2612",
     "billingState": "NY",
+    "customerId": 18,
     "invoiceDate": "2010-11-16T00:00:00",
+    "invoiceId": 157,
     "total": 5
   },
   {
@@ -1418,7 +1732,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "60611",
     "billingState": "IL",
+    "customerId": 24,
     "invoiceDate": "2010-11-19T00:00:00",
+    "invoiceId": 158,
     "total": 8
   },
   {
@@ -1427,7 +1743,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "X1A 1N6",
     "billingState": "NT",
+    "customerId": 33,
     "invoiceDate": "2010-11-24T00:00:00",
+    "invoiceId": 159,
     "total": 13
   },
   {
@@ -1436,7 +1754,9 @@
     "billingCountry": "Italy",
     "billingPostalCode": "00192",
     "billingState": "RM",
+    "customerId": 47,
     "invoiceDate": "2010-12-02T00:00:00",
+    "invoiceId": 160,
     "total": 0
   },
   {
@@ -1445,7 +1765,9 @@
     "billingCountry": "Netherlands",
     "billingPostalCode": "1016",
     "billingState": "VV",
+    "customerId": 48,
     "invoiceDate": "2010-12-15T00:00:00",
+    "invoiceId": 161,
     "total": 1
   },
   {
@@ -1454,7 +1776,9 @@
     "billingCountry": "Spain",
     "billingPostalCode": "28015",
     "billingState": null,
+    "customerId": 50,
     "invoiceDate": "2010-12-15T00:00:00",
+    "invoiceId": 162,
     "total": 1
   },
   {
@@ -1463,7 +1787,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "N1 5LH",
     "billingState": null,
+    "customerId": 52,
     "invoiceDate": "2010-12-16T00:00:00",
+    "invoiceId": 163,
     "total": 3
   },
   {
@@ -1472,7 +1798,9 @@
     "billingCountry": "Argentina",
     "billingPostalCode": "1106",
     "billingState": null,
+    "customerId": 56,
     "invoiceDate": "2010-12-17T00:00:00",
+    "invoiceId": 164,
     "total": 5
   },
   {
@@ -1481,7 +1809,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "H2G 1A7",
     "billingState": "QC",
+    "customerId": 3,
     "invoiceDate": "2010-12-20T00:00:00",
+    "invoiceId": 165,
     "total": 8
   },
   {
@@ -1490,7 +1820,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "20040-020",
     "billingState": "RJ",
+    "customerId": 12,
     "invoiceDate": "2010-12-25T00:00:00",
+    "invoiceId": 166,
     "total": 13
   },
   {
@@ -1499,7 +1831,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "76110",
     "billingState": "TX",
+    "customerId": 26,
     "invoiceDate": "2011-01-02T00:00:00",
+    "invoiceId": 167,
     "total": 0
   },
   {
@@ -1508,7 +1842,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "85719",
     "billingState": "AZ",
+    "customerId": 27,
     "invoiceDate": "2011-01-15T00:00:00",
+    "invoiceId": 168,
     "total": 1
   },
   {
@@ -1517,7 +1853,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "M6J 1V1",
     "billingState": "OE",
+    "customerId": 29,
     "invoiceDate": "2011-01-15T00:00:00",
+    "invoiceId": 169,
     "total": 1
   },
   {
@@ -1526,7 +1864,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "B3S 1C5",
     "billingState": "NS",
+    "customerId": 31,
     "invoiceDate": "2011-01-16T00:00:00",
+    "invoiceId": 170,
     "total": 3
   },
   {
@@ -1535,7 +1875,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 35,
     "invoiceDate": "2011-01-17T00:00:00",
+    "invoiceId": 171,
     "total": 5
   },
   {
@@ -1544,7 +1886,9 @@
     "billingCountry": "France",
     "billingPostalCode": "69002",
     "billingState": null,
+    "customerId": 41,
     "invoiceDate": "2011-01-20T00:00:00",
+    "invoiceId": 172,
     "total": 8
   },
   {
@@ -1553,7 +1897,9 @@
     "billingCountry": "Spain",
     "billingPostalCode": "28015",
     "billingState": null,
+    "customerId": 50,
     "invoiceDate": "2011-01-25T00:00:00",
+    "invoiceId": 173,
     "total": 13
   },
   {
@@ -1562,7 +1908,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14700",
     "billingState": null,
+    "customerId": 5,
     "invoiceDate": "2011-02-02T00:00:00",
+    "invoiceId": 174,
     "total": 0
   },
   {
@@ -1571,7 +1919,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14300",
     "billingState": null,
+    "customerId": 6,
     "invoiceDate": "2011-02-15T00:00:00",
+    "invoiceId": 175,
     "total": 1
   },
   {
@@ -1580,7 +1930,9 @@
     "billingCountry": "Belgium",
     "billingPostalCode": "1000",
     "billingState": null,
+    "customerId": 8,
     "invoiceDate": "2011-02-15T00:00:00",
+    "invoiceId": 176,
     "total": 1
   },
   {
@@ -1589,7 +1941,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01007-010",
     "billingState": "SP",
+    "customerId": 10,
     "invoiceDate": "2011-02-16T00:00:00",
+    "invoiceId": 177,
     "total": 3
   },
   {
@@ -1598,7 +1952,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "T6G 2C7",
     "billingState": "AB",
+    "customerId": 14,
     "invoiceDate": "2011-02-17T00:00:00",
+    "invoiceId": 178,
     "total": 5
   },
   {
@@ -1607,7 +1963,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94040-111",
     "billingState": "CA",
+    "customerId": 20,
     "invoiceDate": "2011-02-20T00:00:00",
+    "invoiceId": 179,
     "total": 8
   },
   {
@@ -1616,7 +1974,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "M6J 1V1",
     "billingState": "OE",
+    "customerId": 29,
     "invoiceDate": "2011-02-25T00:00:00",
+    "invoiceId": 180,
     "total": 13
   },
   {
@@ -1625,7 +1985,9 @@
     "billingCountry": "France",
     "billingPostalCode": "21000",
     "billingState": null,
+    "customerId": 43,
     "invoiceDate": "2011-03-05T00:00:00",
+    "invoiceId": 181,
     "total": 0
   },
   {
@@ -1634,7 +1996,9 @@
     "billingCountry": "Finland",
     "billingPostalCode": "00530",
     "billingState": null,
+    "customerId": 44,
     "invoiceDate": "2011-03-18T00:00:00",
+    "invoiceId": 182,
     "total": 1
   },
   {
@@ -1643,7 +2007,9 @@
     "billingCountry": "Ireland",
     "billingPostalCode": null,
     "billingState": "Dublin",
+    "customerId": 46,
     "invoiceDate": "2011-03-18T00:00:00",
+    "invoiceId": 183,
     "total": 1
   },
   {
@@ -1652,7 +2018,9 @@
     "billingCountry": "Netherlands",
     "billingPostalCode": "1016",
     "billingState": "VV",
+    "customerId": 48,
     "invoiceDate": "2011-03-19T00:00:00",
+    "invoiceId": 184,
     "total": 3
   },
   {
@@ -1661,7 +2029,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "N1 5LH",
     "billingState": null,
+    "customerId": 52,
     "invoiceDate": "2011-03-20T00:00:00",
+    "invoiceId": 185,
     "total": 5
   },
   {
@@ -1670,7 +2040,9 @@
     "billingCountry": "India",
     "billingPostalCode": "110017",
     "billingState": null,
+    "customerId": 58,
     "invoiceDate": "2011-03-23T00:00:00",
+    "invoiceId": 186,
     "total": 8
   },
   {
@@ -1679,7 +2051,9 @@
     "billingCountry": "Belgium",
     "billingPostalCode": "1000",
     "billingState": null,
+    "customerId": 8,
     "invoiceDate": "2011-03-28T00:00:00",
+    "invoiceId": 187,
     "total": 13
   },
   {
@@ -1688,7 +2062,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "32801",
     "billingState": "FL",
+    "customerId": 22,
     "invoiceDate": "2011-04-05T00:00:00",
+    "invoiceId": 188,
     "total": 0
   },
   {
@@ -1697,7 +2073,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "2113",
     "billingState": "MA",
+    "customerId": 23,
     "invoiceDate": "2011-04-18T00:00:00",
+    "invoiceId": 189,
     "total": 1
   },
   {
@@ -1706,7 +2084,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "53703",
     "billingState": "WI",
+    "customerId": 25,
     "invoiceDate": "2011-04-18T00:00:00",
+    "invoiceId": 190,
     "total": 1
   },
   {
@@ -1715,7 +2095,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "85719",
     "billingState": "AZ",
+    "customerId": 27,
     "invoiceDate": "2011-04-19T00:00:00",
+    "invoiceId": 191,
     "total": 3
   },
   {
@@ -1724,7 +2106,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "B3S 1C5",
     "billingState": "NS",
+    "customerId": 31,
     "invoiceDate": "2011-04-20T00:00:00",
+    "invoiceId": 192,
     "total": 5
   },
   {
@@ -1733,7 +2117,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "60316",
     "billingState": null,
+    "customerId": 37,
     "invoiceDate": "2011-04-23T00:00:00",
+    "invoiceId": 193,
     "total": 14
   },
   {
@@ -1742,7 +2128,9 @@
     "billingCountry": "Ireland",
     "billingPostalCode": null,
     "billingState": "Dublin",
+    "customerId": 46,
     "invoiceDate": "2011-04-28T00:00:00",
+    "invoiceId": 194,
     "total": 21
   },
   {
@@ -1751,7 +2139,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "12227-000",
     "billingState": "SP",
+    "customerId": 1,
     "invoiceDate": "2011-05-06T00:00:00",
+    "invoiceId": 195,
     "total": 0
   },
   {
@@ -1760,7 +2150,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "70174",
     "billingState": null,
+    "customerId": 2,
     "invoiceDate": "2011-05-19T00:00:00",
+    "invoiceId": 196,
     "total": 1
   },
   {
@@ -1769,7 +2161,9 @@
     "billingCountry": "Norway",
     "billingPostalCode": "0171",
     "billingState": null,
+    "customerId": 4,
     "invoiceDate": "2011-05-19T00:00:00",
+    "invoiceId": 197,
     "total": 1
   },
   {
@@ -1778,7 +2172,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14300",
     "billingState": null,
+    "customerId": 6,
     "invoiceDate": "2011-05-20T00:00:00",
+    "invoiceId": 198,
     "total": 3
   },
   {
@@ -1787,7 +2183,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01007-010",
     "billingState": "SP",
+    "customerId": 10,
     "invoiceDate": "2011-05-21T00:00:00",
+    "invoiceId": 199,
     "total": 5
   },
   {
@@ -1796,7 +2194,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94043-1351",
     "billingState": "CA",
+    "customerId": 16,
     "invoiceDate": "2011-05-24T00:00:00",
+    "invoiceId": 200,
     "total": 8
   },
   {
@@ -1805,7 +2205,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "53703",
     "billingState": "WI",
+    "customerId": 25,
     "invoiceDate": "2011-05-29T00:00:00",
+    "invoiceId": 201,
     "total": 18
   },
   {
@@ -1814,7 +2216,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75009",
     "billingState": null,
+    "customerId": 39,
     "invoiceDate": "2011-06-06T00:00:00",
+    "invoiceId": 202,
     "total": 1
   },
   {
@@ -1823,7 +2227,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75002",
     "billingState": null,
+    "customerId": 40,
     "invoiceDate": "2011-06-19T00:00:00",
+    "invoiceId": 203,
     "total": 2
   },
   {
@@ -1832,7 +2238,9 @@
     "billingCountry": "France",
     "billingPostalCode": "33000",
     "billingState": null,
+    "customerId": 42,
     "invoiceDate": "2011-06-19T00:00:00",
+    "invoiceId": 204,
     "total": 3
   },
   {
@@ -1841,7 +2249,9 @@
     "billingCountry": "Finland",
     "billingPostalCode": "00530",
     "billingState": null,
+    "customerId": 44,
     "invoiceDate": "2011-06-20T00:00:00",
+    "invoiceId": 205,
     "total": 7
   },
   {
@@ -1850,7 +2260,9 @@
     "billingCountry": "Netherlands",
     "billingPostalCode": "1016",
     "billingState": "VV",
+    "customerId": 48,
     "invoiceDate": "2011-06-21T00:00:00",
+    "invoiceId": 206,
     "total": 8
   },
   {
@@ -1859,7 +2271,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "EH4 1HH",
     "billingState": null,
+    "customerId": 54,
     "invoiceDate": "2011-06-24T00:00:00",
+    "invoiceId": 207,
     "total": 8
   },
   {
@@ -1868,7 +2282,9 @@
     "billingCountry": "Norway",
     "billingPostalCode": "0171",
     "billingState": null,
+    "customerId": 4,
     "invoiceDate": "2011-06-29T00:00:00",
+    "invoiceId": 208,
     "total": 15
   },
   {
@@ -1877,7 +2293,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "10012-2612",
     "billingState": "NY",
+    "customerId": 18,
     "invoiceDate": "2011-07-07T00:00:00",
+    "invoiceId": 209,
     "total": 0
   },
   {
@@ -1886,7 +2304,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "95014",
     "billingState": "CA",
+    "customerId": 19,
     "invoiceDate": "2011-07-20T00:00:00",
+    "invoiceId": 210,
     "total": 1
   },
   {
@@ -1895,7 +2315,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "89503",
     "billingState": "NV",
+    "customerId": 21,
     "invoiceDate": "2011-07-20T00:00:00",
+    "invoiceId": 211,
     "total": 1
   },
   {
@@ -1904,7 +2326,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "2113",
     "billingState": "MA",
+    "customerId": 23,
     "invoiceDate": "2011-07-21T00:00:00",
+    "invoiceId": 212,
     "total": 3
   },
   {
@@ -1913,7 +2337,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "85719",
     "billingState": "AZ",
+    "customerId": 27,
     "invoiceDate": "2011-07-22T00:00:00",
+    "invoiceId": 213,
     "total": 5
   },
   {
@@ -1922,7 +2348,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "X1A 1N6",
     "billingState": "NT",
+    "customerId": 33,
     "invoiceDate": "2011-07-25T00:00:00",
+    "invoiceId": 214,
     "total": 8
   },
   {
@@ -1931,7 +2359,9 @@
     "billingCountry": "France",
     "billingPostalCode": "33000",
     "billingState": null,
+    "customerId": 42,
     "invoiceDate": "2011-07-30T00:00:00",
+    "invoiceId": 215,
     "total": 13
   },
   {
@@ -1940,7 +2370,9 @@
     "billingCountry": "Argentina",
     "billingPostalCode": "1106",
     "billingState": null,
+    "customerId": 56,
     "invoiceDate": "2011-08-07T00:00:00",
+    "invoiceId": 216,
     "total": 0
   },
   {
@@ -1949,7 +2381,9 @@
     "billingCountry": "Chile",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 57,
     "invoiceDate": "2011-08-20T00:00:00",
+    "invoiceId": 217,
     "total": 1
   },
   {
@@ -1958,7 +2392,9 @@
     "billingCountry": "India",
     "billingPostalCode": "560001",
     "billingState": null,
+    "customerId": 59,
     "invoiceDate": "2011-08-20T00:00:00",
+    "invoiceId": 218,
     "total": 1
   },
   {
@@ -1967,7 +2403,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "70174",
     "billingState": null,
+    "customerId": 2,
     "invoiceDate": "2011-08-21T00:00:00",
+    "invoiceId": 219,
     "total": 3
   },
   {
@@ -1976,7 +2414,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14300",
     "billingState": null,
+    "customerId": 6,
     "invoiceDate": "2011-08-22T00:00:00",
+    "invoiceId": 220,
     "total": 5
   },
   {
@@ -1985,7 +2425,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "20040-020",
     "billingState": "RJ",
+    "customerId": 12,
     "invoiceDate": "2011-08-25T00:00:00",
+    "invoiceId": 221,
     "total": 8
   },
   {
@@ -1994,7 +2436,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "89503",
     "billingState": "NV",
+    "customerId": 21,
     "invoiceDate": "2011-08-30T00:00:00",
+    "invoiceId": 222,
     "total": 13
   },
   {
@@ -2003,7 +2447,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 35,
     "invoiceDate": "2011-09-07T00:00:00",
+    "invoiceId": 223,
     "total": 0
   },
   {
@@ -2012,7 +2458,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10789",
     "billingState": null,
+    "customerId": 36,
     "invoiceDate": "2011-09-20T00:00:00",
+    "invoiceId": 224,
     "total": 1
   },
   {
@@ -2021,7 +2469,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10779",
     "billingState": null,
+    "customerId": 38,
     "invoiceDate": "2011-09-20T00:00:00",
+    "invoiceId": 225,
     "total": 1
   },
   {
@@ -2030,7 +2480,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75002",
     "billingState": null,
+    "customerId": 40,
     "invoiceDate": "2011-09-21T00:00:00",
+    "invoiceId": 226,
     "total": 3
   },
   {
@@ -2039,7 +2491,9 @@
     "billingCountry": "Finland",
     "billingPostalCode": "00530",
     "billingState": null,
+    "customerId": 44,
     "invoiceDate": "2011-09-22T00:00:00",
+    "invoiceId": 227,
     "total": 5
   },
   {
@@ -2048,7 +2502,9 @@
     "billingCountry": "Spain",
     "billingPostalCode": "28015",
     "billingState": null,
+    "customerId": 50,
     "invoiceDate": "2011-09-25T00:00:00",
+    "invoiceId": 228,
     "total": 8
   },
   {
@@ -2057,7 +2513,9 @@
     "billingCountry": "India",
     "billingPostalCode": "560001",
     "billingState": null,
+    "customerId": 59,
     "invoiceDate": "2011-09-30T00:00:00",
+    "invoiceId": 229,
     "total": 13
   },
   {
@@ -2066,7 +2524,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "T6G 2C7",
     "billingState": "AB",
+    "customerId": 14,
     "invoiceDate": "2011-10-08T00:00:00",
+    "invoiceId": 230,
     "total": 0
   },
   {
@@ -2075,7 +2535,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "V6C 1G8",
     "billingState": "BC",
+    "customerId": 15,
     "invoiceDate": "2011-10-21T00:00:00",
+    "invoiceId": 231,
     "total": 1
   },
   {
@@ -2084,7 +2546,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "98052-8300",
     "billingState": "WA",
+    "customerId": 17,
     "invoiceDate": "2011-10-21T00:00:00",
+    "invoiceId": 232,
     "total": 1
   },
   {
@@ -2093,7 +2557,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "95014",
     "billingState": "CA",
+    "customerId": 19,
     "invoiceDate": "2011-10-22T00:00:00",
+    "invoiceId": 233,
     "total": 3
   },
   {
@@ -2102,7 +2568,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "2113",
     "billingState": "MA",
+    "customerId": 23,
     "invoiceDate": "2011-10-23T00:00:00",
+    "invoiceId": 234,
     "total": 5
   },
   {
@@ -2111,7 +2579,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "M6J 1V1",
     "billingState": "OE",
+    "customerId": 29,
     "invoiceDate": "2011-10-26T00:00:00",
+    "invoiceId": 235,
     "total": 8
   },
   {
@@ -2120,7 +2590,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10779",
     "billingState": null,
+    "customerId": 38,
     "invoiceDate": "2011-10-31T00:00:00",
+    "invoiceId": 236,
     "total": 13
   },
   {
@@ -2129,7 +2601,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "N1 5LH",
     "billingState": null,
+    "customerId": 52,
     "invoiceDate": "2011-11-08T00:00:00",
+    "invoiceId": 237,
     "total": 0
   },
   {
@@ -2138,7 +2612,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "SW1V 3EE",
     "billingState": null,
+    "customerId": 53,
     "invoiceDate": "2011-11-21T00:00:00",
+    "invoiceId": 238,
     "total": 1
   },
   {
@@ -2147,7 +2623,9 @@
     "billingCountry": "Australia",
     "billingPostalCode": "2010",
     "billingState": "NSW",
+    "customerId": 55,
     "invoiceDate": "2011-11-21T00:00:00",
+    "invoiceId": 239,
     "total": 1
   },
   {
@@ -2156,7 +2634,9 @@
     "billingCountry": "Chile",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 57,
     "invoiceDate": "2011-11-22T00:00:00",
+    "invoiceId": 240,
     "total": 3
   },
   {
@@ -2165,7 +2645,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "70174",
     "billingState": null,
+    "customerId": 2,
     "invoiceDate": "2011-11-23T00:00:00",
+    "invoiceId": 241,
     "total": 5
   },
   {
@@ -2174,7 +2656,9 @@
     "billingCountry": "Belgium",
     "billingPostalCode": "1000",
     "billingState": null,
+    "customerId": 8,
     "invoiceDate": "2011-11-26T00:00:00",
+    "invoiceId": 242,
     "total": 8
   },
   {
@@ -2183,7 +2667,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "98052-8300",
     "billingState": "WA",
+    "customerId": 17,
     "invoiceDate": "2011-12-01T00:00:00",
+    "invoiceId": 243,
     "total": 13
   },
   {
@@ -2192,7 +2678,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "B3S 1C5",
     "billingState": "NS",
+    "customerId": 31,
     "invoiceDate": "2011-12-09T00:00:00",
+    "invoiceId": 244,
     "total": 0
   },
   {
@@ -2201,7 +2689,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "R3L 2B9",
     "billingState": "MB",
+    "customerId": 32,
     "invoiceDate": "2011-12-22T00:00:00",
+    "invoiceId": 245,
     "total": 1
   },
   {
@@ -2210,7 +2700,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 34,
     "invoiceDate": "2011-12-22T00:00:00",
+    "invoiceId": 246,
     "total": 1
   },
   {
@@ -2219,7 +2711,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10789",
     "billingState": null,
+    "customerId": 36,
     "invoiceDate": "2011-12-23T00:00:00",
+    "invoiceId": 247,
     "total": 3
   },
   {
@@ -2228,7 +2722,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75002",
     "billingState": null,
+    "customerId": 40,
     "invoiceDate": "2011-12-24T00:00:00",
+    "invoiceId": 248,
     "total": 5
   },
   {
@@ -2237,7 +2733,9 @@
     "billingCountry": "Ireland",
     "billingPostalCode": null,
     "billingState": "Dublin",
+    "customerId": 46,
     "invoiceDate": "2011-12-27T00:00:00",
+    "invoiceId": 249,
     "total": 8
   },
   {
@@ -2246,7 +2744,9 @@
     "billingCountry": "Australia",
     "billingPostalCode": "2010",
     "billingState": "NSW",
+    "customerId": 55,
     "invoiceDate": "2012-01-01T00:00:00",
+    "invoiceId": 250,
     "total": 13
   },
   {
@@ -2255,7 +2755,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01007-010",
     "billingState": "SP",
+    "customerId": 10,
     "invoiceDate": "2012-01-09T00:00:00",
+    "invoiceId": 251,
     "total": 0
   },
   {
@@ -2264,7 +2766,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01310-200",
     "billingState": "SP",
+    "customerId": 11,
     "invoiceDate": "2012-01-22T00:00:00",
+    "invoiceId": 252,
     "total": 1
   },
   {
@@ -2273,7 +2777,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "71020-677",
     "billingState": "DF",
+    "customerId": 13,
     "invoiceDate": "2012-01-22T00:00:00",
+    "invoiceId": 253,
     "total": 1
   },
   {
@@ -2282,7 +2788,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "V6C 1G8",
     "billingState": "BC",
+    "customerId": 15,
     "invoiceDate": "2012-01-23T00:00:00",
+    "invoiceId": 254,
     "total": 3
   },
   {
@@ -2291,7 +2799,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "95014",
     "billingState": "CA",
+    "customerId": 19,
     "invoiceDate": "2012-01-24T00:00:00",
+    "invoiceId": 255,
     "total": 5
   },
   {
@@ -2300,7 +2810,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "53703",
     "billingState": "WI",
+    "customerId": 25,
     "invoiceDate": "2012-01-27T00:00:00",
+    "invoiceId": 256,
     "total": 8
   },
   {
@@ -2309,7 +2821,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 34,
     "invoiceDate": "2012-02-01T00:00:00",
+    "invoiceId": 257,
     "total": 13
   },
   {
@@ -2318,7 +2832,9 @@
     "billingCountry": "Netherlands",
     "billingPostalCode": "1016",
     "billingState": "VV",
+    "customerId": 48,
     "invoiceDate": "2012-02-09T00:00:00",
+    "invoiceId": 258,
     "total": 0
   },
   {
@@ -2327,7 +2843,9 @@
     "billingCountry": "Poland",
     "billingPostalCode": "00-358",
     "billingState": null,
+    "customerId": 49,
     "invoiceDate": "2012-02-22T00:00:00",
+    "invoiceId": 259,
     "total": 1
   },
   {
@@ -2336,7 +2854,9 @@
     "billingCountry": "Sweden",
     "billingPostalCode": "11230",
     "billingState": null,
+    "customerId": 51,
     "invoiceDate": "2012-02-22T00:00:00",
+    "invoiceId": 260,
     "total": 1
   },
   {
@@ -2345,7 +2865,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "SW1V 3EE",
     "billingState": null,
+    "customerId": 53,
     "invoiceDate": "2012-02-23T00:00:00",
+    "invoiceId": 261,
     "total": 3
   },
   {
@@ -2354,7 +2876,9 @@
     "billingCountry": "Chile",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 57,
     "invoiceDate": "2012-02-24T00:00:00",
+    "invoiceId": 262,
     "total": 5
   },
   {
@@ -2363,7 +2887,9 @@
     "billingCountry": "Norway",
     "billingPostalCode": "0171",
     "billingState": null,
+    "customerId": 4,
     "invoiceDate": "2012-02-27T00:00:00",
+    "invoiceId": 263,
     "total": 8
   },
   {
@@ -2372,7 +2898,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "71020-677",
     "billingState": "DF",
+    "customerId": 13,
     "invoiceDate": "2012-03-03T00:00:00",
+    "invoiceId": 264,
     "total": 13
   },
   {
@@ -2381,7 +2909,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "85719",
     "billingState": "AZ",
+    "customerId": 27,
     "invoiceDate": "2012-03-11T00:00:00",
+    "invoiceId": 265,
     "total": 0
   },
   {
@@ -2390,7 +2920,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "84102",
     "billingState": "UT",
+    "customerId": 28,
     "invoiceDate": "2012-03-24T00:00:00",
+    "invoiceId": 266,
     "total": 1
   },
   {
@@ -2399,7 +2931,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "K2P 1L7",
     "billingState": "OE",
+    "customerId": 30,
     "invoiceDate": "2012-03-24T00:00:00",
+    "invoiceId": 267,
     "total": 1
   },
   {
@@ -2408,7 +2942,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "R3L 2B9",
     "billingState": "MB",
+    "customerId": 32,
     "invoiceDate": "2012-03-25T00:00:00",
+    "invoiceId": 268,
     "total": 3
   },
   {
@@ -2417,7 +2953,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10789",
     "billingState": null,
+    "customerId": 36,
     "invoiceDate": "2012-03-26T00:00:00",
+    "invoiceId": 269,
     "total": 5
   },
   {
@@ -2426,7 +2964,9 @@
     "billingCountry": "France",
     "billingPostalCode": "33000",
     "billingState": null,
+    "customerId": 42,
     "invoiceDate": "2012-03-29T00:00:00",
+    "invoiceId": 270,
     "total": 8
   },
   {
@@ -2435,7 +2975,9 @@
     "billingCountry": "Sweden",
     "billingPostalCode": "11230",
     "billingState": null,
+    "customerId": 51,
     "invoiceDate": "2012-04-03T00:00:00",
+    "invoiceId": 271,
     "total": 13
   },
   {
@@ -2444,7 +2986,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14300",
     "billingState": null,
+    "customerId": 6,
     "invoiceDate": "2012-04-11T00:00:00",
+    "invoiceId": 272,
     "total": 0
   },
   {
@@ -2453,7 +2997,9 @@
     "billingCountry": "Austria",
     "billingPostalCode": "1010",
     "billingState": null,
+    "customerId": 7,
     "invoiceDate": "2012-04-24T00:00:00",
+    "invoiceId": 273,
     "total": 1
   },
   {
@@ -2462,7 +3008,9 @@
     "billingCountry": "Denmark",
     "billingPostalCode": "1720",
     "billingState": null,
+    "customerId": 9,
     "invoiceDate": "2012-04-24T00:00:00",
+    "invoiceId": 274,
     "total": 1
   },
   {
@@ -2471,7 +3019,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01310-200",
     "billingState": "SP",
+    "customerId": 11,
     "invoiceDate": "2012-04-25T00:00:00",
+    "invoiceId": 275,
     "total": 3
   },
   {
@@ -2480,7 +3030,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "V6C 1G8",
     "billingState": "BC",
+    "customerId": 15,
     "invoiceDate": "2012-04-26T00:00:00",
+    "invoiceId": 276,
     "total": 5
   },
   {
@@ -2489,7 +3041,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "89503",
     "billingState": "NV",
+    "customerId": 21,
     "invoiceDate": "2012-04-29T00:00:00",
+    "invoiceId": 277,
     "total": 8
   },
   {
@@ -2498,7 +3052,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "K2P 1L7",
     "billingState": "OE",
+    "customerId": 30,
     "invoiceDate": "2012-05-04T00:00:00",
+    "invoiceId": 278,
     "total": 13
   },
   {
@@ -2507,7 +3063,9 @@
     "billingCountry": "Finland",
     "billingPostalCode": "00530",
     "billingState": null,
+    "customerId": 44,
     "invoiceDate": "2012-05-12T00:00:00",
+    "invoiceId": 279,
     "total": 0
   },
   {
@@ -2516,7 +3074,9 @@
     "billingCountry": "Hungary",
     "billingPostalCode": "H-1073",
     "billingState": null,
+    "customerId": 45,
     "invoiceDate": "2012-05-25T00:00:00",
+    "invoiceId": 280,
     "total": 1
   },
   {
@@ -2525,7 +3085,9 @@
     "billingCountry": "Italy",
     "billingPostalCode": "00192",
     "billingState": "RM",
+    "customerId": 47,
     "invoiceDate": "2012-05-25T00:00:00",
+    "invoiceId": 281,
     "total": 1
   },
   {
@@ -2534,7 +3096,9 @@
     "billingCountry": "Poland",
     "billingPostalCode": "00-358",
     "billingState": null,
+    "customerId": 49,
     "invoiceDate": "2012-05-26T00:00:00",
+    "invoiceId": 282,
     "total": 3
   },
   {
@@ -2543,7 +3107,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "SW1V 3EE",
     "billingState": null,
+    "customerId": 53,
     "invoiceDate": "2012-05-27T00:00:00",
+    "invoiceId": 283,
     "total": 5
   },
   {
@@ -2552,7 +3118,9 @@
     "billingCountry": "India",
     "billingPostalCode": "560001",
     "billingState": null,
+    "customerId": 59,
     "invoiceDate": "2012-05-30T00:00:00",
+    "invoiceId": 284,
     "total": 8
   },
   {
@@ -2561,7 +3129,9 @@
     "billingCountry": "Denmark",
     "billingPostalCode": "1720",
     "billingState": null,
+    "customerId": 9,
     "invoiceDate": "2012-06-04T00:00:00",
+    "invoiceId": 285,
     "total": 13
   },
   {
@@ -2570,7 +3140,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "2113",
     "billingState": "MA",
+    "customerId": 23,
     "invoiceDate": "2012-06-12T00:00:00",
+    "invoiceId": 286,
     "total": 0
   },
   {
@@ -2579,7 +3151,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "60611",
     "billingState": "IL",
+    "customerId": 24,
     "invoiceDate": "2012-06-25T00:00:00",
+    "invoiceId": 287,
     "total": 1
   },
   {
@@ -2588,7 +3162,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "76110",
     "billingState": "TX",
+    "customerId": 26,
     "invoiceDate": "2012-06-25T00:00:00",
+    "invoiceId": 288,
     "total": 1
   },
   {
@@ -2597,7 +3173,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "84102",
     "billingState": "UT",
+    "customerId": 28,
     "invoiceDate": "2012-06-26T00:00:00",
+    "invoiceId": 289,
     "total": 3
   },
   {
@@ -2606,7 +3184,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "R3L 2B9",
     "billingState": "MB",
+    "customerId": 32,
     "invoiceDate": "2012-06-27T00:00:00",
+    "invoiceId": 290,
     "total": 5
   },
   {
@@ -2615,7 +3195,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10779",
     "billingState": null,
+    "customerId": 38,
     "invoiceDate": "2012-06-30T00:00:00",
+    "invoiceId": 291,
     "total": 8
   },
   {
@@ -2624,7 +3206,9 @@
     "billingCountry": "Italy",
     "billingPostalCode": "00192",
     "billingState": "RM",
+    "customerId": 47,
     "invoiceDate": "2012-07-05T00:00:00",
+    "invoiceId": 292,
     "total": 13
   },
   {
@@ -2633,7 +3217,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "70174",
     "billingState": null,
+    "customerId": 2,
     "invoiceDate": "2012-07-13T00:00:00",
+    "invoiceId": 293,
     "total": 0
   },
   {
@@ -2642,7 +3228,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "H2G 1A7",
     "billingState": "QC",
+    "customerId": 3,
     "invoiceDate": "2012-07-26T00:00:00",
+    "invoiceId": 294,
     "total": 1
   },
   {
@@ -2651,7 +3239,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14700",
     "billingState": null,
+    "customerId": 5,
     "invoiceDate": "2012-07-26T00:00:00",
+    "invoiceId": 295,
     "total": 1
   },
   {
@@ -2660,7 +3250,9 @@
     "billingCountry": "Austria",
     "billingPostalCode": "1010",
     "billingState": null,
+    "customerId": 7,
     "invoiceDate": "2012-07-27T00:00:00",
+    "invoiceId": 296,
     "total": 3
   },
   {
@@ -2669,7 +3261,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01310-200",
     "billingState": "SP",
+    "customerId": 11,
     "invoiceDate": "2012-07-28T00:00:00",
+    "invoiceId": 297,
     "total": 5
   },
   {
@@ -2678,7 +3272,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "98052-8300",
     "billingState": "WA",
+    "customerId": 17,
     "invoiceDate": "2012-07-31T00:00:00",
+    "invoiceId": 298,
     "total": 10
   },
   {
@@ -2687,7 +3283,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "76110",
     "billingState": "TX",
+    "customerId": 26,
     "invoiceDate": "2012-08-05T00:00:00",
+    "invoiceId": 299,
     "total": 23
   },
   {
@@ -2696,7 +3294,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75002",
     "billingState": null,
+    "customerId": 40,
     "invoiceDate": "2012-08-13T00:00:00",
+    "invoiceId": 300,
     "total": 0
   },
   {
@@ -2705,7 +3305,9 @@
     "billingCountry": "France",
     "billingPostalCode": "69002",
     "billingState": null,
+    "customerId": 41,
     "invoiceDate": "2012-08-26T00:00:00",
+    "invoiceId": 301,
     "total": 1
   },
   {
@@ -2714,7 +3316,9 @@
     "billingCountry": "France",
     "billingPostalCode": "21000",
     "billingState": null,
+    "customerId": 43,
     "invoiceDate": "2012-08-26T00:00:00",
+    "invoiceId": 302,
     "total": 1
   },
   {
@@ -2723,7 +3327,9 @@
     "billingCountry": "Hungary",
     "billingPostalCode": "H-1073",
     "billingState": null,
+    "customerId": 45,
     "invoiceDate": "2012-08-27T00:00:00",
+    "invoiceId": 303,
     "total": 3
   },
   {
@@ -2732,7 +3338,9 @@
     "billingCountry": "Poland",
     "billingPostalCode": "00-358",
     "billingState": null,
+    "customerId": 49,
     "invoiceDate": "2012-08-28T00:00:00",
+    "invoiceId": 304,
     "total": 5
   },
   {
@@ -2741,7 +3349,9 @@
     "billingCountry": "Australia",
     "billingPostalCode": "2010",
     "billingState": "NSW",
+    "customerId": 55,
     "invoiceDate": "2012-08-31T00:00:00",
+    "invoiceId": 305,
     "total": 8
   },
   {
@@ -2750,7 +3360,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14700",
     "billingState": null,
+    "customerId": 5,
     "invoiceDate": "2012-09-05T00:00:00",
+    "invoiceId": 306,
     "total": 16
   },
   {
@@ -2759,7 +3371,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "95014",
     "billingState": "CA",
+    "customerId": 19,
     "invoiceDate": "2012-09-13T00:00:00",
+    "invoiceId": 307,
     "total": 1
   },
   {
@@ -2768,7 +3382,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94040-111",
     "billingState": "CA",
+    "customerId": 20,
     "invoiceDate": "2012-09-26T00:00:00",
+    "invoiceId": 308,
     "total": 3
   },
   {
@@ -2777,7 +3393,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "32801",
     "billingState": "FL",
+    "customerId": 22,
     "invoiceDate": "2012-09-26T00:00:00",
+    "invoiceId": 309,
     "total": 3
   },
   {
@@ -2786,7 +3404,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "60611",
     "billingState": "IL",
+    "customerId": 24,
     "invoiceDate": "2012-09-27T00:00:00",
+    "invoiceId": 310,
     "total": 7
   },
   {
@@ -2795,7 +3415,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "84102",
     "billingState": "UT",
+    "customerId": 28,
     "invoiceDate": "2012-09-28T00:00:00",
+    "invoiceId": 311,
     "total": 11
   },
   {
@@ -2804,7 +3426,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 34,
     "invoiceDate": "2012-10-01T00:00:00",
+    "invoiceId": 312,
     "total": 10
   },
   {
@@ -2813,7 +3437,9 @@
     "billingCountry": "France",
     "billingPostalCode": "21000",
     "billingState": null,
+    "customerId": 43,
     "invoiceDate": "2012-10-06T00:00:00",
+    "invoiceId": 313,
     "total": 16
   },
   {
@@ -2822,7 +3448,9 @@
     "billingCountry": "Chile",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 57,
     "invoiceDate": "2012-10-14T00:00:00",
+    "invoiceId": 314,
     "total": 0
   },
   {
@@ -2831,7 +3459,9 @@
     "billingCountry": "India",
     "billingPostalCode": "110017",
     "billingState": null,
+    "customerId": 58,
     "invoiceDate": "2012-10-27T00:00:00",
+    "invoiceId": 315,
     "total": 1
   },
   {
@@ -2840,7 +3470,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "12227-000",
     "billingState": "SP",
+    "customerId": 1,
     "invoiceDate": "2012-10-27T00:00:00",
+    "invoiceId": 316,
     "total": 1
   },
   {
@@ -2849,7 +3481,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "H2G 1A7",
     "billingState": "QC",
+    "customerId": 3,
     "invoiceDate": "2012-10-28T00:00:00",
+    "invoiceId": 317,
     "total": 3
   },
   {
@@ -2858,7 +3492,9 @@
     "billingCountry": "Austria",
     "billingPostalCode": "1010",
     "billingState": null,
+    "customerId": 7,
     "invoiceDate": "2012-10-29T00:00:00",
+    "invoiceId": 318,
     "total": 5
   },
   {
@@ -2867,7 +3503,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "71020-677",
     "billingState": "DF",
+    "customerId": 13,
     "invoiceDate": "2012-11-01T00:00:00",
+    "invoiceId": 319,
     "total": 8
   },
   {
@@ -2876,7 +3514,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "32801",
     "billingState": "FL",
+    "customerId": 22,
     "invoiceDate": "2012-11-06T00:00:00",
+    "invoiceId": 320,
     "total": 13
   },
   {
@@ -2885,7 +3525,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "10789",
     "billingState": null,
+    "customerId": 36,
     "invoiceDate": "2012-11-14T00:00:00",
+    "invoiceId": 321,
     "total": 0
   },
   {
@@ -2894,7 +3536,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "60316",
     "billingState": null,
+    "customerId": 37,
     "invoiceDate": "2012-11-27T00:00:00",
+    "invoiceId": 322,
     "total": 1
   },
   {
@@ -2903,7 +3547,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75009",
     "billingState": null,
+    "customerId": 39,
     "invoiceDate": "2012-11-27T00:00:00",
+    "invoiceId": 323,
     "total": 1
   },
   {
@@ -2912,7 +3558,9 @@
     "billingCountry": "France",
     "billingPostalCode": "69002",
     "billingState": null,
+    "customerId": 41,
     "invoiceDate": "2012-11-28T00:00:00",
+    "invoiceId": 324,
     "total": 3
   },
   {
@@ -2921,7 +3569,9 @@
     "billingCountry": "Hungary",
     "billingPostalCode": "H-1073",
     "billingState": null,
+    "customerId": 45,
     "invoiceDate": "2012-11-29T00:00:00",
+    "invoiceId": 325,
     "total": 5
   },
   {
@@ -2930,7 +3580,9 @@
     "billingCountry": "Sweden",
     "billingPostalCode": "11230",
     "billingState": null,
+    "customerId": 51,
     "invoiceDate": "2012-12-02T00:00:00",
+    "invoiceId": 326,
     "total": 8
   },
   {
@@ -2939,7 +3591,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "12227-000",
     "billingState": "SP",
+    "customerId": 1,
     "invoiceDate": "2012-12-07T00:00:00",
+    "invoiceId": 327,
     "total": 13
   },
   {
@@ -2948,7 +3602,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "V6C 1G8",
     "billingState": "BC",
+    "customerId": 15,
     "invoiceDate": "2012-12-15T00:00:00",
+    "invoiceId": 328,
     "total": 0
   },
   {
@@ -2957,7 +3613,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94043-1351",
     "billingState": "CA",
+    "customerId": 16,
     "invoiceDate": "2012-12-28T00:00:00",
+    "invoiceId": 329,
     "total": 1
   },
   {
@@ -2966,7 +3624,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "10012-2612",
     "billingState": "NY",
+    "customerId": 18,
     "invoiceDate": "2012-12-28T00:00:00",
+    "invoiceId": 330,
     "total": 1
   },
   {
@@ -2975,7 +3635,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94040-111",
     "billingState": "CA",
+    "customerId": 20,
     "invoiceDate": "2012-12-29T00:00:00",
+    "invoiceId": 331,
     "total": 3
   },
   {
@@ -2984,7 +3646,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "60611",
     "billingState": "IL",
+    "customerId": 24,
     "invoiceDate": "2012-12-30T00:00:00",
+    "invoiceId": 332,
     "total": 5
   },
   {
@@ -2993,7 +3657,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "K2P 1L7",
     "billingState": "OE",
+    "customerId": 30,
     "invoiceDate": "2013-01-02T00:00:00",
+    "invoiceId": 333,
     "total": 8
   },
   {
@@ -3002,7 +3668,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75009",
     "billingState": null,
+    "customerId": 39,
     "invoiceDate": "2013-01-07T00:00:00",
+    "invoiceId": 334,
     "total": 13
   },
   {
@@ -3011,7 +3679,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "SW1V 3EE",
     "billingState": null,
+    "customerId": 53,
     "invoiceDate": "2013-01-15T00:00:00",
+    "invoiceId": 335,
     "total": 0
   },
   {
@@ -3020,7 +3690,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "EH4 1HH",
     "billingState": null,
+    "customerId": 54,
     "invoiceDate": "2013-01-28T00:00:00",
+    "invoiceId": 336,
     "total": 1
   },
   {
@@ -3029,7 +3701,9 @@
     "billingCountry": "Argentina",
     "billingPostalCode": "1106",
     "billingState": null,
+    "customerId": 56,
     "invoiceDate": "2013-01-28T00:00:00",
+    "invoiceId": 337,
     "total": 1
   },
   {
@@ -3038,7 +3712,9 @@
     "billingCountry": "India",
     "billingPostalCode": "110017",
     "billingState": null,
+    "customerId": 58,
     "invoiceDate": "2013-01-29T00:00:00",
+    "invoiceId": 338,
     "total": 3
   },
   {
@@ -3047,7 +3723,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "H2G 1A7",
     "billingState": "QC",
+    "customerId": 3,
     "invoiceDate": "2013-01-30T00:00:00",
+    "invoiceId": 339,
     "total": 5
   },
   {
@@ -3056,7 +3734,9 @@
     "billingCountry": "Denmark",
     "billingPostalCode": "1720",
     "billingState": null,
+    "customerId": 9,
     "invoiceDate": "2013-02-02T00:00:00",
+    "invoiceId": 340,
     "total": 8
   },
   {
@@ -3065,7 +3745,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "10012-2612",
     "billingState": "NY",
+    "customerId": 18,
     "invoiceDate": "2013-02-07T00:00:00",
+    "invoiceId": 341,
     "total": 13
   },
   {
@@ -3074,7 +3756,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "R3L 2B9",
     "billingState": "MB",
+    "customerId": 32,
     "invoiceDate": "2013-02-15T00:00:00",
+    "invoiceId": 342,
     "total": 0
   },
   {
@@ -3083,7 +3767,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "X1A 1N6",
     "billingState": "NT",
+    "customerId": 33,
     "invoiceDate": "2013-02-28T00:00:00",
+    "invoiceId": 343,
     "total": 1
   },
   {
@@ -3092,7 +3778,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 35,
     "invoiceDate": "2013-02-28T00:00:00",
+    "invoiceId": 344,
     "total": 1
   },
   {
@@ -3101,7 +3789,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "60316",
     "billingState": null,
+    "customerId": 37,
     "invoiceDate": "2013-03-01T00:00:00",
+    "invoiceId": 345,
     "total": 3
   },
   {
@@ -3110,7 +3800,9 @@
     "billingCountry": "France",
     "billingPostalCode": "69002",
     "billingState": null,
+    "customerId": 41,
     "invoiceDate": "2013-03-02T00:00:00",
+    "invoiceId": 346,
     "total": 5
   },
   {
@@ -3119,7 +3811,9 @@
     "billingCountry": "Italy",
     "billingPostalCode": "00192",
     "billingState": "RM",
+    "customerId": 47,
     "invoiceDate": "2013-03-05T00:00:00",
+    "invoiceId": 347,
     "total": 8
   },
   {
@@ -3128,7 +3822,9 @@
     "billingCountry": "Argentina",
     "billingPostalCode": "1106",
     "billingState": null,
+    "customerId": 56,
     "invoiceDate": "2013-03-10T00:00:00",
+    "invoiceId": 348,
     "total": 13
   },
   {
@@ -3137,7 +3833,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01310-200",
     "billingState": "SP",
+    "customerId": 11,
     "invoiceDate": "2013-03-18T00:00:00",
+    "invoiceId": 349,
     "total": 0
   },
   {
@@ -3146,7 +3844,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "20040-020",
     "billingState": "RJ",
+    "customerId": 12,
     "invoiceDate": "2013-03-31T00:00:00",
+    "invoiceId": 350,
     "total": 1
   },
   {
@@ -3155,7 +3855,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "T6G 2C7",
     "billingState": "AB",
+    "customerId": 14,
     "invoiceDate": "2013-03-31T00:00:00",
+    "invoiceId": 351,
     "total": 1
   },
   {
@@ -3164,7 +3866,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94043-1351",
     "billingState": "CA",
+    "customerId": 16,
     "invoiceDate": "2013-04-01T00:00:00",
+    "invoiceId": 352,
     "total": 3
   },
   {
@@ -3173,7 +3877,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94040-111",
     "billingState": "CA",
+    "customerId": 20,
     "invoiceDate": "2013-04-02T00:00:00",
+    "invoiceId": 353,
     "total": 5
   },
   {
@@ -3182,7 +3888,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "76110",
     "billingState": "TX",
+    "customerId": 26,
     "invoiceDate": "2013-04-05T00:00:00",
+    "invoiceId": 354,
     "total": 8
   },
   {
@@ -3191,7 +3899,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 35,
     "invoiceDate": "2013-04-10T00:00:00",
+    "invoiceId": 355,
     "total": 13
   },
   {
@@ -3200,7 +3910,9 @@
     "billingCountry": "Poland",
     "billingPostalCode": "00-358",
     "billingState": null,
+    "customerId": 49,
     "invoiceDate": "2013-04-18T00:00:00",
+    "invoiceId": 356,
     "total": 0
   },
   {
@@ -3209,7 +3921,9 @@
     "billingCountry": "Spain",
     "billingPostalCode": "28015",
     "billingState": null,
+    "customerId": 50,
     "invoiceDate": "2013-05-01T00:00:00",
+    "invoiceId": 357,
     "total": 1
   },
   {
@@ -3218,7 +3932,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "N1 5LH",
     "billingState": null,
+    "customerId": 52,
     "invoiceDate": "2013-05-01T00:00:00",
+    "invoiceId": 358,
     "total": 1
   },
   {
@@ -3227,7 +3943,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "EH4 1HH",
     "billingState": null,
+    "customerId": 54,
     "invoiceDate": "2013-05-02T00:00:00",
+    "invoiceId": 359,
     "total": 3
   },
   {
@@ -3236,7 +3954,9 @@
     "billingCountry": "India",
     "billingPostalCode": "110017",
     "billingState": null,
+    "customerId": 58,
     "invoiceDate": "2013-05-03T00:00:00",
+    "invoiceId": 360,
     "total": 5
   },
   {
@@ -3245,7 +3965,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14700",
     "billingState": null,
+    "customerId": 5,
     "invoiceDate": "2013-05-06T00:00:00",
+    "invoiceId": 361,
     "total": 8
   },
   {
@@ -3254,7 +3976,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "T6G 2C7",
     "billingState": "AB",
+    "customerId": 14,
     "invoiceDate": "2013-05-11T00:00:00",
+    "invoiceId": 362,
     "total": 13
   },
   {
@@ -3263,7 +3987,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "84102",
     "billingState": "UT",
+    "customerId": 28,
     "invoiceDate": "2013-05-19T00:00:00",
+    "invoiceId": 363,
     "total": 0
   },
   {
@@ -3272,7 +3998,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "M6J 1V1",
     "billingState": "OE",
+    "customerId": 29,
     "invoiceDate": "2013-06-01T00:00:00",
+    "invoiceId": 364,
     "total": 1
   },
   {
@@ -3281,7 +4009,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "B3S 1C5",
     "billingState": "NS",
+    "customerId": 31,
     "invoiceDate": "2013-06-01T00:00:00",
+    "invoiceId": 365,
     "total": 1
   },
   {
@@ -3290,7 +4020,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "X1A 1N6",
     "billingState": "NT",
+    "customerId": 33,
     "invoiceDate": "2013-06-02T00:00:00",
+    "invoiceId": 366,
     "total": 3
   },
   {
@@ -3299,7 +4031,9 @@
     "billingCountry": "Germany",
     "billingPostalCode": "60316",
     "billingState": null,
+    "customerId": 37,
     "invoiceDate": "2013-06-03T00:00:00",
+    "invoiceId": 367,
     "total": 5
   },
   {
@@ -3308,7 +4042,9 @@
     "billingCountry": "France",
     "billingPostalCode": "21000",
     "billingState": null,
+    "customerId": 43,
     "invoiceDate": "2013-06-06T00:00:00",
+    "invoiceId": 368,
     "total": 8
   },
   {
@@ -3317,7 +4053,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "N1 5LH",
     "billingState": null,
+    "customerId": 52,
     "invoiceDate": "2013-06-11T00:00:00",
+    "invoiceId": 369,
     "total": 13
   },
   {
@@ -3326,7 +4064,9 @@
     "billingCountry": "Austria",
     "billingPostalCode": "1010",
     "billingState": null,
+    "customerId": 7,
     "invoiceDate": "2013-06-19T00:00:00",
+    "invoiceId": 370,
     "total": 0
   },
   {
@@ -3335,7 +4075,9 @@
     "billingCountry": "Belgium",
     "billingPostalCode": "1000",
     "billingState": null,
+    "customerId": 8,
     "invoiceDate": "2013-07-02T00:00:00",
+    "invoiceId": 371,
     "total": 1
   },
   {
@@ -3344,7 +4086,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01007-010",
     "billingState": "SP",
+    "customerId": 10,
     "invoiceDate": "2013-07-02T00:00:00",
+    "invoiceId": 372,
     "total": 1
   },
   {
@@ -3353,7 +4097,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "20040-020",
     "billingState": "RJ",
+    "customerId": 12,
     "invoiceDate": "2013-07-03T00:00:00",
+    "invoiceId": 373,
     "total": 3
   },
   {
@@ -3362,7 +4108,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94043-1351",
     "billingState": "CA",
+    "customerId": 16,
     "invoiceDate": "2013-07-04T00:00:00",
+    "invoiceId": 374,
     "total": 5
   },
   {
@@ -3371,7 +4119,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "32801",
     "billingState": "FL",
+    "customerId": 22,
     "invoiceDate": "2013-07-07T00:00:00",
+    "invoiceId": 375,
     "total": 8
   },
   {
@@ -3380,7 +4130,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "B3S 1C5",
     "billingState": "NS",
+    "customerId": 31,
     "invoiceDate": "2013-07-12T00:00:00",
+    "invoiceId": 376,
     "total": 13
   },
   {
@@ -3389,7 +4141,9 @@
     "billingCountry": "Hungary",
     "billingPostalCode": "H-1073",
     "billingState": null,
+    "customerId": 45,
     "invoiceDate": "2013-07-20T00:00:00",
+    "invoiceId": 377,
     "total": 0
   },
   {
@@ -3398,7 +4152,9 @@
     "billingCountry": "Ireland",
     "billingPostalCode": null,
     "billingState": "Dublin",
+    "customerId": 46,
     "invoiceDate": "2013-08-02T00:00:00",
+    "invoiceId": 378,
     "total": 1
   },
   {
@@ -3407,7 +4163,9 @@
     "billingCountry": "Netherlands",
     "billingPostalCode": "1016",
     "billingState": "VV",
+    "customerId": 48,
     "invoiceDate": "2013-08-02T00:00:00",
+    "invoiceId": 379,
     "total": 1
   },
   {
@@ -3416,7 +4174,9 @@
     "billingCountry": "Spain",
     "billingPostalCode": "28015",
     "billingState": null,
+    "customerId": 50,
     "invoiceDate": "2013-08-03T00:00:00",
+    "invoiceId": 380,
     "total": 3
   },
   {
@@ -3425,7 +4185,9 @@
     "billingCountry": "United Kingdom",
     "billingPostalCode": "EH4 1HH",
     "billingState": null,
+    "customerId": 54,
     "invoiceDate": "2013-08-04T00:00:00",
+    "invoiceId": 381,
     "total": 5
   },
   {
@@ -3434,7 +4196,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "12227-000",
     "billingState": "SP",
+    "customerId": 1,
     "invoiceDate": "2013-08-07T00:00:00",
+    "invoiceId": 382,
     "total": 8
   },
   {
@@ -3443,7 +4207,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "01007-010",
     "billingState": "SP",
+    "customerId": 10,
     "invoiceDate": "2013-08-12T00:00:00",
+    "invoiceId": 383,
     "total": 13
   },
   {
@@ -3452,7 +4218,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "60611",
     "billingState": "IL",
+    "customerId": 24,
     "invoiceDate": "2013-08-20T00:00:00",
+    "invoiceId": 384,
     "total": 0
   },
   {
@@ -3461,7 +4229,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "53703",
     "billingState": "WI",
+    "customerId": 25,
     "invoiceDate": "2013-09-02T00:00:00",
+    "invoiceId": 385,
     "total": 1
   },
   {
@@ -3470,7 +4240,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "85719",
     "billingState": "AZ",
+    "customerId": 27,
     "invoiceDate": "2013-09-02T00:00:00",
+    "invoiceId": 386,
     "total": 1
   },
   {
@@ -3479,7 +4251,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "M6J 1V1",
     "billingState": "OE",
+    "customerId": 29,
     "invoiceDate": "2013-09-03T00:00:00",
+    "invoiceId": 387,
     "total": 3
   },
   {
@@ -3488,7 +4262,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "X1A 1N6",
     "billingState": "NT",
+    "customerId": 33,
     "invoiceDate": "2013-09-04T00:00:00",
+    "invoiceId": 388,
     "total": 5
   },
   {
@@ -3497,7 +4273,9 @@
     "billingCountry": "France",
     "billingPostalCode": "75009",
     "billingState": null,
+    "customerId": 39,
     "invoiceDate": "2013-09-07T00:00:00",
+    "invoiceId": 389,
     "total": 8
   },
   {
@@ -3506,7 +4284,9 @@
     "billingCountry": "Netherlands",
     "billingPostalCode": "1016",
     "billingState": "VV",
+    "customerId": 48,
     "invoiceDate": "2013-09-12T00:00:00",
+    "invoiceId": 390,
     "total": 13
   },
   {
@@ -3515,7 +4295,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "H2G 1A7",
     "billingState": "QC",
+    "customerId": 3,
     "invoiceDate": "2013-09-20T00:00:00",
+    "invoiceId": 391,
     "total": 0
   },
   {
@@ -3524,7 +4306,9 @@
     "billingCountry": "Norway",
     "billingPostalCode": "0171",
     "billingState": null,
+    "customerId": 4,
     "invoiceDate": "2013-10-03T00:00:00",
+    "invoiceId": 392,
     "total": 1
   },
   {
@@ -3533,7 +4317,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14300",
     "billingState": null,
+    "customerId": 6,
     "invoiceDate": "2013-10-03T00:00:00",
+    "invoiceId": 393,
     "total": 1
   },
   {
@@ -3542,7 +4328,9 @@
     "billingCountry": "Belgium",
     "billingPostalCode": "1000",
     "billingState": null,
+    "customerId": 8,
     "invoiceDate": "2013-10-04T00:00:00",
+    "invoiceId": 394,
     "total": 3
   },
   {
@@ -3551,7 +4339,9 @@
     "billingCountry": "Brazil",
     "billingPostalCode": "20040-020",
     "billingState": "RJ",
+    "customerId": 12,
     "invoiceDate": "2013-10-05T00:00:00",
+    "invoiceId": 395,
     "total": 5
   },
   {
@@ -3560,7 +4350,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "10012-2612",
     "billingState": "NY",
+    "customerId": 18,
     "invoiceDate": "2013-10-08T00:00:00",
+    "invoiceId": 396,
     "total": 8
   },
   {
@@ -3569,7 +4361,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "85719",
     "billingState": "AZ",
+    "customerId": 27,
     "invoiceDate": "2013-10-13T00:00:00",
+    "invoiceId": 397,
     "total": 13
   },
   {
@@ -3578,7 +4372,9 @@
     "billingCountry": "France",
     "billingPostalCode": "69002",
     "billingState": null,
+    "customerId": 41,
     "invoiceDate": "2013-10-21T00:00:00",
+    "invoiceId": 398,
     "total": 0
   },
   {
@@ -3587,7 +4383,9 @@
     "billingCountry": "France",
     "billingPostalCode": "33000",
     "billingState": null,
+    "customerId": 42,
     "invoiceDate": "2013-11-03T00:00:00",
+    "invoiceId": 399,
     "total": 1
   },
   {
@@ -3596,7 +4394,9 @@
     "billingCountry": "Finland",
     "billingPostalCode": "00530",
     "billingState": null,
+    "customerId": 44,
     "invoiceDate": "2013-11-03T00:00:00",
+    "invoiceId": 400,
     "total": 1
   },
   {
@@ -3605,7 +4405,9 @@
     "billingCountry": "Ireland",
     "billingPostalCode": null,
     "billingState": "Dublin",
+    "customerId": 46,
     "invoiceDate": "2013-11-04T00:00:00",
+    "invoiceId": 401,
     "total": 3
   },
   {
@@ -3614,7 +4416,9 @@
     "billingCountry": "Spain",
     "billingPostalCode": "28015",
     "billingState": null,
+    "customerId": 50,
     "invoiceDate": "2013-11-05T00:00:00",
+    "invoiceId": 402,
     "total": 5
   },
   {
@@ -3623,7 +4427,9 @@
     "billingCountry": "Argentina",
     "billingPostalCode": "1106",
     "billingState": null,
+    "customerId": 56,
     "invoiceDate": "2013-11-08T00:00:00",
+    "invoiceId": 403,
     "total": 8
   },
   {
@@ -3632,7 +4438,9 @@
     "billingCountry": "Czech Republic",
     "billingPostalCode": "14300",
     "billingState": null,
+    "customerId": 6,
     "invoiceDate": "2013-11-13T00:00:00",
+    "invoiceId": 404,
     "total": 25
   },
   {
@@ -3641,7 +4449,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "94040-111",
     "billingState": "CA",
+    "customerId": 20,
     "invoiceDate": "2013-11-21T00:00:00",
+    "invoiceId": 405,
     "total": 0
   },
   {
@@ -3650,7 +4460,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "89503",
     "billingState": "NV",
+    "customerId": 21,
     "invoiceDate": "2013-12-04T00:00:00",
+    "invoiceId": 406,
     "total": 1
   },
   {
@@ -3659,7 +4471,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "2113",
     "billingState": "MA",
+    "customerId": 23,
     "invoiceDate": "2013-12-04T00:00:00",
+    "invoiceId": 407,
     "total": 1
   },
   {
@@ -3668,7 +4482,9 @@
     "billingCountry": "USA",
     "billingPostalCode": "53703",
     "billingState": "WI",
+    "customerId": 25,
     "invoiceDate": "2013-12-05T00:00:00",
+    "invoiceId": 408,
     "total": 3
   },
   {
@@ -3677,7 +4493,9 @@
     "billingCountry": "Canada",
     "billingPostalCode": "M6J 1V1",
     "billingState": "OE",
+    "customerId": 29,
     "invoiceDate": "2013-12-06T00:00:00",
+    "invoiceId": 409,
     "total": 5
   },
   {
@@ -3686,7 +4504,9 @@
     "billingCountry": "Portugal",
     "billingPostalCode": null,
     "billingState": null,
+    "customerId": 35,
     "invoiceDate": "2013-12-09T00:00:00",
+    "invoiceId": 410,
     "total": 8
   },
   {
@@ -3695,7 +4515,9 @@
     "billingCountry": "Finland",
     "billingPostalCode": "00530",
     "billingState": null,
+    "customerId": 44,
     "invoiceDate": "2013-12-14T00:00:00",
+    "invoiceId": 411,
     "total": 13
   },
   {
@@ -3704,7 +4526,9 @@
     "billingCountry": "India",
     "billingPostalCode": "110017",
     "billingState": null,
+    "customerId": 58,
     "invoiceDate": "2013-12-22T00:00:00",
+    "invoiceId": 412,
     "total": 1
   }
 ]

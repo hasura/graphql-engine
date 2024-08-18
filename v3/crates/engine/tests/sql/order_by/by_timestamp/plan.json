@@ -1,7 +1,7 @@
 [
   {
     "plan_type": "logical_plan",
-    "plan": "Limit: skip=0, fetch=10\n  ModelQuery: model=default:Invoice, projection=[billingAddress,billingCity,billingCountry,billingPostalCode,billingState,invoiceDate,total], sort=[invoiceDate desc], limit=10"
+    "plan": "Limit: skip=0, fetch=10\n  ModelQuery: model=default:Invoice, projection=[billingAddress,billingCity,billingCountry,billingPostalCode,billingState,customerId,invoiceDate,invoiceId,total], sort=[invoiceDate desc], limit=10"
   },
   {
     "plan_type": "physical_plan",

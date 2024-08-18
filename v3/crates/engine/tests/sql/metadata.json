@@ -586,6 +586,61 @@
           }
         },
         {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "InvoiceLine",
+            "objectType": "InvoiceLine",
+            "source": {
+              "dataConnectorName": "db2",
+              "collection": "InvoiceLine"
+            },
+            "orderableFields": [
+              {
+                "fieldName": "invoiceId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "invoiceLineId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "quantity",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "trackId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "unitPrice",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "selectMany": {
+                "queryRootField": "app_invoice_line"
+              },
+              "selectUniques": [
+                {
+                  "queryRootField": "app_invoiceLineByInvoiceLineId",
+                  "uniqueIdentifier": ["invoiceLineId"]
+                }
+              ]
+            }
+          }
+        },
+        {
           "kind": "ObjectType",
           "version": "v1",
           "definition": {
@@ -623,7 +678,7 @@
               },
               {
                 "name": "customerId",
-                "type": "Int4!",
+                "type": "Int!",
                 "description": null,
                 "deprecated": null
               },
@@ -635,7 +690,7 @@
               },
               {
                 "name": "invoiceId",
-                "type": "Int4!",
+                "type": "Int!",
                 "description": null,
                 "deprecated": null
               },
@@ -703,6 +758,121 @@
                       "name": "InvoiceId"
                     }
                   }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "InvoiceLine",
+            "fields": [
+              {
+                "name": "invoiceId",
+                "type": "Int!",
+                "description": null,
+                "deprecated": null
+              },
+              {
+                "name": "invoiceLineId",
+                "type": "Int!",
+                "description": null,
+                "deprecated": null
+              },
+              {
+                "name": "quantity",
+                "type": "Int!",
+                "description": null,
+                "deprecated": null
+              },
+              {
+                "name": "trackId",
+                "type": "Int!",
+                "description": null,
+                "deprecated": null
+              },
+              {
+                "name": "unitPrice",
+                "type": "Float",
+                "description": null,
+                "deprecated": null
+              }
+            ],
+            "globalIdFields": null,
+            "graphql": {
+              "typeName": "App_InvoiceLine",
+              "inputTypeName": "App_InvoiceLineInput",
+              "apolloFederation": null
+            },
+            "description": null,
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db2",
+                "dataConnectorObjectType": "InvoiceLine",
+                "fieldMapping": {
+                  "invoiceId": {
+                    "column": {
+                      "name": "InvoiceId"
+                    }
+                  },
+                  "invoiceLineId": {
+                    "column": {
+                      "name": "InvoiceLineId"
+                    }
+                  },
+                  "quantity": {
+                    "column": {
+                      "name": "Quantity"
+                    }
+                  },
+                  "trackId": {
+                    "column": {
+                      "name": "TrackId"
+                    }
+                  },
+                  "unitPrice": {
+                    "column": {
+                      "name": "UnitPrice"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "InvoiceLine",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "InvoiceLine",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "invoiceId",
+                    "invoiceLineId",
+                    "quantity",
+                    "trackId",
+                    "unitPrice"
+                  ]
                 }
               }
             ]

@@ -65,3 +65,13 @@ fn test_order_by_by_timestamp() -> anyhow::Result<()> {
 fn test_order_by_nested_fields() -> anyhow::Result<()> {
     test_sql("sql/order_by/nested_fields")
 }
+
+#[test]
+fn test_aggregate_count_invoice_lines() -> anyhow::Result<()> {
+    test_sql("sql/aggregate/count_invoice_lines")
+}
+
+#[test]
+fn test_aggregate_sum_invoice_lines() -> anyhow::Result<()> {
+    test_sql("sql/aggregate/sum_invoice_lines")
+}

@@ -81,12 +81,54 @@
     "description": null,
     "schema_name": "default",
     "table_name": "Invoice",
+    "column_name": "customerId"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Invoice",
     "column_name": "invoiceDate"
   },
   {
     "description": null,
     "schema_name": "default",
     "table_name": "Invoice",
+    "column_name": "invoiceId"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "Invoice",
     "column_name": "total"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "InvoiceLine",
+    "column_name": "invoiceId"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "InvoiceLine",
+    "column_name": "invoiceLineId"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "InvoiceLine",
+    "column_name": "quantity"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "InvoiceLine",
+    "column_name": "trackId"
+  },
+  {
+    "description": null,
+    "schema_name": "default",
+    "table_name": "InvoiceLine",
+    "column_name": "unitPrice"
   }
 ]

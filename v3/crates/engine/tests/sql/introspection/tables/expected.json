@@ -19,6 +19,12 @@
   },
   {
     "table_catalog": "default",
+    "table_schema": "default",
+    "table_name": "InvoiceLine",
+    "table_type": "BASE TABLE"
+  },
+  {
+    "table_catalog": "default",
     "table_schema": "hasura",
     "table_name": "table_metadata",
     "table_type": "VIEW"

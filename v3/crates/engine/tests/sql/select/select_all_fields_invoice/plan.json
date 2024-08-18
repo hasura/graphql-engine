@@ -1,7 +1,7 @@
 [
   {
     "plan_type": "logical_plan",
-    "plan": "ModelQuery: model=default:Invoice, projection=[billingAddress,billingCity,billingCountry,billingPostalCode,billingState,invoiceDate,total]"
+    "plan": "ModelQuery: model=default:Invoice, projection=[billingAddress,billingCity,billingCountry,billingPostalCode,billingState,customerId,invoiceDate,invoiceId,total]"
   },
   {
     "plan_type": "physical_plan",
