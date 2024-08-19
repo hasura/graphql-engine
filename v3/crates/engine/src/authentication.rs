@@ -20,11 +20,15 @@ pub enum AuthModeConfig {
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "AuthConfig")]
 #[opendd(as_versioned_with_definition)]
+#[opendd(json_schema(title = "AuthConfig"))]
 /// Definition of the authentication configuration used by the API server.
 pub enum AuthConfig {
+    /// Definition of the authentication configuration v1, used by the API server.
+    #[opendd(json_schema(title = "AuthConfigV1"))]
     V1(AuthConfigV1),
+    /// Definition of the authentication configuration v2, used by the API server.
+    #[opendd(json_schema(title = "AuthConfigV2"))]
     V2(AuthConfigV2),
 }
 
@@ -42,7 +46,7 @@ impl AuthConfig {
 #[serde(deny_unknown_fields)]
 #[schemars(title = "AuthConfigV2")]
 #[schemars(example = "AuthConfigV2::example")]
-/// Definition of the authentication configuration used by the API server.
+/// Definition of the authentication configuration v2, used by the API server.
 pub struct AuthConfigV2 {
     pub mode: AuthModeConfig,
 }
@@ -68,7 +72,7 @@ impl AuthConfigV2 {
 #[serde(deny_unknown_fields)]
 #[schemars(title = "AuthConfigV1")]
 #[schemars(example = "AuthConfigV1::example")]
-/// Definition of the authentication configuration used by the API server.
+/// Definition of the authentication configuration v1, used by the API server.
 pub struct AuthConfigV1 {
     pub allow_role_emulation_by: Option<Role>,
     pub mode: AuthModeConfig,

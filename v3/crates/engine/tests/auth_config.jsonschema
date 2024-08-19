@@ -5,6 +5,8 @@
   "description": "Definition of the authentication configuration used by the API server.",
   "oneOf": [
     {
+      "title": "AuthConfigV1",
+      "description": "Definition of the authentication configuration v1, used by the API server.",
       "type": "object",
       "required": [
         "definition",
@@ -24,6 +26,8 @@
       "additionalProperties": false
     },
     {
+      "title": "AuthConfigV2",
+      "description": "Definition of the authentication configuration v2, used by the API server.",
       "type": "object",
       "required": [
         "definition",
@@ -47,7 +51,7 @@
     "AuthConfigV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/AuthConfigV1",
       "title": "AuthConfigV1",
-      "description": "Definition of the authentication configuration used by the API server.",
+      "description": "Definition of the authentication configuration v1, used by the API server.",
       "type": "object",
       "required": [
         "mode"
@@ -341,7 +345,7 @@
     "AuthConfigV2": {
       "$id": "https://hasura.io/jsonschemas/metadata/AuthConfigV2",
       "title": "AuthConfigV2",
-      "description": "Definition of the authentication configuration used by the API server.",
+      "description": "Definition of the authentication configuration v2, used by the API server.",
       "type": "object",
       "required": [
         "mode"
