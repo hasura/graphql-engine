@@ -32,12 +32,6 @@
   {
     "table_catalog": "default",
     "table_schema": "hasura",
-    "table_name": "column_metadata",
-    "table_type": "VIEW"
-  },
-  {
-    "table_catalog": "default",
-    "table_schema": "hasura",
     "table_name": "inferred_foreign_key_constraints",
     "table_type": "VIEW"
   },
@@ -50,13 +44,19 @@
   {
     "table_catalog": "default",
     "table_schema": "hasura",
-    "table_name": "table_valued_function_field",
+    "table_name": "table_valued_function_argument",
     "table_type": "VIEW"
   },
   {
     "table_catalog": "default",
     "table_schema": "hasura",
-    "table_name": "table_valued_function_argument",
+    "table_name": "struct_type",
+    "table_type": "VIEW"
+  },
+  {
+    "table_catalog": "default",
+    "table_schema": "hasura",
+    "table_name": "struct_type_field",
     "table_type": "VIEW"
   },
   {

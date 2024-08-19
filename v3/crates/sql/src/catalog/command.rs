@@ -6,13 +6,13 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::{any::Any, sync::Arc};
 
-use metadata_resolve::{self as resolved, Qualified};
+use metadata_resolve as resolved;
 use open_dds::arguments::ArgumentName;
+use open_dds::commands::CommandName;
 use open_dds::identifier::SubgraphName;
-use open_dds::{commands::CommandName, types::CustomTypeName};
-use resolved::TypeMapping;
 
 use super::model::WithSession;
+use super::types::{NormalizedType, StructType, StructTypeName, TypeRegistry};
 use crate::execute::planner::command::{CommandOutput, CommandQuery};
 use crate::execute::planner::scalar::{parse_datafusion_literal, parse_struct_literal};
 
@@ -31,28 +31,25 @@ mod datafusion {
     };
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ArgumentInfo {
     pub argument_type: datafusion::DataType,
+    pub argument_type_normalized: NormalizedType,
     pub is_nullable: bool,
     pub description: Option<String>,
 }
 
 impl ArgumentInfo {
     fn from_resolved(
-        metadata: &resolved::Metadata,
-        command_source: &Option<resolved::CommandSource>,
+        type_registry: &TypeRegistry,
         argument: &resolved::ArgumentInfo,
     ) -> Option<Self> {
         // TODO, ArgumentInfo doesn't have the underlying scalar representation
-        let argument_type = super::model::to_arrow_type(
-            metadata,
-            &argument.argument_type.underlying_type,
-            command_source.as_ref().map(|source| &source.type_mappings),
-            None,
-        )?;
+        let (argument_type_normalized, argument_type) =
+            type_registry.get_datafusion_type(&argument.argument_type.underlying_type)?;
         let argument_info = ArgumentInfo {
             argument_type,
+            argument_type_normalized,
             is_nullable: argument.argument_type.nullable,
             description: argument.description.clone(),
         };
@@ -69,11 +66,10 @@ pub(crate) struct Command {
 
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
 
+    pub struct_type: StructTypeName,
+
     // Datafusion table schema
     pub schema: datafusion::SchemaRef,
-
-    // For now, descriptions of fields
-    pub columns: IndexMap<String, Option<String>>,
 
     // Output of this command
     pub output_type: CommandOutput,
@@ -87,65 +83,46 @@ pub(crate) struct Command {
 // and one column named 'result' (TODO)
 //
 #[allow(clippy::match_same_arms)]
-fn return_type(
-    metadata: &resolved::Metadata,
+fn return_type<'r>(
+    registry: &'r TypeRegistry,
     output_type: &resolved::QualifiedTypeReference,
-    type_mappings: Option<&BTreeMap<Qualified<CustomTypeName>, TypeMapping>>,
 ) -> Option<(
     // datafusion's table schema
-    datafusion::SchemaRef,
-    // description of the fields
-    IndexMap<String, Option<String>>,
+    &'r StructType,
     // the expected output
     CommandOutput,
 )> {
     match &output_type.underlying_type {
-        resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Inbuilt(inbuilt_type)) => {
-            let data_type = match inbuilt_type {
-                open_dds::types::InbuiltType::ID => datafusion::DataType::Utf8,
-                open_dds::types::InbuiltType::Int => datafusion::DataType::Int32,
-                open_dds::types::InbuiltType::Float => datafusion::DataType::Float32,
-                open_dds::types::InbuiltType::Boolean => datafusion::DataType::Boolean,
-                open_dds::types::InbuiltType::String => datafusion::DataType::Utf8,
-            };
-            scalar_type_to_table_schema(&data_type)
+        resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Inbuilt(_)) => {
+            None
+            // scalar_type_to_table_schema(&data_type)
         }
         resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Custom(custom_type)) => {
-            if metadata.object_types.contains_key(custom_type) {
-                let (schema, columns) =
-                    super::model::object_type_table_schema(metadata, custom_type, type_mappings);
-                Some((schema, columns, CommandOutput::Object(custom_type.clone())))
-            } else {
-                None
-            }
+            registry
+                .get_object(custom_type)
+                .map(|object| (object, CommandOutput::Object(custom_type.clone())))
         }
         resolved::QualifiedBaseType::List(element_type) => match &element_type.underlying_type {
             resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Custom(
                 custom_type,
-            )) if metadata.object_types.contains_key(custom_type) => {
-                let (schema, columns) =
-                    super::model::object_type_table_schema(metadata, custom_type, type_mappings);
-                Some((
-                    schema,
-                    columns,
-                    CommandOutput::ListOfObjects(custom_type.clone()),
-                ))
-            }
+            )) => registry
+                .get_object(custom_type)
+                .map(|object| (object, CommandOutput::ListOfObjects(custom_type.clone()))),
             _ => None,
         },
     }
 }
 
-fn scalar_type_to_table_schema(
-    _scalar_type: &datafusion::DataType,
-) -> Option<(
-    datafusion::SchemaRef,
-    IndexMap<String, Option<String>>,
-    CommandOutput,
-)> {
-    // TODO
-    None
-}
+// fn scalar_type_to_table_schema(
+//     _scalar_type: &datafusion::DataType,
+// ) -> Option<(
+//     datafusion::SchemaRef,
+//     IndexMap<String, Option<String>>,
+//     CommandOutput,
+// )> {
+//     // TODO
+//     None
+// }
 
 impl Command {
     // this returns None if any of the following is true
@@ -153,7 +130,7 @@ impl Command {
     // 2. if a table schema cannot be generated for the command's output type
     // 3. if any of the arguments to the command cannot be converted to datafusion's types
     pub fn from_resolved_command(
-        metadata: &resolved::Metadata,
+        type_registry: &TypeRegistry,
         command: &resolved::CommandWithPermissions,
     ) -> Option<Self> {
         let argument_presets_defined = command
@@ -165,17 +142,15 @@ impl Command {
             return None;
         }
 
-        let type_mappings = command.command.source.as_ref().map(|o| &o.type_mappings);
-        let (schema, columns, command_output) =
-            return_type(metadata, &command.command.output_type, type_mappings)?;
+        let (struct_type, command_output) =
+            return_type(type_registry, &command.command.output_type)?;
 
         let arguments = command
             .command
             .arguments
             .iter()
             .map(|(argument_name, argument)| {
-                let argument_info =
-                    ArgumentInfo::from_resolved(metadata, &command.command.source, argument)?;
+                let argument_info = ArgumentInfo::from_resolved(type_registry, argument)?;
                 Some((argument_name.clone(), argument_info))
             })
             // this returns None if any of the arguments cannot be converted
@@ -185,12 +160,10 @@ impl Command {
             subgraph: command.command.name.subgraph.clone(),
             name: command.command.name.name.clone(),
             description: command.command.description.clone(),
-
             arguments,
-
-            schema,
+            struct_type: struct_type.name().clone(),
+            schema: struct_type.schema.clone(),
             output_type: command_output,
-            columns,
         };
         Some(command)
     }

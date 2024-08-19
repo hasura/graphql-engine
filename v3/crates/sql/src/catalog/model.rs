@@ -15,15 +15,16 @@ use open_dds::arguments::ArgumentName;
 use open_dds::identifier::SubgraphName;
 use open_dds::{models::ModelName, types::CustomTypeName};
 
-use resolved::TypeMapping;
 use serde::{Deserialize, Serialize};
 
 use crate::catalog::model::filter::can_pushdown_filters;
 use crate::execute::planner::model::ModelQuery;
 
+use super::types::{StructTypeName, TypeRegistry};
+
 mod datafusion {
     pub(super) use datafusion::{
-        arrow::datatypes::{DataType, Field, Schema, SchemaBuilder, SchemaRef, TimeUnit},
+        arrow::datatypes::{DataType, SchemaRef},
         catalog::Session,
         common::{DFSchema, DFSchemaRef},
         datasource::{function::TableFunctionImpl, TableProvider, TableType},
@@ -48,100 +49,35 @@ pub(crate) struct Model {
 
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
 
+    // The struct type of the model's object type
+    pub struct_type: StructTypeName,
+
     // Datafusion table schema
     pub schema: datafusion::SchemaRef,
-
-    // For now, descriptions of fields
-    pub columns: IndexMap<String, Option<String>>,
 
     // This is the entry point for the type mappings stored
     // in ModelSource
     pub data_type: Qualified<CustomTypeName>,
 }
 
-pub(super) fn object_type_table_schema(
-    metadata: &resolved::Metadata,
-    object_type: &Qualified<CustomTypeName>,
-    // TODO: get rid of this option
-    type_mappings: Option<&BTreeMap<Qualified<CustomTypeName>, TypeMapping>>,
-) -> (
-    // datafusion's table schema
-    datafusion::SchemaRef,
-    // description of the fields
-    IndexMap<String, Option<String>>,
-) {
-    let object_type_fields = metadata
-        .object_types
-        .get(object_type)
-        .map(|ty| &ty.object_type.fields);
-    let mut columns = IndexMap::new();
-    let mut builder = datafusion::SchemaBuilder::new();
-    let type_mapping = type_mappings.and_then(|type_mappings| type_mappings.get(object_type));
-    for (field_name, field_definition) in object_type_fields.into_iter().flatten() {
-        let type_representation = type_mapping.and_then(|type_mapping| {
-            let resolved::TypeMapping::Object { field_mappings, .. } = type_mapping;
-            field_mappings
-                .get(field_name)?
-                .column_type_representation
-                .as_ref()
-        });
-        let field_type = to_arrow_type(
-            metadata,
-            &field_definition.field_type.underlying_type,
-            type_mappings,
-            type_representation,
-        );
-        if let Some(field_type) = field_type {
-            builder.push(datafusion::Field::new(
-                field_name.to_string(),
-                field_type,
-                field_definition.field_type.nullable,
-            ));
-
-            let description = if let Some(ndc_models::TypeRepresentation::Enum { one_of }) =
-                type_representation
-            {
-                // TODO: Instead of stuffing the possible enum values in description,
-                // surface them in the metadata tables.
-                Some(
-                    field_definition
-                        .description
-                        .clone()
-                        .unwrap_or_else(String::new)
-                        + &format!(" Possible values: {}", one_of.join(", ")),
-                )
-            } else {
-                field_definition.description.clone()
-            };
-            columns.insert(field_name.to_string(), description);
-        }
-    }
-    let fields = builder.finish().fields;
-    (
-        datafusion::SchemaRef::new(datafusion::Schema::new(fields)),
-        columns,
-    )
-}
-
 impl Model {
     pub fn from_resolved_model(
-        metadata: &resolved::Metadata,
+        type_registry: &TypeRegistry,
         model: &resolved::ModelWithPermissions,
-    ) -> Self {
-        let (schema, columns) = {
-            let type_mappings = model.model.source.as_ref().map(|o| &o.type_mappings);
-            object_type_table_schema(metadata, &model.model.data_type, type_mappings)
-        };
-
-        Model {
+    ) -> Option<Self> {
+        let (type_name, schema) = type_registry
+            .get_object(&model.model.data_type)
+            .map(|object| (object.name(), object.table_schema()))?;
+        let model = Model {
             subgraph: model.model.name.subgraph.clone(),
             name: model.model.name.name.clone(),
             description: model.model.raw.description.clone(),
             arguments: IndexMap::new(),
-            schema,
+            struct_type: type_name.clone(),
+            schema: schema.clone(),
             data_type: model.model.data_type.clone(),
-            columns,
-        }
+        };
+        Some(model)
     }
 }
 
@@ -271,126 +207,5 @@ impl datafusion::TableProvider for Table {
         filters: &[&Expr],
     ) -> datafusion::Result<Vec<TableProviderFilterPushDown>> {
         Ok(can_pushdown_filters(&self.metadata, &self.model, filters))
-    }
-}
-
-/// Converts an opendd type to an arrow type.
-#[allow(clippy::match_same_arms)]
-pub(super) fn to_arrow_type(
-    metadata: &resolved::Metadata,
-    ty: &resolved::QualifiedBaseType,
-    type_mappings: Option<&BTreeMap<Qualified<CustomTypeName>, TypeMapping>>,
-    type_representation: Option<&ndc_models::TypeRepresentation>,
-) -> Option<datafusion::DataType> {
-    match &ty {
-        resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Inbuilt(inbuilt_type)) => {
-            let data_type = match inbuilt_type {
-                open_dds::types::InbuiltType::ID => datafusion::DataType::Utf8,
-                open_dds::types::InbuiltType::Int => datafusion::DataType::Int32,
-                open_dds::types::InbuiltType::Float => datafusion::DataType::Float32,
-                open_dds::types::InbuiltType::Boolean => datafusion::DataType::Boolean,
-                open_dds::types::InbuiltType::String => datafusion::DataType::Utf8,
-            };
-            Some(data_type)
-        }
-        resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Custom(custom_type)) => {
-            from_named_type(metadata, custom_type, type_mappings, type_representation)
-        }
-        resolved::QualifiedBaseType::List(element_type) => {
-            // TODO: Figure out the right type representation from the equivalent underlying NDC type,
-            // instead of passing None
-            let data_type =
-                to_arrow_type(metadata, &element_type.underlying_type, type_mappings, None)?;
-            Some(datafusion::DataType::List(Arc::new(
-                datafusion::Field::new("element", data_type, element_type.nullable),
-            )))
-        }
-    }
-}
-
-fn from_named_type(
-    metadata: &resolved::Metadata,
-    custom_type: &Qualified<CustomTypeName>,
-    // the type mapping of the enclosing object type, if any
-    // this is a hack to get the type representations of scalars, but those should exist
-    // separately from the enclosing object type mappings
-    type_mappings: Option<&BTreeMap<Qualified<CustomTypeName>, TypeMapping>>,
-    type_representation: Option<&ndc_models::TypeRepresentation>,
-) -> Option<datafusion::DataType> {
-    if let Some(_scalar_type) = metadata.scalar_types.get(custom_type) {
-        if let Some(type_representation) = type_representation {
-            match type_representation {
-                ndc_models::TypeRepresentation::Boolean => Some(datafusion::DataType::Boolean),
-                ndc_models::TypeRepresentation::Int8 => Some(datafusion::DataType::Int8),
-                ndc_models::TypeRepresentation::Int16 => Some(datafusion::DataType::Int16),
-                ndc_models::TypeRepresentation::Int32 => Some(datafusion::DataType::Int32),
-                ndc_models::TypeRepresentation::Int64 => Some(datafusion::DataType::Int64),
-                ndc_models::TypeRepresentation::Float32 => Some(datafusion::DataType::Float32),
-                ndc_models::TypeRepresentation::Float64 |
-                // BigDecimal128 is not supported by arrow.
-                ndc_models::TypeRepresentation::BigDecimal => Some(datafusion::DataType::Float64),
-                ndc_models::TypeRepresentation::String |
-                // Can't do anything better for BigInteger, so we just use String.
-                ndc_models::TypeRepresentation::BigInteger |
-                ndc_models::TypeRepresentation::UUID |
-                ndc_models::TypeRepresentation::Enum { .. } => Some(datafusion::DataType::Utf8),
-                ndc_models::TypeRepresentation::Date => Some(datafusion::DataType::Date32),
-                ndc_models::TypeRepresentation::Timestamp |
-                ndc_models::TypeRepresentation::TimestampTZ => Some(
-                    datafusion::DataType::Timestamp(datafusion::TimeUnit::Microsecond, None),
-                ),
-                _ => None,
-            }
-        } else {
-            match custom_type.name.to_string().to_lowercase().as_str() {
-                "bool" => Some(datafusion::DataType::Boolean),
-                "int8" => Some(datafusion::DataType::Int8),
-                "int16" => Some(datafusion::DataType::Int16),
-                "int32" => Some(datafusion::DataType::Int32),
-                "int64" => Some(datafusion::DataType::Int64),
-                "float32" => Some(datafusion::DataType::Float32),
-                "float64" |
-                // BigDecimal128 is not supported by arrow.
-                "bigdecimal" => Some(datafusion::DataType::Float64),
-                "varchar" |
-                "text" => Some(datafusion::DataType::Utf8),
-                "timestamp"
-                |
-                "timestamptz" => Some(datafusion::DataType::Timestamp(
-                    datafusion::TimeUnit::Microsecond,
-                    None,
-                )),
-                _ => None,
-            }
-        }
-    } else if let Some(object_type) = metadata.object_types.get(custom_type) {
-        let mut builder = datafusion::SchemaBuilder::new();
-        let type_mapping: Option<_> =
-            type_mappings.and_then(|type_mappings| type_mappings.get(custom_type));
-        for (field_name, field) in &object_type.object_type.fields {
-            let type_representation = type_mapping.and_then(|type_mapping| {
-                let resolved::TypeMapping::Object { field_mappings, .. } = type_mapping;
-                field_mappings
-                    .get(field_name)?
-                    .column_type_representation
-                    .as_ref()
-            });
-
-            let data_type = to_arrow_type(
-                metadata,
-                &field.field_type.underlying_type,
-                type_mappings,
-                type_representation,
-            )?;
-
-            builder.push(datafusion::Field::new(
-                field_name.to_string(),
-                data_type,
-                field.field_type.nullable,
-            ));
-        }
-        Some(datafusion::DataType::Struct(builder.finish().fields))
-    } else {
-        None
     }
 }

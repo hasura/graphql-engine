@@ -1,6 +1,5 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-assertion_line: 33
 expression: resolved
 input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested_object/metadata.json
 ---
@@ -180,8 +179,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 },
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "__unknown_namespace",
@@ -330,7 +329,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     },
-                ),
+                    scalar_representations: {},
+                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -438,8 +438,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 },
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "__unknown_namespace",
@@ -556,7 +556,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     },
-                ),
+                    scalar_representations: {},
+                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -664,8 +665,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 },
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "__unknown_namespace",
@@ -782,7 +783,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     },
-                ),
+                    scalar_representations: {},
+                },
             },
         },
         scalar_types: {},

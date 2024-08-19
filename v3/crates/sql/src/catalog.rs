@@ -5,6 +5,7 @@ use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
 use model::WithSession;
 use serde::{Deserialize, Serialize};
+use types::TypeRegistry;
 
 use crate::execute::optimizer;
 
@@ -22,6 +23,7 @@ pub mod introspection;
 pub mod mem_table;
 pub mod model;
 pub mod subgraph;
+pub mod types;
 
 /// The context in which to compile and execute SQL queries.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -36,35 +38,32 @@ pub struct Catalog {
 impl Catalog {
     /// Derive a SQL Context from resolved Open DDS metadata.
     pub fn from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
+        let type_registry = TypeRegistry::build_type_registry(&metadata);
         // process models
         let mut subgraphs = IndexMap::new();
         for (model_name, model) in &metadata.models {
-            let schema_name = &model_name.subgraph;
-            let table_name = &model_name.name;
-            let subgraph =
-                subgraphs
-                    .entry(schema_name.to_string())
-                    .or_insert_with(|| subgraph::Subgraph {
+            if let Some(table) = model::Model::from_resolved_model(&type_registry, model) {
+                let schema_name = &model_name.subgraph;
+                let table_name = &model_name.name;
+                let subgraph = subgraphs.entry(schema_name.to_string()).or_insert_with(|| {
+                    subgraph::Subgraph {
                         metadata: metadata.clone(),
                         tables: IndexMap::new(),
-                    });
-            subgraph.tables.insert(
-                table_name.to_string(),
-                Arc::new(model::Model::from_resolved_model(&metadata, model)),
-            );
+                    }
+                });
+                subgraph
+                    .tables
+                    .insert(table_name.to_string(), Arc::new(table));
+            }
         }
 
         // derive default schema
-        let default_schema = if subgraphs.len() == 1 {
-            subgraphs.get_index(0).map(|v| v.0.clone())
-        } else {
-            None
-        };
-
+        let default_schema = type_registry.default_schema().map(ToString::to_string);
         // process commands
         let mut table_valued_functions = IndexMap::new();
         for (command_name, command) in &metadata.commands {
-            if let Some(command) = command::Command::from_resolved_command(&metadata, command) {
+            if let Some(command) = command::Command::from_resolved_command(&type_registry, command)
+            {
                 let schema_name = command_name.subgraph.to_string();
                 let command_name = &command_name.name;
                 let table_valued_function_name = if Some(&schema_name) == default_schema.as_ref() {
@@ -79,6 +78,7 @@ impl Catalog {
         let introspection = introspection::IntrospectionSchemaProvider::new(
             &introspection::Introspection::from_metadata(
                 &metadata,
+                &type_registry,
                 &subgraphs,
                 &table_valued_functions,
             ),

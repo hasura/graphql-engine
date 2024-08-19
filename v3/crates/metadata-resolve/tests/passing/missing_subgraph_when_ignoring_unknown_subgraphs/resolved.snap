@@ -1,6 +1,5 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-assertion_line: 33
 expression: resolved
 input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring_unknown_subgraphs/metadata.json
 ---
@@ -146,8 +145,8 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                 },
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "article_namespace",
@@ -340,7 +339,8 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                             },
                         },
                     },
-                ),
+                    scalar_representations: {},
+                },
             },
         },
         scalar_types: {},

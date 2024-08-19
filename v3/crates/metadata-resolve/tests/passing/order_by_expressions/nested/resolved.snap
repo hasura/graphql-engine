@@ -1,6 +1,5 @@
 ---
 source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-assertion_line: 33
 expression: resolved
 input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/metadata.json
 ---
@@ -46,8 +45,8 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                 type_output_permissions: {},
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "default",
@@ -94,7 +93,16 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             },
                         },
                     },
-                ),
+                    scalar_representations: {
+                        FieldName(
+                            Identifier(
+                                "foo",
+                            ),
+                        ): {
+                            String,
+                        },
+                    },
+                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -144,8 +152,8 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                 type_output_permissions: {},
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "default",
@@ -184,7 +192,8 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             },
                         },
                     },
-                ),
+                    scalar_representations: {},
+                },
             },
         },
         scalar_types: {},
