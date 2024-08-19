@@ -1,4 +1,4 @@
-.new-version-modal {
+.newVersionModal {
     position: fixed;
     top: 0;
     left: 0;
@@ -8,49 +8,51 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999; /* Ensure it appears above other elements */
+    z-index: 9999;
 }
 
-.display-block {
-    display: flex; /* Change to flex to use flex properties */
-}
-
-.display-none {
+.displayNone {
     display: none;
 }
 
-.new-version-modal .modal-main {
+.modalMain {
+    position: relative;
     background: white;
     padding: 50px;
     border-radius: 8px;
     max-width: 500px;
     width: 100%;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for better visibility */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 @media (max-width: 600px) {
-    .new-version-modal .modal-main {
+    .modalMain {
         max-width: 90%;
     }
 }
 
-.close-icon {
+.closeIcon {
+    position: absolute;
+    top: 25px;
+    left: 25px;
     cursor: pointer;
-    position: relative;
-    top: -25px;
-    left: -20px;
 }
 
-.monsta-image {
+.monstaImage {
 
 }
 
-.above-headline {
+.aboveHeadline {
     margin-top: 1.3rem;
     font-weight: bold;
     color: var(--ifm-link-color);;
 }
+
+[data-theme='dark'] .bodyText {
+    color: #141c22;
+}
+
 
 .headline {
     display: block;
@@ -61,15 +63,32 @@
 }
 
 
-.body-text {
-font-size: .95rem;
+[data-theme='dark'] .headline {
+    color: #141c22;
+}
+
+.subhead {
+
+}
+
+[data-theme='dark'] .subhead {
+    color: #141c22;
+}
+
+.bodyText {
+    font-size: .95rem;
     margin-top: 2rem;
     margin-bottom: 2rem;
 }
 
-.cta-thing {
+
+[data-theme='dark'] .bodyText {
+    color: #141c22;
+}
+
+.ctaThing {
     display: block;
- background-color: #21c45c;
+    background-color: #21c45c;
     color: white;
     padding: 10px 20px;
     border-radius: 5px;
@@ -77,20 +96,8 @@ font-size: .95rem;
     margin: 0 auto;
 }
 
-.cta-thing a {
+.ctaThing a {
     color: white;
     font-weight: bold;
     text-decoration: none;
-}
-
-html[data-theme='dark'] {
-    .headline {
-        color: #141c22;
-    }
-    .subhead {
-        color: #141c22;
-    }
-    .body-text {
-        color: #141c22;
-    }
 }
