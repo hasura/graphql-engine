@@ -10,7 +10,7 @@ build:
 
 format:
   cargo fmt --check
-  prettier --check .
+  npx --yes prettier --check .
   ! command -v nix || nix fmt -- --check .
 alias fmt := format
 
@@ -21,7 +21,7 @@ fix:
   ! command -v nix || nix fmt
 
 fix-format:
-  prettier --write .
+  npx --yes prettier --write .
 
 run-local-with-shell:
   #!/usr/bin/env bash

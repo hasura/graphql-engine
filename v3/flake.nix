@@ -217,7 +217,7 @@
                 pkgs.just
                 pkgs.moreutils
                 pkgs.nixpkgs-fmt
-                pkgs.nodePackages.prettier
+                pkgs.nodejs_22
 
                 # Rust
                 pkgs.bacon
