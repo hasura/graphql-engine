@@ -67,6 +67,26 @@ fn test_order_by_nested_fields() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_paginate_nested_limit_1() -> anyhow::Result<()> {
+    test_sql("sql/paginate/nested_limit_1")
+}
+
+#[test]
+fn test_paginate_nested_limit_2() -> anyhow::Result<()> {
+    test_sql("sql/paginate/nested_limit_2")
+}
+
+#[test]
+fn test_paginate_nested_limit_3() -> anyhow::Result<()> {
+    test_sql("sql/paginate/nested_limit_3")
+}
+
+#[test]
+fn test_paginate_nested_limit_4() -> anyhow::Result<()> {
+    test_sql("sql/paginate/nested_limit_4")
+}
+
+#[test]
 fn test_aggregate_count_invoice_lines() -> anyhow::Result<()> {
     test_sql("sql/aggregate/count_invoice_lines")
 }

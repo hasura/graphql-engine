@@ -218,9 +218,15 @@ impl Table {
         &self,
         projected_schema: datafusion::DFSchemaRef,
         filters: &[datafusion::Expr],
+        fetch: Option<usize>,
     ) -> datafusion::Result<datafusion::LogicalPlan> {
-        let model_query_node =
-            ModelQuery::new(&self.model, &self.arguments, projected_schema, filters)?;
+        let model_query_node = ModelQuery::new(
+            &self.model,
+            &self.arguments,
+            projected_schema,
+            filters,
+            fetch,
+        )?;
         let logical_plan = datafusion::LogicalPlan::Extension(datafusion::Extension {
             node: Arc::new(model_query_node),
         });
@@ -248,14 +254,15 @@ impl datafusion::TableProvider for Table {
         projection: Option<&Vec<usize>>,
         // filters and limit can be used here to inject some push-down operations if needed
         filters: &[datafusion::Expr],
-        _limit: Option<usize>,
+        limit: Option<usize>,
     ) -> datafusion::Result<Arc<dyn datafusion::ExecutionPlan>> {
         let projected_schema = self.model.schema.project(projection.unwrap_or(&vec![]))?;
         let qualified_projected_schema = datafusion::DFSchema::from_unqualified_fields(
             projected_schema.fields,
             projected_schema.metadata,
         )?;
-        let logical_plan = self.to_logical_plan(Arc::new(qualified_projected_schema), filters)?;
+        let logical_plan =
+            self.to_logical_plan(Arc::new(qualified_projected_schema), filters, limit)?;
         state.create_physical_plan(&logical_plan).await
     }
 

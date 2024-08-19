@@ -94,6 +94,7 @@ impl ModelQuery {
         arguments: &BTreeMap<ArgumentName, serde_json::Value>,
         projected_schema: DFSchemaRef,
         filters: &[datafusion::logical_expr::Expr],
+        fetch: Option<usize>,
     ) -> datafusion::error::Result<Self> {
         let mut field_selection = IndexMap::new();
         for field in projected_schema.fields() {
@@ -145,7 +146,7 @@ impl ModelQuery {
                     .collect(),
                 filter,
                 order_by: vec![],
-                limit: None,
+                limit: fetch,
                 offset: None,
             },
             selection: field_selection,
@@ -211,6 +212,35 @@ impl ModelQuery {
         };
 
         Ok(Some(new_query))
+    }
+
+    pub(crate) fn paginate(&self, limit: Option<usize>, offset: usize) -> Self {
+        let new_offset = match self.model_selection.target.offset {
+            None => offset,
+            Some(current_offset) => offset + current_offset,
+        };
+        let new_limit = match self.model_selection.target.limit {
+            None => limit,
+            Some(current_limit) => match limit {
+                None => Some(0.max(current_limit - offset)),
+                Some(limit) if limit + offset > current_limit => {
+                    Some(0.max(current_limit - offset))
+                }
+                Some(limit) => Some(limit),
+            },
+        };
+
+        ModelQuery {
+            model_selection: ModelSelection {
+                target: ModelTarget {
+                    limit: new_limit,
+                    offset: Some(new_offset),
+                    ..self.model_selection.target.clone()
+                },
+                selection: self.model_selection.selection.clone(),
+            },
+            schema: self.schema.clone(),
+        }
     }
 }
 
@@ -425,6 +455,12 @@ impl ModelQuery {
             .transpose()
             .map_err(|_| DataFusionError::Internal("limit out of range".into()))?;
 
+        let offset: Option<u32> = model_target
+            .offset
+            .map(u32::try_from)
+            .transpose()
+            .map_err(|_| DataFusionError::Internal("offset out of range".into()))?;
+
         let ndc_pushdown = NDCQueryPushDown::new(
             http_context.clone(),
             self.schema.inner().clone(),
@@ -437,6 +473,7 @@ impl ModelQuery {
                 relationships: BTreeMap::new(),
             },
             limit,
+            offset,
             relationships,
             Arc::new(model_source.data_connector.clone()),
         );
@@ -567,9 +604,15 @@ impl UserDefinedLogicalNodeCore for ModelQuery {
             .limit
             .as_ref()
             .map_or(String::new(), |limit| format!(", limit={limit}"));
+        let offset = self
+            .model_selection
+            .target
+            .offset
+            .as_ref()
+            .map_or(String::new(), |offset| format!(", offset={offset}"));
         write!(
             f,
-            "ModelQuery: model={}:{}{projection}{filter}{sort}{limit}",
+            "ModelQuery: model={}:{}{projection}{filter}{sort}{limit}{offset}",
             self.model_selection.target.subgraph, self.model_selection.target.model_name,
         )
     }
@@ -592,6 +635,7 @@ pub(crate) struct NDCQueryPushDown {
     filter: Option<ResolvedFilterExpression>,
     order_by: ResolvedOrderBy<'static>,
     limit: Option<u32>,
+    offset: Option<u32>,
     collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
     projected_schema: SchemaRef,
@@ -608,6 +652,7 @@ impl NDCQueryPushDown {
         filter: Option<ResolvedFilterExpression>,
         order_by: ResolvedOrderBy<'static>,
         limit: Option<u32>,
+        offset: Option<u32>,
         collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
         data_connector: Arc<metadata_resolve::DataConnectorLink>,
     ) -> Self {
@@ -620,6 +665,7 @@ impl NDCQueryPushDown {
             filter,
             order_by,
             limit,
+            offset,
             collection_relationships,
             data_connector,
             projected_schema: schema,
@@ -690,7 +736,7 @@ impl ExecutionPlan for NDCQueryPushDown {
                 ),
                 aggregates: None,
                 limit: self.limit,
-                offset: None,
+                offset: self.offset,
                 order_by: Some(self.order_by.order_by_elements.clone()),
                 predicate: self.filter.clone(),
             },

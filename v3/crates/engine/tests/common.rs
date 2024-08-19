@@ -594,7 +594,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
 
         // Execute the test
 
-        snapshot(
+        snapshot_sql(
             &catalog,
             &session,
             &http_context,
@@ -604,7 +604,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
         )
         .await?;
 
-        snapshot(
+        snapshot_sql(
             &catalog,
             &session,
             &http_context,
@@ -618,7 +618,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
     })
 }
 
-async fn snapshot(
+async fn snapshot_sql(
     catalog: &Arc<sql::catalog::Catalog>,
     session: &Arc<hasura_authn_core::Session>,
     http_context: &Arc<execute::HttpContext>,

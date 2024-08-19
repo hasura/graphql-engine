@@ -144,7 +144,12 @@ async fn execute_logical_plan(frame: DataFrame) -> Result<Vec<RecordBatch>, SqlE
 }
 
 fn record_batches_to_json_array(batches: &[RecordBatch]) -> Result<Vec<u8>, SqlExecutionError> {
-    if batches.is_empty() {
+    if batches
+        .iter()
+        .map(datafusion::arrow::array::RecordBatch::num_rows)
+        .sum::<usize>()
+        == 0
+    {
         return Ok(vec![b'[', b']']);
     }
     // Write the record batch out as a JSON array
