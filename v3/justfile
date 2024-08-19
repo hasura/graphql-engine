@@ -8,6 +8,12 @@ default:
 build:
   cargo build --release --all-targets
 
+audit:
+  cargo audit
+
+audit-fix:
+  cargo audit fix
+
 format:
   cargo fmt --check
   npx --yes prettier --check .
