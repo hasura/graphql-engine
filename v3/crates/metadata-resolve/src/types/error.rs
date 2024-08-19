@@ -1,23 +1,22 @@
 use crate::stages::{
-    aggregates::AggregateExpressionError, apollo, boolean_expressions, data_connector_scalar_types,
-    data_connectors, graphql_config, models, object_types, order_by_expressions, relay,
-    scalar_boolean_expressions, type_permissions,
+    aggregates::AggregateExpressionError, apollo, boolean_expressions, commands,
+    data_connector_scalar_types, data_connectors, graphql_config, models, object_types,
+    order_by_expressions, relay, scalar_boolean_expressions, type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::order_by_expression::OrderByExpressionName;
 use open_dds::{
     arguments::ArgumentName,
-    commands::{CommandName, FunctionName, ProcedureName},
+    commands::CommandName,
     data_connector::{DataConnectorName, DataConnectorObjectType},
     models::ModelName,
     relationships::RelationshipName,
-    types::{CustomTypeName, FieldName, OperatorName, TypeReference},
+    types::{CustomTypeName, FieldName, OperatorName},
 };
 
 use crate::helpers::{
-    argument::ArgumentMappingError, ndc_validation::NDCValidationError,
-    type_mappings::TypeMappingCollectionError, typecheck,
+    ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
 };
 
 // TODO: This enum really needs structuring
@@ -27,61 +26,6 @@ pub enum Error {
     UnknownFieldInFilterableFields {
         model_name: ModelName,
         field_name: FieldName,
-    },
-    // ------- Errors for commands ---------
-    #[error("the following command is defined more than once: {name:}")]
-    DuplicateCommandDefinition { name: Qualified<CommandName> },
-    #[error("the following argument {argument_name:} with argument type {argument_type:} in command {command_name:} ) has not been defined")]
-    UnknownCommandArgumentType {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-        argument_type: TypeReference,
-    },
-    #[error(
-        "the following argument in command {command_name:} is defined more than once: {argument_name:}"
-    )]
-    DuplicateCommandArgumentDefinition {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-    },
-    #[error("source for the following command is defined more than once: {command_name:}")]
-    DuplicateCommandSourceDefinition {
-        command_name: Qualified<CommandName>,
-    },
-    #[error("the source data connector {data_connector:} for command {command_name:} has not been defined")]
-    UnknownCommandDataConnector {
-        command_name: Qualified<CommandName>,
-        data_connector: Qualified<DataConnectorName>,
-    },
-    #[error(
-        "the mapping for type {type_name:} in command {command_name:} is defined more than once"
-    )]
-    DuplicateTypeMappingDefinitionInCommandSource {
-        command_name: Qualified<CommandName>,
-        type_name: CustomTypeName,
-    },
-    #[error(
-        "unknown argument {argument_name:} referenced in argument mappings for command {command_name:}"
-    )]
-    UnknownCommandSourceArgument {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-    },
-    #[error("command source is required for command '{command_name:}' to resolve predicate")]
-    CommandSourceRequiredForPredicate {
-        command_name: Qualified<CommandName>,
-    },
-    #[error(
-        "the mapping for argument {argument_name:} of command {command_name:} has been defined more than once"
-    )]
-    DuplicateCommandArgumentMapping {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-    },
-    #[error("a preset argument {argument_name:} has been set for the command {command_name:} but no such argument exists for this command")]
-    CommandArgumentPresetMismatch {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
     },
     #[error("a preset argument {argument_name:} has been set for the model {model_name:} but no such argument exists for this model")]
     ModelArgumentPresetMismatch {
@@ -99,23 +43,6 @@ pub enum Error {
         argument_name: ArgumentName,
     },
 
-    #[error("the procedure {procedure:} in the data connector {data_connector:} for command {command_name:} has not been defined")]
-    UnknownCommandProcedure {
-        command_name: Qualified<CommandName>,
-        data_connector: Qualified<DataConnectorName>,
-        procedure: ProcedureName,
-    },
-    #[error("the function {function:} in the data connector {data_connector:} for command {command_name:} has not been defined")]
-    UnknownCommandFunction {
-        command_name: Qualified<CommandName>,
-        data_connector: Qualified<DataConnectorName>,
-        function: FunctionName,
-    },
-    #[error("{error:} in command {command_name:}")]
-    CommandTypeMappingCollectionError {
-        command_name: Qualified<CommandName>,
-        error: TypeMappingCollectionError,
-    },
     // ----------------
     #[error("the mapping for type {type_name:} in model {model_name:} is defined more than once")]
     DuplicateTypeMappingDefinitionInModelSource {
@@ -299,20 +226,6 @@ pub enum Error {
     UnknownScalarType {
         data_type: Qualified<CustomTypeName>,
     },
-    #[error("An error occurred while mapping arguments in the command {command_name:} to the function {function_name:} in the data connector {data_connector_name:}: {error:}")]
-    CommandFunctionArgumentMappingError {
-        data_connector_name: Qualified<DataConnectorName>,
-        command_name: Qualified<CommandName>,
-        function_name: FunctionName,
-        error: ArgumentMappingError,
-    },
-    #[error("An error occurred while mapping arguments in the command {command_name:} to the procedure {procedure_name:} in the data connector {data_connector_name:}: {error:}")]
-    CommandProcedureArgumentMappingError {
-        data_connector_name: Qualified<DataConnectorName>,
-        command_name: Qualified<CommandName>,
-        procedure_name: ProcedureName,
-        error: ArgumentMappingError,
-    },
     #[error(
         "Type error in preset argument {argument_name:} for command {command_name:}: {type_error:}"
     )]
@@ -372,6 +285,9 @@ pub enum Error {
     RelayError(#[from] relay::RelayError),
     #[error("{0}")]
     ModelsError(#[from] models::ModelsError),
+    #[error("{0}")]
+    CommandsError(#[from] commands::CommandsError),
+
     #[error("{0}")]
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,

@@ -5,7 +5,6 @@ use crate::stages::{
     boolean_expressions, data_connectors, object_boolean_expressions, scalar_types,
     type_permissions,
 };
-use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
 use super::types::CommandsIssue;
@@ -17,6 +16,7 @@ use open_dds::types::{CustomTypeName, DataConnectorArgumentName};
 
 use std::collections::BTreeMap;
 
+use super::error::CommandsError;
 use crate::helpers::type_mappings::{self, SpecialCaseTypeMapping};
 
 struct CommandSourceResponse {
@@ -36,9 +36,9 @@ pub fn resolve_command_source(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-) -> Result<(CommandSource, Vec<CommandsIssue>), Error> {
+) -> Result<(CommandSource, Vec<CommandsIssue>), CommandsError> {
     if command.source.is_some() {
-        return Err(Error::DuplicateCommandSourceDefinition {
+        return Err(CommandsError::DuplicateCommandSourceDefinition {
             command_name: command.name.clone(),
         });
     }
@@ -50,7 +50,7 @@ pub fn resolve_command_source(
     let data_connector_context = data_connectors
         .0
         .get(&qualified_data_connector_name)
-        .ok_or_else(|| Error::UnknownCommandDataConnector {
+        .ok_or_else(|| CommandsError::UnknownCommandDataConnector {
             command_name: command.name.clone(),
             data_connector: qualified_data_connector_name.clone(),
         })?;
@@ -63,7 +63,7 @@ pub fn resolve_command_source(
                 .schema
                 .procedures
                 .get(procedure)
-                .ok_or_else(|| Error::UnknownCommandProcedure {
+                .ok_or_else(|| CommandsError::UnknownCommandProcedure {
                     command_name: command.name.clone(),
                     data_connector: qualified_data_connector_name.clone(),
                     procedure: procedure.clone(),
@@ -88,7 +88,7 @@ pub fn resolve_command_source(
                 .schema
                 .functions
                 .get(function)
-                .ok_or_else(|| Error::UnknownCommandFunction {
+                .ok_or_else(|| CommandsError::UnknownCommandFunction {
                     command_name: command.name.clone(),
                     data_connector: qualified_data_connector_name.clone(),
                     function: function.clone(),
@@ -128,7 +128,7 @@ pub fn resolve_command_source(
     )
     .map_err(|err| match &command_source.data_connector_command {
         DataConnectorCommand::Function(function_name) => {
-            Error::CommandFunctionArgumentMappingError {
+            CommandsError::CommandFunctionArgumentMappingError {
                 data_connector_name: qualified_data_connector_name.clone(),
                 command_name: command.name.clone(),
                 function_name: function_name.clone(),
@@ -136,7 +136,7 @@ pub fn resolve_command_source(
             }
         }
         DataConnectorCommand::Procedure(procedure_name) => {
-            Error::CommandProcedureArgumentMappingError {
+            CommandsError::CommandProcedureArgumentMappingError {
                 data_connector_name: qualified_data_connector_name.clone(),
                 command_name: command.name.clone(),
                 procedure_name: procedure_name.clone(),
@@ -186,7 +186,7 @@ pub fn resolve_command_source(
                 ndc_object_type_name: source_result_type_name,
             };
 
-            Ok::<_, Error>(source_result_type_mapping_to_resolve)
+            Ok::<_, CommandsError>(source_result_type_mapping_to_resolve)
         })
         .transpose()?;
 
@@ -199,7 +199,7 @@ pub fn resolve_command_source(
                 .schema
                 .object_types
                 .get(ndc_type_name)
-                .ok_or_else(|| Error::CommandTypeMappingCollectionError {
+                .ok_or_else(|| CommandsError::CommandTypeMappingCollectionError {
                     command_name: command.name.clone(),
                     error: type_mappings::TypeMappingCollectionError::NDCValidationError(
                         crate::NDCValidationError::NoSuchType(ndc_type_name.as_str().to_owned()),
@@ -231,7 +231,7 @@ pub fn resolve_command_source(
             &mut type_mappings,
             &special_case,
         )
-        .map_err(|error| Error::CommandTypeMappingCollectionError {
+        .map_err(|error| CommandsError::CommandTypeMappingCollectionError {
             command_name: command.name.clone(),
             error,
         })?;

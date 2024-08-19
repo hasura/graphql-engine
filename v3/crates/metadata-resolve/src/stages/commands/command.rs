@@ -3,7 +3,6 @@ use crate::helpers::types::{get_type_representation, mk_name};
 use crate::stages::{
     boolean_expressions, object_boolean_expressions, scalar_types, type_permissions,
 };
-use crate::types::error::Error;
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 use indexmap::IndexMap;
 use open_dds::identifier::SubgraphName;
@@ -13,6 +12,7 @@ use open_dds::commands::CommandV1;
 
 use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 
+use super::error::CommandsError;
 use std::collections::BTreeMap;
 
 pub fn resolve_command(
@@ -25,7 +25,7 @@ pub fn resolve_command(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-) -> Result<Command, Error> {
+) -> Result<Command, CommandsError> {
     let mut arguments = IndexMap::new();
     let qualified_command_name = Qualified::new(subgraph.clone(), command.name.clone());
     let command_description = command.description.clone();
@@ -60,13 +60,13 @@ pub fn resolve_command(
                 )
                 .is_some()
             {
-                return Err(Error::DuplicateCommandArgumentDefinition {
+                return Err(CommandsError::DuplicateCommandArgumentDefinition {
                     command_name: qualified_command_name,
                     argument_name: argument.name.clone(),
                 });
             }
         } else {
-            return Err(Error::UnknownCommandArgumentType {
+            return Err(CommandsError::UnknownCommandArgumentType {
                 command_name: qualified_command_name,
                 argument_name: argument.name.clone(),
                 argument_type: argument.argument_type.clone(),
