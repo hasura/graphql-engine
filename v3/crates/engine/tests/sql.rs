@@ -17,6 +17,61 @@ fn test_introspection_hasura_table_metadata() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_introspection_functions() -> anyhow::Result<()> {
+    test_sql("sql/introspection/functions")
+}
+
+#[test]
+fn test_introspection_struct_types() -> anyhow::Result<()> {
+    test_sql("sql/introspection/struct_types")
+}
+
+#[test]
+fn test_commands_functions() -> anyhow::Result<()> {
+    test_sql("sql/commands/functions")
+}
+
+#[test]
+fn test_commands_functions_empty_args() -> anyhow::Result<()> {
+    test_sql("sql/commands/functions_empty_args")
+}
+
+#[test]
+fn test_commands_functions_no_access() -> anyhow::Result<()> {
+    test_sql("sql/commands/functions_no_access")
+}
+
+#[test]
+fn test_commands_functions_no_access_fields() -> anyhow::Result<()> {
+    test_sql("sql/commands/functions_no_access_fields")
+}
+
+#[test]
+fn test_commands_procedures() -> anyhow::Result<()> {
+    test_sql("sql/commands/procedures")
+}
+
+#[test]
+fn test_commands_procedures_empty_args() -> anyhow::Result<()> {
+    test_sql("sql/commands/procedures_empty_args")
+}
+
+#[test]
+fn test_commands_procedures_no_access() -> anyhow::Result<()> {
+    test_sql("sql/commands/procedures_no_access")
+}
+
+#[test]
+fn test_commands_procedures_no_access_fields() -> anyhow::Result<()> {
+    test_sql("sql/commands/procedures_no_access_fields")
+}
+
+#[test]
+fn test_commands_procedures_disallow_mutations() -> anyhow::Result<()> {
+    test_sql("sql/commands/procedures_disallow_mutations")
+}
+
+#[test]
 fn test_select_all_fields() -> anyhow::Result<()> {
     test_sql("sql/select/select_all_fields")
 }

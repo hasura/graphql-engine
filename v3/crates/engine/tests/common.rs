@@ -560,6 +560,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
         let test_path = root_test_dir.join(test_path_string);
 
         let request_path = test_path.join("query.sql");
+        let request_path_json = test_path.join("query.json");
         let response_path = test_path_string.to_string() + "/expected.json";
         let explain_path = test_path_string.to_string() + "/plan.json";
         let metadata_path = root_test_dir.join("sql/metadata.json");
@@ -580,7 +581,12 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
         // Ensure schema is serialized successfully.
         serde_json::to_string(&schema)?;
 
-        let query = fs::read_to_string(request_path)?;
+        let request = if let Ok(content) = fs::read_to_string(request_path) {
+            SqlRequest::new(content)
+        } else {
+            let json_content = fs::read_to_string(request_path_json)?;
+            serde_json::from_str(&json_content)?
+        };
 
         let session = Arc::new({
             let session_vars_path = &test_path.join("session_variables.json");
@@ -600,7 +606,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
             &http_context,
             &mut test_ctx.mint,
             explain_path,
-            &format!("EXPLAIN {query}"),
+            &SqlRequest::new(format!("EXPLAIN {}", request.sql)),
         )
         .await?;
 
@@ -610,7 +616,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
             &http_context,
             &mut test_ctx.mint,
             response_path,
-            &query,
+            &request,
         )
         .await?;
 
@@ -624,16 +630,20 @@ async fn snapshot_sql(
     http_context: &Arc<execute::HttpContext>,
     mint: &mut Mint,
     response_path: String,
-    query: &str,
+    request: &SqlRequest,
 ) -> Result<(), anyhow::Error> {
-    let request = SqlRequest::new(query.to_owned());
     let response = sql::execute::execute_sql(
         catalog.clone(),
         session.clone(),
         http_context.clone(),
-        &request,
+        request,
     )
-    .await?;
+    .await;
+
+    let response = match response {
+        Ok(r) => r,
+        Err(e) => serde_json::to_vec(&serde_json::json!({"error": e.to_string()}))?,
+    };
     let response = serde_json::from_reader::<_, serde_json::Value>(response.as_slice())?;
     let mut expected = mint.new_goldenfile_with_differ(
         response_path,

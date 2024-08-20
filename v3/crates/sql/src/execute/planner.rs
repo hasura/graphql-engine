@@ -5,7 +5,7 @@ pub(crate) mod model;
 pub(crate) mod order_by;
 pub(crate) mod scalar;
 
-use command::NDCFunctionPushDown;
+use command::build_execution_plan;
 use hasura_authn_core::Session;
 use std::sync::Arc;
 
@@ -77,15 +77,15 @@ impl ExtensionPlanner for NDCPushDownPlanner {
         } else if let Some(command_query) = node.as_any().downcast_ref::<command::CommandQuery>() {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
-            let ndc_pushdown = NDCFunctionPushDown::try_new(
+            build_execution_plan(
                 &self.catalog.metadata,
                 &self.http_context,
                 &self.session,
                 &command_query.command_selection,
                 &command_query.schema,
                 &command_query.output,
-            )?;
-            Ok(Some(Arc::new(ndc_pushdown)))
+            )
+            .map(Some)
         } else {
             Ok(None)
         }

@@ -214,7 +214,7 @@
     "return_type": "institution",
     "table_description": null,
     "field_name": "location",
-    "field_type": "STRUCT<city STRING, country STRUCT<continent STRING, name STRING>, campuses ARRAY<STRING>>",
+    "field_type": "STRUCT<city STRING, campuses ARRAY<STRING>>",
     "field_type_normalized": "location",
     "is_nullable": true,
     "field_description": null

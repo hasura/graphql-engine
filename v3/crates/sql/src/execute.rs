@@ -6,6 +6,7 @@ use datafusion::{
     error::DataFusionError,
 };
 use hasura_authn_core::Session;
+use planner::common::PhysicalPlanOptions;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -19,12 +20,17 @@ pub(crate) mod planner;
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SqlRequest {
-    sql: String,
+    pub sql: String,
+    #[serde(default)]
+    pub disallow_mutations: bool,
 }
 
 impl SqlRequest {
     pub fn new(sql: String) -> Self {
-        SqlRequest { sql }
+        SqlRequest {
+            sql,
+            disallow_mutations: false,
+        }
     }
 }
 
@@ -88,12 +94,13 @@ pub async fn execute_sql(
             },
         )
         .await?;
+    let physical_plan_options = PhysicalPlanOptions::new(request.disallow_mutations);
     let batches = tracer
         .in_span_async(
             "execute_logical_plan",
             "Executes the Logical Plan of a query",
             SpanVisibility::User,
-            || Box::pin(async { execute_logical_plan(data_frame).await }),
+            || Box::pin(async { execute_logical_plan(physical_plan_options, data_frame).await }),
         )
         .await?;
     tracer.in_span(
@@ -104,7 +111,10 @@ pub async fn execute_sql(
     )
 }
 
-async fn execute_logical_plan(frame: DataFrame) -> Result<Vec<RecordBatch>, SqlExecutionError> {
+async fn execute_logical_plan(
+    physical_plan_options: PhysicalPlanOptions,
+    frame: DataFrame,
+) -> Result<Vec<RecordBatch>, SqlExecutionError> {
     let tracer = tracing_util::global_tracer();
     let task_ctx = frame.task_ctx();
     let session_config = task_ctx.session_config().clone();
@@ -129,9 +139,13 @@ async fn execute_logical_plan(frame: DataFrame) -> Result<Vec<RecordBatch>, SqlE
             "Executes a physical plan to collect record batches",
             SpanVisibility::User,
             || {
-                let task_ctx = Arc::new(task_ctx.with_session_config(
-                    session_config.with_extension(Arc::new(tracing_util::Context::current())),
-                ));
+                let task_ctx = Arc::new(
+                    task_ctx.with_session_config(
+                        session_config
+                            .with_extension(Arc::new(tracing_util::Context::current()))
+                            .with_extension(Arc::new(physical_plan_options)),
+                    ),
+                );
                 Box::pin(async {
                     datafusion::physical_plan::collect(plan, task_ctx)
                         .await

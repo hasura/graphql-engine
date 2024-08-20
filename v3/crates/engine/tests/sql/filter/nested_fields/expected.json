@@ -4,10 +4,6 @@
     "name": "Queen Mary University of London",
     "location": {
       "city": "London",
-      "country": {
-        "continent": "Europe",
-        "name": "UK"
-      },
       "campuses": [
         "Mile End",
         "Whitechapel",

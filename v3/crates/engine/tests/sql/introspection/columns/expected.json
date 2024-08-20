@@ -32,7 +32,7 @@
   {
     "table_name": "institutions",
     "column_name": "location",
-    "data_type": "Struct([Field { name: \"city\", data_type: Utf8, nullable: true, dict_id: 0, dict_is_ordered: false, metadata: {} }, Field { name: \"country\", data_type: Struct([Field { name: \"continent\", data_type: Utf8, nullable: true, dict_id: 0, dict_is_ordered: false, metadata: {} }, Field { name: \"name\", data_type: Utf8, nullable: true, dict_id: 0, dict_is_ordered: false, metadata: {} }]), nullable: true, dict_id: 0, dict_is_ordered: false, metadata: {} }, Field { name: \"campuses\", data_type: List(Field { name: \"element\", data_type: Utf8, nullable: true, dict_id: 0, dict_is_ordered: false, metadata: {} }), nullable: true, dict_id: 0, dict_is_ordered: false, metadata: {} }])",
+    "data_type": "Struct([Field { name: \"city\", data_type: Utf8, nullable: true, dict_id: 0, dict_is_ordered: false, metadata: {} }, Field { name: \"campuses\", data_type: List(Field { name: \"element\", data_type: Utf8, nullable: true, dict_id: 0, dict_is_ordered: false, metadata: {} }), nullable: true, dict_id: 0, dict_is_ordered: false, metadata: {} }])",
     "is_nullable": "YES"
   },
   {

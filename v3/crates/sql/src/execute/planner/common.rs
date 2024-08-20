@@ -7,6 +7,17 @@ use metadata_resolve::{
 use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
 
 #[derive(Debug, Clone)]
+pub(crate) struct PhysicalPlanOptions {
+    pub(crate) disallow_mutations: bool,
+}
+
+impl PhysicalPlanOptions {
+    pub(crate) fn new(disallow_mutations: bool) -> Self {
+        Self { disallow_mutations }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct ResolvedColumn {
     pub column_name: DataConnectorColumnName,
     pub field_path: Vec<DataConnectorColumnName>,

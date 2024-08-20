@@ -10,9 +10,10 @@ pub(crate) mod query;
 mod relationships;
 pub(crate) mod selection_set;
 
-pub use arguments::Argument;
+pub use arguments::{Argument, MutationArgument};
 pub use field::ResolvedField;
 pub use filter::{plan_expression, resolve_expression, ResolvedFilterExpression};
+pub use mutation::ResolvedMutationExecutionPlan;
 pub use query::{ResolvedQueryExecutionPlan, ResolvedQueryNode};
 pub use relationships::Relationship;
 
