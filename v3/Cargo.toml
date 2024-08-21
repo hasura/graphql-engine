@@ -1,12 +1,13 @@
 [workspace]
 resolver = "2"
 
-package.version = "0.1.0"
+package.version = "3.0.0"
 package.edition = "2021"
 package.license = "Apache-2.0"
 
 members = [
   "crates/auth/*",
+  "crates/compatibility",
   "crates/custom-connector",
   "crates/engine",
   "crates/execute",
@@ -73,6 +74,7 @@ bincode = "1"
 bson = "2"
 build-data = "0.2"
 bytes = "1"
+chrono = "0.4"
 clap = "4"
 convert_case = "0.6"
 cookie = "0.18"

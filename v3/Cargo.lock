@@ -446,7 +446,7 @@ checksum = "3b43422f69d8ff38f95f1b2bb76517c91589a924d1559a0e935d7c8ce0274c11"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -468,7 +468,7 @@ checksum = "16e62a023e7c117e27523144c5d2459f4397fcc3cab0085af8e2224f643a0193"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -479,7 +479,7 @@ checksum = "6e0c28dcc82d7c8ead5cb13beb15405b57b8546e93215673ff8ca0349a028107"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -797,8 +797,10 @@ checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-targets 0.52.6",
 ]
 
@@ -853,9 +855,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.15"
+version = "4.5.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11d8838454fda655dafd3accb2b6e2bea645b9e4078abe84a22ceb947235c5cc"
+checksum = "ed6719fffa43d0d87e5fd8caeab59be1554fb028cd30edc88fc4369b17971019"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -882,7 +884,7 @@ dependencies = [
  "heck 0.5.0",
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -925,6 +927,20 @@ dependencies = [
  "strum",
  "strum_macros",
  "unicode-width",
+]
+
+[[package]]
+name = "compatibility"
+version = "3.0.0"
+dependencies = [
+ "chrono",
+ "open-dds",
+ "opendds-derive",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "thiserror",
 ]
 
 [[package]]
@@ -1175,7 +1191,7 @@ dependencies = [
 
 [[package]]
 name = "custom-connector"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -1211,7 +1227,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "strsim",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -1222,7 +1238,7 @@ checksum = "d336a2a514f6ccccaa3e09b02d41d35330c07ddf03a62165fcec10bb561c7806"
 dependencies = [
  "darling_core",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -1603,12 +1619,12 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustc_version",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
 name = "dev-auth-webhook"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -1732,7 +1748,7 @@ dependencies = [
 
 [[package]]
 name = "engine"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -1811,7 +1827,7 @@ dependencies = [
 
 [[package]]
 name = "execute"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "async-recursion",
  "axum",
@@ -1986,7 +2002,7 @@ dependencies = [
 
 [[package]]
 name = "futures-ext"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "futures-util",
  "tokio",
@@ -2006,7 +2022,7 @@ checksum = "87750cf4b7a4c0625b1529e4c543c2182106e4dedc60a2a6455e00d212c489ac"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -2175,7 +2191,7 @@ dependencies = [
 
 [[package]]
 name = "hasura-authn-core"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "axum",
  "http",
@@ -2189,7 +2205,7 @@ dependencies = [
 
 [[package]]
 name = "hasura-authn-jwt"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -2214,7 +2230,7 @@ dependencies = [
 
 [[package]]
 name = "hasura-authn-noauth"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "hasura-authn-core",
  "schemars",
@@ -2224,7 +2240,7 @@ dependencies = [
 
 [[package]]
 name = "hasura-authn-webhook"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "axum",
  "hasura-authn-core",
@@ -2497,7 +2513,7 @@ checksum = "8f518f335dce6725a761382244631d86cf0ccb2863413590b31338feb467f9c3"
 
 [[package]]
 name = "ir"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "base64 0.22.1",
  "derive_more",
@@ -2590,7 +2606,7 @@ dependencies = [
 
 [[package]]
 name = "json-ext"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -2618,7 +2634,7 @@ dependencies = [
 
 [[package]]
 name = "jsonschema-tidying"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "regex",
  "schemars",
@@ -2660,7 +2676,7 @@ dependencies = [
 
 [[package]]
 name = "lang-graphql"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "anyhow",
  "apollo-parser",
@@ -2862,7 +2878,7 @@ dependencies = [
 
 [[package]]
 name = "metadata-resolve"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "derive_more",
  "hasura-authn-core",
@@ -2887,7 +2903,7 @@ dependencies = [
 
 [[package]]
 name = "metadata-schema-generator"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "open-dds",
  "schemars",
@@ -3171,7 +3187,7 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "open-dds"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "derive_more",
  "goldenfile",
@@ -3194,14 +3210,14 @@ dependencies = [
 
 [[package]]
 name = "opendds-derive"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "convert_case 0.6.0",
  "darling",
  "proc-macro2",
  "quote",
  "regex",
- "syn 2.0.74",
+ "syn 2.0.75",
  "thiserror",
 ]
 
@@ -3228,7 +3244,7 @@ checksum = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -3581,7 +3597,7 @@ checksum = "2f38a4412a78282e09a2cf38d195ea5420d15ba0602cb375210efbc877243965"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -3669,7 +3685,7 @@ dependencies = [
 
 [[package]]
 name = "pre-execution-plugin"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "axum",
  "hasura-authn-core",
@@ -3722,12 +3738,12 @@ dependencies = [
  "itertools 0.12.1",
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
 name = "query-usage-analytics"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "goldenfile",
  "metadata-resolve",
@@ -3804,10 +3820,10 @@ dependencies = [
 
 [[package]]
 name = "recursion_limit_macro"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -3836,7 +3852,7 @@ checksum = "bcc303e793d3734489387d205e9b186fac9c6cfacedd98cbb2e8a5943595f3e6"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -4081,7 +4097,7 @@ dependencies = [
 
 [[package]]
 name = "schema"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "hasura-authn-core",
  "insta",
@@ -4120,7 +4136,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde_derive_internals",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -4166,9 +4182,9 @@ checksum = "a3f0bf26fd526d2a95683cd0f87bf103b8539e2ca1ef48ce002d67aad59aa0b4"
 
 [[package]]
 name = "serde"
-version = "1.0.207"
+version = "1.0.208"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5665e14a49a4ea1b91029ba7d3bca9f299e1f7cfa194388ccc20f14743e784f2"
+checksum = "cff085d2cb684faa248efb494c39b68e522822ac0de72ccf08109abde717cfb2"
 dependencies = [
  "serde_derive",
 ]
@@ -4184,13 +4200,13 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.207"
+version = "1.0.208"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6aea2634c86b0e8ef2cfdc0c340baede54ec27b1e46febd7f80dffb2aa44a00e"
+checksum = "24008e81ff7613ed8e5ba0cfaf24e2c2f1e5b8a0495711e44fcd4882fca62bcf"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -4201,14 +4217,14 @@ checksum = "18d26a20a969b9e3fdf2fc2d9f21eda6c40e2de84c9408bb5d3b05d499aae711"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
 name = "serde_json"
-version = "1.0.124"
+version = "1.0.125"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66ad62847a56b3dba58cc891acd13884b9c61138d330c0d7b6181713d4fce38d"
+checksum = "83c8e735a073ccf5be70aa8066aa984eaf2fa000db6c8d0100ae605b366d31ed"
 dependencies = [
  "indexmap 2.4.0",
  "itoa",
@@ -4266,7 +4282,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -4453,9 +4469,10 @@ dependencies = [
 
 [[package]]
 name = "sql"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "async-trait",
+ "chrono",
  "datafusion",
  "execute",
  "futures",
@@ -4491,7 +4508,7 @@ checksum = "01b2e185515564f15375f593fb966b5718bc624ba77fe49fa4616ad619690554"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -4531,7 +4548,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustversion",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -4553,9 +4570,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.74"
+version = "2.0.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fceb41e3d546d0bd83421d3409b1460cc7444cd389341a4c880fe7a042cb3d7"
+checksum = "f6af063034fc1935ede7be0122941bafa9bacb949334d090b77ca98b5817c7d9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4631,7 +4648,7 @@ checksum = "a4558b58466b9ad7ca0f102865eccc95938dca1a74a856f2b57b6629050da261"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -4722,9 +4739,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.39.2"
+version = "1.39.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "daa4fb1bc778bd6f04cbfc4bb2d06a7396a8f299dc33ea1900cedaa316f467b1"
+checksum = "9babc99b9923bfa4804bd74722ff02c0381021eafa4db9949217e3be8e84fff5"
 dependencies = [
  "backtrace",
  "bytes",
@@ -4756,7 +4773,7 @@ checksum = "693d596312e88961bc67d7f1f97af8a70227d9f90c31bba5806eec004978d752"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -4910,7 +4927,7 @@ checksum = "34704c8d6ebcbc939824180af020566b01a7c01f80641264eba0999f6c2b6be7"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -4950,7 +4967,7 @@ dependencies = [
 
 [[package]]
 name = "tracing-util"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "axum",
  "derive_more",
@@ -4975,7 +4992,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -5011,7 +5028,7 @@ checksum = "1f718dfaf347dcb5b983bfc87608144b0bad87970aebcbea5ce44d2a30c08e63"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -5187,7 +5204,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
  "wasm-bindgen-shared",
 ]
 
@@ -5221,7 +5238,7 @@ checksum = "afc340c74d9005395cf9dd098506f7f44e38f2b4a21c6aaacf9a105ea5e1e836"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -5497,7 +5514,7 @@ checksum = "fa4f8080344d4671fb4e831a13ad1e68092748387dfc4f55e356242fae12ce3e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
@@ -5517,7 +5534,7 @@ checksum = "ce36e65b0d2999d2aafac989fb249189a141aee1f53c612c1f37d72631959f69"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.74",
+ "syn 2.0.75",
 ]
 
 [[package]]
