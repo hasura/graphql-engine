@@ -939,9 +939,7 @@ dependencies = [
 name = "compatibility"
 version = "3.0.0"
 dependencies = [
- "anyhow",
  "chrono",
- "metadata-resolve",
  "open-dds",
  "opendds-derive",
  "schemars",
@@ -1769,7 +1767,6 @@ dependencies = [
  "base64 0.22.1",
  "build-data",
  "clap",
- "compatibility",
  "criterion",
  "execute",
  "goldenfile",

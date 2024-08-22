@@ -548,7 +548,6 @@ pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configu
             enable_order_by_expressions: false,
             enable_ndc_v02_support: true,
         },
-        warnings_to_raise: metadata_resolve::configuration::WarningsToRaise {},
     }
 }
 

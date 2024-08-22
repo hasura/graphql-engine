@@ -4,9 +4,6 @@
 
 ### Added
 
-- Allow passing an optional `CompatibiityConfig` file that allows opting in to
-  new breaking metadata changes.
-
 ### Fixed
 
 ### Changed

@@ -21,7 +21,6 @@ name = "execute"
 harness = false
 
 [dependencies]
-compatibility = { path = "../compatibility" }
 execute = { path = "../execute" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 hasura-authn-jwt = { path = "../auth/hasura-authn-jwt" }

@@ -97,7 +97,6 @@ fn read_test_configuration(
         Ok(configuration::Configuration {
             allow_unknown_subgraphs: false,
             unstable_features,
-            warnings_to_raise: configuration::WarningsToRaise {},
         })
     }
 }

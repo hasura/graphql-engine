@@ -1,7 +1,27 @@
 use super::compatibility_date::CompatibilityDate;
-use super::types::CompatibilityConfig;
 use chrono::NaiveDate;
-use metadata_resolve::configuration::WarningsToRaise;
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(id = "v1/CompatibilityConfig"))]
+/// The compatibility configuration of the Hasura metadata.
+pub struct CompatibilityConfigV1 {
+    /// Any backwards incompatible changes made to Hasura DDN after this date won't impact the metadata.
+    pub date: CompatibilityDate,
+    // TODO: add flags.
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(id = "v2/CompatibilityConfig"))]
+/// The compatibility configuration of the Hasura metadata.
+pub struct CompatibilityConfigV2 {
+    /// Any backwards incompatible changes made to Hasura DDN after this date won't impact the metadata.
+    pub date: CompatibilityDate,
+    // TODO: add flags.
+}
 
 pub const fn new_compatibility_date(year: i32, month: u32, day: u32) -> CompatibilityDate {
     CompatibilityDate(match NaiveDate::from_ymd_opt(year, month, day) {
@@ -11,34 +31,17 @@ pub const fn new_compatibility_date(year: i32, month: u32, day: u32) -> Compatib
     })
 }
 
-/// Resolve `CompatibilityConfig` which is not part of metadata. Hence we resolve/build
-/// it separately.
-pub fn resolve_compatibility_config(
-    raw_compatibility_config: &str,
-) -> Result<CompatibilityConfig, anyhow::Error> {
-    Ok(open_dds::traits::OpenDd::deserialize(
-        serde_json::from_str(raw_compatibility_config)?,
-    )?)
-}
-
-// given compatibility config, work out which warnings becomes errors using the date
-pub fn config_to_metadata_resolve(compat_config: &Option<CompatibilityConfig>) -> WarningsToRaise {
-    match compat_config {
-        Some(CompatibilityConfig::V1(compat_config_v1)) => {
-            warnings_to_raise_from_date(&compat_config_v1.date)
-        }
-        Some(CompatibilityConfig::V2(compat_config_v2)) => {
-            warnings_to_raise_from_date(&compat_config_v2.date)
-        }
-
-        None => WarningsToRaise::default(),
-    }
-}
-
-// note we have no warnings to raise yet, so this is a no-op whilst we get the plumbing sorted
-fn warnings_to_raise_from_date(_date: &CompatibilityDate) -> WarningsToRaise {
-    WarningsToRaise {
-            // some_boolean_option: date >= &new_compatibility_date(2024, 1, 1) 
-
-        }
+#[derive(Debug, PartialEq, thiserror::Error)]
+pub enum CompatibilityError {
+    #[error("no compatibility config found")]
+    NoCompatibilityConfigFound,
+    #[error("duplicate compatibility config found")]
+    DuplicateCompatibilityConfig,
+    #[error("compatibility date {specified} is too old, oldest supported date is {oldest}")]
+    DateTooOld {
+        specified: CompatibilityDate,
+        oldest: CompatibilityDate,
+    },
+    #[error("compatibility date {0} is in the future")]
+    DateInTheFuture(CompatibilityDate),
 }
