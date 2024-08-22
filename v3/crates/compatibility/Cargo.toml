@@ -8,9 +8,11 @@ license.workspace = true
 bench = false
 
 [dependencies]
+metadata-resolve = { path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
 opendds-derive = { path = "../utils/opendds-derive" }
 
+anyhow = { workspace = true }
 chrono = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }

@@ -37,6 +37,7 @@ run-local-with-shell:
   RUST_LOG=DEBUG cargo run --bin engine -- \
   --otlp-endpoint http://localhost:4317 \
   --authn-config-path static/auth/auth_config.json \
+  --compatibility-config-path static/compatibility/compatibility_config.json \
   --metadata-path crates/engine/tests/schema.json \
   --expose-internal-errors | ts "engine:          " &
   wait
@@ -82,6 +83,7 @@ watch: start-docker-test-deps start-docker-run-deps
    -x 'run --bin engine -- \
     --otlp-endpoint http://localhost:4317 \
     --authn-config-path static/auth/auth_config.json \
+    --compatibility-config-path static/compatibility/compatibility_config.json \
     --metadata-path crates/engine/tests/schema.json \
     --expose-internal-errors'
 
@@ -138,6 +140,7 @@ run: start-docker-test-deps start-docker-run-deps
   RUST_LOG=DEBUG cargo run --bin engine -- \
   --otlp-endpoint http://localhost:4317 \
   --authn-config-path static/auth/auth_config.json \
+  --compatibility-config-path static/compatibility/compatibility_config.json \
   --metadata-path crates/engine/tests/schema.json \
   --expose-internal-errors
 

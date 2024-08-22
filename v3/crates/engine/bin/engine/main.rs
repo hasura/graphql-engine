@@ -66,6 +66,9 @@ struct ServerOptions {
     /// The configuration file used for authentication.
     #[arg(long, value_name = "PATH", env = "AUTHN_CONFIG_PATH")]
     authn_config_path: PathBuf,
+    /// The configuration file used for compatibility.
+    #[arg(long, value_name = "PATH", env = "COMPATIBILITY_CONFIG_PATH")]
+    compatibility_config_path: Option<PathBuf>,
     /// The host IP on which the server listens, defaulting to all IPv4 and IPv6 addresses.
     #[arg(long, value_name = "HOST", env = "HOST", default_value_t = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED))]
     host: net::IpAddr,
@@ -195,6 +198,8 @@ async fn shutdown_signal() {
 enum StartupError {
     #[error("could not read the auth config - {0}")]
     ReadAuth(anyhow::Error),
+    #[error("could not read the compatibility config - {0}")]
+    ReadCompatibility(anyhow::Error),
     #[error("failed to build engine state - {0}")]
     ReadSchema(anyhow::Error),
 }
@@ -348,11 +353,6 @@ impl EngineRouter {
 
 #[allow(clippy::print_stdout)]
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
-    let metadata_resolve_configuration = metadata_resolve::configuration::Configuration {
-        allow_unknown_subgraphs: server.partial_supergraph,
-        unstable_features: resolve_unstable_features(&server.unstable_features),
-    };
-
     let expose_internal_errors = if server.expose_internal_errors {
         execute::ExposeInternalErrors::Expose
     } else {
@@ -362,8 +362,10 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let state = build_state(
         expose_internal_errors,
         &server.authn_config_path,
+        &server.compatibility_config_path,
         &server.metadata_path,
-        metadata_resolve_configuration,
+        server.partial_supergraph,
+        resolve_unstable_features(&server.unstable_features),
     )
     .map_err(StartupError::ReadSchema)?;
 
@@ -748,13 +750,33 @@ fn print_warnings<T: Display>(warnings: Vec<T>) {
 fn build_state(
     expose_internal_errors: execute::ExposeInternalErrors,
     authn_config_path: &PathBuf,
+    compatibility_config_path: &Option<PathBuf>,
     metadata_path: &PathBuf,
-    metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
+    allow_unknown_subgraphs: bool,
+    unstable_features: metadata_resolve::configuration::UnstableFeatures,
 ) -> Result<Arc<EngineState>, anyhow::Error> {
     // Auth Config
     let raw_auth_config = std::fs::read_to_string(authn_config_path)?;
     let (auth_config, auth_warnings) =
         resolve_auth_config(&raw_auth_config).map_err(StartupError::ReadAuth)?;
+
+    // Compatibility Config
+    let compatibility_config = match compatibility_config_path {
+        Some(path) => {
+            let raw_config = std::fs::read_to_string(path)?;
+            let compatibility_config = compatibility::resolve_compatibility_config(&raw_config)
+                .map_err(StartupError::ReadCompatibility)?;
+            Some(compatibility_config)
+        }
+        None => None,
+    };
+
+    // derive metadata resolve configuration using compatibility configuration
+    let metadata_resolve_configuration = metadata_resolve::configuration::Configuration {
+        allow_unknown_subgraphs,
+        unstable_features,
+        warnings_to_raise: compatibility::config_to_metadata_resolve(&compatibility_config),
+    };
 
     // Metadata
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
