@@ -6,10 +6,56 @@
 
 ### Fixed
 
+### Changed
+
+## [v2024.08.22]
+
+### Added
+
+#### Pre-parse Engine Plugins
+
+Add support for pre-parse engine plugins. Engine now supports calling a HTTP
+webhook in pre-parse execution step. This can be used to add a bunch of
+functionalities to the DDN, such as an [allow list][plugin-allowlist].
+
+The following is an example of the OpenDD metadata for the plugins:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+name: allow list
+url: http://localhost:8787
+pre: parse
+config:
+  request:
+    headers:
+      additional:
+      hasura-m-auth:
+        value: "your-strong-m-auth-key"
+    session: {}
+    rawRequest:
+      query: {}
+      variables: {}
+```
+
+The pre-parse plugin hook's request can be customized using the
+`LifecyclePluginHook` metadata object. Currently we support the following
+customizations:
+
+- adding/removing session information
+- adding new headers
+- forwarding specific headers
+- adding/removing graphql query and variables
+
+### Fixed
+
 - Disallow model filter boolean expressions having relationship comparisons in
   their nested object filters.
 
 ### Changed
+
+[plugin-allowlist]: https://github.com/hasura/plugin-allowlist
 
 ## [v2024.08.07]
 
