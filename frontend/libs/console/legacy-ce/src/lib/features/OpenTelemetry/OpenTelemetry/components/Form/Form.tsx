@@ -94,7 +94,7 @@ export function Form(props: FormProps) {
           label="Traces Endpoint"
           placeholder="Your OpenTelemetry traces endpoint"
           tooltip="OpenTelemetry-compliant traces receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/traces. Environment variable templating is available using the {{VARIABLE}} tag"
-          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
+          learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#endpoint"
           clearButton
           loading={skeletonMode}
           disabled={!traceType}
@@ -117,7 +117,7 @@ export function Form(props: FormProps) {
           label="Metrics Endpoint"
           placeholder="Your OpenTelemetry metrics endpoint"
           tooltip="OpenTelemetry-compliant metrics receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/metrics. Metrics will be sampled and exported every 15 seconds. Environment variable templating is available using the {{VARIABLE}} tag"
-          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
+          learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#endpoint"
           clearButton
           loading={skeletonMode}
           disabled={!metricsType}
@@ -140,7 +140,7 @@ export function Form(props: FormProps) {
           label="Logs Endpoint"
           placeholder="Your OpenTelemetry logs endpoint"
           tooltip="OpenTelemetry-compliant logs receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/logs. Environment variable templating is available using the {{VARIABLE}} tag"
-          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
+          learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#endpoint"
           clearButton
           loading={skeletonMode}
           disabled={!logsType}
@@ -165,7 +165,7 @@ export function Form(props: FormProps) {
         label="Batch Size"
         placeholder="A number between 1 and 512"
         tooltip="The maximum number of data points in an export request. The value should be between 1-512. Default value is 512."
-        learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#batch-size"
+        learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#batch-size"
         clearButton
         loading={skeletonMode}
       />
@@ -175,7 +175,7 @@ export function Form(props: FormProps) {
           label="Trace Propagations"
           orientation="horizontal"
           tooltip="The specification that exchanges trace context propagation data between services and processes. The b3 propagation is enabled by default."
-          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#trace-propagations"
+          learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#trace-propagations"
           loading={skeletonMode}
           options={tracesPropagatorSchema.options.map(option => ({
             label: option,
@@ -188,7 +188,7 @@ export function Form(props: FormProps) {
         inputFieldName="headers"
         label="Headers"
         tooltip="Additional custom headers added to export request."
-        learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#headers"
+        learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#headers"
         loading={skeletonMode}
       >
         {/* No need to redact the input fields since Heap avoid recording the input field values by default */}
@@ -198,7 +198,7 @@ export function Form(props: FormProps) {
         inputFieldName="attributes"
         label="Attributes"
         tooltip="Additional custom tags added to export request."
-        learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#attributes"
+        learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#attributes"
         loading={skeletonMode}
       >
         {/* No need to redact the input fields since Heap avoid recording the input field values by default */}
