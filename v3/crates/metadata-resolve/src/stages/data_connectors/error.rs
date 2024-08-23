@@ -1,6 +1,8 @@
 use crate::helpers::ndc_validation::NDCValidationError;
+use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::Qualified;
 use open_dds::data_connector::DataConnectorName;
+use open_dds::flags;
 
 #[derive(Debug, thiserror::Error)]
 #[error("The data connector {data_connector_name} has an error: {error}")]
@@ -44,6 +46,12 @@ pub struct NamedDataConnectorIssue {
     pub issue: DataConnectorIssue,
 }
 
+impl ShouldBeAnError for NamedDataConnectorIssue {
+    fn should_be_an_error(&self, flags: &flags::Flags) -> bool {
+        self.issue.should_be_an_error(flags)
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum DataConnectorIssue {
     #[error(
@@ -53,4 +61,11 @@ pub enum DataConnectorIssue {
         version: String,
         error: semver::Error,
     },
+}
+impl ShouldBeAnError for DataConnectorIssue {
+    fn should_be_an_error(&self, flags: &flags::Flags) -> bool {
+        match self {
+            DataConnectorIssue::InvalidNdcV01Version { .. } => flags.require_valid_ndc_v01_version,
+        }
+    }
 }

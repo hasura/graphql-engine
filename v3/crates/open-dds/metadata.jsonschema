@@ -3061,6 +3061,10 @@
         "require_graphql_config": {
           "default": false,
           "type": "boolean"
+        },
+        "require_valid_ndc_v01_version": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -3094,7 +3098,8 @@
             },
             "flags": {
               "default": {
-                "require_graphql_config": false
+                "require_graphql_config": false,
+                "require_valid_ndc_v01_version": false
               },
               "allOf": [
                 {
@@ -3139,7 +3144,8 @@
             },
             "flags": {
               "default": {
-                "require_graphql_config": false
+                "require_graphql_config": false,
+                "require_valid_ndc_v01_version": false
               },
               "allOf": [
                 {
@@ -3174,7 +3180,8 @@
             },
             "flags": {
               "default": {
-                "require_graphql_config": false
+                "require_graphql_config": false,
+                "require_valid_ndc_v01_version": false
               },
               "allOf": [
                 {

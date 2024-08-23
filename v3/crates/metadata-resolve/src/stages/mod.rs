@@ -22,10 +22,11 @@ pub mod scalar_types;
 pub mod type_permissions;
 mod types;
 use crate::types::warning::Warning;
+use open_dds::flags;
 pub use types::Metadata;
 
 use crate::types::configuration::Configuration;
-use crate::types::error::Error;
+use crate::types::error::{Error, SeparatedBy, ShouldBeAnError};
 
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
 pub fn resolve(
@@ -256,6 +257,8 @@ pub fn resolve(
 
     let pre_parse_plugins = plugins::resolve(&metadata_accessor);
 
+    all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_warnings)?;
+
     Ok((
         Metadata {
             scalar_types,
@@ -272,4 +275,24 @@ pub fn resolve(
         },
         all_warnings,
     ))
+}
+
+fn warnings_as_errors_by_compatibility(
+    flags: &flags::Flags,
+    all_warnings: Vec<Warning>,
+) -> Result<Vec<Warning>, Error> {
+    let (warnings_that_are_errors, remaining_warnings): (Vec<Warning>, Vec<Warning>) = all_warnings
+        .into_iter()
+        .partition(|warning| warning.should_be_an_error(flags));
+
+    if warnings_that_are_errors.is_empty() {
+        Ok(remaining_warnings)
+    } else {
+        Err(Error::CompatibilityError {
+            warnings_as_errors: SeparatedBy {
+                lines_of: warnings_that_are_errors,
+                separator: "\n".to_string(),
+            },
+        })
+    }
 }

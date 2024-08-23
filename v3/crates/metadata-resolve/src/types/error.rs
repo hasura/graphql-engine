@@ -5,6 +5,7 @@ use crate::stages::{
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::flags;
 use open_dds::order_by_expression::OrderByExpressionName;
 use open_dds::{
     arguments::ArgumentName,
@@ -14,6 +15,7 @@ use open_dds::{
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName, OperatorName},
 };
+use std::fmt::Display;
 
 use crate::helpers::{
     ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
@@ -292,6 +294,37 @@ pub enum Error {
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,
     ),
+    #[error(
+        "The following issues were raised but disallowed by compatibility configuration:\n\n{warnings_as_errors}"
+    )]
+    CompatibilityError {
+        warnings_as_errors: SeparatedBy<crate::Warning>,
+    },
+}
+
+pub trait ShouldBeAnError {
+    fn should_be_an_error(&self, flags: &flags::Flags) -> bool;
+}
+
+// A small utility type which exists for the sole purpose of displaying a vector with a certain
+// separator.
+#[derive(Debug)]
+pub struct SeparatedBy<T> {
+    pub lines_of: Vec<T>,
+    pub separator: String,
+}
+
+impl<T: Display> Display for SeparatedBy<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (index, elem) in self.lines_of.iter().enumerate() {
+            elem.fmt(f)?;
+            if index < self.lines_of.len() - 1 {
+                self.separator.fmt(f)?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
