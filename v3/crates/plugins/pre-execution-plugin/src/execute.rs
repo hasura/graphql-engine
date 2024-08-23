@@ -239,7 +239,7 @@ where
             .in_span_async(
                 "pre_execution_plugin_middleware",
                 "Pre-execution Plugin middleware",
-                SpanVisibility::Internal,
+                SpanVisibility::User,
                 || {
                     Box::pin(async {
                         set_attribute_on_active_span(
