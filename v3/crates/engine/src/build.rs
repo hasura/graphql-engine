@@ -20,7 +20,7 @@ pub struct BuildSchemaResponse {
 /// this function is used by Metadata Build Service
 pub fn build_schema(
     metadata: open_dds::Metadata,
-    metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
+    metadata_resolve_configuration: &metadata_resolve::configuration::Configuration,
 ) -> Result<BuildSchemaResponse, BuildError> {
     let (resolved_metadata, warnings) =
         metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;

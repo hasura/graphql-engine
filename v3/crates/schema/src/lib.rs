@@ -89,7 +89,7 @@ pub struct GDS {
 impl GDS {
     pub fn new(
         user_metadata: open_dds::Metadata,
-        metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
+        metadata_resolve_configuration: &metadata_resolve::configuration::Configuration,
     ) -> Result<Self, Error> {
         let (resolved_metadata, _) =
             metadata_resolve::resolve(user_metadata, metadata_resolve_configuration)?;
@@ -101,7 +101,7 @@ impl GDS {
     pub fn new_with_default_flags(user_metadata: open_dds::Metadata) -> Result<Self, Error> {
         let (resolved_metadata, _) = metadata_resolve::resolve(
             user_metadata,
-            metadata_resolve::configuration::Configuration::default(),
+            &metadata_resolve::configuration::Configuration::default(),
         )?;
         Ok(GDS {
             metadata: Arc::new(resolved_metadata),

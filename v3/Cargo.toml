@@ -48,6 +48,7 @@ must_use_candidate = "allow"
 return_self_not_must_use = "allow"
 struct_field_names = "allow"
 wildcard_imports = "allow"
+trivially_copy_pass_by_ref = "allow"
 # disable these for now, but we should probably fix them
 result_large_err = "allow"
 similar_names = "allow"

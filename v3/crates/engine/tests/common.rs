@@ -83,7 +83,7 @@ pub fn test_execution_expectation_legacy(
             metadata
         );
 
-        let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
+        let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
         let schema = GDS::build_schema(&gds)?;
 
         // Ensure schema is serialized successfully.
@@ -169,7 +169,7 @@ pub(crate) fn test_introspection_expectation(
             metadata
         );
 
-        let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
+        let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
 
         let schema = GDS::build_schema(&gds)?;
 
@@ -312,7 +312,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 metadata
             );
 
-            let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
+            let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
             let schema = GDS::build_schema(&gds)?;
 
             // Verify successful serialization and deserialization of the schema.
@@ -491,7 +491,7 @@ pub fn test_execute_explain(
         };
         let gds = GDS::new(
             open_dds::traits::OpenDd::deserialize(metadata)?,
-            configuration,
+            &configuration,
         )?;
 
         let schema = GDS::build_schema(&gds)?;
@@ -575,7 +575,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
             metadata
         );
 
-        let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
+        let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
         let schema = GDS::build_schema(&gds)?;
 
         // Ensure schema is serialized successfully.

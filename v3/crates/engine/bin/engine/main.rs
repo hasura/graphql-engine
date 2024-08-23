@@ -363,7 +363,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         expose_internal_errors,
         &server.authn_config_path,
         &server.metadata_path,
-        metadata_resolve_configuration,
+        &metadata_resolve_configuration,
     )
     .map_err(StartupError::ReadSchema)?;
 
@@ -749,7 +749,7 @@ fn build_state(
     expose_internal_errors: execute::ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
-    metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
+    metadata_resolve_configuration: &metadata_resolve::configuration::Configuration,
 ) -> Result<Arc<EngineState>, anyhow::Error> {
     // Auth Config
     let raw_auth_config = std::fs::read_to_string(authn_config_path)?;

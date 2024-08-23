@@ -30,7 +30,7 @@ use crate::types::error::Error;
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
 pub fn resolve(
     metadata: open_dds::Metadata,
-    configuration: Configuration,
+    configuration: &Configuration,
 ) -> Result<(Metadata, Vec<Warning>), Error> {
     // all warnings raised throughout metadata-resolve
     let mut all_warnings = vec![];
@@ -47,7 +47,7 @@ pub fn resolve(
     let data_connectors::DataConnectorsOutput {
         data_connectors,
         issues,
-    } = data_connectors::resolve(&metadata_accessor, &configuration)?;
+    } = data_connectors::resolve(&metadata_accessor, configuration)?;
 
     all_warnings.extend(issues.into_iter().map(Warning::from));
 

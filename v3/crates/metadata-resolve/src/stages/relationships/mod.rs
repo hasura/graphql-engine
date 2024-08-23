@@ -35,7 +35,7 @@ pub use types::{
 /// returns updated `types` value
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    configuration: Configuration,
+    configuration: &Configuration,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -684,7 +684,7 @@ fn resolve_command_relationship_field(
 }
 
 fn resolve_relationships(
-    configuration: Configuration,
+    configuration: &Configuration,
     relationship: &RelationshipV1,
     subgraph: &open_dds::identifier::SubgraphName,
     known_subgraphs: &HashSet<open_dds::identifier::SubgraphName>,
@@ -756,7 +756,7 @@ fn resolve_relationships(
 // the same functionality to that stage of metadata resolution, and perhaps think about creating an
 // abstraction for that purpose.
 fn should_skip(
-    configuration: Configuration,
+    configuration: &Configuration,
     known_subgraphs: &HashSet<open_dds::identifier::SubgraphName>,
     target_subgraph: Option<&SubgraphName>,
 ) -> bool {
