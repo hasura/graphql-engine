@@ -6,6 +6,7 @@ module Hasura.Server.Compression
     contentEncodingHeader,
     compressionTypeToTxt,
     compressFast,
+    compressSmart,
 
     -- * exported for testing
     getAcceptedEncodings,
