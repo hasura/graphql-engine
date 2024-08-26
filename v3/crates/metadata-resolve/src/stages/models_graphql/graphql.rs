@@ -107,17 +107,11 @@ pub(crate) fn resolve_model_graphql_api(
                         model_name: model.name.clone(),
                         order_by_expression_identifier: n.clone()
                     })).transpose()?;
-                let order_by_expression_type_name = {
-                    let order_by_expression_type = order_by_expression
-                        .and_then(|e| e.graphql.as_ref())
-                        .map(|g| &g.expression_type_name);
-                    match &order_by_expression_type {
-                        None => Ok(None),
-                        Some(type_name) => mk_name(type_name.as_str()).map(ast::TypeName).map(Some),
-                    }}?;
                 // TODO: (paritosh) should we check for conflicting graphql types for default order_by type name as well?
-                order_by_expression_type_name
-                    .map(|order_by_type_name| {
+                order_by_expression
+                    .and_then(|order_by_expression| {
+                        order_by_expression.graphql.clone()
+                        .map(|graphql| {
                         let object_types::TypeMapping::Object { field_mappings, .. } = model_source
                             .type_mappings
                             .get(&model.data_type)
@@ -133,7 +127,7 @@ pub(crate) fn resolve_model_graphql_api(
                             if field_mapping.argument_mappings.is_empty() {
                                 order_by_fields.insert(
                                     field_name.clone(),
-                                    OrderByExpressionInfo {
+                                OrderByExpressionInfo {
                                         ndc_column: field_mapping.column.clone(),
                                     },
                                 );
@@ -147,12 +141,12 @@ pub(crate) fn resolve_model_graphql_api(
                             }),
                             Some(order_by_field_name) => Ok(ModelOrderByExpression {
                                 data_connector_name: model_source.data_connector.name.clone(),
-                                order_by_type_name,
-                                order_by_fields,
+                                order_by_type_name: graphql.expression_type_name,
                                 order_by_field_name: order_by_field_name.clone(),
+                                order_by_expression_identifier: order_by_expression.identifier.clone(),
                             }),
                         }
-                    })
+                    })})
                     .transpose()
             },
         )

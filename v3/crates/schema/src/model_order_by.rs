@@ -1,17 +1,20 @@
 use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
-use lang_graphql::schema as gql_schema;
+use lang_graphql::schema::{self as gql_schema, DeprecationStatus};
 use open_dds::models::ModelName;
 use open_dds::relationships::RelationshipType;
 use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::relationship::OrderByRelationshipAnnotation;
 use super::types::{output_type::get_object_type_representation, Annotation, TypeId};
-use crate::permissions;
-use crate::types;
+use crate::types::{self};
 use crate::GDS;
-use metadata_resolve::mk_name;
-use metadata_resolve::Qualified;
+use crate::{permissions, ModelInputAnnotation};
+use metadata_resolve::{
+    mk_name, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier, OrderableField,
+    OrderableObjectField,
+};
+use metadata_resolve::{Qualified, TypeMapping};
 
 use crate::Error;
 
@@ -74,20 +77,44 @@ pub fn get_order_by_expression_input_field(
     model_name: Qualified<ModelName>,
     order_by_expression_info: &metadata_resolve::ModelOrderByExpression,
 ) -> gql_schema::InputField<GDS> {
+    get_order_by_expression_object_input_field(
+        builder,
+        model_name,
+        types::ModelInputAnnotation::ModelOrderByExpression,
+        &order_by_expression_info.order_by_type_name,
+        &order_by_expression_info.order_by_field_name,
+        &order_by_expression_info.order_by_expression_identifier,
+        false,
+    )
+}
+
+fn get_order_by_expression_object_input_field(
+    builder: &mut gql_schema::Builder<GDS>,
+    model_name: Qualified<ModelName>,
+    model_input_annotation: ModelInputAnnotation,
+    order_by_type_name: &ast::TypeName,
+    order_by_field_name: &ast::Name,
+    order_by_expression_identifier: &Qualified<OrderByExpressionIdentifier>,
+    is_deprecated: bool,
+) -> gql_schema::InputField<GDS> {
+    let deprecation_status = if is_deprecated {
+        DeprecationStatus::Deprecated { reason: None }
+    } else {
+        DeprecationStatus::NotDeprecated
+    };
     gql_schema::InputField::new(
-        order_by_expression_info.order_by_field_name.clone(),
+        order_by_field_name.clone(),
         None,
-        types::Annotation::Input(types::InputAnnotation::Model(
-            types::ModelInputAnnotation::ModelOrderByExpression,
-        )),
+        types::Annotation::Input(types::InputAnnotation::Model(model_input_annotation)),
         ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(builder.register_type(
             types::TypeId::ModelOrderByExpression {
                 model_name,
-                graphql_type_name: order_by_expression_info.order_by_type_name.clone(),
+                order_by_expression_identifier: order_by_expression_identifier.clone(),
+                graphql_type_name: order_by_type_name.clone(),
             },
         ))),
         None,
-        gql_schema::DeprecationStatus::NotDeprecated,
+        deprecation_status,
     )
 }
 
@@ -96,6 +123,7 @@ pub fn build_model_order_by_input_schema(
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &ast::TypeName,
     model_name: &Qualified<ModelName>,
+    order_by_expression_identifier: &Qualified<OrderByExpressionIdentifier>,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
     let model =
         gds.metadata
@@ -105,7 +133,17 @@ pub fn build_model_order_by_input_schema(
                 model_name: model_name.clone(),
             })?;
 
-    let object_type_representation = get_object_type_representation(gds, &model.model.data_type)?;
+    let order_by_expression = gds
+        .metadata
+        .order_by_expressions
+        .0
+        .get(order_by_expression_identifier)
+        .ok_or_else(|| Error::InternalOrderByExpressionNotFound {
+            order_by_expression_identifier: order_by_expression_identifier.clone(),
+        })?;
+
+    let object_type_representation =
+        get_object_type_representation(gds, &order_by_expression.ordered_type)?;
 
     let mut fields = BTreeMap::new();
 
@@ -114,118 +152,172 @@ pub fn build_model_order_by_input_schema(
         .graphql_config
         .order_by_input
         .as_ref()
-        .ok_or_else(|| Error::InternalNoOrderByGraphqlConfig {
-            model_name: model_name.clone(),
+        .ok_or_else(|| Error::InternalNoOrderByGraphqlConfigOrderByExpression {
+            order_by_expression_identifier: order_by_expression_identifier.clone(),
         })?;
 
-    if let Some(model_order_by_expression) = model.graphql_api.order_by_expression.as_ref() {
-        for (field_name, order_by_expression) in &model_order_by_expression.order_by_fields {
-            let graphql_field_name =
-                mk_name(field_name.as_str()).map_err(metadata_resolve::Error::from)?;
+    let field_mappings = model
+        .model
+        .source
+        .as_ref()
+        .and_then(|source| source.type_mappings.get(&order_by_expression.ordered_type))
+        .map(|TypeMapping::Object { field_mappings, .. }| field_mappings)
+        .ok_or_else(|| Error::InternalTypeMappingNotFound {
+            type_name: order_by_expression.ordered_type.clone(),
+        })?;
 
-            let input_type =
-                ast::TypeContainer::named_null(builder.register_type(TypeId::OrderByEnumType {
-                    graphql_type_name: order_by_input_config.enum_type_name.clone(),
-                }));
-            let field_permissions: HashMap<Role, Option<types::NamespaceAnnotation>> =
-                permissions::get_allowed_roles_for_field(object_type_representation, field_name)
-                    .map(|role| (role.clone(), None))
-                    .collect();
+    for (field_name, orderable_field) in &order_by_expression.orderable_fields {
+        let graphql_field_name =
+            mk_name(field_name.as_str()).map_err(metadata_resolve::Error::from)?;
 
-            // Get internal field definition
-            let field_definition = object_type_representation
-                .object_type
-                .fields
-                .get(field_name)
-                .ok_or_else(|| Error::InternalObjectTypeFieldNotFound {
-                    field_name: field_name.clone(),
-                    type_name: model.model.data_type.clone(),
-                })?;
+        // Get internal field definition
+        let field_definition = object_type_representation
+            .object_type
+            .fields
+            .get(field_name)
+            .ok_or_else(|| Error::InternalObjectTypeFieldNotFound {
+                field_name: field_name.clone(),
+                type_name: order_by_expression.ordered_type.clone(),
+            })?;
 
-            let input_field = builder.conditional_namespaced(
-                gql_schema::InputField::new(
-                    graphql_field_name.clone(),
-                    None,
-                    Annotation::Input(types::InputAnnotation::Model(
-                        types::ModelInputAnnotation::ModelOrderByArgument {
-                            field_name: field_name.clone(),
-                            parent_type: model.model.data_type.clone(),
-                            ndc_column: order_by_expression.ndc_column.clone(),
-                            deprecated: field_definition.is_deprecated(),
-                        },
-                    )),
-                    input_type,
-                    None,
-                    gql_schema::DeprecationStatus::NotDeprecated,
-                ),
-                field_permissions,
-            );
-            fields.insert(graphql_field_name, input_field);
-        }
+        let field_permissions: HashMap<Role, Option<types::NamespaceAnnotation>> =
+            permissions::get_allowed_roles_for_field(object_type_representation, field_name)
+                .map(|role| (role.clone(), None))
+                .collect();
 
-        // relationship fields
-        // TODO(naveen): Add support for command relationships.
-        for (rel_name, relationship) in &object_type_representation.relationship_fields {
-            if let metadata_resolve::RelationshipTarget::Model(
-                metadata_resolve::ModelRelationshipTarget {
-                    model_name,
-                    relationship_type,
-                    target_typename,
-                    mappings,
-                },
-            ) = &relationship.target
+        let ndc_column = field_mappings
+            .get(field_name)
+            .map(|field_mapping| field_mapping.column.clone())
+            .ok_or_else(|| Error::InternalMappingNotFound {
+                type_name: order_by_expression.ordered_type.clone(),
+                field_name: field_name.clone(),
+            })?;
+        let input_field = match orderable_field {
+            OrderableField::Scalar(_) => {
+                let input_type = ast::TypeContainer::named_null(builder.register_type(
+                    TypeId::OrderByEnumType {
+                        graphql_type_name: order_by_input_config.enum_type_name.clone(),
+                    },
+                ));
+                builder.conditional_namespaced(
+                    gql_schema::InputField::new(
+                        graphql_field_name.clone(),
+                        None,
+                        Annotation::Input(types::InputAnnotation::Model(
+                            types::ModelInputAnnotation::ModelOrderByArgument {
+                                field_name: field_name.clone(),
+                                parent_type: order_by_expression.ordered_type.clone(),
+                                ndc_column,
+                                deprecated: field_definition.is_deprecated(),
+                            },
+                        )),
+                        input_type,
+                        None,
+                        gql_schema::DeprecationStatus::NotDeprecated,
+                    ),
+                    field_permissions,
+                )
+            }
+            OrderableField::Object(OrderableObjectField {
+                order_by_expression_identifier,
+            }) => {
+                let nested_order_by_expression = gds
+                    .metadata
+                    .order_by_expressions
+                    .0
+                    .get(order_by_expression_identifier)
+                    .ok_or_else(|| Error::InternalOrderByExpressionNotFound {
+                        order_by_expression_identifier: order_by_expression_identifier.clone(),
+                    })?;
+                let graphql_type_name = nested_order_by_expression
+                    .graphql
+                    .as_ref()
+                    .map(
+                        |OrderByExpressionGraphqlConfig {
+                             expression_type_name,
+                         }| expression_type_name,
+                    )
+                    .ok_or_else(|| Error::InternalNoOrderByGraphqlConfigOrderByExpression {
+                        order_by_expression_identifier: order_by_expression_identifier.clone(),
+                    })?;
+                let input_field = get_order_by_expression_object_input_field(
+                    builder,
+                    model_name.clone(),
+                    ModelInputAnnotation::ModelOrderByNestedExpression { ndc_column },
+                    graphql_type_name,
+                    &graphql_field_name,
+                    order_by_expression_identifier,
+                    field_definition.is_deprecated(),
+                );
+                builder.conditional_namespaced(input_field, field_permissions)
+            }
+        };
+        fields.insert(graphql_field_name, input_field);
+    }
+
+    // relationship fields
+    // TODO(naveen): Add support for command relationships.
+    // TODO(dmoverton): use order_by_expression.orderable_relationships
+    for (rel_name, relationship) in &object_type_representation.relationship_fields {
+        if let metadata_resolve::RelationshipTarget::Model(
+            metadata_resolve::ModelRelationshipTarget {
+                model_name,
+                relationship_type,
+                target_typename,
+                mappings,
+            },
+        ) = &relationship.target
+        {
+            let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
+                crate::Error::InternalModelNotFound {
+                    model_name: model_name.clone(),
+                }
+            })?;
+
+            let target_object_type_representation =
+                get_object_type_representation(gds, &target_model.model.data_type)?;
+
+            // Build relationship field in filter expression only when both
+            // the target_model and source model are backed by a source
+            if let (Some(target_source), Some(model_source)) =
+                (&target_model.model.source, &model.model.source)
             {
-                let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
-                    crate::Error::InternalModelNotFound {
-                        model_name: model_name.clone(),
-                    }
-                })?;
+                let target_model_source = metadata_resolve::ModelTargetSource::from_model_source(
+                    target_source,
+                    relationship,
+                )?;
 
-                let target_object_type_representation =
-                    get_object_type_representation(gds, &target_model.model.data_type)?;
-
-                // Build relationship field in filter expression only when both
-                // the target_model and source model are backed by a source
-                if let (Some(target_source), Some(model_source)) =
-                    (&target_model.model.source, &model.model.source)
+                // order_by expression with relationships is currently only supported for local relationships
+                if let metadata_resolve::RelationshipExecutionCategory::Local =
+                    metadata_resolve::relationship_execution_category(
+                        &model_source.data_connector,
+                        &target_source.data_connector,
+                        &target_model_source.capabilities,
+                    )
                 {
-                    let target_model_source =
-                        metadata_resolve::ModelTargetSource::from_model_source(
-                            target_source,
-                            relationship,
-                        )?;
+                    // TODO(naveen): Support Array relationships in order_by when the support for aggregates is implemented
+                    if let RelationshipType::Object = relationship_type {
+                        // If the relationship target model does not have orderByExpressionType do not include
+                        // it in the source model order_by input type.
+                        if let Some(target_model_order_by_expression) =
+                            target_model.graphql_api.order_by_expression.as_ref()
+                        {
+                            let target_model_order_by_expression_type_name =
+                                &target_model_order_by_expression.order_by_type_name;
 
-                    // order_by expression with relationships is currently only supported for local relationships
-                    if let metadata_resolve::RelationshipExecutionCategory::Local =
-                        metadata_resolve::relationship_execution_category(
-                            &model_source.data_connector,
-                            &target_source.data_connector,
-                            &target_model_source.capabilities,
-                        )
-                    {
-                        // TODO(naveen): Support Array relationships in order_by when the support for aggregates is implemented
-                        if let RelationshipType::Object = relationship_type {
-                            // If the relationship target model does not have orderByExpressionType do not include
-                            // it in the source model order_by input type.
-                            if let Some(target_model_order_by_expression) =
-                                target_model.graphql_api.order_by_expression.as_ref()
-                            {
-                                let target_model_order_by_expression_type_name =
-                                    &target_model_order_by_expression.order_by_type_name;
+                            let annotation = OrderByRelationshipAnnotation {
+                                source_type: relationship.source.clone(),
+                                relationship_name: relationship.relationship_name.clone(),
+                                target_model_name: model_name.clone(),
+                                target_source: target_model_source.clone(),
+                                target_type: target_typename.clone(),
+                                relationship_type: relationship_type.clone(),
+                                mappings: mappings.clone(),
+                                source_data_connector: model_source.data_connector.clone(),
+                                source_type_mappings: model_source.type_mappings.clone(),
+                            };
 
-                                let annotation = OrderByRelationshipAnnotation {
-                                    source_type: relationship.source.clone(),
-                                    relationship_name: relationship.relationship_name.clone(),
-                                    target_model_name: model_name.clone(),
-                                    target_source: target_model_source.clone(),
-                                    target_type: target_typename.clone(),
-                                    relationship_type: relationship_type.clone(),
-                                    mappings: mappings.clone(),
-                                    source_data_connector: model_source.data_connector.clone(),
-                                    source_type_mappings: model_source.type_mappings.clone(),
-                                };
-
-                                fields.insert(
+                            fields.insert(
                                     rel_name.clone(),
                                     builder.conditional_namespaced(
                                         gql_schema::InputField::new(
@@ -251,19 +343,14 @@ pub fn build_model_order_by_input_schema(
                                         )?,
                                     ),
                                 );
-                            }
                         }
                     }
                 }
             }
         }
-
-        Ok(gql_schema::TypeInfo::InputObject(
-            gql_schema::InputObject::new(type_name.clone(), None, fields, Vec::new()),
-        ))
-    } else {
-        Err(Error::NoOrderByExpression {
-            model_name: model_name.clone(),
-        })
     }
+
+    Ok(gql_schema::TypeInfo::InputObject(
+        gql_schema::InputObject::new(type_name.clone(), None, fields, Vec::new()),
+    ))
 }

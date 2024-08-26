@@ -60,9 +60,11 @@ pub fn build_ndc_order_by<'s>(
                                             .into(),
                                     })?
                                     .1;
+                            let field_paths = Vec::new();
                             let relationship_paths = Vec::new();
                             let order_by_element = build_ndc_order_by_element(
                                 argument,
+                                field_paths,
                                 relationship_paths,
                                 &mut relationships,
                                 usage_counts,
@@ -112,6 +114,7 @@ pub fn build_ndc_order_by<'s>(
 
 pub fn build_ndc_order_by_element<'s>(
     argument: &InputField<'s, GDS>,
+    mut field_paths: Vec<DataConnectorColumnName>,
     // The path to access the relationship column. If the column is a
     // non-relationship column, this will be empty. The paths contains
     // the names of relationships (in order) that needs to be traversed
@@ -139,12 +142,24 @@ pub fn build_ndc_order_by_element<'s>(
                 }
             };
 
+            let (name, field_path) = if field_paths.is_empty() {
+                (ndc_column.clone(), vec![])
+            } else {
+                let mut field_path = field_paths[1..].to_vec();
+                field_path.push(ndc_column.clone());
+                (field_paths[0].clone(), field_path)
+            };
+
             let order_element = OrderByElement {
                 order_direction: order_direction.clone(),
                 // TODO(naveen): When aggregates are supported, extend this to support other ndc_models::OrderByTarget
                 target: OrderByTarget::Column {
-                    name: ndc_column.clone(),
-                    field_path: None,
+                    name,
+                    field_path: if field_path.is_empty() {
+                        None
+                    } else {
+                        Some(field_path)
+                    },
                     relationship_path: relationship_paths,
                 },
             };
@@ -197,11 +212,33 @@ pub fn build_ndc_order_by_element<'s>(
             for argument in argument_value_map.values() {
                 let order_by_element = build_ndc_order_by_element(
                     argument,
+                    field_paths.clone(),
                     relationship_paths.clone(),
                     relationships,
                     usage_counts,
                 )?;
                 order_by_elements.extend(order_by_element);
+            }
+            Ok(order_by_elements)
+        }
+        Annotation::Input(InputAnnotation::Model(
+            schema::ModelInputAnnotation::ModelOrderByNestedExpression { ndc_column },
+        )) => {
+            field_paths.push(ndc_column.clone());
+            let argument_list = argument.value.as_list()?;
+            let mut order_by_elements = Vec::new();
+            for argument in argument_list {
+                let argument_value_map = argument.as_object()?;
+                for argument in argument_value_map.values() {
+                    let order_by_element = build_ndc_order_by_element(
+                        argument,
+                        field_paths.clone(),
+                        relationship_paths.clone(),
+                        relationships,
+                        usage_counts,
+                    )?;
+                    order_by_elements.extend(order_by_element);
+                }
             }
             Ok(order_by_elements)
         }

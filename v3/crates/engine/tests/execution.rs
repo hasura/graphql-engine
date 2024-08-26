@@ -170,6 +170,20 @@ fn test_model_select_many_order_by() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_model_select_many_order_by_with_model_v2() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by/with_model_v2";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
+fn test_model_select_many_order_by_nested() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by/nested";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
 fn test_model_select_many_order_by_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";

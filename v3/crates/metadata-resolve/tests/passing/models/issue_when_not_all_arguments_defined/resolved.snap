@@ -459,20 +459,21 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                                     "collection_with_args_order_by",
                                 ),
                             ),
-                            order_by_fields: {
-                                FieldName(
-                                    Identifier(
-                                        "test",
-                                    ),
-                                ): OrderByExpressionInfo {
-                                    ndc_column: DataConnectorColumnName(
-                                        "test",
-                                    ),
-                                },
-                            },
                             order_by_field_name: Name(
                                 "order_by",
                             ),
+                            order_by_expression_identifier: Qualified {
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
+                                name: FromModel(
+                                    ModelName(
+                                        Identifier(
+                                            "collection_with_args",
+                                        ),
+                                    ),
+                                ),
+                            },
                         },
                     ),
                     limit_field: Some(
@@ -535,21 +536,20 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                             ),
                         ),
                     },
-                    orderable_fields: [
-                        Scalar(
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "test",
+                            ),
+                        ): Scalar(
                             OrderableScalarField {
-                                field_name: FieldName(
-                                    Identifier(
-                                        "test",
-                                    ),
-                                ),
                                 enable_order_by_directions: EnableAll(
                                     true,
                                 ),
                             },
                         ),
-                    ],
-                    orderable_relationships: [],
+                    },
+                    orderable_relationships: {},
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(

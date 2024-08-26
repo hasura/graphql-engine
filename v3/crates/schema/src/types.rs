@@ -22,7 +22,8 @@ use metadata_resolve::{
     self, data_connectors::ArgumentPresetValue, deserialize_non_string_key_btreemap,
     deserialize_qualified_btreemap, serialize_non_string_key_btreemap,
     serialize_qualified_btreemap, DataConnectorLink, FieldPresetInfo, NdcColumnForComparison,
-    Qualified, QualifiedTypeReference, TypeMapping, ValueExpressionOrPredicate,
+    OrderByExpressionIdentifier, Qualified, QualifiedTypeReference, TypeMapping,
+    ValueExpressionOrPredicate,
 };
 
 use json_ext::HashMapWithJsonKey;
@@ -221,6 +222,9 @@ pub enum ModelInputAnnotation {
     },
     IsNullOperation,
     ModelOrderByExpression,
+    ModelOrderByNestedExpression {
+        ndc_column: DataConnectorColumnName,
+    },
     ModelOrderByArgument {
         field_name: types::FieldName,
         /// The parent type is required to report field usage while analyzing query usage.
@@ -395,6 +399,7 @@ pub enum TypeId {
     },
     ModelOrderByExpression {
         model_name: Qualified<models::ModelName>,
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         graphql_type_name: ast::TypeName,
     },
     ScalarTypeComparisonExpression {

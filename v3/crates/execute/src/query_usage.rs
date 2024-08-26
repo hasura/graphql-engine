@@ -197,6 +197,7 @@ fn analyze_model_input_annotation(annotation: &schema::ModelInputAnnotation) -> 
         | schema::ModelInputAnnotation::ComparisonOperation { .. }
         | schema::ModelInputAnnotation::IsNullOperation
         | schema::ModelInputAnnotation::ModelOrderByExpression
+        | schema::ModelInputAnnotation::ModelOrderByNestedExpression { .. }
         | schema::ModelInputAnnotation::ModelOrderByDirection { .. }
         | schema::ModelInputAnnotation::ModelLimitArgument
         | schema::ModelInputAnnotation::ModelOffsetArgument

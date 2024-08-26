@@ -440,7 +440,7 @@ fn make_order_by_expression(
         identifier: identifier.clone(),
         ordered_type,
         orderable_fields,
-        orderable_relationships: vec![],
+        orderable_relationships: BTreeMap::new(),
         graphql,
         description: Some(format!(
             "OrderByExpression for Model {qualified_model_name}"

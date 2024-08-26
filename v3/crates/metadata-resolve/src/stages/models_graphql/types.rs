@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
@@ -11,9 +9,9 @@ use open_dds::{
     types::{Deprecated, FieldName},
 };
 
-use crate::helpers::types::NdcColumnForComparison;
 use crate::stages::{boolean_expressions, models, object_boolean_expressions};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use crate::{helpers::types::NdcColumnForComparison, OrderByExpressionIdentifier};
 
 /// A Model, once we have added filter expression and graphql for it
 pub(crate) struct ModelWithGraphql {
@@ -70,8 +68,8 @@ pub struct OrderByExpressionInfo {
 pub struct ModelOrderByExpression {
     pub data_connector_name: Qualified<DataConnectorName>,
     pub order_by_type_name: ast::TypeName,
-    pub order_by_fields: BTreeMap<FieldName, OrderByExpressionInfo>,
     pub order_by_field_name: ast::Name,
+    pub order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
