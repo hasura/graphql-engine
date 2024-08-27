@@ -45,6 +45,9 @@
           "dev-auth-webhook"
         ];
 
+        binaryPackages = {
+        };
+
         defaultBinary = "engine";
 
         dockerConfig = {
@@ -107,6 +110,7 @@
             binary = rust.${targetSystem}.callPackage ./nix/app.nix {
               inherit version;
               pname = binaryName;
+              packageName = binaryPackages.${binaryName} or binaryName;
             };
             docker =
               if dockerArchitectures ? ${targetSystem}
@@ -116,7 +120,7 @@
                     package = self.targets.${localSystem}.${binaryName}.${targetSystem}.binary;
                     architecture = dockerArchitectures.${targetSystem};
                     image-name = "build.internal/${binaryName}-${targetSystem}";
-                    extraConfig = dockerConfig.${binaryName};
+                    extraConfig = dockerConfig.${binaryName} or { };
                   }
               else null;
           })
