@@ -1038,6 +1038,9 @@ fn eval_in_collection(
 
             get_collection_by_name(collection, &arguments, state)
         }
+        ndc_models::ExistsInCollection::NestedCollection { .. } => {
+            todo!("ExistsInCollection::NestedCollection not currently supported")
+        }
     }
 }
 

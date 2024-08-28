@@ -26,6 +26,11 @@ pub enum Expression<'s> {
         predicate: Box<Expression<'s>>,
         info: LocalModelRelationshipInfo<'s>,
     },
+    LocalNestedArray {
+        column: DataConnectorColumnName,
+        field_path: Vec<DataConnectorColumnName>,
+        predicate: Box<Expression<'s>>,
+    },
     RemoteRelationship {
         relationship: RelationshipName,
         target_model_name: &'s Qualified<ModelName>,

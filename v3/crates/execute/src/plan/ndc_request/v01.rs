@@ -242,6 +242,26 @@ fn make_expression(
             operator: ndc_models_v01::ComparisonOperatorName::new(operator.into_inner()),
             value: make_comparison_value(value),
         }),
+        filter::ResolvedFilterExpression::LocalNestedArray {
+            column,
+            field_path,
+            predicate,
+        } => {
+            let ndc_expression = make_expression(*predicate)?;
+            let field_name = ndc_models_v01::FieldName::new(column.into_inner());
+
+            Ok(ndc_models_v01::Expression::Exists {
+                in_collection: ndc_models_v01::ExistsInCollection::NestedCollection {
+                    column_name: field_name,
+                    field_path: field_path
+                        .into_iter()
+                        .map(|f| ndc_models_v01::FieldName::new(f.into_inner()))
+                        .collect(),
+                    arguments: BTreeMap::new(),
+                },
+                predicate: Some(Box::new(ndc_expression)),
+            })
+        }
         filter::ResolvedFilterExpression::LocalFieldComparison(
             ir::LocalFieldComparison::UnaryComparison { column, operator },
         ) => Ok(ndc_models_v01::Expression::UnaryComparisonOperator {

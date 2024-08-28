@@ -10,6 +10,7 @@ use super::query;
 use super::relationships::{self, process_model_relationship_definition};
 use crate::{error, ndc, HttpContext};
 use ir::{NdcFieldAlias, NdcRelationshipName};
+use open_dds::data_connector::DataConnectorColumnName;
 
 /// Plan the filter expression IR.
 /// This function will take the filter expression IR and convert it into a planned filter expression
@@ -79,6 +80,18 @@ pub fn plan_expression<'s, 'a>(
         }
         ir::Expression::LocalField(local_field_comparison) => {
             Ok(ir::Expression::LocalField(local_field_comparison.clone()))
+        }
+        ir::Expression::LocalNestedArray {
+            predicate,
+            field_path,
+            column,
+        } => {
+            let resolved_predicate = plan_expression(predicate, relationships)?;
+            Ok(ir::Expression::LocalNestedArray {
+                column: column.clone(),
+                field_path: field_path.clone(),
+                predicate: Box::new(resolved_predicate),
+            })
         }
         ir::Expression::LocalRelationship {
             relationship,
@@ -175,6 +188,11 @@ pub enum ResolvedFilterExpression {
         expression: Box<ResolvedFilterExpression>,
     },
     LocalFieldComparison(ir::LocalFieldComparison),
+    LocalNestedArray {
+        column: DataConnectorColumnName,
+        field_path: Vec<DataConnectorColumnName>,
+        predicate: Box<ResolvedFilterExpression>,
+    },
     LocalRelationshipComparison {
         relationship: NdcRelationshipName,
         predicate: Box<ResolvedFilterExpression>,
@@ -314,6 +332,18 @@ where
             let resolved_expression = resolve_expression(*predicate, http_context).await?;
             Ok(ResolvedFilterExpression::LocalRelationshipComparison {
                 relationship,
+                predicate: Box::new(resolved_expression),
+            })
+        }
+        ir::Expression::LocalNestedArray {
+            column,
+            field_path,
+            predicate,
+        } => {
+            let resolved_expression = resolve_expression(*predicate, http_context).await?;
+            Ok(ResolvedFilterExpression::LocalNestedArray {
+                column,
+                field_path,
                 predicate: Box::new(resolved_expression),
             })
         }

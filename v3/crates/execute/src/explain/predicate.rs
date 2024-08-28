@@ -129,7 +129,10 @@ async fn explain_query_predicate<'s>(
         ir::Expression::Not { expression } => {
             explain_query_predicate(expose_internal_errors, http_context, expression, steps).await
         }
-        ir::Expression::LocalField { .. } | ir::Expression::LocalRelationship { .. } => Ok(()),
+        ir::Expression::LocalField { .. }
+        | ir::Expression::LocalRelationship { .. }
+        | ir::Expression::LocalNestedArray { .. } => Ok(()),
+
         ir::Expression::RemoteRelationship {
             relationship: _,
             target_model_name,
