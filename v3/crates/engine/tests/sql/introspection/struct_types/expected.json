@@ -137,6 +137,33 @@
     ]
   },
   {
+    "name": "article",
+    "description": null,
+    "fields": [
+      {
+        "field_name": "author_id",
+        "field_type": "INT32",
+        "field_type_normalized": "INT32",
+        "is_nullable": false,
+        "description": null
+      },
+      {
+        "field_name": "id",
+        "field_type": "INT32",
+        "field_type_normalized": "INT32",
+        "is_nullable": false,
+        "description": null
+      },
+      {
+        "field_name": "title",
+        "field_type": "STRING",
+        "field_type_normalized": "STRING",
+        "is_nullable": true,
+        "description": null
+      }
+    ]
+  },
+  {
     "name": "author",
     "description": null,
     "fields": [

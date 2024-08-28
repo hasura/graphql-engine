@@ -170,6 +170,7 @@ impl Catalog {
             .with_optimizer_rule(Arc::new(optimizer::ReplaceTableScan {}))
             .with_optimizer_rule(Arc::new(optimizer::NDCPushDownSort {}))
             .with_optimizer_rule(Arc::new(optimizer::NDCPushDownLimit {}))
+            .with_optimizer_rule(Arc::new(optimizer::NDCPushDownAggregate {}))
             .with_expr_planners(datafusion::SessionStateDefaults::default_expr_planners())
             .with_scalar_functions(datafusion::SessionStateDefaults::default_scalar_functions())
             .with_aggregate_functions(

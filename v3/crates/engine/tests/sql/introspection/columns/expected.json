@@ -18,6 +18,24 @@
     "is_nullable": "NO"
   },
   {
+    "table_name": "Articles",
+    "column_name": "author_id",
+    "data_type": "Int32",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "Articles",
+    "column_name": "id",
+    "data_type": "Int32",
+    "is_nullable": "NO"
+  },
+  {
+    "table_name": "Articles",
+    "column_name": "title",
+    "data_type": "Utf8",
+    "is_nullable": "YES"
+  },
+  {
     "table_name": "institutions",
     "column_name": "id",
     "data_type": "Int32",

@@ -86,6 +86,16 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                 &command_query.output,
             )
             .map(Some)
+        } else if let Some(model_aggregate) = node.as_any().downcast_ref::<model::ModelAggregate>()
+        {
+            assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
+            assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
+
+            let ndc_pushdown = model_aggregate
+                .to_physical_node(&self.session, &self.http_context, &self.catalog.metadata)
+                .await?;
+
+            Ok(Some(Arc::new(ndc_pushdown)))
         } else {
             Ok(None)
         }

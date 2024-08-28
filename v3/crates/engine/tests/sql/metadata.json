@@ -8,7 +8,7 @@
           "kind": "DataConnectorScalarRepresentation",
           "version": "v1",
           "definition": {
-            "dataConnectorName": "db2",
+            "dataConnectorName": "db",
             "dataConnectorScalarType": "varchar",
             "representation": "String",
             "graphql": {
@@ -20,7 +20,7 @@
           "kind": "DataConnectorScalarRepresentation",
           "version": "v1",
           "definition": {
-            "dataConnectorName": "db2",
+            "dataConnectorName": "db",
             "dataConnectorScalarType": "numeric",
             "representation": "Int"
           }
@@ -29,7 +29,7 @@
           "kind": "DataConnectorScalarRepresentation",
           "version": "v1",
           "definition": {
-            "dataConnectorName": "db2",
+            "dataConnectorName": "db",
             "dataConnectorScalarType": "timestamp",
             "representation": "Timestamp"
           }
@@ -58,7 +58,7 @@
             },
             "dataConnectorTypeMapping": [
               {
-                "dataConnectorName": "db2",
+                "dataConnectorName": "db",
                 "dataConnectorObjectType": "author",
                 "fieldMapping": {
                   "author_id": {
@@ -88,7 +88,7 @@
             "name": "Authors",
             "objectType": "author",
             "source": {
-              "dataConnectorName": "db2",
+              "dataConnectorName": "db",
               "collection": "author"
             },
             "graphql": {
@@ -152,6 +152,123 @@
           }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "article",
+            "fields": [
+              {
+                "name": "author_id",
+                "type": "Int!"
+              },
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String"
+              }
+            ],
+            "graphql": {
+              "typeName": "Article"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "article",
+                "fieldMapping": {
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  },
+                  "id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Articles",
+            "objectType": "article",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "article"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArticleById",
+                  "uniqueIdentifier": ["id"]
+                }
+              ]
+            },
+            "orderableFields": [
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "article",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["author_id", "id", "title"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Articles",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
           "kind": "ModelPermissions",
           "version": "v1",
           "definition": {
@@ -199,7 +316,7 @@
             },
             "dataConnectorTypeMapping": [
               {
-                "dataConnectorName": "db2",
+                "dataConnectorName": "db",
                 "dataConnectorObjectType": "institution",
                 "fieldMapping": {
                   "id": {
@@ -317,7 +434,7 @@
             },
             "dataConnectorTypeMapping": [
               {
-                "dataConnectorName": "db2",
+                "dataConnectorName": "db",
                 "dataConnectorObjectType": "location",
                 "fieldMapping": {
                   "city": {
@@ -371,7 +488,7 @@
             },
             "dataConnectorTypeMapping": [
               {
-                "dataConnectorName": "db2",
+                "dataConnectorName": "db",
                 "dataConnectorObjectType": "country",
                 "fieldMapping": {
                   "continent": {
@@ -451,7 +568,7 @@
             },
             "dataConnectorTypeMapping": [
               {
-                "dataConnectorName": "db2",
+                "dataConnectorName": "db",
                 "dataConnectorObjectType": "staff",
                 "fieldMapping": {
                   "first_name": {
@@ -524,7 +641,7 @@
             "arguments": [],
             "objectType": "institution",
             "source": {
-              "dataConnectorName": "db2",
+              "dataConnectorName": "db",
               "collection": "institution",
               "argumentMapping": {}
             },
@@ -615,7 +732,7 @@
             "name": "Invoice",
             "objectType": "Invoice",
             "source": {
-              "dataConnectorName": "db2",
+              "dataConnectorName": "db",
               "collection": "Invoice"
             },
             "orderableFields": [
@@ -694,7 +811,7 @@
             "name": "InvoiceLine",
             "objectType": "InvoiceLine",
             "source": {
-              "dataConnectorName": "db2",
+              "dataConnectorName": "db",
               "collection": "InvoiceLine"
             },
             "orderableFields": [
@@ -812,7 +929,7 @@
             "description": null,
             "dataConnectorTypeMapping": [
               {
-                "dataConnectorName": "db2",
+                "dataConnectorName": "db",
                 "dataConnectorObjectType": "Invoice",
                 "fieldMapping": {
                   "total": {
@@ -911,7 +1028,7 @@
             "description": null,
             "dataConnectorTypeMapping": [
               {
-                "dataConnectorName": "db2",
+                "dataConnectorName": "db",
                 "dataConnectorObjectType": "InvoiceLine",
                 "fieldMapping": {
                   "invoiceId": {
@@ -1017,7 +1134,7 @@
           "kind": "DataConnectorScalarRepresentation",
           "version": "v1",
           "definition": {
-            "dataConnectorName": "db2",
+            "dataConnectorName": "db",
             "dataConnectorScalarType": "int4",
             "representation": "Int4",
             "graphql": {
@@ -1029,7 +1146,7 @@
           "kind": "DataConnectorScalarRepresentation",
           "version": "v1",
           "definition": {
-            "dataConnectorName": "db2",
+            "dataConnectorName": "db",
             "dataConnectorScalarType": "int8",
             "representation": "Int8",
             "graphql": {
@@ -1041,7 +1158,7 @@
           "kind": "DataConnectorLink",
           "version": "v1",
           "definition": {
-            "name": "db2",
+            "name": "db",
             "url": {
               "singleUrl": {
                 "value": "http://localhost:8080"

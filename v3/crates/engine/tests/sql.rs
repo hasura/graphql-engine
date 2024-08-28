@@ -147,6 +147,31 @@ fn test_aggregate_count_invoice_lines() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_aggregate_count_distinct() -> anyhow::Result<()> {
+    test_sql("sql/aggregate/count_distinct")
+}
+
+#[test]
+fn test_aggregate_count_no_pushdown() -> anyhow::Result<()> {
+    test_sql("sql/aggregate/count_no_pushdown")
+}
+
+#[test]
+fn test_aggregate_count_nested_field() -> anyhow::Result<()> {
+    test_sql("sql/aggregate/count_nested_field")
+}
+
+#[test]
+fn test_aggregate_count_all_invoice_lines() -> anyhow::Result<()> {
+    test_sql("sql/aggregate/count_all_invoice_lines")
+}
+
+#[test]
+fn test_aggregate_count_all_invoice_lines_aliased() -> anyhow::Result<()> {
+    test_sql("sql/aggregate/count_all_invoice_lines_aliased")
+}
+
+#[test]
 fn test_aggregate_sum_invoice_lines() -> anyhow::Result<()> {
     test_sql("sql/aggregate/sum_invoice_lines")
 }

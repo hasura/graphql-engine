@@ -3,4 +3,5 @@ SELECT
 FROM
     InvoiceLine
 GROUP BY
-    invoiceId;
+    invoiceId
+LIMIT 10;

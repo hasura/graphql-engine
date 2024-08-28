@@ -1,6 +1,39 @@
 [
   {
     "schema_name": "default",
+    "table_name": "Articles",
+    "return_type": "article",
+    "table_description": null,
+    "field_name": "author_id",
+    "field_type": "INT32",
+    "field_type_normalized": "INT32",
+    "is_nullable": false,
+    "field_description": null
+  },
+  {
+    "schema_name": "default",
+    "table_name": "Articles",
+    "return_type": "article",
+    "table_description": null,
+    "field_name": "id",
+    "field_type": "INT32",
+    "field_type_normalized": "INT32",
+    "is_nullable": false,
+    "field_description": null
+  },
+  {
+    "schema_name": "default",
+    "table_name": "Articles",
+    "return_type": "article",
+    "table_description": null,
+    "field_name": "title",
+    "field_type": "STRING",
+    "field_type_normalized": "STRING",
+    "is_nullable": true,
+    "field_description": null
+  },
+  {
+    "schema_name": "default",
     "table_name": "Authors",
     "return_type": "author",
     "table_description": null,

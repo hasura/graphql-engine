@@ -8,6 +8,12 @@
   {
     "table_catalog": "default",
     "table_schema": "default",
+    "table_name": "Articles",
+    "table_type": "BASE TABLE"
+  },
+  {
+    "table_catalog": "default",
+    "table_schema": "default",
     "table_name": "institutions",
     "table_type": "BASE TABLE"
   },
