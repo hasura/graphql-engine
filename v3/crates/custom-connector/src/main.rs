@@ -34,32 +34,7 @@ async fn main() -> anyhow::Result<()> {
     let socket_addr = net::SocketAddr::new(host, port);
     axum::Server::bind(&socket_addr)
         .serve(app.into_make_service())
-        .with_graceful_shutdown(async {
-            // wait for a SIGINT, i.e. a Ctrl+C from the keyboard
-            let sigint = async {
-                tokio::signal::ctrl_c()
-                    .await
-                    .expect("failed to install signal handler");
-            };
-            // wait for a SIGTERM, i.e. a normal `kill` command
-            #[cfg(unix)]
-            let sigterm = async {
-                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-                    .expect("failed to install signal handler")
-                    .recv()
-                    .await
-            };
-            // block until either of the above happens
-            #[cfg(unix)]
-            tokio::select! {
-                () = sigint => (),
-                _ = sigterm => (),
-            }
-            #[cfg(windows)]
-            tokio::select! {
-                _ = sigint => (),
-            }
-        })
+        .with_graceful_shutdown(axum_ext::shutdown_signal())
         .await?;
     Ok(())
 }

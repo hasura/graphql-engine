@@ -10,6 +10,7 @@ path = "src/main.rs"
 bench = false
 
 [dependencies]
+axum-ext = { path = "../../utils/axum-ext" }
 tracing-util = { path = "../../utils/tracing-util" }
 
 anyhow = { workspace = true }

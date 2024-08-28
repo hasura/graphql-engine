@@ -562,6 +562,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "axum-ext"
+version = "3.0.0"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1201,6 +1208,7 @@ version = "3.0.0"
 dependencies = [
  "anyhow",
  "axum",
+ "axum-ext",
  "env_logger",
  "indexmap 2.4.0",
  "ndc-models 0.2.0",
@@ -1634,6 +1642,7 @@ version = "3.0.0"
 dependencies = [
  "anyhow",
  "axum",
+ "axum-ext",
  "clap",
  "http",
  "serde",
@@ -1764,6 +1773,7 @@ version = "3.0.0"
 dependencies = [
  "anyhow",
  "axum",
+ "axum-ext",
  "base64 0.22.1",
  "build-data",
  "clap",

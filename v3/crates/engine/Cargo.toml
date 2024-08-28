@@ -21,6 +21,7 @@ name = "execute"
 harness = false
 
 [dependencies]
+axum-ext = { path = "../utils/axum-ext" }
 execute = { path = "../execute" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 hasura-authn-jwt = { path = "../auth/hasura-authn-jwt" }
