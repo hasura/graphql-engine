@@ -1,3 +1,4 @@
+use futures_util::FutureExt;
 use std::fmt::Display;
 use std::hash;
 use std::hash::{Hash, Hasher};
@@ -571,15 +572,20 @@ async fn handle_request(
             "Handle request",
             SpanVisibility::User,
             || {
-                Box::pin(execute::execute_query(
-                    state.expose_internal_errors,
-                    &state.http_context,
-                    &state.schema,
-                    &session,
-                    &headers,
-                    request,
-                    None,
-                ))
+                {
+                    Box::pin(
+                        execute::execute_query(
+                            state.expose_internal_errors,
+                            &state.http_context,
+                            &state.schema,
+                            &session,
+                            &headers,
+                            request,
+                            None,
+                        )
+                        .map(|(_operation_type, graphql_response)| graphql_response),
+                    )
+                }
             },
         )
         .await;
@@ -607,14 +613,17 @@ async fn handle_explain_request(
             "Handle explain request",
             SpanVisibility::User,
             || {
-                Box::pin(execute::execute_explain(
-                    state.expose_internal_errors,
-                    &state.http_context,
-                    &state.schema,
-                    &session,
-                    &headers,
-                    request,
-                ))
+                Box::pin(
+                    execute::execute_explain(
+                        state.expose_internal_errors,
+                        &state.http_context,
+                        &state.schema,
+                        &session,
+                        &headers,
+                        request,
+                    )
+                    .map(|(_operation_type, graphql_response)| graphql_response),
+                )
             },
         )
         .await;

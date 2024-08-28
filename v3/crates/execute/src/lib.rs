@@ -113,7 +113,7 @@ pub async fn execute_query(
     request_headers: &reqwest::header::HeaderMap,
     request: RawRequest,
     project_id: Option<&ProjectId>,
-) -> GraphQLResponse {
+) -> (Option<ast::OperationType>, GraphQLResponse) {
     execute_query_internal(
         expose_internal_errors,
         http_context,
@@ -124,7 +124,15 @@ pub async fn execute_query(
         project_id,
     )
     .await
-    .unwrap_or_else(|e| GraphQLResponse::from_error(&e, expose_internal_errors))
+    .map_or_else(
+        |e| {
+            (
+                None,
+                GraphQLResponse::from_error(&e, expose_internal_errors),
+            )
+        },
+        |(op_type, response)| (Some(op_type), response),
+    )
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -161,7 +169,7 @@ pub async fn execute_query_internal(
     request_headers: &reqwest::header::HeaderMap,
     raw_request: gql::http::RawRequest,
     project_id: Option<&ProjectId>,
-) -> Result<GraphQLResponse, error::RequestError> {
+) -> Result<(ast::OperationType, GraphQLResponse), error::RequestError> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -267,7 +275,7 @@ pub async fn execute_query_internal(
                             execute_response
                         })
                         .await;
-                    Ok(response)
+                    Ok((normalized_request.ty, response))
                 })
             },
         )
@@ -282,7 +290,7 @@ pub async fn explain_query_internal(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     raw_request: gql::http::RawRequest,
-) -> Result<explain::types::ExplainResponse, error::RequestError> {
+) -> Result<(ast::OperationType, explain::types::ExplainResponse), error::RequestError> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -351,7 +359,7 @@ pub async fn explain_query_internal(
                             },
                         )
                         .await;
-                    Ok(response)
+                    Ok((normalized_request.ty, response))
                 })
             },
         )

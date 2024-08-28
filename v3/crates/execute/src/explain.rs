@@ -25,7 +25,7 @@ pub async fn execute_explain(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     request: RawRequest,
-) -> types::ExplainResponse {
+) -> (Option<ast::OperationType>, types::ExplainResponse) {
     super::explain_query_internal(
         expose_internal_errors,
         http_context,
@@ -35,7 +35,15 @@ pub async fn execute_explain(
         request,
     )
     .await
-    .unwrap_or_else(|e| types::ExplainResponse::error(e.to_graphql_error(expose_internal_errors)))
+    .map_or_else(
+        |e| {
+            (
+                None,
+                types::ExplainResponse::error(e.to_graphql_error(expose_internal_errors)),
+            )
+        },
+        |(operation_type, response)| (Some(operation_type), response),
+    )
 }
 
 /// Produce an /explain plan for a given GraphQL query.

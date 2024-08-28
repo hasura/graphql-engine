@@ -1779,6 +1779,7 @@ dependencies = [
  "clap",
  "criterion",
  "execute",
+ "futures-util",
  "goldenfile",
  "hasura-authn-core",
  "hasura-authn-jwt",

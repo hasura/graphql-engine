@@ -107,7 +107,7 @@ pub fn test_execution_expectation_legacy(
 
         // Execute the test
 
-        let response = execute_query(
+        let (_, response) = execute_query(
             execute::ExposeInternalErrors::Expose,
             &test_ctx.http_context,
             &schema,
@@ -213,7 +213,7 @@ pub(crate) fn test_introspection_expectation(
         // Execute the test
         let mut responses = Vec::new();
         for session in &sessions {
-            let response = execute_query(
+            let (_, response) = execute_query(
                 execute::ExposeInternalErrors::Expose,
                 &test_ctx.http_context,
                 &schema,
@@ -375,7 +375,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         variables: None,
                     };
                     for session in &sessions {
-                        let response = execute_query(
+                        let (_, response) = execute_query(
                             execute::ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
@@ -395,7 +395,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             query: query.clone(),
                             variables: Some(variables),
                         };
-                        let response = execute_query(
+                        let (_, response) = execute_query(
                             execute::ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
@@ -510,7 +510,7 @@ pub fn test_execute_explain(
             query,
             variables: None,
         };
-        let raw_response = execute::execute_explain(
+        let (_, raw_response) = execute::execute_explain(
             execute::ExposeInternalErrors::Expose,
             &test_ctx.http_context,
             &schema,
