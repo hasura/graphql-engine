@@ -7,7 +7,7 @@ use super::types::{
     LimitFieldGraphqlConfig, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig,
     ModelOrderByExpression, OffsetFieldGraphqlConfig, OrderByExpressionInfo,
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
-    UniqueIdentifierField,
+    SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::stages::order_by_expressions::OrderByExpressions;
@@ -85,7 +85,11 @@ pub(crate) fn resolve_model_graphql_api(
                 format!("Selects a single object from the model. Model description: {description}")
             })
         };
-
+        let subscription = select_unique
+            .subscription
+            .as_ref()
+            .map(resolve_subscription_graphql_api)
+            .transpose()?;
         graphql_api
             .select_uniques
             .push(SelectUniqueGraphQlDefinition {
@@ -93,6 +97,7 @@ pub(crate) fn resolve_model_graphql_api(
                 unique_identifier: unique_identifier_fields,
                 description: select_unique_description,
                 deprecated: select_unique.deprecated.clone(),
+                subscription,
             });
     }
 
@@ -157,20 +162,26 @@ pub(crate) fn resolve_model_graphql_api(
     graphql_api.select_many = match &model_graphql_definition.select_many {
         None => Ok(None),
         Some(gql_definition) => {
+            let subscription = gql_definition
+                .subscription
+                .as_ref()
+                .map(resolve_subscription_graphql_api)
+                .transpose()?;
             mk_name(gql_definition.query_root_field.as_str()).map(|f: ast::Name| {
                 let select_many_description = if gql_definition.description.is_some() {
                     gql_definition.description.clone()
                 } else {
                     model_description.as_ref().map(|description| {
                         format!(
-                        "Selects multiple objects from the model. Model description: {description}"
-                    )
+                            "Selects multiple objects from the model. Model description: {description}"
+                        )
                     })
                 };
                 Some(SelectManyGraphQlDefinition {
                     query_root_field: f,
                     description: select_many_description,
                     deprecated: gql_definition.deprecated.clone(),
+                    subscription,
                 })
             })
         }
@@ -222,12 +233,18 @@ pub(crate) fn resolve_model_graphql_api(
                             graphql_config::GraphqlConfigError::MissingAggregateFilterInputFieldNameInGraphqlConfig,
                     })?;
 
+                let subscription = graphql_aggregate
+                    .subscription
+                    .as_ref()
+                    .map(resolve_subscription_graphql_api)
+                    .transpose()?;
                 Ok(SelectAggregateGraphQlDefinition {
                     query_root_field: mk_name(graphql_aggregate.query_root_field.as_str())?,
                     description: graphql_aggregate.description.clone(),
                     deprecated: graphql_aggregate.deprecated.clone(),
                     aggregate_expression_name: aggregate_expression_name.clone(),
                     filter_input_field_name,
+                    subscription,
                 })
             },
         )
@@ -308,4 +325,20 @@ fn is_model_used_in_any_aggregate_relationship(
             }
             _ => false,
         })
+}
+
+fn resolve_subscription_graphql_api(
+    subscription: &open_dds::models::SubscriptionGraphQlDefinition,
+) -> Result<SubscriptionGraphQlDefinition, Error> {
+    let open_dds::models::SubscriptionGraphQlDefinition {
+        root_field,
+        description,
+        deprecated,
+    } = subscription;
+    let root_field_name = mk_name(root_field.as_str())?;
+    Ok(SubscriptionGraphQlDefinition {
+        root_field: root_field_name,
+        description: description.clone(),
+        deprecated: deprecated.clone(),
+    })
 }

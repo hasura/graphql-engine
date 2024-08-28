@@ -296,6 +296,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                                         ),
                                         description: None,
                                         deprecated: None,
+                                        subscription: None,
                                     },
                                 ),
                                 arguments_input_type: None,
@@ -319,6 +320,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                             ),
                             description: None,
                             deprecated: None,
+                            subscription: None,
                         },
                     ),
                     select_aggregate: None,
@@ -360,6 +362,13 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
             mutation_root_type_name: TypeName(
                 Name(
                     "Mutation",
+                ),
+            ),
+            subscription_root_type_name: Some(
+                TypeName(
+                    Name(
+                        "Subscription",
+                    ),
                 ),
             ),
             order_by_input: Some(

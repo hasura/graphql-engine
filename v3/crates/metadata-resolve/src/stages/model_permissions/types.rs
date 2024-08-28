@@ -39,6 +39,7 @@ pub struct SelectPermission {
     pub filter: FilterPermission,
     // pub allow_aggregations: bool,
     pub argument_presets: ArgumentPresets,
+    pub allow_subscriptions: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

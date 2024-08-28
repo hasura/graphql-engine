@@ -236,6 +236,13 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/issue_when_
                     "Mutation",
                 ),
             ),
+            subscription_root_type_name: Some(
+                TypeName(
+                    Name(
+                        "Subscription",
+                    ),
+                ),
+            ),
             order_by_input: Some(
                 OrderByInputGraphqlConfig {
                     asc_direction_field_value: Name(

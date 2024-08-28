@@ -30,6 +30,8 @@ pub enum GraphqlConfig {
 pub struct GraphqlConfigV1 {
     pub query: QueryGraphqlConfig,
     pub mutation: MutationGraphqlConfig,
+    #[opendd(hidden = true)]
+    pub subscription: Option<SubscriptionGraphqlConfig>,
     pub apollo_federation: Option<GraphqlApolloFederationConfig>,
 }
 
@@ -169,6 +171,15 @@ pub struct OrderByEnumTypeName {
 #[opendd(json_schema(title = "MutationGraphqlConfig"))]
 pub struct MutationGraphqlConfig {
     /// The name of the root operation type name for mutations. Usually `mutation`.
+    pub root_operation_type_name: GraphQlTypeName,
+}
+
+/// Configuration for the GraphQL schema of Hasura features for subscriptions.
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(title = "SubscriptionGraphqlConfig"))]
+pub struct SubscriptionGraphqlConfig {
+    /// The name of the root operation type name for subscriptions. Usually `subscription`.
     pub root_operation_type_name: GraphQlTypeName,
 }
 

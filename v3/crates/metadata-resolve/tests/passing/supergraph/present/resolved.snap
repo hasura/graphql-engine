@@ -29,6 +29,13 @@ input_file: crates/metadata-resolve/tests/passing/supergraph/present/metadata.js
                     "Mutation",
                 ),
             ),
+            subscription_root_type_name: Some(
+                TypeName(
+                    Name(
+                        "Subscription",
+                    ),
+                ),
+            ),
             order_by_input: Some(
                 OrderByInputGraphqlConfig {
                     asc_direction_field_value: Name(

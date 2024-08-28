@@ -1390,6 +1390,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         ),
                                         description: None,
                                         deprecated: None,
+                                        subscription: None,
                                     },
                                 ),
                                 arguments_input_type: None,
@@ -1407,6 +1408,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     ): SelectPermission {
                         filter: AllowAll,
                         argument_presets: {},
+                        allow_subscriptions: false,
                     },
                 },
                 filter_expression_type: None,
@@ -1420,6 +1422,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             ),
                             description: None,
                             deprecated: None,
+                            subscription: None,
                         },
                     ),
                     select_aggregate: None,
@@ -1981,6 +1984,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
             mutation_root_type_name: TypeName(
                 Name(
                     "Mutation",
+                ),
+            ),
+            subscription_root_type_name: Some(
+                TypeName(
+                    Name(
+                        "Subscription",
+                    ),
                 ),
             ),
             order_by_input: Some(

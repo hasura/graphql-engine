@@ -242,6 +242,7 @@ pub fn resolve_model_select_permissions(
             let resolved_permission = SelectPermission {
                 filter: resolved_predicate.clone(),
                 argument_presets,
+                allow_subscriptions: select.allow_subscriptions,
             };
             validated_permissions.insert(model_permission.role.clone(), resolved_permission);
         }

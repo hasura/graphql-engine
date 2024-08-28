@@ -40,6 +40,7 @@ pub struct SelectUniqueGraphQlDefinition {
     pub unique_identifier: IndexMap<FieldName, UniqueIdentifierField>,
     pub description: Option<String>,
     pub deprecated: Option<Deprecated>,
+    pub subscription: Option<SubscriptionGraphQlDefinition>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -47,6 +48,7 @@ pub struct SelectManyGraphQlDefinition {
     pub query_root_field: ast::Name,
     pub description: Option<String>,
     pub deprecated: Option<Deprecated>,
+    pub subscription: Option<SubscriptionGraphQlDefinition>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -56,6 +58,14 @@ pub struct SelectAggregateGraphQlDefinition {
     pub deprecated: Option<Deprecated>,
     pub aggregate_expression_name: Qualified<AggregateExpressionName>,
     pub filter_input_field_name: ast::Name,
+    pub subscription: Option<SubscriptionGraphQlDefinition>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct SubscriptionGraphQlDefinition {
+    pub root_field: ast::Name,
+    pub description: Option<String>,
+    pub deprecated: Option<Deprecated>,
 }
 
 // TODO: add support for aggregates

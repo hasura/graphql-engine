@@ -299,6 +299,13 @@ pub struct SelectPermission {
     /// Preset values for arguments for this role
     #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub argument_presets: Vec<ArgumentPreset>,
+    /// Whether to allow subscriptions for this role.
+    #[opendd(
+        hidden = true,
+        default,
+        json_schema(default_exp = "serde_json::json!(false)")
+    )]
+    pub allow_subscriptions: bool,
 }
 
 // We use this instead of an Option, so that we can make the filter field in

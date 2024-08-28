@@ -383,6 +383,9 @@ pub struct SelectUniqueGraphQlDefinition {
     /// Whether this select unique query field is deprecated.
     /// If set, the deprecation status is added to the select unique root field's graphql schema.
     pub deprecated: Option<Deprecated>,
+    /// Enable subscription on this select unique root field.
+    #[opendd(hidden = true)]
+    pub subscription: Option<SubscriptionGraphQlDefinition>,
 }
 
 /// The definition of the GraphQL API for selecting rows from a model.
@@ -397,6 +400,24 @@ pub struct SelectManyGraphQlDefinition {
     pub description: Option<String>,
     /// Whether this select many query field is deprecated.
     /// If set, the deprecation status is added to the select many root field's graphql schema.
+    pub deprecated: Option<Deprecated>,
+    /// Enable subscription on this select many root field.
+    #[opendd(hidden = true)]
+    pub subscription: Option<SubscriptionGraphQlDefinition>,
+}
+
+/// The definition of the GraphQL API for enabling subscription on select_many or select_uniques root fields.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[opendd(json_schema(title = "SubscriptionGraphQlDefinition"))]
+pub struct SubscriptionGraphQlDefinition {
+    /// The name of the subscription root field.
+    pub root_field: GraphQlFieldName,
+    /// The description of the subscription graphql definition.
+    /// Gets added to the description of the subscription root field in the graphql schema.
+    pub description: Option<String>,
+    /// Whether this subscription root field is deprecated.
+    /// If set, the deprecation status is added to the subscription root field's graphql schema.
     pub deprecated: Option<Deprecated>,
 }
 
@@ -473,4 +494,7 @@ pub struct ModelAggregateGraphQlDefinition {
     /// Whether this aggregate query field is deprecated.
     /// If set, the deprecation status is added to the aggregate root field's graphql schema.
     pub deprecated: Option<Deprecated>,
+    /// Enable subscription on this aggregate root field.
+    #[opendd(hidden = true)]
+    pub subscription: Option<SubscriptionGraphQlDefinition>,
 }
