@@ -10,25 +10,32 @@
 //
 // copied from https://github.com/davidB/axum-tracing-opentelemetry/blob/main/examples/otlp/src/main.rs
 pub async fn shutdown_signal() {
-    let ctrl_c = async {
+    // wait for a SIGINT, i.e. a Ctrl+C from the keyboard
+    let sigint = async {
         tokio::signal::ctrl_c()
             .await
-            .expect("failed to install Ctrl+C handler");
+            .expect("failed to install signal handler");
     };
 
+    // wait for a SIGTERM, i.e. a normal `kill` command
     #[cfg(unix)]
-    let terminate = async {
+    let sigterm = async {
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("failed to install signal handler")
             .recv()
-            .await;
+            .await
     };
 
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
+    // on Unix, block until either of the above happens
+    #[cfg(unix)]
     tokio::select! {
-        () = ctrl_c => {},
-        () = terminate => {},
+        () = sigint => (),
+        _ = sigterm => (),
+    }
+
+    // only listen for Ctrl-C on Windows
+    #[cfg(windows)]
+    tokio::select! {
+        _ = sigint => (),
     }
 }
