@@ -224,6 +224,7 @@ pub fn resolve(
         &order_by_expressions,
         &graphql_types,
         &graphql_config,
+        configuration,
     )?;
 
     let commands_with_permissions = command_permissions::resolve(
