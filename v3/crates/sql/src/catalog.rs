@@ -137,6 +137,7 @@ impl datafusion::CatalogProvider for model::WithSession<Catalog> {
 impl Catalog {
     pub fn create_session_context(
         self: Arc<Self>,
+        request_headers: &Arc<reqwest::header::HeaderMap>,
         session: &Arc<Session>,
         http_context: &Arc<execute::HttpContext>,
     ) -> datafusion::SessionContext {
@@ -174,6 +175,7 @@ impl Catalog {
             catalog: self.clone(),
             session: session.clone(),
             http_context: http_context.clone(),
+            request_headers: request_headers.clone(),
         });
         let session_state = datafusion::SessionStateBuilder::new()
             .with_config(session_config)

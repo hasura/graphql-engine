@@ -563,6 +563,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
 
         let request_path = test_path.join("query.sql");
         let request_path_json = test_path.join("query.json");
+        let headers_path_json = test_path.join("headers.json");
         let response_path = test_path_string.to_string() + "/expected.json";
         let explain_path = test_path_string.to_string() + "/plan.json";
         let metadata_path = root_test_dir.join("sql/metadata.json");
@@ -590,6 +591,13 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
             serde_json::from_str(&json_content)?
         };
 
+        let header_map = if let Ok(content) = fs::read_to_string(headers_path_json) {
+            let header_map: HashMap<String, String> = serde_json::from_str(&content)?;
+            Arc::new(reqwest::header::HeaderMap::try_from(&header_map)?)
+        } else {
+            Arc::new(reqwest::header::HeaderMap::new())
+        };
+
         let session = Arc::new({
             let session_vars_path = &test_path.join("session_variables.json");
             let session_variables: HashMap<SessionVariable, SessionVariableValue> =
@@ -608,6 +616,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
             &http_context,
             &mut test_ctx.mint,
             explain_path,
+            &header_map,
             &SqlRequest::new(format!("EXPLAIN {}", request.sql)),
         )
         .await?;
@@ -618,6 +627,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
             &http_context,
             &mut test_ctx.mint,
             response_path,
+            &header_map,
             &request,
         )
         .await?;
@@ -632,9 +642,11 @@ async fn snapshot_sql(
     http_context: &Arc<execute::HttpContext>,
     mint: &mut Mint,
     response_path: String,
+    request_headers: &Arc<reqwest::header::HeaderMap>,
     request: &SqlRequest,
 ) -> Result<(), anyhow::Error> {
     let response = sql::execute::execute_sql(
+        request_headers.clone(),
         catalog.clone(),
         session.clone(),
         http_context.clone(),

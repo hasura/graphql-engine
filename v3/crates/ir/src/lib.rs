@@ -25,7 +25,7 @@ pub use remote_joins::VariableName;
 pub use aggregates::{
     mk_alias_from_graphql_field_path, AggregateFieldSelection, AggregateSelectionSet,
 };
-pub use arguments::Argument;
+pub use arguments::{process_connector_link_presets, Argument};
 pub use commands::{CommandInfo, FunctionBasedCommand, ProcedureBasedCommand};
 pub use filter::expression::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,

@@ -667,6 +667,7 @@ async fn pre_execution_plugins_middleware<'a>(
 
 /// Handle a SQL request and execute it.
 async fn handle_sql_request(
+    headers: axum::http::header::HeaderMap,
     State(state): State<Arc<EngineState>>,
     Extension(session): Extension<Session>,
     Json(request): Json<sql::execute::SqlRequest>,
@@ -680,6 +681,7 @@ async fn handle_sql_request(
             || {
                 Box::pin(async {
                     sql::execute::execute_sql(
+                        Arc::new(headers),
                         state.sql_context.clone(),
                         Arc::new(session),
                         Arc::new(state.http_context.clone()),

@@ -20,6 +20,7 @@ use datafusion::{
 use async_trait::async_trait;
 
 pub(crate) struct OpenDDQueryPlanner {
+    pub(crate) request_headers: Arc<reqwest::header::HeaderMap>,
     pub(crate) session: Arc<Session>,
     pub(crate) http_context: Arc<execute::HttpContext>,
     pub(crate) catalog: Arc<crate::catalog::Catalog>,
@@ -37,6 +38,7 @@ impl QueryPlanner for OpenDDQueryPlanner {
         // Teach the default physical planner how to plan TopK nodes.
         let physical_planner =
             DefaultPhysicalPlanner::with_extension_planners(vec![Arc::new(NDCPushDownPlanner {
+                request_headers: self.request_headers.clone(),
                 session: self.session.clone(),
                 http_context: self.http_context.clone(),
                 catalog: self.catalog.clone(),
@@ -49,6 +51,7 @@ impl QueryPlanner for OpenDDQueryPlanner {
 }
 
 pub(crate) struct NDCPushDownPlanner {
+    pub(crate) request_headers: Arc<reqwest::header::HeaderMap>,
     pub(crate) session: Arc<Session>,
     pub(crate) http_context: Arc<execute::HttpContext>,
     pub(crate) catalog: Arc<crate::catalog::Catalog>,
@@ -78,6 +81,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
             build_execution_plan(
+                &self.request_headers,
                 &self.catalog.metadata,
                 &self.http_context,
                 &self.session,

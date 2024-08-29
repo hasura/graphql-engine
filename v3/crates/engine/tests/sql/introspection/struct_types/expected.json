@@ -110,6 +110,26 @@
     ]
   },
   {
+    "name": "SessionInfo",
+    "description": null,
+    "fields": [
+      {
+        "field_name": "expiry",
+        "field_type": "STRING",
+        "field_type_normalized": "STRING",
+        "is_nullable": false,
+        "description": null
+      },
+      {
+        "field_name": "token",
+        "field_type": "STRING",
+        "field_type_normalized": "STRING",
+        "is_nullable": false,
+        "description": null
+      }
+    ]
+  },
+  {
     "name": "actor",
     "description": null,
     "fields": [
