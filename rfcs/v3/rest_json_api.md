@@ -138,7 +138,7 @@ If required, response transformation could be performed with a JSON:API output o
 #### Flatten Response JSON
 
 Say we want to flatten a field of the JSON response. We want to change `article.author.name` to
-`article.autor_name`.
+`article.author_name`.
 
 Recommended Approach: Use TS Connector
 
