@@ -4,7 +4,7 @@ use crate::catalog::{mem_table::MemTable, types::StructTypeName};
 
 pub const TABLE_METADATA: &str = "table_metadata";
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub(crate) struct TableMetadata {
     rows: Vec<TableMetadataRow>,
 }

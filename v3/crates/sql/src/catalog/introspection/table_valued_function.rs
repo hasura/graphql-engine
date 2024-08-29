@@ -9,7 +9,7 @@ use crate::catalog::{
 pub const TABLE_VALUED_FUNCTION: &str = "table_valued_function";
 pub const TABLE_VALUED_FUNCTION_ARGUMENT: &str = "table_valued_function_argument";
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub(crate) struct TableValuedFunction {
     rows: Vec<TableValuedFunctionRow>,
 }
@@ -86,7 +86,7 @@ pub(crate) struct TableValuedFunctionFieldRow {
     description: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub(crate) struct TableValuedFunctionArgument {
     rows: Vec<TableValuedFunctionArgumentRow>,
 }

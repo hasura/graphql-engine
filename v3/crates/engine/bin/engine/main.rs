@@ -329,6 +329,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         expose_internal_errors,
         &server.authn_config_path,
         &server.metadata_path,
+        server.enable_sql_interface,
         &metadata_resolve_configuration,
     )
     .map_err(StartupError::ReadSchema)?;
@@ -723,6 +724,7 @@ fn build_state(
     expose_internal_errors: execute::ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
+    enable_sql_interface: bool,
     metadata_resolve_configuration: &metadata_resolve::configuration::Configuration,
 ) -> Result<Arc<EngineState>, anyhow::Error> {
     // Auth Config
@@ -745,7 +747,12 @@ fn build_state(
         ndc_response_size_limit: None,
     };
     let pre_parse_plugins = resolved_metadata.pre_parse_plugins.clone();
-    let sql_context = sql::catalog::Catalog::from_metadata(resolved_metadata.clone());
+    let sql_context = if enable_sql_interface {
+        sql::catalog::Catalog::from_metadata(resolved_metadata.clone())
+    } else {
+        sql::catalog::Catalog::empty_from_metadata(resolved_metadata.clone())
+    };
+
     let schema = schema::GDS {
         metadata: resolved_metadata,
     }
