@@ -11,8 +11,9 @@ use datafusion::{
     logical_expr::{Expr, LogicalPlan, UserDefinedLogicalNodeCore},
     physical_expr::EquivalenceProperties,
     physical_plan::{
-        stream::RecordBatchStreamAdapter, DisplayAs, DisplayFormatType, ExecutionMode,
-        ExecutionPlan, Partitioning, PlanProperties,
+        metrics::{BaselineMetrics, ExecutionPlanMetricsSet},
+        stream::RecordBatchStreamAdapter,
+        DisplayAs, DisplayFormatType, ExecutionMode, ExecutionPlan, Partitioning, PlanProperties,
     },
 };
 use futures::TryFutureExt;
@@ -888,6 +889,7 @@ pub(crate) struct NDCAggregatePushdown {
     fields: IndexMap<NdcFieldAlias, AggregateFieldSelection>,
     projected_schema: SchemaRef,
     cache: PlanProperties,
+    metrics: ExecutionPlanMetricsSet,
 }
 
 impl NDCAggregatePushdown {
@@ -898,12 +900,14 @@ impl NDCAggregatePushdown {
         projected_schema: SchemaRef,
     ) -> Self {
         let cache = Self::compute_properties(projected_schema.clone());
+        let metrics = ExecutionPlanMetricsSet::new();
         Self {
             query,
             http_context,
             fields,
             projected_schema,
             cache,
+            metrics,
         }
     }
 
@@ -941,6 +945,10 @@ impl ExecutionPlan for NDCAggregatePushdown {
         vec![]
     }
 
+    fn metrics(&self) -> Option<datafusion::physical_plan::metrics::MetricsSet> {
+        Some(self.metrics.clone_inner())
+    }
+
     fn with_new_children(
         self: Arc<Self>,
         _: Vec<Arc<dyn ExecutionPlan>>,
@@ -950,7 +958,7 @@ impl ExecutionPlan for NDCAggregatePushdown {
 
     fn execute(
         &self,
-        _partition: usize,
+        partition: usize,
         context: Arc<datafusion::execution::TaskContext>,
     ) -> datafusion::error::Result<datafusion::execution::SendableRecordBatchStream> {
         let otel_cx = context
@@ -959,6 +967,8 @@ impl ExecutionPlan for NDCAggregatePushdown {
             .ok_or_else(|| {
                 DataFusionError::External(Box::new(ExecutionPlanError::TracingContextNotFound))
             })?;
+
+        let baseline_metrics = BaselineMetrics::new(&self.metrics, partition);
 
         let query_execution_plan = ResolvedQueryExecutionPlan {
             query_node: ResolvedQueryNode {
@@ -997,6 +1007,7 @@ impl ExecutionPlan for NDCAggregatePushdown {
             self.http_context.clone(),
             query_request,
             self.query.data_connector.clone(),
+            baseline_metrics,
         )
         .with_context((*otel_cx).clone())
         .map_err(|e| DataFusionError::External(Box::new(e)));
@@ -1015,6 +1026,7 @@ pub(crate) struct NDCQueryPushDown {
     query: NDCQuery,
     projected_schema: SchemaRef,
     cache: PlanProperties,
+    metrics: ExecutionPlanMetricsSet,
 }
 
 #[derive(Debug, Clone)]
@@ -1037,12 +1049,14 @@ impl NDCQueryPushDown {
         query: NDCQuery,
     ) -> Self {
         let cache = Self::compute_properties(schema.clone());
+        let metrics = ExecutionPlanMetricsSet::new();
         Self {
             http_context,
             fields,
             query,
             projected_schema: schema,
             cache,
+            metrics,
         }
     }
 
@@ -1080,6 +1094,10 @@ impl ExecutionPlan for NDCQueryPushDown {
         vec![]
     }
 
+    fn metrics(&self) -> Option<datafusion::physical_plan::metrics::MetricsSet> {
+        Some(self.metrics.clone_inner())
+    }
+
     fn with_new_children(
         self: Arc<Self>,
         _: Vec<Arc<dyn ExecutionPlan>>,
@@ -1089,7 +1107,7 @@ impl ExecutionPlan for NDCQueryPushDown {
 
     fn execute(
         &self,
-        _partition: usize,
+        partition: usize,
         context: Arc<datafusion::execution::TaskContext>,
     ) -> datafusion::error::Result<datafusion::execution::SendableRecordBatchStream> {
         let otel_cx = context
@@ -1098,6 +1116,8 @@ impl ExecutionPlan for NDCQueryPushDown {
             .ok_or_else(|| {
                 DataFusionError::External(Box::new(ExecutionPlanError::TracingContextNotFound))
             })?;
+
+        let baseline_metrics = BaselineMetrics::new(&self.metrics, partition);
 
         let query_execution_plan = ResolvedQueryExecutionPlan {
             query_node: ResolvedQueryNode {
@@ -1139,6 +1159,7 @@ impl ExecutionPlan for NDCQueryPushDown {
             self.http_context.clone(),
             query_request,
             self.query.data_connector.clone(),
+            baseline_metrics,
         )
         .with_context((*otel_cx).clone())
         .map_err(|e| DataFusionError::External(Box::new(e)));
@@ -1155,6 +1176,7 @@ pub async fn fetch_from_data_connector(
     http_context: Arc<HttpContext>,
     query_request: execute::ndc::NdcQueryRequest,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
+    baseline_metrics: BaselineMetrics,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let tracer = tracing_util::global_tracer();
 
@@ -1165,7 +1187,7 @@ pub async fn fetch_from_data_connector(
         "ndc_response_to_record_batch",
         "Converts NDC Response into datafusion's RecordBatch",
         SpanVisibility::Internal,
-        || ndc_response_to_record_batch(schema, ndc_response),
+        || ndc_response_to_record_batch(schema, ndc_response, &baseline_metrics),
     )?;
     Ok(batch)
 }
@@ -1175,6 +1197,7 @@ pub async fn fetch_aggregates_from_data_connector(
     http_context: Arc<HttpContext>,
     query_request: execute::ndc::NdcQueryRequest,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
+    baseline_metrics: BaselineMetrics,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let tracer = tracing_util::global_tracer();
 
@@ -1185,7 +1208,7 @@ pub async fn fetch_aggregates_from_data_connector(
         "ndc_response_to_record_batch",
         "Converts NDC Response into datafusion's RecordBatch",
         SpanVisibility::Internal,
-        || ndc_aggregates_response_to_record_batch(schema, ndc_response),
+        || ndc_aggregates_response_to_record_batch(schema, ndc_response, &baseline_metrics),
     )?;
     Ok(batch)
 }
@@ -1193,6 +1216,7 @@ pub async fn fetch_aggregates_from_data_connector(
 pub fn ndc_response_to_record_batch(
     schema: SchemaRef,
     ndc_response: NdcQueryResponse,
+    baseline_metrics: &BaselineMetrics,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let rows = ndc_response
         .as_latest_rowsets()
@@ -1202,12 +1226,14 @@ pub fn ndc_response_to_record_batch(
         .ok_or_else(|| {
             ExecutionPlanError::NDCResponseFormat("no rows found for the row set".to_string())
         })?;
+    baseline_metrics.record_output(rows.len());
     to_record_batch(schema, &rows)
 }
 
 pub fn ndc_aggregates_response_to_record_batch(
     schema: SchemaRef,
     ndc_response: NdcQueryResponse,
+    baseline_metrics: &BaselineMetrics,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let aggregates = ndc_response
         .as_latest_rowsets()
@@ -1217,6 +1243,7 @@ pub fn ndc_aggregates_response_to_record_batch(
         .ok_or_else(|| {
             ExecutionPlanError::NDCResponseFormat("no rows found for the row set".to_string())
         })?;
+    baseline_metrics.record_output(1);
     to_record_batch(schema, &[aggregates])
 }
 
@@ -1270,7 +1297,9 @@ mod tests {
             groups: None,
         }]);
 
-        let result = ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response));
+        let metrics = BaselineMetrics::new(&ExecutionPlanMetricsSet::new(), 0);
+        let result =
+            ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response), &metrics);
         assert!(result.is_ok());
 
         let record_batch = result.unwrap();
@@ -1304,7 +1333,9 @@ mod tests {
             groups: None,
         }]);
 
-        let result = ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response));
+        let metrics = BaselineMetrics::new(&ExecutionPlanMetricsSet::new(), 0);
+        let result =
+            ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response), &metrics);
         assert!(result.is_ok());
 
         let record_batch = result.unwrap();
@@ -1318,7 +1349,10 @@ mod tests {
 
         let query_response = QueryResponse(vec![]);
 
-        let result = ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response));
+        let metrics = BaselineMetrics::new(&ExecutionPlanMetricsSet::new(), 0);
+
+        let result =
+            ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response), &metrics);
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -1336,7 +1370,10 @@ mod tests {
             groups: None,
         }]);
 
-        let result = ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response));
+        let metrics = BaselineMetrics::new(&ExecutionPlanMetricsSet::new(), 0);
+
+        let result =
+            ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response), &metrics);
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -1360,7 +1397,10 @@ mod tests {
             groups: None,
         }]);
 
-        let result = ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response));
+        let metrics = BaselineMetrics::new(&ExecutionPlanMetricsSet::new(), 0);
+
+        let result =
+            ndc_response_to_record_batch(schema, NdcQueryResponse::V02(query_response), &metrics);
         assert!(result.is_err());
     }
 }

@@ -5,8 +5,9 @@ use datafusion::{
     error::{DataFusionError, Result},
     physical_expr::EquivalenceProperties,
     physical_plan::{
-        stream::RecordBatchStreamAdapter, DisplayAs, DisplayFormatType, ExecutionMode,
-        ExecutionPlan, Partitioning, PlanProperties,
+        metrics::{BaselineMetrics, ExecutionPlanMetricsSet},
+        stream::RecordBatchStreamAdapter,
+        DisplayAs, DisplayFormatType, ExecutionMode, ExecutionPlan, Partitioning, PlanProperties,
     },
 };
 use futures::TryFutureExt;
@@ -73,6 +74,7 @@ pub(crate) struct NDCProcedurePushDown {
     projected_schema: SchemaRef,
     // some datafusion detail
     cache: PlanProperties,
+    metrics: ExecutionPlanMetricsSet,
 }
 
 fn wrap_ndc_fields(
@@ -104,6 +106,7 @@ impl NDCProcedurePushDown {
         schema: &DFSchemaRef,
         output: CommandOutput,
     ) -> NDCProcedurePushDown {
+        let metrics = ExecutionPlanMetricsSet::new();
         Self {
             http_context,
             procedure_name,
@@ -114,6 +117,7 @@ impl NDCProcedurePushDown {
             data_connector,
             projected_schema: schema.inner().clone(),
             cache: Self::compute_properties(schema.inner().clone()),
+            metrics,
         }
     }
 
@@ -152,6 +156,10 @@ impl ExecutionPlan for NDCProcedurePushDown {
         vec![]
     }
 
+    fn metrics(&self) -> Option<datafusion::physical_plan::metrics::MetricsSet> {
+        Some(self.metrics.clone_inner())
+    }
+
     fn with_new_children(
         self: Arc<Self>,
         _: Vec<Arc<dyn ExecutionPlan>>,
@@ -161,7 +169,7 @@ impl ExecutionPlan for NDCProcedurePushDown {
 
     fn execute(
         &self,
-        _partition: usize,
+        partition: usize,
         context: Arc<datafusion::execution::TaskContext>,
     ) -> datafusion::error::Result<datafusion::execution::SendableRecordBatchStream> {
         let otel_cx = context
@@ -182,6 +190,8 @@ impl ExecutionPlan for NDCProcedurePushDown {
                 ExecutionPlanError::MutationsAreDisallowed,
             )));
         }
+
+        let baseline_metrics = BaselineMetrics::new(&self.metrics, partition);
 
         let execution_plan = ResolvedMutationExecutionPlan {
             procedure_name: self.procedure_name.clone(),
@@ -210,6 +220,7 @@ impl ExecutionPlan for NDCProcedurePushDown {
             query_request,
             self.data_connector.clone(),
             self.output.clone(),
+            baseline_metrics,
         )
         .with_context((*otel_cx).clone())
         .map_err(|e| DataFusionError::External(Box::new(e)));
@@ -227,6 +238,7 @@ pub async fn fetch_from_data_connector(
     request: execute::ndc::NdcMutationRequest,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
     output: CommandOutput,
+    baseline_metrics: BaselineMetrics,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let tracer = tracing_util::global_tracer();
 
@@ -241,7 +253,7 @@ pub async fn fetch_from_data_connector(
         "ndc_response_to_record_batch",
         "Converts NDC Response into datafusion's RecordBatch",
         SpanVisibility::Internal,
-        || ndc_response_to_record_batch(schema, ndc_response, &output),
+        || ndc_response_to_record_batch(schema, ndc_response, &output, &baseline_metrics),
     )?;
     Ok(batch)
 }
@@ -250,6 +262,7 @@ pub fn ndc_response_to_record_batch(
     schema: SchemaRef,
     ndc_response: NdcMutationResponse,
     output: &CommandOutput,
+    baseline_metrics: &BaselineMetrics,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let ndc_models::MutationOperationResults::Procedure { result } = ndc_response
         .as_latest()
@@ -264,7 +277,10 @@ pub fn ndc_response_to_record_batch(
     match output {
         CommandOutput::Object(_) => {
             let rows = match result {
-                serde_json::Value::Object(v) => Ok(Vec::from([v])),
+                serde_json::Value::Object(v) => {
+                    baseline_metrics.record_output(1);
+                    Ok(Vec::from([v]))
+                }
                 serde_json::Value::Null => Ok(Vec::from([])),
                 _ => Err(ExecutionPlanError::NDCResponseFormat(
                     "expecting an object for __value field".to_string(),
@@ -275,7 +291,10 @@ pub fn ndc_response_to_record_batch(
         CommandOutput::ListOfObjects(_) => {
             let rows = match result {
                 serde_json::Value::Null => Ok(Vec::from([])),
-                serde_json::Value::Array(v) => Ok(v),
+                serde_json::Value::Array(v) => {
+                    baseline_metrics.record_output(v.len());
+                    Ok(v)
+                }
                 _ => Err(ExecutionPlanError::NDCResponseFormat(
                     "expecting a list for __value field".to_string(),
                 )),

@@ -1,16 +1,27 @@
 use std::sync::Arc;
 
 use datafusion::{
-    arrow::{array::RecordBatch, error::ArrowError, json::writer::JsonArray, json::WriterBuilder},
+    arrow::{
+        array::RecordBatch,
+        error::ArrowError,
+        json::{writer::JsonArray, WriterBuilder},
+    },
+    common::tree_node::TreeNode,
     dataframe::DataFrame,
     error::DataFusionError,
 };
 use hasura_authn_core::Session;
-use planner::common::PhysicalPlanOptions;
+use planner::{
+    command::{NDCFunctionPushDown, NDCProcedurePushDown},
+    common::PhysicalPlanOptions,
+    model::{NDCAggregatePushdown, NDCQueryPushDown},
+};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use tracing_util::{ErrorVisibility, SpanVisibility, Successful, TraceableError};
+use tracing_util::{
+    set_attribute_on_active_span, ErrorVisibility, SpanVisibility, Successful, TraceableError,
+};
 
 pub use datafusion::execution::context::SessionContext;
 
@@ -86,10 +97,17 @@ pub async fn execute_sql(
             SpanVisibility::User,
             || {
                 Box::pin(async {
-                    session_context
+                    let logical_plan = session_context
                         .sql(&request.sql)
                         .await
-                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))
+                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))?;
+                    set_attribute_on_active_span(
+                        tracing_util::AttributeVisibility::Default,
+                        "logical_plan",
+                        logical_plan.logical_plan().to_string(),
+                    );
+
+                    Ok::<_, SqlExecutionError>(logical_plan)
                 })
             },
         )
@@ -147,9 +165,63 @@ async fn execute_logical_plan(
                     ),
                 );
                 Box::pin(async {
-                    datafusion::physical_plan::collect(plan, task_ctx)
+                    let results = datafusion::physical_plan::collect(plan.clone(), task_ctx)
                         .await
-                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))
+                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))?;
+
+                    set_attribute_on_active_span(
+                        tracing_util::AttributeVisibility::Default,
+                        "total_rows",
+                        results
+                            .iter()
+                            .map(|x| i64::try_from(x.num_rows()).unwrap_or(0))
+                            .sum::<i64>(),
+                    );
+
+                    // NOTE: we must compute these metrics _after_ running
+                    // datafusion::physical_plan::collect, because otherwise the execution
+                    // metrics will not be populated. Even though 'plan' is not marked
+                    // mutable, it uses interior mutability throughout the structure in order
+                    // to maintain its metrics.
+
+                    // Compute rows_processed by summing over all subplans -
+                    // we want to know if any of our nodes fetched an unusually high number
+                    // of rows.
+                    let mut rows_fetched: i64 = 0;
+
+                    plan.apply(|node| {
+                        if node.as_any().is::<NDCQueryPushDown>()
+                            || node.as_any().is::<NDCAggregatePushdown>()
+                            || node.as_any().is::<NDCFunctionPushDown>()
+                            || node.as_any().is::<NDCProcedurePushDown>()
+                        {
+                            if let Some(metrics) = node.metrics() {
+                                if let Some(output_rows) = metrics.output_rows() {
+                                    rows_fetched += i64::try_from(output_rows).unwrap_or(0);
+                                }
+                            }
+                        }
+                        Ok(datafusion::common::tree_node::TreeNodeRecursion::Continue)
+                    })?;
+
+                    set_attribute_on_active_span(
+                        tracing_util::AttributeVisibility::Default,
+                        "rows_fetched",
+                        rows_fetched,
+                    );
+
+                    // Take elapsed_compute metric from the top level node
+                    if let Some(metrics) = plan.metrics() {
+                        if let Some(value) = metrics.elapsed_compute() {
+                            set_attribute_on_active_span(
+                                tracing_util::AttributeVisibility::Default,
+                                "elapsed_compute",
+                                i64::try_from(value).unwrap_or(0),
+                            );
+                        }
+                    }
+
+                    Ok::<_, SqlExecutionError>(results)
                 })
             },
         )

@@ -16,7 +16,7 @@ mod procedure;
 pub(crate) use function::CommandOutput;
 pub(crate) use function::NDCFunctionPushDown;
 use open_dds::commands::DataConnectorCommand;
-use procedure::NDCProcedurePushDown;
+pub(crate) use procedure::NDCProcedurePushDown;
 
 pub fn build_execution_plan(
     metadata: &metadata_resolve::Metadata,
