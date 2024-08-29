@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use axum::{http::StatusCode, Json};
 use ndc_models;
 
-use crate::{query::Result, state::AppState};
+use crate::{arguments::check_all_arguments_used, query::Result, state::AppState};
 
 pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
     ndc_models::ProcedureInfo {
@@ -22,7 +22,12 @@ pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
     }
 }
 
-pub(crate) fn execute(state: &mut AppState) -> Result<serde_json::Value> {
+pub(crate) fn execute(
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
+    state: &mut AppState,
+) -> Result<serde_json::Value> {
+    check_all_arguments_used(arguments)?;
+
     let mut actors_list = vec![];
     let current_state = state.actors.clone();
     for (actor_id, actor) in &current_state {

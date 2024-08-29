@@ -11,6 +11,7 @@ bench = false
 derive_more = { workspace = true }
 http = { workspace = true }
 opentelemetry = { workspace = true }
+opentelemetry-contrib = { workspace = true }
 opentelemetry-http = { workspace = true }
 opentelemetry-otlp = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }

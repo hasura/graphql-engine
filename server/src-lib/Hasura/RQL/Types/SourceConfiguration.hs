@@ -21,6 +21,7 @@ class
   ( Representable (SourceConnConfiguration b),
     HasCodec (SourceConnConfiguration b),
     FromJSON (SourceConnConfiguration b),
+    Show (SourceConfig b),
     ToJSON (SourceConfig b),
     ToJSON (SourceConnConfiguration b),
     Eq (SourceConfig b),

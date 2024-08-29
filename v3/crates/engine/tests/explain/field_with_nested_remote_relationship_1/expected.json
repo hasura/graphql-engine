@@ -39,14 +39,14 @@
                         }
                       }
                     },
-                    "relationship": "[{\"subgraph\":\"connector_2\",\"name\":\"Album\"},\"Tracks\"]",
+                    "relationship": "connector_2___Album__Tracks",
                     "arguments": {}
                   }
                 }
               },
               "arguments": {},
               "collection_relationships": {
-                "[{\"subgraph\":\"connector_2\",\"name\":\"Album\"},\"Tracks\"]": {
+                "connector_2___Album__Tracks": {
                   "column_mapping": {
                     "AlbumId": "AlbumId"
                   },

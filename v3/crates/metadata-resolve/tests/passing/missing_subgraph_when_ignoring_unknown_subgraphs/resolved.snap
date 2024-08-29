@@ -7,7 +7,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
     Metadata {
         object_types: {
             Qualified {
-                subgraph: "article_namespace",
+                subgraph: SubgraphName(
+                    "article_namespace",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "article",
@@ -143,10 +145,12 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                 },
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
-                            subgraph: "article_namespace",
+                            subgraph: SubgraphName(
+                                "article_namespace",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "db",
@@ -174,11 +178,33 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -195,11 +221,33 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -216,24 +264,91 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "st_coveredby",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "st_covers",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "st_intersects",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "st_relatematch",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
                             },
                         },
                     },
-                ),
+                    scalar_representations: {},
+                },
             },
         },
         scalar_types: {},
         models: {
             Qualified {
-                subgraph: "article_namespace",
+                subgraph: SubgraphName(
+                    "article_namespace",
+                ),
                 name: ModelName(
                     Identifier(
                         "Articles",
@@ -242,7 +357,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             }: ModelWithPermissions {
                 model: Model {
                     name: Qualified {
-                        subgraph: "article_namespace",
+                        subgraph: SubgraphName(
+                            "article_namespace",
+                        ),
                         name: ModelName(
                             Identifier(
                                 "Articles",
@@ -250,7 +367,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                         ),
                     },
                     data_type: Qualified {
-                        subgraph: "article_namespace",
+                        subgraph: SubgraphName(
+                            "article_namespace",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "article",
@@ -322,7 +441,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                         ModelSource {
                             data_connector: DataConnectorLink {
                                 name: Qualified {
-                                    subgraph: "article_namespace",
+                                    subgraph: SubgraphName(
+                                        "article_namespace",
+                                    ),
                                     name: DataConnectorName(
                                         Identifier(
                                             "db",
@@ -353,7 +474,6 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                 headers: SerializableHeaderMap(
                                     {},
                                 ),
-                                argument_presets: [],
                                 response_config: None,
                                 capabilities: DataConnectorCapabilities {
                                     supported_ndc_version: V01,
@@ -371,7 +491,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                             ),
                             type_mappings: {
                                 Qualified {
-                                    subgraph: "article_namespace",
+                                    subgraph: SubgraphName(
+                                        "article_namespace",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "article",
@@ -396,11 +518,33 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -417,11 +561,33 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -438,17 +604,82 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "st_coveredby",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "st_covers",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "st_intersects",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "st_relatematch",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
                                 },
                             },
                             argument_mappings: {},
+                            data_connector_link_argument_presets: {},
                             source_arguments: {},
                         },
                     ),
@@ -471,43 +702,25 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                         },
                     ),
                     apollo_federation_key_source: None,
-                    orderable_fields: [
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "article_id",
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "article_namespace",
+                            ),
+                            name: FromModel(
+                                ModelName(
+                                    Identifier(
+                                        "Articles",
+                                    ),
                                 ),
                             ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
                         },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "title",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "author_id",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                    ],
+                    ),
                     aggregate_expression: None,
                     raw: ModelRaw {
                         filter_expression_type: None,
                         graphql: Some(
-                            ModelGraphQlDefinition {
+                            ModelGraphQlDefinitionV2 {
                                 select_uniques: [],
                                 select_many: Some(
                                     SelectManyGraphQlDefinition {
@@ -516,10 +729,10 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                         ),
                                         description: None,
                                         deprecated: None,
+                                        subscription: None,
                                     },
                                 ),
                                 arguments_input_type: None,
-                                order_by_expression_type: None,
                                 apollo_federation: None,
                                 filter_input_type_name: None,
                                 aggregate: None,
@@ -534,6 +747,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                     ): SelectPermission {
                         filter: AllowAll,
                         argument_presets: {},
+                        allow_subscriptions: false,
                     },
                     Role(
                         "user1",
@@ -546,7 +760,9 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                     ),
                                 ),
                                 field_parent_type: Qualified {
-                                    subgraph: "article_namespace",
+                                    subgraph: SubgraphName(
+                                        "article_namespace",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "article",
@@ -572,15 +788,18 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                         "x-hasura-user-id",
                                     ),
                                 ),
+                                deprecated: false,
                             },
                         ),
                         argument_presets: {},
+                        allow_subscriptions: false,
                     },
                     Role(
                         "user2",
                     ): SelectPermission {
                         filter: AllowAll,
                         argument_presets: {},
+                        allow_subscriptions: false,
                     },
                 },
                 filter_expression_type: None,
@@ -594,6 +813,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                             ),
                             description: None,
                             deprecated: None,
+                            subscription: None,
                         },
                     ),
                     select_aggregate: None,
@@ -622,6 +842,85 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             objects: {},
             scalars: {},
         },
+        order_by_expressions: OrderByExpressions(
+            {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "article_namespace",
+                    ),
+                    name: FromModel(
+                        ModelName(
+                            Identifier(
+                                "Articles",
+                            ),
+                        ),
+                    ),
+                }: OrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "article_namespace",
+                        ),
+                        name: FromModel(
+                            ModelName(
+                                Identifier(
+                                    "Articles",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "article_namespace",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "article",
+                            ),
+                        ),
+                    },
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "article_id",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "author_id",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "title",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                    },
+                    orderable_relationships: {},
+                    graphql: None,
+                    description: Some(
+                        "OrderByExpression for Model Articles (in subgraph article_namespace)",
+                    ),
+                },
+            },
+        ),
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
@@ -632,6 +931,13 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             mutation_root_type_name: TypeName(
                 Name(
                     "Mutation",
+                ),
+            ),
+            subscription_root_type_name: Some(
+                TypeName(
+                    Name(
+                        "Subscription",
+                    ),
                 ),
             ),
             order_by_input: Some(
@@ -651,6 +957,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             ),
             enable_apollo_federation_fields: false,
         },
+        pre_parse_plugins: [],
         roles: [
             Role(
                 "admin",
@@ -672,36 +979,5 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             ),
         ],
     },
-    [
-        DataConnectorScalarTypesWarning(
-            PleaseUpgradeToBooleanExpressionType {
-                scalar_type: DataConnectorScalarType(
-                    "String",
-                ),
-                data_connector_name: Qualified {
-                    subgraph: "article_namespace",
-                    name: DataConnectorName(
-                        Identifier(
-                            "db",
-                        ),
-                    ),
-                },
-            },
-        ),
-        DataConnectorScalarTypesWarning(
-            PleaseUpgradeToBooleanExpressionType {
-                scalar_type: DataConnectorScalarType(
-                    "Int",
-                ),
-                data_connector_name: Qualified {
-                    subgraph: "article_namespace",
-                    name: DataConnectorName(
-                        Identifier(
-                            "db",
-                        ),
-                    ),
-                },
-            },
-        ),
-    ],
+    [],
 )

@@ -216,6 +216,7 @@ fn json_pointer_schema(gen: &mut SchemaGenerator) -> Schema {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "JWTClaimsMappingPathEntry")]
+/// Entry to lookup the Hasura claims at the specified JSON Pointer
 pub struct JWTClaimsMappingPathEntry<T> {
     /// JSON pointer to find the particular claim in the decoded
     /// JWT token.
@@ -1058,7 +1059,13 @@ mod tests {
     #[tokio::test]
     // This test emulates scenarios where multiple JWKs are present and only the correct encoded JWT is used to decode the Hasura claims
     async fn test_jwk() -> anyhow::Result<()> {
-        tracing_util::initialize_tracing(None, "test_jwk", None)?;
+        tracing_util::initialize_tracing(
+            None,
+            "test_jwk",
+            None,
+            tracing_util::PropagateBaggage::Disable,
+            tracing_util::ExportTracesStdout::Disable,
+        )?;
         let mut server = mockito::Server::new_async().await;
 
         let url = server.url();

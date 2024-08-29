@@ -5,6 +5,7 @@ use ndc_models;
 use uuid::Uuid;
 
 use crate::{
+    arguments::{check_all_arguments_used, parse_i64_argument, parse_object_argument},
     query::Result,
     state::Row,
     types::login::{ResponseHeaders, SessionInfo, SessionResponse},
@@ -41,20 +42,13 @@ pub(crate) fn function_info() -> ndc_models::FunctionInfo {
 pub(crate) fn rows(
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
 ) -> Result<Vec<Row>> {
-    let _headers = arguments.get("_headers").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "required argument field '_headers' is missing".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-    let _username = arguments.get("user_id").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "required argument field 'user_id' is missing".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
+    let mut arguments = arguments
+        .iter()
+        .map(|(k, v)| (k.clone(), v))
+        .collect::<BTreeMap<_, _>>();
+    let _headers = parse_object_argument("_headers", &mut arguments)?;
+    let _user_id = parse_i64_argument("user_id", &mut arguments)?;
+    check_all_arguments_used(&arguments)?;
 
     let cookie_val1 = Uuid::new_v4();
     let cookie_val2 = Uuid::new_v4();

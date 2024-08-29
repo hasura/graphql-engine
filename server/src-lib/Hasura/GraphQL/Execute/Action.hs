@@ -37,10 +37,16 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.List.Extended qualified as LE
 import Data.SerializableBlob qualified as SB
 import Data.Set (Set)
+import Data.String (fromString)
+import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as PG
 import Hasura.App.State
+import Hasura.Authentication.Header (mkSetCookieHeaders)
+import Hasura.Authentication.Role (adminRoleName)
+import Hasura.Authentication.Session (SessionVariables, mkClientHeadersForward)
+import Hasura.Authentication.User (UserInfo, _uiRole, _uiSession)
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.Execute.Types
@@ -77,17 +83,11 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Headers (HeaderConf)
 import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
-import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Init.Config (OptionalInterval (..), ResponseInternalErrorsConfig (..), shouldIncludeInternal)
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (HeaderPrecedence (..))
-import Hasura.Server.Utils
-  ( mkClientHeadersForward,
-    mkSetCookieHeaders,
-  )
-import Hasura.Session (SessionVariables, UserInfo, _uiRole, _uiSession)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -179,6 +179,7 @@ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics
           _aecHeaders
           _aaeHeaders
           _aaeForwardClientHeaders
+          (map (fromString . T.unpack) _aaeIgnoredClientHeaders)
           _aaeWebhook
           handlerPayload
           _aaeType
@@ -316,7 +317,7 @@ resolveActionMutationAsync ::
 resolveActionMutationAsync annAction reqHeaders sessionVariables =
   liftEitherM $ insertAction actionName sessionVariables reqHeaders inputArgs
   where
-    IR.AnnActionMutationAsync actionName _ inputArgs = annAction
+    IR.AnnActionMutationAsync actionName _ _ inputArgs = annAction
 
 {- Note: [Resolving async action query]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -422,7 +423,7 @@ resolveAsyncActionQuery userInfo annAction responseErrorsConfig =
           codeMaybe = actionLogResponseError ^? key "code" . _String
           code = maybe Unexpected ActionWebhookCode codeMaybe
        in QErr [] HTTP.status500 errorMessageText code internal'
-    IR.AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
+    IR.AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ _ actionSource = annAction
 
     idColumn = (unsafePGCol "id", PGUUID)
     responsePayloadColumn = (unsafePGCol TF.actionResponsePayloadColumn, PGJSONB)
@@ -543,6 +544,7 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
                 outputFields = IR.getActionOutputFields $ snd $ _aiOutputType actionInfo
                 webhookUrl = _adHandler definition
                 forwardClientHeaders = _adForwardClientHeaders definition
+                ignoredClientHeaders = _adIgnoredClientHeaders definition
                 confHeaders = _adHeaders definition
                 timeout = _adTimeout definition
                 outputType = _adOutputType definition
@@ -564,6 +566,7 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
                   reqHeaders
                   confHeaders
                   forwardClientHeaders
+                  (map (fromString . T.unpack) ignoredClientHeaders)
                   webhookUrl
                   (ActionWebhookPayload actionContext sessionVariables inputPayload gqlQueryText)
                   (ActionMutation ActionAsynchronous)
@@ -595,6 +598,7 @@ callWebhook ::
   [HTTP.Header] ->
   [HeaderConf] ->
   Bool ->
+  [HTTP.HeaderName] ->
   EnvRecord ResolvedWebhook ->
   ActionWebhookPayload ->
   ActionType ->
@@ -613,6 +617,7 @@ callWebhook
   reqHeaders
   confHeaders
   forwardClientHeaders
+  ignoredClientHeaders
   resolvedWebhook
   actionWebhookPayload
   actionType
@@ -621,7 +626,7 @@ callWebhook
   metadataResponseTransform
   headerPrecedence = do
     resolvedConfHeaders <- makeHeadersFromConf env confHeaders
-    let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
+    let clientHeaders = if forwardClientHeaders then mkClientHeadersForward ignoredClientHeaders reqHeaders else mempty
         hdrs = case headerPrecedence of
           -- preserves old behaviour (default)
           -- avoids duplicates and forwards client headers with higher precedence than configuration headers

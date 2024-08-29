@@ -82,8 +82,8 @@ exit 1
 }
 
 # See: TODO
-cabal --version | grep -q ' 3\.10' || { 
-    echo_error "Please use cabal 3.10, as cabal broke 'import' and we can't make it compatible"
+cabal --version | grep -q -E ' 3\.10|3\.12' || { 
+    echo_error "Please use cabal >=3.10, as cabal broke 'import' and we can't make it compatible"
     exit 1
 }
 

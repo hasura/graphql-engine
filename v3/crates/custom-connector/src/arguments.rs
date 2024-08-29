@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::{borrow::Borrow, collections::BTreeMap, fmt::Display};
 
 use axum::{http::StatusCode, Json};
 use ndc_models::Argument;
@@ -270,4 +270,198 @@ fn hash(
         }
     };
     Ok(serde_json::Value::String(hash))
+}
+
+pub(crate) fn parse_object_argument<'a, Arg>(
+    argument_name: &Arg,
+    arguments: &mut BTreeMap<ndc_models::ArgumentName, &'a serde_json::Value>,
+) -> Result<&'a serde_json::Map<String, serde_json::Value>>
+where
+    ndc_models::ArgumentName: Borrow<Arg>,
+    Arg: Ord + ?Sized + Display,
+{
+    let result = arguments
+        .remove(argument_name)
+        .ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: format!("missing argument {argument_name}"),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?
+        .as_object()
+        .ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: format!("{argument_name} must be an object"),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?;
+    Ok(result)
+}
+
+pub(crate) fn parse_i32_argument<Arg>(
+    argument_name: &Arg,
+    arguments: &mut BTreeMap<ndc_models::ArgumentName, &serde_json::Value>,
+) -> Result<i32>
+where
+    ndc_models::ArgumentName: Borrow<Arg>,
+    Arg: Ord + ?Sized + Display,
+{
+    let result = arguments
+        .remove(argument_name)
+        .ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: format!("missing argument {argument_name}"),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?
+        .as_i64()
+        .ok_or_else(|| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ndc_models::ErrorResponse {
+                    message: "argument '{argument_name}' is not an integer".into(),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?
+        .try_into()
+        .map_err(|_| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: "argument '{argument_name}' is out of range".into(),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?;
+    Ok(result)
+}
+
+pub(crate) fn parse_i64_argument<Arg>(
+    argument_name: &Arg,
+    arguments: &mut BTreeMap<ndc_models::ArgumentName, &serde_json::Value>,
+) -> Result<i64>
+where
+    ndc_models::ArgumentName: Borrow<Arg>,
+    Arg: Ord + ?Sized + Display,
+{
+    let result = arguments
+        .remove(argument_name)
+        .ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: format!("missing argument {argument_name}"),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?
+        .as_i64()
+        .ok_or_else(|| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ndc_models::ErrorResponse {
+                    message: "argument '{argument_name}' is not an integer".into(),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?;
+    Ok(result)
+}
+
+pub(crate) fn parse_string_argument<'a, Arg>(
+    argument_name: &Arg,
+    arguments: &mut BTreeMap<ndc_models::ArgumentName, &'a serde_json::Value>,
+) -> Result<&'a str>
+where
+    ndc_models::ArgumentName: Borrow<Arg>,
+    Arg: Ord + ?Sized + Display,
+{
+    let result = arguments
+        .remove(argument_name)
+        .ok_or_else(|| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: format!("missing argument {argument_name}"),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?
+        .as_str()
+        .ok_or_else(|| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ndc_models::ErrorResponse {
+                    message: "argument '{argument_name}' is not an integer".into(),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?;
+    Ok(result)
+}
+
+pub(crate) fn parse_expression_argument<Arg>(
+    argument_name: &Arg,
+    arguments: &mut BTreeMap<ndc_models::ArgumentName, &serde_json::Value>,
+) -> Result<ndc_models::Expression>
+where
+    ndc_models::ArgumentName: Borrow<Arg>,
+    Arg: Ord + ?Sized + Display,
+{
+    let value = arguments.remove(argument_name).ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ndc_models::ErrorResponse {
+                message: format!("missing argument {argument_name}"),
+                details: serde_json::Value::Null,
+            }),
+        )
+    })?;
+
+    let decoded_bool_exp: ndc_models::Expression =
+        serde_json::from_value(value.clone()).map_err(|_| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: format!("could not decode argument {argument_name}"),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?;
+
+    Ok(decoded_bool_exp)
+}
+
+pub(crate) fn check_all_arguments_used<TArgumentName, TValue>(
+    arguments: &BTreeMap<TArgumentName, TValue>,
+) -> Result<()>
+where
+    TArgumentName: Borrow<str>,
+{
+    if arguments.keys().next().is_some() {
+        let unexpected_arguments = arguments
+            .keys()
+            .map(|k| Borrow::<str>::borrow(k).to_owned())
+            .collect::<Vec<String>>()
+            .join(",");
+        Err((
+            StatusCode::BAD_REQUEST,
+            Json(ndc_models::ErrorResponse {
+                message: format!("unexpected arguments found: {unexpected_arguments}"),
+                details: serde_json::Value::Null,
+            }),
+        ))
+    } else {
+        Ok(())
+    }
 }

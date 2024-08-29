@@ -271,7 +271,7 @@ fn add_aggregation_functions(
     aggregate_expression: &AggregateExpression,
 ) -> Result<(), Error> {
     for aggregatable_function_info in &aggregate_expression.operand.aggregation_functions {
-        let field_graphql_name = mk_name(aggregatable_function_info.name.0.as_str())
+        let field_graphql_name = mk_name(aggregatable_function_info.name.as_str())
             .map_err(metadata_resolve::Error::from)?;
 
         let field = gql_schema::Field::<GDS>::new(

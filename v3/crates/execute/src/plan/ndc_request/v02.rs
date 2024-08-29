@@ -2,17 +2,20 @@ use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 use ndc_models as ndc_models_v02;
+use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::types::DataConnectorArgumentName;
 
-use super::super::types;
-use crate::{
-    error::{FieldError, FieldInternalError},
-    ir,
-    remote_joins::types::VariableName,
-};
+use super::super::arguments;
+use super::super::field;
+use super::super::filter;
+use super::super::mutation;
+use super::super::query;
+use super::super::relationships;
+use crate::error::{FieldError, FieldInternalError};
+use ir::VariableName;
 
 pub fn make_query_request(
-    query_execution_plan: types::ResolvedQueryExecutionPlan<'_>,
+    query_execution_plan: query::ResolvedQueryExecutionPlan<'_>,
 ) -> Result<ndc_models_v02::QueryRequest, FieldError> {
     let query_request = ndc_models_v02::QueryRequest {
         collection: ndc_models_v02::CollectionName::from(query_execution_plan.collection.as_str()),
@@ -44,9 +47,7 @@ fn make_variables(
     })
 }
 
-fn make_query(
-    query_node: types::ResolvedQueryNode<'_>,
-) -> Result<ndc_models_v02::Query, FieldError> {
+fn make_query(query_node: query::ResolvedQueryNode) -> Result<ndc_models_v02::Query, FieldError> {
     let ndc_predicate = query_node.predicate.map(make_expression).transpose()?;
 
     let ndc_fields = query_node
@@ -76,7 +77,7 @@ fn make_query(
 }
 
 fn make_arguments(
-    arguments: BTreeMap<DataConnectorArgumentName, types::ResolvedArgument>,
+    arguments: BTreeMap<DataConnectorArgumentName, arguments::ResolvedArgument>,
 ) -> Result<BTreeMap<ndc_models_v02::ArgumentName, ndc_models_v02::Argument>, FieldError> {
     arguments
         .into_iter()
@@ -90,16 +91,16 @@ fn make_arguments(
 }
 
 fn make_argument(
-    argument: types::ResolvedArgument,
+    argument: arguments::ResolvedArgument,
 ) -> Result<ndc_models_v02::Argument, FieldError> {
     match argument {
-        types::ResolvedArgument::Literal { value } => {
+        arguments::ResolvedArgument::Literal { value } => {
             Ok(ndc_models_v02::Argument::Literal { value })
         }
-        types::ResolvedArgument::Variable { name } => Ok(ndc_models_v02::Argument::Variable {
+        arguments::ResolvedArgument::Variable { name } => Ok(ndc_models_v02::Argument::Variable {
             name: ndc_models_v02::VariableName::from(name.0.as_str()),
         }),
-        types::ResolvedArgument::BooleanExpression { predicate } => {
+        arguments::ResolvedArgument::BooleanExpression { predicate } => {
             let ndc_expression = make_expression(predicate)?;
             Ok(ndc_models_v02::Argument::Literal {
                 value: serde_json::to_value(ndc_expression).map_err(|e| {
@@ -111,7 +112,7 @@ fn make_argument(
 }
 
 fn make_relationship_arguments_from_arguments(
-    arguments: BTreeMap<DataConnectorArgumentName, types::ResolvedArgument>,
+    arguments: BTreeMap<DataConnectorArgumentName, arguments::ResolvedArgument>,
 ) -> Result<BTreeMap<ndc_models_v02::ArgumentName, ndc_models_v02::RelationshipArgument>, FieldError>
 {
     arguments
@@ -126,18 +127,18 @@ fn make_relationship_arguments_from_arguments(
 }
 
 fn make_relationship_argument_from_argument(
-    argument: types::ResolvedArgument,
+    argument: arguments::ResolvedArgument,
 ) -> Result<ndc_models_v02::RelationshipArgument, FieldError> {
     match argument {
-        types::ResolvedArgument::Literal { value } => {
+        arguments::ResolvedArgument::Literal { value } => {
             Ok(ndc_models_v02::RelationshipArgument::Literal { value })
         }
-        types::ResolvedArgument::Variable { name } => {
+        arguments::ResolvedArgument::Variable { name } => {
             Ok(ndc_models_v02::RelationshipArgument::Variable {
                 name: ndc_models_v02::VariableName::from(name.0.as_str()),
             })
         }
-        types::ResolvedArgument::BooleanExpression { predicate } => {
+        arguments::ResolvedArgument::BooleanExpression { predicate } => {
             let ndc_expression = make_expression(predicate)?;
             Ok(ndc_models_v02::RelationshipArgument::Literal {
                 value: serde_json::to_value(ndc_expression).map_err(|e| {
@@ -149,7 +150,7 @@ fn make_relationship_argument_from_argument(
 }
 
 fn make_relationship_arguments(
-    arguments: BTreeMap<DataConnectorArgumentName, types::RelationshipArgument>,
+    arguments: BTreeMap<DataConnectorArgumentName, relationships::RelationshipArgument>,
 ) -> BTreeMap<ndc_models_v02::ArgumentName, ndc_models_v02::RelationshipArgument> {
     arguments
         .into_iter()
@@ -163,10 +164,10 @@ fn make_relationship_arguments(
 }
 
 fn make_relationship_argument(
-    argument: types::RelationshipArgument,
+    argument: relationships::RelationshipArgument,
 ) -> ndc_models_v02::RelationshipArgument {
     match argument {
-        types::RelationshipArgument::Column { name } => {
+        relationships::RelationshipArgument::Column { name } => {
             ndc_models_v02::RelationshipArgument::Column {
                 name: ndc_models_v02::FieldName::new(name.into_inner()),
             }
@@ -175,7 +176,7 @@ fn make_relationship_argument(
 }
 
 fn make_mutation_arguments(
-    arguments: BTreeMap<DataConnectorArgumentName, types::ResolvedMutationArgument>,
+    arguments: BTreeMap<DataConnectorArgumentName, arguments::ResolvedMutationArgument>,
 ) -> Result<BTreeMap<ndc_models_v02::ArgumentName, serde_json::Value>, FieldError> {
     arguments
         .into_iter()
@@ -189,11 +190,11 @@ fn make_mutation_arguments(
 }
 
 fn make_mutation_argument(
-    argument: types::ResolvedMutationArgument,
+    argument: arguments::ResolvedMutationArgument,
 ) -> Result<serde_json::Value, FieldError> {
     match argument {
-        types::ResolvedMutationArgument::Literal { value } => Ok(value),
-        types::ResolvedMutationArgument::BooleanExpression { predicate } => {
+        arguments::ResolvedMutationArgument::Literal { value } => Ok(value),
+        arguments::ResolvedMutationArgument::BooleanExpression { predicate } => {
             let ndc_expression = make_expression(predicate)?;
             Ok(serde_json::to_value(ndc_expression).map_err(|e| {
                 FieldError::InternalError(FieldInternalError::ExpressionSerializationError(e))
@@ -203,37 +204,42 @@ fn make_mutation_argument(
 }
 
 pub fn make_expression(
-    predicate: types::ResolvedFilterExpression,
+    predicate: filter::ResolvedFilterExpression,
 ) -> Result<ndc_models_v02::Expression, FieldError> {
     match predicate {
-        types::ResolvedFilterExpression::And { expressions } => {
+        filter::ResolvedFilterExpression::And { expressions } => {
             let mut ndc_expressions = Vec::new();
+
             for expression in expressions {
                 let ndc_expression = make_expression(expression)?;
                 ndc_expressions.push(ndc_expression);
             }
+
             Ok(ndc_models_v02::Expression::And {
                 expressions: ndc_expressions,
             })
         }
-        types::ResolvedFilterExpression::Or { expressions } => {
+        filter::ResolvedFilterExpression::Or { expressions } => {
             let mut ndc_expressions = Vec::new();
+
             for expression in expressions {
                 let ndc_expression = make_expression(expression)?;
                 ndc_expressions.push(ndc_expression);
             }
+
             Ok(ndc_models_v02::Expression::Or {
                 expressions: ndc_expressions,
             })
         }
-        types::ResolvedFilterExpression::Not { expression } => {
+        filter::ResolvedFilterExpression::Not { expression } => {
             let ndc_expression = make_expression(*expression)?;
+
             Ok(ndc_models_v02::Expression::Not {
                 expression: Box::new(ndc_expression),
             })
         }
-        types::ResolvedFilterExpression::LocalFieldComparison(
-            ir::filter::expression::LocalFieldComparison::BinaryComparison {
+        filter::ResolvedFilterExpression::LocalFieldComparison(
+            ir::LocalFieldComparison::BinaryComparison {
                 column,
                 operator,
                 value,
@@ -243,8 +249,29 @@ pub fn make_expression(
             operator: ndc_models_v02::ComparisonOperatorName::new(operator.into_inner()),
             value: make_comparison_value(value),
         }),
-        types::ResolvedFilterExpression::LocalFieldComparison(
-            ir::filter::expression::LocalFieldComparison::UnaryComparison { column, operator },
+
+        filter::ResolvedFilterExpression::LocalNestedArray {
+            column,
+            field_path,
+            predicate,
+        } => {
+            let ndc_expression = make_expression(*predicate)?;
+            let field_name = ndc_models_v02::FieldName::new(column.into_inner());
+
+            Ok(ndc_models_v02::Expression::Exists {
+                in_collection: ndc_models_v02::ExistsInCollection::NestedCollection {
+                    column_name: field_name,
+                    field_path: field_path
+                        .into_iter()
+                        .map(|f| ndc_models_v02::FieldName::new(f.into_inner()))
+                        .collect(),
+                    arguments: BTreeMap::new(),
+                },
+                predicate: Some(Box::new(ndc_expression)),
+            })
+        }
+        filter::ResolvedFilterExpression::LocalFieldComparison(
+            ir::LocalFieldComparison::UnaryComparison { column, operator },
         ) => Ok(ndc_models_v02::Expression::UnaryComparisonOperator {
             column: make_comparison_target(column),
             operator: match operator {
@@ -253,7 +280,7 @@ pub fn make_expression(
                 }
             },
         }),
-        types::ResolvedFilterExpression::LocalRelationshipComparison {
+        filter::ResolvedFilterExpression::LocalRelationshipComparison {
             relationship,
             predicate,
         } => {
@@ -270,10 +297,10 @@ pub fn make_expression(
 }
 
 fn make_comparison_target(
-    comparison_target: ir::filter::expression::ComparisonTarget,
+    comparison_target: ir::ComparisonTarget,
 ) -> ndc_models_v02::ComparisonTarget {
     match comparison_target {
-        ir::filter::expression::ComparisonTarget::Column { name, field_path } => {
+        ir::ComparisonTarget::Column { name, field_path } => {
             ndc_models_v02::ComparisonTarget::Column {
                 name: ndc_models_v02::FieldName::new(name.into_inner()),
                 field_path: if field_path.is_empty() {
@@ -291,24 +318,18 @@ fn make_comparison_target(
     }
 }
 
-fn make_comparison_value(
-    comparison_value: ir::filter::expression::ComparisonValue,
-) -> ndc_models_v02::ComparisonValue {
+fn make_comparison_value(comparison_value: ir::ComparisonValue) -> ndc_models_v02::ComparisonValue {
     match comparison_value {
-        ir::filter::expression::ComparisonValue::Scalar { value } => {
-            ndc_models_v02::ComparisonValue::Scalar { value }
-        }
-        ir::filter::expression::ComparisonValue::Variable { name } => {
-            ndc_models_v02::ComparisonValue::Variable {
-                name: ndc_models_v02::VariableName::from(name.0.as_str()),
-            }
-        }
+        ir::ComparisonValue::Scalar { value } => ndc_models_v02::ComparisonValue::Scalar { value },
+        ir::ComparisonValue::Variable { name } => ndc_models_v02::ComparisonValue::Variable {
+            name: ndc_models_v02::VariableName::from(name.0.as_str()),
+        },
     }
 }
 
-fn make_field(field: types::ResolvedField<'_>) -> Result<ndc_models_v02::Field, FieldError> {
+fn make_field(field: field::ResolvedField) -> Result<ndc_models_v02::Field, FieldError> {
     match field {
-        types::ResolvedField::Column {
+        field::ResolvedField::Column {
             column,
             fields,
             arguments,
@@ -321,7 +342,7 @@ fn make_field(field: types::ResolvedField<'_>) -> Result<ndc_models_v02::Field, 
                 arguments: make_arguments(arguments)?,
             })
         }
-        types::ResolvedField::Relationship {
+        field::ResolvedField::Relationship {
             query_node,
             relationship,
             arguments,
@@ -337,20 +358,20 @@ fn make_field(field: types::ResolvedField<'_>) -> Result<ndc_models_v02::Field, 
 }
 
 fn make_nested_field(
-    nested_field: types::ResolvedNestedField,
+    nested_field: field::ResolvedNestedField,
 ) -> Result<ndc_models_v02::NestedField, FieldError> {
     match nested_field {
-        types::ResolvedNestedField::Object(nested_object) => Ok(
+        field::ResolvedNestedField::Object(nested_object) => Ok(
             ndc_models_v02::NestedField::Object(make_nested_object(nested_object)?),
         ),
-        types::ResolvedNestedField::Array(nested_array) => Ok(ndc_models_v02::NestedField::Array(
+        field::ResolvedNestedField::Array(nested_array) => Ok(ndc_models_v02::NestedField::Array(
             make_nested_array(nested_array)?,
         )),
     }
 }
 
 fn make_nested_object(
-    nested_field: types::ResolvedNestedObject,
+    nested_field: field::ResolvedNestedObject,
 ) -> Result<ndc_models_v02::NestedObject, FieldError> {
     let fields = nested_field
         .fields
@@ -366,7 +387,7 @@ fn make_nested_object(
 }
 
 fn make_nested_array(
-    nested_field: types::ResolvedNestedArray,
+    nested_field: field::ResolvedNestedArray,
 ) -> Result<ndc_models_v02::NestedArray, FieldError> {
     let fields = make_nested_field(*nested_field.fields)?;
     Ok(ndc_models_v02::NestedArray {
@@ -375,7 +396,7 @@ fn make_nested_array(
 }
 
 pub fn make_collection_relationships(
-    collection_relationships: BTreeMap<ir::selection_set::NdcRelationshipName, types::Relationship>,
+    collection_relationships: BTreeMap<ir::NdcRelationshipName, relationships::Relationship>,
 ) -> BTreeMap<ndc_models_v02::RelationshipName, ndc_models_v02::Relationship> {
     collection_relationships
         .into_iter()
@@ -388,7 +409,7 @@ pub fn make_collection_relationships(
         .collect::<BTreeMap<_, _>>()
 }
 
-fn make_relationship(relationship: types::Relationship) -> ndc_models_v02::Relationship {
+fn make_relationship(relationship: relationships::Relationship) -> ndc_models_v02::Relationship {
     ndc_models_v02::Relationship {
         column_mapping: relationship
             .column_mapping
@@ -415,7 +436,7 @@ fn make_relationship(relationship: types::Relationship) -> ndc_models_v02::Relat
     }
 }
 
-fn make_order_by(order_by_elements: Vec<ir::order_by::OrderByElement>) -> ndc_models_v02::OrderBy {
+fn make_order_by(order_by_elements: Vec<ir::OrderByElement>) -> ndc_models_v02::OrderBy {
     ndc_models_v02::OrderBy {
         elements: order_by_elements
             .into_iter()
@@ -430,10 +451,11 @@ fn make_order_by(order_by_elements: Vec<ir::order_by::OrderByElement>) -> ndc_mo
     }
 }
 
-fn make_order_by_target(target: ir::order_by::OrderByTarget) -> ndc_models_v02::OrderByTarget {
+fn make_order_by_target(target: ir::OrderByTarget) -> ndc_models_v02::OrderByTarget {
     match target {
-        ir::order_by::OrderByTarget::Column {
+        ir::OrderByTarget::Column {
             name,
+            field_path,
             relationship_path,
         } => {
             let mut order_by_element_path = Vec::new();
@@ -474,7 +496,12 @@ fn make_order_by_target(target: ir::order_by::OrderByTarget) -> ndc_models_v02::
             ndc_models_v02::OrderByTarget::Column {
                 name: ndc_models_v02::FieldName::new(name.into_inner()),
                 path: order_by_element_path,
-                field_path: None,
+                field_path: field_path.map(|field_path| {
+                    field_path
+                        .iter()
+                        .map(|name| ndc_models_v02::FieldName::from(name.as_str()))
+                        .collect()
+                }),
             }
         }
     }
@@ -482,20 +509,20 @@ fn make_order_by_target(target: ir::order_by::OrderByTarget) -> ndc_models_v02::
 
 /// Translates the internal IR 'AggregateSelectionSet' into an NDC query aggregates selection
 fn make_aggregates(
-    aggregate_selection_set: ir::aggregates::AggregateSelectionSet,
+    aggregate_selection_set: ir::AggregateSelectionSet,
 ) -> IndexMap<ndc_models_v02::FieldName, ndc_models_v02::Aggregate> {
     aggregate_selection_set
         .fields
         .into_iter()
         .map(|(field_name, aggregate_selection)| {
             let aggregate = match aggregate_selection {
-                ir::aggregates::AggregateFieldSelection::Count { column_path, .. } => {
+                ir::AggregateFieldSelection::Count { column_path, .. } => {
                     make_count_aggregate(column_path, false)
                 }
-                ir::aggregates::AggregateFieldSelection::CountDistinct { column_path, .. } => {
+                ir::AggregateFieldSelection::CountDistinct { column_path, .. } => {
                     make_count_aggregate(column_path, true)
                 }
-                ir::aggregates::AggregateFieldSelection::AggregationFunction {
+                ir::AggregateFieldSelection::AggregationFunction {
                     function_name,
                     column_path,
                 } => {
@@ -505,17 +532,19 @@ fn make_aggregates(
                     } = column_path;
                     let nested_field_path = field_path
                         .into_iter()
-                        .map(ndc_models_v02::FieldName::from)
+                        .map(|column_name| {
+                            ndc_models_v02::FieldName::from(column_name.into_inner())
+                        })
                         .collect::<Vec<_>>();
                     ndc_models_v02::Aggregate::SingleColumn {
-                        column: ndc_models_v02::FieldName::from(column),
+                        column: ndc_models_v02::FieldName::from(column.into_inner()),
                         field_path: if nested_field_path.is_empty() {
                             None
                         } else {
                             Some(nested_field_path)
                         },
                         function: ndc_models_v02::AggregateFunctionName::from(
-                            function_name.0.as_str(),
+                            function_name.as_str(),
                         ),
                     }
                 }
@@ -530,11 +559,14 @@ fn make_aggregates(
 
 /// Creates the appropriate NDC count aggregation based on whether we're selecting
 /// a column (nested or otherwise) or not
-fn make_count_aggregate(column_path: Vec<&str>, distinct: bool) -> ndc_models_v02::Aggregate {
+fn make_count_aggregate(
+    column_path: Vec<DataConnectorColumnName>,
+    distinct: bool,
+) -> ndc_models_v02::Aggregate {
     let mut column_path_iter = column_path.into_iter();
     if let Some(first_path_element) = column_path_iter.next() {
         let remaining_path = column_path_iter
-            .map(ndc_models_v02::FieldName::from)
+            .map(|column_name| ndc_models_v02::FieldName::from(column_name.into_inner()))
             .collect::<Vec<_>>();
         let nested_field_path = if remaining_path.is_empty() {
             None
@@ -542,7 +574,7 @@ fn make_count_aggregate(column_path: Vec<&str>, distinct: bool) -> ndc_models_v0
             Some(remaining_path)
         };
         ndc_models_v02::Aggregate::ColumnCount {
-            column: ndc_models_v02::FieldName::from(first_path_element),
+            column: ndc_models_v02::FieldName::from(first_path_element.into_inner()),
             field_path: nested_field_path,
             distinct,
         }
@@ -552,7 +584,7 @@ fn make_count_aggregate(column_path: Vec<&str>, distinct: bool) -> ndc_models_v0
 }
 
 pub fn make_mutation_request(
-    mutation_execution_plan: types::ResolvedMutationExecutionPlan,
+    mutation_execution_plan: mutation::ResolvedMutationExecutionPlan,
 ) -> Result<ndc_models_v02::MutationRequest, FieldError> {
     let mutation_operation = ndc_models_v02::MutationOperation::Procedure {
         name: ndc_models_v02::ProcedureName::new(

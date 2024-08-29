@@ -28,12 +28,6 @@ pub enum BooleanExpressionError {
         data_connector_object_type: DataConnectorObjectType,
         object_boolean_expression_type: Qualified<CustomTypeName>,
     },
-    #[error("field '{field_name:}' in object boolean expression type {object_boolean_expression_type:} is a nested array and cannot be used for comparison")]
-    CannotCompareNestedArray {
-        field_name: FieldName,
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-    },
-
     #[error("unknown field '{field_name:}' used in object boolean expression type {object_boolean_expression_type:}")]
     UnknownFieldInObjectBooleanExpressionType {
         field_name: FieldName,
@@ -82,6 +76,15 @@ pub enum BooleanExpressionError {
         nested_type_name: Qualified<CustomTypeName>,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error(
+        "The nested object field '{field_name}' within '{parent_boolean_expression_type_name}' cannot be used for comparison \
+         because its boolean expression type '{nested_boolean_expression_type_name}' involves a relationship comparison field."
+    )]
+    NestedObjectFieldContainsRelationshipComparison {
+        field_name: FieldName,
+        parent_boolean_expression_type_name: Qualified<CustomTypeName>,
+        nested_boolean_expression_type_name: Qualified<CustomTypeName>,
+    },
     #[error("The field {field_name:} has type {field_type:} but the field's boolean expression type {field_boolean_expression_type_name:} has type {underlying_type:}")]
     FieldTypeMismatch {
         field_name: FieldName,
@@ -107,6 +110,6 @@ pub enum BooleanExpressionError {
     #[error("data connector error in boolean expression {boolean_expression_name:}: {data_connector_error:}")]
     DataConnectorError {
         boolean_expression_name: Qualified<CustomTypeName>,
-        data_connector_error: data_connectors::DataConnectorError,
+        data_connector_error: data_connectors::NamedDataConnectorError,
     },
 }

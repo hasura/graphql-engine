@@ -1,3 +1,7 @@
+use std::collections::BTreeMap;
+
+use metadata_resolve::data_connectors::NdcVersion;
+
 mod common;
 
 #[test]
@@ -80,29 +84,51 @@ fn test_model_select_many_filter() -> anyhow::Result<()> {
 #[test]
 fn test_model_select_many_empty_select() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/empty_select";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
 fn test_model_select_many_field_arguments() -> anyhow::Result<()> {
-    let test_path_string = "execute/models/select_many/field_arguments";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/field_arguments",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+    )
 }
 
 #[test]
 fn test_model_select_many_multiple_field_arguments() -> anyhow::Result<()> {
-    let test_path_string = "execute/models/select_many/field_arguments/multiple_arguments";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/models/select_many/field_arguments/multiple_arguments",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+    )
 }
 
 // Nested selection tests
 #[test]
 fn test_model_select_many_nested_select() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/nested_select";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
@@ -112,7 +138,7 @@ fn test_model_select_many_nested_select() -> anyhow::Result<()> {
 #[test]
 fn test_model_select_many_nested_select_no_explicit_type_mapping() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/nested_select/no_explicit_type_mapping";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
@@ -121,7 +147,7 @@ fn test_model_select_many_nested_select_no_explicit_type_mapping() -> anyhow::Re
 fn test_model_select_many_nested_select_with_relationship() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/nested_select/relationship";
     let common_metadata_paths = [
-        "execute/common_metadata/custom_connector_schema.json",
+        "execute/common_metadata/custom_connector_v02_schema.json",
         "execute/models/select_many/nested_select/metadata.json",
     ];
     common::test_execution_expectation_legacy(test_path_string, &common_metadata_paths)
@@ -140,6 +166,20 @@ fn test_model_select_many_nested_select_postgres() -> anyhow::Result<()> {
 fn test_model_select_many_order_by() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
+fn test_model_select_many_order_by_with_model_v2() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by/with_model_v2";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
+fn test_model_select_many_order_by_nested() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/order_by/nested";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
@@ -548,7 +588,7 @@ fn test_model_select_many_where_remote_object_relationship_nested() -> anyhow::R
 #[test]
 fn test_model_select_many_object_type_input_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/object_type_input_arguments";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
@@ -709,7 +749,7 @@ fn test_typename() -> anyhow::Result<()> {
 #[test]
 fn test_command_functions() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
     common::test_execution_expectation_legacy(
         test_path_string,
@@ -723,7 +763,7 @@ fn test_command_functions() -> anyhow::Result<()> {
 #[test]
 fn test_command_object_type_input_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/object_type_input_arguments";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
     common::test_execution_expectation_legacy(
         test_path_string,
@@ -737,7 +777,7 @@ fn test_command_object_type_input_arguments() -> anyhow::Result<()> {
 #[test]
 fn test_command_custom_scalar_inputs() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/custom_scalar_inputs";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
     common::test_execution_expectation_legacy(
         test_path_string,
@@ -751,30 +791,38 @@ fn test_command_custom_scalar_inputs() -> anyhow::Result<()> {
 // Tests a query command with scalar (Int) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
 fn test_command_functions_scalar_output_type() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/scalar_output_type";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/scalar_output_type",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // Tests a query command with object (commandActor) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
 fn test_command_functions_object_output_type_command_permissions() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/object_output_type/command_permissions";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/object_output_type/command_permissions",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -782,46 +830,58 @@ fn test_command_functions_object_output_type_command_permissions() -> anyhow::Re
 // user_1, user_2)
 #[test]
 fn test_command_functions_object_output_type_output_permissions() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/object_output_type/output_permissions";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/object_output_type/output_permissions",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // Tests a query command with array of scalar ([String]) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
 fn test_command_functions_scalar_array_output_type() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/scalar_array_output_type";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/scalar_array_output_type",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // Tests a query command with array of object ([commandActor]) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
 fn test_command_functions_object_array_output_type_command_permissions() -> anyhow::Result<()> {
-    let test_path_string =
-        "execute/commands/functions/object_array_output_type/command_permissions";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/object_array_output_type/command_permissions",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            // This test can't use the old NDC v0.1.x connector, the embedded actors data has changed
+            // (
+            //     NdcVersion::V01,
+            //     vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            // ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -829,15 +889,20 @@ fn test_command_functions_object_array_output_type_command_permissions() -> anyh
 // user_1, user_2)
 #[test]
 fn test_command_functions_object_array_output_type_output_permissions() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/object_array_output_type/output_permissions";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/object_array_output_type/output_permissions",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            // This test can't use the old NDC v0.1.x connector, the embedded actors data has changed
+            // (
+            //     NdcVersion::V01,
+            //     vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            // ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -847,15 +912,19 @@ fn test_command_functions_object_array_output_type_output_permissions() -> anyho
 //  permission: different command permissions for roles: admin, user_1, user_2
 #[test]
 fn test_command_functions_multiple_arguments() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/multiple_arguments";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/multiple_arguments",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -865,30 +934,38 @@ fn test_command_functions_multiple_arguments() -> anyhow::Result<()> {
 // user_2). This mutation doesn't perform any mutation on the database, it just returns a string
 #[test]
 fn test_command_procedures_scalar_output_type_command_permissions() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/procedures/scalar_output_type";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/procedures/scalar_output_type",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // Tests a mutation command with object (commandActor) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
 fn test_command_procedures_object_output_type_command_permissions() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/procedures/object_output_type/command_permissions";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/procedures/object_output_type/command_permissions",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -896,46 +973,59 @@ fn test_command_procedures_object_output_type_command_permissions() -> anyhow::R
 // user_1, user_2)
 #[test]
 fn test_command_procedures_object_output_type_output_permissions() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/procedures/object_output_type/output_permissions";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/procedures/object_output_type/output_permissions",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // Tests a mutation command with array of scalar ([String]) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
 fn test_command_procedures_scalar_array_output_type() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/procedures/scalar_array_output_type";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/procedures/scalar_array_output_type",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            // This test can't use the old NDC v0.1.x connector, the embedded actors data has changed
+            // (
+            //     NdcVersion::V01,
+            //     vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            // ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // Tests a mutation command with array of object ([commandActor]) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
 fn test_command_procedures_object_array_output_type_command_permissions() -> anyhow::Result<()> {
-    let test_path_string =
-        "execute/commands/procedures/object_array_output_type/command_permissions";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/procedures/object_array_output_type/command_permissions",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            // This test can't use the old NDC v0.1.x connector, the embedded actors data has changed
+            // (
+            //     NdcVersion::V01,
+            //     vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            // ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -943,31 +1033,39 @@ fn test_command_procedures_object_array_output_type_command_permissions() -> any
 // user_1, user_2)
 #[test]
 fn test_command_procedures_object_array_output_type_output_permissions() -> anyhow::Result<()> {
-    let test_path_string =
-        "execute/commands/procedures/object_array_output_type/output_permissions";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/procedures/object_array_output_type/output_permissions",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            // This test can't use the old NDC v0.1.x connector, the embedded actors data has changed
+            // (
+            //     NdcVersion::V01,
+            //     vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            // ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // Test a mutation command with an input object type as an argument
 #[test]
 fn test_command_procedures_input_object_type() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/procedures/object_input_type";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/procedures/object_input_type",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -977,15 +1075,19 @@ fn test_command_procedures_input_object_type() -> anyhow::Result<()> {
 // permission: different command permissions for roles: admin, user_1, user_2
 #[test]
 fn test_command_procedures_multiple_arguments() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/procedures/multiple_arguments";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/procedures/multiple_arguments",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -995,15 +1097,19 @@ fn test_command_procedures_multiple_arguments() -> anyhow::Result<()> {
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
 #[test]
 fn test_command_argument_presets() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/command_argument_presets";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/command_argument_presets",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -1016,15 +1122,19 @@ fn test_command_argument_presets() -> anyhow::Result<()> {
 #[test]
 fn test_boolean_expression_command_argument_presets_object_boolean_expression_type(
 ) -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/boolean_expression_command_argument/object_boolean_expression_type";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/boolean_expression_command_argument/object_boolean_expression_type",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -1032,32 +1142,38 @@ fn test_boolean_expression_command_argument_presets_object_boolean_expression_ty
 #[test]
 fn test_boolean_expression_command_argument_presets_boolean_expression_type() -> anyhow::Result<()>
 {
-    let test_path_string =
-        "execute/commands/functions/boolean_expression_command_argument/boolean_expression_type";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/boolean_expression_command_argument/boolean_expression_type",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // new `boolean_expression_type` with boolean expression provided in query
 #[test]
 fn test_boolean_expression_command_argument_from_user() -> anyhow::Result<()> {
-    let test_path_string =
-        "execute/commands/functions/boolean_expression_command_argument/passed_by_user";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/boolean_expression_command_argument/passed_by_user",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -1065,15 +1181,19 @@ fn test_boolean_expression_command_argument_from_user() -> anyhow::Result<()> {
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
 #[test]
 fn test_model_argument_presets_select_many() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/model_argument_presets_select_many";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/model_argument_presets_select_many",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -1081,47 +1201,57 @@ fn test_model_argument_presets_select_many() -> anyhow::Result<()> {
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
 #[test]
 fn test_model_argument_presets_select_one() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/model_argument_presets_select_one";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/model_argument_presets_select_one",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // Tests input type permissions -> field presets, on command
 #[test]
 fn test_input_type_field_presets_on_command() -> anyhow::Result<()> {
-    let test_path_string = "execute/input_types/field_presets/commands";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/input_types/field_presets/commands",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // Tests input type permissions -> field presets, on model arguments
 #[test]
 fn test_input_type_field_presets_on_model_arguments() -> anyhow::Result<()> {
-    let test_path_string = "execute/input_types/field_presets/models";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/input_types/field_presets/models",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -1280,20 +1410,182 @@ fn test_model_select_many_relationship_predicate_object_two_relationship_fields(
     )
 }
 
+// Tests using remote relationships in predicates
+// Array relationship
 #[test]
-fn test_graphql_descriptions() -> anyhow::Result<()> {
-    let test_path_string = "execute/description";
+fn test_model_select_many_remote_relationship_predicate_array_simple() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/remote_relationship_predicates/array/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    let common_custom_connector_path_string =
-        "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
     common::test_execution_expectation(
         test_path_string,
         &[
             common_metadata_path_string,
-            common_custom_connector_path_string,
-            common_command_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
         ],
+    )
+}
+
+// Tests using remote relationships in predicates
+
+// Nested Array relationship
+#[test]
+fn test_model_select_many_remote_relationship_predicate_array_nested() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/remote_relationship_predicates/array/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Nested Array relationship with multiple fields
+#[test]
+fn test_model_select_many_remote_relationship_predicate_array_nested_multiple_fields(
+) -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/remote_relationship_predicates/array/nested_multiple_fields";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Tests using remote relationships in predicates
+// Object relationship
+#[test]
+fn test_model_select_many_remote_relationship_predicate_object_simple() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/remote_relationship_predicates/object/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Tests using remote relationships in predicates
+// Nested object relationship
+#[test]
+fn test_model_select_many_remote_relationship_predicate_object_nested() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/remote_relationship_predicates/object/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Tests using remote relationships in predicates
+// We have the following relationships:
+//  1.  'TracksRemote' array relationship to 'Album' model
+//  2.  'AlbumRemote' object relationship to 'Track' model
+//
+// Predicates using the relationship are defined on both the models as follows:
+// 1. The select permission for 'user' role on 'Album' model is defined as:
+//      Select only those Album whose `TrackId` from the relationship `TracksRemote` is equal to "x-hasura-user-id"
+// 2. The select permission for 'user' role on 'Track' model is defined as:
+//      Select only those Track whose `Title` from the relationship `AlbumRemote` is equal to "x-hasura-album-title"
+//
+// In this test, we test what happens when we query both the `TracksRemote` and `AlbumRemote` relationship in the same query.
+// The query we make is:
+//   query MyQuery {
+//      Album(limit: 1) {
+//          Tracks {
+//              TrackId
+//              Name
+//              Album {
+//                  Title
+//              }
+//          }
+//      }
+//  }
+// We expect the following results:
+//      Fetch all the tracks of the Albums whose `TrackId` is equal to "x-hasura-user-id" and then
+//      filter those tracks based on the "x-hasura-album-title" value.
+#[test]
+fn test_model_select_many_remote_relationship_predicate_on_two_fields() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/remote_relationship_predicates/on_two_fields";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Tests using relationships in predicates
+// We have the following relationships:
+//  1.  'TracksRemote' object relationship to 'Album' model
+//  2.  'AlbumRemote' object relationship to 'Track' model
+//  3.  'GenreRemote' object relationship to 'Track' model
+//
+// We have the following select permission defined for "user" role
+//    It filters only those Albums whose Tracks's Album's AlbumnId is equal to "x-hasura-user-id" and
+//    whose Tracks's Genre's GenreId is equal to "x-hasura-genre-name"
+#[test]
+fn test_model_select_many_remote_relationship_predicate_object_two_relationship_fields(
+) -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/models/select_many/remote_relationship_predicates/object/two_relationship_fields";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/remote_relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+#[test]
+fn test_graphql_descriptions() -> anyhow::Result<()> {
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/description",
+        &[
+            "execute/common_metadata/postgres_connector_schema.json",
+            "execute/common_metadata/command_metadata.json",
+        ],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -1348,13 +1640,22 @@ fn test_aggregates_root_field_filtering() -> anyhow::Result<()> {
 #[test]
 fn test_aggregates_root_field_nested_object() -> anyhow::Result<()> {
     let test_path_string = "execute/aggregates/root_field/nested_object";
-    common::test_execution_expectation(
+    common::test_execution_expectation_for_multiple_ndc_versions(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/custom_connector_schema.json",
             "execute/aggregates/common_metadata/custom_connector_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/aggregates/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/aggregates/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
@@ -1389,29 +1690,37 @@ fn test_aggregates_relationship_field_filtering() -> anyhow::Result<()> {
 // Tests a mutation command "login", with NDC forward headers configuration.
 #[test]
 fn test_command_mutation_forwarded_headers() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/procedures/forward_headers";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/procedures/forward_headers",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 // Tests a mutation command "login", with NDC forward headers configuration.
 #[test]
 fn test_command_query_forwarded_headers() -> anyhow::Result<()> {
-    let test_path_string = "execute/commands/functions/forward_headers";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/commands/functions/forward_headers",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }

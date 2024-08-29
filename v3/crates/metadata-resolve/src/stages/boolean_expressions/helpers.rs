@@ -10,7 +10,7 @@ pub(crate) fn lookup_raw_boolean_expression<'a>(
     raw_boolean_expression_types: &'a super::object::RawBooleanExpressionTypes<'a>,
 ) -> Result<
     &'a (
-        &'a open_dds::identifier::SubgraphIdentifier,
+        &'a open_dds::identifier::SubgraphName,
         &'a open_dds::boolean_expression::BooleanExpressionTypeV1,
     ),
     BooleanExpressionError,

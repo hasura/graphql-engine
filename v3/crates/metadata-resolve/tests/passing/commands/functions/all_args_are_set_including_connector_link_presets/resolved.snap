@@ -1,0 +1,286 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: resolved
+input_file: crates/metadata-resolve/tests/passing/commands/functions/all_args_are_set_including_connector_link_presets/metadata.json
+---
+(
+    Metadata {
+        object_types: {},
+        scalar_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CustomTypeName(
+                    Identifier(
+                        "Headers",
+                    ),
+                ),
+            }: ScalarTypeRepresentation {
+                graphql_type_name: Some(
+                    TypeName(
+                        Name(
+                            "Headers",
+                        ),
+                    ),
+                ),
+                description: Some(
+                    "Headers map",
+                ),
+            },
+        },
+        models: {},
+        commands: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "default",
+                ),
+                name: CommandName(
+                    Identifier(
+                        "function_with_args",
+                    ),
+                ),
+            }: CommandWithPermissions {
+                command: Command {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CommandName(
+                            Identifier(
+                                "function_with_args",
+                            ),
+                        ),
+                    },
+                    output_type: QualifiedTypeReference {
+                        underlying_type: Named(
+                            Inbuilt(
+                                String,
+                            ),
+                        ),
+                        nullable: true,
+                    },
+                    arguments: {
+                        ArgumentName(
+                            Identifier(
+                                "argA",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            argument_kind: Other,
+                        },
+                        ArgumentName(
+                            Identifier(
+                                "argB",
+                            ),
+                        ): ArgumentInfo {
+                            argument_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: true,
+                            },
+                            description: None,
+                            argument_kind: Other,
+                        },
+                    },
+                    graphql_api: None,
+                    source: Some(
+                        CommandSource {
+                            data_connector: DataConnectorLink {
+                                name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: DataConnectorName(
+                                        Identifier(
+                                            "myconnector",
+                                        ),
+                                    ),
+                                },
+                                url: ReadWriteUrls(
+                                    ResolvedReadWriteUrls {
+                                        read: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                        write: SerializableUrl(
+                                            Url {
+                                                scheme: "http",
+                                                cannot_be_a_base: false,
+                                                username: "",
+                                                password: None,
+                                                host: Some(
+                                                    Domain(
+                                                        "local-dev.hasura.me",
+                                                    ),
+                                                ),
+                                                port: Some(
+                                                    8080,
+                                                ),
+                                                path: "/",
+                                                query: None,
+                                                fragment: None,
+                                            },
+                                        ),
+                                    },
+                                ),
+                                headers: SerializableHeaderMap(
+                                    {},
+                                ),
+                                response_config: None,
+                                capabilities: DataConnectorCapabilities {
+                                    supported_ndc_version: V01,
+                                    supports_explaining_queries: true,
+                                    supports_explaining_mutations: true,
+                                    supports_nested_object_filtering: false,
+                                    supports_nested_object_aggregations: false,
+                                },
+                            },
+                            source: Function(
+                                FunctionName(
+                                    "function_with_args",
+                                ),
+                            ),
+                            ndc_type_opendd_type_same: true,
+                            type_mappings: {},
+                            argument_mappings: {
+                                ArgumentName(
+                                    Identifier(
+                                        "argA",
+                                    ),
+                                ): DataConnectorArgumentName(
+                                    "arg1",
+                                ),
+                                ArgumentName(
+                                    Identifier(
+                                        "argB",
+                                    ),
+                                ): DataConnectorArgumentName(
+                                    "arg2",
+                                ),
+                            },
+                            data_connector_link_argument_presets: {
+                                DataConnectorArgumentName(
+                                    "headers",
+                                ): ArgumentPresetValue {
+                                    http_headers: HttpHeadersPreset {
+                                        forward: [
+                                            SerializableHeaderName(
+                                                "x-myheader",
+                                            ),
+                                        ],
+                                        additional: {
+                                            SerializableHeaderName(
+                                                "x-whatever",
+                                            ): Literal(
+                                                String("wow"),
+                                            ),
+                                        },
+                                    },
+                                },
+                            },
+                            source_arguments: {
+                                DataConnectorArgumentName(
+                                    "arg1",
+                                ): Named {
+                                    name: TypeName(
+                                        "String",
+                                    ),
+                                },
+                                DataConnectorArgumentName(
+                                    "arg2",
+                                ): Named {
+                                    name: TypeName(
+                                        "Int",
+                                    ),
+                                },
+                                DataConnectorArgumentName(
+                                    "headers",
+                                ): Named {
+                                    name: TypeName(
+                                        "Headers",
+                                    ),
+                                },
+                            },
+                        },
+                    ),
+                    description: None,
+                },
+                permissions: {},
+            },
+        },
+        object_boolean_expression_types: {},
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {},
+            scalars: {},
+        },
+        order_by_expressions: OrderByExpressions(
+            {},
+        ),
+        aggregate_expressions: {},
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            subscription_root_type_name: Some(
+                TypeName(
+                    Name(
+                        "Subscription",
+                    ),
+                ),
+            ),
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "order_by",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+        },
+        pre_parse_plugins: [],
+        roles: [],
+    },
+    [],
+)

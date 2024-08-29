@@ -19,7 +19,8 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "article"
-                      }
+                      },
+                      "deprecated": false
                     }
                   }
                 ]
@@ -34,7 +35,8 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "article"
-                      }
+                      },
+                      "deprecated": false
                     }
                   }
                 ]
@@ -50,7 +52,8 @@
                         "opendd_type": {
                           "subgraph": "default",
                           "name": "article"
-                        }
+                        },
+                        "deprecated": false
                       }
                     ]
                   }
@@ -72,7 +75,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "commandArticle"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -89,7 +93,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "commandArticle"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]
@@ -106,7 +111,8 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "commandArticle"
-                  }
+                  },
+                  "deprecated": false
                 }
               }
             ]

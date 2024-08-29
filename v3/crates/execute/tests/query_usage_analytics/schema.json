@@ -2298,6 +2298,20 @@
                             "field": "author_id"
                           }
                         }
+                      },
+                      {
+                        "relationship": {
+                          "name": "Author",
+                          "predicate": {
+                            "fieldComparison": {
+                              "field": "author_id",
+                              "operator": "_eq",
+                              "value": {
+                                "sessionVariable": "x-hasura-user-id"
+                              }
+                            }
+                          }
+                        }
                       }
                     ]
                   }
@@ -2912,7 +2926,10 @@
               },
               {
                 "name": "Fax",
-                "type": "varchar"
+                "type": "varchar",
+                "deprecated": {
+                  "reason": "Fax is no more used; Use Email instead"
+                }
               },
               {
                 "name": "FirstName",

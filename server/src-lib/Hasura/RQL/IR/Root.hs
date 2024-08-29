@@ -17,6 +17,7 @@ where
 
 import Data.Aeson.Ordered qualified as JO
 import Data.Kind (Type)
+import Hasura.GraphQL.Execute.Action.Types qualified as EA
 import Hasura.Prelude
 import Hasura.QueryTags.Types qualified as RQL
 import Hasura.RQL.IR.Action
@@ -25,6 +26,7 @@ import Hasura.RQL.IR.Insert
 import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
+import Hasura.RQL.IR.Value qualified as IR (UnpreparedValue)
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common qualified as RQL
@@ -34,6 +36,10 @@ import Hasura.SQL.AnyBackend qualified as AB
 
 data SourceConfigWith (db :: BackendType -> Type) (b :: BackendType)
   = SourceConfigWith (RQL.SourceConfig b) (Maybe RQL.QueryTagsConfig) (db b)
+
+deriving instance
+  (RQL.Backend b, Show (db b), Show (RQL.SourceConfig b)) =>
+  Show (SourceConfigWith db b)
 
 data RootField (db :: BackendType -> Type) remote action raw where
   RFDB ::
@@ -70,6 +76,18 @@ data ActionMutation (r :: Type)
 -- b)`. Sadly, neither type synonyms nor type families may be partially applied. Hence the need for
 -- @QueryDBRoot@ and @MutationDBRoot@.
 newtype QueryDBRoot r v b = QDBR (QueryDB b r (v b))
+
+deriving stock instance
+  ( RQL.Backend b,
+    Show r,
+    Show (v b),
+    Show (RQL.AggregationPredicates b (v b)),
+    Show (RQL.BooleanOperators b (v b)),
+    Show (RQL.FunctionArgumentExp b (v b)),
+    Show (RQL.CountType b (v b)),
+    Show (EA.AsyncActionQuerySourceExecution (IR.UnpreparedValue b))
+  ) =>
+  Show (QueryDBRoot r v b)
 
 newtype MutationDBRoot r v b = MDBR (MutationDB b r (v b))
 

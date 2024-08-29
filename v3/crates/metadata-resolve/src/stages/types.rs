@@ -9,11 +9,13 @@ use open_dds::{
     types::CustomTypeName,
 };
 
+use open_dds::plugins::LifecyclePluginHookPreParse;
+
 use crate::types::subgraph::Qualified;
 
 use crate::stages::{
     aggregates, boolean_expressions, command_permissions, graphql_config, model_permissions,
-    object_boolean_expressions, relationships, scalar_types,
+    object_boolean_expressions, order_by_expressions, relationships, scalar_types,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
@@ -29,8 +31,10 @@ pub struct Metadata {
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     pub boolean_expression_types: boolean_expressions::BooleanExpressionTypes,
+    pub order_by_expressions: order_by_expressions::OrderByExpressions,
     pub aggregate_expressions:
         BTreeMap<Qualified<AggregateExpressionName>, aggregates::AggregateExpression>,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
+    pub pre_parse_plugins: Vec<LifecyclePluginHookPreParse>,
     pub roles: Vec<Role>,
 }

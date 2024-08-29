@@ -232,6 +232,7 @@ fn object_type_fields(
                     field_base_type_kind: get_type_kind(gds, &field_definition.field_type)?,
                     parent_type: type_name.to_owned(),
                     argument_types: field_argument_types,
+                    deprecated: field_definition.deprecated.is_some(),
                 }),
                 get_output_type(gds, builder, &field_definition.field_type)?,
                 field_arguments,

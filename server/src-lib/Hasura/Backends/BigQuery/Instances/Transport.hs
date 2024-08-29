@@ -4,6 +4,7 @@ module Hasura.Backends.BigQuery.Instances.Transport () where
 
 import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.BigQuery.Instances.Execute ()
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
@@ -28,7 +29,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.Server.Types (RequestId)
-import Hasura.Session
 import Hasura.Tracing
 
 instance BackendTransport 'BigQuery where

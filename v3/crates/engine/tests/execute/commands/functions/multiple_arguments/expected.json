@@ -3,16 +3,6 @@
     "data": {
       "getActorsByMovieIdBounds": [
         {
-          "actor_id": 0,
-          "movie_id": 2,
-          "name": "Peter"
-        },
-        {
-          "actor_id": 3,
-          "movie_id": 2,
-          "name": "Irfan Khan"
-        },
-        {
           "actor_id": 4,
           "movie_id": 3,
           "name": "Al Pacino"
@@ -26,6 +16,11 @@
           "actor_id": 6,
           "movie_id": 4,
           "name": "Morgan Freeman"
+        },
+        {
+          "actor_id": 7,
+          "movie_id": 5,
+          "name": "Ben Kingsley"
         }
       ]
     }
@@ -34,16 +29,6 @@
     "data": {
       "getActorsByMovieIdBounds": [
         {
-          "actor_id": 0,
-          "movie_id": 2,
-          "name": "Peter"
-        },
-        {
-          "actor_id": 3,
-          "movie_id": 2,
-          "name": "Irfan Khan"
-        },
-        {
           "actor_id": 4,
           "movie_id": 3,
           "name": "Al Pacino"
@@ -57,6 +42,11 @@
           "actor_id": 6,
           "movie_id": 4,
           "name": "Morgan Freeman"
+        },
+        {
+          "actor_id": 7,
+          "movie_id": 5,
+          "name": "Ben Kingsley"
         }
       ]
     }

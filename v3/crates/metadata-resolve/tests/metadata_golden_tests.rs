@@ -27,7 +27,7 @@ fn test_passing_metadata() {
             let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)
                 .unwrap_or_else(|error| panic!("{}: Could not deserialize metadata: {error}", directory.display()));
 
-            let resolved = metadata_resolve::resolve(metadata, configuration)
+            let resolved = metadata_resolve::resolve(metadata, &configuration)
                 .unwrap_or_else(|error| panic!("{}: Could not resolve metadata: {error}",directory.display()));
 
             insta::assert_debug_snapshot!("resolved", resolved);
@@ -54,7 +54,7 @@ fn test_failing_metadata() {
                 Ok(metadata_json_value) => {
                     match open_dds::traits::OpenDd::deserialize(metadata_json_value) {
                         Ok(metadata) => {
-                            match metadata_resolve::resolve(metadata, configuration) {
+                            match metadata_resolve::resolve(metadata, &configuration) {
                                 Ok(_) => {
                                     panic!("{}: Unexpected success when resolving {path:?}.", directory.display());
                                 }

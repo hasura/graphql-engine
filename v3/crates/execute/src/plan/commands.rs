@@ -5,25 +5,26 @@ use std::collections::BTreeMap;
 
 use super::arguments;
 use super::error;
+use super::field;
+use super::mutation;
+use super::query;
+use super::relationships;
 use super::selection_set;
-use super::types;
-use crate::ir::commands::CommandInfo;
-use crate::ir::commands::FunctionBasedCommand;
-use crate::ir::commands::ProcedureBasedCommand;
-use crate::ir::selection_set::NdcFieldName;
-use crate::ir::selection_set::NdcRelationshipName;
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
-use crate::remote_joins::types::VariableName;
 use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
+use ir::{
+    CommandInfo, FunctionBasedCommand, NdcFieldAlias, NdcRelationshipName, ProcedureBasedCommand,
+    VariableName,
+};
 use open_dds::commands::ProcedureName;
 
 pub(crate) fn plan_query_node<'s, 'ir>(
     ir: &'ir CommandInfo<'s>,
     join_id_counter: &mut MonotonicCounter,
-    relationships: &mut BTreeMap<NdcRelationshipName, types::Relationship>,
+    relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
 ) -> Result<
     (
-        types::UnresolvedQueryNode<'s>,
+        query::UnresolvedQueryNode<'s>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
@@ -40,11 +41,11 @@ pub(crate) fn plan_query_node<'s, 'ir>(
         ndc_nested_field = Some(fields);
         jl = locations;
     }
-    let query = types::QueryNode {
+    let query = query::QueryNode {
         aggregates: None,
         fields: Some(IndexMap::from([(
-            NdcFieldName::from(FUNCTION_IR_VALUE_COLUMN_NAME),
-            types::Field::Column {
+            NdcFieldAlias::from(FUNCTION_IR_VALUE_COLUMN_NAME),
+            field::Field::Column {
                 column: DataConnectorColumnName::from(FUNCTION_IR_VALUE_COLUMN_NAME),
                 fields: ndc_nested_field,
                 arguments: BTreeMap::new(),
@@ -63,7 +64,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
-        types::UnresolvedQueryExecutionPlan<'s>,
+        query::UnresolvedQueryExecutionPlan<'s>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
@@ -76,7 +77,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
     for (variable_name, variable_argument) in &ir.variable_arguments {
         arguments.insert(
             variable_name.clone(),
-            types::Argument::Variable {
+            arguments::Argument::Variable {
                 name: VariableName(variable_argument.clone()),
             },
         );
@@ -87,14 +88,8 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
         join_id_counter,
         &mut collection_relationships,
     )?;
-    if let Some(nested_selection) = &ir.command_info.selection {
-        selection_set::collect_relationships_from_nested_selection(
-            nested_selection,
-            &mut collection_relationships,
-        )?;
-    }
 
-    let query_request = types::UnresolvedQueryExecutionPlan {
+    let query_request = query::UnresolvedQueryExecutionPlan {
         query_node,
         collection: CollectionName::from(ir.function_name.as_str()),
         arguments: arguments.clone(),
@@ -111,7 +106,7 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
-        types::UnresolvedMutationExecutionPlan<'s>,
+        mutation::UnresolvedMutationExecutionPlan<'s>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
@@ -132,13 +127,7 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
         ndc_nested_field = Some(fields);
         jl = locations;
     }
-    if let Some(nested_selection) = &ir.command_info.selection {
-        selection_set::collect_relationships_from_nested_selection(
-            nested_selection,
-            &mut collection_relationships,
-        )?;
-    }
-    let mutation_request = types::MutationExecutionPlan {
+    let mutation_request = mutation::MutationExecutionPlan {
         procedure_name: procedure_name.clone(),
         procedure_arguments: arguments::plan_mutation_arguments(
             &ir.command_info.arguments,

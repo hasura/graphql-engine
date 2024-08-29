@@ -7,7 +7,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
     Metadata {
         object_types: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "Invoice",
@@ -25,7 +27,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -49,7 +53,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -73,7 +79,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -97,7 +105,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -121,7 +131,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -145,7 +157,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -169,7 +183,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Timestamp",
@@ -193,7 +209,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -217,7 +235,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Numeric",
@@ -254,10 +274,12 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                 type_output_permissions: {},
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: DataConnectorName(
                                 Identifier(
                                     "mypg",
@@ -289,11 +311,67 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         column_type_representation: Some(
                                             String,
                                         ),
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -314,11 +392,67 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         column_type_representation: Some(
                                             String,
                                         ),
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -339,11 +473,67 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         column_type_representation: Some(
                                             String,
                                         ),
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -364,11 +554,67 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         column_type_representation: Some(
                                             String,
                                         ),
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -389,11 +635,67 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         column_type_representation: Some(
                                             String,
                                         ),
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_ilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_iregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nilike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_niregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nlike",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_nregex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_regex",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "starts_with",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "ts_match_tt",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -412,11 +714,37 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         column_type_representation: Some(
                                             Int32,
                                         ),
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -435,11 +763,37 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         column_type_representation: Some(
                                             Timestamp,
                                         ),
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -458,11 +812,37 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         column_type_representation: Some(
                                             Int32,
                                         ),
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -481,23 +861,116 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         column_type_representation: Some(
                                             BigDecimal,
                                         ),
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_in",
+                                                    ),
+                                                ],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_gt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_gte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lt",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_lte",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "_neq",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
                             },
                         },
                     },
-                ),
+                    scalar_representations: {
+                        FieldName(
+                            Identifier(
+                                "billingAddress",
+                            ),
+                        ): {
+                            String,
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingCity",
+                            ),
+                        ): {
+                            String,
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingCountry",
+                            ),
+                        ): {
+                            String,
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingPostalCode",
+                            ),
+                        ): {
+                            String,
+                        },
+                        FieldName(
+                            Identifier(
+                                "billingState",
+                            ),
+                        ): {
+                            String,
+                        },
+                        FieldName(
+                            Identifier(
+                                "customerId",
+                            ),
+                        ): {
+                            Int32,
+                        },
+                        FieldName(
+                            Identifier(
+                                "invoiceDate",
+                            ),
+                        ): {
+                            Timestamp,
+                        },
+                        FieldName(
+                            Identifier(
+                                "invoiceId",
+                            ),
+                        ): {
+                            Int32,
+                        },
+                        FieldName(
+                            Identifier(
+                                "total",
+                            ),
+                        ): {
+                            BigDecimal,
+                        },
+                    },
+                },
             },
         },
         scalar_types: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "Int4",
@@ -514,7 +987,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                 description: None,
             },
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: CustomTypeName(
                     Identifier(
                         "Int8",
@@ -533,7 +1008,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
         },
         models: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: ModelName(
                     Identifier(
                         "Invoice",
@@ -542,7 +1019,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
             }: ModelWithPermissions {
                 model: Model {
                     name: Qualified {
-                        subgraph: "default",
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
                         name: ModelName(
                             Identifier(
                                 "Invoice",
@@ -550,7 +1029,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                         ),
                     },
                     data_type: Qualified {
-                        subgraph: "default",
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
                         name: CustomTypeName(
                             Identifier(
                                 "Invoice",
@@ -567,7 +1048,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -591,7 +1074,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -615,7 +1100,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -639,7 +1126,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -663,7 +1152,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Varchar",
@@ -687,7 +1178,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -711,7 +1204,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Timestamp",
@@ -735,7 +1230,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -759,7 +1256,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Numeric",
@@ -781,7 +1280,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                         ModelSource {
                             data_connector: DataConnectorLink {
                                 name: Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: DataConnectorName(
                                         Identifier(
                                             "mypg",
@@ -833,7 +1334,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 headers: SerializableHeaderMap(
                                     {},
                                 ),
-                                argument_presets: [],
                                 response_config: None,
                                 capabilities: DataConnectorCapabilities {
                                     supported_ndc_version: V01,
@@ -851,7 +1351,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                             ),
                             type_mappings: {
                                 Qualified {
-                                    subgraph: "default",
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
                                     name: CustomTypeName(
                                         Identifier(
                                             "Invoice",
@@ -880,11 +1382,67 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             column_type_representation: Some(
                                                 String,
                                             ),
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -905,11 +1463,67 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             column_type_representation: Some(
                                                 String,
                                             ),
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -930,11 +1544,67 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             column_type_representation: Some(
                                                 String,
                                             ),
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -955,11 +1625,67 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             column_type_representation: Some(
                                                 String,
                                             ),
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -980,11 +1706,67 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             column_type_representation: Some(
                                                 String,
                                             ),
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_ilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_iregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_like",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nilike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_niregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nlike",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_nregex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_regex",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "starts_with",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "ts_match_tt",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1003,11 +1785,37 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             column_type_representation: Some(
                                                 Int32,
                                             ),
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1026,11 +1834,37 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             column_type_representation: Some(
                                                 Timestamp,
                                             ),
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1049,11 +1883,37 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             column_type_representation: Some(
                                                 Int32,
                                             ),
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1072,117 +1932,68 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                             column_type_representation: Some(
                                                 BigDecimal,
                                             ),
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_in",
+                                                        ),
+                                                    ],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_gt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_gte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lt",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_lte",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "_neq",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
                                 },
                             },
                             argument_mappings: {},
+                            data_connector_link_argument_presets: {},
                             source_arguments: {},
                         },
                     ),
                     global_id_source: None,
                     apollo_federation_key_source: None,
-                    orderable_fields: [
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "billingAddress",
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
+                            name: FromModel(
+                                ModelName(
+                                    Identifier(
+                                        "Invoice",
+                                    ),
                                 ),
                             ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
                         },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "billingCity",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "billingCountry",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "billingPostalCode",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "billingState",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "customerId",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "invoiceDate",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "invoiceId",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                        OrderableField {
-                            field_name: FieldName(
-                                Identifier(
-                                    "total",
-                                ),
-                            ),
-                            order_by_directions: EnableAll(
-                                true,
-                            ),
-                        },
-                    ],
+                    ),
                     aggregate_expression: Some(
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: AggregateExpressionName(
                                 Identifier(
                                     "Invoice_aggregate_exp",
@@ -1193,7 +2004,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                     raw: ModelRaw {
                         filter_expression_type: None,
                         graphql: Some(
-                            ModelGraphQlDefinition {
+                            ModelGraphQlDefinitionV2 {
                                 select_uniques: [
                                     SelectUniqueGraphQlDefinition {
                                         query_root_field: GraphQlFieldName(
@@ -1208,6 +2019,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         ],
                                         description: None,
                                         deprecated: None,
+                                        subscription: None,
                                     },
                                 ],
                                 select_many: Some(
@@ -1217,10 +2029,10 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         ),
                                         description: None,
                                         deprecated: None,
+                                        subscription: None,
                                     },
                                 ),
                                 arguments_input_type: None,
-                                order_by_expression_type: None,
                                 apollo_federation: None,
                                 filter_input_type_name: Some(
                                     GraphQlTypeName(
@@ -1234,6 +2046,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         ),
                                         description: None,
                                         deprecated: None,
+                                        subscription: None,
                                     },
                                 ),
                             },
@@ -1260,7 +2073,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                         underlying_type: Named(
                                             Custom(
                                                 Qualified {
-                                                    subgraph: "default",
+                                                    subgraph: SubgraphName(
+                                                        "default",
+                                                    ),
                                                     name: CustomTypeName(
                                                         Identifier(
                                                             "Int4",
@@ -1285,6 +2100,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                             },
                             description: None,
                             deprecated: None,
+                            subscription: None,
                         },
                     ],
                     select_many: Some(
@@ -1294,6 +2110,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                             ),
                             description: None,
                             deprecated: None,
+                            subscription: None,
                         },
                     ),
                     select_aggregate: Some(
@@ -1304,7 +2121,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                             description: None,
                             deprecated: None,
                             aggregate_expression_name: Qualified {
-                                subgraph: "default",
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
                                 name: AggregateExpressionName(
                                     Identifier(
                                         "Invoice_aggregate_exp",
@@ -1314,6 +2133,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                             filter_input_field_name: Name(
                                 "filter_input",
                             ),
+                            subscription: None,
                         },
                     ),
                     order_by_expression: None,
@@ -1347,9 +2167,156 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
             objects: {},
             scalars: {},
         },
+        order_by_expressions: OrderByExpressions(
+            {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromModel(
+                        ModelName(
+                            Identifier(
+                                "Invoice",
+                            ),
+                        ),
+                    ),
+                }: OrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromModel(
+                            ModelName(
+                                Identifier(
+                                    "Invoice",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "Invoice",
+                            ),
+                        ),
+                    },
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "billingAddress",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "billingCity",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "billingCountry",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "billingPostalCode",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "billingState",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "customerId",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "invoiceDate",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "invoiceId",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "total",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                    },
+                    orderable_relationships: {},
+                    graphql: None,
+                    description: Some(
+                        "OrderByExpression for Model Invoice (in subgraph default)",
+                    ),
+                },
+            },
+        ),
         aggregate_expressions: {
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: AggregateExpressionName(
                     Identifier(
                         "Int4_aggregate_exp",
@@ -1357,7 +2324,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                 ),
             }: AggregateExpression {
                 name: Qualified {
-                    subgraph: "default",
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
                     name: AggregateExpressionName(
                         Identifier(
                             "Int4_aggregate_exp",
@@ -1367,7 +2336,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                 operand: AggregateOperand {
                     aggregated_type: Custom(
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: CustomTypeName(
                                 Identifier(
                                     "Int4",
@@ -1388,7 +2359,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int8",
@@ -1402,7 +2375,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                             data_connector_functions: [
                                 DataConnectorAggregationFunctionInfo {
                                     data_connector_name: Qualified {
-                                        subgraph: "default",
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
                                         name: DataConnectorName(
                                             Identifier(
                                                 "mypg",
@@ -1429,7 +2404,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -1443,7 +2420,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                             data_connector_functions: [
                                 DataConnectorAggregationFunctionInfo {
                                     data_connector_name: Qualified {
-                                        subgraph: "default",
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
                                         name: DataConnectorName(
                                             Identifier(
                                                 "mypg",
@@ -1470,7 +2449,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                                 underlying_type: Named(
                                     Custom(
                                         Qualified {
-                                            subgraph: "default",
+                                            subgraph: SubgraphName(
+                                                "default",
+                                            ),
                                             name: CustomTypeName(
                                                 Identifier(
                                                     "Int4",
@@ -1484,7 +2465,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                             data_connector_functions: [
                                 DataConnectorAggregationFunctionInfo {
                                     data_connector_name: Qualified {
-                                        subgraph: "default",
+                                        subgraph: SubgraphName(
+                                            "default",
+                                        ),
                                         name: DataConnectorName(
                                             Identifier(
                                                 "mypg",
@@ -1514,7 +2497,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                 description: None,
             },
             Qualified {
-                subgraph: "default",
+                subgraph: SubgraphName(
+                    "default",
+                ),
                 name: AggregateExpressionName(
                     Identifier(
                         "Invoice_aggregate_exp",
@@ -1522,7 +2507,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                 ),
             }: AggregateExpression {
                 name: Qualified {
-                    subgraph: "default",
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
                     name: AggregateExpressionName(
                         Identifier(
                             "Invoice_aggregate_exp",
@@ -1532,7 +2519,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                 operand: AggregateOperand {
                     aggregated_type: Custom(
                         Qualified {
-                            subgraph: "default",
+                            subgraph: SubgraphName(
+                                "default",
+                            ),
                             name: CustomTypeName(
                                 Identifier(
                                     "Invoice",
@@ -1549,7 +2538,9 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                             ),
                             description: None,
                             aggregate_expression: Qualified {
-                                subgraph: "default",
+                                subgraph: SubgraphName(
+                                    "default",
+                                ),
                                 name: AggregateExpressionName(
                                     Identifier(
                                         "Int4_aggregate_exp",
@@ -1583,6 +2574,13 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                     "Mutation",
                 ),
             ),
+            subscription_root_type_name: Some(
+                TypeName(
+                    Name(
+                        "Subscription",
+                    ),
+                ),
+            ),
             order_by_input: Some(
                 OrderByInputGraphqlConfig {
                     asc_direction_field_value: Name(
@@ -1600,38 +2598,8 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
             ),
             enable_apollo_federation_fields: false,
         },
+        pre_parse_plugins: [],
         roles: [],
     },
-    [
-        DataConnectorScalarTypesWarning(
-            PleaseUpgradeToBooleanExpressionType {
-                scalar_type: DataConnectorScalarType(
-                    "int4",
-                ),
-                data_connector_name: Qualified {
-                    subgraph: "default",
-                    name: DataConnectorName(
-                        Identifier(
-                            "mypg",
-                        ),
-                    ),
-                },
-            },
-        ),
-        DataConnectorScalarTypesWarning(
-            PleaseUpgradeToBooleanExpressionType {
-                scalar_type: DataConnectorScalarType(
-                    "int8",
-                ),
-                data_connector_name: Qualified {
-                    subgraph: "default",
-                    name: DataConnectorName(
-                        Identifier(
-                            "mypg",
-                        ),
-                    ),
-                },
-            },
-        ),
-    ],
+    [],
 )

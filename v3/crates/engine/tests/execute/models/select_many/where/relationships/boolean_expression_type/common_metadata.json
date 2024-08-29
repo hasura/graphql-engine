@@ -334,7 +334,7 @@
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "Int",
+                    "dataConnectorScalarType": "int4",
                     "operatorMapping": {}
                   }
                 ]
@@ -363,7 +363,7 @@
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "String",
+                    "dataConnectorScalarType": "text",
                     "operatorMapping": {}
                   }
                 ]

@@ -246,12 +246,16 @@
       ],
       "properties": {
         "subgraph": {
-          "type": "string"
+          "$ref": "#/definitions/SubgraphName"
         },
         "name": {
           "$ref": "#/definitions/ModelName"
         }
       }
+    },
+    "SubgraphName": {
+      "description": "The name of a subgraph.\n\nThis is different from 'SubgraphNameInput' which is more restrictive. A SubgraphName may refer to a user defined subgraph (through 'SubgraphNameInput') or a restricted namespace such as '__globals' or '__unknown_namespace'\n\nFurther, it may not be a valid identifier as v2 version of Metadata did not do any validation on namespaces. When we deprecate v2 version of metadata, this can switch to str_newtype over Identifier\n\nThis is also not meant to be used in any of the user facing metadata types, hence there is on 'OpenDD' trait implementation. However, there is a 'JsonSchema' trait implementation to help with query analytics",
+      "type": "string"
     },
     "ModelName": {
       "$id": "https://hasura.io/jsonschemas/metadata/ModelName",
@@ -268,7 +272,7 @@
       ],
       "properties": {
         "subgraph": {
-          "type": "string"
+          "$ref": "#/definitions/SubgraphName"
         },
         "name": {
           "$ref": "#/definitions/CommandName"
@@ -285,6 +289,7 @@
     "FieldUsage": {
       "type": "object",
       "required": [
+        "deprecated",
         "name",
         "opendd_type"
       ],
@@ -294,6 +299,9 @@
         },
         "opendd_type": {
           "$ref": "#/definitions/Qualified_for_CustomTypeName"
+        },
+        "deprecated": {
+          "type": "boolean"
         }
       }
     },
@@ -312,7 +320,7 @@
       ],
       "properties": {
         "subgraph": {
-          "type": "string"
+          "$ref": "#/definitions/SubgraphName"
         },
         "name": {
           "$ref": "#/definitions/CustomTypeName"
@@ -396,15 +404,16 @@
         "relationships": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/RelationshipUsage"
+            "$ref": "#/definitions/PredicateRelationshipUsage"
           }
         }
       }
     },
-    "RelationshipUsage": {
+    "PredicateRelationshipUsage": {
       "type": "object",
       "required": [
         "name",
+        "predicate_usage",
         "source",
         "target"
       ],
@@ -417,6 +426,9 @@
         },
         "target": {
           "$ref": "#/definitions/RelationshipTarget"
+        },
+        "predicate_usage": {
+          "$ref": "#/definitions/FilterPredicateUsage"
         }
       }
     },
@@ -514,6 +526,25 @@
       "title": "DataConnectorArgumentName",
       "description": "The name of an argument as defined by a data connector.",
       "type": "string"
+    },
+    "RelationshipUsage": {
+      "type": "object",
+      "required": [
+        "name",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/RelationshipName"
+        },
+        "source": {
+          "$ref": "#/definitions/Qualified_for_CustomTypeName"
+        },
+        "target": {
+          "$ref": "#/definitions/RelationshipTarget"
+        }
+      }
     }
   }
 }

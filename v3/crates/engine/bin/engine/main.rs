@@ -1,4 +1,7 @@
+use futures_util::FutureExt;
 use std::fmt::Display;
+use std::hash;
+use std::hash::{Hash, Hasher};
 use std::net;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -12,41 +15,37 @@ use axum::{
     routing::{get, post},
     Extension, Json, Router,
 };
-
+use base64::engine::Engine;
 use clap::Parser;
-use pre_execution_plugin::{
-    configuration::PrePluginConfig, execute::pre_execution_plugins_handler,
-};
+use open_dds::plugins::LifecyclePluginHookPreParse;
+use pre_execution_plugin::execute::pre_execution_plugins_handler;
 use reqwest::header::CONTENT_TYPE;
 use serde::Serialize;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
-use tracing_util::{
-    add_event_on_active_span, set_attribute_on_active_span, set_status_on_current_span,
-    ErrorVisibility, SpanVisibility, TraceableError, TraceableHttpResponse,
-};
 
-use base64::engine::Engine;
-use engine::internal_flags::{resolve_unstable_features, UnstableFeature};
-use engine::VERSION;
 use engine::{
-    authentication::{
-        AuthConfig::{self, V1 as V1AuthConfig},
-        AuthModeConfig,
-    },
-    plugins::read_pre_execution_plugins_config,
+    authentication::{resolve_auth_config, AuthConfig, AuthModeConfig},
+    internal_flags::{resolve_unstable_features, UnstableFeature},
+    VERSION,
 };
 use execute::HttpContext;
 use hasura_authn_core::Session;
 use hasura_authn_jwt::auth as jwt_auth;
 use hasura_authn_jwt::jwt;
+use hasura_authn_noauth as noauth;
 use hasura_authn_webhook::webhook;
 use lang_graphql as gql;
 use schema::GDS;
-use std::hash;
-use std::hash::{Hash, Hasher};
+use tracing_util::{
+    add_event_on_active_span, set_attribute_on_active_span, set_status_on_current_span,
+    ErrorVisibility, SpanVisibility, TraceableError, TraceableHttpResponse,
+};
 
 mod cors;
+
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 const DEFAULT_PORT: u16 = 3000;
 
@@ -56,7 +55,7 @@ const MB: usize = 1_048_576;
 #[derive(Parser, Serialize)]
 #[command(version = VERSION)]
 struct ServerOptions {
-    /// The path to the metadata file, used to construct the schema.g
+    /// The path to the metadata file, used to construct the schema.
     #[arg(long, value_name = "PATH", env = "METADATA_PATH")]
     metadata_path: PathBuf,
     /// An introspection metadata file, served over `/metadata` if provided.
@@ -102,15 +101,16 @@ struct ServerOptions {
         value_delimiter = ','
     )]
     unstable_features: Vec<UnstableFeature>,
-    /// The configuration file used for authentication.
-    #[arg(long, value_name = "PATH", env = "pre_execution_plugins_path")]
-    pre_execution_plugins_path: Option<PathBuf>,
 
     /// Whether internal errors should be shown or censored.
     /// It is recommended to only show errors while developing since internal errors may contain
     /// sensitve information.
     #[arg(long, env = "EXPOSE_INTERNAL_ERRORS")]
     expose_internal_errors: bool,
+
+    /// Log traces to stdout.
+    #[arg(long, env = "EXPORT_TRACES_STDOUT")]
+    export_traces_stdout: bool,
 }
 
 struct EngineState {
@@ -118,19 +118,26 @@ struct EngineState {
     http_context: HttpContext,
     schema: gql::schema::Schema<GDS>,
     auth_config: AuthConfig,
-    pre_execution_plugins_config: Vec<PrePluginConfig>,
-    sql_context: sql::catalog::Context,
+    sql_context: Arc<sql::catalog::Catalog>,
+    pre_parse_plugins: Vec<LifecyclePluginHookPreParse>,
 }
 
 #[tokio::main]
 #[allow(clippy::print_stdout)]
 async fn main() {
-    let server = ServerOptions::parse();
+    let server_options = ServerOptions::parse();
+    let export_traces_stdout = if server_options.export_traces_stdout {
+        tracing_util::ExportTracesStdout::Enable
+    } else {
+        tracing_util::ExportTracesStdout::Disable
+    };
 
     tracing_util::initialize_tracing(
-        server.otlp_endpoint.as_deref(),
+        server_options.otlp_endpoint.as_deref(),
         "graphql-engine",
         Some(VERSION),
+        tracing_util::PropagateBaggage::Disable,
+        export_traces_stdout,
     )
     .unwrap();
 
@@ -139,7 +146,7 @@ async fn main() {
             "app init",
             "App initialization",
             SpanVisibility::Internal,
-            || Box::pin(start_engine(&server)),
+            || Box::pin(start_engine(&server_options)),
         )
         .await
     {
@@ -149,41 +156,6 @@ async fn main() {
     tracing_util::shutdown_tracer();
 }
 
-// Connects a signal handler for the unix SIGTERM signal. (This is the standard signal that unix
-// systems send when pressing ctrl+c or running `kill`. It is distinct from the "force kill" signal
-// which is SIGKILL.) This function produces a future that resolves when a SIGTERM is received. We
-// pass the future to axum's `with_graceful_shutdown` method to instruct axum to start a graceful
-// shutdown when the signal is received.
-//
-// Listening for SIGTERM specifically avoids a 10-second delay when stopping the process.
-//
-// Also listens for tokio's cross-platform `ctrl_c` signal polyfill.
-//
-// copied from https://github.com/davidB/axum-tracing-opentelemetry/blob/main/examples/otlp/src/main.rs
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
-    };
-
-    #[cfg(unix)]
-    let terminate = async {
-        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
-            .recv()
-            .await;
-    };
-
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
-    tokio::select! {
-        () = ctrl_c => {},
-        () = terminate => {},
-    }
-}
-
 #[derive(thiserror::Error, Debug)]
 #[allow(clippy::enum_variant_names)]
 enum StartupError {
@@ -191,8 +163,6 @@ enum StartupError {
     ReadAuth(anyhow::Error),
     #[error("failed to build engine state - {0}")]
     ReadSchema(anyhow::Error),
-    #[error("could not read the pre-execution plugins config - {0}")]
-    ReadPrePlugin(anyhow::Error),
 }
 
 impl TraceableError for StartupError {
@@ -359,8 +329,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         expose_internal_errors,
         &server.authn_config_path,
         &server.metadata_path,
-        &server.pre_execution_plugins_path,
-        metadata_resolve_configuration,
+        &metadata_resolve_configuration,
     )
     .map_err(StartupError::ReadSchema)?;
 
@@ -395,7 +364,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     // run it with hyper on `addr`
     axum::Server::bind(&address)
         .serve(engine_router.into_make_service())
-        .with_graceful_shutdown(shutdown_signal())
+        .with_graceful_shutdown(axum_ext::shutdown_signal())
         .await
         .unwrap();
 
@@ -546,29 +515,36 @@ where
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    match &engine_state.auth_config {
-                        V1AuthConfig(auth_config) => match &auth_config.mode {
-                            AuthModeConfig::Webhook(webhook_config) => {
-                                webhook::authenticate_request(
-                                    &engine_state.http_context.client,
-                                    webhook_config,
-                                    &headers_map,
-                                    auth_config.allow_role_emulation_by.as_ref(),
-                                )
-                                .await
-                                .map_err(AuthError::from)
-                            }
-                            AuthModeConfig::Jwt(jwt_secret_config) => {
-                                jwt_auth::authenticate_request(
-                                    &engine_state.http_context.client,
-                                    *jwt_secret_config.clone(),
-                                    auth_config.allow_role_emulation_by.as_ref(),
-                                    &headers_map,
-                                )
-                                .await
-                                .map_err(AuthError::from)
-                            }
-                        },
+                    // We are still supporting AuthConfig::V1, hence we need to
+                    // support role emulation
+                    let (auth_mode, allow_role_emulation_by) = match &engine_state.auth_config {
+                        AuthConfig::V1(auth_config) => (
+                            &auth_config.mode,
+                            auth_config.allow_role_emulation_by.as_ref(),
+                        ),
+                        // There is no role emulation in AuthConfig::V2
+                        AuthConfig::V2(auth_config) => (&auth_config.mode, None),
+                    };
+                    match auth_mode {
+                        AuthModeConfig::NoAuth(no_auth_config) => {
+                            Ok(noauth::identity_from_config(no_auth_config))
+                        }
+                        AuthModeConfig::Webhook(webhook_config) => webhook::authenticate_request(
+                            &engine_state.http_context.client,
+                            webhook_config,
+                            &headers_map,
+                            allow_role_emulation_by,
+                        )
+                        .await
+                        .map_err(AuthError::from),
+                        AuthModeConfig::Jwt(jwt_secret_config) => jwt_auth::authenticate_request(
+                            &engine_state.http_context.client,
+                            *jwt_secret_config.clone(),
+                            &headers_map,
+                            allow_role_emulation_by,
+                        )
+                        .await
+                        .map_err(AuthError::from),
                     }
                 })
             },
@@ -596,15 +572,20 @@ async fn handle_request(
             "Handle request",
             SpanVisibility::User,
             || {
-                Box::pin(execute::execute_query(
-                    state.expose_internal_errors,
-                    &state.http_context,
-                    &state.schema,
-                    &session,
-                    &headers,
-                    request,
-                    None,
-                ))
+                {
+                    Box::pin(
+                        execute::execute_query(
+                            state.expose_internal_errors,
+                            &state.http_context,
+                            &state.schema,
+                            &session,
+                            &headers,
+                            request,
+                            None,
+                        )
+                        .map(|(_operation_type, graphql_response)| graphql_response),
+                    )
+                }
             },
         )
         .await;
@@ -632,14 +613,17 @@ async fn handle_explain_request(
             "Handle explain request",
             SpanVisibility::User,
             || {
-                Box::pin(execute::execute_explain(
-                    state.expose_internal_errors,
-                    &state.http_context,
-                    &state.schema,
-                    &session,
-                    &headers,
-                    request,
-                ))
+                Box::pin(
+                    execute::execute_explain(
+                        state.expose_internal_errors,
+                        &state.http_context,
+                        &state.schema,
+                        &session,
+                        &headers,
+                        request,
+                    )
+                    .map(|(_operation_type, graphql_response)| graphql_response),
+                )
             },
         )
         .await;
@@ -649,29 +633,34 @@ async fn handle_explain_request(
     response
 }
 
-async fn pre_execution_plugins_middleware<'a, B>(
+async fn pre_execution_plugins_middleware<'a>(
     State(engine_state): State<Arc<EngineState>>,
     Extension(session): Extension<Session>,
     headers_map: HeaderMap,
-    request: Request<B>,
+    request: Request<axum::body::Body>,
     next: Next<axum::body::Body>,
-) -> axum::response::Result<axum::response::Response>
-where
-    B: HttpBody,
-    B::Error: Display,
-{
-    let (request, response) = pre_execution_plugins_handler(
-        &engine_state.pre_execution_plugins_config,
-        &engine_state.http_context.client,
-        session,
-        request,
-        headers_map,
-    )
-    .await?;
+) -> axum::response::Result<axum::response::Response> {
+    // Check if the pre_execution_plugins_config is empty
+    match nonempty::NonEmpty::from_slice(&engine_state.pre_parse_plugins) {
+        None => {
+            // If empty, do nothing and pass the request to the next middleware
+            Ok(next.run(request).await)
+        }
+        Some(pre_parse_plugins) => {
+            let (request, response) = pre_execution_plugins_handler(
+                &pre_parse_plugins,
+                &engine_state.http_context.client,
+                session,
+                request,
+                headers_map,
+            )
+            .await?;
 
-    match response {
-        Some(response) => Ok(response),
-        None => Ok(next.run(request).await),
+            match response {
+                Some(response) => Ok(response),
+                None => Ok(next.run(request).await),
+            }
+        }
     }
 }
 
@@ -690,7 +679,7 @@ async fn handle_sql_request(
             || {
                 Box::pin(async {
                     sql::execute::execute_sql(
-                        &state.sql_context,
+                        state.sql_context.clone(),
                         Arc::new(session),
                         Arc::new(state.http_context.clone()),
                         &request,
@@ -723,7 +712,7 @@ async fn handle_sql_request(
 
 #[allow(clippy::print_stdout)]
 /// Print any build warnings to stdout
-fn print_warnings(warnings: Vec<metadata_resolve::Warning>) {
+fn print_warnings<T: Display>(warnings: Vec<T>) {
     for warning in warnings {
         println!("Warning: {warning}");
     }
@@ -734,25 +723,29 @@ fn build_state(
     expose_internal_errors: execute::ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
-    pre_execution_plugins_path: &Option<PathBuf>,
-    metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
+    metadata_resolve_configuration: &metadata_resolve::configuration::Configuration,
 ) -> Result<Arc<EngineState>, anyhow::Error> {
-    let auth_config = read_auth_config(authn_config_path).map_err(StartupError::ReadAuth)?;
-    let pre_execution_plugins_config =
-        read_pre_execution_plugins_config(pre_execution_plugins_path)
-            .map_err(StartupError::ReadPrePlugin)?;
+    // Auth Config
+    let raw_auth_config = std::fs::read_to_string(authn_config_path)?;
+    let (auth_config, auth_warnings) =
+        resolve_auth_config(&raw_auth_config).map_err(StartupError::ReadAuth)?;
+
+    // Metadata
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
     let (resolved_metadata, warnings) =
         metadata_resolve::resolve(metadata, metadata_resolve_configuration)?;
+    let resolved_metadata = Arc::new(resolved_metadata);
 
+    print_warnings(auth_warnings);
     print_warnings(warnings);
 
     let http_context = HttpContext {
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
-    let sql_context = sql::catalog::Context::from_metadata(&resolved_metadata);
+    let pre_parse_plugins = resolved_metadata.pre_parse_plugins.clone();
+    let sql_context = sql::catalog::Catalog::from_metadata(resolved_metadata.clone());
     let schema = schema::GDS {
         metadata: resolved_metadata,
     }
@@ -762,15 +755,8 @@ fn build_state(
         http_context,
         schema,
         auth_config,
-        pre_execution_plugins_config,
-        sql_context,
+        sql_context: sql_context.into(),
+        pre_parse_plugins,
     });
     Ok(state)
-}
-
-fn read_auth_config(path: &PathBuf) -> Result<AuthConfig, anyhow::Error> {
-    let raw_auth_config = std::fs::read_to_string(path)?;
-    Ok(open_dds::traits::OpenDd::deserialize(
-        serde_json::from_str(&raw_auth_config)?,
-    )?)
 }

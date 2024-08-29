@@ -12,6 +12,8 @@ import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict qualified as Map
 import Data.Text.Extended
 import Data.Text.Lazy qualified as LT
+import Hasura.Authentication.Session (SessionVariables)
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.BigQuery.DDL (scalarTypeFromColumnType)
 import Hasura.Backends.BigQuery.FromIr as BigQuery
 import Hasura.Backends.BigQuery.Types
@@ -21,7 +23,6 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.SQL.Types
-import Hasura.Session
 
 --------------------------------------------------------------------------------
 -- Top-level planner

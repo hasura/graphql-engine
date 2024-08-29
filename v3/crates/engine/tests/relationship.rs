@@ -14,6 +14,10 @@
 //        - <some-field> <<Some-operator>> <some-literal-value>
 //
 
+use std::collections::BTreeMap;
+
+use metadata_resolve::data_connectors::NdcVersion;
+
 mod common;
 
 // Non-remote relationships (relationship within the same connector)
@@ -65,70 +69,111 @@ fn test_relationships_array_with_arguments_with_graphql_config() -> anyhow::Resu
 
 #[test]
 fn test_local_relationships_command_to_model() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/command_to_model";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/command_to_model",
+        &[],
+        BTreeMap::from([
+            // This test can't use the old NDC v0.1.x connector, the embedded actors data has changed
+            // (
+            //     NdcVersion::V01,
+            //     vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            // ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+    )
 }
 
 #[test]
 fn test_relationships_command_to_model_with_graphql_config() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/command_to_model/with_graphql_config";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_metadata_graphql_config =
-        "execute/relationships/common_metadata/graphql_config.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[common_metadata_path_string, common_metadata_graphql_config],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/command_to_model/with_graphql_config",
+        &["execute/relationships/common_metadata/graphql_config.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 #[test]
 fn test_local_relationships_model_to_command() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/model_to_command";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/model_to_command",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 #[test]
 fn test_local_relationships_command_to_command() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/command_to_command";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/command_to_command",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 #[test]
 fn test_local_mutually_recursive_relationships_to_command() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/command_to_command/mutually_recursive";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
-    common::test_execution_expectation(
-        test_path_string,
-        &[
-            common_metadata_path_string,
-            common_command_metadata_path_string,
-        ],
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/command_to_command/mutually_recursive",
+        &["execute/common_metadata/command_metadata.json"],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
     )
 }
 
 #[test]
 fn test_local_relationships_permissions_target_model_filter_predicate() -> anyhow::Result<()> {
-    let test_path_string = "execute/relationships/permissions/target_model_filter_predicate";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/permissions/target_model_filter_predicate",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/common_metadata/custom_connector_v01_schema.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/common_metadata/custom_connector_v02_schema.json"],
+            ),
+        ]),
+    )
 }
 
 // Remote Relationships tests
@@ -160,11 +205,20 @@ fn test_relationships_command_to_command_across_namespace() -> anyhow::Result<()
 #[test]
 fn test_remote_mutually_recursive_relationships_to_command_across_namespace() -> anyhow::Result<()>
 {
-    let test_path_string =
-        "execute/relationships/command_to_command/mutually_recursive_across_namespace";
-    let common_metadata_path_string =
-        "execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation_for_multiple_ndc_versions(
+        "execute/relationships/command_to_command/mutually_recursive_across_namespace",
+        &[],
+        BTreeMap::from([
+            (
+                NdcVersion::V01,
+                vec!["execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v01.json"],
+            ),
+            (
+                NdcVersion::V02,
+                vec!["execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors_v02.json"],
+            ),
+        ]),
+    )
 }
 
 #[test]

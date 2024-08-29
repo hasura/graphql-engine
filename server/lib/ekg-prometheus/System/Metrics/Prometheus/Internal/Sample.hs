@@ -10,7 +10,6 @@ module System.Metrics.Prometheus.Internal.Sample
   )
 where
 
-import Data.List (foldl')
 import qualified Data.Map.Strict as M
 import Data.Maybe (isJust)
 import Prelude hiding (lookup)

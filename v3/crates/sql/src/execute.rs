@@ -1,26 +1,48 @@
 use std::sync::Arc;
 
 use datafusion::{
-    arrow::{array::RecordBatch, error::ArrowError, json::writer::JsonArray, json::WriterBuilder},
+    arrow::{
+        array::RecordBatch,
+        error::ArrowError,
+        json::{writer::JsonArray, WriterBuilder},
+    },
+    common::tree_node::TreeNode,
     dataframe::DataFrame,
     error::DataFusionError,
 };
 use hasura_authn_core::Session;
+use planner::{
+    command::{NDCFunctionPushDown, NDCProcedurePushDown},
+    common::PhysicalPlanOptions,
+    model::{NDCAggregatePushdown, NDCQueryPushDown},
+};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use tracing_util::{ErrorVisibility, SpanVisibility, Successful, TraceableError};
+use tracing_util::{
+    set_attribute_on_active_span, ErrorVisibility, SpanVisibility, Successful, TraceableError,
+};
 
 pub use datafusion::execution::context::SessionContext;
 
-pub(crate) mod analyzer;
 pub(crate) mod optimizer;
 pub(crate) mod planner;
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SqlRequest {
-    sql: String,
+    pub sql: String,
+    #[serde(default)]
+    pub disallow_mutations: bool,
+}
+
+impl SqlRequest {
+    pub fn new(sql: String) -> Self {
+        SqlRequest {
+            sql,
+            disallow_mutations: false,
+        }
+    }
 }
 
 #[derive(Error, Debug, Clone)]
@@ -51,7 +73,7 @@ impl TraceableError for SqlExecutionError {
 
 /// Executes an SQL Request using the Apache DataFusion query engine.
 pub async fn execute_sql(
-    context: &crate::catalog::Context,
+    catalog: Arc<crate::catalog::Catalog>,
     session: Arc<Session>,
     http_context: Arc<execute::HttpContext>,
     request: &SqlRequest,
@@ -63,7 +85,7 @@ pub async fn execute_sql(
             "Create a datafusion SessionContext",
             SpanVisibility::Internal,
             || {
-                let session = context.create_session_context(&session, &http_context);
+                let session = catalog.create_session_context(&session, &http_context);
                 Successful::new(session)
             },
         )
@@ -75,20 +97,28 @@ pub async fn execute_sql(
             SpanVisibility::User,
             || {
                 Box::pin(async {
-                    session_context
+                    let logical_plan = session_context
                         .sql(&request.sql)
                         .await
-                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))
+                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))?;
+                    set_attribute_on_active_span(
+                        tracing_util::AttributeVisibility::Default,
+                        "logical_plan",
+                        logical_plan.logical_plan().to_string(),
+                    );
+
+                    Ok::<_, SqlExecutionError>(logical_plan)
                 })
             },
         )
         .await?;
+    let physical_plan_options = PhysicalPlanOptions::new(request.disallow_mutations);
     let batches = tracer
         .in_span_async(
             "execute_logical_plan",
             "Executes the Logical Plan of a query",
             SpanVisibility::User,
-            || Box::pin(async { execute_logical_plan(data_frame).await }),
+            || Box::pin(async { execute_logical_plan(physical_plan_options, data_frame).await }),
         )
         .await?;
     tracer.in_span(
@@ -99,7 +129,10 @@ pub async fn execute_sql(
     )
 }
 
-async fn execute_logical_plan(frame: DataFrame) -> Result<Vec<RecordBatch>, SqlExecutionError> {
+async fn execute_logical_plan(
+    physical_plan_options: PhysicalPlanOptions,
+    frame: DataFrame,
+) -> Result<Vec<RecordBatch>, SqlExecutionError> {
     let tracer = tracing_util::global_tracer();
     let task_ctx = frame.task_ctx();
     let session_config = task_ctx.session_config().clone();
@@ -124,13 +157,71 @@ async fn execute_logical_plan(frame: DataFrame) -> Result<Vec<RecordBatch>, SqlE
             "Executes a physical plan to collect record batches",
             SpanVisibility::User,
             || {
-                let task_ctx = Arc::new(task_ctx.with_session_config(
-                    session_config.with_extension(Arc::new(tracing_util::Context::current())),
-                ));
+                let task_ctx = Arc::new(
+                    task_ctx.with_session_config(
+                        session_config
+                            .with_extension(Arc::new(tracing_util::Context::current()))
+                            .with_extension(Arc::new(physical_plan_options)),
+                    ),
+                );
                 Box::pin(async {
-                    datafusion::physical_plan::collect(plan, task_ctx)
+                    let results = datafusion::physical_plan::collect(plan.clone(), task_ctx)
                         .await
-                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))
+                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))?;
+
+                    set_attribute_on_active_span(
+                        tracing_util::AttributeVisibility::Default,
+                        "total_rows",
+                        results
+                            .iter()
+                            .map(|x| i64::try_from(x.num_rows()).unwrap_or(0))
+                            .sum::<i64>(),
+                    );
+
+                    // NOTE: we must compute these metrics _after_ running
+                    // datafusion::physical_plan::collect, because otherwise the execution
+                    // metrics will not be populated. Even though 'plan' is not marked
+                    // mutable, it uses interior mutability throughout the structure in order
+                    // to maintain its metrics.
+
+                    // Compute rows_processed by summing over all subplans -
+                    // we want to know if any of our nodes fetched an unusually high number
+                    // of rows.
+                    let mut rows_fetched: i64 = 0;
+
+                    plan.apply(|node| {
+                        if node.as_any().is::<NDCQueryPushDown>()
+                            || node.as_any().is::<NDCAggregatePushdown>()
+                            || node.as_any().is::<NDCFunctionPushDown>()
+                            || node.as_any().is::<NDCProcedurePushDown>()
+                        {
+                            if let Some(metrics) = node.metrics() {
+                                if let Some(output_rows) = metrics.output_rows() {
+                                    rows_fetched += i64::try_from(output_rows).unwrap_or(0);
+                                }
+                            }
+                        }
+                        Ok(datafusion::common::tree_node::TreeNodeRecursion::Continue)
+                    })?;
+
+                    set_attribute_on_active_span(
+                        tracing_util::AttributeVisibility::Default,
+                        "rows_fetched",
+                        rows_fetched,
+                    );
+
+                    // Take elapsed_compute metric from the top level node
+                    if let Some(metrics) = plan.metrics() {
+                        if let Some(value) = metrics.elapsed_compute() {
+                            set_attribute_on_active_span(
+                                tracing_util::AttributeVisibility::Default,
+                                "elapsed_compute",
+                                i64::try_from(value).unwrap_or(0),
+                            );
+                        }
+                    }
+
+                    Ok::<_, SqlExecutionError>(results)
                 })
             },
         )
@@ -139,7 +230,12 @@ async fn execute_logical_plan(frame: DataFrame) -> Result<Vec<RecordBatch>, SqlE
 }
 
 fn record_batches_to_json_array(batches: &[RecordBatch]) -> Result<Vec<u8>, SqlExecutionError> {
-    if batches.is_empty() {
+    if batches
+        .iter()
+        .map(datafusion::arrow::array::RecordBatch::num_rows)
+        .sum::<usize>()
+        == 0
+    {
         return Ok(vec![b'[', b']']);
     }
     // Write the record batch out as a JSON array

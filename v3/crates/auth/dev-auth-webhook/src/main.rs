@@ -3,20 +3,43 @@ use std::env;
 use std::net;
 
 use axum::{http::header::HeaderMap, response::Json, routing::post, Router};
+use clap::Parser;
+use serde::Serialize;
 use serde_json::Value;
 use tower_http::trace::TraceLayer;
 use tracing::debug;
 
 const DEFAULT_PORT: u16 = 3050;
 
+#[derive(Parser, Serialize)]
+struct ServerOptions {
+    /// The OpenTelemetry collector endpoint.
+    #[arg(long, value_name = "URL", env = "OTLP_ENDPOINT")]
+    otlp_endpoint: Option<String>,
+
+    /// Log traces to stdout.
+    #[arg(long, env = "EXPORT_TRACES_STDOUT")]
+    export_traces_stdout: bool,
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let otlp_endpoint_option = env::var("OTLP_ENDPOINT").ok();
-    tracing_util::initialize_tracing(
-        otlp_endpoint_option.as_deref(),
-        env!("CARGO_PKG_NAME"),
-        None,
-    )?;
+    let server_options = ServerOptions::parse();
+    if let Some(otlp_endpoint) = server_options.otlp_endpoint {
+        let export_traces_stdout = if server_options.export_traces_stdout {
+            tracing_util::ExportTracesStdout::Enable
+        } else {
+            tracing_util::ExportTracesStdout::Disable
+        };
+
+        tracing_util::initialize_tracing(
+            Some(&otlp_endpoint),
+            env!("CARGO_PKG_NAME"),
+            None,
+            tracing_util::PropagateBaggage::Enable,
+            export_traces_stdout,
+        )?;
+    }
 
     let app = Router::new()
         .route("/validate-request", post(validate_request))
@@ -25,7 +48,7 @@ async fn main() -> anyhow::Result<()> {
         ))
         .layer(TraceLayer::new_for_http());
 
-    let host = net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED);
+    let host = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED);
     let port = env::var("PORT")
         .map(|str| str.parse())
         .unwrap_or(Ok(DEFAULT_PORT))?;
@@ -37,32 +60,7 @@ async fn main() -> anyhow::Result<()> {
         server.local_addr()
     );
     server
-        .with_graceful_shutdown(async {
-            // wait for a SIGINT, i.e. a Ctrl+C from the keyboard
-            let sigint = async {
-                tokio::signal::ctrl_c()
-                    .await
-                    .expect("failed to install signal handler")
-            };
-            // wait for a SIGTERM, i.e. a normal `kill` command
-            #[cfg(unix)]
-            let sigterm = async {
-                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-                    .expect("failed to install signal handler")
-                    .recv()
-                    .await
-            };
-            // block until either of the above happens
-            #[cfg(unix)]
-            tokio::select! {
-                _ = sigint => (),
-                _ = sigterm => (),
-            }
-            #[cfg(windows)]
-            tokio::select! {
-                _ = sigint => (),
-            }
-        })
+        .with_graceful_shutdown(axum_ext::shutdown_signal())
         .await?;
     Ok(())
 }

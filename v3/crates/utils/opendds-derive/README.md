@@ -11,8 +11,6 @@
     - [Type Level](#type-level-1)
     - [Variant Level](#variant-level)
 - [Common JSON Schema attributes](#common-json-schema-attributes)
-  - [Type Level](#type-level-2)
-  - [Field Level](#field-level-1)
 - [Notes](#notes)
 
 ## Derive Macros for `OpenDd` Trait
@@ -82,7 +80,8 @@ Common Behavior:
 
 #### Type Level
 
-Only [json schema](#type-level-2) related attributes applicable here.
+Only [json schema](#common-json-schema-attributes) related attributes applicable
+here.
 
 #### Field Level
 
@@ -94,6 +93,19 @@ Only [json schema](#type-level-2) related attributes applicable here.
 
   Deserialize this field with the given name instead of _camel-cased_ Rust field
   name.
+
+- `[opendd(hidden = true)]`
+
+  Hide the field from the json schema, useful for keeping work in progress out
+  of the public API.
+
+- `#[opendd(json_schema(default_exp = "some::function()"))]`
+
+  To be used in conjuction with [#[opendd(default)]](#field-level). The given
+  function should return a json value which is included in the generated
+  schema's `default`. Not needed when the field type has `serde::Serialize`
+  trait implemented. The default JSON value will be inferred using
+  `serde_json::json!(Default::default())`.
 
 ## Enum
 
@@ -296,12 +308,21 @@ attributes.
   Hide this variant from the json schema, useful for keeping work in progress
   out of the public API.
 
+- `#[opendd(json_schema(title = "title string value"))]`
+
+  Set the generated JSON schema's title. This applies exclusively to enums with
+  the `as_versioned_with_definition` attribute.
+
+- `#[opendd(json_schema(example = "some::function"))]`
+
+  Include the result of the given function in the generated JSON schema's
+  `examples`. This applies exclusively to enums with the
+  `as_versioned_with_definition` attribute.
+
 ## Common JSON Schema attributes
 
 The following json schema related attributes are applicable for both structs and
 enums.
-
-### Type Level
 
 - `#[opendd(json_schema(rename = "rename string value"))]`
 
@@ -311,24 +332,14 @@ enums.
 
   Set the generated schema's title.
 
+- `#[opendd(json_schema(id = "json schema id"))]`
+
+  Set the generated schema's
+  [`$id`](https://datatracker.ietf.org/doc/html/draft-handrews-json-schema-02#section-8.2.2).
+
 - `#[opendd(json_schema(example = "some::function"))]`
 
   Include the result of the given function in the generated schema's `examples`.
-
-### Field Level
-
-- `#[opendd(json_schema(default_exp = "some::function()"))]`
-
-  To be used in conjuction with [#[opendd(default)]](#field-level). The given
-  function should return a json value which is included in the generated
-  schema's `default`. Not needed when the field type has `serde::Serialize`
-  trait implemented. The default JSON value will be inferred using
-  `serde_json::json!(Default::default())`.
-
-- `[opendd(hidden = true)]`
-
-  Hide the field from the json schema, useful for keeping work in progress out
-  of the public API.
 
 ## Notes
 

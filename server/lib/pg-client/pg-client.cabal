@@ -24,6 +24,9 @@ common common-all
     -fmax-simplifier-iterations=2
     -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
     -Weverything
+    -Wno-missing-role-annotations
+    -Wno-term-variable-capture
+    -Wno-missing-poly-kind-signatures
     -Wno-missing-exported-signatures
     -Wno-missing-import-lists
     -Wno-missed-specialisations
@@ -113,20 +116,21 @@ test-suite pg-client-tests
     , time
     , transformers
 
-benchmark pg-client-bench
-  import:         common-all
-  type:           exitcode-stdio-1.0
-  hs-source-dirs: bench
-  main-is:        Main.hs
-  build-depends:
-    , aeson
-    , base
-    , bytestring
-    , file-embed
-    , hasql
-    , hasql-pool
-    , hasql-transaction
-    , pg-client
-    , tasty-bench
-    , text
-    , transformers
+-- TODO fix these up for 9.10 someday, maybe
+-- benchmark pg-client-bench
+--  import:         common-all
+--  type:           exitcode-stdio-1.0
+--  hs-source-dirs: bench
+--  main-is:        Main.hs
+--  build-depends:
+--    , aeson
+--    , base
+--    , bytestring
+--    , file-embed
+--    , hasql
+--    , hasql-pool
+--    , hasql-transaction
+--    , pg-client
+--    , tasty-bench
+--    , text
+--    , transformers

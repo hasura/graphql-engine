@@ -3,7 +3,7 @@ mod common;
 
 #[test]
 fn test_introspect_command_with_preset_arguments() -> anyhow::Result<()> {
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
     common::test_introspection_expectation(
@@ -17,7 +17,7 @@ fn test_introspect_command_with_preset_arguments() -> anyhow::Result<()> {
 
 #[test]
 fn test_introspect_model_with_preset_arguments_select_many() -> anyhow::Result<()> {
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
     common::test_introspection_expectation(
@@ -31,7 +31,7 @@ fn test_introspect_model_with_preset_arguments_select_many() -> anyhow::Result<(
 
 #[test]
 fn test_introspect_model_with_preset_arguments_select_one() -> anyhow::Result<()> {
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
     common::test_introspection_expectation(
@@ -46,7 +46,7 @@ fn test_introspect_model_with_preset_arguments_select_one() -> anyhow::Result<()
 #[test]
 fn test_introspect_input_type_field_presets_on_command() -> anyhow::Result<()> {
     let test_path_string = "execute/input_types/field_presets/commands";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
     common::test_introspection_expectation(
@@ -61,7 +61,7 @@ fn test_introspect_input_type_field_presets_on_command() -> anyhow::Result<()> {
 #[test]
 fn test_introspect_input_type_field_presets_on_model_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/input_types/field_presets/models";
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
     common::test_introspection_expectation(
@@ -76,7 +76,7 @@ fn test_introspect_input_type_field_presets_on_model_arguments() -> anyhow::Resu
 #[test]
 fn test_graphql_deprecated() -> anyhow::Result<()> {
     let common_custom_connector_path_string =
-        "execute/common_metadata/custom_connector_schema.json";
+        "execute/common_metadata/custom_connector_v02_schema.json";
 
     common::test_introspection_expectation(
         "execute/deprecated",
@@ -91,7 +91,7 @@ fn test_graphql_deprecated() -> anyhow::Result<()> {
 #[test]
 fn test_introspect_boolean_expression_in_command_object_boolean_expression_type(
 ) -> anyhow::Result<()> {
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
     common::test_introspection_expectation(
@@ -107,7 +107,7 @@ fn test_introspect_boolean_expression_in_command_object_boolean_expression_type(
 
 #[test]
 fn test_introspect_boolean_expression_in_command_boolean_expression_type() -> anyhow::Result<()> {
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
     common::test_introspection_expectation(
@@ -124,7 +124,7 @@ fn test_introspect_boolean_expression_in_command_boolean_expression_type() -> an
 #[test]
 fn test_introspect_boolean_expression_in_command_boolean_expression_type_passed_in_query(
 ) -> anyhow::Result<()> {
-    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
     common::test_introspection_expectation(
@@ -170,7 +170,7 @@ fn test_introspect_aggregates_root_field_nested_object() -> anyhow::Result<()> {
     common::test_introspection_expectation(
         test_path_string,
         &[
-            "execute/aggregates/common_metadata/custom_connector_schema.json",
+            "execute/aggregates/common_metadata/custom_connector_v02_schema.json",
             "execute/aggregates/common_metadata/custom_connector_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
@@ -221,5 +221,21 @@ fn test_introspect_relationship_comparison_capabilities_with_boolean_expression_
     common::test_introspection_expectation(
         test_path_string,
         &["execute/relationships/no_relationship_comparison_capability/metadata.json"],
+    )
+}
+
+#[test]
+fn test_introspect_model_select_many_where_object_boolean_array_relationship_simple(
+) -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/relationships/object_boolean_expression_type/array/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/where/relationships/object_boolean_expression_type/common_metadata.json";
+    common::test_introspection_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
     )
 }

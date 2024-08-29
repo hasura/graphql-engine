@@ -24,19 +24,21 @@ pub use stages::aggregates::{
 };
 pub use stages::boolean_expressions::{
     BooleanExpressionComparableRelationship, BooleanExpressionError,
-    BooleanExpressionGraphqlConfig, ComparisonExpressionInfo, IncludeLogicalOperators,
-    ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
+    BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,
+    IncludeLogicalOperators, ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
 };
-pub use stages::command_permissions::CommandWithPermissions;
-pub use stages::commands::Command;
-pub use stages::data_connectors;
 pub use stages::data_connectors::DataConnectorLink;
 pub use stages::model_permissions::{
-    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions, SelectPermission,
-    UnaryComparisonOperator,
+    ArgumentPresets, FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
+    SelectPermission, UnaryComparisonOperator,
 };
-pub use stages::models::{Model, ModelSource};
+pub use stages::models::{Model, ModelSource, ModelsError};
 pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;
+pub use stages::{
+    command_permissions::CommandWithPermissions,
+    commands::{Command, CommandSource},
+    data_connectors,
+};
 pub use types::warning::Warning;
 
 pub use stages::models_graphql::{
@@ -50,6 +52,10 @@ pub use stages::object_types::{
     FieldArgumentInfo, FieldMapping, ObjectTypeRepresentation,
     ResolvedObjectApolloFederationConfig, TypeMapping,
 };
+pub use stages::order_by_expressions::{
+    OrderByExpression, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
+    OrderByExpressions, OrderableField, OrderableObjectField, OrderableScalarField,
+};
 pub use stages::relationships::{
     relationship_execution_category, CommandRelationshipTarget, ModelAggregateRelationshipTarget,
     ModelRelationshipTarget, ObjectTypeWithRelationships, RelationshipCapabilities,
@@ -57,7 +63,7 @@ pub use stages::relationships::{
     RelationshipModelMapping, RelationshipTarget,
 };
 pub use stages::scalar_types::ScalarTypeRepresentation;
-pub use stages::type_permissions::TypeInputPermission;
+pub use stages::type_permissions::{FieldPresetInfo, TypeInputPermission};
 pub use stages::{resolve, Metadata};
 pub use types::configuration;
 pub use types::error::Error;

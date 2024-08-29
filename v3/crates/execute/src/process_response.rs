@@ -12,11 +12,10 @@ use lang_graphql::normalized_ast;
 use open_dds::commands::CommandName;
 use open_dds::types::FieldName;
 
-use super::global_id::{global_id_col_format, GLOBAL_ID_VERSION};
 use super::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use super::plan::ProcessResponseAs;
 use crate::error;
-use crate::ir;
+use ir::{global_id_col_format, GLOBAL_ID_VERSION};
 use metadata_resolve::data_connectors;
 use metadata_resolve::Qualified;
 use schema::{AggregateOutputAnnotation, Annotation, GlobalID, OutputAnnotation, GDS};
@@ -468,9 +467,8 @@ fn reshape_aggregate_fields(
                 Annotation::Output(OutputAnnotation::Aggregate(
                     AggregateOutputAnnotation::AggregationFunctionField(..),
                 )) => {
-                    let field_name = ir::aggregates::mk_alias_from_graphql_field_path(
-                        graphql_field_path.as_slice(),
-                    );
+                    let field_name =
+                        ir::mk_alias_from_graphql_field_path(graphql_field_path.as_slice());
                     let aggregate_value = aggregate_results
                         .swap_remove(field_name.as_str())
                         .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {

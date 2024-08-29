@@ -4,6 +4,7 @@ use axum::{http::StatusCode, Json};
 use ndc_models;
 
 use crate::{
+    arguments::{check_all_arguments_used, parse_object_argument},
     query::{eval_nested_field, Result},
     state::AppState,
 };
@@ -33,20 +34,12 @@ pub(crate) fn execute(
     collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
-    let movie = arguments.get("movie").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: " ".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-    let movie_obj = movie.as_object().ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: " ".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
+    let mut arguments = arguments
+        .iter()
+        .map(|(k, v)| (k.clone(), v))
+        .collect::<BTreeMap<_, _>>();
+    let movie_obj = parse_object_argument("movie", &mut arguments)?;
+    check_all_arguments_used(&arguments)?;
 
     let id = movie_obj.get("id").ok_or((
         StatusCode::BAD_REQUEST,

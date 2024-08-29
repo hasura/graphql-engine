@@ -22,6 +22,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Min (..))
 import Data.Set qualified as Set
 import Data.Text.Extended (toTxt)
+import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Backends.DataConnector.API (Target (TInterpolated))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
@@ -38,7 +39,6 @@ import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Witch qualified
 

@@ -5,8 +5,10 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy
 where
 
 import Control.Lens ((^?))
+import Data.Functor qualified as Functor
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
   ( IsIdentifier (toIdentifier),
@@ -56,7 +58,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.RQL.Types.Session (UserInfo)
 
 {- Note [Optimizing queries using limit/offset]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -232,7 +233,7 @@ processOrderByItems userInfo sourcePrefix' selectSourceQual fieldAlias' similarA
                in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias) obTyM obNullsM
             orderByExp = S.OrderByExp $ toOrderByExp <$> orderByExps
         distinctOnExps <- traverse (applyDistinctOnAtNode sourcePrefix' userInfo) distOnCols
-        let (maybeDistOn, distOnExtrs) = NE.unzip $ distinctOnExps
+        let (maybeDistOn, distOnExtrs) = Functor.unzip $ distinctOnExps
         pure (orderByExp, maybeDistOn, fromMaybe [] distOnExtrs)
       let sortOnlyAtNode =
             (Sorting $ ASorting (nodeOrderBy, nodeDistinctOn) Nothing, nodeDistinctOnExtractors)

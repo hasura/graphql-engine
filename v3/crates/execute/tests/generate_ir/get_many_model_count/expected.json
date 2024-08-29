@@ -59,7 +59,17 @@
                                             "name": "int4"
                                           },
                                           "column_type_representation": null,
-                                          "equal_operators": ["_eq"],
+                                          "comparison_operators": {
+                                            "equality_operators": ["_eq"],
+                                            "in_operators": [],
+                                            "other_operators": [
+                                              "_gt",
+                                              "_gte",
+                                              "_lt",
+                                              "_lte",
+                                              "_neq"
+                                            ]
+                                          },
                                           "argument_mappings": {}
                                         },
                                         "author_id": {
@@ -69,7 +79,17 @@
                                             "name": "int4"
                                           },
                                           "column_type_representation": null,
-                                          "equal_operators": ["_eq"],
+                                          "comparison_operators": {
+                                            "equality_operators": ["_eq"],
+                                            "in_operators": [],
+                                            "other_operators": [
+                                              "_gt",
+                                              "_gte",
+                                              "_lt",
+                                              "_lte",
+                                              "_neq"
+                                            ]
+                                          },
                                           "argument_mappings": {}
                                         },
                                         "title": {
@@ -79,7 +99,31 @@
                                             "name": "varchar"
                                           },
                                           "column_type_representation": null,
-                                          "equal_operators": ["_eq"],
+                                          "comparison_operators": {
+                                            "equality_operators": ["_eq"],
+                                            "in_operators": [],
+                                            "other_operators": [
+                                              "_gt",
+                                              "_gte",
+                                              "_ilike",
+                                              "_iregex",
+                                              "_like",
+                                              "_lt",
+                                              "_lte",
+                                              "_neq",
+                                              "_nilike",
+                                              "_niregex",
+                                              "_nlike",
+                                              "_nregex",
+                                              "_regex",
+                                              "st_coveredby",
+                                              "st_covers",
+                                              "st_intersects",
+                                              "st_relatematch",
+                                              "starts_with",
+                                              "ts_match_tt"
+                                            ]
+                                          },
                                           "argument_mappings": {}
                                         }
                                       }
@@ -87,6 +131,7 @@
                                   }
                                 },
                                 "argument_mappings": {},
+                                "data_connector_link_argument_presets": {},
                                 "source_arguments": {}
                               },
                               "capabilities": {
@@ -187,7 +232,17 @@
                                                   "name": "int8"
                                                 },
                                                 "column_type_representation": null,
-                                                "equal_operators": ["_eq"],
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "in_operators": [],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq"
+                                                  ]
+                                                },
                                                 "argument_mappings": {}
                                               },
                                               "first_name": {
@@ -197,7 +252,31 @@
                                                   "name": "varchar"
                                                 },
                                                 "column_type_representation": null,
-                                                "equal_operators": ["_eq"],
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "in_operators": [],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_ilike",
+                                                    "_iregex",
+                                                    "_like",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq",
+                                                    "_nilike",
+                                                    "_niregex",
+                                                    "_nlike",
+                                                    "_nregex",
+                                                    "_regex",
+                                                    "st_coveredby",
+                                                    "st_covers",
+                                                    "st_intersects",
+                                                    "st_relatematch",
+                                                    "starts_with",
+                                                    "ts_match_tt"
+                                                  ]
+                                                },
                                                 "argument_mappings": {}
                                               },
                                               "last_name": {
@@ -207,7 +286,31 @@
                                                   "name": "varchar"
                                                 },
                                                 "column_type_representation": null,
-                                                "equal_operators": ["_eq"],
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "in_operators": [],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_ilike",
+                                                    "_iregex",
+                                                    "_like",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq",
+                                                    "_nilike",
+                                                    "_niregex",
+                                                    "_nlike",
+                                                    "_nregex",
+                                                    "_regex",
+                                                    "st_coveredby",
+                                                    "st_covers",
+                                                    "st_intersects",
+                                                    "st_relatematch",
+                                                    "starts_with",
+                                                    "ts_match_tt"
+                                                  ]
+                                                },
                                                 "argument_mappings": {}
                                               }
                                             }
@@ -215,6 +318,7 @@
                                         }
                                       },
                                       "argument_mappings": {},
+                                      "data_connector_link_argument_presets": {},
                                       "source_arguments": {}
                                     },
                                     "capabilities": {
@@ -315,9 +419,19 @@
                                                         "name": "int4"
                                                       },
                                                       "column_type_representation": null,
-                                                      "equal_operators": [
-                                                        "_eq"
-                                                      ],
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "in_operators": [],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq"
+                                                        ]
+                                                      },
                                                       "argument_mappings": {}
                                                     },
                                                     "author_id": {
@@ -327,9 +441,19 @@
                                                         "name": "int4"
                                                       },
                                                       "column_type_representation": null,
-                                                      "equal_operators": [
-                                                        "_eq"
-                                                      ],
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "in_operators": [],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq"
+                                                        ]
+                                                      },
                                                       "argument_mappings": {}
                                                     },
                                                     "title": {
@@ -339,9 +463,33 @@
                                                         "name": "varchar"
                                                       },
                                                       "column_type_representation": null,
-                                                      "equal_operators": [
-                                                        "_eq"
-                                                      ],
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "in_operators": [],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_ilike",
+                                                          "_iregex",
+                                                          "_like",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq",
+                                                          "_nilike",
+                                                          "_niregex",
+                                                          "_nlike",
+                                                          "_nregex",
+                                                          "_regex",
+                                                          "st_coveredby",
+                                                          "st_covers",
+                                                          "st_intersects",
+                                                          "st_relatematch",
+                                                          "starts_with",
+                                                          "ts_match_tt"
+                                                        ]
+                                                      },
                                                       "argument_mappings": {}
                                                     }
                                                   }
@@ -349,6 +497,7 @@
                                               }
                                             },
                                             "argument_mappings": {},
+                                            "data_connector_link_argument_presets": {},
                                             "source_arguments": {}
                                           },
                                           "capabilities": {
@@ -451,7 +600,8 @@
                                                 "subgraph": "default",
                                                 "name": "article"
                                               },
-                                              "argument_types": {}
+                                              "argument_types": {},
+                                              "deprecated": false
                                             }
                                           }
                                         },
@@ -669,7 +819,7 @@
                                             },
                                             "aggregate_selection": null
                                           },
-                                          "name": "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]",
+                                          "name": "default___author__Articles",
                                           "relationship_info": {
                                             "relationship_name": "Articles",
                                             "relationship_type": "Array",
@@ -708,9 +858,19 @@
                                                         "name": "int8"
                                                       },
                                                       "column_type_representation": null,
-                                                      "equal_operators": [
-                                                        "_eq"
-                                                      ],
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "in_operators": [],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq"
+                                                        ]
+                                                      },
                                                       "argument_mappings": {}
                                                     },
                                                     "first_name": {
@@ -720,9 +880,33 @@
                                                         "name": "varchar"
                                                       },
                                                       "column_type_representation": null,
-                                                      "equal_operators": [
-                                                        "_eq"
-                                                      ],
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "in_operators": [],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_ilike",
+                                                          "_iregex",
+                                                          "_like",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq",
+                                                          "_nilike",
+                                                          "_niregex",
+                                                          "_nlike",
+                                                          "_nregex",
+                                                          "_regex",
+                                                          "st_coveredby",
+                                                          "st_covers",
+                                                          "st_intersects",
+                                                          "st_relatematch",
+                                                          "starts_with",
+                                                          "ts_match_tt"
+                                                        ]
+                                                      },
                                                       "argument_mappings": {}
                                                     },
                                                     "last_name": {
@@ -732,9 +916,33 @@
                                                         "name": "varchar"
                                                       },
                                                       "column_type_representation": null,
-                                                      "equal_operators": [
-                                                        "_eq"
-                                                      ],
+                                                      "comparison_operators": {
+                                                        "equality_operators": [
+                                                          "_eq"
+                                                        ],
+                                                        "in_operators": [],
+                                                        "other_operators": [
+                                                          "_gt",
+                                                          "_gte",
+                                                          "_ilike",
+                                                          "_iregex",
+                                                          "_like",
+                                                          "_lt",
+                                                          "_lte",
+                                                          "_neq",
+                                                          "_nilike",
+                                                          "_niregex",
+                                                          "_nlike",
+                                                          "_nregex",
+                                                          "_regex",
+                                                          "st_coveredby",
+                                                          "st_covers",
+                                                          "st_intersects",
+                                                          "st_relatematch",
+                                                          "starts_with",
+                                                          "ts_match_tt"
+                                                        ]
+                                                      },
                                                       "argument_mappings": {}
                                                     }
                                                   }
@@ -776,9 +984,19 @@
                                                             "name": "int4"
                                                           },
                                                           "column_type_representation": null,
-                                                          "equal_operators": [
-                                                            "_eq"
-                                                          ],
+                                                          "comparison_operators": {
+                                                            "equality_operators": [
+                                                              "_eq"
+                                                            ],
+                                                            "in_operators": [],
+                                                            "other_operators": [
+                                                              "_gt",
+                                                              "_gte",
+                                                              "_lt",
+                                                              "_lte",
+                                                              "_neq"
+                                                            ]
+                                                          },
                                                           "argument_mappings": {}
                                                         },
                                                         "author_id": {
@@ -788,9 +1006,19 @@
                                                             "name": "int4"
                                                           },
                                                           "column_type_representation": null,
-                                                          "equal_operators": [
-                                                            "_eq"
-                                                          ],
+                                                          "comparison_operators": {
+                                                            "equality_operators": [
+                                                              "_eq"
+                                                            ],
+                                                            "in_operators": [],
+                                                            "other_operators": [
+                                                              "_gt",
+                                                              "_gte",
+                                                              "_lt",
+                                                              "_lte",
+                                                              "_neq"
+                                                            ]
+                                                          },
                                                           "argument_mappings": {}
                                                         },
                                                         "title": {
@@ -800,9 +1028,33 @@
                                                             "name": "varchar"
                                                           },
                                                           "column_type_representation": null,
-                                                          "equal_operators": [
-                                                            "_eq"
-                                                          ],
+                                                          "comparison_operators": {
+                                                            "equality_operators": [
+                                                              "_eq"
+                                                            ],
+                                                            "in_operators": [],
+                                                            "other_operators": [
+                                                              "_gt",
+                                                              "_gte",
+                                                              "_ilike",
+                                                              "_iregex",
+                                                              "_like",
+                                                              "_lt",
+                                                              "_lte",
+                                                              "_neq",
+                                                              "_nilike",
+                                                              "_niregex",
+                                                              "_nlike",
+                                                              "_nregex",
+                                                              "_regex",
+                                                              "st_coveredby",
+                                                              "st_covers",
+                                                              "st_intersects",
+                                                              "st_relatematch",
+                                                              "starts_with",
+                                                              "ts_match_tt"
+                                                            ]
+                                                          },
                                                           "argument_mappings": {}
                                                         }
                                                       }
@@ -810,6 +1062,7 @@
                                                   }
                                                 },
                                                 "argument_mappings": {},
+                                                "data_connector_link_argument_presets": {},
                                                 "source_arguments": {}
                                               },
                                               "capabilities": {
@@ -843,7 +1096,7 @@
                                   },
                                   "aggregate_selection": null
                                 },
-                                "name": "[{\"subgraph\":\"default\",\"name\":\"article\"},\"Author\"]",
+                                "name": "default___article__Author",
                                 "relationship_info": {
                                   "relationship_name": "Author",
                                   "relationship_type": "Object",
@@ -882,7 +1135,17 @@
                                               "name": "int4"
                                             },
                                             "column_type_representation": null,
-                                            "equal_operators": ["_eq"],
+                                            "comparison_operators": {
+                                              "equality_operators": ["_eq"],
+                                              "in_operators": [],
+                                              "other_operators": [
+                                                "_gt",
+                                                "_gte",
+                                                "_lt",
+                                                "_lte",
+                                                "_neq"
+                                              ]
+                                            },
                                             "argument_mappings": {}
                                           },
                                           "author_id": {
@@ -892,7 +1155,17 @@
                                               "name": "int4"
                                             },
                                             "column_type_representation": null,
-                                            "equal_operators": ["_eq"],
+                                            "comparison_operators": {
+                                              "equality_operators": ["_eq"],
+                                              "in_operators": [],
+                                              "other_operators": [
+                                                "_gt",
+                                                "_gte",
+                                                "_lt",
+                                                "_lte",
+                                                "_neq"
+                                              ]
+                                            },
                                             "argument_mappings": {}
                                           },
                                           "title": {
@@ -902,7 +1175,31 @@
                                               "name": "varchar"
                                             },
                                             "column_type_representation": null,
-                                            "equal_operators": ["_eq"],
+                                            "comparison_operators": {
+                                              "equality_operators": ["_eq"],
+                                              "in_operators": [],
+                                              "other_operators": [
+                                                "_gt",
+                                                "_gte",
+                                                "_ilike",
+                                                "_iregex",
+                                                "_like",
+                                                "_lt",
+                                                "_lte",
+                                                "_neq",
+                                                "_nilike",
+                                                "_niregex",
+                                                "_nlike",
+                                                "_nregex",
+                                                "_regex",
+                                                "st_coveredby",
+                                                "st_covers",
+                                                "st_intersects",
+                                                "st_relatematch",
+                                                "starts_with",
+                                                "ts_match_tt"
+                                              ]
+                                            },
                                             "argument_mappings": {}
                                           }
                                         }
@@ -944,7 +1241,17 @@
                                                   "name": "int8"
                                                 },
                                                 "column_type_representation": null,
-                                                "equal_operators": ["_eq"],
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "in_operators": [],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq"
+                                                  ]
+                                                },
                                                 "argument_mappings": {}
                                               },
                                               "first_name": {
@@ -954,7 +1261,31 @@
                                                   "name": "varchar"
                                                 },
                                                 "column_type_representation": null,
-                                                "equal_operators": ["_eq"],
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "in_operators": [],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_ilike",
+                                                    "_iregex",
+                                                    "_like",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq",
+                                                    "_nilike",
+                                                    "_niregex",
+                                                    "_nlike",
+                                                    "_nregex",
+                                                    "_regex",
+                                                    "st_coveredby",
+                                                    "st_covers",
+                                                    "st_intersects",
+                                                    "st_relatematch",
+                                                    "starts_with",
+                                                    "ts_match_tt"
+                                                  ]
+                                                },
                                                 "argument_mappings": {}
                                               },
                                               "last_name": {
@@ -964,7 +1295,31 @@
                                                   "name": "varchar"
                                                 },
                                                 "column_type_representation": null,
-                                                "equal_operators": ["_eq"],
+                                                "comparison_operators": {
+                                                  "equality_operators": ["_eq"],
+                                                  "in_operators": [],
+                                                  "other_operators": [
+                                                    "_gt",
+                                                    "_gte",
+                                                    "_ilike",
+                                                    "_iregex",
+                                                    "_like",
+                                                    "_lt",
+                                                    "_lte",
+                                                    "_neq",
+                                                    "_nilike",
+                                                    "_niregex",
+                                                    "_nlike",
+                                                    "_nregex",
+                                                    "_regex",
+                                                    "st_coveredby",
+                                                    "st_covers",
+                                                    "st_intersects",
+                                                    "st_relatematch",
+                                                    "starts_with",
+                                                    "ts_match_tt"
+                                                  ]
+                                                },
                                                 "argument_mappings": {}
                                               }
                                             }
@@ -972,6 +1327,7 @@
                                         }
                                       },
                                       "argument_mappings": {},
+                                      "data_connector_link_argument_presets": {},
                                       "source_arguments": {}
                                     },
                                     "capabilities": {
@@ -1005,7 +1361,7 @@
                         },
                         "aggregate_selection": null
                       },
-                      "name": "[{\"subgraph\":\"default\",\"name\":\"commandArticle\"},\"article\"]",
+                      "name": "default___commandArticle__article",
                       "relationship_info": {
                         "relationship_name": "article",
                         "relationship_type": "Object",
@@ -1044,7 +1400,17 @@
                                     "name": "int4"
                                   },
                                   "column_type_representation": null,
-                                  "equal_operators": ["_eq"],
+                                  "comparison_operators": {
+                                    "equality_operators": ["_eq"],
+                                    "in_operators": [],
+                                    "other_operators": [
+                                      "_gt",
+                                      "_gte",
+                                      "_lt",
+                                      "_lte",
+                                      "_neq"
+                                    ]
+                                  },
                                   "argument_mappings": {}
                                 },
                                 "author_id": {
@@ -1054,7 +1420,17 @@
                                     "name": "int4"
                                   },
                                   "column_type_representation": null,
-                                  "equal_operators": ["_eq"],
+                                  "comparison_operators": {
+                                    "equality_operators": ["_eq"],
+                                    "in_operators": [],
+                                    "other_operators": [
+                                      "_gt",
+                                      "_gte",
+                                      "_lt",
+                                      "_lte",
+                                      "_neq"
+                                    ]
+                                  },
                                   "argument_mappings": {}
                                 },
                                 "title": {
@@ -1064,7 +1440,31 @@
                                     "name": "varchar"
                                   },
                                   "column_type_representation": null,
-                                  "equal_operators": ["_eq"],
+                                  "comparison_operators": {
+                                    "equality_operators": ["_eq"],
+                                    "in_operators": [],
+                                    "other_operators": [
+                                      "_gt",
+                                      "_gte",
+                                      "_ilike",
+                                      "_iregex",
+                                      "_like",
+                                      "_lt",
+                                      "_lte",
+                                      "_neq",
+                                      "_nilike",
+                                      "_niregex",
+                                      "_nlike",
+                                      "_nregex",
+                                      "_regex",
+                                      "st_coveredby",
+                                      "st_covers",
+                                      "st_intersects",
+                                      "st_relatematch",
+                                      "starts_with",
+                                      "ts_match_tt"
+                                    ]
+                                  },
                                   "argument_mappings": {}
                                 }
                               }
@@ -1106,7 +1506,17 @@
                                         "name": "int4"
                                       },
                                       "column_type_representation": null,
-                                      "equal_operators": ["_eq"],
+                                      "comparison_operators": {
+                                        "equality_operators": ["_eq"],
+                                        "in_operators": [],
+                                        "other_operators": [
+                                          "_gt",
+                                          "_gte",
+                                          "_lt",
+                                          "_lte",
+                                          "_neq"
+                                        ]
+                                      },
                                       "argument_mappings": {}
                                     },
                                     "author_id": {
@@ -1116,7 +1526,17 @@
                                         "name": "int4"
                                       },
                                       "column_type_representation": null,
-                                      "equal_operators": ["_eq"],
+                                      "comparison_operators": {
+                                        "equality_operators": ["_eq"],
+                                        "in_operators": [],
+                                        "other_operators": [
+                                          "_gt",
+                                          "_gte",
+                                          "_lt",
+                                          "_lte",
+                                          "_neq"
+                                        ]
+                                      },
                                       "argument_mappings": {}
                                     },
                                     "title": {
@@ -1126,7 +1546,31 @@
                                         "name": "varchar"
                                       },
                                       "column_type_representation": null,
-                                      "equal_operators": ["_eq"],
+                                      "comparison_operators": {
+                                        "equality_operators": ["_eq"],
+                                        "in_operators": [],
+                                        "other_operators": [
+                                          "_gt",
+                                          "_gte",
+                                          "_ilike",
+                                          "_iregex",
+                                          "_like",
+                                          "_lt",
+                                          "_lte",
+                                          "_neq",
+                                          "_nilike",
+                                          "_niregex",
+                                          "_nlike",
+                                          "_nregex",
+                                          "_regex",
+                                          "st_coveredby",
+                                          "st_covers",
+                                          "st_intersects",
+                                          "st_relatematch",
+                                          "starts_with",
+                                          "ts_match_tt"
+                                        ]
+                                      },
                                       "argument_mappings": {}
                                     }
                                   }
@@ -1134,6 +1578,7 @@
                               }
                             },
                             "argument_mappings": {},
+                            "data_connector_link_argument_presets": {},
                             "source_arguments": {}
                           },
                           "capabilities": {

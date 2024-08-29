@@ -16,6 +16,7 @@ module Hasura.RQL.Types.Schema.Options
     IncludeGroupByAggregateFields (..),
     UsePostgresArrays (..),
     NoNullUnboundVariableDefault (..),
+    RemoveEmptySubscriptionResponses (..),
   )
 where
 
@@ -36,7 +37,8 @@ data SchemaOptions = SchemaOptions
     soBigQueryStringNumericInput :: BigQueryStringNumericInput,
     soIncludeGroupByAggregateFields :: IncludeGroupByAggregateFields,
     soPostgresArrays :: UsePostgresArrays,
-    soNoNullUnboundVariableDefault :: NoNullUnboundVariableDefault
+    soNoNullUnboundVariableDefault :: NoNullUnboundVariableDefault,
+    soRemoveEmptySubscriptionResponses :: RemoveEmptySubscriptionResponses
   }
 
 -- | Should we represent numbers in our responses as numbers, or strings?
@@ -220,3 +222,25 @@ instance ToJSON NoNullUnboundVariableDefault where
   toJSON = \case
     RemoveUnboundNullableVariablesFromTheQuery -> Bool True
     DefaultUnboundNullableVariablesToNull -> Bool False
+
+-- | When we're dealing with many multiplexed streaming subscriptions that
+-- don't update often, network overhead can become very large due to us sending
+-- back empty result sets. This option allows the user to stipulate that empty
+-- result sets should not be returned.
+data RemoveEmptySubscriptionResponses
+  = RemoveEmptyResponses
+  | PreserveEmptyResponses
+  deriving (Eq, Show)
+
+instance FromJSON RemoveEmptySubscriptionResponses where
+  parseJSON =
+    withBool "RemoveEmptySubscriptionResponses"
+      $ pure
+      . \case
+        True -> RemoveEmptyResponses
+        False -> PreserveEmptyResponses
+
+instance ToJSON RemoveEmptySubscriptionResponses where
+  toJSON = \case
+    RemoveEmptyResponses -> Bool True
+    PreserveEmptyResponses -> Bool False

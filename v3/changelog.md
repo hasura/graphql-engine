@@ -8,6 +8,145 @@
 
 ### Changed
 
+## [v2024.08.22]
+
+### Added
+
+#### Pre-parse Engine Plugins
+
+Add support for pre-parse engine plugins. Engine now supports calling a HTTP
+webhook in pre-parse execution step. This can be used to add a bunch of
+functionalities to the DDN, such as an [allow list][plugin-allowlist].
+
+The following is an example of the OpenDD metadata for the plugins:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+name: allow list
+url: http://localhost:8787
+pre: parse
+config:
+  request:
+    headers:
+      additional:
+      hasura-m-auth:
+        value: "your-strong-m-auth-key"
+    session: {}
+    rawRequest:
+      query: {}
+      variables: {}
+```
+
+The pre-parse plugin hook's request can be customized using the
+`LifecyclePluginHook` metadata object. Currently we support the following
+customizations:
+
+- adding/removing session information
+- adding new headers
+- forwarding specific headers
+- adding/removing graphql query and variables
+
+### Fixed
+
+- Disallow model filter boolean expressions having relationship comparisons in
+  their nested object filters.
+
+### Changed
+
+[plugin-allowlist]: https://github.com/hasura/plugin-allowlist
+
+## [v2024.08.07]
+
+### Added
+
+- A new CLI flag (`--export-traces-stdout`) and env var (`EXPORT_TRACES_STDOUT`)
+  is introduced to enable logging of traces to STDOUT. By default, logging is
+  disabled.
+
+#### Remote Relationships Predicates
+
+We have significantly enhanced our permission capabilities to support remote
+relationships in filter predicates. It is important to note that the
+relationship source and target models should be from the same subgraph.
+
+**Example:** API traces are stored in a separate database. Users should only be
+able to view traces of their own API requests.
+
+```yaml
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: traces
+  permissions:
+    - role: user
+      select:
+        filter:
+          relationship:
+            name: User
+            predicate:
+              fieldComparison:
+                field: user_id
+                operator: _eq
+                value:
+                  sessionVariable: x-hasura-user-id
+```
+
+In the above configuration, a permission filter is defined on the `traces`
+model. The filter predicate employs the `User` remote relationship, ensuring the
+`user_id` field is equal to the `x-hasura-user-id` session variable.
+
+- New `NoAuth` mode in auth config can be used to provide a static role and
+  session variables to use whilst running the engine, to make getting started
+  easier.
+
+### Fixed
+
+- Fixes a bug where queries with nested relationship selection and filter
+  predicates fail due to an issue with NDC relationship collection
+
+- Reduce error for using nested arrays in boolean expressions to a warning to
+  maintain backwards compatibility
+
+- Fix use of object types as comparison operator arguments by correctly
+  utilising user-provided OpenDD types.
+
+- Fixes a bug where argument presets set in the DataConnectorLink were sent to
+  every connector function/procedure regardless of whether the
+  function/procedure actually declared that argument
+
+- Fixes a bug where argument presets set in the DataConnectorLink were not sent
+  to connector collections that backed Models
+
+- Fixes a bug where the type of the argument name in the DataConnectorLink's
+  argument presets was incorrect in the Open DD schema. It was `ArgumentName`
+  but should have been `DataConnectorArgumentName`
+
+- Fixes a bug where the check to ensure that argument presets in the
+  DataConnectorLink does not overlap with arguments defined on Models/Commands
+  was comparing against the Model/Command argument name not the data connector
+  argument name
+
+### Changed
+
+- Introduced `AuthConfig` `v2`. This new version removes role emulation in
+  engine (`allowRoleEmulationBy`) field.
+
+- Raise a warning when an invalid data connector capabilities version is used in
+  in a `DataConnectorLink` and prevent the usage of incompatible data connector
+  capabilities versions
+
+- Models and commands that do not define all the necessary arguments to satisfy
+  the underlying data connector collection/function/procedure now cause warnings
+  to be raised. The warnings will be turned into errors in the future.
+
+## [v2024.07.25]
+
+### Fixed
+
+- Ensured `traceresponse` header is returned
+
 ## [v2024.07.24]
 
 ### Added
@@ -255,7 +394,10 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.07.18...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.08.07...HEAD
+[v2024.08.07]: https://github.com/hasura/v3-engine/releases/tag/v2024.08.07
+[v2024.07.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.25
+[v2024.07.24]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.24
 [v2024.07.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.18
 [v2024.07.10]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.10
 [v2024.07.04]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.04

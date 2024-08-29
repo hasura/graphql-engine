@@ -46,7 +46,7 @@ and the new V3 concepts.
 ```sh
 RUST_LOG=DEBUG cargo run --release --bin engine -- \
   --metadata-path crates/open-dds/examples/reference.json \
- --authn-config-path auth_config.json
+ --authn-config-path static/auth/auth_config.json
 ```
 
 A dev webhook implementation is provided in `crates/auth/dev-auth-webhook`, that
@@ -81,7 +81,7 @@ You can also start v3-engine, along with a Postgres data connector and Jaeger
 for tracing using Docker:
 
 ```sh
-METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=auth_config.json docker compose up
+METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=static/auth/auth_config.json docker compose up
 ```
 
 Open <http://localhost:3001> for GraphiQL, or <http://localhost:4002> to view
@@ -220,7 +220,7 @@ v3-engine run with the chinook database as a data connector.
 To get this running, you can run the following command:
 
 ```bash
-METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=auth_config.json docker compose up postgres_connector engine
+METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=static/auth/auth_config.json docker compose up postgres_connector engine
 ```
 
 ### Running tests with a single command
@@ -249,21 +249,6 @@ Docker:
   just update-golden-files
 ```
 
-### Running coverage report
-
-We can check for coverage of unit tests by running:
-
-```sh
-just coverage
-```
-
-You can also give a filter expression (which is passed to `grep -E`) to give
-coverage only for matched files:
-
-```sh
-just coverage "open-dds|engine"
-```
-
 ## Run benchmarks
 
 The benchmarks operate against the reference agent using the same test cases as
@@ -275,10 +260,4 @@ To run benchmarks for the lexer, parser and validation:
 cargo bench -p lang-graphql "lexer"
 cargo bench -p lang-graphql "parser"
 cargo bench -p lang-graphql "validation/.*"
-```
-
-Alternatively, the benchmarks can be run in the same Docker image as CI:
-
-```sh
-just ci-bench
 ```

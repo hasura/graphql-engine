@@ -1,10 +1,15 @@
 use super::error::BooleanExpressionError;
 use super::graphql;
 use super::helpers;
-pub use super::{BooleanExpressionComparableRelationship, ResolvedObjectBooleanExpressionType};
+pub use super::{
+    BooleanExpressionComparableRelationship, BooleanExpressionIssue,
+    ResolvedObjectBooleanExpressionType,
+};
 use crate::stages::{graphql_config, object_types, scalar_boolean_expressions, type_permissions};
 use crate::types::subgraph::mk_qualified_type_name;
 use crate::{Qualified, QualifiedBaseType};
+use lang_graphql::ast::common::{self as ast};
+use open_dds::identifier::SubgraphName;
 use open_dds::{
     boolean_expression::{
         BooleanExpressionComparableField, BooleanExpressionLogicalOperators,
@@ -13,22 +18,27 @@ use open_dds::{
     },
     types::{CustomTypeName, FieldName, TypeName},
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) type RawBooleanExpressionTypes<'a> = BTreeMap<
     Qualified<CustomTypeName>,
     (
-        &'a open_dds::identifier::SubgraphIdentifier,
+        &'a open_dds::identifier::SubgraphName,
         &'a open_dds::boolean_expression::BooleanExpressionTypeV1,
     ),
 >;
+
+pub struct ObjectBooleanExpressionTypeOutput {
+    pub object_boolean_expression: ResolvedObjectBooleanExpressionType,
+    pub issues: Vec<BooleanExpressionIssue>,
+}
 
 /// Resolves a given object boolean expression type
 pub(crate) fn resolve_object_boolean_expression_type(
     boolean_expression_type_name: &Qualified<CustomTypeName>,
     object_boolean_expression_operand: &BooleanExpressionObjectOperand,
     logical_operators: &BooleanExpressionLogicalOperators,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_boolean_expression_types: &BTreeMap<
@@ -37,9 +47,10 @@ pub(crate) fn resolve_object_boolean_expression_type(
     >,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<ResolvedObjectBooleanExpressionType, BooleanExpressionError> {
+    graphql_types: &mut BTreeSet<ast::TypeName>,
+) -> Result<ObjectBooleanExpressionTypeOutput, BooleanExpressionError> {
     let qualified_object_type_name = Qualified::new(
-        subgraph.to_string(),
+        subgraph.clone(),
         object_boolean_expression_operand.r#type.clone(),
     );
 
@@ -54,7 +65,10 @@ pub(crate) fn resolve_object_boolean_expression_type(
             )?;
 
     // resolve any comparable fields
-    let comparable_fields = resolve_comparable_fields(
+    let ComparableFieldsOutput {
+        comparable_fields,
+        issues,
+    } = resolve_comparable_fields(
         &object_boolean_expression_operand.comparable_fields,
         &object_type_representation.object_type,
         boolean_expression_type_name,
@@ -81,8 +95,8 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 &comparable_relationships,
                 scalar_boolean_expression_types,
                 raw_boolean_expression_types,
-                subgraph,
                 graphql_config,
+                graphql_types,
             )
         })
         .transpose()?;
@@ -93,7 +107,10 @@ pub(crate) fn resolve_object_boolean_expression_type(
         object_type: qualified_object_type_name.clone(),
         graphql: resolved_graphql,
     };
-    Ok(resolved_boolean_expression)
+    Ok(ObjectBooleanExpressionTypeOutput {
+        object_boolean_expression: resolved_boolean_expression,
+        issues,
+    })
 }
 
 // resolve comparable relationships. These should only be local relationships (ie, in the same data
@@ -104,7 +121,7 @@ fn resolve_comparable_relationships(
     comparable_relationships: &Vec<
         open_dds::boolean_expression::BooleanExpressionComparableRelationship,
     >,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
 ) -> Result<BTreeMap<FieldName, BooleanExpressionComparableRelationship>, BooleanExpressionError> {
     let mut resolved_comparable_relationships = BTreeMap::new();
@@ -118,7 +135,7 @@ fn resolve_comparable_relationships(
             let _raw_boolean_expression_type = helpers::lookup_raw_boolean_expression(
                 boolean_expression_type_name,
                 &Qualified::new(
-                    subgraph.to_string(),
+                    subgraph.clone(),
                     target_boolean_expression_type_name.clone(),
                 ),
                 raw_boolean_expression_types,
@@ -129,7 +146,7 @@ fn resolve_comparable_relationships(
             boolean_expression_type: comparable_relationship
                 .boolean_expression_type
                 .as_ref()
-                .map(|bool_exp| Qualified::new(subgraph.to_string(), bool_exp.clone())),
+                .map(|bool_exp| Qualified::new(subgraph.clone(), bool_exp.clone())),
         };
         resolved_comparable_relationships.insert(
             FieldName::new(comparable_relationship.relationship_name.inner().clone()),
@@ -139,16 +156,23 @@ fn resolve_comparable_relationships(
 
     Ok(resolved_comparable_relationships)
 }
+
+pub struct ComparableFieldsOutput {
+    pub comparable_fields: BTreeMap<FieldName, Qualified<CustomTypeName>>,
+    pub issues: Vec<BooleanExpressionIssue>,
+}
+
 // comparable_fields don't do much, all we can do is ensure that the other BooleanExpressionTypes
 // they refer to exist
 fn resolve_comparable_fields(
     comparable_fields: &Vec<BooleanExpressionComparableField>,
     object_type_representation: &object_types::ObjectTypeRepresentation,
     boolean_expression_type_name: &Qualified<CustomTypeName>,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
-) -> Result<BTreeMap<FieldName, Qualified<CustomTypeName>>, BooleanExpressionError> {
+) -> Result<ComparableFieldsOutput, BooleanExpressionError> {
     let mut resolved_comparable_fields = BTreeMap::new();
+    let mut issues = vec![];
 
     // validate comparable fields all exist in underlying object
     for comparable_field in comparable_fields {
@@ -162,15 +186,14 @@ fn resolve_comparable_fields(
                 },
             )?;
 
-        // throw an error if attempting to match a nested array
+        // raise a warning if trying to use a nested array for filtering
         // this is not yet supported by ndc-spec
-        match field.field_type.underlying_type {
-            QualifiedBaseType::List(_) => Err(BooleanExpressionError::CannotCompareNestedArray {
+        if let QualifiedBaseType::List(_) = field.field_type.underlying_type {
+            issues.push(BooleanExpressionIssue::CannotCompareNestedArray {
                 field_name: comparable_field.field_name.clone(),
                 object_boolean_expression_type: boolean_expression_type_name.clone(),
-            }),
-            QualifiedBaseType::Named(_) => Ok(()),
-        }?;
+            });
+        };
 
         // fields with field arguments are not allowed in boolean expressions
         if !field.field_arguments.is_empty() {
@@ -178,7 +201,7 @@ fn resolve_comparable_fields(
         }
 
         let field_boolean_expression_type_name = Qualified::new(
-            subgraph.to_string(),
+            subgraph.clone(),
             comparable_field.boolean_expression_type.clone(),
         );
 
@@ -221,5 +244,8 @@ fn resolve_comparable_fields(
         );
     }
 
-    Ok(resolved_comparable_fields)
+    Ok(ComparableFieldsOutput {
+        comparable_fields: resolved_comparable_fields,
+        issues,
+    })
 }

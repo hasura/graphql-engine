@@ -1,5 +1,5 @@
-use crate::types::subgraph::Qualified;
-use open_dds::types::{CustomTypeName, GraphQlTypeName, OperatorName, TypeName, TypeReference};
+use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use open_dds::types::{CustomTypeName, GraphQlTypeName, OperatorName, TypeName};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -20,7 +20,7 @@ pub struct ResolvedScalarBooleanExpressionType {
     pub representation: TypeName,
 
     /// The list of comparison operators that can used on this scalar type
-    pub comparison_operators: BTreeMap<OperatorName, TypeReference>,
+    pub comparison_operators: BTreeMap<OperatorName, QualifiedTypeReference>,
 
     /// The list of mappings between OpenDD operator names and the names used in the data
     /// connector schema

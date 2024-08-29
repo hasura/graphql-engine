@@ -22,6 +22,8 @@ pub use types::{
     SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
 };
 
+use super::order_by_expressions;
+
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
@@ -35,6 +37,7 @@ pub fn resolve(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    order_by_expressions: &order_by_expressions::OrderByExpressions,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<types::ModelsWithGraphql, Error> {
@@ -78,6 +81,7 @@ pub fn resolve(
                 data_connector_scalars,
                 &model.raw.description,
                 &model.aggregate_expression,
+                order_by_expressions,
                 graphql_config,
             )?,
             None => types::ModelGraphQlApi::default(),

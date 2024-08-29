@@ -19,9 +19,10 @@ use open_dds::{
 };
 
 use metadata_resolve::{
-    self, deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
-    serialize_non_string_key_btreemap, serialize_qualified_btreemap, DataConnectorLink,
-    NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping,
+    self, data_connectors::ArgumentPresetValue, deserialize_non_string_key_btreemap,
+    deserialize_qualified_btreemap, serialize_non_string_key_btreemap,
+    serialize_qualified_btreemap, DataConnectorLink, FieldPresetInfo, NdcColumnForComparison,
+    OrderByExpressionIdentifier, Qualified, QualifiedTypeReference, TypeMapping,
     ValueExpressionOrPredicate,
 };
 
@@ -86,6 +87,8 @@ pub enum ModelFilterArgument {
     Field {
         field_name: types::FieldName,
         object_type: Qualified<types::CustomTypeName>,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: bool,
     },
     RelationshipField(FilterRelationshipAnnotation),
 }
@@ -106,6 +109,8 @@ pub struct CommandSourceDetail {
     )]
     pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    pub data_connector_link_argument_presets:
+        BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     pub ndc_type_opendd_type_same: bool,
 }
 
@@ -175,6 +180,8 @@ pub enum OutputAnnotation {
         /// Field usage is reported with the name of object type where the field is defined.
         parent_type: Qualified<types::CustomTypeName>,
         argument_types: BTreeMap<ast::Name, QualifiedTypeReference>,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: bool,
     },
     GlobalIDField {
         /// The `global_id_fields` are required to calculate the
@@ -215,12 +222,17 @@ pub enum ModelInputAnnotation {
     },
     IsNullOperation,
     ModelOrderByExpression,
+    ModelOrderByNestedExpression {
+        ndc_column: DataConnectorColumnName,
+    },
     ModelOrderByArgument {
         field_name: types::FieldName,
         /// The parent type is required to report field usage while analyzing query usage.
         /// Field usage is reported with the name of object type where the field is defined.
         parent_type: Qualified<types::CustomTypeName>,
         ndc_column: DataConnectorColumnName,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: bool,
     },
     ModelOrderByRelationshipArgument(OrderByRelationshipAnnotation),
 
@@ -263,6 +275,8 @@ pub enum InputAnnotation {
         field_name: types::FieldName,
         field_type: QualifiedTypeReference,
         parent_type: Qualified<types::CustomTypeName>,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: bool,
     },
     BooleanExpression(BooleanExpressionAnnotation),
     CommandArgument {
@@ -292,7 +306,7 @@ pub enum Annotation {
     Input(InputAnnotation),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 /// Preset arguments for models or commands
 pub struct ArgumentPresets {
     #[serde(
@@ -336,7 +350,7 @@ pub enum NamespaceAnnotation {
     /// AST is used to analyze query usage, and additional context is not available.
     /// Therefore, the field presets are annotated to track their usage.
     InputFieldPresets {
-        presets_fields: Vec<types::FieldName>,
+        presets_fields: BTreeMap<types::FieldName, FieldPresetInfo>,
         type_name: Qualified<types::CustomTypeName>,
     },
     /// The `NodeFieldTypeMappings` contains a Hashmap of typename to the filter permission.
@@ -385,6 +399,7 @@ pub enum TypeId {
     },
     ModelOrderByExpression {
         model_name: Qualified<models::ModelName>,
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         graphql_type_name: ast::TypeName,
     },
     ScalarTypeComparisonExpression {

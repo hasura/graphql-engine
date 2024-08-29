@@ -137,6 +137,7 @@ pub enum BooleanExpressionOperand {
     Scalar(BooleanExpressionScalarOperand),
 }
 
+/// Definition of a comparison operator for a scalar type
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[schemars(title = "ComparisonOperator")]
@@ -148,6 +149,7 @@ pub struct ComparisonOperator {
     pub argument_type: TypeReference,
 }
 
+/// Mapping between OpenDD operator names and the names used in the data connector schema
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
 )]
@@ -200,6 +202,7 @@ pub struct BooleanExpressionObjectOperand {
     pub comparable_relationships: Vec<BooleanExpressionComparableRelationship>,
 }
 
+/// Comparison configuration definition for a field that can be used for a comparison
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[schemars(title = "BooleanExpressionComparableField")]

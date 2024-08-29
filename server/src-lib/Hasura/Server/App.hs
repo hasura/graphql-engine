@@ -33,7 +33,7 @@ import Control.Exception.Lifted (ErrorCall (..), catch)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson hiding (json)
+import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as J
 import Data.Aeson.Key qualified as K
@@ -54,6 +54,9 @@ import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Encoding qualified as TL
 import GHC.Stats.Extended qualified as RTS
 import Hasura.App.State
+import Hasura.Authentication.Headers
+import Hasura.Authentication.Role (adminRoleName, roleNameToTxt)
+import Hasura.Authentication.User (ExtraUserInfo (..), UserInfo (..), UserInfoM, askUserInfo)
 import Hasura.Backends.DataConnector.API (openApiSchema)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Execute.Types
@@ -79,10 +82,9 @@ import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.BackendType
-import Hasura.RQL.Types.Common (SQLGenCtx (SQLGenCtx, noNullUnboundVariableDefault, nullInNonNullableVariables))
+import Hasura.RQL.Types.Common (SQLGenCtx (..))
 import Hasura.RQL.Types.Endpoint as EP
 import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
-import Hasura.RQL.Types.Roles (adminRoleName, roleNameToTxt)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.Server.API.Config (runGetConfig)
@@ -109,7 +111,6 @@ import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Server.Version
 import Hasura.Services
-import Hasura.Session (ExtraUserInfo (..), UserInfo (..), UserInfoM, askUserInfo)
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Types qualified as HTTP
@@ -657,8 +658,8 @@ gqlExplainHandler query = do
   reqHeaders <- asks hcReqHeaders
   responseErrorsConfig <- asks (acResponseInternalErrorsConfig . hcAppContext)
   licenseKeyCache <- asks hcLicenseKeyCache
-  SQLGenCtx {nullInNonNullableVariables, noNullUnboundVariableDefault} <- asks (acSQLGenCtx . hcAppContext)
-  res <- GE.explainGQLQuery nullInNonNullableVariables noNullUnboundVariableDefault (lastBuiltSchemaCache schemaCache) licenseKeyCache reqHeaders query responseErrorsConfig
+  SQLGenCtx {nullInNonNullableVariables, noNullUnboundVariableDefault, removeEmptySubscriptionResponses} <- asks (acSQLGenCtx . hcAppContext)
+  res <- GE.explainGQLQuery removeEmptySubscriptionResponses nullInNonNullableVariables noNullUnboundVariableDefault (lastBuiltSchemaCache schemaCache) licenseKeyCache reqHeaders query responseErrorsConfig
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m) => PGD.PGDumpReqBody -> m APIResp

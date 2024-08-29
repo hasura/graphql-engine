@@ -1,11 +1,11 @@
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast::{self, Operation};
-use metadata_resolve::{FilterPermission, ModelPredicate};
+use metadata_resolve::{FieldPresetInfo, FilterPermission, ModelPredicate};
 use open_dds::relationships::RelationshipType;
 use query_usage_analytics::{
     self, ArgumentPresetsUsage, FieldPresetsUsage, FieldUsage, FilterPredicateUsage, GqlField,
-    GqlInputField, GqlOperation, OpenddObject, PermissionUsage, RelationshipTarget,
-    RelationshipUsage,
+    GqlInputField, GqlOperation, OpenddObject, PermissionUsage, PredicateRelationshipUsage,
+    RelationshipTarget, RelationshipUsage,
 };
 use schema::GDS;
 
@@ -119,11 +119,13 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
         schema::InputAnnotation::InputObjectField {
             field_name,
             parent_type,
+            deprecated,
             ..
         } => {
             result.push(OpenddObject::Field(FieldUsage {
                 name: field_name.to_owned(),
                 opendd_type: parent_type.to_owned(),
+                deprecated: deprecated.to_owned(),
             }));
         }
         schema::InputAnnotation::BooleanExpression(
@@ -132,10 +134,12 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
             schema::ModelFilterArgument::Field {
                 field_name,
                 object_type,
+                deprecated,
             } => {
                 result.push(OpenddObject::Field(FieldUsage {
                     name: field_name.to_owned(),
                     opendd_type: object_type.to_owned(),
+                    deprecated: deprecated.to_owned(),
                 }));
             }
             schema::ModelFilterArgument::RelationshipField(relationship_annotation) => {
@@ -169,11 +173,13 @@ fn analyze_model_input_annotation(annotation: &schema::ModelInputAnnotation) -> 
         schema::ModelInputAnnotation::ModelOrderByArgument {
             field_name,
             parent_type,
+            deprecated,
             ..
         } => {
             result.push(OpenddObject::Field(FieldUsage {
                 name: field_name.to_owned(),
                 opendd_type: parent_type.to_owned(),
+                deprecated: deprecated.to_owned(),
             }));
         }
         schema::ModelInputAnnotation::ModelOrderByRelationshipArgument(relationship_orderby) => {
@@ -191,6 +197,7 @@ fn analyze_model_input_annotation(annotation: &schema::ModelInputAnnotation) -> 
         | schema::ModelInputAnnotation::ComparisonOperation { .. }
         | schema::ModelInputAnnotation::IsNullOperation
         | schema::ModelInputAnnotation::ModelOrderByExpression
+        | schema::ModelInputAnnotation::ModelOrderByNestedExpression { .. }
         | schema::ModelInputAnnotation::ModelOrderByDirection { .. }
         | schema::ModelInputAnnotation::ModelLimitArgument
         | schema::ModelInputAnnotation::ModelOffsetArgument
@@ -220,11 +227,15 @@ fn analyze_output_annotation(annotation: &schema::OutputAnnotation) -> Vec<Opend
             | schema::RootFieldAnnotation::ApolloFederation(_) => {}
         },
         schema::OutputAnnotation::Field {
-            name, parent_type, ..
+            name,
+            parent_type,
+            deprecated,
+            ..
         } => {
             result.push(OpenddObject::Field(FieldUsage {
                 name: name.to_owned(),
                 opendd_type: parent_type.to_owned(),
+                deprecated: deprecated.to_owned(),
             }));
         }
         schema::OutputAnnotation::RelationshipToModel(relationship) => {
@@ -284,10 +295,19 @@ fn analyze_namespace_annotation(annotation: &schema::NamespaceAnnotation) -> Vec
             FieldPresetsUsage {
                 fields: presets_fields
                     .iter()
-                    .map(|field_name| FieldUsage {
-                        name: field_name.to_owned(),
-                        opendd_type: type_name.clone(),
-                    })
+                    .map(
+                        |(
+                            field_name,
+                            FieldPresetInfo {
+                                value: _,
+                                deprecated,
+                            },
+                        )| FieldUsage {
+                            name: field_name.to_owned(),
+                            opendd_type: type_name.clone(),
+                            deprecated: deprecated.to_owned(),
+                        },
+                    )
                     .collect(),
             },
         ))),
@@ -320,56 +340,63 @@ fn analyze_argument_presets(argument_presets: &schema::ArgumentPresets) -> Optio
 fn analyze_filter_permission(filter: &FilterPermission) -> Option<OpenddObject> {
     match filter {
         FilterPermission::AllowAll => None,
-        FilterPermission::Filter(predicate) => {
-            let mut fields = Vec::new();
-            let mut relationships = Vec::new();
-            analyze_model_predicate(predicate, &mut fields, &mut relationships);
-            Some(OpenddObject::Permission(PermissionUsage::FilterPredicate(
-                FilterPredicateUsage {
-                    fields,
-                    relationships,
-                },
-            )))
-        }
+        FilterPermission::Filter(predicate) => Some(OpenddObject::Permission(
+            PermissionUsage::FilterPredicate(analyze_model_predicate(predicate)),
+        )),
     }
 }
 
-fn analyze_model_predicate(
+fn analyze_model_predicate(predicate: &ModelPredicate) -> FilterPredicateUsage {
+    let mut fields = Vec::new();
+    let mut relationships = Vec::new();
+    analyze_model_predicate_internal(predicate, &mut fields, &mut relationships);
+    FilterPredicateUsage {
+        fields,
+        relationships,
+    }
+}
+
+fn analyze_model_predicate_internal(
     predicate: &ModelPredicate,
     fields: &mut Vec<FieldUsage>,
-    relationships: &mut Vec<RelationshipUsage>,
+    relationships: &mut Vec<PredicateRelationshipUsage>,
 ) {
     match predicate {
         ModelPredicate::And(predicates) | ModelPredicate::Or(predicates) => {
             analyze_model_predicate_list(predicates, fields, relationships);
         }
-        ModelPredicate::Not(predicate) => analyze_model_predicate(predicate, fields, relationships),
+        ModelPredicate::Not(predicate) => {
+            analyze_model_predicate_internal(predicate, fields, relationships);
+        }
         ModelPredicate::UnaryFieldComparison {
             field,
             field_parent_type,
+            deprecated,
             ..
         }
         | ModelPredicate::BinaryFieldComparison {
             field,
             field_parent_type,
+            deprecated,
             ..
         } => fields.push(FieldUsage {
             name: field.to_owned(),
             opendd_type: field_parent_type.to_owned(),
+            deprecated: deprecated.to_owned(),
         }),
         ModelPredicate::Relationship {
             relationship_info,
             predicate,
         } => {
-            relationships.push(RelationshipUsage {
+            relationships.push(PredicateRelationshipUsage {
                 name: relationship_info.relationship_name.clone(),
                 source: relationship_info.source_type.clone(),
                 target: RelationshipTarget::Model {
                     model_name: relationship_info.target_model_name.clone(),
                     relationship_type: relationship_info.relationship_type.clone(),
                 },
+                predicate_usage: Box::new(analyze_model_predicate(predicate)),
             });
-            analyze_model_predicate(predicate, fields, relationships);
         }
     }
 }
@@ -377,9 +404,9 @@ fn analyze_model_predicate(
 fn analyze_model_predicate_list(
     predicates: &[ModelPredicate],
     fields: &mut Vec<FieldUsage>,
-    relationships: &mut Vec<RelationshipUsage>,
+    relationships: &mut Vec<PredicateRelationshipUsage>,
 ) {
-    let _ = predicates
-        .iter()
-        .map(|predicate| analyze_model_predicate(predicate, fields, relationships));
+    for predicate in predicates {
+        analyze_model_predicate_internal(predicate, fields, relationships);
+    }
 }

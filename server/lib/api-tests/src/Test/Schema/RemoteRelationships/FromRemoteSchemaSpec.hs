@@ -183,14 +183,14 @@ type Article {
 
 knownObjects :: (Monad m) => [(Int, Object m)]
 knownObjects =
-  [ (101, ObjectWriter writer1),
-    (102, ObjectWriter writer2),
-    (201, ObjectArtist artist1),
-    (202, ObjectArtist artist2),
-    (301, ObjectArticle article1),
-    (302, ObjectArticle article2),
-    (303, ObjectArticle article3),
-    (304, ObjectArticle article4)
+  [ (101, ObjectWriter $ pure writer1),
+    (102, ObjectWriter $ pure writer2),
+    (201, ObjectArtist $ pure artist1),
+    (202, ObjectArtist $ pure artist2),
+    (301, ObjectArticle $ pure article1),
+    (302, ObjectArticle $ pure article2),
+    (303, ObjectArticle $ pure article3),
+    (304, ObjectArticle $ pure article4)
   ]
   where
     writer1 = Writer (pure 101) (pure "Writer1") (pure [301, 302]) (pure [article1, article2])
@@ -207,27 +207,28 @@ objectResolver (Arg objectId) = pure $ lookup objectId knownObjects
 
 writerResolver :: (Monad m) => Arg "id" Int -> m (Maybe (Writer m))
 writerResolver (Arg objectId) =
-  pure $ case lookup objectId knownObjects of
-    Just (ObjectWriter w) -> Just w
-    _ -> Nothing
+  case lookup objectId knownObjects of
+    Just (ObjectWriter w) -> Just <$> w
+    _ -> pure Nothing
 
 artistResolver :: (Monad m) => Arg "id" Int -> m (Maybe (Artist m))
 artistResolver (Arg objectId) =
-  pure $ case lookup objectId knownObjects of
-    Just (ObjectArtist a) -> Just a
-    _ -> Nothing
+  case lookup objectId knownObjects of
+    Just (ObjectArtist a) -> Just <$> a
+    _ -> pure Nothing
 
 objectsResolver :: (Monad m) => Arg "ids" [Int] -> m [Maybe (Object m)]
 objectsResolver (Arg objectIds) = pure [lookup objectId knownObjects | objectId <- objectIds]
 
 articlesResolver :: (Monad m) => Arg "ids" [Int] -> m [Maybe (Article m)]
 articlesResolver (Arg objectIds) =
-  pure
-    $ objectIds
-    <&> \objectId ->
-      case lookup objectId knownObjects of
-        Just (ObjectArticle a) -> Just a
-        _ -> Nothing
+  mapM
+    ( \objectId ->
+        case lookup objectId knownObjects of
+          Just (ObjectArticle a) -> Just <$> a
+          _ -> pure Nothing
+    )
+    objectIds
 
 --------------------------------------------------------------------------------
 -- RHS Postgres (for metadata only)

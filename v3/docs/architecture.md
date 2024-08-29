@@ -21,6 +21,7 @@ crates
 ├── schema
 │   ├── operations
 │   ├── types
+├── ir
 ├── execute
 ├── engine
 │   ├── bin
@@ -116,6 +117,11 @@ Each module under `types` defines the following:
 - Logic to generate schema for the given type using data from resolved metadata.
 - Logic to parse a normalized object (selection set or input value) from the
   request into the defined IR format.
+
+### `ir`
+
+Responsible for combining the user input and our resolved metadata into our
+intermediate representation ready to plan a request.
 
 ### `execute`
 

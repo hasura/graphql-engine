@@ -14,6 +14,9 @@ input_file: crates/metadata-resolve/tests/passing/simple/metadata.json
             objects: {},
             scalars: {},
         },
+        order_by_expressions: OrderByExpressions(
+            {},
+        ),
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
@@ -24,6 +27,13 @@ input_file: crates/metadata-resolve/tests/passing/simple/metadata.json
             mutation_root_type_name: TypeName(
                 Name(
                     "Mutation",
+                ),
+            ),
+            subscription_root_type_name: Some(
+                TypeName(
+                    Name(
+                        "Subscription",
+                    ),
                 ),
             ),
             order_by_input: Some(
@@ -43,6 +53,7 @@ input_file: crates/metadata-resolve/tests/passing/simple/metadata.json
             ),
             enable_apollo_federation_fields: false,
         },
+        pre_parse_plugins: [],
         roles: [],
     },
     [],

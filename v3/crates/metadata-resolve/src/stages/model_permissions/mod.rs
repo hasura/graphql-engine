@@ -7,7 +7,7 @@ use indexmap::IndexMap;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
 pub use types::{
-    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
+    ArgumentPresets, FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
     PredicateRelationshipInfo, SelectPermission, UnaryComparisonOperator,
 };
 mod model_permission;
@@ -56,7 +56,7 @@ pub fn resolve(
         object: permissions,
     } in &metadata_accessor.model_permissions
     {
-        let model_name = Qualified::new(subgraph.to_string(), permissions.model_name.clone());
+        let model_name = Qualified::new(subgraph.clone(), permissions.model_name.clone());
         let model = models_with_permissions
             .get_mut(&model_name)
             .ok_or_else(|| Error::UnknownModelInModelSelectPermissions {

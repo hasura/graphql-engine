@@ -1510,6 +1510,32 @@
             "name": "TestNullableAndArrayTypes",
             "objectType": "test_nullable_array_types",
             "globalIdSource": false,
+            "arguments": [
+              {
+                "name": "nullable_field",
+                "type": "String"
+              },
+              {
+                "name": "non_nullable_field",
+                "type": "String!"
+              },
+              {
+                "name": "array_field",
+                "type": "[String!]!"
+              },
+              {
+                "name": "nullable_array_field",
+                "type": "[String!]"
+              },
+              {
+                "name": "array_nullable_field",
+                "type": "[String]!"
+              },
+              {
+                "name": "nullable_array_nullable_field",
+                "type": "[String]"
+              }
+            ],
             "source": {
               "dataConnectorName": "db",
               "collection": "test_nullable_and_array_types"
@@ -2024,6 +2050,12 @@
           "definition": {
             "name": "artist_below_id",
             "objectType": "artist_below_id",
+            "arguments": [
+              {
+                "name": "id",
+                "type": "Int!"
+              }
+            ],
             "source": {
               "dataConnectorName": "db",
               "collection": "artist_below_id"

@@ -10,17 +10,16 @@ const config = {
   title: 'Hasura GraphQL Docs',
   tagline: 'Instant GraphQL on all your data',
   url: 'https://hasura.io',
-  baseUrl: '/docs/',
+  baseUrl: '/docs/2.0',
   trailingSlash: true,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
-  favicon: '/docs/img/favicon.png',
+  favicon: '/img/favicon.png',
   organizationName: 'hasura',
   projectName: 'graphql-engine',
   staticDirectories: ['static', 'public'],
   customFields: {
     docsBotEndpointURL: (() => {
-      console.log('process.env.release_mode docs-bot', process.env.release_mode);
       switch (process.env.release_mode) {
         case 'development':
           return 'ws://localhost:8000/hasura-docs-ai';
@@ -72,7 +71,7 @@ const config = {
             current: {
               label: 'v2.x',
               badge: true,
-              path: 'latest',
+              path: '',
             },
           },
         },
@@ -201,13 +200,13 @@ const config = {
             position: 'left',
           },
           {
-            to: '/latest/hasura-cloud/overview',
+            to: '/hasura-cloud/overview',
             label: 'Hasura Cloud',
             className: 'header-hasura-cloud-link',
             position: 'left',
           },
           {
-            to: '/latest/enterprise/overview',
+            to: '/enterprise/overview',
             label: 'Hasura Enterprise',
             className: 'header-hasura-ee-link',
             position: 'left',

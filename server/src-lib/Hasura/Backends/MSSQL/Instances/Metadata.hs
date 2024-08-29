@@ -37,7 +37,7 @@ instance BackendMetadata 'MSSQL where
   listAllTrackables _ =
     throw500 "Computed fields are not yet defined for MSSQL backends"
   getTableInfo _ _ = throw400 UnexpectedPayload "get_table_info not yet supported in MSSQL!"
-  validateNativeQuery _disableNativeQueryValidation _ _ _ _ _ nq = do
+  validateNativeQuery _disableNativeQueryValidation _ _ nq = do
     validateArgumentDeclaration nq
     pure (trimQueryEnd (_nqmCode nq)) -- for now, all queries are valid
   validateStoredProcedure _ _ _ _ = pure () -- for now, all stored procedures are valid

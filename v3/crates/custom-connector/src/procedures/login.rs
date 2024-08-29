@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use uuid::Uuid;
 
 use crate::{
+    arguments::{check_all_arguments_used, parse_object_argument, parse_string_argument},
     query::Result,
     types::login::{LoginResponse, ResponseHeaders},
 };
@@ -50,27 +51,14 @@ pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
 pub(crate) fn execute(
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
 ) -> Result<serde_json::Value> {
-    let _headers = arguments.get("_headers").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "required argument field '_headers' is missing".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-    let _username = arguments.get("username").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "required argument field 'username' is missing".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-    let _password = arguments.get("password").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "required argument field 'password' is missing".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
+    let mut arguments = arguments
+        .iter()
+        .map(|(k, v)| (k.clone(), v))
+        .collect::<BTreeMap<_, _>>();
+    let _headers = parse_object_argument("_headers", &mut arguments)?;
+    let _username = parse_string_argument("username", &mut arguments)?;
+    let _password = parse_string_argument("password", &mut arguments)?;
+    check_all_arguments_used(&arguments)?;
 
     let cookie_val1 = Uuid::new_v4();
     let cookie_val2 = Uuid::new_v4();

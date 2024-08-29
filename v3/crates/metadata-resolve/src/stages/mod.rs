@@ -12,6 +12,8 @@ pub mod models;
 pub mod models_graphql;
 pub mod object_boolean_expressions;
 pub mod object_types;
+pub mod order_by_expressions;
+pub mod plugins;
 pub mod relationships;
 pub mod relay;
 pub mod roles;
@@ -20,15 +22,16 @@ pub mod scalar_types;
 pub mod type_permissions;
 mod types;
 use crate::types::warning::Warning;
+use open_dds::flags;
 pub use types::Metadata;
 
 use crate::types::configuration::Configuration;
-use crate::types::error::Error;
+use crate::types::error::{Error, SeparatedBy, ShouldBeAnError};
 
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
 pub fn resolve(
     metadata: open_dds::Metadata,
-    configuration: Configuration,
+    configuration: &Configuration,
 ) -> Result<(Metadata, Vec<Warning>), Error> {
     // all warnings raised throughout metadata-resolve
     let mut all_warnings = vec![];
@@ -42,7 +45,12 @@ pub fn resolve(
         graphql_config::resolve(&metadata_accessor.graphql_config, metadata_accessor.flags)?;
 
     // Fetch and check schema information for all our data connectors
-    let data_connectors = data_connectors::resolve(&metadata_accessor, &configuration)?;
+    let data_connectors::DataConnectorsOutput {
+        data_connectors,
+        issues,
+    } = data_connectors::resolve(&metadata_accessor, configuration)?;
+
+    all_warnings.extend(issues.into_iter().map(Warning::from));
 
     // Validate object types defined in metadata
     let object_types::ObjectTypesOutput {
@@ -56,44 +64,58 @@ pub fn resolve(
     let scalar_types::ScalarTypesOutput {
         scalar_types,
         graphql_types,
-    } = scalar_types::resolve(&metadata_accessor, &graphql_types)?;
+    } = scalar_types::resolve(&metadata_accessor, graphql_types)?;
 
     // Validate scalar `BooleanExpressionType`s
     let scalar_boolean_expressions::ScalarBooleanExpressionsOutput {
         graphql_types,
         boolean_expression_scalar_types,
-    } = scalar_boolean_expressions::resolve(&metadata_accessor, &graphql_types, &data_connectors)?;
+    } = scalar_boolean_expressions::resolve(
+        &metadata_accessor,
+        graphql_types,
+        &data_connectors,
+        &object_types,
+        &scalar_types,
+    )?;
 
     // Validate `DataConnectorScalarType` metadata. This will soon be deprecated and subsumed by
     // `BooleanExpressionType`
     let data_connector_scalar_types::DataConnectorWithScalarsOutput {
         data_connector_scalars,
         graphql_types,
-        warnings,
     } = data_connector_scalar_types::resolve(
         &metadata_accessor,
         &data_connectors,
         &scalar_types,
-        &boolean_expression_scalar_types,
-        &graphql_types,
+        graphql_types,
     )?;
-
-    all_warnings.extend(warnings.into_iter().map(Warning::from));
 
     // Fetch and validate permissions, and attach them to the relevant object types
     let object_types_with_permissions =
-        type_permissions::resolve(&metadata_accessor, &object_types)?;
+        type_permissions::resolve(&metadata_accessor, object_types)?;
 
     // Resolve fancy new boolean expression types
     let boolean_expressions::BooleanExpressionsOutput {
         boolean_expression_types,
         graphql_types,
+        issues,
     } = boolean_expressions::resolve(
         &metadata_accessor,
         &boolean_expression_scalar_types,
-        &graphql_types,
+        graphql_types,
         &graphql_config,
         &object_types_with_permissions,
+    )?;
+
+    all_warnings.extend(issues.into_iter().map(Warning::from));
+
+    let order_by_expressions::OrderByExpressionsOutput {
+        order_by_expressions,
+        graphql_types,
+    } = order_by_expressions::resolve(
+        &metadata_accessor,
+        &object_types_with_permissions,
+        graphql_types,
     )?;
 
     // Check aggregate expressions
@@ -121,7 +143,7 @@ pub fn resolve(
         &data_connectors,
         &data_connector_scalars,
         &object_types_with_permissions,
-        &graphql_types,
+        graphql_types,
         &graphql_config,
     )?;
 
@@ -132,20 +154,27 @@ pub fn resolve(
         models,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
+        order_by_expressions,
+        graphql_types,
+        issues,
     } = models::resolve(
         &metadata_accessor,
         &data_connectors,
         &data_connector_scalars,
-        &global_id_enabled_types,
-        &apollo_federation_entity_enabled_types,
+        global_id_enabled_types,
+        apollo_federation_entity_enabled_types,
         &object_types_with_permissions,
         &scalar_types,
         &object_boolean_expression_types,
         &boolean_expression_types,
         &aggregate_expressions,
+        order_by_expressions,
+        graphql_types,
     )?;
 
-    let commands = commands::resolve(
+    all_warnings.extend(issues.into_iter().map(Warning::from));
+
+    let commands::CommandsOutput { commands, issues } = commands::resolve(
         &metadata_accessor,
         &data_connectors,
         &object_types_with_permissions,
@@ -154,9 +183,11 @@ pub fn resolve(
         &boolean_expression_types,
     )?;
 
-    apollo::resolve(&apollo_federation_entity_enabled_types)?;
+    all_warnings.extend(issues.into_iter().map(Warning::from));
 
-    relay::resolve(&global_id_enabled_types)?;
+    apollo::resolve(apollo_federation_entity_enabled_types)?;
+
+    relay::resolve(global_id_enabled_types)?;
 
     let object_types_with_relationships = relationships::resolve(
         &metadata_accessor,
@@ -190,6 +221,7 @@ pub fn resolve(
         &object_types_with_relationships,
         &object_boolean_expression_types,
         &boolean_expression_types,
+        &order_by_expressions,
         &graphql_types,
         &graphql_config,
     )?;
@@ -223,6 +255,10 @@ pub fn resolve(
         &commands_with_permissions,
     );
 
+    let pre_parse_plugins = plugins::resolve(&metadata_accessor);
+
+    all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_warnings)?;
+
     Ok((
         Metadata {
             scalar_types,
@@ -231,10 +267,32 @@ pub fn resolve(
             commands: commands_with_permissions,
             object_boolean_expression_types,
             boolean_expression_types,
+            order_by_expressions,
             aggregate_expressions,
             graphql_config: graphql_config.global,
             roles,
+            pre_parse_plugins,
         },
         all_warnings,
     ))
+}
+
+fn warnings_as_errors_by_compatibility(
+    flags: &flags::Flags,
+    all_warnings: Vec<Warning>,
+) -> Result<Vec<Warning>, Error> {
+    let (warnings_that_are_errors, remaining_warnings): (Vec<Warning>, Vec<Warning>) = all_warnings
+        .into_iter()
+        .partition(|warning| warning.should_be_an_error(flags));
+
+    if warnings_that_are_errors.is_empty() {
+        Ok(remaining_warnings)
+    } else {
+        Err(Error::CompatibilityError {
+            warnings_as_errors: SeparatedBy {
+                lines_of: warnings_that_are_errors,
+                separator: "\n".to_string(),
+            },
+        })
+    }
 }

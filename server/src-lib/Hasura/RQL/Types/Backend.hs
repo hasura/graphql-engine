@@ -24,6 +24,7 @@ import Data.Kind (Type)
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
 import Data.Typeable (Typeable)
+import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Backends.Postgres.Connection.Settings (ConnectionTemplate (..))
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
@@ -36,7 +37,6 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.RQL.Types.ResizePool (ServerReplicas, SourceResizePoolSummary)
-import Hasura.RQL.Types.Session (SessionVariables)
 import Hasura.RQL.Types.SourceConfiguration
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -205,7 +205,30 @@ class
     Traversable (BooleanOperators b),
     Traversable (UpdateVariant b),
     Traversable (BackendInsert b),
-    Traversable (AggregationPredicates b)
+    Traversable (AggregationPredicates b),
+    -- we need to smuggle superclass constraints on higher kinded associated
+    -- types in this weird way here for the compiler to accept it. Done to
+    -- allow us to remove UndecidableInstances elsewhere
+    --
+    -- More will need to be added here to excise UI everywhere
+    LiftedConstraint Eq (FunctionArgumentExp b),
+    LiftedConstraint Eq (AggregationPredicates b),
+    LiftedConstraint Eq (BooleanOperators b),
+    LiftedConstraint Eq (CountType b),
+    LiftedConstraint Show (CountType b),
+    LiftedConstraint Show (BooleanOperators b),
+    LiftedConstraint NFData (BooleanOperators b),
+    LiftedConstraint Hashable (BooleanOperators b),
+    ComposeConstraint ToJSONKeyValue ToJSON (BooleanOperators b),
+    LiftedConstraint Show (FunctionArgumentExp b),
+    LiftedConstraint NFData (FunctionArgumentExp b),
+    LiftedConstraint Hashable (FunctionArgumentExp b),
+    LiftedConstraint Show (AggregationPredicates b),
+    LiftedConstraint NFData (AggregationPredicates b),
+    LiftedConstraint Hashable (AggregationPredicates b),
+    ComposeConstraint ToJSONKeyValue ToJSON (AggregationPredicates b),
+    LiftedConstraint Eq (UpdateVariant b),
+    LiftedConstraint Show (UpdateVariant b)
   ) =>
   Backend (b :: BackendType)
   where

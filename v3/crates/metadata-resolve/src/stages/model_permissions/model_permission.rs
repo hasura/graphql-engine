@@ -5,6 +5,7 @@ use crate::stages::{
     object_boolean_expressions, object_types, relationships, scalar_types,
 };
 use indexmap::IndexMap;
+use open_dds::identifier::SubgraphName;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 use std::collections::BTreeMap;
 
@@ -26,7 +27,7 @@ use open_dds::{
 fn resolve_model_predicate_with_model(
     model_predicate: &open_dds::permissions::ModelPredicate,
     model: &models::Model,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     boolean_expression_graphql: Option<&boolean_expressions::BooleanExpressionGraphqlConfig>,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
@@ -71,14 +72,14 @@ fn resolve_model_predicate_with_model(
     let object_types::TypeMapping::Object { field_mappings, .. } = model_source
         .type_mappings
         .get(&model.data_type)
-        .ok_or(Error::TypeMappingRequired {
+        .ok_or(models::ModelsError::TypeMappingRequired {
             model_name: model.name.clone(),
             type_name: model.data_type.clone(),
             data_connector: model_source.data_connector.name.clone(),
         })?;
 
     let data_connector_core_info = data_connectors.0.get(data_connector_name).ok_or_else(|| {
-        Error::UnknownModelDataConnector {
+        models::ModelsError::UnknownModelDataConnector {
             model_name: model.name.clone(),
             data_connector: data_connector_name.clone(),
         }
@@ -107,7 +108,7 @@ fn resolve_model_predicate_with_model(
 }
 
 // get the ndc_models::Type for an argument if it is available
-fn get_model_source_argument<'a>(
+pub fn get_model_source_argument<'a>(
     argument_name: &'a ArgumentName,
     model: &'a models::Model,
 ) -> Option<&'a ndc_models::Type> {
@@ -125,7 +126,7 @@ fn get_model_source_argument<'a>(
 
 pub fn resolve_model_select_permissions(
     model: &models::Model,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     model_permissions: &ModelPermissionsV1,
     boolean_expression_graphql: Option<&boolean_expressions::BooleanExpressionGraphqlConfig>,
     data_connectors: &data_connectors::DataConnectors,
@@ -241,6 +242,7 @@ pub fn resolve_model_select_permissions(
             let resolved_permission = SelectPermission {
                 filter: resolved_predicate.clone(),
                 argument_presets,
+                allow_subscriptions: select.allow_subscriptions,
             };
             validated_permissions.insert(model_permission.role.clone(), resolved_permission);
         }

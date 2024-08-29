@@ -249,7 +249,7 @@ spec = do
 genBinaryComparisonOperator :: (MonadGen m, GenBase m ~ Identity) => m BinaryComparisonOperator
 genBinaryComparisonOperator =
   Gen.choice
-    [ Gen.element [LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, Equal],
+    [ Gen.element ([LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, Equal] :: [BinaryComparisonOperator]),
       CustomBinaryComparisonOperator
         <$> genArbitraryAlphaNumTextExcluding
           ["less_than", "less_than_or_equal", "greater_than", "greater_than_or_equal", "equal"]
@@ -280,7 +280,7 @@ genComparisonColumn =
 
 genColumnPath :: (MonadGen m) => m ColumnPath
 genColumnPath =
-  Gen.element [CurrentTable, QueryTable]
+  Gen.element ([CurrentTable, QueryTable] :: [ColumnPath])
 
 genComparisonValue :: (MonadGen m, GenBase m ~ Identity) => m ComparisonValue
 genComparisonValue =

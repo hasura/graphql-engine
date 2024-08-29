@@ -5,20 +5,28 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+execute = { path = "../execute" }
+hasura-authn-core = { path = "../auth/hasura-authn-core" }
+ir = { path = "../ir" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
 schema = { path = "../schema" }
-execute = { path = "../execute" }
 tracing-util = { path = "../utils/tracing-util" }
-hasura-authn-core = { path = "../auth/hasura-authn-core" }
 
 ndc-models = { workspace = true }
+
+async-trait = { workspace = true }
+datafusion = { workspace = true, features = ["serde"] }
+futures = { workspace = true }
 indexmap = { workspace = true }
-datafusion = { version = "40.0.0", features = ["serde"] }
-async-trait = "0.1.81"
-futures = "0.3.30"
 serde = { workspace = true, features = ["rc"] }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
+chrono = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+chrono = { workspace = true }
 
 [lints]
 workspace = true

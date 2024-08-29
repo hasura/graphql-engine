@@ -19,14 +19,9 @@
     "data": {
       "ActorsByMovieMany": [
         {
-          "actor_id": 0,
-          "movie_id": 2,
-          "name": "Peter"
-        },
-        {
-          "actor_id": 3,
-          "movie_id": 2,
-          "name": "Irfan Khan"
+          "actor_id": 6,
+          "movie_id": 4,
+          "name": "Morgan Freeman"
         }
       ]
     }
