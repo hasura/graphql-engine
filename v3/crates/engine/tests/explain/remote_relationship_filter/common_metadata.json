@@ -508,7 +508,10 @@
                         "arguments": {},
                         "type": {
                           "type": "array",
-                          "element_type": { "type": "named", "name": "staff" }
+                          "element_type": {
+                            "type": "named",
+                            "name": "staff"
+                          }
                         }
                       },
                       "departments": {
@@ -516,7 +519,10 @@
                         "arguments": {},
                         "type": {
                           "type": "array",
-                          "element_type": { "type": "named", "name": "json" }
+                          "element_type": {
+                            "type": "named",
+                            "name": "json"
+                          }
                         }
                       },
                       "id": {
@@ -529,7 +535,6 @@
                       }
                     }
                   },
-
                   "test_nullable_and_array": {
                     "description": "Testing nullable and array types",
                     "fields": {
@@ -1152,13 +1157,21 @@
                   }
                 ],
                 "comparableRelationships": [
-                  { "relationshipName": "Albums" },
-                  { "relationshipName": "AlbumsRemote" }
+                  {
+                    "relationshipName": "Albums"
+                  },
+                  {
+                    "relationshipName": "AlbumsRemote"
+                  }
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Artist_Where_Exp"
             }
@@ -1198,12 +1211,18 @@
                   {
                     "relationshipName": "Tracks"
                   },
-                  { "relationshipName": "TracksRemote" }
+                  {
+                    "relationshipName": "TracksRemote"
+                  }
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Album_Where_Exp"
             }
@@ -1322,7 +1341,9 @@
                     "relationshipName": "Album",
                     "booleanExpressionType": "album_bool_exp"
                   },
-                  { "relationshipName": "Genre" },
+                  {
+                    "relationshipName": "Genre"
+                  },
                   {
                     "relationshipName": "TrackAlbums"
                   },
@@ -1330,13 +1351,21 @@
                     "relationshipName": "AlbumRemote",
                     "booleanExpressionType": "album_bool_exp"
                   },
-                  { "relationshipName": "GenreRemote" },
-                  { "relationshipName": "TrackAlbumsRemote" }
+                  {
+                    "relationshipName": "GenreRemote"
+                  },
+                  {
+                    "relationshipName": "TrackAlbumsRemote"
+                  }
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Track_Where_Exp"
             }
@@ -1417,8 +1446,12 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Genre_Where_Exp"
             }
@@ -1433,24 +1466,31 @@
               "scalar": {
                 "type": "Int",
                 "comparisonOperators": [
-                  { "name": "_eq", "argumentType": "Int!" }
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "Int",
+                    "dataConnectorScalarType": "int4",
                     "operatorMapping": {}
                   },
                   {
                     "dataConnectorName": "remote_db",
-                    "dataConnectorScalarType": "Int",
+                    "dataConnectorScalarType": "int4",
                     "operatorMapping": {}
                   }
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Int_Comparison_Exp"
             }
@@ -1465,13 +1505,19 @@
               "scalar": {
                 "type": "String",
                 "comparisonOperators": [
-                  { "name": "_eq", "argumentType": "String!" },
-                  { "name": "_ilike", "argumentType": "String!" }
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  },
+                  {
+                    "name": "_ilike",
+                    "argumentType": "String!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "String",
+                    "dataConnectorScalarType": "text",
                     "operatorMapping": {}
                   },
                   {
@@ -1482,8 +1528,12 @@
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "String_Comparison_Exp"
             }

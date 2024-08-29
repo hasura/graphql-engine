@@ -838,7 +838,7 @@
                     "description": "Movies filtered by actor name search parameters",
                     "arguments": {
                       "_headers": {
-                        "description": "headers required",
+                        "description": "headers",
                         "type": {
                           "type": "named",
                           "name": "HeaderMap"

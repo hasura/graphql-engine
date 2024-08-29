@@ -263,26 +263,18 @@
             "name": "_max",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             }
           }
         ]
@@ -322,52 +314,36 @@
             "name": "_max",
             "description": "Largest integer",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": "Smallest integer",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
             }
           },
           {
             "name": "_stddev",
             "description": "Standard deviation across integers",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_sum",
             "description": "Sum of all integers",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int64",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Int64",
+              "ofType": null
             }
           }
         ]
@@ -407,52 +383,36 @@
             "name": "_max",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_stddev",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_sum",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           }
         ]
@@ -492,26 +452,18 @@
             "name": "_max",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Timestamp",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Timestamp",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
             }
           }
         ]
@@ -782,26 +734,18 @@
             "name": "_max",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             }
           }
         ]
@@ -841,52 +785,36 @@
             "name": "_max",
             "description": "Largest integer",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": "Smallest integer",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
             }
           },
           {
             "name": "_stddev",
             "description": "Standard deviation across integers",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_sum",
             "description": "Sum of all integers",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int64",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Int64",
+              "ofType": null
             }
           }
         ]
@@ -926,52 +854,36 @@
             "name": "_max",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_stddev",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_sum",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           }
         ]
@@ -1011,26 +923,18 @@
             "name": "_max",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Timestamp",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Timestamp",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
             }
           }
         ]
@@ -1262,26 +1166,18 @@
             "name": "_max",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             }
           }
         ]
@@ -1321,52 +1217,36 @@
             "name": "_max",
             "description": "Largest integer",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": "Smallest integer",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
             }
           },
           {
             "name": "_stddev",
             "description": "Standard deviation across integers",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_sum",
             "description": "Sum of all integers",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int64",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Int64",
+              "ofType": null
             }
           }
         ]
@@ -1406,52 +1286,36 @@
             "name": "_max",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_stddev",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           },
           {
             "name": "_sum",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Numeric",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Numeric",
+              "ofType": null
             }
           }
         ]
@@ -1491,26 +1355,18 @@
             "name": "_max",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Timestamp",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
             }
           },
           {
             "name": "_min",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Timestamp",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Timestamp",
+              "ofType": null
             }
           }
         ]

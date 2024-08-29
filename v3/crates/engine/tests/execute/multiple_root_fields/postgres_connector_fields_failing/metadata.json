@@ -822,7 +822,7 @@
                     "description": "Movies filtered by actor name search parameters",
                     "arguments": {
                       "_headers": {
-                        "description": "headers required",
+                        "description": "headers",
                         "type": {
                           "type": "named",
                           "name": "HeaderMap"
@@ -2123,7 +2123,7 @@
           "version": "v1",
           "definition": {
             "dataConnectorName": "db",
-            "dataConnectorScalarType": "String",
+            "dataConnectorScalarType": "text",
             "representation": "String",
             "graphql": {
               "comparisonExpressionTypeName": "String_Comparison_Exp"
@@ -2135,7 +2135,7 @@
           "version": "v1",
           "definition": {
             "dataConnectorName": "db",
-            "dataConnectorScalarType": "Int",
+            "dataConnectorScalarType": "int4",
             "representation": "CustomInt"
           }
         }
