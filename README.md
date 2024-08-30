@@ -11,10 +11,7 @@ to data via a single, composable, secure API endpoint.
 
 ## Hasura V3
 
-[//]: # "TODO update version badge"
-[//]: # "[![Latest release](https://img.shields.io/github/v/release/hasura/graphql-engine)](https://github.com/hasura/graphql-engine/releases/latest)"
-
-[![Docs](https://img.shields.io/badge/docs-v3.x.beta-yellow.svg?style=flat)](https://hasura.io/docs/3.0/getting-started/overview/)
+[![Docs](https://img.shields.io/badge/docs-v3-yellow.svg?style=flat)](https://hasura.io/docs/3.0/getting-started/quickstart/)
 
 The future of data delivery is GA: Supporting PostgreSQL (and its flavors), MongoDB, ClickHouse, and MS SQL Server. Also supports writing custom business logic using the Typescript, Python, and Go Connector SDKs. Here is the recommended [Getting Started](https://hasura.io/docs/3.0/getting-started/quickstart/) guide on DDN.
 
@@ -97,6 +94,13 @@ add the "Powered by Hasura" badge to your applications built using Hasura. ‚ù§Ô∏
 
 ## Licenses
 
+### V3
+
+All the [Data Connectors](https://github.com/hasura/ndc-hub) are available under
+the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+The core [V3 GraphQL Engine](v3/) is intended to be licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
+
 ### V2
 
 The V2 core GraphQL Engine is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
@@ -105,10 +109,3 @@ All **other contents** in the v2 folder (except those in [`server`](v2/server), 
 [`console`](v2/console) directories) are available under the [MIT License](LICENSE-community).
 This includes everything in the [`docs`](v2/docs) and [`community`](v2/community)
 directories.
-
-### V3
-
-All the [Data Connectors](https://github.com/hasura/ndc-hub) are available under
-the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
-
-The core [V3 GraphQL Engine](v3/) is intended to be licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
