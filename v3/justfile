@@ -100,12 +100,12 @@ update-golden-files: start-docker-test-deps
     UPDATE_GOLDENFILES=1 cargo test
     just fix-format
 
-update-custom-connector-schema-in-test-metadata: && fix-format
+update-custom-connector-schema-in-test-metadata:
     docker compose -f ci.docker-compose.yaml up --build --wait custom_connector
 
     just update-schema-in-test-metadata "8102" "v0.2"
 
-update-postgres-schema-in-test-metadata: && fix-format
+update-postgres-schema-in-test-metadata:
     docker compose -f ci.docker-compose.yaml up --build --wait postgres postgres_connector
 
     just update-schema-in-test-metadata "8080" "v0.1"

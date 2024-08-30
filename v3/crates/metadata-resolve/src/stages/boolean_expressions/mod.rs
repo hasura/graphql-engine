@@ -16,8 +16,9 @@ use crate::Qualified;
 pub use types::{
     BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
     BooleanExpressionGraphqlFieldConfig, BooleanExpressionIssue, BooleanExpressionTypes,
-    BooleanExpressionsOutput, ComparisonExpressionInfo, IncludeLogicalOperators,
-    ObjectComparisonExpressionInfo, ResolvedObjectBooleanExpressionType,
+    BooleanExpressionsOutput, ComparableFieldKind, ComparisonExpressionInfo,
+    IncludeLogicalOperators, ObjectComparisonExpressionInfo, ObjectComparisonKind,
+    ResolvedObjectBooleanExpressionType,
 };
 
 pub fn resolve(
@@ -31,7 +32,6 @@ pub fn resolve(
     object_types: &type_permissions::ObjectTypesWithPermissions,
 ) -> Result<BooleanExpressionsOutput, BooleanExpressionError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
-    let mut issues = vec![];
 
     // first we collect all the boolean_expression_types
     // so we have a full set to refer to when resolving them
@@ -54,10 +54,7 @@ pub fn resolve(
         if let BooleanExpressionOperand::Object(boolean_expression_object_operand) =
             &boolean_expression_type.operand
         {
-            let object::ObjectBooleanExpressionTypeOutput {
-                object_boolean_expression: object_boolean_expression_type,
-                issues: object_issues,
-            } = object::resolve_object_boolean_expression_type(
+            let object_boolean_expression_type = object::resolve_object_boolean_expression_type(
                 boolean_expression_type_name,
                 boolean_expression_object_operand,
                 &boolean_expression_type.logical_operators,
@@ -69,8 +66,6 @@ pub fn resolve(
                 graphql_config,
                 &mut graphql_types,
             )?;
-
-            issues.extend(object_issues);
 
             boolean_expression_object_types.insert(
                 boolean_expression_type_name.clone(),
@@ -86,6 +81,5 @@ pub fn resolve(
         },
         // TODO: make sure we are adding new types to graphql_types
         graphql_types,
-        issues,
     })
 }

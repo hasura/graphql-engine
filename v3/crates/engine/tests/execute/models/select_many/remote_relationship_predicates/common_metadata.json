@@ -2925,6 +2925,28 @@
                       }
                     }
                   },
+                  "pet": {
+                    "fields": {
+                      "age": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "name": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "text"
+                          }
+                        }
+                      }
+                    }
+                  },
                   "spatial_ref_sys": {
                     "fields": {
                       "auth_name": {
@@ -2997,6 +3019,21 @@
                           "underlying_type": {
                             "type": "named",
                             "name": "text"
+                          }
+                        }
+                      },
+                      "pets": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "array",
+                            "element_type": {
+                              "type": "nullable",
+                              "underlying_type": {
+                                "type": "named",
+                                "name": "pet"
+                              }
+                            }
                           }
                         }
                       },

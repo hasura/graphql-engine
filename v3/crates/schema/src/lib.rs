@@ -41,8 +41,8 @@ pub use types::{
     Annotation, ApolloFederationRootFields, ArgumentNameAndPath, ArgumentPresets,
     BooleanExpressionAnnotation, CommandSourceDetail, EntityFieldTypeNameMapping, GlobalID,
     InputAnnotation, ModelFilterArgument, ModelInputAnnotation, ModelOrderByDirection,
-    NamespaceAnnotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
-    RootFieldKind, TypeKind,
+    NamespaceAnnotation, NodeFieldTypeNameMapping, ObjectFieldKind, OutputAnnotation,
+    RootFieldAnnotation, RootFieldKind, TypeKind,
 };
 
 /// This 'NamespacedGetter' looks up 'NamespacedNodeInfo's according to actual roles.

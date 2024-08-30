@@ -296,10 +296,25 @@ fn test_model_select_many_boolean_expression_type() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_model_select_many_where_nested_select() -> anyhow::Result<()> {
-    let test_path_string = "execute/models/select_many/where/nested_select";
+fn test_model_select_many_where_nested_select_object() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/nested_select/object";
+    let shared_metadata = "execute/models/select_many/where/nested_select/common-metadata.json";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[shared_metadata, common_metadata_path_string],
+    )
+}
+
+#[test]
+fn test_model_select_many_where_nested_select_array() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/nested_select/array";
+    let shared_metadata = "execute/models/select_many/where/nested_select/common-metadata.json";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[shared_metadata, common_metadata_path_string],
+    )
 }
 
 // is_null tests

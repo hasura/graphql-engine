@@ -9,12 +9,13 @@ use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::FilterRelationshipAnnotation;
-use super::types::{BooleanExpressionAnnotation, InputAnnotation, TypeId};
+use super::types::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind, TypeId};
 use metadata_resolve::{
     mk_name, BooleanExpressionComparableRelationship, ComparisonExpressionInfo,
     IncludeLogicalOperators, ModelExpressionType, ModelWithPermissions,
-    ObjectBooleanExpressionType, ObjectComparisonExpressionInfo, ObjectTypeWithRelationships,
-    Qualified, RelationshipField, RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
+    ObjectBooleanExpressionType, ObjectComparisonExpressionInfo, ObjectComparisonKind,
+    ObjectTypeWithRelationships, Qualified, RelationshipField, RelationshipModelMapping,
+    ResolvedObjectBooleanExpressionType,
 };
 
 use crate::permissions;
@@ -170,6 +171,7 @@ fn build_comparable_fields_schema(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
                 field: types::ModelFilterArgument::Field {
                     field_name: field_name.clone(),
+                    object_field_kind: ObjectFieldKind::Scalar,
                     object_type: object_type_name.clone(),
                     deprecated: field_definition.is_deprecated(),
                 },
@@ -232,6 +234,10 @@ fn build_comparable_fields_schema(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
                 field: types::ModelFilterArgument::Field {
                     field_name: field_name.clone(),
+                    object_field_kind: match object_comparison_expression.field_kind {
+                        ObjectComparisonKind::Object => ObjectFieldKind::Object,
+                        ObjectComparisonKind::Array => ObjectFieldKind::Array,
+                    },
                     object_type: object_type_name.clone(),
                     deprecated: field_definition.is_deprecated(),
                 },

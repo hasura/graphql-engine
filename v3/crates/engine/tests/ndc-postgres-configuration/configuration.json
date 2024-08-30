@@ -2637,6 +2637,27 @@
         },
         "description": null
       },
+      "pet": {
+        "typeName": "pet",
+        "schemaName": "public",
+        "fields": {
+          "age": {
+            "fieldName": "age",
+            "type": {
+              "scalarType": "int4"
+            },
+            "description": null
+          },
+          "name": {
+            "fieldName": "name",
+            "type": {
+              "scalarType": "text"
+            },
+            "description": null
+          }
+        },
+        "description": null
+      },
       "staff": {
         "typeName": "staff",
         "schemaName": "public",
@@ -2659,6 +2680,15 @@
             "fieldName": "last_name",
             "type": {
               "scalarType": "text"
+            },
+            "description": null
+          },
+          "pets": {
+            "fieldName": "pets",
+            "type": {
+              "arrayType": {
+                "compositeType": "pet"
+              }
             },
             "description": null
           },

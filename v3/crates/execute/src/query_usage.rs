@@ -135,6 +135,7 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
                 field_name,
                 object_type,
                 deprecated,
+                object_field_kind: _,
             } => {
                 result.push(OpenddObject::Field(FieldUsage {
                     name: field_name.to_owned(),

@@ -80,6 +80,13 @@ pub enum RootFieldKind {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum ObjectFieldKind {
+    Scalar,
+    Object,
+    Array,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ModelFilterArgument {
     AndOp,
     OrOp,
@@ -87,6 +94,7 @@ pub enum ModelFilterArgument {
     Field {
         field_name: types::FieldName,
         object_type: Qualified<types::CustomTypeName>,
+        object_field_kind: ObjectFieldKind,
         /// To mark a field as deprecated in the field usage while reporting query usage analytics.
         deprecated: bool,
     },

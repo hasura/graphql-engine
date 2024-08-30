@@ -98,7 +98,6 @@ pub fn resolve(
     let boolean_expressions::BooleanExpressionsOutput {
         boolean_expression_types,
         graphql_types,
-        issues,
     } = boolean_expressions::resolve(
         &metadata_accessor,
         &boolean_expression_scalar_types,
@@ -106,8 +105,6 @@ pub fn resolve(
         &graphql_config,
         &object_types_with_permissions,
     )?;
-
-    all_warnings.extend(issues.into_iter().map(Warning::from));
 
     let order_by_expressions::OrderByExpressionsOutput {
         order_by_expressions,

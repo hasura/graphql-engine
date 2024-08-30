@@ -2,7 +2,7 @@ use super::error::BooleanExpressionError;
 use super::graphql;
 use super::helpers;
 pub use super::{
-    BooleanExpressionComparableRelationship, BooleanExpressionIssue,
+    BooleanExpressionComparableRelationship, ComparableFieldKind,
     ResolvedObjectBooleanExpressionType,
 };
 use crate::stages::{graphql_config, object_types, scalar_boolean_expressions, type_permissions};
@@ -28,11 +28,6 @@ pub(crate) type RawBooleanExpressionTypes<'a> = BTreeMap<
     ),
 >;
 
-pub struct ObjectBooleanExpressionTypeOutput {
-    pub object_boolean_expression: ResolvedObjectBooleanExpressionType,
-    pub issues: Vec<BooleanExpressionIssue>,
-}
-
 /// Resolves a given object boolean expression type
 pub(crate) fn resolve_object_boolean_expression_type(
     boolean_expression_type_name: &Qualified<CustomTypeName>,
@@ -48,7 +43,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
     graphql_config: &graphql_config::GraphqlConfig,
     graphql_types: &mut BTreeSet<ast::TypeName>,
-) -> Result<ObjectBooleanExpressionTypeOutput, BooleanExpressionError> {
+) -> Result<ResolvedObjectBooleanExpressionType, BooleanExpressionError> {
     let qualified_object_type_name = Qualified::new(
         subgraph.clone(),
         object_boolean_expression_operand.r#type.clone(),
@@ -65,10 +60,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
             )?;
 
     // resolve any comparable fields
-    let ComparableFieldsOutput {
-        comparable_fields,
-        issues,
-    } = resolve_comparable_fields(
+    let ComparableFieldsOutput(comparable_fields) = resolve_comparable_fields(
         &object_boolean_expression_operand.comparable_fields,
         &object_type_representation.object_type,
         boolean_expression_type_name,
@@ -101,15 +93,11 @@ pub(crate) fn resolve_object_boolean_expression_type(
         })
         .transpose()?;
 
-    let resolved_boolean_expression = ResolvedObjectBooleanExpressionType {
+    Ok(ResolvedObjectBooleanExpressionType {
         name: boolean_expression_type_name.clone(),
         include_logical_operators: helpers::resolve_logical_operators(logical_operators),
         object_type: qualified_object_type_name.clone(),
         graphql: resolved_graphql,
-    };
-    Ok(ObjectBooleanExpressionTypeOutput {
-        object_boolean_expression: resolved_boolean_expression,
-        issues,
     })
 }
 
@@ -157,10 +145,9 @@ fn resolve_comparable_relationships(
     Ok(resolved_comparable_relationships)
 }
 
-pub struct ComparableFieldsOutput {
-    pub comparable_fields: BTreeMap<FieldName, Qualified<CustomTypeName>>,
-    pub issues: Vec<BooleanExpressionIssue>,
-}
+pub struct ComparableFieldsOutput(
+    BTreeMap<FieldName, (ComparableFieldKind, Qualified<CustomTypeName>)>,
+);
 
 // comparable_fields don't do much, all we can do is ensure that the other BooleanExpressionTypes
 // they refer to exist
@@ -172,7 +159,6 @@ fn resolve_comparable_fields(
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
 ) -> Result<ComparableFieldsOutput, BooleanExpressionError> {
     let mut resolved_comparable_fields = BTreeMap::new();
-    let mut issues = vec![];
 
     // validate comparable fields all exist in underlying object
     for comparable_field in comparable_fields {
@@ -185,15 +171,6 @@ fn resolve_comparable_fields(
                     object_boolean_expression_type: boolean_expression_type_name.clone(),
                 },
             )?;
-
-        // raise a warning if trying to use a nested array for filtering
-        // this is not yet supported by ndc-spec
-        if let QualifiedBaseType::List(_) = field.field_type.underlying_type {
-            issues.push(BooleanExpressionIssue::CannotCompareNestedArray {
-                field_name: comparable_field.field_name.clone(),
-                object_boolean_expression_type: boolean_expression_type_name.clone(),
-            });
-        };
 
         // fields with field arguments are not allowed in boolean expressions
         if !field.field_arguments.is_empty() {
@@ -216,12 +193,18 @@ fn resolve_comparable_fields(
         let field_type = field.field_type.get_underlying_type_name();
 
         // get type underlying boolean expression
-        let boolean_expression_underlying_type = match &raw_boolean_expression_type.operand {
+        let (field_kind, boolean_expression_underlying_type) = match &raw_boolean_expression_type
+            .operand
+        {
             BooleanExpressionOperand::Object(BooleanExpressionObjectOperand { r#type, .. }) => {
-                TypeName::Custom(r#type.clone())
+                let field_kind = match field.field_type.underlying_type {
+                    QualifiedBaseType::List(_) => ComparableFieldKind::Array,
+                    QualifiedBaseType::Named(_) => ComparableFieldKind::Object,
+                };
+                (field_kind, TypeName::Custom(r#type.clone()))
             }
             BooleanExpressionOperand::Scalar(BooleanExpressionScalarOperand { r#type, .. }) => {
-                r#type.clone()
+                (ComparableFieldKind::Scalar, r#type.clone())
             }
         };
 
@@ -240,12 +223,9 @@ fn resolve_comparable_fields(
 
         resolved_comparable_fields.insert(
             comparable_field.field_name.clone(),
-            field_boolean_expression_type_name,
+            (field_kind, field_boolean_expression_type_name),
         );
     }
 
-    Ok(ComparableFieldsOutput {
-        comparable_fields: resolved_comparable_fields,
-        issues,
-    })
+    Ok(ComparableFieldsOutput(resolved_comparable_fields))
 }

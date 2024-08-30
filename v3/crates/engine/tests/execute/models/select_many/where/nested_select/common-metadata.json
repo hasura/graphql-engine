@@ -13,7 +13,10 @@
               "scalar": {
                 "type": "String",
                 "comparisonOperators": [
-                  { "name": "_eq", "argumentType": "String!" }
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": [
                   {
@@ -24,8 +27,12 @@
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "String_Comparison_Exp"
             }
@@ -40,7 +47,10 @@
               "scalar": {
                 "type": "Int",
                 "comparisonOperators": [
-                  { "name": "_eq", "argumentType": "Int!" }
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": [
                   {
@@ -51,8 +61,12 @@
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Int_Comparison_Exp"
             }
@@ -78,17 +92,98 @@
                   {
                     "fieldName": "location",
                     "booleanExpressionType": "location_bool_exp"
+                  },
+                  {
+                    "fieldName": "staff",
+                    "booleanExpressionType": "staff_bool_exp"
                   }
                 ],
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
-            "graphql": { "typeName": "InstitutionBoolExp" }
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "InstitutionBoolExp"
+            }
           }
         },
-
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "pet_bool_exp",
+            "operand": {
+              "object": {
+                "type": "pet",
+                "comparableFields": [
+                  {
+                    "fieldName": "name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "age",
+                    "booleanExpressionType": "int_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "PetBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "staff_bool_exp",
+            "operand": {
+              "object": {
+                "type": "staff_member",
+                "comparableFields": [
+                  {
+                    "fieldName": "first_name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "last_name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "specialities",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "pets",
+                    "booleanExpressionType": "pet_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "StaffBoolExp"
+            }
+          }
+        },
         {
           "kind": "ObjectType",
           "version": "v1",
@@ -196,12 +291,17 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
-            "graphql": { "typeName": "CountryBoolExp" }
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "CountryBoolExp"
+            }
           }
         },
-
         {
           "kind": "BooleanExpressionType",
           "version": "v1",
@@ -223,9 +323,15 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
-            "graphql": { "typeName": "LocationBoolExp" }
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "LocationBoolExp"
+            }
           }
         },
         {
@@ -266,7 +372,6 @@
             ]
           }
         },
-
         {
           "kind": "ObjectType",
           "version": "v1",
@@ -329,7 +434,6 @@
             ]
           }
         },
-
         {
           "kind": "TypePermissions",
           "version": "v1",
@@ -340,6 +444,44 @@
                 "role": "admin",
                 "output": {
                   "allowedFields": ["city", "country", "campuses"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "pet",
+            "fields": [
+              {
+                "name": "name",
+                "type": "String"
+              },
+              {
+                "name": "age",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "Pet"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "pet",
+                "fieldMapping": {
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "age": {
+                    "column": {
+                      "name": "age"
+                    }
+                  }
                 }
               }
             ]
@@ -362,6 +504,10 @@
               {
                 "name": "specialities",
                 "type": "[String]"
+              },
+              {
+                "name": "pets",
+                "type": "[pet]"
               }
             ],
             "graphql": {
@@ -386,7 +532,27 @@
                     "column": {
                       "name": "specialities"
                     }
+                  },
+                  "pets": {
+                    "column": {
+                      "name": "pets"
+                    }
                   }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "pet",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["name", "age"]
                 }
               }
             ]
@@ -401,7 +567,12 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": ["first_name", "last_name", "specialities"]
+                  "allowedFields": [
+                    "first_name",
+                    "last_name",
+                    "specialities",
+                    "pets"
+                  ]
                 }
               }
             ]

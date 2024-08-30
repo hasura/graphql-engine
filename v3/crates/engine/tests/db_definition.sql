@@ -95,30 +95,28 @@ SELECT pg_catalog.setval('public.movie_analytics_id_seq', 3, true);
 
 ALTER SEQUENCE public.movie_analytics_id_seq OWNED BY public.movie_analytics.id;
 
-
 --
 -- Name: movie_analytics id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.movie_analytics ALTER COLUMN id SET DEFAULT nextval('public.movie_analytics_id_seq'::regclass);
-
+ALTER TABLE ONLY public.movie_analytics
+ALTER COLUMN id
+SET DEFAULT nextval('public.movie_analytics_id_seq'::regclass);
 -- `institution` table for testing queries into JSON objects
 CREATE TYPE public.country AS (name text, continent text);
-
 CREATE TYPE public.location AS (city text, country country, campuses text []);
-
+CREATE TYPE public.pet AS (name text, age int);
 CREATE TYPE public.staff AS (
   first_name text,
   last_name text,
   specialities text [],
+  pets pet [],
   favourite_artist_id int
 );
-
 CREATE TYPE public.institution_songs AS (
   primary_anthem_track_id int,
   secondary_anthem_track_id int
 );
-
 CREATE TABLE public.institution (
   id integer NOT NULL,
   name text,
@@ -128,47 +126,45 @@ CREATE TABLE public.institution (
   songs institution_songs,
   CONSTRAINT institution_pkey PRIMARY KEY (id)
 );
-
 INSERT INTO public.institution (id, name, location, staff, departments, songs)
 VALUES (
     1,
     'Queen Mary University of London',
     ROW(
       'London',
-      ROW('UK','Europe') :: country,
+      ROW('UK', 'Europe')::country,
       ARRAY ['Mile End','Whitechapel','Charterhouse Square','West Smithfield']
     )::location,
-    ARRAY [ROW('Peter','Landin',ARRAY['Computer Science','Education'],
+    ARRAY [ROW('Peter','Landin',
+      ARRAY['Computer Science','Education'],
+    ARRAY [('Dog',100) ::pet],
     1
   )::staff ],
   ARRAY ['Humanities and Social Sciences','Science and Engineering','Medicine and Dentistry'],
-  ROW(
-    2270,
-    2271
-  )::institution_songs
+  ROW(2270, 2271)::institution_songs
 ),
 (
   2,
   'Chalmers University of Technology',
   ROW(
     'Gothenburg',
-    ROW('Sweden','Europe') :: country,
+    ROW('Sweden', 'Europe')::country,
     ARRAY ['Johanneberg','Lindholmen']
   )::location,
-  ARRAY [ROW('John','Hughes',ARRAY['Computer Science','Functional Programming','Software Testing'],
+  ARRAY [ROW('John','Hughes',
+      ARRAY['Computer Science', 'Functional Programming', 'Software Testing'],
+  ARRAY [('Horse', 20) :: pet],
   2
 )::staff,
 ROW(
   'Koen',
   'Claessen',
-  ARRAY ['Computer Science','Functional Programming','Automated Reasoning'],
+  ARRAY ['Computer Science', 'Functional Programming', 'Automated Reasoning'],
+  ARRAY [('First horse',1) :: pet, ('Second horse', 2) ::pet],
   3
 )::staff ],
 ARRAY ['Architecture and Civil Engineering','Computer Science and Engineering','Electrical Engineering','Physics','Industrial and Materials Science'],
-ROW(
-    3421,
-    NULL
-  )::institution_songs
+ROW(3421, NULL)::institution_songs
 ),
 (
   3,

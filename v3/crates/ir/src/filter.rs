@@ -17,7 +17,7 @@ use open_dds::{
 use schema::FilterRelationshipAnnotation;
 use schema::GDS;
 use schema::{self};
-use schema::{BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation};
+use schema::{BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation, ObjectFieldKind};
 
 use super::relationship::LocalModelRelationshipInfo;
 use crate::selection_set::NdcRelationshipName;
@@ -147,15 +147,19 @@ fn build_filter_expression_from_boolean_expression<'s>(
                 schema::ModelFilterArgument::Field {
                     field_name,
                     object_type,
+                    object_field_kind,
                     ..
                 },
         } => {
             let FieldMapping { column, .. } =
                 get_field_mapping_of_field_name(type_mappings, object_type, field_name)?;
 
+            let inner_is_array_field = matches!(object_field_kind, ObjectFieldKind::Array);
+
             build_comparison_expression(
                 field,
                 field_path,
+                inner_is_array_field,
                 &column,
                 data_connector_link,
                 type_mappings,
@@ -324,6 +328,7 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
 fn build_comparison_expression<'s>(
     field: &normalized_ast::InputField<'s, GDS>,
     field_path: &mut Vec<DataConnectorColumnName>,
+    is_array_field: bool,
     column: &DataConnectorColumnName,
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
@@ -368,6 +373,7 @@ fn build_comparison_expression<'s>(
                     field:
                         schema::ModelFilterArgument::Field {
                             field_name: inner_field_name,
+                            object_field_kind,
                             object_type: inner_object_type,
                             ..
                         },
@@ -383,18 +389,43 @@ fn build_comparison_expression<'s>(
                     inner_field_name,
                 )?;
 
-                // add it to the path
-                field_path.push(inner_column);
+                let inner_is_array_field = matches!(object_field_kind, ObjectFieldKind::Array);
 
-                let inner_expression = build_comparison_expression(
-                    op_value,
-                    field_path,
-                    column,
-                    data_connector_link,
-                    type_mappings,
-                )?;
+                if is_array_field {
+                    // if we're matching in an array field, we look for the inner column directly
+                    let inner_expression = build_comparison_expression(
+                        op_value,
+                        field_path,
+                        inner_is_array_field,
+                        &inner_column,
+                        data_connector_link,
+                        type_mappings,
+                    )?;
 
-                expressions.push(inner_expression);
+                    // and then wrap it in an `exists`
+                    let exists_wrapper = expression::Expression::LocalNestedArray {
+                        column: column.clone(),
+                        field_path: field_path.clone(),
+                        predicate: Box::new(inner_expression),
+                    };
+
+                    expressions.push(exists_wrapper);
+                } else {
+                    // otherwise we add to the field path
+                    field_path.push(inner_column.clone());
+
+                    // and look for the main column inside
+                    let inner_expression = build_comparison_expression(
+                        op_value,
+                        field_path,
+                        inner_is_array_field,
+                        column,
+                        data_connector_link,
+                        type_mappings,
+                    )?;
+
+                    expressions.push(inner_expression);
+                }
             }
             // Nested relationship comparison
             schema::Annotation::Input(InputAnnotation::BooleanExpression(

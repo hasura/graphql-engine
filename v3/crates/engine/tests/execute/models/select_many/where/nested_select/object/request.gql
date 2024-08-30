@@ -21,6 +21,7 @@ query MyQuery {
     }
     departments
   }
+
   match_uk: InstitutionMany(
     where: { location: { country: { name: { _eq: "UK" } } } }
   ) {
