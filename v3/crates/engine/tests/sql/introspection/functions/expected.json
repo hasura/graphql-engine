@@ -66,6 +66,21 @@
     ]
   },
   {
+    "function_name": "get_session_info",
+    "return_type": "SessionInfo",
+    "description": null,
+    "arguments": [
+      {
+        "name": "userId",
+        "position": 0,
+        "argument_type": "INT32",
+        "argument_type_normalized": "INT32",
+        "is_nullable": false,
+        "description": null
+      }
+    ]
+  },
+  {
     "function_name": "uppercase_actor_name_by_id",
     "return_type": "actor",
     "description": null,

@@ -4505,6 +4505,7 @@ dependencies = [
  "metadata-resolve",
  "ndc-models 0.2.0",
  "open-dds",
+ "reqwest",
  "schema",
  "serde",
  "serde_json",

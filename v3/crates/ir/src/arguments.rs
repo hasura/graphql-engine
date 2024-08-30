@@ -162,6 +162,25 @@ where
     }
 
     // preset arguments from `DataConnectorLink` argument presets
+    for (argument_name, value) in process_connector_link_presets(
+        data_connector_link_argument_presets,
+        session_variables,
+        request_headers,
+    )? {
+        arguments.insert(argument_name, Argument::Literal { value });
+    }
+
+    Ok(arguments)
+}
+
+/// Builds arguments for a command that come from a connector link's argument presets
+pub fn process_connector_link_presets(
+    data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
+    session_variables: &SessionVariables,
+    request_headers: &reqwest::header::HeaderMap,
+) -> Result<BTreeMap<DataConnectorArgumentName, serde_json::Value>, error::Error> {
+    let mut arguments = BTreeMap::new();
+    // preset arguments from `DataConnectorLink` argument presets
     for (dc_argument_preset_name, dc_argument_preset_value) in data_connector_link_argument_presets
     {
         let mut headers_argument = reqwest::header::HeaderMap::new();
@@ -199,12 +218,9 @@ where
 
         arguments.insert(
             dc_argument_preset_name.clone(),
-            Argument::Literal {
-                value: serde_json::to_value(SerializableHeaderMap(headers_argument))?,
-            },
+            serde_json::to_value(SerializableHeaderMap(headers_argument))?,
         );
     }
-
     Ok(arguments)
 }
 

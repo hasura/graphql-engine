@@ -9,7 +9,7 @@ use crate::catalog::{
 pub const STRUCT_TYPE: &str = "struct_type";
 pub const STRUCT_TYPE_FIELD: &str = "struct_type_field";
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub(crate) struct StructTypes {
     rows: Vec<StructTypeRow>,
 }
@@ -55,7 +55,7 @@ impl StructTypeRow {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub(crate) struct StructTypeFields {
     rows: Vec<StructTypeFieldRow>,
 }

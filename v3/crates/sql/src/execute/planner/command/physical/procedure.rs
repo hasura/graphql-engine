@@ -24,12 +24,15 @@ use execute::{
     HttpContext,
 };
 use ir::{NdcFieldAlias, NdcRelationshipName};
-use open_dds::{commands::ProcedureName, types::DataConnectorArgumentName};
+use open_dds::{
+    commands::ProcedureName, data_connector::DataConnectorColumnName,
+    types::DataConnectorArgumentName,
+};
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 use crate::execute::planner::common::PhysicalPlanOptions;
 
-use super::CommandOutput;
+use super::{function::extract_result_field, CommandOutput};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ExecutionPlanError {
@@ -69,6 +72,9 @@ pub(crate) struct NDCProcedurePushDown {
     collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     // used to post process a command's output
     output: CommandOutput,
+    //  The key from which the response has to be extracted if the command output is not the
+    //  same as the ndc type. This happens with response config in a data connector link
+    extract_response_from: Option<DataConnectorColumnName>,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
     // the schema of the node's output
     projected_schema: SchemaRef,
@@ -105,6 +111,7 @@ impl NDCProcedurePushDown {
         // schema of the output of the command selection
         schema: &DFSchemaRef,
         output: CommandOutput,
+        extract_response_from: Option<DataConnectorColumnName>,
     ) -> NDCProcedurePushDown {
         let metrics = ExecutionPlanMetricsSet::new();
         Self {
@@ -114,6 +121,7 @@ impl NDCProcedurePushDown {
             fields: Some(wrap_ndc_fields(&output, ndc_fields)),
             collection_relationships: BTreeMap::new(),
             output,
+            extract_response_from,
             data_connector,
             projected_schema: schema.inner().clone(),
             cache: Self::compute_properties(schema.inner().clone()),
@@ -220,6 +228,7 @@ impl ExecutionPlan for NDCProcedurePushDown {
             query_request,
             self.data_connector.clone(),
             self.output.clone(),
+            self.extract_response_from.clone(),
             baseline_metrics,
         )
         .with_context((*otel_cx).clone())
@@ -238,6 +247,7 @@ pub async fn fetch_from_data_connector(
     request: execute::ndc::NdcMutationRequest,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
     output: CommandOutput,
+    extract_response_from: Option<DataConnectorColumnName>,
     baseline_metrics: BaselineMetrics,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let tracer = tracing_util::global_tracer();
@@ -253,7 +263,15 @@ pub async fn fetch_from_data_connector(
         "ndc_response_to_record_batch",
         "Converts NDC Response into datafusion's RecordBatch",
         SpanVisibility::Internal,
-        || ndc_response_to_record_batch(schema, ndc_response, &output, &baseline_metrics),
+        || {
+            ndc_response_to_record_batch(
+                schema,
+                ndc_response,
+                &output,
+                extract_response_from.as_ref(),
+                &baseline_metrics,
+            )
+        },
     )?;
     Ok(batch)
 }
@@ -262,6 +280,7 @@ pub fn ndc_response_to_record_batch(
     schema: SchemaRef,
     ndc_response: NdcMutationResponse,
     output: &CommandOutput,
+    extract_response_from: Option<&DataConnectorColumnName>,
     baseline_metrics: &BaselineMetrics,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let ndc_models::MutationOperationResults::Procedure { result } = ndc_response
@@ -271,6 +290,9 @@ pub fn ndc_response_to_record_batch(
         .ok_or_else(|| {
             ExecutionPlanError::NDCResponseFormat("no operation_results found".to_string())
         })?;
+
+    let result = extract_result_field(result, extract_response_from)
+        .map_err(ExecutionPlanError::NDCResponseFormat)?;
 
     let mut decoder =
         datafusion::arrow::json::reader::ReaderBuilder::new(schema.clone()).build_decoder()?;

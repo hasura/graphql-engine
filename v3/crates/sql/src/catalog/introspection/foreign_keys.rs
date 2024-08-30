@@ -34,7 +34,7 @@ impl InferredForeignKeysRow {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub(crate) struct InferredForeignKeys {
     rows: Vec<InferredForeignKeysRow>,
 }

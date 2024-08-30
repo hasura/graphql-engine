@@ -32,7 +32,7 @@ mod table_valued_function;
 pub const HASURA_METADATA_SCHEMA: &str = "hasura";
 
 /// Describes the database schema structure and metadata.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub(crate) struct Introspection {
     struct_types: StructTypes,
     struct_type_fields: StructTypeFields,

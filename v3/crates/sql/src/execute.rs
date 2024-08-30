@@ -73,6 +73,7 @@ impl TraceableError for SqlExecutionError {
 
 /// Executes an SQL Request using the Apache DataFusion query engine.
 pub async fn execute_sql(
+    request_headers: Arc<reqwest::header::HeaderMap>,
     catalog: Arc<crate::catalog::Catalog>,
     session: Arc<Session>,
     http_context: Arc<execute::HttpContext>,
@@ -85,7 +86,8 @@ pub async fn execute_sql(
             "Create a datafusion SessionContext",
             SpanVisibility::Internal,
             || {
-                let session = catalog.create_session_context(&session, &http_context);
+                let session =
+                    catalog.create_session_context(&request_headers, &session, &http_context);
                 Successful::new(session)
             },
         )

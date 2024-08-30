@@ -19,6 +19,7 @@ use open_dds::commands::DataConnectorCommand;
 pub(crate) use procedure::NDCProcedurePushDown;
 
 pub fn build_execution_plan(
+    request_headers: &reqwest::header::HeaderMap,
     metadata: &metadata_resolve::Metadata,
     http_context: &Arc<execute::HttpContext>,
     session: &Arc<Session>,
@@ -138,6 +139,26 @@ pub fn build_execution_plan(
         ndc_fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_field);
     }
 
+    let (ndc_fields, extract_response_from) = match &command_source.data_connector.response_config {
+        // if the data connector has 'responseHeaders' configured, we'll need to wrap the ndc fields
+        // under the 'result' field if the command's response at opendd layer refers to the 'result'
+        // field's type. Note that we aren't requesting the 'header's field as we don't forward the
+        // response headers in the SQL layer yet
+        Some(response_config) if !command_source.ndc_type_opendd_type_same => {
+            let result_field_name = NdcFieldAlias::from(response_config.result_field.as_str());
+            let result_field = ResolvedField::Column {
+                column: response_config.result_field.clone(),
+                fields: Some(execute::plan::field::NestedField::Object(
+                    execute::plan::field::NestedObject { fields: ndc_fields },
+                )),
+                arguments: BTreeMap::new(),
+            };
+            let fields = IndexMap::from_iter([(result_field_name, result_field)]);
+            (fields, Some(response_config.result_field.clone()))
+        }
+        _ => (ndc_fields, None),
+    };
+
     if !command
         .permissions
         .get(&session.role)
@@ -161,6 +182,17 @@ pub fn build_execution_plan(
         ndc_arguments.insert(ndc_argument_name.clone(), ndc_argument_value.clone());
     }
 
+    // preset arguments from `DataConnectorLink` argument presets
+    for (argument_name, value) in ir::process_connector_link_presets(
+        &command_source.data_connector_link_argument_presets,
+        &session.variables,
+        request_headers,
+    )
+    .map_err(|e| DataFusionError::External(Box::new(e)))?
+    {
+        ndc_arguments.insert(argument_name, value);
+    }
+
     match &command_source.source {
         DataConnectorCommand::Function(function_name) => {
             let ndc_pushdown = NDCFunctionPushDown::new(
@@ -171,6 +203,7 @@ pub fn build_execution_plan(
                 ndc_fields,
                 schema,
                 output.clone(),
+                extract_response_from,
             );
             Ok(Arc::new(ndc_pushdown))
         }
@@ -183,6 +216,7 @@ pub fn build_execution_plan(
                 ndc_fields,
                 schema,
                 output.clone(),
+                extract_response_from,
             );
             Ok(Arc::new(ndc_pushdown))
         }

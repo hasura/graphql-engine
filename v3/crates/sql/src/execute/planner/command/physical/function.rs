@@ -28,7 +28,7 @@ use execute::{
 use ir::{NdcFieldAlias, NdcRelationshipName};
 use open_dds::{
     commands::FunctionName,
-    data_connector::CollectionName,
+    data_connector::{CollectionName, DataConnectorColumnName},
     types::{CustomTypeName, DataConnectorArgumentName},
 };
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
@@ -71,6 +71,9 @@ pub(crate) struct NDCFunctionPushDown {
     collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     // used to post process a command's output
     output: CommandOutput,
+    //  The key from which the response has to be extracted if the command output is not the
+    //  same as the ndc type. This happens with response config in a data connector link
+    extract_response_from: Option<DataConnectorColumnName>,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
     // the schema of the node's output
     projected_schema: SchemaRef,
@@ -117,6 +120,7 @@ impl NDCFunctionPushDown {
         // schema of the output of the command selection
         schema: &DFSchemaRef,
         output: CommandOutput,
+        extract_response_from: Option<DataConnectorColumnName>,
     ) -> NDCFunctionPushDown {
         let metrics = ExecutionPlanMetricsSet::new();
         Self {
@@ -126,6 +130,7 @@ impl NDCFunctionPushDown {
             fields: wrap_ndc_fields(&output, ndc_fields),
             collection_relationships: BTreeMap::new(),
             output,
+            extract_response_from,
             data_connector,
             projected_schema: schema.inner().clone(),
             cache: Self::compute_properties(schema.inner().clone()),
@@ -232,6 +237,7 @@ impl ExecutionPlan for NDCFunctionPushDown {
             query_request,
             self.data_connector.clone(),
             self.output.clone(),
+            self.extract_response_from.clone(),
             baseline_metrics,
         )
         .with_context((*otel_cx).clone())
@@ -244,12 +250,13 @@ impl ExecutionPlan for NDCFunctionPushDown {
     }
 }
 
-pub async fn fetch_from_data_connector(
+async fn fetch_from_data_connector(
     schema: SchemaRef,
     http_context: Arc<HttpContext>,
     query_request: execute::ndc::NdcQueryRequest,
     data_connector: Arc<metadata_resolve::DataConnectorLink>,
     output: CommandOutput,
+    extract_response_from: Option<DataConnectorColumnName>,
     baseline_metrics: BaselineMetrics,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let tracer = tracing_util::global_tracer();
@@ -261,15 +268,38 @@ pub async fn fetch_from_data_connector(
         "ndc_response_to_record_batch",
         "Converts NDC Response into datafusion's RecordBatch",
         SpanVisibility::Internal,
-        || ndc_response_to_record_batch(schema, ndc_response, &output, &baseline_metrics),
+        || {
+            ndc_response_to_record_batch(
+                schema,
+                ndc_response,
+                &output,
+                extract_response_from.as_ref(),
+                &baseline_metrics,
+            )
+        },
     )?;
     Ok(batch)
 }
 
-pub fn ndc_response_to_record_batch(
+pub(super) fn extract_result_field(
+    mut rows: serde_json::Value,
+    extract_response_from: Option<&DataConnectorColumnName>,
+) -> Result<serde_json::Value, String> {
+    match extract_response_from {
+        Some(result_field) => rows
+            .as_object_mut()
+            .ok_or_else(|| "expecting an object to extract result field".to_string())?
+            .remove(result_field.as_str())
+            .ok_or_else(|| format!("missing result field in ndc response: {result_field}")),
+        None => Ok(rows),
+    }
+}
+
+fn ndc_response_to_record_batch(
     schema: SchemaRef,
     ndc_response: NdcQueryResponse,
     output: &CommandOutput,
+    extract_response_from: Option<&DataConnectorColumnName>,
     baseline_metrics: &BaselineMetrics,
 ) -> Result<RecordBatch, ExecutionPlanError> {
     let rows = ndc_response
@@ -291,6 +321,9 @@ pub fn ndc_response_to_record_batch(
             )
         })?
         .0;
+
+    let rows = extract_result_field(rows, extract_response_from)
+        .map_err(ExecutionPlanError::NDCResponseFormat)?;
 
     let mut decoder =
         datafusion::arrow::json::reader::ReaderBuilder::new(schema.clone()).build_decoder()?;

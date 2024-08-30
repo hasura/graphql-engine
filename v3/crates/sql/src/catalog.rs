@@ -24,7 +24,6 @@ pub mod mem_table;
 pub mod model;
 pub mod subgraph;
 pub mod types;
-
 /// The context in which to compile and execute SQL queries.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Catalog {
@@ -36,6 +35,18 @@ pub struct Catalog {
 }
 
 impl Catalog {
+    /// Create a no-op Catalog, used when `sql` layer is disabled
+    pub fn empty_from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
+        Catalog {
+            metadata,
+            subgraphs: IndexMap::default(),
+            table_valued_functions: IndexMap::default(),
+            introspection: Arc::new(introspection::IntrospectionSchemaProvider::new(
+                &introspection::Introspection::default(),
+            )),
+            default_schema: None,
+        }
+    }
     /// Derive a SQL Context from resolved Open DDS metadata.
     pub fn from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
         let type_registry = TypeRegistry::build_type_registry(&metadata);
@@ -126,6 +137,7 @@ impl datafusion::CatalogProvider for model::WithSession<Catalog> {
 impl Catalog {
     pub fn create_session_context(
         self: Arc<Self>,
+        request_headers: &Arc<reqwest::header::HeaderMap>,
         session: &Arc<Session>,
         http_context: &Arc<execute::HttpContext>,
     ) -> datafusion::SessionContext {
@@ -163,6 +175,7 @@ impl Catalog {
             catalog: self.clone(),
             session: session.clone(),
             http_context: http_context.clone(),
+            request_headers: request_headers.clone(),
         });
         let session_state = datafusion::SessionStateBuilder::new()
             .with_config(session_config)

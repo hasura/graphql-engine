@@ -32,6 +32,11 @@ fn test_commands_functions() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_commands_functions_forward_headers() -> anyhow::Result<()> {
+    test_sql("sql/commands/functions_forward_headers")
+}
+
+#[test]
 fn test_commands_functions_empty_args() -> anyhow::Result<()> {
     test_sql("sql/commands/functions_empty_args")
 }
