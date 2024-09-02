@@ -31,6 +31,7 @@ pub struct GraphqlConfigV1 {
     pub query: QueryGraphqlConfig,
     pub mutation: MutationGraphqlConfig,
     #[opendd(hidden = true)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub subscription: Option<SubscriptionGraphqlConfig>,
     pub apollo_federation: Option<GraphqlApolloFederationConfig>,
 }

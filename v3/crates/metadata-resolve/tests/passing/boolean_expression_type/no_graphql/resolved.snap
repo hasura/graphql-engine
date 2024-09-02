@@ -454,13 +454,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                     "Mutation",
                 ),
             ),
-            subscription_root_type_name: Some(
-                TypeName(
-                    Name(
-                        "Subscription",
-                    ),
-                ),
-            ),
+            subscription_root_type_name: None,
             order_by_input: Some(
                 OrderByInputGraphqlConfig {
                     asc_direction_field_value: Name(
