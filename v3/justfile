@@ -144,10 +144,10 @@ update-schema-in-test-metadata PORT NDC_VERSION: && fix-format
     docker compose -f ci.docker-compose.yaml down
 
 # run the engine using schema from tests
-run: start-docker-test-deps start-docker-run-deps
+run METADATA_PATH="static/sample-schema.json": start-docker-test-deps start-docker-run-deps
     RUST_LOG=DEBUG cargo run --bin engine -- \
     --otlp-endpoint http://localhost:4317 \
     --authn-config-path static/auth/auth_config.json \
-    --metadata-path static/sample-schema.json \
+    --metadata-path {{ METADATA_PATH }} \
     --unstable-feature enable-subscriptions \
     --expose-internal-errors
