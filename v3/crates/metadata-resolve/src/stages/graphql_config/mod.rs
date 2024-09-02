@@ -40,13 +40,13 @@ pub fn resolve(
         if flags.require_graphql_config {
             return Err(GraphqlConfigError::MissingGraphqlConfig);
         }
-        resolve_graphql_config(fallback_graphql_config())
+        resolve_graphql_config(fallback_graphql_config(), flags)
     } else {
         match graphql_configs.as_slice() {
             // There should only be one graphql config in supergraph
             // Because this config can only be defined in once in a supergraph, it doesn't actually
             // matter which subgraph defines it: the outcome will be the same.
-            [graphql_config] => resolve_graphql_config(&graphql_config.object),
+            [graphql_config] => resolve_graphql_config(&graphql_config.object, flags),
             _ => Err(GraphqlConfigError::MultipleGraphqlConfigDefinition),
         }
     }
@@ -56,6 +56,7 @@ pub fn resolve(
 /// For example, make sure all names are valid GraphQL names.
 pub fn resolve_graphql_config(
     graphql_config: &open_dds::graphql_config::GraphqlConfig,
+    flags: open_dds::flags::Flags,
 ) -> Result<GraphqlConfig, GraphqlConfigError> {
     match graphql_config {
         open_dds::graphql_config::GraphqlConfig::V1(graphql_config_metadata) => {
@@ -204,6 +205,8 @@ pub fn resolve_graphql_config(
                     subscription_root_type_name,
                     order_by_input,
                     enable_apollo_federation_fields,
+                    bypass_relation_comparisons_ndc_capability: flags
+                        .bypass_relation_comparisons_ndc_capability,
                 },
             })
         }

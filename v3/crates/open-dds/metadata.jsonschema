@@ -3065,6 +3065,10 @@
         "require_valid_ndc_v01_version": {
           "default": false,
           "type": "boolean"
+        },
+        "bypass_relation_comparisons_ndc_capability": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -3099,7 +3103,8 @@
             "flags": {
               "default": {
                 "require_graphql_config": false,
-                "require_valid_ndc_v01_version": false
+                "require_valid_ndc_v01_version": false,
+                "bypass_relation_comparisons_ndc_capability": false
               },
               "allOf": [
                 {
@@ -3145,7 +3150,8 @@
             "flags": {
               "default": {
                 "require_graphql_config": false,
-                "require_valid_ndc_v01_version": false
+                "require_valid_ndc_v01_version": false,
+                "bypass_relation_comparisons_ndc_capability": false
               },
               "allOf": [
                 {
@@ -3181,7 +3187,8 @@
             "flags": {
               "default": {
                 "require_graphql_config": false,
-                "require_valid_ndc_v01_version": false
+                "require_valid_ndc_v01_version": false,
+                "bypass_relation_comparisons_ndc_capability": false
               },
               "allOf": [
                 {

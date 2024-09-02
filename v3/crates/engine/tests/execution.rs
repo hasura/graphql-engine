@@ -533,7 +533,7 @@ fn test_model_select_many_where_object_relationship_nested() -> anyhow::Result<(
     )
 }
 
-// Remote belationships in boolean expressions
+// Remote relationships in boolean expressions
 
 // What is being tested:
 // 1. Remote array relationships in boolean expressions (Simple, Nested relationships). We also test multi column boolean expressions
@@ -596,6 +596,72 @@ fn test_model_select_many_where_remote_object_relationship_nested() -> anyhow::R
         &[
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
+// Relationships in boolean expressions without 'relation_comparisons' capability
+// What is being tested:
+// 1. Remote and Local array relationships in boolean expressions (Simple, Nested relationships). We also test multi column boolean expressions
+
+#[test]
+fn test_model_select_many_where_no_capability_array_relationship_simple() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/no_relation_comparisons_capability/boolean_expression_type/array/simple";
+    let common_metadata_path_string =
+        "execute/common_metadata/two_postgres_connector_same_subgraph_schema.json";
+    let test_common_metadata_path_string = "execute/models/select_many/where/no_relation_comparisons_capability/boolean_expression_type/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            test_common_metadata_path_string,
+        ],
+    )
+}
+
+#[test]
+fn test_model_select_many_where_no_capability_array_relationship_nested() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/no_relation_comparisons_capability//boolean_expression_type/array/nested";
+    let common_metadata_path_string =
+        "execute/common_metadata/two_postgres_connector_same_subgraph_schema.json";
+    let test_common_metadata_path_string = "execute/models/select_many/where/no_relation_comparisons_capability/boolean_expression_type/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            test_common_metadata_path_string,
+        ],
+    )
+}
+
+// Remote and Local object relationships in boolean expressions (Simple, Nested rrelationships). We also test multi column boolean expressions
+
+#[test]
+fn test_model_select_many_where_no_capability_object_relationship_simple() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/no_relation_comparisons_capability/boolean_expression_type/object/simple";
+    let common_metadata_path_string =
+        "execute/common_metadata/two_postgres_connector_same_subgraph_schema.json";
+    let test_common_metadata_path_string = "execute/models/select_many/where/no_relation_comparisons_capability/boolean_expression_type/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            test_common_metadata_path_string,
+        ],
+    )
+}
+
+#[test]
+fn test_model_select_many_where_no_capability_object_relationship_nested() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/no_relation_comparisons_capability/boolean_expression_type/object/nested";
+    let common_metadata_path_string =
+        "execute/common_metadata/two_postgres_connector_same_subgraph_schema.json";
+    let test_common_metadata_path_string = "execute/models/select_many/where/no_relation_comparisons_capability/boolean_expression_type/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            test_common_metadata_path_string,
         ],
     )
 }

@@ -21,17 +21,21 @@ pub enum Expression<'s> {
         expression: Box<Expression<'s>>,
     },
     LocalField(LocalFieldComparison),
-    LocalRelationship {
-        relationship: NdcRelationshipName,
-        predicate: Box<Expression<'s>>,
-        info: LocalModelRelationshipInfo<'s>,
-    },
     LocalNestedArray {
         column: DataConnectorColumnName,
         field_path: Vec<DataConnectorColumnName>,
         predicate: Box<Expression<'s>>,
     },
-    RemoteRelationship {
+    /// Handles predicate resolution by pushing it down to the NDC (Data Connector).
+    /// For local relationships having the `relation_comparisons` NDC capability.
+    RelationshipNdcPushdown {
+        relationship: NdcRelationshipName,
+        predicate: Box<Expression<'s>>,
+        info: LocalModelRelationshipInfo<'s>,
+    },
+    /// Resolves the predicate within the engine itself.
+    /// For remote relationships and local relationships without the `relation_comparisons` NDC capability.
+    RelationshipEngineResolved {
         relationship: RelationshipName,
         target_model_name: &'s Qualified<ModelName>,
         target_model_source: &'s metadata_resolve::ModelSource,

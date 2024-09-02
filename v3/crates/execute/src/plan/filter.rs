@@ -93,7 +93,7 @@ pub fn plan_expression<'s, 'a>(
                 predicate: Box::new(resolved_predicate),
             })
         }
-        ir::Expression::LocalRelationship {
+        ir::Expression::RelationshipNdcPushdown {
             relationship,
             predicate,
             info,
@@ -104,21 +104,21 @@ pub fn plan_expression<'s, 'a>(
                 process_model_relationship_definition(info)?,
             );
 
-            Ok(ir::Expression::LocalRelationship {
+            Ok(ir::Expression::RelationshipNdcPushdown {
                 relationship: relationship.clone(),
                 predicate: Box::new(relationship_filter),
                 info: info.clone(),
             })
         }
-        ir::Expression::RemoteRelationship {
+        ir::Expression::RelationshipEngineResolved {
             relationship,
             target_model_name,
             target_model_source,
             ndc_column_mapping,
             predicate,
         } => {
-            // This is a remote relationship, further planning is deferred until it is resolved
-            Ok(ir::Expression::RemoteRelationship {
+            // This needs to be resolved in engine itself, further planning is deferred until it is resolved
+            Ok(ir::Expression::RelationshipEngineResolved {
                 relationship: relationship.clone(),
                 target_model_name,
                 target_model_source,
@@ -324,7 +324,7 @@ where
         ir::Expression::LocalField(local_field_comparison) => Ok(
             ResolvedFilterExpression::LocalFieldComparison(local_field_comparison),
         ),
-        ir::Expression::LocalRelationship {
+        ir::Expression::RelationshipNdcPushdown {
             relationship,
             predicate,
             info: _,
@@ -347,7 +347,7 @@ where
                 predicate: Box::new(resolved_expression),
             })
         }
-        ir::Expression::RemoteRelationship {
+        ir::Expression::RelationshipEngineResolved {
             relationship,
             target_model_name: _,
             target_model_source,

@@ -10,6 +10,9 @@ pub struct Flags {
 
     #[opendd(default, rename = "require_valid_ndc_v01_version")]
     pub require_valid_ndc_v01_version: bool,
+
+    #[opendd(default, rename = "bypass_relation_comparisons_ndc_capability")]
+    pub bypass_relation_comparisons_ndc_capability: bool,
 }
 
 impl Flags {
@@ -18,6 +21,7 @@ impl Flags {
         Self {
             require_graphql_config: false,
             require_valid_ndc_v01_version: false,
+            bypass_relation_comparisons_ndc_capability: false,
         }
     }
 

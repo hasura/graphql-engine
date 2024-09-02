@@ -489,6 +489,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
                 },
             ),
             enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
         },
         pre_parse_plugins: [],
         roles: [],

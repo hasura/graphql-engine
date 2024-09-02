@@ -223,6 +223,37 @@ fn build_filter_expression_from_boolean_expression<'s>(
     }
 }
 
+/// Defines strategies for executing relationship predicates.
+enum RelationshipPredicateExecutionStrategy {
+    /// Pushes predicate resolution to the NDC (Data Connector).
+    /// This is feasible only if the data connector supports the 'relation_comparisons' capability
+    /// and is used when both source and target connectors are the same (local relationship).
+    NDCPushdown,
+
+    /// Resolves predicates within the Engine itself.
+    /// This approach is used when dealing with remote relationships or if the data connector lacks
+    /// the 'relation_comparisons' capability. The Engine queries field values from the target model
+    /// and constructs the necessary comparison expressions.
+    InEngine,
+}
+
+/// Determines the strategy for executing relationship predicates based on the connectors and their capabilities.
+fn get_relationship_predicate_execution_strategy(
+    source_connector: &DataConnectorLink,
+    target_connector: &DataConnectorLink,
+    target_source_relationship_capabilities: &metadata_resolve::RelationshipCapabilities,
+) -> RelationshipPredicateExecutionStrategy {
+    // It's a local relationship if the source and target connectors are the same and
+    // the connector supports relationships.
+    if target_connector.name == source_connector.name
+        && target_source_relationship_capabilities.relationship_comparison
+    {
+        RelationshipPredicateExecutionStrategy::NDCPushdown
+    } else {
+        RelationshipPredicateExecutionStrategy::InEngine
+    }
+}
+
 /// Build a relationship comparison expression from a relationship predicate.
 /// This is used for for both query and permission filter predicates.
 /// Corresponding inner predicates need to be resolved prior to this function call
@@ -241,12 +272,12 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
     relationship_predicate: expression::Expression<'s>,
 ) -> Result<expression::Expression<'s>, error::Error> {
     // Determinde whether the relationship is local or remote
-    match metadata_resolve::relationship_execution_category(
+    match get_relationship_predicate_execution_strategy(
         data_connector_link,
         &target_source.model.data_connector,
         &target_source.capabilities,
     ) {
-        metadata_resolve::RelationshipExecutionCategory::Local => {
+        RelationshipPredicateExecutionStrategy::NDCPushdown => {
             let ndc_relationship_name = NdcRelationshipName::new(source_type, relationship_name)?;
 
             let local_model_relationship_info = LocalModelRelationshipInfo {
@@ -260,14 +291,14 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
                 mappings,
             };
 
-            Ok(expression::Expression::LocalRelationship {
+            Ok(expression::Expression::RelationshipNdcPushdown {
                 relationship: ndc_relationship_name,
                 predicate: Box::new(relationship_predicate),
                 info: local_model_relationship_info,
             })
         }
 
-        metadata_resolve::RelationshipExecutionCategory::RemoteForEach => {
+        RelationshipPredicateExecutionStrategy::InEngine => {
             // Build a NDC column mapping out of the relationship mappings.
             // This mapping is later used to build the local field comparison expressions
             // using values fetched from remote source
@@ -314,7 +345,7 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
                 });
             }
 
-            Ok(expression::Expression::RemoteRelationship {
+            Ok(expression::Expression::RelationshipEngineResolved {
                 relationship: relationship_name.clone(),
                 target_model_name,
                 target_model_source: &target_source.model,

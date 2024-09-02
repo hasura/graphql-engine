@@ -130,10 +130,12 @@ async fn explain_query_predicate<'s>(
             explain_query_predicate(expose_internal_errors, http_context, expression, steps).await
         }
         ir::Expression::LocalField { .. }
-        | ir::Expression::LocalRelationship { .. }
+        | ir::Expression::RelationshipNdcPushdown { .. }
         | ir::Expression::LocalNestedArray { .. } => Ok(()),
 
-        ir::Expression::RemoteRelationship {
+        // Needs to be resolved in the Engine by making a request to the target data connector,
+        // for which we need to explain the corresponding NDC request.
+        ir::Expression::RelationshipEngineResolved {
             relationship: _,
             target_model_name,
             target_model_source,

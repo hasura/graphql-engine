@@ -4,6 +4,27 @@
 
 ### Added
 
+#### Enhanced Handling of Relationships in Predicates
+
+Improved support for using relationships in boolean expressions even when the
+data connector lacks the `relation_comparisons` capability. This update
+introduces two strategies for handling relationship predicates:
+
+- **Data Connector Pushdown**: When the source and target connectors are the
+  same and the target connector supports relationship comparisons, predicates
+  are pushed down to the NDC (Data Connector) for more efficient processing.
+  This strategy optimizes query execution by leveraging the data connector’s
+  capabilities.
+
+- **Engine-Based Resolution**: When the data connector does not support
+  relationship comparisons or when dealing with relationships targeting models
+  from other data connectors, predicates are resolved internally within the
+  engine. This approach involves querying the target model’s field values and
+  constructing the necessary comparison expressions.
+
+This enhancement provides greater flexibility of using relationships in
+predicates across data connectors.
+
 ### Fixed
 
 ### Changed
