@@ -85,11 +85,15 @@ fn resolve_order_by_expression(
         &order_by_expression.orderable_fields,
     )?;
 
-    let orderable_relationships = order_by_expression
-        .orderable_relationships
-        .iter()
-        .map(|o| resolve_orderable_relationship(subgraph, order_by_expression_names_and_types, o))
-        .collect::<Result<_, _>>()?;
+    let orderable_relationships = OrderableRelationships::ModelV2(
+        order_by_expression
+            .orderable_relationships
+            .iter()
+            .map(|o| {
+                resolve_orderable_relationship(subgraph, order_by_expression_names_and_types, o)
+            })
+            .collect::<Result<_, _>>()?,
+    );
 
     let graphql = order_by_expression
         .graphql

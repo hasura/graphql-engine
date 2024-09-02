@@ -55,7 +55,8 @@ pub use stages::object_types::{
 };
 pub use stages::order_by_expressions::{
     OrderByExpression, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
-    OrderByExpressions, OrderableField, OrderableObjectField, OrderableScalarField,
+    OrderByExpressions, OrderableField, OrderableObjectField, OrderableRelationship,
+    OrderableRelationships, OrderableScalarField,
 };
 pub use stages::relationships::{
     relationship_execution_category, CommandRelationshipTarget, ModelAggregateRelationshipTarget,

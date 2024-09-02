@@ -32,7 +32,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::order_by_expressions::{
     resolve_orderable_fields, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
-    OrderByExpressions,
+    OrderByExpressions, OrderableRelationships,
 };
 
 /// resolve models and their sources
@@ -440,7 +440,7 @@ fn make_order_by_expression(
         identifier: identifier.clone(),
         ordered_type,
         orderable_fields,
-        orderable_relationships: BTreeMap::new(),
+        orderable_relationships: OrderableRelationships::ModelV1AllowAll,
         graphql,
         description: Some(format!(
             "OrderByExpression for Model {qualified_model_name}"

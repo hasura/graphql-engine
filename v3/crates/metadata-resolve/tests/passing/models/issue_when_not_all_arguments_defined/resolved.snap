@@ -551,7 +551,7 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                             },
                         ),
                     },
-                    orderable_relationships: {},
+                    orderable_relationships: ModelV1AllowAll,
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(

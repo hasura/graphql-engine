@@ -170,33 +170,53 @@
               ],
               "selectMany": {
                 "queryRootField": "Album"
-              },
-              "orderByExpressionType": "Album_Order_By"
+              }
             },
             "filterExpressionType": "album_bool_exp",
+            "orderByExpression": "album_order_by"
+          },
+          "version": "v2",
+          "kind": "Model"
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "album_order_by",
+            "orderedType": "Album",
             "orderableFields": [
               {
                 "fieldName": "AlbumId",
-                "orderByDirections": {
+                "enableOrderByDirections": {
                   "enableAll": true
                 }
               },
               {
                 "fieldName": "Title",
-                "orderByDirections": {
+                "enableOrderByDirections": {
                   "enableAll": true
                 }
               },
               {
                 "fieldName": "ArtistId",
-                "orderByDirections": {
+                "enableOrderByDirections": {
                   "enableAll": true
                 }
               }
-            ]
-          },
-          "version": "v1",
-          "kind": "Model"
+            ],
+            "orderableRelationships": [
+              {
+                "relationshipName": "Tracks"
+              },
+              {
+                "relationshipName": "Artist",
+                "orderByExpression": "artist_order_by"
+              }
+            ],
+            "graphql": {
+              "expressionTypeName": "Album_Order_By"
+            }
+          }
         },
         {
           "kind": "ObjectBooleanExpressionType",
@@ -248,33 +268,49 @@
               ],
               "selectMany": {
                 "queryRootField": "Track"
-              },
-              "orderByExpressionType": "Track_Order_By"
+              }
             },
             "filterExpressionType": "track_bool_exp",
+            "orderByExpression": "track_order_by"
+          },
+          "version": "v2",
+          "kind": "Model"
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "track_order_by",
+            "orderedType": "Track",
             "orderableFields": [
               {
                 "fieldName": "TrackId",
-                "orderByDirections": {
+                "enableOrderByDirections": {
                   "enableAll": true
                 }
               },
               {
                 "fieldName": "Name",
-                "orderByDirections": {
+                "enableOrderByDirections": {
                   "enableAll": true
                 }
               },
               {
                 "fieldName": "AlbumId",
-                "orderByDirections": {
+                "enableOrderByDirections": {
                   "enableAll": true
                 }
               }
-            ]
-          },
-          "version": "v1",
-          "kind": "Model"
+            ],
+            "orderableRelationships": [
+              {
+                "relationshipName": "Album"
+              }
+            ],
+            "graphql": {
+              "expressionTypeName": "Track_Order_By"
+            }
+          }
         },
         {
           "definition": {
@@ -538,27 +574,59 @@
               ],
               "selectMany": {
                 "queryRootField": "Artist"
-              },
-              "orderByExpressionType": "Artist_Order_By"
+              }
             },
-            "filterExpressionType": "artist_bool_exp",
+            "orderByExpression": "artist_order_by_limited",
+            "filterExpressionType": "artist_bool_exp"
+          },
+          "version": "v2",
+          "kind": "Model"
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "artist_order_by_limited",
+            "orderedType": "Artist",
+            "orderableFields": [
+              {
+                "fieldName": "Name",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "orderableRelationships": [],
+            "graphql": {
+              "expressionTypeName": "Artist_Order_By_Limited"
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "artist_order_by",
+            "orderedType": "Artist",
             "orderableFields": [
               {
                 "fieldName": "ArtistId",
-                "orderByDirections": {
+                "enableOrderByDirections": {
                   "enableAll": true
                 }
               },
               {
                 "fieldName": "Name",
-                "orderByDirections": {
+                "enableOrderByDirections": {
                   "enableAll": true
                 }
               }
-            ]
-          },
-          "version": "v1",
-          "kind": "Model"
+            ],
+            "orderableRelationships": [],
+            "graphql": {
+              "expressionTypeName": "Artist_Order_By"
+            }
+          }
         },
         {
           "definition": {

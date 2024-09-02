@@ -570,7 +570,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                             },
                         ),
                     },
-                    orderable_relationships: {},
+                    orderable_relationships: ModelV1AllowAll,
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(

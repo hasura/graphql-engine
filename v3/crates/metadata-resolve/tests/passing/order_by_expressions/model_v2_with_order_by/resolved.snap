@@ -444,7 +444,9 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                             },
                         ),
                     },
-                    orderable_relationships: {},
+                    orderable_relationships: ModelV2(
+                        {},
+                    ),
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(

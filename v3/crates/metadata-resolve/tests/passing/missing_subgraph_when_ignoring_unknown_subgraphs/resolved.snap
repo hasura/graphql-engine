@@ -913,7 +913,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                             },
                         ),
                     },
-                    orderable_relationships: {},
+                    orderable_relationships: ModelV1AllowAll,
                     graphql: None,
                     description: Some(
                         "OrderByExpression for Model Articles (in subgraph article_namespace)",

@@ -2,7 +2,7 @@ use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema::{self as gql_schema, DeprecationStatus};
 use open_dds::models::ModelName;
-use open_dds::relationships::RelationshipType;
+use open_dds::relationships::{RelationshipName, RelationshipType};
 use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::relationship::OrderByRelationshipAnnotation;
@@ -11,8 +11,9 @@ use crate::types::{self};
 use crate::GDS;
 use crate::{permissions, ModelInputAnnotation};
 use metadata_resolve::{
-    mk_name, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier, OrderableField,
-    OrderableObjectField,
+    mk_name, ModelWithPermissions, ObjectTypeWithRelationships, OrderByExpressionGraphqlConfig,
+    OrderByExpressionIdentifier, OrderableField, OrderableObjectField, OrderableRelationship,
+    OrderableRelationships,
 };
 use metadata_resolve::{Qualified, TypeMapping};
 
@@ -256,8 +257,37 @@ pub fn build_model_order_by_input_schema(
     }
 
     // relationship fields
-    // TODO(naveen): Add support for command relationships.
-    // TODO(dmoverton): use order_by_expression.orderable_relationships
+    match &order_by_expression.orderable_relationships {
+        OrderableRelationships::ModelV2(orderable_relationships) => {
+            build_orderable_relationships(
+                gds,
+                &mut fields,
+                builder,
+                model,
+                object_type_representation,
+                orderable_relationships,
+            )?;
+        }
+        OrderableRelationships::ModelV1AllowAll => {
+            build_all_relationships(gds, &mut fields, builder, model, object_type_representation)?;
+        }
+    }
+
+    Ok(gql_schema::TypeInfo::InputObject(
+        gql_schema::InputObject::new(type_name.clone(), None, fields, Vec::new()),
+    ))
+}
+
+// when using `ModelV1` we do not explicitly allow relationships, so any `Relationship` on the type
+// to a valid model is allowed. When we deprecate `ModelV1`, this function should simply be
+// removed.
+fn build_all_relationships(
+    gds: &GDS,
+    fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
+    builder: &mut gql_schema::Builder<GDS>,
+    model: &ModelWithPermissions,
+    object_type_representation: &ObjectTypeWithRelationships,
+) -> Result<(), Error> {
     for (rel_name, relationship) in &object_type_representation.relationship_fields {
         if let metadata_resolve::RelationshipTarget::Model(
             metadata_resolve::ModelRelationshipTarget {
@@ -349,8 +379,164 @@ pub fn build_model_order_by_input_schema(
             }
         }
     }
+    Ok(())
+}
 
-    Ok(gql_schema::TypeInfo::InputObject(
-        gql_schema::InputObject::new(type_name.clone(), None, fields, Vec::new()),
-    ))
+// when using `OrderByExpressions` the user explicitly lets us know which relationships
+// are allowed, and which `OrderByExpression` to use
+fn build_orderable_relationships(
+    gds: &GDS,
+    fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
+    builder: &mut gql_schema::Builder<GDS>,
+    model: &ModelWithPermissions,
+    object_type_representation: &ObjectTypeWithRelationships,
+    orderable_relationships: &BTreeMap<RelationshipName, OrderableRelationship>,
+) -> Result<(), Error> {
+    for (rel_name, orderable_relationship) in orderable_relationships {
+        let field_name = mk_name(rel_name.as_str()).map_err(metadata_resolve::Error::from)?;
+
+        // lookup the relationship used in the underlying object type
+        let relationship = object_type_representation
+            .relationship_fields
+            .get(&field_name)
+            .ok_or_else(|| Error::InternalRelationshipNotFound {
+                relationship_name: rel_name.clone(),
+            })?;
+
+        if let metadata_resolve::RelationshipTarget::Model(
+            metadata_resolve::ModelRelationshipTarget {
+                model_name,
+                relationship_type,
+                target_typename,
+                mappings,
+            },
+        ) = &relationship.target
+        {
+            let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
+                crate::Error::InternalModelNotFound {
+                    model_name: model_name.clone(),
+                }
+            })?;
+
+            let target_object_type_representation =
+                get_object_type_representation(gds, &target_model.model.data_type)?;
+
+            // Build relationship field in filter expression only when both
+            // the target_model and source model are backed by a source
+            if let (Some(target_source), Some(model_source)) =
+                (&target_model.model.source, &model.model.source)
+            {
+                let target_model_source = metadata_resolve::ModelTargetSource::from_model_source(
+                    target_source,
+                    relationship,
+                )?;
+
+                // order_by expression with relationships is currently only supported for local relationships
+                if let metadata_resolve::RelationshipExecutionCategory::Local =
+                    metadata_resolve::relationship_execution_category(
+                        &model_source.data_connector,
+                        &target_source.data_connector,
+                        &target_model_source.capabilities,
+                    )
+                {
+                    // TODO(naveen): Support Array relationships in order_by when the support for aggregates is implemented
+                    if let RelationshipType::Object = relationship_type {
+                        // which type to use for the inner ordering?
+                        // if there is one designated by the orderable relationship, use that
+                        // otherwise use whatever the target models feels like
+                        if let Some(target_model_order_by_expression_type_name) =
+                            match &orderable_relationship.order_by_expression {
+                                Some(target_model_order_by_expression_name) => {
+                                    let qualified_target_order_by_identifier = Qualified::new(
+                                        target_model_order_by_expression_name.subgraph.clone(),
+                                        OrderByExpressionIdentifier::FromOrderByExpression(
+                                            target_model_order_by_expression_name.name.clone(),
+                                        ),
+                                    );
+
+                                    let target_order_by_expression = gds
+                                        .metadata
+                                        .order_by_expressions
+                                        .0
+                                        .get(&qualified_target_order_by_identifier)
+                                        .ok_or_else(|| {
+                                            Error::InternalOrderByExpressionNotFound {
+                                                order_by_expression_identifier:
+                                                    qualified_target_order_by_identifier.clone(),
+                                            }
+                                        })?;
+
+                                    // lookup graphql type name if it has one defined
+                                    let maybe_graphql_type = target_order_by_expression
+                                        .graphql
+                                        .as_ref()
+                                        .map(|graphql| &graphql.expression_type_name);
+
+                                    // we add the target order by expression to the schema
+                                    // as it might not be attached to anything else
+                                    if let Some(graphql_type) = maybe_graphql_type {
+                                        builder.register_type(
+                                            types::TypeId::ModelOrderByExpression {
+                                                model_name: model_name.clone(),
+                                                order_by_expression_identifier:
+                                                    qualified_target_order_by_identifier.clone(),
+                                                graphql_type_name: graphql_type.clone(),
+                                            },
+                                        );
+                                    }
+
+                                    maybe_graphql_type
+                                }
+                                None => target_model
+                                    .graphql_api
+                                    .order_by_expression
+                                    .as_ref()
+                                    .map(|graphql| &graphql.order_by_type_name),
+                            }
+                        {
+                            let annotation = OrderByRelationshipAnnotation {
+                                source_type: relationship.source.clone(),
+                                relationship_name: relationship.relationship_name.clone(),
+                                target_model_name: model_name.clone(),
+                                target_source: target_model_source.clone(),
+                                target_type: target_typename.clone(),
+                                relationship_type: relationship_type.clone(),
+                                mappings: mappings.clone(),
+                                source_data_connector: model_source.data_connector.clone(),
+                                source_type_mappings: model_source.type_mappings.clone(),
+                            };
+
+                            fields.insert(
+                                    field_name.clone(),
+                                    builder.conditional_namespaced(
+                                        gql_schema::InputField::new(
+                                            field_name.clone(),
+                                            None,
+                                            types::Annotation::Input(types::InputAnnotation::Model(
+                                                types::ModelInputAnnotation::ModelOrderByRelationshipArgument(annotation),
+                                            )),
+                                            ast::TypeContainer::named_null(
+                                                gql_schema::RegisteredTypeName::new(
+                                                    target_model_order_by_expression_type_name.0.clone(),
+                                                ),
+                                            ),
+                                            None,
+                                            gql_schema::DeprecationStatus::NotDeprecated,
+                                        ),
+                                        permissions::get_model_relationship_namespace_annotations(
+                                            target_model,
+                                            object_type_representation,
+                                            target_object_type_representation,
+                                            mappings,
+                                            &gds.metadata.object_types,
+                                        )?,
+                                    ),
+                                );
+                        };
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
 }

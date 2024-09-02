@@ -577,7 +577,9 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             },
                         ),
                     },
-                    orderable_relationships: {},
+                    orderable_relationships: ModelV2(
+                        {},
+                    ),
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(
@@ -647,7 +649,9 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             },
                         ),
                     },
-                    orderable_relationships: {},
+                    orderable_relationships: ModelV2(
+                        {},
+                    ),
                     graphql: Some(
                         OrderByExpressionGraphqlConfig {
                             expression_type_name: TypeName(

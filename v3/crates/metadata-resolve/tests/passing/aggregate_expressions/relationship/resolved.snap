@@ -3649,7 +3649,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             },
                         ),
                     },
-                    orderable_relationships: {},
+                    orderable_relationships: ModelV1AllowAll,
                     graphql: None,
                     description: Some(
                         "OrderByExpression for Model Invoice (in subgraph default)",
@@ -3746,7 +3746,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             },
                         ),
                     },
-                    orderable_relationships: {},
+                    orderable_relationships: ModelV1AllowAll,
                     graphql: None,
                     description: Some(
                         "OrderByExpression for Model InvoiceLine (in subgraph default)",

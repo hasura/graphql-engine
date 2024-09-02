@@ -36,9 +36,15 @@ pub struct OrderByExpression {
     pub identifier: Qualified<OrderByExpressionIdentifier>,
     pub ordered_type: Qualified<CustomTypeName>,
     pub orderable_fields: BTreeMap<FieldName, OrderableField>,
-    pub orderable_relationships: BTreeMap<RelationshipName, OrderableRelationship>,
+    pub orderable_relationships: OrderableRelationships,
     pub graphql: Option<OrderByExpressionGraphqlConfig>,
     pub description: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum OrderableRelationships {
+    ModelV1AllowAll,
+    ModelV2(BTreeMap<RelationshipName, OrderableRelationship>),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
