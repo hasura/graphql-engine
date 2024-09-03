@@ -180,3 +180,8 @@ fn test_aggregate_count_all_invoice_lines_aliased() -> anyhow::Result<()> {
 fn test_aggregate_sum_invoice_lines() -> anyhow::Result<()> {
     test_sql("sql/aggregate/sum_invoice_lines")
 }
+
+#[test]
+fn test_aggregate_group_by_unique_key() -> anyhow::Result<()> {
+    test_sql("sql/aggregate/group_by_unique_key")
+}

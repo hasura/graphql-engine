@@ -4,6 +4,8 @@
 
 ### Added
 
+- SQL endpoint can utilize uniqueness constraints
+
 ### Fixed
 
 ### Changed

@@ -6,7 +6,9 @@ pub(crate) mod filter;
 use std::collections::BTreeMap;
 use std::{any::Any, sync::Arc};
 
+use ::datafusion::common::Constraints;
 use ::datafusion::logical_expr::{Expr, TableProviderFilterPushDown};
+use ::datafusion::sql::sqlparser::ast::TableConstraint;
 use async_trait::async_trait;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
@@ -115,7 +117,7 @@ impl datafusion::TableFunctionImpl for TableValuedFunction {
         _exprs: &[datafusion::Expr],
     ) -> datafusion::Result<Arc<dyn datafusion::TableProvider>> {
         let arguments = BTreeMap::new();
-        let table = Table::new(self.metadata.clone(), self.model.clone(), arguments);
+        let table = Table::new(self.metadata.clone(), self.model.clone(), arguments)?;
         Ok(Arc::new(table) as Arc<dyn datafusion::TableProvider>)
     }
 }
@@ -129,6 +131,10 @@ pub(crate) struct Table {
     pub(crate) model: Arc<Model>,
     /// This will be empty if the model doesn't take any arguments
     pub(crate) arguments: BTreeMap<ArgumentName, serde_json::Value>,
+    /// DF constraints which can help guide the planner,
+    /// e.g. uniqueness constraints establish functional dependencies
+    /// which ensure all correct columns are in scope under a GROUP BY.
+    pub(crate) constraints: ::datafusion::common::Constraints,
 }
 
 impl Table {
@@ -136,19 +142,20 @@ impl Table {
         metadata: Arc<Metadata>,
         model: Arc<Model>,
         arguments: BTreeMap<ArgumentName, serde_json::Value>,
-    ) -> Self {
-        Table {
+    ) -> datafusion::Result<Self> {
+        let constraints = compute_table_constraints(&model, &metadata)?;
+        Ok(Table {
             metadata,
             model,
             arguments,
-        }
+            constraints,
+        })
     }
-    pub(crate) fn new_no_args(metadata: Arc<Metadata>, model: Arc<Model>) -> Self {
-        Table {
-            metadata,
-            model,
-            arguments: BTreeMap::new(),
-        }
+    pub(crate) fn new_no_args(
+        metadata: Arc<Metadata>,
+        model: Arc<Model>,
+    ) -> datafusion::Result<Self> {
+        Self::new(metadata, model, BTreeMap::new())
     }
     pub(crate) fn to_logical_plan(
         &self,
@@ -170,6 +177,49 @@ impl Table {
     }
 }
 
+/// Computes DF constraints from the model metadata.
+/// TODO: this function currently uses the select_uniques field from
+/// the GraphQL configuration section, but we should have that data on the
+/// model itself, since it's not just a GraphQL concern now.
+fn compute_table_constraints(
+    model: &Arc<Model>,
+    metadata: &Arc<Metadata>,
+) -> datafusion::Result<::datafusion::common::Constraints> {
+    let schema = model.schema.as_ref().clone();
+    let df_schema = datafusion::DFSchema::from_unqualified_fields(schema.fields, schema.metadata)?;
+    let model = metadata
+        .models
+        .get(&Qualified::new(model.subgraph.clone(), model.name.clone()))
+        .ok_or(::datafusion::error::DataFusionError::Internal(format!(
+            "Model {} could not be found",
+            model.name
+        )))?;
+
+    let table_constraints = model
+        .graphql_api
+        .select_uniques
+        .iter()
+        .map(|unique| TableConstraint::Unique {
+            name: None,
+            index_name: None,
+            index_type_display: ::datafusion::sql::sqlparser::ast::KeyOrIndexDisplay::None,
+            index_type: None,
+            columns: unique
+                .unique_identifier
+                .iter()
+                .map(|(field_name, _)| field_name.as_str().into())
+                .collect(),
+            index_options: vec![],
+            characteristics: None,
+        })
+        .collect::<Vec<_>>();
+
+    ::datafusion::common::Constraints::new_from_table_constraints(
+        table_constraints.as_slice(),
+        &Arc::new(df_schema),
+    )
+}
+
 #[async_trait]
 impl datafusion::TableProvider for Table {
     fn as_any(&self) -> &dyn Any {
@@ -182,6 +232,10 @@ impl datafusion::TableProvider for Table {
 
     fn table_type(&self) -> datafusion::TableType {
         datafusion::TableType::Base
+    }
+
+    fn constraints(&self) -> Option<&Constraints> {
+        Some(&self.constraints)
     }
 
     async fn scan(
