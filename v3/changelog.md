@@ -12,6 +12,12 @@
 
 ### Added
 
+- Enhanced handling of relationships in predicates
+- Filter nested arrays
+- Order by nested fields
+- A new GraphQL config flag `require_valid_ndc_v01_version` to promote warnings
+  about NDC version as errors.
+
 #### Enhanced Handling of Relationships in Predicates
 
 Improved support for using relationships in boolean expressions even when the
@@ -35,7 +41,7 @@ predicates across data connectors.
 
 #### Filter Nested Arrays
 
-If`institution` is a big JSON document, and `staff` is an array of objects
+If `institution` is a big JSON document, and `staff` is an array of objects
 inside it, we can now filter `institutions` based on matches that exist within
 that array.
 
@@ -76,14 +82,11 @@ query MyQuery {
 This will order by the value of the nested field `city` within the `location`
 JSONB column.
 
-- A new GraphQL config flag `require_valid_ndc_v01_version` to promote warnings
-  about NDC version as errors.
-
-####
-
 ### Fixed
 
-- Metrics correctly display whether they are for queries or mutations
+- Stack overflow error on startup. Even if the (experimental) SQL feature was
+  turned off, engine would try to build a SQL catalog on startup. Now it will
+  build an empty catalog.
 
 ### Changed
 
