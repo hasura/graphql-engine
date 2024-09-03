@@ -20,7 +20,8 @@
                         "subgraph": "default",
                         "name": "Invoice"
                       },
-                      "deprecated": false
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -39,7 +40,8 @@
                             "subgraph": "default",
                             "name": "Customer"
                           },
-                          "deprecated": false
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -61,7 +63,9 @@
                           },
                           "relationship_type": "Object"
                         }
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -84,7 +88,8 @@
                     "subgraph": "default",
                     "name": "Invoice"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -107,7 +112,8 @@
                             "subgraph": "default",
                             "name": "InvoiceLine"
                           },
-                          "deprecated": false
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -130,7 +136,8 @@
                         "subgraph": "default",
                         "name": "InvoiceLine"
                       },
-                      "deprecated": false
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -152,7 +159,9 @@
                       },
                       "relationship_type": "Array"
                     }
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]

@@ -36,7 +36,8 @@
                         "subgraph": "default",
                         "name": "article"
                       },
-                      "deprecated": false
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -58,7 +59,9 @@
                       },
                       "relationship_type": "Object"
                     }
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -76,7 +79,8 @@
                     "subgraph": "default",
                     "name": "commandArticle"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]

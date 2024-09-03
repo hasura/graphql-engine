@@ -33,7 +33,7 @@
                               "name": "Artist"
                             },
                             "argument_types": {},
-                            "deprecated": false
+                            "deprecated": null
                           }
                         }
                       },
@@ -95,7 +95,7 @@
                                 "nullable": true
                               }
                             },
-                            "deprecated": false
+                            "deprecated": null
                           }
                         }
                       },

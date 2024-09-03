@@ -177,6 +177,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
                     target_type,
                     target_model_name,
                     mappings,
+                    deprecated: _,
                 }),
         } => {
             // Add the target model being used in the usage counts

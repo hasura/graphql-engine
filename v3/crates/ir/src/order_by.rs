@@ -180,6 +180,7 @@ pub fn build_ndc_order_by_element<'s>(
                     target_type,
                     target_model_name,
                     mappings,
+                    deprecated: _,
                 },
             ),
         )) => {

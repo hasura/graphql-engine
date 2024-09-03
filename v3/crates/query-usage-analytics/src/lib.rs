@@ -71,6 +71,7 @@ pub struct FieldUsage {
     pub name: FieldName,
     pub opendd_type: Qualified<CustomTypeName>,
     pub deprecated: bool,
+    pub deprecated_reason: Option<String>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -102,6 +103,8 @@ pub struct RelationshipUsage {
     pub name: RelationshipName,
     pub source: Qualified<CustomTypeName>,
     pub target: RelationshipTarget,
+    pub deprecated: bool,
+    pub deprecated_reason: Option<String>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -183,6 +186,8 @@ mod tests {
                 ),
                 relationship_type: RelationshipType::Object,
             },
+            deprecated: false,
+            deprecated_reason: None,
         });
 
         // id: {_eq: 5}
@@ -195,6 +200,7 @@ mod tests {
                     CustomTypeName(identifier!("Order")),
                 ),
                 deprecated: false,
+                deprecated_reason: None,
             })],
             fields: vec![GqlInputField {
                 name: "_eq".to_string(),
@@ -214,6 +220,7 @@ mod tests {
                         CustomTypeName(identifier!("Product")),
                     ),
                     deprecated: false,
+                    deprecated_reason: None,
                 })],
                 fields: vec![GqlInputField {
                     name: "_gt".to_string(),
@@ -245,6 +252,7 @@ mod tests {
                             CustomTypeName(identifier!("Product")),
                         ),
                         deprecated: false,
+                        deprecated_reason: None,
                     })],
                 }],
                 used: vec![product_relationship.clone()],
@@ -262,6 +270,7 @@ mod tests {
                     CustomTypeName(identifier!("Product")),
                 ),
                 deprecated: false,
+                deprecated_reason: None,
             })],
             fields: vec![GqlInputField {
                 name: "_gt".to_string(),
@@ -288,6 +297,7 @@ mod tests {
                         CustomTypeName(identifier!("Product")),
                     ),
                     deprecated: false,
+                    deprecated_reason: None,
                 })],
             }],
             used: vec![],
@@ -315,6 +325,7 @@ mod tests {
                                     CustomTypeName(identifier!("Order")),
                                 ),
                                 deprecated: false,
+                                deprecated_reason: None,
                             }],
                             relationships: vec![],
                         },
@@ -331,6 +342,7 @@ mod tests {
                                 CustomTypeName(identifier!("Order")),
                             ),
                             deprecated: false,
+                            deprecated_reason: None,
                         })],
                         fields: vec![],
                         arguments: vec![],
@@ -352,6 +364,7 @@ mod tests {
                                         CustomTypeName(identifier!("Address")),
                                     ),
                                     deprecated: false,
+                                    deprecated_reason: None,
                                 })],
                             },
                             GqlField {
@@ -366,6 +379,7 @@ mod tests {
                                         CustomTypeName(identifier!("Address")),
                                     ),
                                     deprecated: false,
+                                    deprecated_reason: None,
                                 })],
                             },
                         ],
@@ -376,6 +390,7 @@ mod tests {
                                 CustomTypeName(identifier!("Order")),
                             ),
                             deprecated: false,
+                            deprecated_reason: None,
                         })],
                     },
                     GqlField {
@@ -393,6 +408,7 @@ mod tests {
                                     CustomTypeName(identifier!("Product")),
                                 ),
                                 deprecated: false,
+                                deprecated_reason: None,
                             })],
                             arguments: vec![],
                             fields: vec![],

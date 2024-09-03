@@ -30,7 +30,7 @@
                               "name": "article"
                             },
                             "argument_types": {},
-                            "deprecated": false
+                            "deprecated": null
                           }
                         }
                       },
@@ -77,7 +77,7 @@
                               "name": "article"
                             },
                             "argument_types": {},
-                            "deprecated": false
+                            "deprecated": null
                           }
                         }
                       },

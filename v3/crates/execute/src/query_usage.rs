@@ -2,6 +2,7 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast::{self, Operation};
 use metadata_resolve::{FieldPresetInfo, FilterPermission, ModelPredicate};
 use open_dds::relationships::RelationshipType;
+use open_dds::types::Deprecated;
 use query_usage_analytics::{
     self, ArgumentPresetsUsage, FieldPresetsUsage, FieldUsage, FilterPredicateUsage, GqlField,
     GqlInputField, GqlOperation, OpenddObject, PermissionUsage, PredicateRelationshipUsage,
@@ -122,10 +123,15 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
             deprecated,
             ..
         } => {
+            let DeprecatedDetails {
+                is_deprecated,
+                reason,
+            } = get_deprecated_details(deprecated);
             result.push(OpenddObject::Field(FieldUsage {
                 name: field_name.to_owned(),
                 opendd_type: parent_type.to_owned(),
-                deprecated: deprecated.to_owned(),
+                deprecated: is_deprecated,
+                deprecated_reason: reason,
             }));
         }
         schema::InputAnnotation::BooleanExpression(
@@ -137,13 +143,22 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
                 deprecated,
                 object_field_kind: _,
             } => {
+                let DeprecatedDetails {
+                    is_deprecated,
+                    reason,
+                } = get_deprecated_details(deprecated);
                 result.push(OpenddObject::Field(FieldUsage {
                     name: field_name.to_owned(),
                     opendd_type: object_type.to_owned(),
-                    deprecated: deprecated.to_owned(),
+                    deprecated: is_deprecated,
+                    deprecated_reason: reason,
                 }));
             }
             schema::ModelFilterArgument::RelationshipField(relationship_annotation) => {
+                let DeprecatedDetails {
+                    is_deprecated,
+                    reason,
+                } = get_deprecated_details(&relationship_annotation.deprecated);
                 result.push(OpenddObject::Relationship(RelationshipUsage {
                     name: relationship_annotation.relationship_name.clone(),
                     source: relationship_annotation.source_type.clone(),
@@ -151,6 +166,8 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
                         model_name: relationship_annotation.target_model_name.clone(),
                         relationship_type: relationship_annotation.relationship_type.clone(),
                     },
+                    deprecated: is_deprecated,
+                    deprecated_reason: reason,
                 }));
             }
             schema::ModelFilterArgument::AndOp
@@ -177,13 +194,22 @@ fn analyze_model_input_annotation(annotation: &schema::ModelInputAnnotation) -> 
             deprecated,
             ..
         } => {
+            let DeprecatedDetails {
+                is_deprecated,
+                reason,
+            } = get_deprecated_details(deprecated);
             result.push(OpenddObject::Field(FieldUsage {
                 name: field_name.to_owned(),
                 opendd_type: parent_type.to_owned(),
-                deprecated: deprecated.to_owned(),
+                deprecated: is_deprecated,
+                deprecated_reason: reason,
             }));
         }
         schema::ModelInputAnnotation::ModelOrderByRelationshipArgument(relationship_orderby) => {
+            let DeprecatedDetails {
+                is_deprecated,
+                reason,
+            } = get_deprecated_details(&relationship_orderby.deprecated);
             result.push(OpenddObject::Relationship(RelationshipUsage {
                 name: relationship_orderby.relationship_name.clone(),
                 source: relationship_orderby.source_type.clone(),
@@ -191,6 +217,8 @@ fn analyze_model_input_annotation(annotation: &schema::ModelInputAnnotation) -> 
                     model_name: relationship_orderby.target_model_name.clone(),
                     relationship_type: relationship_orderby.relationship_type.clone(),
                 },
+                deprecated: is_deprecated,
+                deprecated_reason: reason,
             }));
         }
         schema::ModelInputAnnotation::ModelArgumentsExpression
@@ -233,13 +261,22 @@ fn analyze_output_annotation(annotation: &schema::OutputAnnotation) -> Vec<Opend
             deprecated,
             ..
         } => {
+            let DeprecatedDetails {
+                is_deprecated,
+                reason,
+            } = get_deprecated_details(deprecated);
             result.push(OpenddObject::Field(FieldUsage {
                 name: name.to_owned(),
                 opendd_type: parent_type.to_owned(),
-                deprecated: deprecated.to_owned(),
+                deprecated: is_deprecated,
+                deprecated_reason: reason,
             }));
         }
         schema::OutputAnnotation::RelationshipToModel(relationship) => {
+            let DeprecatedDetails {
+                is_deprecated,
+                reason,
+            } = get_deprecated_details(&relationship.deprecated);
             result.push(OpenddObject::Relationship(RelationshipUsage {
                 name: relationship.relationship_name.clone(),
                 source: relationship.source_type.clone(),
@@ -247,18 +284,30 @@ fn analyze_output_annotation(annotation: &schema::OutputAnnotation) -> Vec<Opend
                     model_name: relationship.model_name.clone(),
                     relationship_type: relationship.relationship_type.clone(),
                 },
+                deprecated: is_deprecated,
+                deprecated_reason: reason,
             }));
         }
         schema::OutputAnnotation::RelationshipToCommand(relationship) => {
+            let DeprecatedDetails {
+                is_deprecated,
+                reason,
+            } = get_deprecated_details(&relationship.deprecated);
             result.push(OpenddObject::Relationship(RelationshipUsage {
                 name: relationship.relationship_name.clone(),
                 source: relationship.source_type.clone(),
                 target: RelationshipTarget::Command {
                     command_name: relationship.command_name.clone(),
                 },
+                deprecated: is_deprecated,
+                deprecated_reason: reason,
             }));
         }
         schema::OutputAnnotation::RelationshipToModelAggregate(relationship) => {
+            let DeprecatedDetails {
+                is_deprecated,
+                reason,
+            } = get_deprecated_details(&relationship.deprecated);
             result.push(OpenddObject::Relationship(RelationshipUsage {
                 name: relationship.relationship_name.clone(),
                 source: relationship.source_type.clone(),
@@ -266,6 +315,8 @@ fn analyze_output_annotation(annotation: &schema::OutputAnnotation) -> Vec<Opend
                     model_name: relationship.model_name.clone(),
                     relationship_type: RelationshipType::Array,
                 },
+                deprecated: is_deprecated,
+                deprecated_reason: reason,
             }));
         }
         schema::OutputAnnotation::GlobalIDField { .. }
@@ -303,10 +354,17 @@ fn analyze_namespace_annotation(annotation: &schema::NamespaceAnnotation) -> Vec
                                 value: _,
                                 deprecated,
                             },
-                        )| FieldUsage {
-                            name: field_name.to_owned(),
-                            opendd_type: type_name.clone(),
-                            deprecated: deprecated.to_owned(),
+                        )| {
+                            let DeprecatedDetails {
+                                is_deprecated,
+                                reason,
+                            } = get_deprecated_details(deprecated);
+                            FieldUsage {
+                                name: field_name.to_owned(),
+                                opendd_type: type_name.clone(),
+                                deprecated: is_deprecated,
+                                deprecated_reason: reason,
+                            }
                         },
                     )
                     .collect(),
@@ -380,11 +438,18 @@ fn analyze_model_predicate_internal(
             field_parent_type,
             deprecated,
             ..
-        } => fields.push(FieldUsage {
-            name: field.to_owned(),
-            opendd_type: field_parent_type.to_owned(),
-            deprecated: deprecated.to_owned(),
-        }),
+        } => {
+            let DeprecatedDetails {
+                is_deprecated,
+                reason,
+            } = get_deprecated_details(deprecated);
+            fields.push(FieldUsage {
+                name: field.to_owned(),
+                opendd_type: field_parent_type.to_owned(),
+                deprecated: is_deprecated,
+                deprecated_reason: reason,
+            });
+        }
         ModelPredicate::Relationship {
             relationship_info,
             predicate,
@@ -409,5 +474,19 @@ fn analyze_model_predicate_list(
 ) {
     for predicate in predicates {
         analyze_model_predicate_internal(predicate, fields, relationships);
+    }
+}
+
+struct DeprecatedDetails {
+    is_deprecated: bool,
+    reason: Option<String>,
+}
+
+fn get_deprecated_details(deprecated: &Option<Deprecated>) -> DeprecatedDetails {
+    let is_deprecated = deprecated.is_some();
+    let reason = deprecated.as_ref().and_then(|d| d.reason.clone());
+    DeprecatedDetails {
+        is_deprecated,
+        reason,
     }
 }

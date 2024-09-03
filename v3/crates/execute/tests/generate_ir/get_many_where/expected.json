@@ -62,7 +62,7 @@
                               "name": "article"
                             },
                             "argument_types": {},
-                            "deprecated": false
+                            "deprecated": null
                           }
                         }
                       },
@@ -217,7 +217,7 @@
                               "name": "author"
                             },
                             "argument_types": {},
-                            "deprecated": false
+                            "deprecated": null
                           }
                         }
                       },
@@ -264,7 +264,7 @@
                               "name": "author"
                             },
                             "argument_types": {},
-                            "deprecated": false
+                            "deprecated": null
                           }
                         }
                       },

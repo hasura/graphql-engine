@@ -1,14 +1,15 @@
 use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
-use lang_graphql::schema::{self as gql_schema, DeprecationStatus};
+use lang_graphql::schema as gql_schema;
 use open_dds::models::ModelName;
 use open_dds::relationships::{RelationshipName, RelationshipType};
+use open_dds::types::Deprecated;
 use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::relationship::OrderByRelationshipAnnotation;
 use super::types::{output_type::get_object_type_representation, Annotation, TypeId};
 use crate::types::{self};
-use crate::GDS;
+use crate::{mk_deprecation_status, GDS};
 use crate::{permissions, ModelInputAnnotation};
 use metadata_resolve::{
     mk_name, ModelWithPermissions, ObjectTypeWithRelationships, OrderByExpressionGraphqlConfig,
@@ -85,7 +86,7 @@ pub fn get_order_by_expression_input_field(
         &order_by_expression_info.order_by_type_name,
         &order_by_expression_info.order_by_field_name,
         &order_by_expression_info.order_by_expression_identifier,
-        false,
+        &None,
     )
 }
 
@@ -96,13 +97,8 @@ fn get_order_by_expression_object_input_field(
     order_by_type_name: &ast::TypeName,
     order_by_field_name: &ast::Name,
     order_by_expression_identifier: &Qualified<OrderByExpressionIdentifier>,
-    is_deprecated: bool,
+    deprecated: &Option<Deprecated>,
 ) -> gql_schema::InputField<GDS> {
-    let deprecation_status = if is_deprecated {
-        DeprecationStatus::Deprecated { reason: None }
-    } else {
-        DeprecationStatus::NotDeprecated
-    };
     gql_schema::InputField::new(
         order_by_field_name.clone(),
         None,
@@ -115,7 +111,7 @@ fn get_order_by_expression_object_input_field(
             },
         ))),
         None,
-        deprecation_status,
+        mk_deprecation_status(deprecated),
     )
 }
 
@@ -209,7 +205,7 @@ pub fn build_model_order_by_input_schema(
                                 field_name: field_name.clone(),
                                 parent_type: order_by_expression.ordered_type.clone(),
                                 ndc_column,
-                                deprecated: field_definition.is_deprecated(),
+                                deprecated: field_definition.deprecated.clone(),
                             },
                         )),
                         input_type,
@@ -248,7 +244,7 @@ pub fn build_model_order_by_input_schema(
                     graphql_type_name,
                     &graphql_field_name,
                     order_by_expression_identifier,
-                    field_definition.is_deprecated(),
+                    &field_definition.deprecated,
                 );
                 builder.conditional_namespaced(input_field, field_permissions)
             }
@@ -345,6 +341,7 @@ fn build_all_relationships(
                                 mappings: mappings.clone(),
                                 source_data_connector: model_source.data_connector.clone(),
                                 source_type_mappings: model_source.type_mappings.clone(),
+                                deprecated: relationship.deprecated.clone(),
                             };
 
                             fields.insert(
@@ -504,6 +501,7 @@ fn build_orderable_relationships(
                                 mappings: mappings.clone(),
                                 source_data_connector: model_source.data_connector.clone(),
                                 source_type_mappings: model_source.type_mappings.clone(),
+                                deprecated: relationship.deprecated.clone(),
                             };
 
                             fields.insert(

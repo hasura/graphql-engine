@@ -516,7 +516,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                 operator: resolved_operator,
                 argument_type,
                 value: value_expression,
-                deprecated: field_definition.is_deprecated(),
+                deprecated: field_definition.deprecated.clone(),
             })
         }
         permissions::ModelPredicate::FieldIsNull(permissions::FieldIsNullPredicate { field }) => {
@@ -542,7 +542,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                 field_parent_type: type_name.to_owned(),
                 ndc_column: field_mapping.column.clone(),
                 operator: model_permissions::UnaryComparisonOperator::IsNull,
-                deprecated: field_definition.is_deprecated(),
+                deprecated: field_definition.deprecated.clone(),
             })
         }
 

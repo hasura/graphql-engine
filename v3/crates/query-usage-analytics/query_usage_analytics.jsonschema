@@ -302,6 +302,12 @@
         },
         "deprecated": {
           "type": "boolean"
+        },
+        "deprecated_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -530,6 +536,7 @@
     "RelationshipUsage": {
       "type": "object",
       "required": [
+        "deprecated",
         "name",
         "source",
         "target"
@@ -543,6 +550,15 @@
         },
         "target": {
           "$ref": "#/definitions/RelationshipTarget"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "deprecated_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

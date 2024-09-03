@@ -1,6 +1,7 @@
 use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema::{self as gql_schema};
+use open_dds::types::Deprecated;
 use open_dds::{
     relationships::RelationshipType,
     types::{CustomTypeName, FieldName},
@@ -173,7 +174,7 @@ fn build_comparable_fields_schema(
                     field_name: field_name.clone(),
                     object_field_kind: ObjectFieldKind::Scalar,
                     object_type: object_type_name.clone(),
-                    deprecated: field_definition.is_deprecated(),
+                    deprecated: field_definition.deprecated.clone(),
                 },
             },
         ));
@@ -239,7 +240,7 @@ fn build_comparable_fields_schema(
                         ObjectComparisonKind::Array => ObjectFieldKind::Array,
                     },
                     object_type: object_type_name.clone(),
-                    deprecated: field_definition.is_deprecated(),
+                    deprecated: field_definition.deprecated.clone(),
                 },
             },
         ));
@@ -368,6 +369,7 @@ fn build_new_comparable_relationships_schema(
                     relationship,
                     relationship_type,
                     mappings,
+                    &relationship.deprecated,
                     gds,
                     builder,
                 )?;
@@ -470,6 +472,7 @@ fn build_comparable_relationships_schema(
                     relationship,
                     relationship_type,
                     mappings,
+                    &relationship.deprecated,
                     gds,
                     builder,
                 )?;
@@ -495,6 +498,7 @@ fn build_model_relationship_schema(
     relationship: &RelationshipField,
     relationship_type: &RelationshipType,
     relationship_model_mappings: &[RelationshipModelMapping],
+    relationship_deprecated: &Option<Deprecated>,
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
 ) -> Result<InputField, Error> {
@@ -511,6 +515,7 @@ fn build_model_relationship_schema(
         target_model_name: target_model.model.name.clone(),
         relationship_type: relationship_type.clone(),
         mappings: relationship_model_mappings.to_vec(),
+        deprecated: relationship_deprecated.clone(),
     };
 
     let namespace_annotations = permissions::get_model_relationship_namespace_annotations(

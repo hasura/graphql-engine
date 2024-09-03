@@ -157,7 +157,7 @@ fn input_object_type_input_fields(
                     field_name: field_name.clone(),
                     field_type: field_definition.field_type.clone(),
                     parent_type: type_name.to_owned(),
-                    deprecated: field_definition.is_deprecated(),
+                    deprecated: field_definition.deprecated.clone(),
                 }),
                 get_input_type(gds, builder, &field_definition.field_type)?,
                 None, // Default value

@@ -788,7 +788,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                         "x-hasura-user-id",
                                     ),
                                 ),
-                                deprecated: false,
+                                deprecated: None,
                             },
                         ),
                         argument_presets: {},

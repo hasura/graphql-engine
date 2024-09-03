@@ -158,7 +158,8 @@
                                   "equal_operator": "_eq"
                                 }
                               }
-                            ]
+                            ],
+                            "deprecated": null
                           }
                         }
                       },
@@ -345,7 +346,8 @@
                                         "equal_operator": "_eq"
                                       }
                                     }
-                                  ]
+                                  ],
+                                  "deprecated": null
                                 }
                               }
                             },
@@ -524,7 +526,8 @@
                                               "equal_operator": "_eq"
                                             }
                                           }
-                                        ]
+                                        ],
+                                        "deprecated": null
                                       }
                                     }
                                   },
@@ -601,7 +604,7 @@
                                                 "name": "article"
                                               },
                                               "argument_types": {},
-                                              "deprecated": false
+                                              "deprecated": null
                                             }
                                           }
                                         },

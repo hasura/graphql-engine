@@ -29,7 +29,8 @@
                             "subgraph": "default",
                             "name": "article"
                           },
-                          "deprecated": false
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -51,7 +52,8 @@
                             "subgraph": "default",
                             "name": "article"
                           },
-                          "deprecated": false
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -77,7 +79,8 @@
                     "subgraph": "default",
                     "name": "article"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -95,7 +98,8 @@
                     "subgraph": "default",
                     "name": "article"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -120,7 +124,8 @@
                       "subgraph": "default",
                       "name": "article"
                     },
-                    "deprecated": false
+                    "deprecated": false,
+                    "deprecated_reason": null
                   },
                   {
                     "name": "author_id",
@@ -128,7 +133,8 @@
                       "subgraph": "default",
                       "name": "article"
                     },
-                    "deprecated": false
+                    "deprecated": false,
+                    "deprecated_reason": null
                   }
                 ],
                 "relationships": [
@@ -155,7 +161,8 @@
                             "subgraph": "default",
                             "name": "author"
                           },
-                          "deprecated": false
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       ],
                       "relationships": []
@@ -191,7 +198,8 @@
                     "subgraph": "default",
                     "name": "commandAuthor"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -209,7 +217,8 @@
                     "subgraph": "default",
                     "name": "commandAuthor"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -227,7 +236,8 @@
                     "subgraph": "default",
                     "name": "commandAuthor"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]

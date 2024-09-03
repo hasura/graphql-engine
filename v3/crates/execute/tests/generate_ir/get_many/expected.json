@@ -62,7 +62,7 @@
                               "name": "article"
                             },
                             "argument_types": {},
-                            "deprecated": false
+                            "deprecated": null
                           }
                         }
                       },

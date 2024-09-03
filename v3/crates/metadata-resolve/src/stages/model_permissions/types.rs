@@ -8,7 +8,7 @@ use open_dds::{
     models::ModelName,
     permissions::Role,
     relationships::{RelationshipName, RelationshipType},
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, Deprecated, FieldName},
 };
 
 use crate::stages::{data_connectors, models, models_graphql, object_types, relationships};
@@ -50,7 +50,7 @@ pub enum ModelPredicate {
         ndc_column: DataConnectorColumnName,
         operator: UnaryComparisonOperator,
         /// To mark a field as deprecated in the field usage while reporting query usage analytics.
-        deprecated: bool,
+        deprecated: Option<Deprecated>,
     },
     BinaryFieldComparison {
         field: FieldName,
@@ -60,7 +60,7 @@ pub enum ModelPredicate {
         argument_type: QualifiedTypeReference,
         value: ValueExpression,
         /// To mark a field as deprecated in the field usage while reporting query usage analytics.
-        deprecated: bool,
+        deprecated: Option<Deprecated>,
     },
     Relationship {
         relationship_info: PredicateRelationshipInfo,

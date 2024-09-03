@@ -26,7 +26,8 @@
                     "subgraph": "default",
                     "name": "Album"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -44,7 +45,8 @@
                     "subgraph": "default",
                     "name": "Album"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -67,7 +69,8 @@
                         "subgraph": "default",
                         "name": "Track"
                       },
-                      "deprecated": false
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -85,7 +88,8 @@
                         "subgraph": "default",
                         "name": "Track"
                       },
-                      "deprecated": false
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -108,7 +112,8 @@
                             "subgraph": "default",
                             "name": "PlaylistTrack"
                           },
-                          "deprecated": false
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -130,7 +135,9 @@
                           },
                           "relationship_type": "Array"
                         }
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -152,7 +159,9 @@
                       },
                       "relationship_type": "Array"
                     }
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -193,7 +202,8 @@
                     "subgraph": "default",
                     "name": "Customer"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -211,7 +221,8 @@
                     "subgraph": "default",
                     "name": "Customer"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -229,7 +240,8 @@
                     "subgraph": "default",
                     "name": "Customer"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -247,7 +259,8 @@
                     "subgraph": "default",
                     "name": "Customer"
                   },
-                  "deprecated": false
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -270,7 +283,8 @@
                         "subgraph": "default",
                         "name": "Employee"
                       },
-                      "deprecated": false
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -288,7 +302,8 @@
                         "subgraph": "default",
                         "name": "Employee"
                       },
-                      "deprecated": false
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -306,7 +321,8 @@
                         "subgraph": "default",
                         "name": "Employee"
                       },
-                      "deprecated": true
+                      "deprecated": true,
+                      "deprecated_reason": "Fax is no more used; Use Email instead"
                     }
                   }
                 ]
@@ -324,7 +340,8 @@
                         "subgraph": "default",
                         "name": "Employee"
                       },
-                      "deprecated": false
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -353,7 +370,8 @@
                             "subgraph": "default",
                             "name": "Employee"
                           },
-                          "deprecated": false
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -371,7 +389,8 @@
                             "subgraph": "default",
                             "name": "Employee"
                           },
-                          "deprecated": false
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -393,7 +412,9 @@
                           },
                           "relationship_type": "Array"
                         }
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -415,7 +436,9 @@
                       },
                       "relationship_type": "Object"
                     }
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
