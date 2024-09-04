@@ -85,6 +85,18 @@ Now, start the containers:
 docker compose up -d
 ```
 
+:::info Are you trying this on a Mac with silicon processor?
+
+Update your ```docker-compose.yml``` file and specify platform.
+```bash
+graphql-engine:
+    image: hasura/graphql-engine:v2.36.0
+    platform: linux/arm64
+    ...
+```
+
+:::
+
 ## Step 3: Run the Hasura Console
 
 If you've followed our [simple getting started guide for Docker](/getting-started/docker-simple.mdx), you'll already be
