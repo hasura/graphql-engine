@@ -2132,7 +2132,11 @@
             },
             "url": {
               "description": "The URL to access the lifecycle plugin hook.",
-              "type": "string"
+              "allOf": [
+                {
+                  "$ref": "#/definitions/EnvironmentValue"
+                }
+              ]
             },
             "config": {
               "description": "Configuration for the lifecycle plugin hook.",
@@ -4122,7 +4126,9 @@
               "definition": {
                 "pre": "parse",
                 "name": "test",
-                "url": "http://localhost:8080",
+                "url": {
+                  "value": "http://localhost:8080"
+                },
                 "config": {
                   "request": {
                     "headers": {

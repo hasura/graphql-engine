@@ -135,7 +135,7 @@ fn build_request(
         pre_plugin_headers.extend(headers);
     }
     let mut request_builder = http_client
-        .post(config.url.clone())
+        .post(config.url.value.clone())
         .headers(pre_plugin_headers);
     let mut request_body = PreExecutePluginRequestBody {
         session: None,

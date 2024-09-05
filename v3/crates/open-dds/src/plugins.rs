@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{data_connector::HttpHeaders, impl_OpenDd_default_for};
+use crate::{data_connector::HttpHeaders, impl_OpenDd_default_for, EnvironmentValue};
 
 #[derive(
     Serialize, Deserialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd, JsonSchema,
@@ -30,7 +30,9 @@ impl LifecyclePluginHook {
                 "definition": {
                     "pre": "parse",
                     "name": "test",
-                    "url": "http://localhost:8080",
+                    "url": {
+                        "value": "http://localhost:8080",
+                    },
                     "config": {
                         "request": {
                             "headers": {
@@ -72,7 +74,7 @@ pub enum LifecyclePluginHookV1 {
     Parse(LifecyclePluginHookPreParse),
 }
 
-type LifecyclePluginUrl = String;
+type LifecyclePluginUrl = EnvironmentValue;
 
 type LifecyclePluginName = String;
 
@@ -162,7 +164,9 @@ pub struct RawRequestConfig {
 fn test_lifecycle_plugin_hook_parse() {
     let hook = LifecyclePluginHook::V1(LifecyclePluginHookV1::Parse(LifecyclePluginHookPreParse {
         name: "test".to_string(),
-        url: "http://localhost:8080".to_string(),
+        url: crate::EnvironmentValue {
+            value: "http://localhost:8080".to_string(),
+        },
         config: LifecyclePluginHookConfig {
             request: LifecyclePluginHookConfigRequest {
                 headers: Some(LifecyclePluginHookHeadersConfig {
