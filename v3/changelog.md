@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2024.09.05]
+
+### Added
+
 - SQL endpoint can utilize uniqueness constraints
 
 ### Fixed
