@@ -357,8 +357,8 @@ where
             let tracer = tracing_util::global_tracer();
             tracer
                 .in_span_async(
-                    "resolve_remote_relationship_predicate",
-                    format!("Resolve remote relationship comparison expression: {relationship}"),
+                    "resolve_in_engine_relationship_predicate",
+                    format!("Resolve relationship comparison expression: {relationship}"),
                     SpanVisibility::User,
                     || {
                         Box::pin(async {

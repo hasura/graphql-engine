@@ -8,6 +8,9 @@
 
 ### Fixed
 
+- Fix the name and description of the span resolving relationship predicates in
+  the Engine.
+
 ### Changed
 
 ## [v2024.09.02]
