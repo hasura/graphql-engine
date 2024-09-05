@@ -34,12 +34,15 @@ introduces two strategies for handling relationship predicates:
 
 - **Engine-Based Resolution**: When the data connector does not support
   relationship comparisons or when dealing with relationships targeting models
-  from other data connectors, predicates are resolved internally within the
-  engine. This approach involves querying the target model’s field values and
-  constructing the necessary comparison expressions.
+  from other data connectors (remote relationships), predicates are resolved
+  internally within the engine. This approach involves querying the target
+  model’s field values and constructing the necessary comparison expressions.
 
-This enhancement provides greater flexibility of using relationships in
-predicates across data connectors.
+This enhancement updates the GraphQL schema's boolean expression input types by
+introducing relationship predicates. The feature is gated by a compatibility
+date to ensure backward compatibility. To enable it, set the date to
+`2024-09-03` or later in your DDN project's `globals/compatibility-config.hml`
+file.
 
 #### Filter Nested Arrays
 
