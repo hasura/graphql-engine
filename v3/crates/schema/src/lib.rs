@@ -12,6 +12,7 @@ mod mutation_root;
 mod permissions;
 mod query_root;
 mod relay;
+mod subscription_root;
 mod types;
 
 use std::str::FromStr;
@@ -144,6 +145,11 @@ impl gql_schema::SchemaContext for GDS {
             types::TypeId::MutationRoot { graphql_type_name } => Ok(gql_schema::TypeInfo::Object(
                 mutation_root::mutation_root_schema(builder, self, graphql_type_name)?,
             )),
+            types::TypeId::SubscriptionRoot { graphql_type_name } => {
+                Ok(gql_schema::TypeInfo::Object(
+                    subscription_root::subscription_root_schema(builder, self, graphql_type_name)?,
+                ))
+            }
             types::TypeId::OutputType {
                 gds_type_name,
                 graphql_type_name,
@@ -258,7 +264,14 @@ impl gql_schema::SchemaContext for GDS {
             mutation: Some(types::TypeId::MutationRoot {
                 graphql_type_name: self.metadata.graphql_config.mutation_root_type_name.clone(),
             }),
-            subscription: None,
+            subscription: self
+                .metadata
+                .graphql_config
+                .subscription_root_type_name
+                .as_ref()
+                .map(|type_name| types::TypeId::SubscriptionRoot {
+                    graphql_type_name: type_name.clone(),
+                }),
         }
     }
 }

@@ -384,6 +384,9 @@ pub enum TypeId {
     MutationRoot {
         graphql_type_name: ast::TypeName,
     },
+    SubscriptionRoot {
+        graphql_type_name: ast::TypeName,
+    },
     OutputType {
         gds_type_name: Qualified<types::CustomTypeName>,
         graphql_type_name: ast::TypeName,
@@ -452,6 +455,7 @@ impl TypeId {
         match self {
             TypeId::QueryRoot { graphql_type_name }
             | TypeId::MutationRoot { graphql_type_name }
+            | TypeId::SubscriptionRoot { graphql_type_name }
             | TypeId::OutputType {
                 graphql_type_name, ..
             }

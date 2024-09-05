@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use goldenfile::{differs::text_diff, Mint};
 use hasura_authn_core::{Identity, Role, Session, SessionError, SessionVariableValue};
 use lang_graphql::ast::common as ast;
@@ -89,13 +90,13 @@ pub fn test_execution_expectation_legacy(
         // Ensure schema is serialized successfully.
         serde_json::to_string(&schema)?;
 
-        let query = fs::read_to_string(request_path)?;
+        let query = read_to_string(&request_path)?;
 
         let request_headers = reqwest::header::HeaderMap::new();
         let session = {
             let session_vars_path = &test_path.join("session_variables.json");
             let session_variables: HashMap<SessionVariable, SessionVariableValue> =
-                json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
+                json::from_str(read_to_string(session_vars_path)?.as_ref())?;
             resolve_session(session_variables)
         }?;
 
@@ -188,12 +189,12 @@ pub(crate) fn test_introspection_expectation(
             "initial built metadata does not match deserialized metadata"
         );
 
-        let query = fs::read_to_string(request_path)?;
+        let query = read_to_string(&request_path)?;
 
         let request_headers = reqwest::header::HeaderMap::new();
         let session_vars_path = &test_path.join("session_variables.json");
         let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
-            json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
+            json::from_str(read_to_string(session_vars_path)?.as_ref())?;
         let sessions: Vec<Session> = sessions
             .into_iter()
             .map(resolve_session)
@@ -330,14 +331,14 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 "initial built metadata does not match deserialized metadata"
             );
 
-            let query = fs::read_to_string(&request_path)?;
+            let query = read_to_string(&request_path)?;
 
             // Read optional GQL query variables.
             // NOTE: It is expected the variables.json file contains a list of
             // variables. Each item in the list corresponding to a session in
             // session_variables.json
             let query_vars: Option<Vec<HashMap<ast::Name, serde_json::Value>>> =
-                match fs::read_to_string(&variables_path) {
+                match read_to_string(&variables_path) {
                     Ok(query_vars_str) => Some(json::from_str(&query_vars_str)?),
                     Err(_) => None,
                 };
@@ -345,7 +346,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
             let request_headers = reqwest::header::HeaderMap::new();
             let session_vars_path = &test_path.join("session_variables.json");
             let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
-                json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
+                json::from_str(read_to_string(session_vars_path)?.as_ref())?;
             let sessions: Vec<Session> = sessions
                 .into_iter()
                 .map(resolve_session)
@@ -359,7 +360,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
             // expected response headers are a `Vec<String>`; one set for each
             // session/role.
             let expected_headers: Option<Vec<Vec<String>>> =
-                match fs::read_to_string(&response_headers_path) {
+                match read_to_string(&response_headers_path) {
                     Ok(response_headers_str) => Some(json::from_str(&response_headers_str)?),
                     Err(_) => None,
                 };
@@ -444,7 +445,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
 }
 
 fn read_json(path: &Path) -> anyhow::Result<Value> {
-    let json_string = fs::read_to_string(path)?;
+    let json_string = read_to_string(path)?;
     let value = serde_json::from_str(&json_string)?;
     Ok(value)
 }
@@ -505,7 +506,7 @@ pub fn test_execute_explain(
                 serde_json::from_str(session_variables_raw)?;
             resolve_session(session_variables)
         }?;
-        let query = std::fs::read_to_string(root_test_dir.join(gql_request_file_path))?;
+        let query = read_to_string(&root_test_dir.join(gql_request_file_path))?;
         let raw_request = lang_graphql::http::RawRequest {
             operation_name: None,
             query,
@@ -548,7 +549,7 @@ pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configu
         unstable_features: metadata_resolve::configuration::UnstableFeatures {
             enable_order_by_expressions: false,
             enable_ndc_v02_support: true,
-            enable_subscriptions: false,
+            enable_subscriptions: true,
         },
     }
 }
@@ -584,14 +585,14 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
         // Ensure schema is serialized successfully.
         serde_json::to_string(&schema)?;
 
-        let request = if let Ok(content) = fs::read_to_string(request_path) {
+        let request = if let Ok(content) = read_to_string(&request_path) {
             SqlRequest::new(content)
         } else {
-            let json_content = fs::read_to_string(request_path_json)?;
+            let json_content = read_to_string(&request_path_json)?;
             serde_json::from_str(&json_content)?
         };
 
-        let header_map = if let Ok(content) = fs::read_to_string(headers_path_json) {
+        let header_map = if let Ok(content) = read_to_string(&headers_path_json) {
             let header_map: HashMap<String, String> = serde_json::from_str(&content)?;
             Arc::new(reqwest::header::HeaderMap::try_from(&header_map)?)
         } else {
@@ -601,7 +602,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
         let session = Arc::new({
             let session_vars_path = &test_path.join("session_variables.json");
             let session_variables: HashMap<SessionVariable, SessionVariableValue> =
-                serde_json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
+                serde_json::from_str(read_to_string(session_vars_path)?.as_ref())?;
             resolve_session(session_variables)
         }?);
 
@@ -673,4 +674,10 @@ async fn snapshot_sql(
     )?;
     write!(expected, "{}", serde_json::to_string_pretty(&response)?)?;
     Ok(())
+}
+
+/// A utility wrapper around std::read_to_string
+/// Prints path on error to help debugging
+fn read_to_string(path: &Path) -> anyhow::Result<String> {
+    fs::read_to_string(path).map_err(|e| anyhow!("path: {}, error: {}", path.to_string_lossy(), e))
 }

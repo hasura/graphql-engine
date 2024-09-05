@@ -239,3 +239,13 @@ fn test_introspect_model_select_many_where_object_boolean_array_relationship_sim
         ],
     )
 }
+
+// Tests for subscriptions
+
+// Tests subscription schema generation with introspection queries
+#[test]
+fn test_subscription_introspection() -> anyhow::Result<()> {
+    let test_path_string = "execute/subscriptions/introspection";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_introspection_expectation(test_path_string, &[common_metadata_path_string])
+}

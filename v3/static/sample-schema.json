@@ -43,6 +43,9 @@
           "mutation": {
             "rootOperationTypeName": "Mutation"
           },
+          "subscription": {
+            "rootOperationTypeName": "Subscription"
+          },
           "apolloFederation": {
             "enableRootFields": true
           }
@@ -2278,11 +2281,17 @@
               "selectUniques": [
                 {
                   "queryRootField": "ArticleByID",
-                  "uniqueIdentifier": ["article_id"]
+                  "uniqueIdentifier": ["article_id"],
+                  "subscription": {
+                    "rootField": "ArticleByID"
+                  }
                 }
               ],
               "selectMany": {
-                "queryRootField": "ArticleMany"
+                "queryRootField": "ArticleMany",
+                "subscription": {
+                  "rootField": "ArticleMany"
+                }
               },
               "orderByExpressionType": "Article_Order_By"
             }

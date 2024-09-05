@@ -45,7 +45,8 @@ pub use types::warning::Warning;
 
 pub use stages::models_graphql::{
     ModelExpressionType, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
-    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
+    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition,
+    UniqueIdentifierField,
 };
 pub use stages::object_boolean_expressions::{
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,

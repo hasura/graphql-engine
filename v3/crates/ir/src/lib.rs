@@ -19,7 +19,7 @@ mod remote_joins;
 mod root_field;
 mod selection_set;
 
-pub use error::{Error, InternalEngineError};
+pub use error::{Error, InternalDeveloperError, InternalEngineError};
 pub use remote_joins::VariableName;
 
 pub use aggregates::{

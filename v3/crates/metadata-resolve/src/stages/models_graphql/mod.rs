@@ -20,7 +20,8 @@ use crate::types::subgraph::Qualified;
 pub(crate) use types::ModelWithGraphql;
 pub use types::{
     ModelExpressionType, ModelGraphQlApi, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
-    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
+    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition,
+    UniqueIdentifierField,
 };
 
 use super::order_by_expressions;

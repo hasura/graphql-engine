@@ -183,6 +183,9 @@ pub enum InternalDeveloperError {
 
     #[error("The relationship '{relationship_name}' is from a nested object and cannot be used in a predicate")]
     NestedObjectRelationshipInPredicate { relationship_name: RelationshipName },
+
+    #[error("subscription are not supported yet")]
+    SubscriptionsNotSupported,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -204,9 +207,6 @@ pub enum InternalEngineError {
         namespace_annotation: NamespaceAnnotation,
         expected_type: String,
     },
-
-    #[error("subscription shouldn't have been validated")]
-    SubscriptionsNotSupported,
 
     #[error("expected namespace annotation type {namespace_annotation_type} but not found")]
     // Running into this error means that the GDS field was not annotated with the correct

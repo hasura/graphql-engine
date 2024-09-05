@@ -487,7 +487,7 @@ pub fn generate_ir<'n, 's>(
             Ok(ir::IR::Mutation(mutation_ir))
         }
         ast::OperationType::Subscription => {
-            Err(ir::InternalEngineError::SubscriptionsNotSupported)?
+            Err(ir::InternalDeveloperError::SubscriptionsNotSupported)?
         }
     }
 }

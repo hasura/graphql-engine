@@ -4123,6 +4123,7 @@ name = "schema"
 version = "3.0.0"
 dependencies = [
  "hasura-authn-core",
+ "indexmap 2.5.0",
  "insta",
  "json-ext",
  "lang-graphql",
