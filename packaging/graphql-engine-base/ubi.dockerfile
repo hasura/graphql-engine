@@ -13,7 +13,7 @@ RUN set -ex; \
     fi; \
     microdnf install -y postgresql16-server
 
-FROM registry.access.redhat.com/ubi9-minimal:9.4-949.1714662671
+FROM registry.access.redhat.com/ubi9-minimal:9.4-1194
 
 ARG TARGETPLATFORM
 
