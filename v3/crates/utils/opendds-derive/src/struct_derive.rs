@@ -161,6 +161,14 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
             proc_macro2::TokenStream::new()
         };
 
+        let title = if let Some(t) = &field.title {
+            quote! {
+                metadata.title = Some(#t.to_string());
+            }
+        } else {
+            proc_macro2::TokenStream::new()
+        };
+
         // We only modify the schema if necessary, as doing so adds extra levels
         // of nesting for the `$ref` value. (According to JSON Schema, `$ref`
         // cannot be mixed with other properties, and so `schemars` will nest
@@ -175,6 +183,7 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
                 let metadata = schema_object.metadata();
                 #default_prop
                 #description
+                #title
                 schemars::schema::Schema::Object(schema_object)
             }
         };

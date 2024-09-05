@@ -9,23 +9,23 @@ use crate::{permissions::ValueExpression, types::DataConnectorArgumentName, Envi
 use super::{DataConnectorColumnName, DataConnectorName, VersionedSchemaAndCapabilities};
 
 /// A pair of URLs to access a data connector, one for reading and one for writing.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "ReadWriteUrls")]
+#[opendd(json_schema(title = "ReadWriteUrls"))]
 pub struct ReadWriteUrls {
     pub read: EnvironmentValue,
     pub write: EnvironmentValue,
 }
 
 /// A URL to access a data connector. This can be a single URL or a pair of read and write URLs.
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
-)]
-#[schemars(title = "DataConnectorUrlV1")]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[opendd(externally_tagged, json_schema(title = "DataConnectorUrlV1"))]
 #[serde(rename_all = "camelCase")]
 pub enum DataConnectorUrlV1 {
+    // #[opendd(json_schema(title = "SingleUrl"))]
     SingleUrl(EnvironmentValue),
+    // #[opendd(json_schema(title = "ReadWriteUrls"))]
     ReadWriteUrls(ReadWriteUrls),
 }
 

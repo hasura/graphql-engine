@@ -39,6 +39,7 @@ struct FieldOpts {
 #[derive(Default, FromMeta)]
 #[darling(default)]
 struct JsonSchemaFieldOpts {
+    title: Option<String>,
     default_exp: Option<syn::Expr>,
 }
 
@@ -50,6 +51,7 @@ struct EnumOpts {
     as_versioned_internally_tagged: Option<bool>,
     as_versioned_with_definition: Option<bool>,
     untagged_with_kind: Option<bool>,
+    externally_tagged: Option<bool>,
     #[darling(default)]
     json_schema: JsonSchemaOpts,
 }
@@ -190,6 +192,7 @@ pub struct NamedField<'a> {
     pub is_optional: bool,
     pub default_exp: Option<syn::Expr>,
     pub description: Option<String>,
+    pub title: Option<String>,
     pub hidden: bool,
 }
 
@@ -209,6 +212,7 @@ impl<'a> NamedField<'a> {
         let is_default = field_opts.default.unwrap_or(false);
         let is_optional = is_option_type(&field.ty);
         let default_exp = field_opts.json_schema.default_exp;
+        let title = field_opts.json_schema.title;
         let hidden = field_opts.hidden.unwrap_or(false);
         if hidden && !is_default && !is_optional {
             Err(syn::Error::new_spanned(
@@ -225,6 +229,7 @@ impl<'a> NamedField<'a> {
             is_optional,
             default_exp,
             description,
+            title,
             hidden,
         })
     }
@@ -266,6 +271,8 @@ impl EnumImplStyle {
             Some(Self::Tagged(Tagged::VersionWithDefinition))
         } else if opts.untagged_with_kind.unwrap_or(false) {
             Some(Self::UntaggedWithKind)
+        } else if opts.externally_tagged.unwrap_or(false) {
+            Some(Self::Tagged(Tagged::External))
         } else {
             None
         }
@@ -276,6 +283,7 @@ pub enum Tagged {
     KindInternal,
     VersionInternal,
     VersionWithDefinition,
+    External,
 }
 
 pub struct EnumVariant<'a> {
@@ -299,8 +307,8 @@ impl<'a> EnumVariant<'a> {
                 EnumImplStyle::Tagged(tag_style) => match tag_style {
                     // Preserve casing for kinded enums
                     Tagged::KindInternal => variant_name.to_string(),
-                    // Use camel-casing for versioned enums
-                    Tagged::VersionInternal | Tagged::VersionWithDefinition => {
+                    // Use camel-casing for versioned enums and externally-tagged enums
+                    Tagged::VersionInternal | Tagged::VersionWithDefinition | Tagged::External => {
                         variant_name.to_string().to_case(Case::Camel)
                     }
                 },

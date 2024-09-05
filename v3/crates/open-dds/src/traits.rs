@@ -813,4 +813,219 @@ mod tests {
             serde_json::to_string_pretty(&root_schema).unwrap()
         );
     }
+
+    // Tests for externally tagged enums
+
+    #[derive(Debug, PartialEq, OpenDd)]
+    #[opendd(externally_tagged)]
+    #[allow(clippy::enum_variant_names)]
+    /// An externally tagged enum
+    enum ExternallyTaggedEnum {
+        #[opendd(json_schema(title = "VariantOne"))]
+        /// The first variant
+        VariantOne(VariantOneStruct),
+        #[opendd(json_schema(title = "VariantTwo"))]
+        /// The second variant
+        VariantTwo(VariantTwoStruct),
+        #[opendd(hidden = true)]
+        VariantThree(VariantThreeStruct),
+    }
+
+    #[derive(Debug, PartialEq, OpenDd)]
+    struct VariantOneStruct {
+        prop_a: String,
+        prop_b: i32,
+    }
+
+    #[derive(Debug, PartialEq, OpenDd)]
+    struct VariantTwoStruct {
+        prop_1: bool,
+        prop_2: String,
+    }
+
+    #[derive(Debug, PartialEq, OpenDd)]
+    struct VariantThreeStruct {
+        prop_x: String,
+        prop_y: String,
+    }
+
+    #[test]
+    fn test_externally_tagged_enum() {
+        let json = serde_json::json!({
+            "variantTwo": {
+                "prop1": true,
+                "prop2": "testing"
+            }
+        });
+        let expected = ExternallyTaggedEnum::VariantTwo(VariantTwoStruct {
+            prop_1: true,
+            prop_2: "testing".to_owned(),
+        });
+        assert_eq!(expected, traits::OpenDd::deserialize(json).unwrap());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_deserializes_hidden_variants() {
+        let json = serde_json::json!({
+            "variantThree": {
+                "propX": "testing",
+                "propY": "abcd",
+            }
+        });
+        let expected = ExternallyTaggedEnum::VariantThree(VariantThreeStruct {
+            prop_x: "testing".to_owned(),
+            prop_y: "abcd".to_owned(),
+        });
+        assert_eq!(expected, traits::OpenDd::deserialize(json).unwrap());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_multiple_properties_error() {
+        let json = serde_json::json!({
+            "variantOne": {
+                "propA": "test",
+                "propB": 123,
+            },
+            "variantTwo": {
+                "prop1": true,
+                "prop2": "testing"
+            }
+        });
+        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        assert_eq!(
+            "invalid type: found multiple object properties, expected object with only one of the following properties: variantOne, variantTwo".to_string(),
+            err
+                .error
+                .to_string()
+        );
+        assert_eq!("$", err.path.to_string());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_empty_object_error() {
+        let json = serde_json::json!({});
+        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        assert_eq!(
+            "invalid type: found empty object, expected object with only one of the following properties: variantOne, variantTwo".to_string(),
+            err.error.to_string()
+        );
+        assert_eq!("$", err.path.to_string());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_content_not_object_error() {
+        let json = serde_json::json!({
+            "variantOne": "wrong"
+        });
+        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        assert_eq!(
+            "invalid type: not an object, expected object".to_string(),
+            err.error.to_string()
+        );
+        assert_eq!("$.variantOne", err.path.to_string());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_unexpected_variant() {
+        let json = serde_json::json!({
+            "variantUnknown": {
+                "propA": "test",
+                "propB": 123,
+            }
+        });
+        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        assert_eq!(
+            "unknown variant `variantUnknown`, expected `variantOne, variantTwo`".to_string(),
+            err.error.to_string()
+        );
+        assert_eq!("$", err.path.to_string());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_json_schema() {
+        let mut gen = schemars::gen::SchemaGenerator::default();
+        let root_schema = traits::gen_root_schema_for::<ExternallyTaggedEnum>(&mut gen);
+        let exp = serde_json::json!(
+            {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "$id": "https://hasura.io/jsonschemas/metadata/ExternallyTaggedEnum",
+                "title": "ExternallyTaggedEnum",
+                "description": "An externally tagged enum",
+                "oneOf": [
+                    {
+                        "title": "VariantOne",
+                        "description": "The first variant",
+                        "type": "object",
+                        "required": [
+                            "variantOne"
+                        ],
+                        "properties": {
+                            "variantOne": {
+                                "$ref": "#/definitions/VariantOneStruct"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    {
+                        "title": "VariantTwo",
+                        "description": "The second variant",
+                        "type": "object",
+                        "required": [
+                            "variantTwo"
+                        ],
+                        "properties": {
+                            "variantTwo": {
+                                "$ref": "#/definitions/VariantTwoStruct"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                ],
+                "definitions": {
+                    "VariantOneStruct": {
+                        "$id": "https://hasura.io/jsonschemas/metadata/VariantOneStruct",
+                        "title": "VariantOneStruct",
+                        "type": "object",
+                        "required": [
+                            "propA",
+                            "propB"
+                        ],
+                        "properties": {
+                            "propA": {
+                                "type": "string"
+                            },
+                            "propB": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "VariantTwoStruct": {
+                        "$id": "https://hasura.io/jsonschemas/metadata/VariantTwoStruct",
+                        "title": "VariantTwoStruct",
+                        "type": "object",
+                        "required": [
+                            "prop1",
+                            "prop2"
+                        ],
+                        "properties": {
+                            "prop1": {
+                                "type": "boolean"
+                            },
+                            "prop2": {
+                                "type": "string"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            }
+        );
+
+        assert_eq!(
+            serde_json::to_string_pretty(&exp).unwrap(),
+            serde_json::to_string_pretty(&root_schema).unwrap()
+        );
+    }
 }

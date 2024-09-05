@@ -107,6 +107,10 @@ here.
   trait implemented. The default JSON value will be inferred using
   `serde_json::json!(Default::default())`.
 
+- `#[opendd(json_schema(title = "title string value"))]`
+
+  Set the generated JSON schema's title.
+
 ## Enum
 
 Limitations:
@@ -283,12 +287,52 @@ attributes.
   ```
 
   The following object is parsed into
-  `UntaggedEnum::KindTwo(KindEnumTwo::VariantFour(FourStruct{field_four: "four"}))`
+  `UntaggedEnum::KindTwo(KindEnumTwo::VariantFour(FourStruct { field_four: "four" }))`
 
   ```json
   {
     "kind": "VariantFour",
     "fieldFour": "four"
+  }
+  ```
+
+- `#[opendd(externally_tagged)]`
+
+  The JSON object is externally tagged, where the name of the variant is used as
+  the property name and the variant contents is that property's value.
+
+  Example:
+
+  ```rust
+  #[derive(OpenDd)]
+  #[opendd(externally_tagged)]
+  enum ExternallyTaggedEnum {
+      VariantOne(VariantOneStruct),
+      VariantTwo(VariantTwoStruct),
+  }
+
+  #[derive(Debug, PartialEq, OpenDd)]
+  struct VariantOneStruct {
+      prop_a: String,
+      prop_b: i32,
+  }
+
+  #[derive(Debug, PartialEq, OpenDd)]
+  struct VariantTwoStruct {
+      prop_1: bool,
+      prop_2: String,
+  }
+  ```
+
+  The following JSON object is parsed into
+  `ExternallyTaggedEnum::VariantTwo(VariantTwoStruct { prop_1: true, prop_2: "testing" })`:
+
+  ```json
+  {
+    "variantTwo": {
+      "prop1": true,
+      "prop2": "testing"
+    }
   }
   ```
 
@@ -311,7 +355,7 @@ attributes.
 - `#[opendd(json_schema(title = "title string value"))]`
 
   Set the generated JSON schema's title. This applies exclusively to enums with
-  the `as_versioned_with_definition` attribute.
+  the `as_versioned_with_definition` and `externally_tagged` attribute.
 
 - `#[opendd(json_schema(example = "some::function"))]`
 
