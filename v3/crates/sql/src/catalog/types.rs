@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeSet, HashMap, HashSet},
     fmt::{Debug, Display},
     sync::Arc,
 };
@@ -117,22 +117,20 @@ impl TypeRegistry {
             }
         }
 
-        let struct_types = metadata
-            .object_types
-            .iter()
-            .map(|(object_type_name, object_type)| {
-                (
-                    object_type_name.clone(),
-                    struct_type(
-                        &default_schema,
-                        metadata,
-                        &custom_scalars,
-                        object_type_name,
-                        object_type,
-                    ),
-                )
-            })
-            .collect();
+        let mut struct_types: HashMap<Qualified<CustomTypeName>, StructType> = HashMap::new();
+
+        for (object_type_name, object_type) in &metadata.object_types {
+            if let Some(struct_type) = struct_type(
+                &default_schema,
+                metadata,
+                &custom_scalars,
+                object_type_name,
+                object_type,
+                &BTreeSet::from_iter([object_type_name.clone()]),
+            ) {
+                struct_types.insert(object_type_name.clone(), struct_type);
+            }
+        }
 
         Self {
             custom_scalars,
@@ -266,7 +264,7 @@ impl StructTypeName {
         StructTypeName(name)
     }
 }
-
+#[derive(Clone)]
 pub(crate) struct StructType {
     pub name: StructTypeName,
     pub description: Option<String>,
@@ -292,6 +290,7 @@ impl StructType {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct StructTypeField {
     pub _name: open_dd::FieldName,
     pub description: Option<String>,
@@ -306,7 +305,8 @@ fn struct_type(
     custom_scalars: &HashMap<Qualified<CustomTypeName>, ndc_models::TypeRepresentation>,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &resolved::ObjectTypeWithRelationships,
-) -> StructType {
+    disallowed_object_types: &BTreeSet<Qualified<CustomTypeName>>,
+) -> Option<StructType> {
     let object_type_fields = &object_type.object_type.fields;
     let mut struct_fields = IndexMap::new();
     let mut builder = datafusion::SchemaBuilder::new();
@@ -316,46 +316,67 @@ fn struct_type(
             metadata,
             custom_scalars,
             &field_definition.field_type.underlying_type,
+            disallowed_object_types,
         );
-        if let Some((normalized_type, field_type)) = field_type {
-            builder.push(datafusion::Field::new(
-                field_name.to_string(),
-                field_type.clone(),
-                field_definition.field_type.nullable,
-            ));
+        match field_type {
+            GeneratedArrowType::DisallowedHere => {}
+            GeneratedArrowType::DisallowedNested => {
+                // We are in a nested context if and only if the disallowed_object_types
+                // stack/set has size > 1, because there are only two cases:
+                // 1. we added a new unseen type name to the set, which must have happened
+                //    when considering a nested object type, or
+                // 2. we re-added an already-seen type name, in which case the set size
+                //    would have remained unchanged. But this case would have been
+                //    short-circuited by the recursive type check anyway.
+                let is_nested = disallowed_object_types.len() > 1;
+                if is_nested {
+                    return None;
+                }
+            }
+            GeneratedArrowType::Allowed { normalized, flat } => {
+                builder.push(datafusion::Field::new(
+                    field_name.to_string(),
+                    flat.clone(),
+                    field_definition.field_type.nullable,
+                ));
 
-            // let description = if let Some(ndc_models::TypeRepresentation::Enum { one_of }) =
-            //     type_representation
-            // {
-            //     // TODO: Instead of stuffing the possible enum values in description,
-            //     // surface them in the metadata tables.
-            //     Some(
-            //         field_definition
-            //             .description
-            //             .clone()
-            //             .unwrap_or_else(String::new)
-            //             + &format!(" Possible values: {}", one_of.join(", ")),
-            //     )
-            // } else {
-            //     field_definition.description.clone()
-            // };
-            let object_type_field = StructTypeField {
-                _name: field_name.clone(),
-                description: field_definition.description.clone(),
-                data_type: field_type,
-                is_nullable: field_definition.field_type.nullable,
-                normalized_type,
-            };
-            struct_fields.insert(field_name.clone(), object_type_field);
+                // let description = if let Some(ndc_models::TypeRepresentation::Enum { one_of }) =
+                //     type_representation
+                // {
+                //     // TODO: Instead of stuffing the possible enum values in description,
+                //     // surface them in the metadata tables.
+                //     Some(
+                //         field_definition
+                //             .description
+                //             .clone()
+                //             .unwrap_or_else(String::new)
+                //             + &format!(" Possible values: {}", one_of.join(", ")),
+                //     )
+                // } else {
+                //     field_definition.description.clone()
+                // };
+                let object_type_field = StructTypeField {
+                    _name: field_name.clone(),
+                    description: field_definition.description.clone(),
+                    data_type: flat,
+                    is_nullable: field_definition.field_type.nullable,
+                    normalized_type: normalized,
+                };
+                struct_fields.insert(field_name.clone(), object_type_field);
+            }
         }
     }
 
-    StructType {
+    let struct_type = StructType {
         name: StructTypeName::new(default_schema, object_type_name),
         description: object_type.object_type.description.clone(),
         fields: struct_fields,
         schema: datafusion::SchemaRef::new(datafusion::Schema::new(builder.finish().fields)),
-    }
+    };
+
+    // struct_types.insert(object_type_name.clone(), struct_type.clone());
+
+    Some(struct_type)
 }
 
 fn built_in_type(ty: &open_dds::types::InbuiltType) -> (NormalizedType, datafusion::DataType) {
@@ -404,6 +425,21 @@ fn ndc_representation_to_datatype(
     ))
 }
 
+enum GeneratedArrowType {
+    /// This type cannot appeaer in any nested struct and should
+    /// cascade deletes of types up to the outermost-enclosing field.
+    /// Specifically, table column types cannot include recursive
+    /// types anywhere, and any such columns should be removed.
+    DisallowedNested,
+    /// This type is disallowed at the current location and should be
+    /// removed from the nearest enclosing struct type.
+    DisallowedHere,
+    Allowed {
+        normalized: NormalizedType,
+        flat: datafusion::DataType,
+    },
+}
+
 /// Converts an opendd type to an arrow type.
 #[allow(clippy::match_same_arms)]
 fn to_arrow_type(
@@ -411,52 +447,80 @@ fn to_arrow_type(
     metadata: &resolved::Metadata,
     custom_scalars: &HashMap<Qualified<CustomTypeName>, ndc_models::TypeRepresentation>,
     ty: &resolved::QualifiedBaseType,
-) -> Option<(NormalizedType, datafusion::DataType)> {
+    disallowed_object_types: &BTreeSet<Qualified<CustomTypeName>>,
+) -> GeneratedArrowType {
     match &ty {
         resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Inbuilt(inbuilt_type)) => {
-            Some(built_in_type(inbuilt_type))
+            let (normalized, flat) = built_in_type(inbuilt_type);
+            GeneratedArrowType::Allowed { normalized, flat }
         }
         resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Custom(custom_type)) => {
             // check if the custom type is a scalar
             if let Some(ndc_representation) = custom_scalars.get(custom_type) {
-                ndc_representation_to_datatype(ndc_representation)
+                match ndc_representation_to_datatype(ndc_representation) {
+                    None => GeneratedArrowType::DisallowedHere,
+                    Some((normalized, flat)) => GeneratedArrowType::Allowed { normalized, flat },
+                }
             } else if let Some(object_type) = metadata.object_types.get(custom_type) {
-                let struct_type = struct_type(
+                if disallowed_object_types.contains(custom_type) {
+                    // If we have seen this type name before, then we have a recursive
+                    // object type. Recursive structs are not supported by datafusion,
+                    // so we cut off the recursion here and omit this field.
+                    return GeneratedArrowType::DisallowedNested;
+                }
+
+                let mut disallowed_object_types = disallowed_object_types.clone();
+                disallowed_object_types.insert(custom_type.clone());
+
+                match struct_type(
                     default_schema,
                     metadata,
                     custom_scalars,
                     custom_type,
                     object_type,
-                );
-                let datafusion_type =
-                    datafusion::DataType::Struct(struct_type.table_schema().fields.clone());
-                Some((
-                    NormalizedType::Named(NormalizedTypeNamed::Struct(struct_type.name().clone())),
-                    datafusion_type,
-                ))
+                    &disallowed_object_types,
+                ) {
+                    None => GeneratedArrowType::DisallowedNested,
+                    Some(struct_type) => {
+                        let flat =
+                            datafusion::DataType::Struct(struct_type.table_schema().fields.clone());
+                        GeneratedArrowType::Allowed {
+                            normalized: NormalizedType::Named(NormalizedTypeNamed::Struct(
+                                struct_type.name().clone(),
+                            )),
+                            flat,
+                        }
+                    }
+                }
             } else {
-                None
+                GeneratedArrowType::DisallowedHere
             }
         }
         resolved::QualifiedBaseType::List(element_type) => {
-            let (normalized_type, data_type) = to_arrow_type(
+            let inner_type = to_arrow_type(
                 default_schema,
                 metadata,
                 custom_scalars,
                 &element_type.underlying_type,
-            )?;
-            let datafusion_type = datafusion::DataType::List(Arc::new(datafusion::Field::new(
-                "element",
-                data_type,
-                element_type.nullable,
-            )));
-            Some((
-                NormalizedType::List(Box::new(NormalizedTypeReference {
-                    underlying_type: normalized_type,
-                    nullable: element_type.nullable,
-                })),
-                datafusion_type,
-            ))
+                disallowed_object_types,
+            );
+            match inner_type {
+                GeneratedArrowType::Allowed { normalized, flat } => {
+                    let flat = datafusion::DataType::List(Arc::new(datafusion::Field::new(
+                        "element",
+                        flat,
+                        element_type.nullable,
+                    )));
+                    GeneratedArrowType::Allowed {
+                        normalized: NormalizedType::List(Box::new(NormalizedTypeReference {
+                            underlying_type: normalized,
+                            nullable: element_type.nullable,
+                        })),
+                        flat,
+                    }
+                }
+                other => other,
+            }
         }
     }
 }

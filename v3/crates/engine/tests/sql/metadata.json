@@ -168,6 +168,14 @@
               {
                 "name": "title",
                 "type": "String"
+              },
+              {
+                "name": "disallowed_recursive_type",
+                "type": "[article]"
+              },
+              {
+                "name": "disallowed_mutually_recursive_type",
+                "type": "[Invoice]"
               }
             ],
             "graphql": {
@@ -191,6 +199,16 @@
                   "title": {
                     "column": {
                       "name": "title"
+                    }
+                  },
+                  "disallowed_recursive_type": {
+                    "column": {
+                      "name": "disallowed_recursive_type"
+                    }
+                  },
+                  "disallowed_mutually_recursive_type": {
+                    "column": {
+                      "name": "disallowed_mutually_recursive_type"
                     }
                   }
                 }
@@ -247,7 +265,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": ["author_id", "id", "title"]
+                  "allowedFields": [
+                    "author_id",
+                    "id",
+                    "title",
+                    "disallowed_recursive_type",
+                    "disallowed_mutually_recursive_type"
+                  ]
                 }
               }
             ]
@@ -718,7 +742,8 @@
                     "customerId",
                     "invoiceDate",
                     "invoiceId",
-                    "total"
+                    "total",
+                    "disallowed_mutually_recursive_type"
                   ]
                 }
               }
@@ -918,6 +943,12 @@
                 "type": "Int!",
                 "description": null,
                 "deprecated": null
+              },
+              {
+                "name": "disallowed_mutually_recursive_type",
+                "type": "[article]",
+                "description": null,
+                "deprecated": null
               }
             ],
             "globalIdFields": null,
@@ -975,6 +1006,11 @@
                   "invoiceId": {
                     "column": {
                       "name": "InvoiceId"
+                    }
+                  },
+                  "disallowed_mutually_recursive_type": {
+                    "column": {
+                      "name": "disallowed_mutually_recursive_type"
                     }
                   }
                 }
@@ -3537,6 +3573,15 @@
                           "type": "named",
                           "name": "numeric"
                         }
+                      },
+                      "disallowed_mutually_recursive_type": {
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "article"
+                          }
+                        }
                       }
                     }
                   },
@@ -3752,6 +3797,24 @@
                           "underlying_type": {
                             "type": "named",
                             "name": "text"
+                          }
+                        }
+                      },
+                      "disallowed_recursive_type": {
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "article"
+                          }
+                        }
+                      },
+                      "disallowed_mutually_recursive_type": {
+                        "type": {
+                          "type": "array",
+                          "element_type": {
+                            "type": "named",
+                            "name": "Invoice"
                           }
                         }
                       }

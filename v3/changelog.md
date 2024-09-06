@@ -6,6 +6,8 @@
 
 ### Fixed
 
+- Disallow recursive types in SQL table column types
+
 ### Changed
 
 ## [v2024.09.05]
