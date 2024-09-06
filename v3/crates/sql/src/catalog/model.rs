@@ -199,18 +199,23 @@ fn compute_table_constraints(
         .graphql_api
         .select_uniques
         .iter()
-        .map(|unique| TableConstraint::Unique {
-            name: None,
-            index_name: None,
-            index_type_display: ::datafusion::sql::sqlparser::ast::KeyOrIndexDisplay::None,
-            index_type: None,
-            columns: unique
-                .unique_identifier
-                .iter()
-                .map(|(field_name, _)| field_name.as_str().into())
-                .collect(),
-            index_options: vec![],
-            characteristics: None,
+        .filter_map(|unique| {
+            let mut columns: Vec<::datafusion::sql::sqlparser::ast::Ident> = vec![];
+
+            for (field_name, _) in &unique.unique_identifier {
+                let _ = df_schema.field_with_name(None, field_name.as_str()).ok()?;
+                columns.push(field_name.as_str().into());
+            }
+
+            Some(TableConstraint::Unique {
+                name: None,
+                index_name: None,
+                index_type_display: ::datafusion::sql::sqlparser::ast::KeyOrIndexDisplay::None,
+                index_type: None,
+                columns,
+                index_options: vec![],
+                characteristics: None,
+            })
         })
         .collect::<Vec<_>>();
 
