@@ -8,9 +8,10 @@ use open_dds::{data_connector::DataConnectorName, models::ModelName, types::Cust
 use std::collections::BTreeMap;
 pub use types::{
     ArgumentPresets, FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
-    PredicateRelationshipInfo, SelectPermission, UnaryComparisonOperator,
+    SelectPermission, UnaryComparisonOperator,
 };
 mod model_permission;
+pub(crate) use model_permission::resolve_model_predicate_with_type;
 
 use crate::types::error::Error;
 
