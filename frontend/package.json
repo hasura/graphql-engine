@@ -70,7 +70,7 @@
     "apollo-link-http": "^1.5.16",
     "apollo-link-ws": "1.0.20",
     "await-to-js": "^3.0.0",
-    "axios": "1.7.2",
+    "axios": "1.7.4",
     "babel-plugin-transform-runtime": "^6.23.0",
     "brace": "0.11.1",
     "browser-hrtime": "^1.1.8",
