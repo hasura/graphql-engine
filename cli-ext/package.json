@@ -28,11 +28,11 @@
   "author": "wawhal",
   "license": "ISC",
   "dependencies": {
-    "@graphql-codegen/core": "^1.9.0",
-    "@graphql-codegen/typescript": "^1.9.0",
+    "@graphql-codegen/core": "^1.15.0",
+    "@graphql-codegen/typescript": "^1.15.0",
     "graphql": "^14.5.8",
     "inflection": "^1.12.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.7",
     "regenerator-runtime": "^0.13.3"
   },
   "devDependencies": {
