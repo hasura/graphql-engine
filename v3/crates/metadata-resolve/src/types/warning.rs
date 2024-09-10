@@ -1,7 +1,7 @@
 use open_dds::flags;
 
 use crate::stages::{
-    boolean_expressions, commands, data_connectors, models, object_boolean_expressions,
+    aggregates, boolean_expressions, commands, data_connectors, models, object_boolean_expressions,
 };
 
 use super::error::ShouldBeAnError;
@@ -22,6 +22,8 @@ pub enum Warning {
     ModelIssue(#[from] models::ModelsIssue),
     #[error("{0}")]
     CommandIssue(#[from] commands::CommandsIssue),
+    #[error("{0}")]
+    AggregateExpressionIssue(#[from] aggregates::AggregateExpressionIssue),
 }
 
 impl ShouldBeAnError for Warning {

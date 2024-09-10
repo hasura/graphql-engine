@@ -17,6 +17,7 @@ use crate::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 pub struct AggregateExpressionsOutput {
     pub aggregate_expressions: BTreeMap<Qualified<AggregateExpressionName>, AggregateExpression>,
     pub graphql_types: BTreeSet<ast::TypeName>,
+    pub issues: Vec<AggregateExpressionIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -72,17 +73,20 @@ pub struct AggregateExpressionGraphqlConfig {
     pub select_output_type_name: ast::TypeName,
 }
 
+#[derive(Debug, thiserror::Error, PartialEq, Eq, Clone)]
+pub enum AggregateExpressionIssue {
+    #[error("the aggregate expression {name} defines a graphql section but it will not appear in the GraphQL API unless {config_name} is also configured in the GraphqlConfig")]
+    ConfigMissingFromGraphQlConfig {
+        name: Qualified<AggregateExpressionName>,
+        config_name: String,
+    },
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum AggregateExpressionError {
     #[error("the following aggregate expression is defined more than once: {name}")]
     DuplicateAggregateExpressionDefinition {
         name: Qualified<AggregateExpressionName>,
-    },
-
-    #[error("the aggregate expression {name} defines a graphql section and so {config_name} must be set in the GraphqlConfig")]
-    ConfigMissingFromGraphQlConfig {
-        name: Qualified<AggregateExpressionName>,
-        config_name: String,
     },
 
     #[error("the name used by {config_name} from the GraphqlConfig conflicts with the aggregatable field name {aggregatable_field_name} in the aggregate expression {name}")]

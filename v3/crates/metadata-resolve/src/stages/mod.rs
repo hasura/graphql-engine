@@ -119,6 +119,7 @@ pub fn resolve(
     let aggregates::AggregateExpressionsOutput {
         aggregate_expressions,
         graphql_types,
+        issues,
     } = aggregates::resolve(
         &metadata_accessor,
         &data_connectors,
@@ -128,6 +129,8 @@ pub fn resolve(
         graphql_types,
         &graphql_config,
     )?;
+
+    all_warnings.extend(issues.into_iter().map(Warning::from));
 
     // Validate `ObjectBooleanExpressionType` metadata. This will soon be deprecated and subsumed
     // by `BooleanExpressionType`.

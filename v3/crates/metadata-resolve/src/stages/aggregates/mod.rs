@@ -34,6 +34,7 @@ pub fn resolve(
 ) -> Result<AggregateExpressionsOutput, AggregateExpressionError> {
     let mut resolved_aggregate_expressions =
         BTreeMap::<Qualified<AggregateExpressionName>, AggregateExpression>::new();
+    let mut issues = vec![];
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -63,6 +64,7 @@ pub fn resolve(
             graphql_config,
             &aggregate_expression_name,
             aggregate_expression,
+            &mut issues,
         )?;
 
         resolved_aggregate_expressions
@@ -72,6 +74,7 @@ pub fn resolve(
     Ok(AggregateExpressionsOutput {
         aggregate_expressions: resolved_aggregate_expressions,
         graphql_types: existing_graphql_types,
+        issues,
     })
 }
 
@@ -88,6 +91,7 @@ fn resolve_aggregate_expression(
     graphql_config: &graphql_config::GraphqlConfig,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     aggregate_expression: &open_dds::aggregates::AggregateExpressionV1,
+    issues: &mut Vec<AggregateExpressionIssue>,
 ) -> Result<AggregateExpression, AggregateExpressionError> {
     let operand = match &aggregate_expression.operand {
         open_dds::aggregates::AggregateOperand::Object(object_operand) => resolve_object_operand(
@@ -112,6 +116,7 @@ fn resolve_aggregate_expression(
         aggregate_expression_name,
         &operand,
         &aggregate_expression.graphql,
+        issues,
     )?;
 
     Ok(AggregateExpression {
@@ -615,6 +620,7 @@ fn resolve_aggregate_expression_graphql_config(
     aggregate_expression_graphql_definition: &Option<
         open_dds::aggregates::AggregateExpressionGraphQlDefinition,
     >,
+    issues: &mut Vec<AggregateExpressionIssue>,
 ) -> Result<Option<AggregateExpressionGraphqlConfig>, AggregateExpressionError> {
     let select_type_name = aggregate_expression_graphql_definition
         .as_ref()
@@ -634,21 +640,19 @@ fn resolve_aggregate_expression_graphql_config(
         },
     )?;
 
-    let graphql_config = select_type_name
-        .map(|select_type_name| -> Result<_, AggregateExpressionError> {
-            // Check that the aggregate config is configured in graphql config
-            let aggregate_config =
-                graphql_config
-                    .query
-                    .aggregate_config
-                    .as_ref()
-                    .ok_or_else(
-                        || AggregateExpressionError::ConfigMissingFromGraphQlConfig {
-                            name: aggregate_expression_name.clone(),
-                            config_name: "query.aggregate".to_string(),
-                        },
-                    )?;
-
+    let graphql_config = match (select_type_name, &graphql_config.query.aggregate_config) {
+        (None, _) => None,
+        (Some(_select_type_name), None) => {
+            // If the a select type name has been configured, but global aggregate config
+            // is missing from GraphqlConfig, raise a warning since this is likely a user
+            // misconfiguration issue.
+            issues.push(AggregateExpressionIssue::ConfigMissingFromGraphQlConfig {
+                name: aggregate_expression_name.clone(),
+                config_name: "query.aggregate".to_string(),
+            });
+            None
+        }
+        (Some(select_type_name), Some(aggregate_config)) => {
             // Check that no aggregatable field conflicts with the _count field
             if let Some(field) = aggregate_operand.aggregatable_fields.iter().find(|field| {
                 field.field_name.as_str() == aggregate_config.count_field_name.as_str()
@@ -704,13 +708,13 @@ fn resolve_aggregate_expression_graphql_config(
                 });
             }
 
-            Ok(AggregateExpressionGraphqlConfig {
+            Some(AggregateExpressionGraphqlConfig {
                 select_output_type_name: select_type_name,
                 count_field_name: aggregate_config.count_field_name.clone(),
                 count_distinct_field_name: aggregate_config.count_distinct_field_name.clone(),
             })
-        })
-        .transpose()?;
+        }
+    };
 
     Ok(graphql_config)
 }
