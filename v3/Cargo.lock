@@ -2645,6 +2645,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonapi"
+version = "3.0.0"
+
+[[package]]
 name = "jsonptr"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
