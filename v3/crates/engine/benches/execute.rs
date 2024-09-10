@@ -1,7 +1,8 @@
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
+use execute::HttpContext;
 use execute::{execute_mutation_plan, execute_query_plan, generate_request_plan};
-use execute::{execute_query_internal, generate_ir, HttpContext};
+use graphql_frontend::{execute_query_internal, generate_ir};
 use hasura_authn_core::Identity;
 use lang_graphql::http::RawRequest;
 use open_dds::permissions::Role;

@@ -1,22 +1,21 @@
+use super::fetch_explain_from_data_connector;
 use super::types;
-use super::HttpContext;
-use crate::error;
-use crate::explain::fetch_explain_from_data_connector;
-use crate::plan;
-use crate::plan::field::{UnresolvedField, UnresolvedNestedField};
-use crate::plan::query::UnresolvedQueryNode;
 use async_recursion::async_recursion;
+use execute::plan;
+use execute::plan::field::{UnresolvedField, UnresolvedNestedField};
+use execute::plan::UnresolvedQueryNode;
+use execute::HttpContext;
 use indexmap::IndexMap;
 use ir::NdcFieldAlias;
 use std::collections::BTreeMap;
 
 #[async_recursion]
 pub(crate) async fn explain_query_predicate_node<'s>(
-    expose_internal_errors: &crate::ExposeInternalErrors,
+    expose_internal_errors: &execute::ExposeInternalErrors,
     http_context: &HttpContext,
     node: &UnresolvedQueryNode<'s>,
     steps: &mut Vec<types::Step>,
-) -> Result<(), error::RequestError> {
+) -> Result<(), execute::RequestError> {
     // Generate explain steps for involved remote relationships in the predicate
     if let Some(filter_predicate) = &node.predicate {
         explain_query_predicate(
@@ -40,11 +39,11 @@ pub(crate) async fn explain_query_predicate_node<'s>(
 }
 
 async fn explain_query_predicate_fields<'s, 'a>(
-    expose_internal_errors: &crate::ExposeInternalErrors,
+    expose_internal_errors: &execute::ExposeInternalErrors,
     http_context: &HttpContext,
     fields: Option<&'a IndexMap<NdcFieldAlias, UnresolvedField<'s>>>,
     steps: &mut Vec<types::Step>,
-) -> Result<(), error::RequestError> {
+) -> Result<(), execute::RequestError> {
     if let Some(fields) = fields {
         for field in fields.values() {
             match field {
@@ -74,11 +73,11 @@ async fn explain_query_predicate_fields<'s, 'a>(
 
 #[async_recursion]
 pub(crate) async fn explain_query_predicate_nested_field<'s, 'a>(
-    expose_internal_errors: &crate::ExposeInternalErrors,
+    expose_internal_errors: &execute::ExposeInternalErrors,
     http_context: &HttpContext,
     nested_field: Option<&'a UnresolvedNestedField<'s>>,
     steps: &mut Vec<types::Step>,
-) -> Result<(), error::RequestError> {
+) -> Result<(), execute::RequestError> {
     if let Some(nested_field) = nested_field {
         match nested_field {
             UnresolvedNestedField::Object(nested_object) => {
@@ -106,11 +105,11 @@ pub(crate) async fn explain_query_predicate_nested_field<'s, 'a>(
 
 #[async_recursion]
 async fn explain_query_predicate<'s>(
-    expose_internal_errors: &crate::ExposeInternalErrors,
+    expose_internal_errors: &execute::ExposeInternalErrors,
     http_context: &HttpContext,
     predicate: &ir::Expression<'s>,
     steps: &mut Vec<types::Step>,
-) -> Result<(), error::RequestError> {
+) -> Result<(), execute::RequestError> {
     match predicate {
         ir::Expression::And { expressions } => {
             for expression in expressions {
@@ -133,8 +132,6 @@ async fn explain_query_predicate<'s>(
         | ir::Expression::RelationshipNdcPushdown { .. }
         | ir::Expression::LocalNestedArray { .. } => Ok(()),
 
-        // Needs to be resolved in the Engine by making a request to the target data connector,
-        // for which we need to explain the corresponding NDC request.
         ir::Expression::RelationshipEngineResolved {
             relationship: _,
             target_model_name,
@@ -143,8 +140,8 @@ async fn explain_query_predicate<'s>(
             predicate,
         } => {
             let (remote_query_node, collection_relationships) =
-                plan::filter::plan_remote_predicate(ndc_column_mapping, predicate)
-                    .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                execute::plan_remote_predicate(ndc_column_mapping, predicate)
+                    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             explain_query_predicate_node(
                 expose_internal_errors,
@@ -157,9 +154,9 @@ async fn explain_query_predicate<'s>(
             let resolved_query_node = remote_query_node
                 .resolve(http_context)
                 .await
-                .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
-            let query_execution_plan = plan::query::ResolvedQueryExecutionPlan {
+            let query_execution_plan = execute::ResolvedQueryExecutionPlan {
                 query_node: resolved_query_node,
                 collection: target_model_source.collection.clone(),
                 arguments: BTreeMap::new(),
@@ -169,7 +166,7 @@ async fn explain_query_predicate<'s>(
             };
 
             let ndc_query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)
-                .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             let ndc_request = types::NDCRequest::Query(ndc_query_request);
             let data_connector_explain = fetch_explain_from_data_connector(

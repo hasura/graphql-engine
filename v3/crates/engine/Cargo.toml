@@ -23,6 +23,7 @@ harness = false
 [dependencies]
 axum-ext = { path = "../utils/axum-ext" }
 execute = { path = "../execute" }
+graphql-frontend = { path = "../frontends/graphql" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 hasura-authn-jwt = { path = "../auth/hasura-authn-jwt" }
 hasura-authn-noauth = { path = "../auth/hasura-authn-noauth" }

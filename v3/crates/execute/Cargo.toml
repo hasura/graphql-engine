@@ -7,10 +7,6 @@ license.workspace = true
 [lib]
 bench = false
 
-[[bench]]
-name = "generate_ir"
-harness = false
-
 [dependencies]
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 ir = { path = "../ir" }
@@ -41,8 +37,6 @@ transitive = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-criterion = { workspace = true, features = ["html_reports", "async_tokio"] }
-goldenfile = { workspace = true }
 mockito = { workspace = true }
 pretty_assertions = { workspace = true }
 

@@ -1781,6 +1781,7 @@ dependencies = [
  "execute",
  "futures-util",
  "goldenfile",
+ "graphql-frontend",
  "hasura-authn-core",
  "hasura-authn-jwt",
  "hasura-authn-noauth",
@@ -1868,10 +1869,8 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "bytes",
- "criterion",
  "futures-ext",
  "futures-util",
- "goldenfile",
  "hasura-authn-core",
  "indexmap 2.5.0",
  "ir",
@@ -2146,6 +2145,32 @@ dependencies = [
  "similar-asserts",
  "tempfile",
  "yansi 1.0.1",
+]
+
+[[package]]
+name = "graphql-frontend"
+version = "3.0.0"
+dependencies = [
+ "async-recursion",
+ "axum",
+ "criterion",
+ "execute",
+ "goldenfile",
+ "hasura-authn-core",
+ "indexmap 2.5.0",
+ "ir",
+ "lang-graphql",
+ "metadata-resolve",
+ "ndc-models 0.1.6",
+ "ndc-models 0.2.0",
+ "nonempty",
+ "open-dds",
+ "reqwest",
+ "schema",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing-util",
 ]
 
 [[package]]

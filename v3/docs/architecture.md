@@ -23,6 +23,8 @@ crates
 │   ├── types
 ├── ir
 ├── execute
+├── frontends
+│   ├── graphql
 ├── engine
 │   ├── bin
 │   │   ├── engine
@@ -126,8 +128,12 @@ intermediate representation ready to plan a request.
 ### `execute`
 
 Responsible for the core operation of the engine in the context of a user
-provided metadata, including the web server, requests processing, executing
-requests, etc.
+provided metadata, including requests processing, executing requests, etc.
+
+### `frontends/graphql`
+
+Entrypoints for GraphQL requests. Orchestrates parsing, validation and planning
+requests.
 
 #### `engine/bin`
 

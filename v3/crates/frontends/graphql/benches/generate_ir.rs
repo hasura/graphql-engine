@@ -64,8 +64,13 @@ pub fn bench_generate_ir(c: &mut Criterion) {
             &(&schema, &normalized_request),
             |b, (schema, normalized_request)| {
                 b.iter(|| {
-                    execute::generate_ir(schema, &session, &request_headers, normalized_request)
-                        .unwrap()
+                    graphql_frontend::generate_ir(
+                        schema,
+                        &session,
+                        &request_headers,
+                        normalized_request,
+                    )
+                    .unwrap()
                 });
             },
         );

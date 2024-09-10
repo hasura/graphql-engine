@@ -596,7 +596,7 @@ async fn handle_request(
             || {
                 {
                     Box::pin(
-                        execute::execute_query(
+                        graphql_frontend::execute_query(
                             state.expose_internal_errors,
                             &state.http_context,
                             &state.graphql_state,
@@ -627,7 +627,7 @@ async fn handle_explain_request(
     State(state): State<Arc<EngineState>>,
     Extension(session): Extension<Session>,
     Json(request): Json<gql::http::RawRequest>,
-) -> execute::ExplainResponse {
+) -> graphql_frontend::ExplainResponse {
     let tracer = tracing_util::global_tracer();
     let response = tracer
         .in_span_async(
@@ -636,7 +636,7 @@ async fn handle_explain_request(
             SpanVisibility::User,
             || {
                 Box::pin(
-                    execute::execute_explain(
+                    graphql_frontend::execute_explain(
                         state.expose_internal_errors,
                         &state.http_context,
                         &state.graphql_state,

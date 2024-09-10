@@ -1,32 +1,33 @@
 mod predicate;
 pub mod types;
+use super::steps;
 
 use std::borrow::Cow;
 
-use super::remote_joins::types::{JoinNode, RemoteJoinType};
-use super::HttpContext;
-use crate::ndc::client as ndc_client;
-use crate::plan::{ApolloFederationSelect, NDCQueryExecution, NodeQueryPlan, ProcessResponseAs};
-use crate::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
-use crate::{error, plan};
 use async_recursion::async_recursion;
+use execute::ndc::client as ndc_client;
+use execute::plan::{
+    self, ApolloFederationSelect, NDCQueryExecution, NodeQueryPlan, ProcessResponseAs,
+};
+use execute::HttpContext;
+use execute::{JoinId, JoinLocations, JoinNode, RemoteJoin, RemoteJoinType};
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use nonempty::NonEmpty;
 use schema::GDS;
-use tracing_util::SpanVisibility;
+use tracing_util::{AttributeVisibility, SpanVisibility};
 
 pub async fn execute_explain(
-    expose_internal_errors: crate::ExposeInternalErrors,
+    expose_internal_errors: execute::ExposeInternalErrors,
     http_context: &HttpContext,
     schema: &Schema<GDS>,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     request: RawRequest,
 ) -> (Option<ast::OperationType>, types::ExplainResponse) {
-    super::explain_query_internal(
+    explain_query_internal(
         expose_internal_errors,
         http_context,
         schema,
@@ -46,12 +47,97 @@ pub async fn execute_explain(
     )
 }
 
+/// Explains (query plan) a GraphQL query
+async fn explain_query_internal(
+    expose_internal_errors: execute::ExposeInternalErrors,
+    http_context: &HttpContext,
+    schema: &gql::schema::Schema<GDS>,
+    session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
+    raw_request: gql::http::RawRequest,
+) -> Result<(ast::OperationType, types::ExplainResponse), execute::RequestError> {
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "explain_query",
+            "Execute explain request",
+            SpanVisibility::User,
+            || {
+                tracing_util::set_attribute_on_active_span(
+                    AttributeVisibility::Default,
+                    "session.role",
+                    session.role.to_string(),
+                );
+                tracing_util::set_attribute_on_active_span(
+                    AttributeVisibility::Default,
+                    "request.graphql_query",
+                    raw_request.query.to_string(),
+                );
+                Box::pin(async {
+                    // parse the raw request into a GQL query
+                    let query = steps::parse_query(&raw_request.query)?;
+
+                    // normalize the parsed GQL query
+                    let normalized_request =
+                        steps::normalize_request(schema, session, query, raw_request)?;
+
+                    // generate IR
+                    let ir =
+                        steps::build_ir(schema, session, request_headers, &normalized_request)?;
+
+                    // construct a plan to execute the request
+                    let request_plan = steps::build_request_plan(&ir)?;
+
+                    // explain the query plan
+                    let response = tracer
+                        .in_span_async(
+                            "explain",
+                            "Explain request plan",
+                            SpanVisibility::Internal,
+                            || {
+                                Box::pin(async {
+                                    let request_result = match request_plan {
+                                        plan::RequestPlan::MutationPlan(mutation_plan) => {
+                                            explain_mutation_plan(
+                                                expose_internal_errors,
+                                                http_context,
+                                                mutation_plan,
+                                            )
+                                            .await
+                                        }
+                                        plan::RequestPlan::QueryPlan(query_plan) => {
+                                            explain_query_plan(
+                                                expose_internal_errors,
+                                                http_context,
+                                                query_plan,
+                                            )
+                                            .await
+                                        }
+                                    };
+                                    // convert the query plan to explain step
+                                    match request_result {
+                                        Ok(step) => step.make_explain_response(),
+                                        Err(e) => types::ExplainResponse::error(
+                                            e.to_graphql_error(expose_internal_errors),
+                                        ),
+                                    }
+                                })
+                            },
+                        )
+                        .await;
+                    Ok((normalized_request.ty, response))
+                })
+            },
+        )
+        .await
+}
+
 /// Produce an /explain plan for a given GraphQL query.
 pub(crate) async fn explain_query_plan(
-    expose_internal_errors: crate::ExposeInternalErrors,
+    expose_internal_errors: execute::ExposeInternalErrors,
     http_context: &HttpContext,
     query_plan: plan::QueryPlan<'_, '_, '_>,
-) -> Result<types::Step, error::RequestError> {
+) -> Result<types::Step, execute::RequestError> {
     let mut parallel_root_steps = vec![];
     // Here, we are assuming that all root fields are executed in parallel.
     for (alias, node) in query_plan {
@@ -77,12 +163,12 @@ pub(crate) async fn explain_query_plan(
                     .query_execution_plan
                     .resolve(http_context)
                     .await
-                    .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
                 let data_connector = resolved_execution_plan.data_connector;
                 let ndc_request =
                     plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
-                        .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                        .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
                 let sequence_steps = get_execution_steps(
                     expose_internal_errors,
@@ -122,12 +208,12 @@ pub(crate) async fn explain_query_plan(
                         .query_execution_plan
                         .resolve(http_context)
                         .await
-                        .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                        .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
                     let data_connector = resolved_execution_plan.data_connector;
                     let ndc_request =
                         plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
-                            .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                            .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
                     let sequence_steps = get_execution_steps(
                         expose_internal_errors,
@@ -157,12 +243,12 @@ pub(crate) async fn explain_query_plan(
             | NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::ServiceField {
                 ..
             }) => {
-                return Err(error::RequestError::ExplainError(
+                return Err(execute::RequestError::ExplainError(
                     "cannot explain introspection queries".to_string(),
                 ));
             }
             NodeQueryPlan::RelayNodeSelect(None) => {
-                return Err(error::RequestError::ExplainError(
+                return Err(execute::RequestError::ExplainError(
                     "cannot explain relay queries with no execution plan".to_string(),
                 ));
             }
@@ -175,7 +261,7 @@ pub(crate) async fn explain_query_plan(
                 simplify_step(Box::new(types::Step::Parallel(parallel_root_steps)));
             Ok(*simplified_step)
         }
-        None => Err(error::RequestError::ExplainError(
+        None => Err(execute::RequestError::ExplainError(
             "cannot explain query as there are no explainable root field".to_string(),
         )),
     }
@@ -183,14 +269,14 @@ pub(crate) async fn explain_query_plan(
 
 /// Produce an /explain plan for a given GraphQL mutation.
 pub(crate) async fn explain_mutation_plan(
-    expose_internal_errors: crate::ExposeInternalErrors,
+    expose_internal_errors: execute::ExposeInternalErrors,
     http_context: &HttpContext,
     mutation_plan: plan::MutationPlan<'_, '_, '_>,
-) -> Result<types::Step, error::RequestError> {
+) -> Result<types::Step, execute::RequestError> {
     let mut root_steps = vec![];
 
     if !mutation_plan.type_names.is_empty() {
-        return Err(error::RequestError::ExplainError(
+        return Err(execute::RequestError::ExplainError(
             "cannot explain introspection queries".to_string(),
         ));
     }
@@ -213,11 +299,11 @@ pub(crate) async fn explain_mutation_plan(
                 .execution_node
                 .resolve(http_context)
                 .await
-                .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             let mutation_request =
                 plan::ndc_request::make_ndc_mutation_request(resolved_execution_plan)
-                    .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             let sequence_steps = get_execution_steps(
                 expose_internal_errors,
@@ -243,21 +329,21 @@ pub(crate) async fn explain_mutation_plan(
             let simplified_step = simplify_step(Box::new(types::Step::Sequence(root_steps)));
             Ok(*simplified_step)
         }
-        None => Err(error::RequestError::ExplainError(
+        None => Err(execute::RequestError::ExplainError(
             "cannot explain mutation as there are no explainable root fields".to_string(),
         )),
     }
 }
 
 async fn get_execution_steps<'s>(
-    expose_internal_errors: crate::ExposeInternalErrors,
+    expose_internal_errors: execute::ExposeInternalErrors,
     http_context: &HttpContext,
     alias: gql::ast::common::Alias,
     process_response_as: &ProcessResponseAs<'s>,
     join_locations: JoinLocations<(RemoteJoin<'s, '_>, JoinId)>,
     ndc_request: types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
-) -> Result<NonEmpty<Box<types::Step>>, error::RequestError> {
+) -> Result<NonEmpty<Box<types::Step>>, execute::RequestError> {
     let mut sequence_steps = match process_response_as {
         ProcessResponseAs::CommandResponse { .. } => {
             // A command execution node
@@ -309,10 +395,10 @@ async fn get_execution_steps<'s>(
 /// TODO: Currently the steps are sequential, we should make them parallel once the executor supports it.
 #[async_recursion]
 async fn get_join_steps(
-    expose_internal_errors: crate::ExposeInternalErrors,
+    expose_internal_errors: execute::ExposeInternalErrors,
     join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'async_recursion>, JoinId)>,
     http_context: &HttpContext,
-) -> Result<Option<NonEmpty<Box<types::Step>>>, error::RequestError> {
+) -> Result<Option<NonEmpty<Box<types::Step>>>, execute::RequestError> {
     let mut sequence_join_steps = vec![];
     for (alias, location) in join_locations.locations {
         let mut sequence_steps = vec![];
@@ -321,12 +407,12 @@ async fn get_join_steps(
                 .target_ndc_execution
                 .resolve(http_context)
                 .await
-                .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             resolved_execution_plan.variables = Some(vec![]);
             let target_data_connector = resolved_execution_plan.data_connector;
             let query_request = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
-                .map_err(|e| error::RequestError::ExplainError(e.to_string()))?;
+                .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             let ndc_request = types::NDCRequest::Query(query_request);
 
@@ -401,7 +487,7 @@ fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
 }
 
 pub(crate) async fn fetch_explain_from_data_connector(
-    expose_internal_errors: crate::ExposeInternalErrors,
+    expose_internal_errors: execute::ExposeInternalErrors,
     http_context: &HttpContext,
     ndc_request: &types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
@@ -427,7 +513,7 @@ pub(crate) async fn fetch_explain_from_data_connector(
                                 ndc_client::explain_query_post(ndc_config, query_request)
                                     .await
                                     .map(Some)
-                                    .map_err(error::FieldError::from)
+                                    .map_err(execute::FieldError::from)
                             } else {
                                 Ok(None)
                             }
@@ -437,7 +523,7 @@ pub(crate) async fn fetch_explain_from_data_connector(
                                 ndc_client::explain_mutation_post(ndc_config, mutation_request)
                                     .await
                                     .map(Some)
-                                    .map_err(error::FieldError::from)
+                                    .map_err(execute::FieldError::from)
                             } else {
                                 Ok(None)
                             }

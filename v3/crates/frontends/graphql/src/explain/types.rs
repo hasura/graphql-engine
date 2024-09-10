@@ -8,9 +8,8 @@ use ndc_models as ndc_models_v02;
 use ndc_models_v01;
 use tracing_util::Traceable;
 
-use crate::error;
-use crate::ndc;
-use crate::GraphQLErrors;
+use super::super::types::GraphQLErrors;
+use execute::ndc;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -110,8 +109,8 @@ pub(crate) enum NDCRequest {
 
 impl NDCExplainResponse {
     pub(crate) fn error(
-        error: &error::FieldError,
-        expose_internal_errors: crate::ExposeInternalErrors,
+        error: &execute::FieldError,
+        expose_internal_errors: execute::ExposeInternalErrors,
     ) -> Self {
         Self::Error(error.to_graphql_error(expose_internal_errors, None))
     }

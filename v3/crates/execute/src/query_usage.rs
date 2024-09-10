@@ -10,7 +10,7 @@ use query_usage_analytics::{
 };
 use schema::GDS;
 
-pub(crate) fn analyze_query_usage<'s>(normalized_request: &'s Operation<'s, GDS>) -> GqlOperation {
+pub fn analyze_query_usage<'s>(normalized_request: &'s Operation<'s, GDS>) -> GqlOperation {
     let operation_name = normalized_request
         .name
         .as_ref()

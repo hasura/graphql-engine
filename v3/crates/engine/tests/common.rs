@@ -18,7 +18,8 @@ use std::{
     path::PathBuf,
 };
 
-use execute::{execute_query, HttpContext};
+use execute::HttpContext;
+use graphql_frontend::execute_query;
 use schema::GDS;
 
 extern crate json_value_merge;
@@ -513,7 +514,7 @@ pub fn test_execute_explain(
             query,
             variables: None,
         };
-        let (_, raw_response) = execute::execute_explain(
+        let (_, raw_response) = graphql_frontend::execute_explain(
             execute::ExposeInternalErrors::Expose,
             &test_ctx.http_context,
             &schema,
@@ -523,7 +524,7 @@ pub fn test_execute_explain(
         )
         .await;
 
-        let response = execute::redact_ndc_explain(raw_response);
+        let response = graphql_frontend::redact_ndc_explain(raw_response);
 
         let mut expected = test_ctx.mint.new_goldenfile_with_differ(
             expected_response_file,

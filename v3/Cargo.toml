@@ -11,6 +11,7 @@ members = [
   "crates/custom-connector",
   "crates/engine",
   "crates/execute",
+  "crates/frontends/*",
   "crates/ir",
   "crates/jsonapi",
   "crates/lang-graphql",
