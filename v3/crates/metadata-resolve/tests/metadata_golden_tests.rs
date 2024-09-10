@@ -84,6 +84,7 @@ fn read_test_configuration(
         enable_order_by_expressions: false,
         enable_ndc_v02_support: false,
         enable_subscriptions: false,
+        enable_jsonapi: false,
     };
 
     let configuration_path = directory.join("configuration.json");

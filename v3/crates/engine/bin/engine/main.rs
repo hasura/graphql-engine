@@ -1,4 +1,5 @@
 use futures_util::FutureExt;
+use json_api::create_json_api_router;
 use std::fmt::Display;
 use std::hash;
 use std::hash::{Hash, Hasher};
@@ -43,6 +44,7 @@ use tracing_util::{
 };
 
 mod cors;
+mod json_api;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -113,10 +115,11 @@ struct ServerOptions {
     export_traces_stdout: bool,
 }
 
-struct EngineState {
+pub struct EngineState {
     expose_internal_errors: execute::ExposeInternalErrors,
     http_context: HttpContext,
-    schema: gql::schema::Schema<GDS>,
+    graphql_state: gql::schema::Schema<GDS>,
+    jsonapi_state: json_api::State,
     auth_config: AuthConfig,
     sql_context: Arc<sql::catalog::Catalog>,
     pre_parse_plugins: Vec<LifecyclePluginHookPreParse>,
@@ -181,6 +184,8 @@ struct EngineRouter {
     metadata_routes: Option<Router>,
     /// Routes for the SQL interface
     sql_routes: Option<Router>,
+    /// Routes for the JSON:API interface
+    jsonapi_routes: Option<Router>,
     /// The CORS layer for the engine.
     cors_layer: Option<CorsLayer>,
 }
@@ -245,6 +250,7 @@ impl EngineRouter {
             base_router: base_routes,
             metadata_routes: None,
             sql_routes: None,
+            jsonapi_routes: None,
             cors_layer: None,
         }
     }
@@ -288,6 +294,11 @@ impl EngineRouter {
         self.sql_routes = Some(sql_routes);
     }
 
+    fn add_jsonapi_route(&mut self, state: Arc<EngineState>) {
+        let jsonapi_routes = create_json_api_router(state);
+        self.jsonapi_routes = Some(jsonapi_routes);
+    }
+
     fn add_cors_layer(&mut self, allow_origin: &[String]) {
         self.cors_layer = Some(cors::build_cors_layer(allow_origin));
     }
@@ -297,6 +308,9 @@ impl EngineRouter {
         // Merge the metadata routes if they exist.
         if let Some(sql_routes) = self.sql_routes {
             app = app.merge(sql_routes);
+        }
+        if let Some(jsonapi_routes) = self.jsonapi_routes {
+            app = app.merge(jsonapi_routes);
         }
         // Merge the metadata routes if they exist.
         if let Some(metadata_routes) = self.metadata_routes {
@@ -338,6 +352,13 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
 
     if server.enable_sql_interface {
         engine_router.add_sql_route(state.clone());
+    }
+
+    if metadata_resolve_configuration
+        .unstable_features
+        .enable_jsonapi
+    {
+        engine_router.add_jsonapi_route(state.clone());
     }
 
     // If `--introspection-metadata` is specified we also serve the file indicated on `/metadata`
@@ -497,7 +518,7 @@ impl IntoResponse for AuthError {
 /// authentication configuration present in the `auth_config` of `EngineState`. The
 /// result of the authentication is `hasura-authn-core::Identity`, which is then
 /// made available to the GraphQL request handler.
-async fn authentication_middleware<'a, B>(
+pub async fn authentication_middleware<'a, B>(
     State(engine_state): State<Arc<EngineState>>,
     headers_map: HeaderMap,
     mut request: Request<B>,
@@ -578,7 +599,7 @@ async fn handle_request(
                         execute::execute_query(
                             state.expose_internal_errors,
                             &state.http_context,
-                            &state.schema,
+                            &state.graphql_state,
                             &session,
                             &headers,
                             request,
@@ -618,7 +639,7 @@ async fn handle_explain_request(
                     execute::execute_explain(
                         state.expose_internal_errors,
                         &state.http_context,
-                        &state.schema,
+                        &state.graphql_state,
                         &session,
                         &headers,
                         request,
@@ -756,13 +777,15 @@ fn build_state(
     };
 
     let schema = schema::GDS {
-        metadata: resolved_metadata,
+        metadata: resolved_metadata.clone(),
     }
     .build_schema()?;
+
     let state = Arc::new(EngineState {
         expose_internal_errors,
         http_context,
-        schema,
+        graphql_state: schema,
+        jsonapi_state: json_api::State::new(&resolved_metadata),
         auth_config,
         sql_context: sql_context.into(),
         pre_parse_plugins,

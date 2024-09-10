@@ -1,4 +1,4 @@
-mod error;
+pub mod error;
 mod explain;
 pub mod ndc;
 pub mod plan;
