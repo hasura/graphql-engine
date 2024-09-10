@@ -1,0 +1,1 @@
+include=author&fields[articles]=title,body&fields[people]=name&page[number]=3&page[size]=1

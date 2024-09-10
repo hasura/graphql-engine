@@ -84,6 +84,7 @@ watch: start-docker-test-deps start-docker-run-deps
       --authn-config-path static/auth/auth_config.json \
       --metadata-path static/sample-schema.json \
       --unstable-feature enable-subscriptions \
+      --unstable-feature enable-json-api \
       --expose-internal-errors'
 
 # check the code is fine
@@ -150,4 +151,5 @@ run METADATA_PATH="static/sample-schema.json": start-docker-test-deps start-dock
     --authn-config-path static/auth/auth_config.json \
     --metadata-path {{ METADATA_PATH }} \
     --unstable-feature enable-subscriptions \
+    --unstable-feature enable-json-api \
     --expose-internal-errors

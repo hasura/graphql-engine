@@ -1778,7 +1778,6 @@ dependencies = [
  "build-data",
  "clap",
  "criterion",
- "derive_more",
  "execute",
  "futures-util",
  "goldenfile",
@@ -1786,8 +1785,9 @@ dependencies = [
  "hasura-authn-jwt",
  "hasura-authn-noauth",
  "hasura-authn-webhook",
- "indexmap 2.5.0",
  "json_value_merge",
+ "jsonapi 0.7.0",
+ "jsonapi 3.0.0",
  "lang-graphql",
  "metadata-resolve",
  "mimalloc",
@@ -1848,6 +1848,16 @@ checksum = "534c5cf6194dfab3db3242765c03bbe257cf92f22b38f6bc0c58d59108a820ba"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "error-chain"
+version = "0.12.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d2f06b9cac1506ece98fe3231e3cc9c4410ec3d5b1f24ae1c8946f0742cdefc"
+dependencies = [
+ "backtrace",
+ "version_check",
 ]
 
 [[package]]
@@ -2648,7 +2658,35 @@ dependencies = [
 
 [[package]]
 name = "jsonapi"
+version = "0.7.0"
+source = "git+https://github.com/hasura/jsonapi-rust.git?rev=a7a656c5ce2a552d2a8d6ff7421ec878e2069ba0#a7a656c5ce2a552d2a8d6ff7421ec878e2069ba0"
+dependencies = [
+ "error-chain",
+ "log",
+ "queryst",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
+
+[[package]]
+name = "jsonapi"
 version = "3.0.0"
+dependencies = [
+ "axum",
+ "derive_more",
+ "execute",
+ "hasura-authn-core",
+ "indexmap 2.5.0",
+ "insta",
+ "jsonapi 0.7.0",
+ "metadata-resolve",
+ "open-dds",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing-util",
+]
 
 [[package]]
 name = "jsonptr"
@@ -3779,6 +3817,19 @@ dependencies = [
  "metadata-resolve",
  "open-dds",
  "schemars",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "queryst"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1cbeb75ac695daf201ca2d66d9c684f873b135f28af4f2c79952478cab3b9d9"
+dependencies = [
+ "lazy_static",
+ "percent-encoding",
+ "regex",
  "serde",
  "serde_json",
 ]
@@ -5312,7 +5363,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

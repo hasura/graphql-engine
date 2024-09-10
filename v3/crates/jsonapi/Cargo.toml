@@ -5,6 +5,25 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+execute = { path = "../execute" }
+hasura-authn-core = { path = "../auth/hasura-authn-core" }
+metadata-resolve = { path = "../metadata-resolve" }
+open-dds = { path = "../open-dds" }
+tracing-util = { path = "../utils/tracing-util" }
+
+axum = { workspace = true }
+derive_more = { workspace = true }
+indexmap = { workspace = true }
+jsonapi_library = { workspace = true }
+serde = { workspace = true, features = ["rc"] }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true, features = ["glob"] }
+tokio = { workspace = true }
 
 [lints]
 workspace = true
+
+[package.metadata.cargo-machete]
+ignored = ["error_chain", "log", "queryst", "serde_derive" ]
