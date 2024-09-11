@@ -16,7 +16,7 @@ use open_dds::{data_connector::DataConnectorName, types::OperatorName};
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionGraphqlConfig,
-    ObjectBooleanExpressionType, ObjectBooleanExpressionWarning, ObjectBooleanExpressionsOutput,
+    ObjectBooleanExpressionIssue, ObjectBooleanExpressionType, ObjectBooleanExpressionsOutput,
 };
 
 /// resolve object boolean expression types
@@ -32,7 +32,7 @@ pub fn resolve(
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionsOutput, boolean_expressions::BooleanExpressionError> {
     let mut object_boolean_expression_types = BTreeMap::new();
-    let mut warnings = vec![];
+    let mut issues = vec![];
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -51,8 +51,8 @@ pub fn resolve(
 
         // tell user that this metadata type is old news and we'd rather they used
         // `BooleanExpressionType`
-        warnings.push(
-            ObjectBooleanExpressionWarning::PleaseUpgradeToBooleanExpression {
+        issues.push(
+            ObjectBooleanExpressionIssue::PleaseUpgradeToBooleanExpression {
                 name: resolved_boolean_expression.name.clone(),
             },
         );
@@ -71,7 +71,7 @@ pub fn resolve(
     Ok(ObjectBooleanExpressionsOutput {
         object_boolean_expression_types,
         graphql_types,
-        warnings,
+        issues,
     })
 }
 

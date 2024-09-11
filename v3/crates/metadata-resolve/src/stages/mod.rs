@@ -33,8 +33,9 @@ pub fn resolve(
     metadata: open_dds::Metadata,
     configuration: &Configuration,
 ) -> Result<(Metadata, Vec<Warning>), Error> {
-    // all warnings raised throughout metadata-resolve
-    let mut all_warnings = vec![];
+    // all issues raised throughout metadata-resolve. These will be turned into `warnings` or
+    // `errors` at the end of this function, depending on OpenDDS flags.
+    let mut all_issues = vec![];
 
     let metadata_accessor: open_dds::accessor::MetadataAccessor =
         open_dds::accessor::MetadataAccessor::new(metadata);
@@ -50,7 +51,7 @@ pub fn resolve(
         issues,
     } = data_connectors::resolve(&metadata_accessor, configuration)?;
 
-    all_warnings.extend(issues.into_iter().map(Warning::from));
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Validate object types defined in metadata
     let object_types::ObjectTypesOutput {
@@ -130,14 +131,14 @@ pub fn resolve(
         &graphql_config,
     )?;
 
-    all_warnings.extend(issues.into_iter().map(Warning::from));
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Validate `ObjectBooleanExpressionType` metadata. This will soon be deprecated and subsumed
     // by `BooleanExpressionType`.
     let object_boolean_expressions::ObjectBooleanExpressionsOutput {
         object_boolean_expression_types,
         graphql_types,
-        warnings,
+        issues,
     } = object_boolean_expressions::resolve(
         &metadata_accessor,
         &data_connectors,
@@ -147,7 +148,7 @@ pub fn resolve(
         &graphql_config,
     )?;
 
-    all_warnings.extend(warnings.into_iter().map(Warning::from));
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Resolve models and their sources
     let models::ModelsOutput {
@@ -172,7 +173,7 @@ pub fn resolve(
         graphql_types,
     )?;
 
-    all_warnings.extend(issues.into_iter().map(Warning::from));
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     let commands::CommandsOutput { commands, issues } = commands::resolve(
         &metadata_accessor,
@@ -183,7 +184,7 @@ pub fn resolve(
         &boolean_expression_types,
     )?;
 
-    all_warnings.extend(issues.into_iter().map(Warning::from));
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     apollo::resolve(apollo_federation_entity_enabled_types)?;
 
@@ -258,7 +259,7 @@ pub fn resolve(
 
     let pre_parse_plugins = plugins::resolve(&metadata_accessor);
 
-    all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_warnings)?;
+    let all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_issues)?;
 
     Ok((
         Metadata {
@@ -280,9 +281,9 @@ pub fn resolve(
 
 fn warnings_as_errors_by_compatibility(
     flags: &flags::Flags,
-    all_warnings: Vec<Warning>,
+    all_issues: Vec<Warning>,
 ) -> Result<Vec<Warning>, Error> {
-    let (warnings_that_are_errors, remaining_warnings): (Vec<Warning>, Vec<Warning>) = all_warnings
+    let (warnings_that_are_errors, remaining_warnings): (Vec<Warning>, Vec<Warning>) = all_issues
         .into_iter()
         .partition(|warning| warning.should_be_an_error(flags));
 

@@ -9,9 +9,11 @@ use super::error::ShouldBeAnError;
 /// Warnings for the user raised during metadata generation
 /// These are things that don't break the build, but may do so in future
 #[derive(Debug, thiserror::Error)]
-pub enum Warning {
+pub enum Issue {
     #[error("{0}")]
-    ObjectBooleanExpressionIssue(#[from] object_boolean_expressions::ObjectBooleanExpressionIssue),
+    ObjectBooleanExpressionWarning(
+        #[from] object_boolean_expressions::ObjectBooleanExpressionWarning,
+    ),
     #[error("{0}")]
     DataConnectorIssue(#[from] data_connectors::NamedDataConnectorIssue),
     #[error("{0}")]
@@ -24,10 +26,10 @@ pub enum Warning {
     AggregateExpressionIssue(#[from] aggregates::AggregateExpressionIssue),
 }
 
-impl ShouldBeAnError for Warning {
+impl ShouldBeAnError for Issue {
     fn should_be_an_error(&self, flags: &flags::Flags) -> bool {
         match self {
-            Warning::DataConnectorIssue(issue) => issue.should_be_an_error(flags),
+            Issue::DataConnectorIssue(issue) => issue.should_be_an_error(flags),
             _ => false,
         }
     }
