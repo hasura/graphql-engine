@@ -947,6 +947,7 @@ name = "compatibility"
 version = "3.0.0"
 dependencies = [
  "chrono",
+ "jsonpath",
  "open-dds",
  "opendds-derive",
  "schemars",
@@ -1789,6 +1790,7 @@ dependencies = [
  "json_value_merge",
  "jsonapi 0.7.0",
  "jsonapi 3.0.0",
+ "jsonpath",
  "lang-graphql",
  "metadata-resolve",
  "mimalloc",
@@ -2714,6 +2716,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonpath"
+version = "3.0.0"
+dependencies = [
+ "serde",
+ "serde_path_to_error",
+]
+
+[[package]]
 name = "jsonptr"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3284,6 +3294,7 @@ dependencies = [
  "derive_more",
  "goldenfile",
  "indexmap 2.5.0",
+ "jsonpath",
  "jsonschema-tidying",
  "ndc-models 0.1.6",
  "ndc-models 0.2.0",

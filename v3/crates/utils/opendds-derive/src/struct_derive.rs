@@ -52,7 +52,7 @@ fn impl_deserialize_named_fields<'a>(
                         serde::de::Unexpected::Other("not an object"),
                         &"object",
                     ),
-                    path: open_dds::traits::JSONPath::new(),
+                    path: jsonpath::JSONPath::new(),
                 })
             },
         };
@@ -66,7 +66,7 @@ fn impl_deserialize_named_fields<'a>(
                     __remaining_keys.join(", "),
                     [#(#expected_fields),*].join(", "),
                 )),
-                path: open_dds::traits::JSONPath::new(),
+                path: jsonpath::JSONPath::new(),
             });
         }
         Ok(__value)
@@ -113,7 +113,7 @@ fn generate_named_fields_value<'a>(
             quote! {
                 .ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
                     error: serde::de::Error::missing_field(#field_name_str),
-                    path: open_dds::traits::JSONPath::new(),
+                    path: jsonpath::JSONPath::new(),
                 })?
             }
         };

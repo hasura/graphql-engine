@@ -36,7 +36,7 @@ pub struct EnvironmentValue {
 impl traits::OpenDd for EnvironmentValue {
     fn deserialize(json: serde_json::Value) -> Result<Self, traits::OpenDdDeserializeError> {
         serde_path_to_error::deserialize(json).map_err(|e| traits::OpenDdDeserializeError {
-            path: traits::JSONPath::from_serde_path(e.path()),
+            path: jsonpath::JSONPath::from_serde_path(e.path()),
             error: e.into_inner(),
         })
     }
@@ -144,7 +144,7 @@ impl traits::OpenDd for Metadata {
                 ))?,
             )),
             _ => Err(traits::OpenDdDeserializeError {
-                path: traits::JSONPath::new(),
+                path: jsonpath::JSONPath::new(),
                 error: serde::de::Error::invalid_type(
                     serde::de::Unexpected::Other("not a sequence or map"),
                     &"a sequence or map",
@@ -197,7 +197,7 @@ impl Metadata {
                 <Metadata as traits::OpenDd>::deserialize(json)
             }
             Err(e) => Err(traits::OpenDdDeserializeError {
-                path: traits::JSONPath::from_serde_path(&track.path()),
+                path: jsonpath::JSONPath::from_serde_path(&track.path()),
                 error: e,
             }),
         }

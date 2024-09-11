@@ -6,7 +6,7 @@ use smol_str::SmolStr;
 
 use crate::{
     impl_JsonSchema_with_OpenDd_for,
-    traits::{JSONPath, OpenDd, OpenDdDeserializeError},
+    traits::{OpenDd, OpenDdDeserializeError},
 };
 
 // Macro to produce a validated identifier using a string literal that crashes
@@ -74,11 +74,11 @@ impl OpenDd for Identifier {
         let string: String =
             serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
                 error,
-                path: JSONPath::default(),
+                path: jsonpath::JSONPath::default(),
             })?;
         Identifier::new(string).map_err(|e| OpenDdDeserializeError {
             error: serde_json::Error::custom(e),
-            path: JSONPath::default(),
+            path: jsonpath::JSONPath::default(),
         })
     }
 
@@ -161,11 +161,11 @@ impl OpenDd for SubgraphNameInput {
         let string: String =
             serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
                 error,
-                path: JSONPath::default(),
+                path: jsonpath::JSONPath::default(),
             })?;
         SubgraphNameInput::new(string).map_err(|e| OpenDdDeserializeError {
             error: serde_json::Error::custom(e),
-            path: JSONPath::default(),
+            path: jsonpath::JSONPath::default(),
         })
     }
 

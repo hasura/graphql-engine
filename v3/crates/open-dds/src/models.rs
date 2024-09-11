@@ -443,7 +443,7 @@ pub enum EnableAllOrSpecific<T> {
 impl<'de, T: serde::Deserialize<'de> + JsonSchema> OpenDd for EnableAllOrSpecific<T> {
     fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
         serde_path_to_error::deserialize(json).map_err(|e| OpenDdDeserializeError {
-            path: open_dds::traits::JSONPath::from_serde_path(e.path()),
+            path: jsonpath::JSONPath::from_serde_path(e.path()),
             error: e.into_inner(),
         })
     }

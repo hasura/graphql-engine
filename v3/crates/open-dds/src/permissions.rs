@@ -326,7 +326,7 @@ impl traits::OpenDd for NullableModelPredicate {
             Ok(NullableModelPredicate::NotNull(
                 serde_path_to_error::deserialize(json).map_err(|e| {
                     traits::OpenDdDeserializeError {
-                        path: traits::JSONPath::from_serde_path(e.path()),
+                        path: jsonpath::JSONPath::from_serde_path(e.path()),
                         error: e.into_inner(),
                     }
                 })?,

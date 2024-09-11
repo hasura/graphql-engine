@@ -8,7 +8,7 @@ macro_rules! impl_OpenDd_default_for {
             ) -> Result<Self, open_dds::traits::OpenDdDeserializeError> {
                 ::serde_path_to_error::deserialize(json).map_err(|e| {
                     open_dds::traits::OpenDdDeserializeError {
-                        path: open_dds::traits::JSONPath::from_serde_path(e.path()),
+                        path: jsonpath::JSONPath::from_serde_path(e.path()),
                         error: e.into_inner(),
                     }
                 })
@@ -55,7 +55,7 @@ macro_rules! seq_impl {
                             serde::de::Unexpected::Other("not an array"),
                             &"array",
                         ),
-                        path: JSONPath::new(),
+                        path: jsonpath::JSONPath::new(),
                     }),
                 }
             }
@@ -111,7 +111,7 @@ macro_rules! map_impl {
                             serde::de::Unexpected::Other("not an object"),
                             &"object",
                         ),
-                        path: JSONPath::new(),
+                        path: jsonpath::JSONPath::new(),
                     }),
                 }
             }

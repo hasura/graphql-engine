@@ -8,6 +8,7 @@ license.workspace = true
 bench = false
 
 [dependencies]
+jsonpath = { path = "../utils/jsonpath" }
 open-dds = { path = "../open-dds" }
 opendds-derive = { path = "../utils/opendds-derive" }
 
@@ -20,6 +21,7 @@ thiserror = { workspace = true }
 
 [package.metadata.cargo-machete]
 ignored = [
+  "jsonpath",            # used by opendds-derive
   "serde_json",          # used by opendds-derive
   "serde_path_to_error", # used by opendds-derive
 ]
