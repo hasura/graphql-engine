@@ -3,15 +3,21 @@ use axum::{
     middleware::Next,
 };
 use indexmap::IndexMap;
+use metadata_resolve::ModelWithPermissions;
+use open_dds::{
+    identifier,
+    identifier::{Identifier, SubgraphName},
+    models::ModelName,
+};
 use serde::Serialize;
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 use tracing_util::{
     ErrorVisibility, SpanVisibility, Traceable, TraceableError, TraceableHttpResponse,
 };
 
 #[derive(Debug)]
 pub struct State {
-    pub routes: Vec<String>,
+    pub routes: HashMap<String, ModelWithPermissions>,
 }
 
 impl State {
@@ -19,8 +25,14 @@ impl State {
         let routes = metadata
             .models
             .iter()
-            .map(|(model_name, _)| format!("/{}/{}", model_name.subgraph, model_name.name))
-            .collect::<Vec<String>>();
+            // TODO: remove model.clone()
+            .map(|(model_name, model)| {
+                (
+                    format!("/{}/{}", model_name.subgraph, model_name.name),
+                    model.clone(),
+                )
+            })
+            .collect::<HashMap<_, _>>();
         Self { routes }
     }
 }
@@ -39,37 +51,40 @@ pub async fn handler_internal(
     query_string: jsonapi_library::query::Query,
 ) -> Result<JsonApiDocument, RequestError> {
     // route matching/validation
-    if !is_valid_route(state, &uri) {
-        return Err(RequestError::NotFound);
-    }
-    // create the query IR
-    let query_ir = create_query_ir(&http_method, &uri, &query_string)?;
-    // execute the query with the query-engine
-    let result = query_engine_execute(&query_ir, state)?;
-    // process result to JSON:API compliant response
-    Ok(process_result(&result))
-}
-
-fn is_valid_route(state: &State, uri: &Uri) -> bool {
-    // TODO: to_string() maybe not optimal. Optimize later
-    let uri_s = uri.to_string();
-    for route in &state.routes {
-        if uri_s.starts_with(route) {
-            return true;
+    match validate_route(state, &uri) {
+        None => Err(RequestError::NotFound),
+        Some(model) => {
+            // create the query IR
+            let query_ir = create_query_ir(model, &http_method, &uri, &query_string)?;
+            dbg!(&query_ir);
+            // execute the query with the query-engine
+            let result = query_engine_execute(&query_ir, state)?;
+            // process result to JSON:API compliant response
+            Ok(process_result(&result))
         }
     }
-    false
+}
+
+fn validate_route<'a>(state: &'a State, uri: &'a Uri) -> Option<&'a ModelWithPermissions> {
+    // TODO: to_string() maybe not optimal. Optimize later
+    let uri_s = uri.to_string();
+    for (route, model) in &state.routes {
+        if uri_s.starts_with(route) {
+            return Some(model);
+        }
+    }
+    None
 }
 
 #[derive(Serialize, Debug)]
 pub struct JsonApiDocument {
-    name: String,
-    age: i32,
+    foo: String,
+    bar: i32,
 }
 
 impl Display for JsonApiDocument {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Hello error")
+        write!(f, "foo: {} - bar: {}", self.foo, self.bar)
     }
 }
 
@@ -90,8 +105,8 @@ impl TraceableError for RequestError {
 
 fn process_result(_result: &QueryResult) -> JsonApiDocument {
     JsonApiDocument {
-        age: 1,
-        name: "foo".to_string(),
+        foo: "foo".to_string(),
+        bar: 1,
     }
 }
 
@@ -102,16 +117,112 @@ fn query_engine_execute(
     Err(RequestError::BadRequest("Not implemented".to_string()))
 }
 
-#[allow(clippy::unnecessary_wraps)]
 fn create_query_ir(
+    model: &ModelWithPermissions,
     _http_method: &Method,
-    _uri: &Uri,
+    uri: &Uri,
     _query_string: &jsonapi_library::query::Query,
 ) -> Result<open_dds::query::QueryRequest, RequestError> {
-    let queries = IndexMap::new();
+    // get model info from parsing URI
+    let ModelInfo {
+        subgraph,
+        name: model_name,
+        unique_identifier: _,
+        relationship: _,
+    } = parse_url(uri)?;
+
+    // create the selection fields; include all fields of the model output type
+    // TODO: parse 'sparse fieldsets' to include specific fields only
+    let mut selection = IndexMap::new();
+    for (field_name, _field_def) in &model.model.type_fields {
+        let field_name_ident = Identifier::new(field_name.as_str()).unwrap();
+        let field_name = open_dds::types::FieldName::new(field_name_ident.clone());
+        let field_alias = open_dds::query::Alias::new(field_name_ident);
+        let sub_sel =
+            open_dds::query::ObjectSubSelection::Field(open_dds::query::ObjectFieldSelection {
+                target: open_dds::query::ObjectFieldTarget {
+                    arguments: IndexMap::new(),
+                    field_name,
+                },
+                selection: None,
+            });
+        selection.insert(field_alias, sub_sel);
+    }
+
+    // TODO: create filters
+    // TODO: create sorts
+    // TODO: create pagination
+
+    // form the model selection
+    let model_selection = open_dds::query::ModelSelection {
+        selection,
+        target: open_dds::query::ModelTarget {
+            arguments: IndexMap::new(),
+            filter: None,
+            order_by: Vec::new(),
+            limit: None,
+            offset: None,
+            model_name,
+            subgraph,
+        },
+    };
+    let queries = IndexMap::from_iter([(
+        open_dds::query::Alias::new(identifier!("jsonapi_model_query")),
+        open_dds::query::Query::Model(model_selection),
+    )]);
     Ok(open_dds::query::QueryRequest::V1(
         open_dds::query::QueryRequestV1 { queries },
     ))
+}
+
+/// Model related info derived from URI path
+#[allow(dead_code)]
+struct ModelInfo {
+    subgraph: SubgraphName,
+    name: ModelName,
+    /// value of the unique identifier of the model.
+    // TODO: this won't be a string always
+    unique_identifier: Option<String>,
+    /// path to a relationship; like `["artist", "albums", "tracks"]`
+    relationship: Vec<String>,
+}
+
+struct ParseError(String);
+
+impl From<&str> for ParseError {
+    fn from(value: &str) -> Self {
+        Self(value.to_string())
+    }
+}
+
+impl From<ParseError> for RequestError {
+    fn from(value: ParseError) -> Self {
+        Self::BadRequest(format!("Parse Error: {}", value.0))
+    }
+}
+
+fn parse_url(uri: &Uri) -> Result<ModelInfo, ParseError> {
+    let path = uri.path();
+    let paths = path
+        .split('/')
+        .filter(|p| !p.is_empty())
+        .collect::<Vec<_>>();
+    if paths.len() < 2 {
+        return Err("Path length MUST BE >=2".into());
+    }
+    let subgraph = paths[0];
+    let model_name = paths[1];
+    let unique_identifier = paths.get(2).map(|x| (*x).to_string());
+    let mut relationship = Vec::new();
+    if paths.get(3).is_some() {
+        relationship = paths[3..].iter().map(|i| (*i).to_string()).collect();
+    }
+    Ok(ModelInfo {
+        name: ModelName::new(Identifier::new(model_name)?),
+        subgraph: SubgraphName::try_new(subgraph)?,
+        unique_identifier,
+        relationship,
+    })
 }
 
 struct QueryResult;
