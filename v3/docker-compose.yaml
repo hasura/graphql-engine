@@ -14,8 +14,6 @@ services:
       # Binding to localhost:3001 avoids conflict with dev_setup
       - 3001:3000
     depends_on:
-      reference_agent:
-        condition: service_started
       jaeger:
         condition: service_started
       auth_hook:
@@ -60,11 +58,6 @@ services:
       interval: 2s
       timeout: 1s
       retries: 5
-
-  reference_agent:
-    build: https://github.com/hasura/ndc-spec.git#v0.1.3
-    ports:
-      - 8102:8100
 
   auth_hook:
     build:
