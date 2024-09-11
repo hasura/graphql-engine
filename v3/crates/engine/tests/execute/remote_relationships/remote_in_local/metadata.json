@@ -276,7 +276,7 @@
                     "field": "num_users_faved",
                     "operator": "_eq",
                     "value": {
-                      "literal": "14"
+                      "literal": 14
                     }
                   }
                 }

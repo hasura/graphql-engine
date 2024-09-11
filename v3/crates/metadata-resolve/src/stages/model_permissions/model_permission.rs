@@ -6,6 +6,7 @@ use super::types::{
 use crate::helpers::argument::resolve_value_expression_for_argument;
 use crate::helpers::type_mappings;
 use crate::helpers::typecheck;
+use crate::helpers::typecheck::typecheck_value_expression;
 use crate::helpers::types::mk_name;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, models, models_graphql,
@@ -284,7 +285,6 @@ pub(crate) fn resolve_model_predicate_with_type(
                 value,
             },
         ) => {
-            // TODO: (anon) typecheck the value expression with the field
             // TODO: resolve the "in" operator too (ndc_models::BinaryArrayComparisonOperator)
 
             // Determine field_mapping for the predicate field
@@ -361,6 +361,16 @@ pub(crate) fn resolve_model_predicate_with_type(
                 }
             }?;
 
+            let field_definition = fields.get(field).ok_or_else(|| Error::TypePredicateError {
+                type_predicate_error: TypePredicateError::UnknownFieldInTypePredicate {
+                    field_name: field.clone(),
+                    type_name: type_name.clone(),
+                },
+            })?;
+
+            // typecheck the `open_dds::permissions::ValueExpression` with the field
+            typecheck_value_expression(&field_definition.field_type, value)?;
+
             let value_expression = match value {
                 open_dds::permissions::ValueExpression::Literal(json_value) => {
                     ValueExpression::Literal(json_value.clone())
@@ -369,13 +379,6 @@ pub(crate) fn resolve_model_predicate_with_type(
                     ValueExpression::SessionVariable(session_variable.clone())
                 }
             };
-
-            let field_definition = fields.get(field).ok_or_else(|| Error::TypePredicateError {
-                type_predicate_error: TypePredicateError::UnknownFieldInTypePredicate {
-                    field_name: field.clone(),
-                    type_name: type_name.clone(),
-                },
-            })?;
 
             Ok(ModelPredicate::BinaryFieldComparison {
                 field: field.clone(),

@@ -1,3 +1,4 @@
+use crate::helpers::typecheck::TypecheckError;
 use crate::stages::{
     aggregates::AggregateExpressionError, apollo, boolean_expressions, commands,
     data_connector_scalar_types, data_connectors, graphql_config, models, object_types,
@@ -529,10 +530,20 @@ pub enum TypeError {
     NoNamedTypeFound {
         qualified_type_reference: QualifiedTypeReference,
     },
+    #[error("type mismatch: {error:}")]
+    TypeCheckError { error: TypecheckError },
 }
 
 impl From<AggregateExpressionError> for Error {
     fn from(val: AggregateExpressionError) -> Self {
         Error::AggregateExpressionError(val)
+    }
+}
+
+impl From<TypecheckError> for Error {
+    fn from(type_error: TypecheckError) -> Self {
+        Error::TypeError {
+            type_error: TypeError::TypeCheckError { error: type_error },
+        }
     }
 }

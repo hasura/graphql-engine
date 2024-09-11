@@ -15,6 +15,7 @@
   until the `GraphqlConfig` is updated. This allows you to add
   `AggregateExpressions` and update your `GraphqlConfig` separately, which is
   useful if they are in separate repositories.
+- Add a missing typecheck of `ValueExpression` while resolving model predicates
 
 ### Changed
 
