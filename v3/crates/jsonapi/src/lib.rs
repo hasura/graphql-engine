@@ -3,6 +3,7 @@ use axum::{
     middleware::Next,
 };
 use indexmap::IndexMap;
+use metadata_resolve::ModelExpressionType;
 use metadata_resolve::ModelWithPermissions;
 use open_dds::{
     identifier,
@@ -121,7 +122,7 @@ fn create_query_ir(
     model: &ModelWithPermissions,
     _http_method: &Method,
     uri: &Uri,
-    _query_string: &jsonapi_library::query::Query,
+    query_string: &jsonapi_library::query::Query,
 ) -> Result<open_dds::query::QueryRequest, RequestError> {
     // get model info from parsing URI
     let ModelInfo {
@@ -149,19 +150,42 @@ fn create_query_ir(
         selection.insert(field_alias, sub_sel);
     }
 
-    // TODO: create filters
-    // TODO: create sorts
-    // TODO: create pagination
+    // create filters
+    let filter_query = query_string
+        .filter
+        .as_ref()
+        .map(|filter| build_boolean_expression(model, filter));
+
+    // create sorts
+    let sort_query = match &query_string.sort {
+        None => Ok(vec![]),
+        Some(sort) => sort
+            .iter()
+            .map(|elem| Ok(build_order_by_element(elem)?))
+            .collect::<Result<Vec<_>, RequestError>>(),
+    }?;
+
+    // pagination
+    // spec: <https://jsonapi.org/format/#fetching-pagination>
+    // FIXME: unwrap
+    let limit = query_string
+        .page
+        .as_ref()
+        .map(|page| usize::try_from(page.size).unwrap());
+    let offset = query_string
+        .page
+        .as_ref()
+        .map(|page| usize::try_from(page.number).unwrap());
 
     // form the model selection
     let model_selection = open_dds::query::ModelSelection {
         selection,
         target: open_dds::query::ModelTarget {
             arguments: IndexMap::new(),
-            filter: None,
-            order_by: Vec::new(),
-            limit: None,
-            offset: None,
+            filter: filter_query,
+            order_by: sort_query,
+            limit,
+            offset,
             model_name,
             subgraph,
         },
@@ -172,6 +196,87 @@ fn create_query_ir(
     )]);
     Ok(open_dds::query::QueryRequest::V1(
         open_dds::query::QueryRequestV1 { queries },
+    ))
+}
+
+// Sorting spec: <https://jsonapi.org/format/#fetching-sorting>
+fn build_order_by_element(elem: &String) -> Result<open_dds::query::OrderByElement, ParseError> {
+    let (field_name, direction) = if elem.starts_with('-') {
+        (
+            elem.split_at(1).1.to_string(),
+            open_dds::models::OrderByDirection::Desc,
+        )
+    } else {
+        (elem.to_string(), open_dds::models::OrderByDirection::Asc)
+    };
+
+    let operand = open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
+        target: Box::new(open_dds::query::ObjectFieldTarget {
+            field_name: open_dds::types::FieldName::new(Identifier::new(field_name)?),
+            arguments: IndexMap::new(),
+        }),
+        nested: None,
+    });
+    Ok(open_dds::query::OrderByElement { operand, direction })
+}
+
+/* Example filter as query string - /movies?sort=...&filter=<json>
+{
+  "$or": [
+    {
+      "name": {
+        "$eq": "Braveheart"
+      }
+    },
+    {
+      "name": {
+        "$eq": "Gladiator"
+      }
+    },
+    {
+      "$and": [
+        {
+          "director": {
+            "last_name": {
+              "$eq": "Scorcese"
+            }
+          }
+        },
+        {
+          "director": {
+            "age": {
+              "$gt": 50
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "name": {
+    "$eq": "Foobar"
+  }
+}
+*/
+fn build_boolean_expression(
+    model: &ModelWithPermissions,
+    _filter: &HashMap<String, Vec<String>>,
+) -> open_dds::query::BooleanExpression {
+    // TODO: actually parse and create a BooleanExpression
+    if let Some(filter_exp_type) = &model.filter_expression_type {
+        match filter_exp_type {
+            ModelExpressionType::BooleanExpressionType(_x) => {}
+            ModelExpressionType::ObjectBooleanExpressionType(_x) => {}
+        }
+    }
+    // dummy return
+    open_dds::query::BooleanExpression::IsNull(open_dds::query::Operand::Field(
+        open_dds::query::ObjectFieldOperand {
+            target: Box::new(open_dds::query::ObjectFieldTarget {
+                field_name: open_dds::types::FieldName::new(identifier!("dummy")),
+                arguments: IndexMap::new(),
+            }),
+            nested: None,
+        },
     ))
 }
 
