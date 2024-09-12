@@ -200,6 +200,17 @@ fn resolve_aggregatable_field(
             },
         )?;
 
+    // If the field has arguments, then we don't support aggregating over it
+    if !field_def.field_arguments.is_empty() {
+        return Err(
+            AggregateExpressionError::AggregateOperandObjectFieldHasArguments {
+                name: aggregate_expression_name.clone(),
+                operand_type: operand_object_type_name.clone(),
+                field_name: aggregate_field_def.field_name.clone(),
+            },
+        );
+    }
+
     // Get the underlying type of the field (ie. ignore nullability and unwrap one level of array)
     let field_agg_type_name =
         get_underlying_aggregatable_type(&field_def.field_type).ok_or_else(|| {

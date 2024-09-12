@@ -122,6 +122,13 @@ pub enum AggregateExpressionError {
         field_name: FieldName,
     },
 
+    #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' (from the operand type {operand_type}) that has field arguments. Fields with arguments cannot be aggregated")]
+    AggregateOperandObjectFieldHasArguments {
+        name: Qualified<AggregateExpressionName>,
+        operand_type: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
+
     #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' that references an aggregate expression that cannot be found: {field_aggregate_expression}")]
     AggregateOperandObjectFieldAggregateExpressionNotFound {
         name: Qualified<AggregateExpressionName>,

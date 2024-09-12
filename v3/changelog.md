@@ -18,6 +18,10 @@
   `GraphqlConfig` separately, which is useful if they are in separate
   repositories.
 - Add a missing typecheck of `ValueExpression` while resolving model predicates
+- A build error is now raised if an `AggregateExpression` specifies an
+  `aggregatableField` that has field arguments. This is an unsupported scenario
+  and previously would have allowed invalid queries that omitted the required
+  field arguments. These queries may have failed with errors at query time.
 
 ### Changed
 
