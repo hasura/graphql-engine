@@ -874,23 +874,50 @@ fn resolve_schema_field<NSGet: NamespacedGetter<GDS>>(
     )?)?)
 }
 
-async fn resolve_ndc_query_execution(
+// run ndc query, do any joins, and process result
+async fn resolve_ndc_query_execution<'s, 'ir>(
     http_context: &HttpContext,
-    ndc_query: NDCQueryExecution<'_, '_>,
+    ndc_query: NDCQueryExecution<'s, 'ir>,
     project_id: Option<&ProjectId>,
 ) -> Result<ProcessedResponse, FieldError> {
     let NDCQueryExecution {
         execution_tree,
         selection_set,
         execution_span_attribute,
-        field_span_attribute,
+        ref field_span_attribute,
         process_response_as,
     } = ndc_query;
 
-    let resolved_execution_plan = execution_tree
-        .query_execution_plan
-        .resolve(http_context)
-        .await?;
+    let response_rowsets = execute_ndc_query(
+        http_context,
+        execution_tree.query_execution_plan,
+        field_span_attribute,
+        execution_span_attribute,
+        project_id,
+    )
+    .await?;
+
+    process_ndc_query_response(
+        http_context,
+        execution_tree.remote_join_executions,
+        execution_span_attribute,
+        selection_set,
+        process_response_as,
+        project_id,
+        response_rowsets,
+    )
+    .await
+}
+
+// run ndc query, return results
+async fn execute_ndc_query<'s, 'ir>(
+    http_context: &HttpContext,
+    query_execution_plan: query::UnresolvedQueryExecutionPlan<'s>,
+    field_span_attribute: &str,
+    execution_span_attribute: &'static str,
+    project_id: Option<&ProjectId>,
+) -> Result<Vec<ndc_models::RowSet>, FieldError> {
+    let resolved_execution_plan = query_execution_plan.resolve(http_context).await?;
 
     let data_connector = resolved_execution_plan.data_connector;
     let query_request = ndc_request::make_ndc_query_request(resolved_execution_plan)?;
@@ -900,13 +927,24 @@ async fn resolve_ndc_query_execution(
         &query_request,
         data_connector,
         execution_span_attribute,
-        field_span_attribute.clone(),
+        field_span_attribute.to_owned(),
         project_id,
     )
     .await?;
 
-    let mut response_rowsets = response.as_latest_rowsets();
+    Ok(response.as_latest_rowsets())
+}
 
+// given results of ndc query, do any joins, and process result
+async fn process_ndc_query_response<'s, 'ir>(
+    http_context: &HttpContext,
+    remote_join_executions: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
+    execution_span_attribute: &'static str,
+    selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
+    process_response_as: ProcessResponseAs<'ir>,
+    project_id: Option<&ProjectId>,
+    mut response_rowsets: Vec<ndc_models::RowSet>,
+) -> Result<ProcessedResponse, FieldError> {
     // TODO: Failures in remote joins should result in partial response
     // https://github.com/hasura/v3-engine/issues/229
     execute_join_locations(
@@ -914,7 +952,7 @@ async fn resolve_ndc_query_execution(
         execution_span_attribute,
         &mut response_rowsets,
         &process_response_as,
-        &execution_tree.remote_join_executions,
+        &remote_join_executions,
         project_id,
     )
     .await?;
