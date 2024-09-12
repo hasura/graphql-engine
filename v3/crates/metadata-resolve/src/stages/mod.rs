@@ -215,7 +215,10 @@ pub fn resolve(
 
     // Resolve the filter expressions and graphql settings for models
     // This is a separate step so we can look up resolved models and their sources
-    let models_with_graphql = models_graphql::resolve(
+    let models_graphql::ModelsWithGraphqlOutput {
+        models_with_graphql,
+        issues,
+    } = models_graphql::resolve(
         &metadata_accessor,
         &models,
         &data_connector_scalars,
@@ -227,6 +230,8 @@ pub fn resolve(
         &graphql_config,
         configuration,
     )?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     let commands_with_permissions = command_permissions::resolve(
         &metadata_accessor,

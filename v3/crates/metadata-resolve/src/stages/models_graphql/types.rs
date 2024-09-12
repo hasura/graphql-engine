@@ -13,14 +13,19 @@ use crate::stages::{boolean_expressions, models, object_boolean_expressions};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use crate::{helpers::types::NdcColumnForComparison, OrderByExpressionIdentifier};
 
+#[derive(Debug)]
+pub struct ModelsWithGraphqlOutput {
+    pub models_with_graphql: IndexMap<Qualified<ModelName>, ModelWithGraphql>,
+    pub issues: Vec<ModelGraphqlIssue>,
+}
+
 /// A Model, once we have added filter expression and graphql for it
+#[derive(Debug)]
 pub(crate) struct ModelWithGraphql {
     pub inner: models::Model,
     pub filter_expression_type: Option<ModelExpressionType>,
     pub graphql_api: ModelGraphQlApi,
 }
-
-pub(crate) type ModelsWithGraphql = IndexMap<Qualified<ModelName>, ModelWithGraphql>;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ModelExpressionType {
@@ -107,4 +112,10 @@ pub struct ModelGraphQlApi {
     pub limit_field: Option<LimitFieldGraphqlConfig>,
     pub offset_field: Option<OffsetFieldGraphqlConfig>,
     pub filter_input_type_name: Option<ast::TypeName>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ModelGraphqlIssue {
+    #[error("the model {model_name} has defined a selectAggregate graphql API, but it will not appear in the GraphQL API unless query.aggregate.filterInputFieldName is also configured in GraphqlConfig")]
+    MissingAggregateFilterInputFieldNameInGraphqlConfig { model_name: Qualified<ModelName> },
 }

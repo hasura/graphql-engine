@@ -19,9 +19,9 @@ use crate::types::subgraph::Qualified;
 
 pub(crate) use types::ModelWithGraphql;
 pub use types::{
-    ModelExpressionType, ModelGraphQlApi, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
-    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition,
-    UniqueIdentifierField,
+    ModelExpressionType, ModelGraphQlApi, ModelGraphqlIssue, ModelOrderByExpression,
+    ModelsWithGraphqlOutput, SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition,
+    SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
 
 use super::order_by_expressions;
@@ -43,8 +43,11 @@ pub fn resolve(
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
     configuration: &Configuration,
-) -> Result<types::ModelsWithGraphql, Error> {
-    let mut models_with_graphql = types::ModelsWithGraphql::new();
+) -> Result<ModelsWithGraphqlOutput, Error> {
+    let mut output = ModelsWithGraphqlOutput {
+        models_with_graphql: IndexMap::new(),
+        issues: vec![],
+    };
 
     // Used to ensure we don't resolve the same type twice.
     let mut existing_graphql_types = existing_graphql_types.clone();
@@ -87,11 +90,12 @@ pub fn resolve(
                 order_by_expressions,
                 graphql_config,
                 configuration,
+                &mut output.issues,
             )?,
             None => types::ModelGraphQlApi::default(),
         };
 
-        models_with_graphql.insert(
+        output.models_with_graphql.insert(
             model_name,
             types::ModelWithGraphql {
                 inner: model,
@@ -101,5 +105,5 @@ pub fn resolve(
         );
     }
 
-    Ok(models_with_graphql)
+    Ok(output)
 }

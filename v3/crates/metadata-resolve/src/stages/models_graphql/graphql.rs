@@ -4,7 +4,7 @@ use open_dds::models::{ModelGraphQlDefinitionV2, ModelName};
 use open_dds::relationships::{ModelRelationshipTarget, RelationshipTarget};
 
 use super::types::{
-    LimitFieldGraphqlConfig, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig,
+    LimitFieldGraphqlConfig, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig, ModelGraphqlIssue,
     ModelOrderByExpression, OffsetFieldGraphqlConfig, OrderByExpressionInfo,
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
     SubscriptionGraphQlDefinition, UniqueIdentifierField,
@@ -34,6 +34,7 @@ pub(crate) fn resolve_model_graphql_api(
     order_by_expressions: &OrderByExpressions,
     graphql_config: &graphql_config::GraphqlConfig,
     configuration: &Configuration,
+    issues: &mut Vec<ModelGraphqlIssue>,
 ) -> Result<ModelGraphQlApi, Error> {
     let model_name = &model.name;
     let mut graphql_api = ModelGraphQlApi::default();
@@ -218,39 +219,40 @@ pub(crate) fn resolve_model_graphql_api(
     }
 
     // record select_aggregate root field
-    graphql_api.select_aggregate = model_graphql_definition
-        .aggregate
-        .as_ref()
-        .zip(aggregate_expression_name.as_ref()) // Only matters if we have an aggregate expression specified
-        .map(
-            |(graphql_aggregate, aggregate_expression_name)| -> Result<_, Error> {
-                // Check that the filter input field name is configured in graphql config
-                let filter_input_field_name = graphql_config
-                    .query
-                    .aggregate_config
-                    .as_ref()
-                    .map(|agg| agg.filter_input_field_name.clone())
-                    .ok_or_else::<Error, _>(|| Error::GraphqlConfigError {
-                        graphql_config_error:
-                            graphql_config::GraphqlConfigError::MissingAggregateFilterInputFieldNameInGraphqlConfig,
-                    })?;
+    graphql_api.select_aggregate = match (
+        &model_graphql_definition.aggregate,
+        aggregate_expression_name,
+        &graphql_config.query.aggregate_config,
+    ) {
+        (Some(_graphql_aggregate), Some(_aggregate_expression_name), None) => {
+            // If the user has an aggregate expression and has specified the graphql select aggregate root field
+            // but is missing the global aggregate GraphqlConfig, this is probably a mistake and so let's raise
+            // a warning for them
+            issues.push(
+                ModelGraphqlIssue::MissingAggregateFilterInputFieldNameInGraphqlConfig {
+                    model_name: model_name.clone(),
+                },
+            );
+            None
+        }
+        (Some(graphql_aggregate), Some(aggregate_expression_name), Some(aggregate_config)) => {
+            let subscription = graphql_aggregate
+                .subscription
+                .as_ref()
+                .map(|s| resolve_subscription_graphql_api(s, configuration))
+                .transpose()?;
 
-                let subscription = graphql_aggregate
-                    .subscription
-                    .as_ref()
-                    .map(|s| resolve_subscription_graphql_api(s, configuration))
-                    .transpose()?;
-                Ok(SelectAggregateGraphQlDefinition {
-                    query_root_field: mk_name(graphql_aggregate.query_root_field.as_str())?,
-                    description: graphql_aggregate.description.clone(),
-                    deprecated: graphql_aggregate.deprecated.clone(),
-                    aggregate_expression_name: aggregate_expression_name.clone(),
-                    filter_input_field_name,
-                    subscription,
-                })
-            },
-        )
-        .transpose()?;
+            Some(SelectAggregateGraphQlDefinition {
+                query_root_field: mk_name(graphql_aggregate.query_root_field.as_str())?,
+                description: graphql_aggregate.description.clone(),
+                deprecated: graphql_aggregate.deprecated.clone(),
+                aggregate_expression_name: aggregate_expression_name.clone(),
+                filter_input_field_name: aggregate_config.filter_input_field_name.clone(),
+                subscription,
+            })
+        }
+        _ => None,
+    };
 
     // record limit and offset field names
     graphql_api.limit_field = graphql_config

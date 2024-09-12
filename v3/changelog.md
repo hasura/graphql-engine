@@ -8,13 +8,15 @@
 
 - Disallow recursive types in SQL table column types
 - Previously, if you had `AggregateExpressions` that were configured to be used
-  in GraphQL, but you did not set the appropriate configuration in
+  in GraphQL, or `Models` configured for aggregates in GraphQL, but you did not
+  set the appropriate configuration in
   `GraphqlConfig.definition.query.aggregates`, the build would fail with an
-  error. This has been relaxed so that the build now succeeds, but a warning is
+  error. This has been relaxed so that the build now succeeds, but warnings are
   raised instead. However, the aggregates will not appear in your GraphQL API
   until the `GraphqlConfig` is updated. This allows you to add
-  `AggregateExpressions` and update your `GraphqlConfig` separately, which is
-  useful if they are in separate repositories.
+  `AggregateExpressions` and configure your `Model` but update your
+  `GraphqlConfig` separately, which is useful if they are in separate
+  repositories.
 - Add a missing typecheck of `ValueExpression` while resolving model predicates
 
 ### Changed

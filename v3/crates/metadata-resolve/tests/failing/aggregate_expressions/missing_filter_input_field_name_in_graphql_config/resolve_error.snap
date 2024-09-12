@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
-input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/missing_filter_input_field_name_in_graphql_config/metadata.json
----
-the filterInputFieldName for aggregate needs to be defined in GraphqlConfig, when models have a selectAggregate graphql API
