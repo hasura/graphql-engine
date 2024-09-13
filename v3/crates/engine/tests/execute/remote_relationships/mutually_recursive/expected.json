@@ -46,6 +46,9 @@
                 "title": "Slumdog Millionaire",
                 "Actors": [
                   {
+                    "name": "Peter"
+                  },
+                  {
                     "name": "Irfan Khan"
                   }
                 ],
@@ -120,6 +123,9 @@
               "Movie": {
                 "title": "Slumdog Millionaire",
                 "Actors": [
+                  {
+                    "name": "Peter"
+                  },
                   {
                     "name": "Irfan Khan"
                   }

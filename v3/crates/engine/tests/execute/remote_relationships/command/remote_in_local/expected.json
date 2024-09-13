@@ -25,6 +25,13 @@
           "title": "Slumdog Millionaire",
           "Actors": [
             {
+              "name": "Peter",
+              "MovieFromCommand": {
+                "title": "Slumdog Millionaire",
+                "rating": 5
+              }
+            },
+            {
               "name": "Irfan Khan",
               "MovieFromCommand": {
                 "title": "Slumdog Millionaire",

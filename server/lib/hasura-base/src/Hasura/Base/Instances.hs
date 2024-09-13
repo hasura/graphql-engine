@@ -10,7 +10,6 @@ import Control.Monad.Fail
 import Control.Monad.Fix
 import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
-import Data.Fixed (Fixed (..))
 import Data.OpenApi.Declare as D
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8With, encodeUtf8)
@@ -80,8 +79,6 @@ deriving instance TH.Lift TDFA.ExecOption
 deriving instance TH.Lift TDFA.Pattern
 
 deriving instance TH.Lift TDFA.PatternSet
-
-deriving instance TH.Lift (Fixed a)
 
 deriving instance TH.Lift TDFA.PatternSetCharacterClass
 

@@ -61,7 +61,8 @@
                               "subgraph": "default",
                               "name": "article"
                             },
-                            "argument_types": {}
+                            "argument_types": {},
+                            "deprecated": null
                           }
                         }
                       },
@@ -94,7 +95,7 @@
                 "name": "db"
               },
               "url": {
-                "singleUrl": "http://postgres_connector:8080/"
+                "singleUrl": "http://localhost:8080/"
               },
               "headers": {
                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""

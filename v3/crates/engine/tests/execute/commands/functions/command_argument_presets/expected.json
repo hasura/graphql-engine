@@ -3,11 +3,6 @@
     "data": {
       "getActorsByMovieIdBounds": [
         {
-          "actor_id": 3,
-          "movie_id": 2,
-          "name": "Irfan Khan"
-        },
-        {
           "actor_id": 4,
           "movie_id": 3,
           "name": "Al Pacino"

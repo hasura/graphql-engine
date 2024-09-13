@@ -25,7 +25,9 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Album"
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -42,7 +44,9 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Album"
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -64,7 +68,9 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Track"
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -81,7 +87,9 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Track"
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -103,7 +111,9 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "PlaylistTrack"
-                          }
+                          },
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -125,7 +135,9 @@
                           },
                           "relationship_type": "Array"
                         }
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -147,7 +159,9 @@
                       },
                       "relationship_type": "Array"
                     }
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -187,7 +201,9 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Customer"
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -204,7 +220,9 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Customer"
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -221,7 +239,9 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Customer"
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -238,7 +258,9 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Customer"
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -260,7 +282,9 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Employee"
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -277,7 +301,28 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Employee"
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "Fax",
+                "alias": "Fax",
+                "arguments": [],
+                "fields": [],
+                "used": [
+                  {
+                    "field": {
+                      "name": "Fax",
+                      "opendd_type": {
+                        "subgraph": "default",
+                        "name": "Employee"
+                      },
+                      "deprecated": true,
+                      "deprecated_reason": "Fax is no more used; Use Email instead"
                     }
                   }
                 ]
@@ -294,7 +339,9 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Employee"
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -322,7 +369,9 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "Employee"
-                          }
+                          },
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -339,7 +388,9 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "Employee"
-                          }
+                          },
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -361,7 +412,9 @@
                           },
                           "relationship_type": "Array"
                         }
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -383,7 +436,9 @@
                       },
                       "relationship_type": "Object"
                     }
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]

@@ -29,7 +29,8 @@
                               "subgraph": "default",
                               "name": "article"
                             },
-                            "argument_types": {}
+                            "argument_types": {},
+                            "deprecated": null
                           }
                         }
                       },
@@ -75,7 +76,8 @@
                               "subgraph": "default",
                               "name": "article"
                             },
-                            "argument_types": {}
+                            "argument_types": {},
+                            "deprecated": null
                           }
                         }
                       },
@@ -108,7 +110,7 @@
                 "name": "db"
               },
               "url": {
-                "singleUrl": "http://postgres_connector:8080/"
+                "singleUrl": "http://localhost:8080/"
               },
               "headers": {
                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
@@ -130,13 +132,16 @@
                   "LocalField": {
                     "BinaryComparison": {
                       "column": {
-                        "type": "column",
-                        "name": "id"
+                        "Column": {
+                          "name": "id",
+                          "field_path": []
+                        }
                       },
                       "operator": "_eq",
                       "value": {
-                        "type": "scalar",
-                        "value": 1
+                        "Scalar": {
+                          "value": 1
+                        }
                       }
                     }
                   }

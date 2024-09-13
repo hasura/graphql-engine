@@ -9,6 +9,7 @@
 , protobuf
 , darwin
 , pname
+, packageName ? pname
 }:
 let
   buildArgs = {
@@ -42,13 +43,13 @@ let
   };
 
   # only build the binary we care about
-  cargoExtraArgs = "--package ${buildArgs.pname}";
+  cargoExtraArgs = "--package ${packageName}";
 
   # Build the dependencies first.
   cargoArtifacts = craneLib.buildDepsOnly (buildArgs //
     {
       # without this we'll build deps for the entire workspace every time
-      buildPhaseCargoCommand = "cargo build --profile $CARGO_PROFILE --package ${buildArgs.pname}";
+      buildPhaseCargoCommand = "cargo build --profile $CARGO_PROFILE --package ${packageName}";
       doCheck = false;
     }
 

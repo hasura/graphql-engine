@@ -13,8 +13,8 @@ import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
+import Hasura.Authentication.Session (SessionVariables, getSessionVariableValue, mkSessionVariable)
 import Hasura.Prelude
-import Hasura.Session (SessionVariables, getSessionVariableValue, mkSessionVariable)
 import Kriti qualified
 import Kriti.CustomFunctions qualified as Kriti
 import Kriti.Error (SerializeError (serialize), SerializedError)
@@ -59,7 +59,11 @@ sessionFunctions sessionVars = HashMap.singleton "getSessionVariable" getSession
     getSessionVar = \case
       J.Null -> Right $ J.Null
       J.String txt ->
-        case sessionVars >>= getSessionVariableValue (mkSessionVariable txt) of
-          Just x -> Right $ J.String x
-          Nothing -> Left . Kriti.CustomFunctionError $ "Session variable \"" <> txt <> "\" not found"
+        let value = do
+              sessionVars' <- sessionVars
+              var <- mkSessionVariable txt
+              getSessionVariableValue var sessionVars'
+         in case value of
+              Just x -> Right $ J.String x
+              Nothing -> Left . Kriti.CustomFunctionError $ "Session variable \"" <> txt <> "\" not found"
       _ -> Left $ Kriti.CustomFunctionError "Session variable name should be a string"

@@ -18,11 +18,11 @@ use crate::Error;
 pub fn get_where_expression_input_field(
     builder: &mut gql_schema::Builder<GDS>,
     gds_type_name: Qualified<CustomTypeName>,
-    boolean_expression_graphql_config: &metadata_resolve::BooleanExpressionGraphqlConfig,
+    boolean_expression_graphql_field_config: &metadata_resolve::BooleanExpressionGraphqlFieldConfig,
+    boolean_expression_type_name: &ast::TypeName,
 ) -> gql_schema::InputField<GDS> {
     gql_schema::InputField::new(
-        boolean_expression_graphql_config
-            .graphql_config
+        boolean_expression_graphql_field_config
             .where_field_name
             .clone(),
         None,
@@ -32,7 +32,7 @@ pub fn get_where_expression_input_field(
         ast::TypeContainer::named_null(builder.register_type(
             types::TypeId::InputObjectBooleanExpressionType {
                 gds_type_name,
-                graphql_type_name: boolean_expression_graphql_config.type_name.clone(),
+                graphql_type_name: boolean_expression_type_name.clone(),
             },
         )),
         None,

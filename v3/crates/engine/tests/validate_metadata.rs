@@ -230,7 +230,9 @@ fn test_disallow_object_mapped_to_scalar() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: ResolveError::ModelTypeMappingCollectionError { .. }
+                error: ResolveError::ModelsError(
+                    metadata_resolve::ModelsError::ModelTypeMappingCollectionError { .. }
+                )
             })
         ),
         "actual: {gds:?}"

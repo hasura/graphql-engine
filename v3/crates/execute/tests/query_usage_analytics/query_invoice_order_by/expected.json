@@ -19,7 +19,9 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "Invoice"
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -37,7 +39,9 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "Customer"
-                          }
+                          },
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -59,7 +63,9 @@
                           },
                           "relationship_type": "Object"
                         }
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -81,7 +87,9 @@
                   "opendd_type": {
                     "subgraph": "default",
                     "name": "Invoice"
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]
@@ -103,7 +111,9 @@
                           "opendd_type": {
                             "subgraph": "default",
                             "name": "InvoiceLine"
-                          }
+                          },
+                          "deprecated": false,
+                          "deprecated_reason": null
                         }
                       }
                     ]
@@ -125,7 +135,9 @@
                       "opendd_type": {
                         "subgraph": "default",
                         "name": "InvoiceLine"
-                      }
+                      },
+                      "deprecated": false,
+                      "deprecated_reason": null
                     }
                   }
                 ]
@@ -147,7 +159,9 @@
                       },
                       "relationship_type": "Array"
                     }
-                  }
+                  },
+                  "deprecated": false,
+                  "deprecated_reason": null
                 }
               }
             ]

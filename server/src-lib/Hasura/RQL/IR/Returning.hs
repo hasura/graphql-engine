@@ -1,5 +1,4 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.IR.Returning
   ( MutFld,
@@ -35,13 +34,15 @@ data MutFldG (b :: BackendType) (r :: Type) v
 
 deriving stock instance
   ( Backend b,
-    Show (AnnFieldsG b r v)
+    Show v,
+    Show r
   ) =>
   Show (MutFldG b r v)
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnFieldsG b r v)
+    Eq r,
+    Eq v
   ) =>
   Eq (MutFldG b r v)
 
@@ -56,15 +57,15 @@ data MutationOutputG (b :: BackendType) (r :: Type) v
 
 deriving stock instance
   ( Backend b,
-    Show (MutFldsG b r v),
-    Show (AnnFieldsG b r v)
+    Show v,
+    Show r
   ) =>
   Show (MutationOutputG b r v)
 
 deriving stock instance
   ( Backend b,
-    Eq (MutFldsG b r v),
-    Eq (AnnFieldsG b r v)
+    Eq v,
+    Eq r
   ) =>
   Eq (MutationOutputG b r v)
 

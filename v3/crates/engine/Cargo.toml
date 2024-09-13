@@ -21,9 +21,11 @@ name = "execute"
 harness = false
 
 [dependencies]
+axum-ext = { path = "../utils/axum-ext" }
 execute = { path = "../execute" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 hasura-authn-jwt = { path = "../auth/hasura-authn-jwt" }
+hasura-authn-noauth = { path = "../auth/hasura-authn-noauth" }
 hasura-authn-webhook = { path = "../auth/hasura-authn-webhook" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }
@@ -38,7 +40,10 @@ anyhow = { workspace = true }
 axum = { workspace = true }
 base64 = { workspace = true }
 clap = { workspace = true, features = ["derive", "env"] }
+futures-util = {workspace = true}
 json_value_merge = { workspace = true }
+mimalloc = { workspace = true }
+nonempty = { workspace = true }
 reqwest = { workspace = true, features = ["json", "multipart"] }
 schemars = { workspace = true, features = ["smol_str"] }
 serde = { workspace = true }

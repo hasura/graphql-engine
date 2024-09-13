@@ -47,6 +47,8 @@ import Data.List.NonEmpty qualified as NE
 import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Extended
+import Hasura.Authentication.Session (SessionVariables)
+import Hasura.Authentication.User (ExtraUserInfo, UserInfo (..))
 import Hasura.Base.Error
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
@@ -64,7 +66,6 @@ import Hasura.Server.Utils
     deprecatedEnvVars,
     envVarsMovedToMetadata,
   )
-import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai.Extended qualified as Wai

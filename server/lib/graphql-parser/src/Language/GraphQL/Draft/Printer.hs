@@ -307,7 +307,7 @@ dispatchStringPrinter t =
     hasWhitespaceEnd = T.all isWhitespace $ T.takeWhileEnd (/= '\n') t
     -- Condition 4: if none of the remaining lines (i.e. not the first line)
     -- contains nonzero indentation, we can't print it as a block string
-    hasZeroIndentation = any lineZeroIndentation $ tail $ T.lines t
+    hasZeroIndentation = any lineZeroIndentation $ drop 1 $ T.lines t
       where
         lineZeroIndentation line = case T.uncons line of
           Nothing -> False -- empty lines don't count

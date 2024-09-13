@@ -1,214 +1,153 @@
-set positional-arguments
-
-# This produces "-p engine -p lang-graphql -p ...".
-# See https://github.com/rust-lang/cargo/issues/4463 for why we build each
-# package explicitly instead of `cargo build --workspace --all-targets`.
-PACKAGE_SELECTOR := `find crates -name "Cargo.toml" -type f | xargs dirname | xargs -n 1 basename | sed 's/^/-p /' | xargs echo`
+set positional-arguments := true
+set shell := ["bash", "-c"]
 
 default:
-  just --list
+    just --list
 
-# run commands in a rust docker environment with source code only without starting any dependencies.
-docker_with_source_only +args:
-  #!/usr/bin/env sh
-  docker compose -f ci.docker-compose.yaml run --build --rm source_only "$@"
-  exit_code=$?
-  docker compose -f ci.docker-compose.yaml down
-  exit $exit_code
+build:
+    cargo build --release --all-targets
 
-# run commands in a rust docker environment including test dependencies and then removes the container dependencies
-# while emiting the exit code of the docker command
-docker_with_test_env +args:
-  #!/usr/bin/env sh
-  docker compose -f ci.docker-compose.yaml run --build --rm test_setup "$@"
-  exit_code=$?
-  docker compose -f ci.docker-compose.yaml down
-  exit $exit_code
+audit:
+    cargo audit
 
-# build used by CI
-ci-build:
-  just docker_with_source_only \
-    cargo build {{ PACKAGE_SELECTOR }} --release --all-targets
-
-build-local:
-  cargo build {{ PACKAGE_SELECTOR }} --release --all-targets
-
-# linting run by CI
-ci-lint:
-  just docker_with_source_only sh -c \
-    "RUSTFLAGS='-D warnings' cargo clippy --all-targets --no-deps"
-
-fix:
-  just docker_with_source_only sh -c "cargo clippy --all-targets --no-deps --fix --allow-no-vcs; cargo fmt"
+audit-fix:
+    cargo audit fix
 
 format:
-  cargo fmt --check
-  prettier --check .
-  ! command -v nix || nix fmt -- --check .
+    cargo fmt --check
+    npx --yes prettier --check .
+    ! command -v nix || nix fmt -- --check .
+
 alias fmt := format
 
-fix-local:
-  cargo clippy --all-targets --no-deps --fix --allow-no-vcs
-  cargo fmt
-  just fix-format
-  ! command -v nix || nix fmt
+fix:
+    cargo clippy --all-targets --no-deps --fix --allow-no-vcs
+    cargo fmt
+    just fix-format
+    ! command -v nix || nix fmt
 
 fix-format:
-  prettier --write .
+    npx --yes prettier --write .
 
-# tests run by CI
-ci-test: docker-refresh
-  just docker_with_test_env cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast
-
-test *ARGS:
-  #!/usr/bin/env bash
-  COMMAND=(cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast "$@")
-  echo "cargo nextest run --no-fail-fast $*"
-  just docker_with_test_env "${COMMAND[@]}"
-
-update-golden-files: docker-refresh
-  docker compose -f ci.docker-compose.yaml run --rm -e UPDATE_GOLDENFILES=1 test_setup \
-    cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast
-  just fix-format
-
-# Benchmarks run by CI
-ci-bench:
-  # Only bench what is required
-  just docker_with_test_env cargo bench \
-       -p lang-graphql --bench validation --bench parser \
-       -p engine --bench generate_ir \
-       -p execute --bench generate_ir
-
-drill:
-  just docker_with_test_env drill --benchmark drill.yml -s -q
-
-# optional argument to show coverage only for files matched by {{filterexp}} i.e. grep -E filterexp
-coverage *filterexp:
-  just docker_with_source_only bash coverage.sh '{{filterexp}}'
-
-generate-benchmarks gh-issue gh-token:
-  just docker_with_test_env bash benchmark.sh {{gh-issue}} {{gh-token}}
-
-dev:
-  docker compose run --build --rm dev_setup bash
-  docker compose down
+run-local-with-shell:
+    #!/usr/bin/env bash
+    cargo run --bin custom-connector | ts "custom-connector:" &
+    OTLP_ENDPOINT=http://localhost:4317 \
+      cargo run --bin dev-auth-webhook | ts "dev-auth-webhook:" &
+    RUST_LOG=DEBUG cargo run --bin engine -- \
+    --otlp-endpoint http://localhost:4317 \
+    --authn-config-path static/auth/auth_config.json \
+    --metadata-path static/sample-schema.json \
+    --expose-internal-errors | ts "engine:          " &
+    wait
 
 # start all the docker deps for running tests (not engine)
 start-docker-test-deps:
-  # start connectors and wait for health
-  docker compose -f ci.docker-compose.yaml up --wait postgres postgres_connector custom_connector
+    # start connectors and wait for health
+    docker compose -f ci.docker-compose.yaml up --wait postgres postgres_connector custom_connector custom_connector_ndc_v01
 
 # start all the docker run time deps for the engine
 start-docker-run-deps:
-  # start auth_hook and jaeger
-  docker compose up --wait auth_hook jaeger
+    # start auth_hook and jaeger
+    docker compose up --wait auth_hook jaeger
 
 # pull / build all docker deps
 docker-refresh:
-  docker compose -f ci.docker-compose.yaml pull postgres_connector
-  docker compose -f ci.docker-compose.yaml build custom_connector
+    docker compose -f ci.docker-compose.yaml pull postgres_connector
+    docker compose -f ci.docker-compose.yaml build custom_connector
 
 # stop all the docker deps
 stop-docker:
-  docker compose -f ci.docker-compose.yaml down -v
-  docker compose down -v
-
-# local development commands
-
-# these work by running tests locally rather than in Docker
-# to make them work, add the following lines to your `/etc/hosts` file
-# (without the '#' at the start):
-# 127.0.0.1 postgres_connector
-# 127.0.0.1 custom_connector
+    docker compose -f ci.docker-compose.yaml down -v
+    docker compose down -v
 
 # run the tests using local engine (once)
-test-local *ARGS: start-docker-test-deps
-  #!/usr/bin/env bash
-  if command -v cargo-nextest; then
-    COMMAND=(cargo nextest run)
-  else
-    COMMAND=(cargo test)
-  fi
-  COMMAND+=(--no-fail-fast "$@")
-  echo "${COMMAND[*]}"
-  "${COMMAND[@]}"
+test *ARGS: start-docker-test-deps
+    #!/usr/bin/env bash
+    if command -v cargo-nextest; then
+      COMMAND=(cargo nextest run)
+    else
+      COMMAND=(cargo test)
+    fi
+    COMMAND+=(--no-fail-fast "$@")
+    echo "${COMMAND[*]}"
+    "${COMMAND[@]}"
 
 # run a watch process that runs the tests locally
-watch-local: start-docker-test-deps start-docker-run-deps
-  RUST_LOG=DEBUG \
-  cargo watch -i "**/*.snap.new" \
-   -x test \
-   -x 'clippy --no-deps' \
-   -x 'run --bin engine -- \
-    --otlp-endpoint http://localhost:4317 \
-    --authn-config-path auth_config.json \
-    --metadata-path crates/engine/tests/schema.json \
-    --expose-internal-errors'
+watch: start-docker-test-deps start-docker-run-deps
+    RUST_LOG=DEBUG \
+    cargo watch -i "**/*.snap.new" \
+     -x test \
+     -x 'clippy --no-deps' \
+     -x 'run --bin engine -- \
+      --otlp-endpoint http://localhost:4317 \
+      --authn-config-path static/auth/auth_config.json \
+      --metadata-path static/sample-schema.json \
+      --unstable-feature enable-subscriptions \
+      --expose-internal-errors'
 
 # check the code is fine
-lint-local:
-  cargo clippy --all-targets --no-deps
-  ! command -v nix || nix flake check
+lint:
+    cargo clippy --all-targets --no-deps
+    ! command -v nix || nix flake check
 
 # ensure we don't have unused dependencies:
 machete:
-  cargo machete --with-metadata
+    cargo machete --with-metadata
 
 # update golden tests
-update-golden-files-local: start-docker-test-deps
-  UPDATE_GOLDENFILES=1 cargo test
-  just fix-format
+update-golden-files: start-docker-test-deps
+    UPDATE_GOLDENFILES=1 cargo test
+    just fix-format
 
-update-custom-connector-schema-in-test-metadata: && fix-format
-  #!/usr/bin/env bash
-  set -e
-  docker compose -f ci.docker-compose.yaml up --build --wait custom_connector
+update-custom-connector-schema-in-test-metadata:
+    docker compose -f ci.docker-compose.yaml up --build --wait custom_connector
 
-  new_capabilities=$(curl http://localhost:8101/capabilities | jq)
-  new_schema=$(curl http://localhost:8101/schema | jq)
-  ndc_version="v0.2"
+    just update-schema-in-test-metadata "8102" "v0.2"
 
-  # Should only be tests that actually talk to the running connector and therefore must be up to date
-  test_directories=(./crates/engine/tests/execute)
+update-postgres-schema-in-test-metadata:
+    docker compose -f ci.docker-compose.yaml up --build --wait postgres postgres_connector
 
-  find "${test_directories[@]}" -name '*.json' -print0 |
-  while IFS= read -r -d '' file; do
-    # Check if the file actually contains a custom connector DataConnectorLink
-    if jq -e '
-      (. | type == "object") and has("subgraphs") and (.subgraphs | length > 0) and (.subgraphs[] | has("objects") and (.objects | length > 0))
-      and any(.subgraphs[].objects[]; .kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://custom_connector:8101")' "$file" >/dev/null; then
+    just update-schema-in-test-metadata "8080" "v0.1"
 
-      # Update its schema, capabilities and version
-      jq --argjson newCapabilities "$new_capabilities" --argjson newSchema "$new_schema" --arg ndcVersion "$ndc_version" '
-        (.subgraphs[].objects[] | select(.kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://custom_connector:8101").definition.schema)
-        |= (.capabilities = $newCapabilities | .schema = $newSchema | .version = $ndcVersion)
-      ' $file \
-      | sponge $file
+update-schema-in-test-metadata PORT NDC_VERSION: && fix-format
+    #!/usr/bin/env bash
+    set -e
 
-      echo "Updated $file"
-    else
-      echo "Skipping $file: Does not appear to be a metadata file with a custom connector"
-    fi
-  done
+    new_capabilities=$(curl http://localhost:{{ PORT }}/capabilities | jq)
+    new_schema=$(curl http://localhost:{{ PORT }}/schema | jq)
+    ndc_version="{{ NDC_VERSION }}"
 
-  docker compose -f ci.docker-compose.yaml down
+    # Should only be tests that actually talk to the running connector and therefore must be up to date
+    test_directories=(./crates/engine/tests/execute)
+
+    find "${test_directories[@]}" -name '*.json' -print0 |
+    while IFS= read -r -d '' file; do
+      # Check if the file actually contains a custom connector DataConnectorLink
+      if jq -e '
+        (. | type == "object") and has("subgraphs") and (.subgraphs | length > 0) and (.subgraphs[] | has("objects") and (.objects | length > 0))
+        and any(.subgraphs[].objects[]; .kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://localhost:{{ PORT }}")' "$file" >/dev/null; then
+
+        # Update its schema, capabilities and version
+        jq --argjson newCapabilities "$new_capabilities" --argjson newSchema "$new_schema" --arg ndcVersion "$ndc_version" '
+          (.subgraphs[].objects[] | select(.kind == "DataConnectorLink" and .definition.url.singleUrl.value == "http://localhost:{{ PORT }}").definition.schema)
+          |= (.capabilities = $newCapabilities | .schema = $newSchema | .version = $ndcVersion)
+        ' $file \
+        | sponge $file
+
+        echo "Updated $file"
+      else
+        echo "Skipping $file: Does not appear to be a metadata file with a matching connector"
+      fi
+    done
+
+    docker compose -f ci.docker-compose.yaml down
 
 # run the engine using schema from tests
-run-local: start-docker-test-deps start-docker-run-deps
-  RUST_LOG=DEBUG cargo run --bin engine -- \
-  --otlp-endpoint http://localhost:4317 \
-  --authn-config-path auth_config.json \
-  --metadata-path crates/engine/tests/schema.json \
-  --expose-internal-errors
-
-# check the docker build works
-build-docker-with-nix binary="engine":
-  #!/usr/bin/env bash
-  echo "$(tput bold)nix build .#{{ binary }}-docker | gunzip | docker load$(tput sgr0)"
-  gunzip < "$(nix build --no-warn-dirty --no-link --print-out-paths '.#{{ binary }}-docker')" | docker load
-
-# check the arm64 docker build works
-build-aarch64-docker-with-nix binary="engine":
-  #!/usr/bin/env bash
-  echo "$(tput bold)nix build .#{{ binary }}-docker-aarch64-linux | gunzip | docker load$(tput sgr0)"
-  gunzip < "$(nix build --no-warn-dirty --no-link --print-out-paths --system aarch64-linux '.#{{ binary }}-docker-aarch64-linux')" | docker load
+run METADATA_PATH="static/sample-schema.json": start-docker-test-deps start-docker-run-deps
+    RUST_LOG=DEBUG cargo run --bin engine -- \
+    --otlp-endpoint http://localhost:4317 \
+    --authn-config-path static/auth/auth_config.json \
+    --metadata-path {{ METADATA_PATH }} \
+    --unstable-feature enable-subscriptions \
+    --expose-internal-errors

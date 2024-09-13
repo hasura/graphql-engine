@@ -180,6 +180,65 @@ fn run_json_schema_validation_checks(
 ) {
     check_no_arbitrary_additional_properties(schema, config);
     check_titles(schema, is_externally_tagged_enum_variant);
+    check_description(schema, is_externally_tagged_enum_variant);
+}
+
+fn check_description(schema: &Schema, is_externally_tagged_enum_variant: bool) {
+    if is_externally_tagged_enum_variant {
+        // If it is an externally tagged enum variant, its description is validated in the parent schema
+        // as part of the subschema validation.
+        return;
+    };
+    if is_top_level_metadata_object_variant(schema) {
+        // Top-level metadata objects are handled specially in tooling, so okay to not have title for those.
+        return;
+    }
+    if is_nullable_wrapper(schema) {
+        // If this is just wrapping a type to make it nullable, it does not need a description.
+        return;
+    }
+    if is_all_of_wrapper(schema) {
+        // If this is just an all of wrapping another schema (which happens when we have a field-level description in the schema),
+        // we don't need a description.
+        return;
+    }
+
+    if let Schema::Object(object) = schema {
+        let has_description = object
+            .metadata
+            .as_ref()
+            .is_some_and(|metadata| metadata.description.is_some());
+
+        // If the schema is of a struct, it should definitely have a description
+        if object.object.is_some() {
+            assert!(
+                has_description,
+                "Schema does not have a description present: {}",
+                serde_json::to_string_pretty(schema).unwrap()
+            );
+        }
+        // If the schema is of an enum, either it or its all subschemas should have a description.
+        if let Some(subschemas) = &object.subschemas {
+            let has_description_in_subschemas =
+                subschemas.one_of.iter().flatten().all(|subschema| {
+                    if let Schema::Object(subschema_object) = subschema {
+                        subschema_object
+                            .metadata
+                            .as_ref()
+                            .is_some_and(|metadata| metadata.description.is_some())
+                    } else {
+                        // If the subschema is not an object, no need of description.
+                        true
+                    }
+                });
+            // Assert for description
+            assert!(
+                has_description || has_description_in_subschemas,
+                "Schema or its subschemas do not have a description present: {}",
+                serde_json::to_string_pretty(schema).unwrap()
+            );
+        }
+    }
 }
 
 fn check_titles(schema: &Schema, is_externally_tagged_enum_variant: bool) {

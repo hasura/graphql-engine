@@ -19,6 +19,7 @@ module Hasura.RQL.IR.Action
     aaeWebhook,
     aaeHeaders,
     aaeForwardClientHeaders,
+    aaeIgnoredClientHeaders,
     aaeTimeOut,
     aaeRequestTransform,
     aaeResponseTransform,
@@ -37,6 +38,7 @@ module Hasura.RQL.IR.Action
     aaaqDefinitionList,
     aaaqStringifyNum,
     aaaqForwardClientHeaders,
+    aaaqIgnoredClientHeaders,
     aaaqSource,
     ActionSourceInfo (..),
     ActionOutputFields,
@@ -64,6 +66,7 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Headers
 import Hasura.RQL.Types.Schema.Options (StringifyNumbers)
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Types qualified as HTTP
 
 -- | Internal representation for a selection of fields on the result of an action.
 -- Type parameter r will be either
@@ -114,6 +117,7 @@ data AnnActionExecution (r :: Type) = AnnActionExecution
     _aaeWebhook :: EnvRecord ResolvedWebhook,
     _aaeHeaders :: [HeaderConf],
     _aaeForwardClientHeaders :: Bool,
+    _aaeIgnoredClientHeaders :: [Text],
     _aaeTimeOut :: Timeout,
     _aaeRequestTransform :: Maybe RequestTransform,
     _aaeResponseTransform :: Maybe MetadataResponseTransform
@@ -132,6 +136,7 @@ getActionOutputFields inp = case inp of
 data AnnActionMutationAsync = AnnActionMutationAsync
   { _aamaName :: RQL.ActionName,
     _aamaForwardClientHeaders :: Bool,
+    _aamaIgnoredClientHeaders :: [HTTP.HeaderName],
     -- | jsonified input arguments
     _aamaPayload :: J.Value
   }
@@ -155,6 +160,7 @@ data AnnActionAsyncQuery (b :: BackendType) (r :: Type) = AnnActionAsyncQuery
     _aaaqDefinitionList :: [(Column b, ScalarType b)],
     _aaaqStringifyNum :: StringifyNumbers,
     _aaaqForwardClientHeaders :: Bool,
+    _aaaqIgnoredClientHeaders :: [HTTP.HeaderName],
     _aaaqSource :: ActionSourceInfo b
   }
   deriving stock (Functor, Foldable, Traversable)

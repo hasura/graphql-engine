@@ -195,17 +195,9 @@ impl Tracer {
             propagator.extract(&HeaderExtractor(parent_headers))
         });
 
-        let parent_context_span = parent_context.span();
-        let parent_context_span_context = parent_context_span.span_context();
-
-        // if there is no parent span ID, we get something nonsensical, so we need to validate it
-        if parent_context_span_context.is_valid() {
-            self.in_span_async(name, display_name, visibility, f)
-                .with_context(parent_context)
-                .await
-        } else {
-            self.in_span_async(name, display_name, visibility, f).await
-        }
+        self.in_span_async(name, display_name, visibility, f)
+            .with_context(parent_context)
+            .await
     }
 }
 

@@ -91,6 +91,7 @@ let
   # The version of GHC in `ghcName` is set in nix/overlays/ghc.nix.
   haskellInputs = [
     pkgs.cabal2nix
+    pkgs.ghciwatch
 
     ghc
     hls

@@ -4,30 +4,34 @@ use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{arguments::ArgumentName, permissions::ValueExpression, EnvironmentValue};
+use crate::{permissions::ValueExpression, types::DataConnectorArgumentName, EnvironmentValue};
 
-use super::{DataConnectorName, VersionedSchemaAndCapabilities};
+use super::{DataConnectorColumnName, DataConnectorName, VersionedSchemaAndCapabilities};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+/// A pair of URLs to access a data connector, one for reading and one for writing.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "ReadWriteUrls")]
+#[opendd(json_schema(title = "ReadWriteUrls"))]
 pub struct ReadWriteUrls {
     pub read: EnvironmentValue,
     pub write: EnvironmentValue,
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
-)]
-#[schemars(title = "DataConnectorUrlV1")]
+/// A URL to access a data connector. This can be a single URL or a pair of read and write URLs.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[opendd(externally_tagged, json_schema(title = "DataConnectorUrlV1"))]
 #[serde(rename_all = "camelCase")]
 pub enum DataConnectorUrlV1 {
+    // #[opendd(json_schema(title = "SingleUrl"))]
     SingleUrl(EnvironmentValue),
+    // #[opendd(json_schema(title = "ReadWriteUrls"))]
     ReadWriteUrls(ReadWriteUrls),
 }
 
-#[derive(Serialize, Default, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(
+    Serialize, Deserialize, Default, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd, JsonSchema,
+)]
 /// Key value map of HTTP headers to be sent with an HTTP request. The key is the
 /// header name and the value is a potential reference to an environment variable.
 // We wrap maps into newtype structs so that we have a type and title for them in the JSONSchema which
@@ -72,12 +76,13 @@ pub struct DataConnectorLinkV1 {
 /// An argument preset that can be applied to all functions/procedures of a
 /// connector
 pub struct DataConnectorArgumentPreset {
-    pub argument: ArgumentName,
+    pub argument: DataConnectorArgumentName,
     pub value: DataConnectorArgumentPresetValue,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
+/// The value of a data connector argument preset.
 pub struct DataConnectorArgumentPresetValue {
     /// HTTP headers that can be preset from request
     pub http_headers: HttpHeadersPreset,
@@ -95,6 +100,7 @@ pub struct HttpHeadersPreset {
 }
 
 #[derive(Serialize, Default, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+/// Key value map of HTTP headers to be forwarded in the headers argument of a data connector request.
 // We wrap maps into newtype structs so that we have a type and title for them
 // in the JSONSchema which makes it easier to auto-generate documentation.
 pub struct AdditionalHttpHeaders(pub IndexMap<String, ValueExpression>);
@@ -107,17 +113,17 @@ impl Deref for AdditionalHttpHeaders {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq, opendds_derive::OpenDd, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd, Eq)]
 #[serde(rename_all = "camelCase")]
 /// Configuration of what HTTP response headers should be forwarded from a data
 /// connector to the client in HTTP response.
 pub struct ResponseHeaders {
     /// Name of the field in the NDC function/procedure's result which contains
     /// the response headers
-    pub headers_field: String,
+    pub headers_field: DataConnectorColumnName,
     /// Name of the field in the NDC function/procedure's result which contains
     /// the result
-    pub result_field: String,
+    pub result_field: DataConnectorColumnName,
     /// List of actual HTTP response headers from the data connector to be set as
     /// response headers
     pub forward_headers: Vec<String>,

@@ -18,6 +18,7 @@ import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
+import Data.Morpheus.Server.Types hiding (Value)
 import Data.Morpheus.Types qualified as Morpheus
 import Data.Text qualified as Text
 import Data.Typeable (Typeable)
@@ -587,25 +588,55 @@ sqliteTeardown cloneName = do
 -- names and field names for Haskell records to be consistent with their
 -- corresponding GraphQL equivalents, we define most of the schema manually with
 -- the following options.
-hasuraTypeOptions :: Morpheus.GQLTypeOptions
-hasuraTypeOptions =
-  Morpheus.defaultTypeOptions
-    { -- transformation to apply to constructors, for enums; we simply map to
-      -- lower case:
-      --   Asc -> asc
-      Morpheus.constructorTagModifier = map toLower,
-      -- transformation to apply to field names; we drop all characters up to and
-      -- including the first underscore:
-      --   hta_where -> where
-      Morpheus.fieldLabelModifier = tail . dropWhile (/= '_'),
-      -- transformation to apply to type names; we split the name on uppercase
-      -- letters, intercalate with underscore, and map everything to lowercase:
-      --   HasuraTrack -> hasura_track
-      Morpheus.typeNameModifier = \_ ->
-        map toLower
-          . intercalate "_"
-          . split (dropBlanks $ keepDelimsL $ whenElt isUpper)
-    }
+--
+-- NOTE: A LOT OF COPY-PASTE OF THESE IN OTHER MODULES. Would be better to DRY,
+-- but some have variations it seems.
+data HasuraTypeOptions = HasuraTypeOptions
+  deriving (Generic)
+
+instance GQLType HasuraTypeOptions where
+  type KIND HasuraTypeOptions = DIRECTIVE
+
+instance GQLDirective HasuraTypeOptions where
+  excludeFromSchema _ = True
+  type
+    DIRECTIVE_LOCATIONS HasuraTypeOptions =
+      '[ 'LOCATION_OBJECT,
+         'LOCATION_ENUM,
+         'LOCATION_INPUT_OBJECT,
+         'LOCATION_UNION,
+         'LOCATION_SCALAR,
+         'LOCATION_INTERFACE,
+         'LOCATION_ENUM_VALUE,
+         'LOCATION_FIELD_DEFINITION,
+         'LOCATION_INPUT_FIELD_DEFINITION
+       ]
+
+-- I don't understand how these relate to VisitType. Hopefully this works...
+instance VisitEnum HasuraTypeOptions
+
+instance VisitField HasuraTypeOptions
+
+instance VisitType HasuraTypeOptions where
+  -- transformation to apply to constructors, for enums; we simply map to
+  -- lower case:
+  --   Asc -> asc
+  visitEnumNames _ = Text.map toLower
+
+  -- transformation to apply to type names; we split the name on uppercase
+  -- letters, intercalate with underscore, and map everything to lowercase:
+  --   HasuraTrack -> hasura_track
+  visitTypeName _ _isInput =
+    Text.map toLower
+      . Text.intercalate "_"
+      . map Text.pack
+      . split (dropBlanks $ keepDelimsL $ whenElt isUpper)
+      . Text.unpack
+
+  -- transformation to apply to field names; we drop all characters up to and
+  -- including the first underscore:
+  --   hta_where -> where
+  visitFieldNames _ = Text.tail . Text.dropWhile (/= '_')
 
 data Query m = Query
   { hasura_track :: HasuraTrackArgs -> m [HasuraTrack m]
@@ -622,7 +653,7 @@ data HasuraTrackArgs = HasuraTrackArgs
   deriving (Generic)
 
 instance Morpheus.GQLType HasuraTrackArgs where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 data HasuraTrack m = HasuraTrack
   { t_id :: m (Maybe Int),
@@ -632,7 +663,7 @@ data HasuraTrack m = HasuraTrack
   deriving (Generic)
 
 instance (Typeable m) => Morpheus.GQLType (HasuraTrack m) where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 data HasuraTrackOrderBy = HasuraTrackOrderBy
   { tob_id :: Maybe OrderType,
@@ -642,7 +673,7 @@ data HasuraTrackOrderBy = HasuraTrackOrderBy
   deriving (Generic)
 
 instance Morpheus.GQLType HasuraTrackOrderBy where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 data HasuraTrackBoolExp = HasuraTrackBoolExp
   { tbe__and :: Maybe [HasuraTrackBoolExp],
@@ -655,13 +686,13 @@ data HasuraTrackBoolExp = HasuraTrackBoolExp
   deriving (Generic)
 
 instance Morpheus.GQLType HasuraTrackBoolExp where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 data OrderType = Asc | Desc
   deriving (Show, Generic)
 
 instance Morpheus.GQLType OrderType where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 [gqlDocument|
 

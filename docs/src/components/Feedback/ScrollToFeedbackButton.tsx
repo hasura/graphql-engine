@@ -10,7 +10,7 @@ export const ScrollToFeedbackButton = ({path}: {path: string}) => {
   }
 
   // Do not show on Intro page
-  if (path === '/docs/latest/index/') {
+  if (path === '/docs/2.0/index/') {
     return null;
   }
 

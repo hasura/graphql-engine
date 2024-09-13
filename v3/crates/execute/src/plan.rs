@@ -1,14 +1,21 @@
+mod arguments;
 mod commands;
-mod common;
-pub(crate) mod error;
+pub mod error;
+pub mod field;
 pub(crate) mod filter;
 mod model_selection;
-pub(crate) mod ndc_request;
+mod mutation;
+pub mod ndc_request;
+pub(crate) mod query;
 mod relationships;
 pub(crate) mod selection_set;
-pub(crate) mod types;
 
-pub use filter::plan_expression;
+pub use arguments::{Argument, MutationArgument};
+pub use field::ResolvedField;
+pub use filter::{plan_expression, resolve_expression, ResolvedFilterExpression};
+pub use mutation::ResolvedMutationExecutionPlan;
+pub use query::{ResolvedQueryExecutionPlan, ResolvedQueryNode};
+pub use relationships::Relationship;
 
 use gql::normalized_ast;
 use gql::schema::NamespacedGetter;
@@ -19,9 +26,6 @@ use lang_graphql::ast::common as ast;
 use serde_json as json;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable};
 
-use super::ir;
-use super::ir::model_selection::ModelSelection;
-use super::ir::root_field;
 use super::ndc;
 use super::process_response::process_response;
 use super::remote_joins::execute_join_locations;
@@ -31,6 +35,7 @@ use super::remote_joins::types::{
 use super::{HttpContext, ProjectId};
 use crate::error::FieldError;
 use crate::process_response::{process_mutation_response, ProcessedResponse};
+use ir::ModelSelection;
 use schema::GDSRoleNamespaceGetter;
 use schema::GDS;
 
@@ -107,7 +112,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 
 #[derive(Debug)]
 pub struct NDCMutationExecution<'n, 's, 'ir> {
-    pub execution_node: types::MutationExecutionPlan<'s>,
+    pub execution_node: mutation::UnresolvedMutationExecutionPlan<'s>,
     pub join_locations: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
     pub execution_span_attribute: String,
@@ -118,7 +123,7 @@ pub struct NDCMutationExecution<'n, 's, 'ir> {
 
 #[derive(Debug)]
 pub struct ExecutionTree<'s, 'ir> {
-    pub query_execution_plan: types::QueryExecutionPlan<'s>,
+    pub query_execution_plan: query::UnresolvedQueryExecutionPlan<'s>,
     pub remote_join_executions: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
 }
 
@@ -171,12 +176,12 @@ pub fn generate_request_plan<'n, 's, 'ir>(
             };
             for (alias, field) in ir {
                 match field {
-                    root_field::MutationRootField::TypeName { type_name } => {
+                    ir::MutationRootField::TypeName { type_name } => {
                         mutation_plan
                             .type_names
                             .insert(alias.clone(), type_name.clone());
                     }
-                    root_field::MutationRootField::ProcedureBasedCommand { selection_set, ir } => {
+                    ir::MutationRootField::ProcedureBasedCommand { selection_set, ir } => {
                         let plan = plan_mutation(selection_set, ir)?;
                         mutation_plan
                             .nodes
@@ -194,7 +199,7 @@ pub fn generate_request_plan<'n, 's, 'ir>(
 // Given a singular root field of a mutation, plan the execution of that root field.
 fn plan_mutation<'n, 's, 'ir>(
     selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-    ir: &'ir super::ir::commands::ProcedureBasedCommand<'s>,
+    ir: &'ir ir::ProcedureBasedCommand<'s>,
 ) -> Result<NDCMutationExecution<'n, 's, 'ir>, error::Error> {
     let mut join_id_counter = MonotonicCounter::new();
     let (ndc_ir, join_locations) =
@@ -217,14 +222,14 @@ fn plan_mutation<'n, 's, 'ir>(
 
 // Given a singular root field of a query, plan the execution of that root field.
 fn plan_query<'n, 's, 'ir>(
-    ir: &'ir root_field::QueryRootField<'n, 's>,
+    ir: &'ir ir::QueryRootField<'n, 's>,
 ) -> Result<NodeQueryPlan<'n, 's, 'ir>, error::Error> {
     let mut counter = MonotonicCounter::new();
     let query_plan = match ir {
-        root_field::QueryRootField::TypeName { type_name } => NodeQueryPlan::TypeName {
+        ir::QueryRootField::TypeName { type_name } => NodeQueryPlan::TypeName {
             type_name: type_name.clone(),
         },
-        root_field::QueryRootField::TypeField {
+        ir::QueryRootField::TypeField {
             selection_set,
             schema,
             type_name,
@@ -235,7 +240,7 @@ fn plan_query<'n, 's, 'ir>(
             type_name: type_name.clone(),
             role: namespace.clone(),
         },
-        root_field::QueryRootField::SchemaField {
+        ir::QueryRootField::SchemaField {
             role: namespace,
             selection_set,
             schema,
@@ -244,7 +249,7 @@ fn plan_query<'n, 's, 'ir>(
             selection_set,
             schema,
         },
-        root_field::QueryRootField::ModelSelectOne { ir, selection_set } => {
+        ir::QueryRootField::ModelSelectOne { ir, selection_set } => {
             let execution_tree = generate_execution_tree(&ir.model_selection)?;
             NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
                 execution_tree,
@@ -257,7 +262,7 @@ fn plan_query<'n, 's, 'ir>(
             })
         }
 
-        root_field::QueryRootField::ModelSelectMany { ir, selection_set } => {
+        ir::QueryRootField::ModelSelectMany { ir, selection_set } => {
             let execution_tree = generate_execution_tree(&ir.model_selection)?;
             NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
                 execution_tree,
@@ -269,7 +274,7 @@ fn plan_query<'n, 's, 'ir>(
                 },
             })
         }
-        root_field::QueryRootField::ModelSelectAggregate { ir, selection_set } => {
+        ir::QueryRootField::ModelSelectAggregate { ir, selection_set } => {
             let execution_tree = generate_execution_tree(&ir.model_selection)?;
             NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
                 execution_tree,
@@ -279,7 +284,7 @@ fn plan_query<'n, 's, 'ir>(
                 process_response_as: ProcessResponseAs::Aggregates,
             })
         }
-        root_field::QueryRootField::NodeSelect(optional_ir) => match optional_ir {
+        ir::QueryRootField::NodeSelect(optional_ir) => match optional_ir {
             Some(ir) => {
                 let execution_tree = generate_execution_tree(&ir.model_selection)?;
                 NodeQueryPlan::RelayNodeSelect(Some(NDCQueryExecution {
@@ -292,7 +297,7 @@ fn plan_query<'n, 's, 'ir>(
             }
             None => NodeQueryPlan::RelayNodeSelect(None),
         },
-        root_field::QueryRootField::FunctionBasedCommand { ir, selection_set } => {
+        ir::QueryRootField::FunctionBasedCommand { ir, selection_set } => {
             let (query_execution_plan, join_locations) =
                 commands::plan_query_execution(ir, &mut counter)?;
             let join_locations_ids = assign_with_join_ids(join_locations)?;
@@ -312,9 +317,9 @@ fn plan_query<'n, 's, 'ir>(
                 },
             })
         }
-        root_field::QueryRootField::ApolloFederation(
-            root_field::ApolloFederationRootFields::EntitiesSelect(irs),
-        ) => {
+        ir::QueryRootField::ApolloFederation(ir::ApolloFederationRootFields::EntitiesSelect(
+            irs,
+        )) => {
             let mut ndc_query_executions = Vec::new();
             for ir in irs {
                 let execution_tree = generate_execution_tree(&ir.model_selection)?;
@@ -330,13 +335,11 @@ fn plan_query<'n, 's, 'ir>(
                 ndc_query_executions,
             ))
         }
-        root_field::QueryRootField::ApolloFederation(
-            root_field::ApolloFederationRootFields::ServiceField {
-                schema,
-                selection_set,
-                role,
-            },
-        ) => {
+        ir::QueryRootField::ApolloFederation(ir::ApolloFederationRootFields::ServiceField {
+            schema,
+            selection_set,
+            role,
+        }) => {
             let sdl = schema.generate_sdl(&GDSRoleNamespaceGetter {
                 scope: role.clone(),
             });
@@ -884,10 +887,13 @@ async fn resolve_ndc_query_execution(
         process_response_as,
     } = ndc_query;
 
-    let (query_request, data_connector) = execution_tree
+    let resolved_execution_plan = execution_tree
         .query_execution_plan
         .resolve(http_context)
         .await?;
+
+    let data_connector = resolved_execution_plan.data_connector;
+    let query_request = ndc_request::make_ndc_query_request(resolved_execution_plan)?;
 
     let response = ndc::execute_ndc_query(
         http_context,
@@ -932,7 +938,10 @@ async fn resolve_ndc_mutation_execution(
         join_locations: _,
     } = ndc_mutation_execution;
 
-    let mutation_request = execution_node.resolve(http_context).await?;
+    let resolved_execution_plan = execution_node.resolve(http_context).await?;
+
+    let mutation_request = ndc_request::make_ndc_mutation_request(resolved_execution_plan)?;
+
     let response = ndc::execute_ndc_mutation(
         http_context,
         &mutation_request,

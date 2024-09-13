@@ -165,14 +165,14 @@ fn handle_special_case_type_mapping<'a>(
     {
         if ndc_object_type
             .fields
-            .contains_key(&response_config.headers_field)
+            .contains_key(response_config.headers_field.as_str())
             && ndc_object_type
                 .fields
-                .contains_key(&response_config.result_field)
+                .contains_key(response_config.result_field.as_str())
         {
             let ndc_object_type = &ndc_object_type
                 .fields
-                .get(&response_config.result_field)
+                .get(response_config.result_field.as_str())
                 .unwrap()
                 .r#type;
             let ndc_object_type_name = unwrap_ndc_object_type_name(ndc_object_type);

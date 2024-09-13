@@ -13,6 +13,8 @@ path = "src/main.rs"
 bench = false
 
 [dependencies]
+axum-ext = { path = "../utils/axum-ext" }
+
 anyhow = { workspace = true }
 axum = { workspace = true, features = ["http2"] }
 env_logger = { workspace = true }

@@ -1,7 +1,6 @@
 {- ORMOLU_DISABLE -}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE UndecidableInstances #-}
 -- NOTE: This module previously used Template Haskell to generate its instances,
 -- but additional restrictions on Template Haskell splices introduced in GHC 9.0 impose an ordering
 -- on the generated instances that is difficult to satisfy
@@ -26,7 +25,6 @@ import Language.Haskell.TH.Syntax
 import Hasura.Base.ToErrorValue
 import Hasura.RQL.Types.Backend qualified as Backend
 import Hasura.RQL.Types.BackendType qualified as Backend
-import qualified Hasura.RQL.Types.Backend as IR
 
 deriving instance Generic (Aliased a)
 instance Hashable a => Hashable (Aliased a)
@@ -262,21 +260,11 @@ deriving newtype instance FromJSONKey ColumnName
 
 deriving instance Generic (CountType n)
 
-deriving instance (Backend.Backend 'Backend.MSSQL, Show n,
-  Show (IR.AggregationPredicates 'Backend.MSSQL n),
-  Show (IR.FunctionArgumentExp 'Backend.MSSQL n),
-  Show (IR.BooleanOperators 'Backend.MSSQL n)) => Show (CountType n)
-deriving instance (Backend.Backend 'Backend.MSSQL) => Functor CountType
-deriving instance (Backend.Backend 'Backend.MSSQL) => Foldable CountType
-deriving instance (Backend.Backend 'Backend.MSSQL) => Traversable CountType
 
 deriving instance Foldable Countable
 deriving instance Traversable Countable
 
-deriving instance (Backend.Backend 'Backend.MSSQL, Eq n,
-  Eq (IR.AggregationPredicates 'Backend.MSSQL n),
-  Eq (IR.FunctionArgumentExp 'Backend.MSSQL n),
-  Eq (IR.BooleanOperators 'Backend.MSSQL n)) => Eq (CountType n)
+deriving instance (Backend.Backend 'Backend.MSSQL, Eq n) => Eq (CountType n)
 
 deriving instance Generic (Countable n)
 
@@ -318,8 +306,6 @@ deriving instance Foldable BooleanOperators
 deriving instance Traversable BooleanOperators
 
 deriving instance Show a => Show (BooleanOperators a)
-
-deriving instance Eq a => Eq (BooleanOperators a)
 
 instance NFData a => NFData (BooleanOperators a)
 

@@ -633,6 +633,18 @@ fn collect_accessible_types<S: schema::SchemaContext, NSGet: schema::NamespacedG
         accessible_types.insert(mutation_type.clone());
         collect_accessible_types_(namespaced_getter, schema, mutation_type, accessible_types);
     }
+
+    // insert subscription root always to accessible types if it exists in schema
+    // and collect related accessible types
+    if let Some(subscription_type) = &schema.subscription_type {
+        accessible_types.insert(subscription_type.clone());
+        collect_accessible_types_(
+            namespaced_getter,
+            schema,
+            subscription_type,
+            accessible_types,
+        );
+    }
 }
 
 // Recursively collect types available/accessible to a given `Namespace`.

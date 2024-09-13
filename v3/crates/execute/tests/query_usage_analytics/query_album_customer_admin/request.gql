@@ -18,6 +18,7 @@ query MyQuery {
     Employee {
       BirthDate
       City
+      Fax
       Email
       Employees(limit: 10) {
         BirthDate

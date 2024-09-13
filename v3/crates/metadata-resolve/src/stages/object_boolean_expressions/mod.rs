@@ -1,10 +1,12 @@
+mod helpers;
 pub mod types;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
     object_types, type_permissions,
 };
+pub use helpers::resolve_ndc_type;
+use open_dds::identifier::SubgraphName;
 
-use crate::helpers::model::resolve_ndc_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::types::subgraph::Qualified;
 
@@ -13,8 +15,8 @@ use lang_graphql::ast::common as ast;
 use open_dds::{data_connector::DataConnectorName, types::OperatorName};
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
-    ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
-    ObjectBooleanExpressionsOutput,
+    ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionGraphqlConfig,
+    ObjectBooleanExpressionType, ObjectBooleanExpressionWarning, ObjectBooleanExpressionsOutput,
 };
 
 /// resolve object boolean expression types
@@ -26,11 +28,11 @@ pub fn resolve(
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
-    existing_graphql_types: &BTreeSet<ast::TypeName>,
+    mut graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionsOutput, boolean_expressions::BooleanExpressionError> {
     let mut object_boolean_expression_types = BTreeMap::new();
-    let mut graphql_types = existing_graphql_types.clone();
+    let mut warnings = vec![];
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -46,6 +48,15 @@ pub fn resolve(
             &mut graphql_types,
             graphql_config,
         )?;
+
+        // tell user that this metadata type is old news and we'd rather they used
+        // `BooleanExpressionType`
+        warnings.push(
+            ObjectBooleanExpressionWarning::PleaseUpgradeToBooleanExpression {
+                name: resolved_boolean_expression.name.clone(),
+            },
+        );
+
         if let Some(existing) = object_boolean_expression_types.insert(
             resolved_boolean_expression.name.clone(),
             resolved_boolean_expression,
@@ -60,13 +71,14 @@ pub fn resolve(
     Ok(ObjectBooleanExpressionsOutput {
         object_boolean_expression_types,
         graphql_types,
+        warnings,
     })
 }
 
 /// Resolves a given object boolean expression type
 pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression: &open_dds::types::ObjectBooleanExpressionTypeV1,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
@@ -77,12 +89,11 @@ pub(crate) fn resolve_object_boolean_expression_type(
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionType, boolean_expressions::BooleanExpressionError> {
     // name of the boolean expression
-    let qualified_name =
-        Qualified::new(subgraph.to_string(), object_boolean_expression.name.clone());
+    let qualified_name = Qualified::new(subgraph.clone(), object_boolean_expression.name.clone());
 
     // name of the object type backing the boolean expression
     let qualified_object_type_name = Qualified::new(
-        subgraph.to_string(),
+        subgraph.clone(),
         object_boolean_expression.object_type.clone(),
     );
     let object_type_representation =
@@ -93,7 +104,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         })?;
 
     let qualified_data_connector_name = Qualified::new(
-        subgraph.to_string(),
+        subgraph.clone(),
         object_boolean_expression.data_connector_name.clone(),
     );
 
@@ -177,10 +188,10 @@ pub(crate) fn resolve_object_boolean_expression_type(
     }
 
     let object_boolean_expression_type =
-        Qualified::new(subgraph.to_string(), object_boolean_expression.name.clone());
+        Qualified::new(subgraph.clone(), object_boolean_expression.name.clone());
 
     let data_connector_name = Qualified::new(
-        subgraph.to_string(),
+        subgraph.clone(),
         object_boolean_expression.data_connector_name.clone(),
     );
 
@@ -250,15 +261,12 @@ pub(crate) fn resolve_object_boolean_expression_type(
 pub fn resolve_boolean_expression_graphql_config(
     data_connector_name: &Qualified<open_dds::data_connector::DataConnectorName>,
     where_type_name: ast::TypeName,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
     fields: &IndexMap<open_dds::types::FieldName, object_types::FieldDefinition>,
-) -> Result<
-    boolean_expressions::BooleanExpressionGraphqlConfig,
-    boolean_expressions::BooleanExpressionError,
-> {
+) -> Result<ObjectBooleanExpressionGraphqlConfig, boolean_expressions::BooleanExpressionError> {
     let mut scalar_fields = BTreeMap::new();
 
     let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
@@ -320,12 +328,10 @@ pub fn resolve_boolean_expression_graphql_config(
         }
     }
 
-    Ok(boolean_expressions::BooleanExpressionGraphqlConfig {
+    Ok(ObjectBooleanExpressionGraphqlConfig {
         type_name: where_type_name,
         scalar_fields,
-        object_fields: BTreeMap::new(),
-        relationship_fields: BTreeMap::new(),
-        graphql_config: (boolean_expressions::BooleanExpressionGraphqlFieldConfig {
+        field_config: (boolean_expressions::BooleanExpressionGraphqlFieldConfig {
             where_field_name: filter_graphql_config.where_field_name.clone(),
             and_operator_name: filter_graphql_config.operator_names.and.clone(),
             or_operator_name: filter_graphql_config.operator_names.or.clone(),

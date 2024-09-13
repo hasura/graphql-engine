@@ -28,6 +28,7 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended (ToTxt (toTxt))
 import Data.Text.NonEmpty qualified as TNE
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp, withRedactionExp)
@@ -88,7 +89,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.RQL.Types.Session (UserInfo)
 
 processSelectParams ::
   forall pgKind m.

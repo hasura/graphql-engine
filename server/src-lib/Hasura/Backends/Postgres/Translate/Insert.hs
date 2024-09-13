@@ -9,6 +9,7 @@ module Hasura.Backends.Postgres.Translate.Insert
   )
 where
 
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp
@@ -18,7 +19,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Insert
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
-import Hasura.RQL.Types.Session (UserInfo)
 
 mkInsertCTE ::
   (Backend ('Postgres pgKind), MonadIO m, MonadError QErr m) =>

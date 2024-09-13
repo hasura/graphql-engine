@@ -1,3 +1,4 @@
+use indexmap::IndexMap;
 use open_dds::{
     data_connector::DataConnectorColumnName,
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
@@ -102,7 +103,7 @@ pub(crate) fn get_select_permissions_namespace_annotations(
 pub(crate) fn get_select_one_namespace_annotations(
     model: &metadata_resolve::ModelWithPermissions,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    select_unique: &metadata_resolve::SelectUniqueGraphQlDefinition,
+    unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
@@ -113,7 +114,7 @@ pub(crate) fn get_select_one_namespace_annotations(
     let permissions = select_permissions
         .into_iter()
         .filter(|(role, _)| {
-            select_unique.unique_identifier.iter().all(|field| {
+            unique_identifier.iter().all(|field| {
                 get_allowed_roles_for_field(object_type_representation, field.0)
                     .any(|allowed_role| role == allowed_role)
             })
@@ -371,7 +372,7 @@ fn build_preset_map_from_input_object_type_permission(
 
             let value = (
                 type_reference.clone(),
-                match preset {
+                match &preset.value {
                     open_dds::permissions::ValueExpression::Literal(literal) => {
                         ValueExpressionOrPredicate::Literal(literal.clone())
                     }

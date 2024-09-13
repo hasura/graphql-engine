@@ -1,18 +1,18 @@
 use std::ops::Deref;
 
 use indexmap::IndexMap;
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     data_connector::{DataConnectorName, DataConnectorScalarType},
     identifier::Identifier,
-    impl_JsonSchema_with_OpenDd_for, str_newtype,
+    str_newtype,
     types::{CustomTypeName, Deprecated, FieldName, GraphQlTypeName, TypeName, TypeReference},
 };
 
 str_newtype!(AggregateExpressionName over Identifier | doc "The name of an aggregate expression.");
 
+/// Definition of an aggregate expression on an OpenDD type.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
@@ -80,40 +80,33 @@ pub struct AggregateExpressionV1 {
     pub description: Option<String>,
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
-)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 /// Definition of an aggregate expression's operand
-#[schemars(title = "AggregateOperand")]
+#[opendd(externally_tagged, json_schema(title = "AggregateOperand"))]
 pub enum AggregateOperand {
     /// If the operand is an object type
-    #[schemars(title = "Object")]
+    #[opendd(json_schema(title = "Object"))]
     Object(ObjectAggregateOperand),
     /// If the operand is a scalar type
-    #[schemars(title = "Scalar")]
+    #[opendd(json_schema(title = "Scalar"))]
     Scalar(ScalarAggregateOperand),
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema, opendds_derive::OpenDd,
-)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[schemars(title = "ObjectAggregateOperand")]
+#[opendd(json_schema(title = "ObjectAggregateOperand"))]
 /// Definition of an aggregate over an object-typed operand
 pub struct ObjectAggregateOperand {
     /// The name of the object type the aggregate expression is aggregating
     pub aggregated_type: CustomTypeName,
     /// The fields on the object that are aggregatable
-    #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub aggregatable_fields: Vec<AggregatableFieldDefinition>,
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema, opendds_derive::OpenDd,
-)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[schemars(title = "AggregatableFieldDefinition")]
+#[opendd(json_schema(title = "AggregatableFieldDefinition"))]
 /// Definition of an aggregatable field on an object type
 pub struct AggregatableFieldDefinition {
     /// The name of the field on the operand aggregated type that is aggregatable
@@ -125,11 +118,9 @@ pub struct AggregatableFieldDefinition {
     pub aggregate_expression: AggregateExpressionName,
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
-)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[schemars(title = "ScalarAggregateOperand")]
+#[opendd(json_schema(title = "ScalarAggregateOperand"))]
 /// Definition of an aggregate over a scalar-typed operand
 pub struct ScalarAggregateOperand {
     /// The name of the scalar type the aggregate expression is aggregating
@@ -137,15 +128,12 @@ pub struct ScalarAggregateOperand {
     /// The aggregation functions that operate over the scalar type
     pub aggregation_functions: Vec<AggregationFunctionDefinition>,
     /// Mapping of aggregation functions to corresponding aggregation functions in various data connectors
-    #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub data_connector_aggregation_function_mapping: Vec<DataConnectorAggregationFunctionMapping>,
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema, opendds_derive::OpenDd,
-)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[schemars(title = "AggregationFunctionDefinition")]
+#[opendd(json_schema(title = "AggregationFunctionDefinition"))]
 /// Definition of an aggregation function
 pub struct AggregationFunctionDefinition {
     /// The name of the aggregation function
@@ -157,47 +145,13 @@ pub struct AggregationFunctionDefinition {
     pub return_type: TypeReference,
 }
 
-#[repr(transparent)]
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    ref_cast::RefCast,
-    derive_more::Display,
-    opendds_derive::OpenDd,
-)]
-/// The name of an aggregation function.
-pub struct AggregationFunctionName(pub Identifier);
+str_newtype!(AggregationFunctionName over Identifier | doc "The name of an aggregation function.");
 
-impl_JsonSchema_with_OpenDd_for!(AggregationFunctionName);
+str_newtype!(DataConnectorAggregationFunctionName | doc "The name of an aggregation function in a data connector");
 
-#[repr(transparent)]
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    ref_cast::RefCast,
-    derive_more::Display,
-    opendds_derive::OpenDd,
-)]
-/// The name of an aggregation function in a data connector
-pub struct DataConnectorAggregationFunctionName(pub String);
-
-impl_JsonSchema_with_OpenDd_for!(DataConnectorAggregationFunctionName);
-
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
-)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[schemars(title = "DataConnectorAggregationFunctionMapping")]
+#[opendd(json_schema(title = "DataConnectorAggregationFunctionMapping"))]
 /// Definition of how to map an aggregate expression's aggregation functions to
 /// data connector aggregation functions.
 pub struct DataConnectorAggregationFunctionMapping {
@@ -206,14 +160,11 @@ pub struct DataConnectorAggregationFunctionMapping {
     /// The matching scalar type in the data connector for the operand scalar type
     pub data_connector_scalar_type: DataConnectorScalarType,
     /// Mapping from Open DD aggregation function to data connector aggregation function
-    #[opendd(default)]
     pub function_mapping: AggregationFunctionMappings,
 }
 
-#[derive(
-    Serialize, Deserialize, Default, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
-)]
-#[schemars(title = "AggregationFunctionMappings")]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[opendd(json_schema(title = "AggregationFunctionMappings"))]
 /// Mapping of aggregation functions to their matching aggregation functions in the data connector.
 // We wrap maps into newtype structs so that we have a type and title for them in the JSONSchema which
 // makes it easier to auto-generate documentation.
@@ -229,11 +180,9 @@ impl Deref for AggregationFunctionMappings {
     }
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema, opendds_derive::OpenDd,
-)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[schemars(title = "AggregateFunctionMapping")]
+#[opendd(json_schema(title = "AggregateFunctionMapping"))]
 /// Definition of how to map the aggregation function to a function in the data connector
 pub struct AggregateFunctionMapping {
     /// The name of the aggregation function in the data connector

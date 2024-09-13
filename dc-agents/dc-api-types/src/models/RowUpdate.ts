@@ -5,5 +5,5 @@
 import type { CustomUpdateColumnOperatorRowUpdate } from './CustomUpdateColumnOperatorRowUpdate';
 import type { SetColumnRowUpdate } from './SetColumnRowUpdate';
 
-export type RowUpdate = (CustomUpdateColumnOperatorRowUpdate | SetColumnRowUpdate);
+export type RowUpdate = (SetColumnRowUpdate | CustomUpdateColumnOperatorRowUpdate);
 

@@ -13,6 +13,7 @@ harness = false
 
 [dependencies]
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
+ir = { path = "../ir" }
 json-ext = { path = "../utils/json-ext" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }
@@ -26,14 +27,12 @@ async-recursion = { workspace = true }
 axum = { workspace = true }
 base64 = { workspace = true }
 bytes = { workspace = true }
-derive_more = { workspace = true }
 futures-util = { workspace = true }
 indexmap = { workspace = true, features = ["serde"] }
 ndc-models = { workspace = true }
 ndc-models-v01 = { workspace = true }
 nonempty = { workspace = true }
 reqwest = { workspace = true, features = ["json", "multipart"] }
-schemars = { workspace = true, features = ["smol_str"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

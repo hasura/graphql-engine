@@ -129,3 +129,12 @@ instance HasSourceConfiguration 'BigQuery where
   sourceConfigConnectonTemplate = const Nothing -- not supported
   sourceSupportsColumnRedaction = const True
   sourceConfigBackendSourceKind _sourceConfig = BigQueryKind
+
+-- NOTE: these moved here from Backend.BigQuery.Types to avoid Backend
+-- constraint requiring UndecidableInstances
+
+deriving stock instance Foldable BigQuery.CountType
+
+deriving stock instance Functor BigQuery.CountType
+
+deriving stock instance Traversable BigQuery.CountType

@@ -1,4 +1,6 @@
-use super::error::DataConnectorError;
+use super::error::{
+    DataConnectorError, DataConnectorIssue, NamedDataConnectorError, NamedDataConnectorIssue,
+};
 use crate::configuration::UnstableFeatures;
 use crate::helpers::http::{
     HeaderError, SerializableHeaderMap, SerializableHeaderName, SerializableUrl,
@@ -10,7 +12,8 @@ use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::OperationType;
 use ndc_models;
-use open_dds::arguments::ArgumentName;
+use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::types::DataConnectorArgumentName;
 use open_dds::{
     commands::{FunctionName, ProcedureName},
     data_connector::{
@@ -19,11 +22,26 @@ use open_dds::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use strum_macros::EnumIter;
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Serialize, Deserialize)]
+pub struct DataConnectorsOutput<'a> {
+    pub data_connectors: DataConnectors<'a>,
+    pub issues: Vec<NamedDataConnectorIssue>,
+}
+
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Serialize, Deserialize, EnumIter)]
 pub enum NdcVersion {
     V01,
     V02,
+}
+
+impl std::fmt::Display for NdcVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            NdcVersion::V01 => write!(f, "v0.1.x"),
+            NdcVersion::V02 => write!(f, "v0.2.x"),
+        }
+    }
 }
 
 /// Map of resolved data connectors information that are used in the later
@@ -45,11 +63,16 @@ pub struct DataConnectorContext<'a> {
 impl<'a> DataConnectorContext<'a> {
     pub fn new(
         data_connector: &'a data_connector::DataConnectorLinkV1,
-        data_connector_name: &Qualified<DataConnectorName>,
         unstable_features: &UnstableFeatures,
-    ) -> Result<Self, DataConnectorError> {
-        let (resolved_schema, capabilities, supported_ndc_version) = match &data_connector.schema {
+    ) -> Result<(Self, Vec<DataConnectorIssue>), DataConnectorError> {
+        let (resolved_schema, capabilities, supported_ndc_version, issues) = match &data_connector
+            .schema
+        {
             VersionedSchemaAndCapabilities::V01(schema_and_capabilities) => {
+                let issues = validate_ndc_version(
+                    NdcVersion::V01,
+                    &schema_and_capabilities.capabilities.version,
+                )?;
                 let schema =
                     DataConnectorSchema::new(ndc_migration::v02::migrate_schema_response_from_v01(
                         schema_and_capabilities.schema.clone(),
@@ -57,29 +80,28 @@ impl<'a> DataConnectorContext<'a> {
                 let capabilities = ndc_migration::v02::migrate_capabilities_from_v01(
                     schema_and_capabilities.capabilities.capabilities.clone(),
                 );
-                (schema, capabilities, NdcVersion::V01)
+                (schema, capabilities, NdcVersion::V01, issues)
             }
             VersionedSchemaAndCapabilities::V02(schema_and_capabilities) => {
+                let issues = validate_ndc_version(
+                    NdcVersion::V02,
+                    &schema_and_capabilities.capabilities.version,
+                )?;
                 let schema = DataConnectorSchema::new(schema_and_capabilities.schema.clone());
                 let capabilities = schema_and_capabilities.capabilities.capabilities.clone();
-                (schema, capabilities, NdcVersion::V02)
+                (schema, capabilities, NdcVersion::V02, issues)
             }
         };
 
         if !unstable_features.enable_ndc_v02_support && supported_ndc_version == NdcVersion::V02 {
-            return Err(DataConnectorError::NdcV02DataConnectorNotSupported {
-                data_connector: data_connector_name.clone(),
-            });
+            return Err(DataConnectorError::NdcV02DataConnectorNotSupported);
         }
 
         let argument_presets = data_connector
             .argument_presets
             .iter()
             .map(|argument_preset| -> Result<_, DataConnectorError> {
-                let header_presets = HttpHeadersPreset::new(
-                    &argument_preset.value.http_headers,
-                    data_connector_name,
-                )?;
+                let header_presets = HttpHeadersPreset::new(&argument_preset.value.http_headers)?;
                 Ok(ArgumentPreset {
                     name: argument_preset.argument.clone(),
                     value: ArgumentPresetValue {
@@ -94,12 +116,12 @@ impl<'a> DataConnectorContext<'a> {
             .map_err(DataConnectorError::NdcValidationError)?;
 
         let response_headers = if let Some(headers) = &data_connector.response_headers {
-            Some(CommandsResponseConfig::new(headers, data_connector_name)?)
+            Some(CommandsResponseConfig::new(headers)?)
         } else {
             None
         };
 
-        Ok(DataConnectorContext {
+        let context = DataConnectorContext {
             url: &data_connector.url,
             headers: data_connector
                 .headers
@@ -111,6 +133,51 @@ impl<'a> DataConnectorContext<'a> {
             supported_ndc_version,
             argument_presets,
             response_headers,
+        };
+
+        Ok((context, issues))
+    }
+}
+
+fn validate_ndc_version(
+    ndc_version: NdcVersion,
+    capabilities_version: &str,
+) -> Result<Vec<DataConnectorIssue>, DataConnectorError> {
+    let capabilities_semver_result = semver::Version::parse(capabilities_version);
+
+    let capabilities_semver = match ndc_version {
+        NdcVersion::V01 => match capabilities_semver_result {
+            Ok(semver) => semver,
+            // Old builds with V01 capabilities contain invalid capabilities versions such as
+            // "", "*", "^0.1.1". In order to be backwards compatible we'll allow these and assume
+            // they are NDC v0.1.x connectors (they were back then, there were no v0.2.x connectors)
+            // and we'll just log an issue
+            Err(error) => {
+                return Ok(vec![DataConnectorIssue::InvalidNdcV01Version {
+                    version: capabilities_version.to_owned(),
+                    error,
+                }]);
+            }
+        },
+        NdcVersion::V02 => {
+            capabilities_semver_result.map_err(|error| DataConnectorError::InvalidNdcVersion {
+                version: capabilities_version.to_owned(),
+                error,
+            })?
+        }
+    };
+
+    let requirement = match ndc_version {
+        NdcVersion::V01 => semver::VersionReq::parse("^0.1.0").unwrap(),
+        NdcVersion::V02 => semver::VersionReq::parse("^0.2.0").unwrap(),
+    };
+
+    if requirement.matches(&capabilities_semver) {
+        Ok(vec![])
+    } else {
+        Err(DataConnectorError::IncompatibleNdcVersion {
+            version: capabilities_version.to_owned(),
+            requirement,
         })
     }
 }
@@ -175,10 +242,6 @@ pub struct DataConnectorLink {
     pub url: ResolvedDataConnectorUrl,
     /// These are headers used in the protocol level
     pub headers: SerializableHeaderMap,
-    /// Presets for arguments that applies to all functions/procedures of the
-    /// data connector
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub argument_presets: Vec<ArgumentPreset>,
     /// HTTP response headers configuration that is forwarded from a NDC
     /// function/procedure to the client.
     #[serde(skip_serializing_if = "Option::is_none", default)]
@@ -199,47 +262,36 @@ impl DataConnectorLink {
     pub(crate) fn new(
         name: Qualified<DataConnectorName>,
         context: &DataConnectorContext<'_>,
-    ) -> Result<Self, DataConnectorError> {
+    ) -> Result<Self, NamedDataConnectorError> {
         let url = match context.url {
-            DataConnectorUrl::SingleUrl(url) => {
-                ResolvedDataConnectorUrl::SingleUrl(SerializableUrl::new(&url.value).map_err(
-                    |e| DataConnectorError::InvalidDataConnectorUrl {
-                        data_connector_name: name.clone(),
-                        error: e,
-                    },
-                )?)
-            }
+            DataConnectorUrl::SingleUrl(url) => ResolvedDataConnectorUrl::SingleUrl(
+                SerializableUrl::new(&url.value).map_err(|error| NamedDataConnectorError {
+                    data_connector_name: name.clone(),
+                    error: DataConnectorError::InvalidDataConnectorUrl { error },
+                })?,
+            ),
             DataConnectorUrl::ReadWriteUrls(ReadWriteUrls { read, write }) => {
                 ResolvedDataConnectorUrl::ReadWriteUrls(ResolvedReadWriteUrls {
-                    read: SerializableUrl::new(&read.value).map_err(|e| {
-                        DataConnectorError::InvalidDataConnectorUrl {
+                    read: SerializableUrl::new(&read.value).map_err(|error| {
+                        NamedDataConnectorError {
                             data_connector_name: name.clone(),
-                            error: e,
+                            error: DataConnectorError::InvalidDataConnectorUrl { error },
                         }
                     })?,
-                    write: SerializableUrl::new(&write.value).map_err(|e| {
-                        DataConnectorError::InvalidDataConnectorUrl {
+                    write: SerializableUrl::new(&write.value).map_err(|error| {
+                        NamedDataConnectorError {
                             data_connector_name: name.clone(),
-                            error: e,
+                            error: DataConnectorError::InvalidDataConnectorUrl { error },
                         }
                     })?,
                 })
             }
         };
-        let headers = SerializableHeaderMap::new(&context.headers).map_err(|e| match e {
-            HeaderError::InvalidHeaderName { header_name } => {
-                DataConnectorError::InvalidHeaderName {
-                    data_connector: name.clone(),
-                    header_name,
-                }
-            }
-            HeaderError::InvalidHeaderValue { header_name } => {
-                DataConnectorError::InvalidHeaderValue {
-                    data_connector: name.clone(),
-                    header_name,
-                }
-            }
-        })?;
+        let headers =
+            SerializableHeaderMap::new(&context.headers).map_err(|e| NamedDataConnectorError {
+                data_connector_name: name.clone(),
+                error: to_error(e),
+            })?;
         let capabilities = DataConnectorCapabilities {
             supported_ndc_version: context.supported_ndc_version,
             supports_explaining_queries: context.capabilities.query.explain.is_some(),
@@ -262,7 +314,6 @@ impl DataConnectorLink {
             url,
             headers,
             capabilities,
-            argument_presets: context.argument_presets.clone(),
             response_config: context.response_headers.clone(),
         })
     }
@@ -298,7 +349,7 @@ impl ResolvedDataConnectorUrl {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ArgumentPreset {
-    pub name: ArgumentName,
+    pub name: DataConnectorArgumentName,
     pub value: ArgumentPresetValue,
 }
 
@@ -319,23 +370,18 @@ pub struct HttpHeadersPreset {
 impl HttpHeadersPreset {
     fn new(
         headers_preset: &open_dds::data_connector::HttpHeadersPreset,
-        data_connector_name: &Qualified<DataConnectorName>,
     ) -> Result<Self, DataConnectorError> {
         let forward = headers_preset
             .forward
             .iter()
-            .map(|header| {
-                SerializableHeaderName::new(header.to_string())
-                    .map_err(|err| to_error(err, data_connector_name))
-            })
+            .map(|header| SerializableHeaderName::new(header.to_string()).map_err(to_error))
             .collect::<Result<Vec<_>, DataConnectorError>>()?;
 
         let additional = headers_preset
             .additional
             .iter()
             .map(|(header_name, header_val)| {
-                let key = SerializableHeaderName::new(header_name.to_string())
-                    .map_err(|err| to_error(err, data_connector_name))?;
+                let key = SerializableHeaderName::new(header_name.to_string()).map_err(to_error)?;
                 let val = resolve_value_expression(header_val.clone());
                 Ok((key, val))
             })
@@ -361,19 +407,14 @@ fn resolve_value_expression(
     }
 }
 
-fn to_error(
-    err: HeaderError,
-    data_connector_name: &Qualified<DataConnectorName>,
-) -> DataConnectorError {
+fn to_error(err: HeaderError) -> DataConnectorError {
     match err {
-        HeaderError::InvalidHeaderName { header_name } => DataConnectorError::InvalidHeaderName {
-            data_connector: data_connector_name.clone(),
-            header_name,
-        },
-        HeaderError::InvalidHeaderValue { header_name } => DataConnectorError::InvalidHeaderValue {
-            data_connector: data_connector_name.clone(),
-            header_name,
-        },
+        HeaderError::InvalidHeaderName { header_name } => {
+            DataConnectorError::InvalidHeaderName { header_name }
+        }
+        HeaderError::InvalidHeaderValue { header_name } => {
+            DataConnectorError::InvalidHeaderValue { header_name }
+        }
     }
 }
 
@@ -381,27 +422,23 @@ fn to_error(
 /// Configure how NDC functions/procedures should be processed to extract
 /// headers and result
 pub struct CommandsResponseConfig {
-    pub headers_field: ndc_models::FieldName,
-    pub result_field: ndc_models::FieldName,
+    pub headers_field: DataConnectorColumnName,
+    pub result_field: DataConnectorColumnName,
     pub forward_headers: Vec<SerializableHeaderName>,
 }
 
 impl CommandsResponseConfig {
     fn new(
         response_headers: &open_dds::data_connector::ResponseHeaders,
-        data_connector_name: &Qualified<DataConnectorName>,
     ) -> Result<Self, DataConnectorError> {
         let forward_headers = response_headers
             .forward_headers
             .iter()
-            .map(|header| {
-                SerializableHeaderName::new(header.to_string())
-                    .map_err(|err| to_error(err, data_connector_name))
-            })
+            .map(|header| SerializableHeaderName::new(header.to_string()).map_err(to_error))
             .collect::<Result<Vec<_>, DataConnectorError>>()?;
         Ok(Self {
-            headers_field: ndc_models::FieldName::from(response_headers.headers_field.as_str()),
-            result_field: ndc_models::FieldName::from(response_headers.result_field.as_str()),
+            headers_field: response_headers.headers_field.clone(),
+            result_field: response_headers.result_field.clone(),
             forward_headers,
         })
     }
@@ -421,11 +458,15 @@ pub struct DataConnectorCapabilities {
 mod tests {
     use ndc_models;
     use open_dds::data_connector::DataConnectorLinkV1;
+    use strum::IntoEnumIterator;
 
     use crate::{
-        configuration::UnstableFeatures, data_connectors::types::NdcVersion,
-        stages::data_connectors::types::DataConnectorContext, Qualified,
+        configuration::UnstableFeatures,
+        data_connectors::{error::DataConnectorIssue, types::NdcVersion},
+        stages::data_connectors::types::DataConnectorContext,
     };
+
+    use super::validate_ndc_version;
 
     #[test]
     fn test_url_serialization_deserialization() {
@@ -472,22 +513,16 @@ mod tests {
             .unwrap();
 
         // With explicit capabilities specified, we should use them
-        let dc_name = Qualified::new(
-            "foo".to_string(),
-            data_connector_with_capabilities.name.clone(),
-        );
         let unstable_features = UnstableFeatures {
             enable_ndc_v02_support: true,
             ..Default::default()
         };
-        let context = DataConnectorContext::new(
-            &data_connector_with_capabilities,
-            &dc_name,
-            &unstable_features,
-        )
-        .unwrap();
+        let (context, issues) =
+            DataConnectorContext::new(&data_connector_with_capabilities, &unstable_features)
+                .unwrap();
         assert_eq!(context.capabilities, explicit_capabilities);
         assert_eq!(context.supported_ndc_version, NdcVersion::V01);
+        assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
     }
 
     #[test]
@@ -519,21 +554,75 @@ mod tests {
             .unwrap();
 
         // With explicit capabilities specified, we should use them
-        let dc_name = Qualified::new(
-            "foo".to_string(),
-            data_connector_with_capabilities.name.clone(),
-        );
         let unstable_features = UnstableFeatures {
             enable_ndc_v02_support: true,
             ..Default::default()
         };
-        let context = DataConnectorContext::new(
-            &data_connector_with_capabilities,
-            &dc_name,
-            &unstable_features,
-        )
-        .unwrap();
+        let (context, issues) =
+            DataConnectorContext::new(&data_connector_with_capabilities, &unstable_features)
+                .unwrap();
         assert_eq!(context.capabilities, explicit_capabilities);
         assert_eq!(context.supported_ndc_version, NdcVersion::V02);
+        assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
+    }
+
+    enum AssertNdcVersionShould {
+        Validate,
+        HaveIssue,
+        FailToValidate,
+    }
+
+    #[test]
+    fn test_validate_ndc_version() {
+        for ndc_version in NdcVersion::iter() {
+            // This might seem like a convoluted way of writing the test cases,
+            // but the match ensures that new versions that get added produce warnings
+            // here that tell the developer to add more test cases here
+            let test_cases = match ndc_version {
+                NdcVersion::V01 => vec![
+                    ("0.1.0", AssertNdcVersionShould::Validate),
+                    ("0.1.1", AssertNdcVersionShould::Validate),
+                    ("0.2.0", AssertNdcVersionShould::FailToValidate),
+                    ("0.2.1", AssertNdcVersionShould::FailToValidate),
+                    ("1.0.0", AssertNdcVersionShould::FailToValidate),
+                    ("", AssertNdcVersionShould::HaveIssue),
+                    ("*", AssertNdcVersionShould::HaveIssue),
+                    ("^0.1.1", AssertNdcVersionShould::HaveIssue),
+                ],
+                NdcVersion::V02 => vec![
+                    ("0.1.0", AssertNdcVersionShould::FailToValidate),
+                    ("0.1.1", AssertNdcVersionShould::FailToValidate),
+                    ("0.2.0", AssertNdcVersionShould::Validate),
+                    ("0.2.1", AssertNdcVersionShould::Validate),
+                    ("1.0.0", AssertNdcVersionShould::FailToValidate),
+                    ("", AssertNdcVersionShould::FailToValidate),
+                    ("*", AssertNdcVersionShould::FailToValidate),
+                    ("^0.1.1", AssertNdcVersionShould::FailToValidate),
+                ],
+            };
+
+            for (version, assertion) in test_cases {
+                let result = validate_ndc_version(ndc_version, version);
+                match assertion {
+                    AssertNdcVersionShould::Validate => {
+                        match result {
+                            Ok(issues) => {
+                                assert!(issues.is_empty(), "When testing ndc version {ndc_version:?}, the version '{version}' validated but had issues: {issues:#?}");
+                            },
+                            Err(error) => panic!("When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"),
+                        }
+                    },
+                    AssertNdcVersionShould::HaveIssue => {
+                        match result {
+                            Ok(issues) => {
+                                assert!(issues.iter().any(|i| matches!(i, DataConnectorIssue::InvalidNdcV01Version { .. })), "When testing ndc version {ndc_version:?}, the version '{version}' validated but did not have the InvalidNdcV1Version issue. Issues: {issues:#?}");
+                            },
+                            Err(error) => panic!("When testing ndc version {ndc_version:?}, the version '{version}' failed to validate: {error}"),
+                        }
+                    },
+                    AssertNdcVersionShould::FailToValidate => assert!(result.is_err(), "When testing ndc version {ndc_version:?}, the version '{version}' validated when it shouldn't have: {result:#?}"),
+                }
+            }
+        }
     }
 }

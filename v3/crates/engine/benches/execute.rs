@@ -19,6 +19,10 @@ use std::path::Path;
 
 use lang_graphql as gql;
 
+// match allocator used by engine binary
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 pub fn merge_with_common_metadata(
     common_metadata_path: &Path,
     metadata_path_string: &Path,
@@ -71,8 +75,9 @@ pub fn bench_execute(
     let mut group = c.benchmark_group(benchmark_group);
 
     // these numbers are fairly low, optimising for runtime of benchmark suite
-    group.warm_up_time(Duration::from_millis(500));
-    group.sample_size(20);
+    group.warm_up_time(Duration::from_millis(100));
+    group.sample_size(1000);
+    group.measurement_time(Duration::from_secs(5));
     group.sampling_mode(SamplingMode::Flat);
 
     // Parse request

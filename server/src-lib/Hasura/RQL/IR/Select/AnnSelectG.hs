@@ -1,5 +1,4 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 -- | More leaves from `RQL.IR.Select`
 module Hasura.RQL.IR.Select.AnnSelectG
@@ -36,19 +35,15 @@ data AnnSelectG (b :: BackendType) (f :: Type -> Type) (v :: Type) = AnnSelectG
 
 deriving stock instance
   ( Backend b,
-    Eq (Fields (f v)),
-    Eq (SelectArgsG b v),
-    Eq (SelectFromG b v),
-    Eq (TablePermG b v)
+    Eq (f v),
+    Eq v
   ) =>
   Eq (AnnSelectG b f v)
 
 deriving stock instance
   ( Backend b,
-    Show (Fields (f v)),
-    Show (SelectArgsG b v),
-    Show (SelectFromG b v),
-    Show (TablePermG b v)
+    Show (f v),
+    Show v
   ) =>
   Show (AnnSelectG b f v)
 
@@ -75,18 +70,14 @@ data
 
 deriving instance
   ( Backend b,
-    Eq (SelectFromG b v),
-    Eq (TablePermG b v),
-    Eq (SelectStreamArgsG b v),
+    Eq v,
     Eq (f v)
   ) =>
   Eq (AnnSelectStreamG b f v)
 
 deriving instance
   ( Backend b,
-    Show (SelectFromG b v),
-    Show (TablePermG b v),
-    Show (SelectStreamArgsG b v),
+    Show v,
     Show (f v)
   ) =>
   Show (AnnSelectStreamG b f v)

@@ -33,6 +33,7 @@ import Data.Scientific qualified as Scientific
 import Data.Text qualified as T
 import Data.Text.Extended ((<<>), (<>>))
 import Data.Text.Read qualified as TR
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Instances ()
@@ -46,7 +47,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types
-import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G

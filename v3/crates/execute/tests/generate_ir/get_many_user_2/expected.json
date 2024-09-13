@@ -29,7 +29,8 @@
                               "subgraph": "default",
                               "name": "article"
                             },
-                            "argument_types": {}
+                            "argument_types": {},
+                            "deprecated": null
                           }
                         }
                       },
@@ -75,7 +76,8 @@
                               "subgraph": "default",
                               "name": "article"
                             },
-                            "argument_types": {}
+                            "argument_types": {},
+                            "deprecated": null
                           }
                         }
                       },
@@ -108,7 +110,7 @@
                 "name": "db"
               },
               "url": {
-                "singleUrl": "http://postgres_connector:8080/"
+                "singleUrl": "http://localhost:8080/"
               },
               "headers": {
                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
@@ -135,13 +137,16 @@
                       "LocalField": {
                         "BinaryComparison": {
                           "column": {
-                            "type": "column",
-                            "name": "title"
+                            "Column": {
+                              "name": "title",
+                              "field_path": []
+                            }
                           },
                           "operator": "_like",
                           "value": {
-                            "type": "scalar",
-                            "value": "%Functional%"
+                            "Scalar": {
+                              "value": "%Functional%"
+                            }
                           }
                         }
                       }
@@ -152,10 +157,12 @@
                           "LocalField": {
                             "UnaryComparison": {
                               "column": {
-                                "type": "column",
-                                "name": "author_id"
+                                "Column": {
+                                  "name": "author_id",
+                                  "field_path": []
+                                }
                               },
-                              "operator": "is_null"
+                              "operator": "IsNull"
                             }
                           }
                         }

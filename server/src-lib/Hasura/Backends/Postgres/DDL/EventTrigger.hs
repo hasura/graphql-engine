@@ -48,6 +48,7 @@ import Data.Text.Lazy qualified as TL
 import Data.Time (UTCTime)
 import Data.Time.Clock qualified as Time
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -69,7 +70,6 @@ import Hasura.Server.Migrate.Internal
 import Hasura.Server.Migrate.LatestVersion
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
-import Hasura.Session
 import Hasura.Table.Cache (PrimaryKey)
 import Hasura.Tracing qualified as Tracing
 import Text.Builder qualified as TB
@@ -883,43 +883,45 @@ mkAllTriggersQ triggerName table triggerOnReplication allCols fullspec = do
 addCleanupSchedules ::
   (MonadIO m, MonadError QErr m) =>
   PGSourceConfig ->
-  [(TriggerName, AutoTriggerLogCleanupConfig)] ->
+  NonEmpty (TriggerName, AutoTriggerLogCleanupConfig) ->
   m ()
-addCleanupSchedules sourceConfig triggersWithcleanupConfig =
-  unless (null triggersWithcleanupConfig) $ do
-    let triggerNames = map fst triggersWithcleanupConfig
-    countAndLastSchedules <- liftEitherM $ liftIO $ runPgSourceReadTx sourceConfig $ selectLastCleanupScheduledTimestamp triggerNames
-    currTime <- liftIO $ Time.getCurrentTime
-    let triggerMap = HashMap.fromList $ map (\(triggerName, count, lastTime) -> (triggerName, (count, lastTime))) countAndLastSchedules
-        scheduledTriggersAndTimestamps =
-          mapMaybe
-            ( \(triggerName, cleanupConfig) ->
-                let lastScheduledTime = case HashMap.lookup triggerName triggerMap of
-                      Nothing -> Just currTime
-                      Just (count, lastTime) -> if count < 5 then (Just lastTime) else Nothing
-                 in fmap
-                      ( \lastScheduledTimestamp ->
-                          (triggerName, generateScheduleTimes lastScheduledTimestamp cleanupSchedulesToBeGenerated (_atlccSchedule cleanupConfig))
-                      )
-                      lastScheduledTime
-            )
-            triggersWithcleanupConfig
-    unless (null scheduledTriggersAndTimestamps)
-      $ liftEitherM
-      $ liftIO
-      $ runPgSourceWriteTx sourceConfig InternalRawQuery
-      $ insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
+addCleanupSchedules sourceConfig triggersWithCleanupConfig = do
+  let triggerNames = fmap fst triggersWithCleanupConfig
+  countAndLastSchedules <- liftEitherM $ liftIO $ runPgSourceReadTx sourceConfig $ selectLastCleanupScheduledTimestamp triggerNames
+  currTime <- liftIO $ Time.getCurrentTime
+  let triggerMap = HashMap.fromList $ map (\(triggerName, count, lastTime) -> (triggerName, (count, lastTime))) countAndLastSchedules
+      scheduledTriggersAndTimestampsMaybe =
+        mapMaybe
+          ( \(triggerName, cleanupConfig) ->
+              let lastScheduledTime = case HashMap.lookup triggerName triggerMap of
+                    Nothing -> Just currTime
+                    Just (count, lastTime) -> if count < 5 then (Just lastTime) else Nothing
+               in fmap
+                    ( \lastScheduledTimestamp ->
+                        (triggerName, generateScheduleTimes lastScheduledTimestamp cleanupSchedulesToBeGenerated (_atlccSchedule cleanupConfig))
+                    )
+                    lastScheduledTime
+          )
+          (toList triggersWithCleanupConfig)
+  fmap (fromMaybe ())
+    $ for
+      (nonEmpty scheduledTriggersAndTimestampsMaybe)
+      ( liftEitherM
+          . liftIO
+          . runPgSourceWriteTx sourceConfig InternalRawQuery
+          . insertEventTriggerCleanupLogsTx
+      )
 
 -- | Insert the cleanup logs for the fiven trigger name and schedules
-insertEventTriggerCleanupLogsTx :: [(TriggerName, [Time.UTCTime])] -> PG.TxET QErr IO ()
-insertEventTriggerCleanupLogsTx triggersWithschedules = do
+insertEventTriggerCleanupLogsTx :: NonEmpty (TriggerName, [Time.UTCTime]) -> PG.TxET QErr IO ()
+insertEventTriggerCleanupLogsTx triggersWithSchedules = do
   let insertCleanupEventsSql =
         TB.run
           $ toSQL
             S.SQLInsert
               { siTable = cleanupLogTable,
                 siCols = map unsafePGCol ["trigger_name", "scheduled_at", "status"],
-                siValues = S.ValuesExp $ concatMap genArr triggersWithschedules,
+                siValues = S.ValuesExp $ concatMap genArr triggersWithSchedules,
                 siConflict = Just $ S.DoNothing Nothing,
                 siRet = Nothing
               }
@@ -930,7 +932,7 @@ insertEventTriggerCleanupLogsTx triggersWithschedules = do
     toTupleExp = S.TupleExp . map S.SELit
 
 -- | Get the last scheduled timestamp for a given event trigger name
-selectLastCleanupScheduledTimestamp :: [TriggerName] -> PG.TxET QErr IO [(TriggerName, Int, Time.UTCTime)]
+selectLastCleanupScheduledTimestamp :: NonEmpty TriggerName -> PG.TxET QErr IO [(TriggerName, Int, Time.UTCTime)]
 selectLastCleanupScheduledTimestamp triggerNames =
   PG.withQE
     defaultTxErrorHandler
@@ -940,7 +942,7 @@ selectLastCleanupScheduledTimestamp triggerNames =
       WHERE status='scheduled' AND trigger_name = ANY($1::text[])
       GROUP BY trigger_name
     |]
-    (Identity $ PGTextArray $ map triggerNameToTxt triggerNames)
+    (Identity . PGTextArray . map triggerNameToTxt $ toList triggerNames)
     True
 
 deleteAllScheduledCleanupsTx :: TriggerName -> PG.TxE QErr ()

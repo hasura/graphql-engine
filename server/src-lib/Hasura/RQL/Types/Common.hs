@@ -229,7 +229,7 @@ instance HasCodec FieldName where
 type Fields a = [(FieldName, a)]
 
 class ToAesonPairs a where
-  toAesonPairs :: (KeyValue v) => a -> [v]
+  toAesonPairs :: (KeyValue e v) => a -> [v]
 
 data SourceName
   = SNDefault
@@ -303,6 +303,7 @@ data SQLGenCtx = SQLGenCtx
     dangerousBooleanCollapse :: Options.DangerouslyCollapseBooleans,
     nullInNonNullableVariables :: Options.BackwardsCompatibleNullInNonNullableVariables,
     noNullUnboundVariableDefault :: Options.NoNullUnboundVariableDefault,
+    removeEmptySubscriptionResponses :: Options.RemoveEmptySubscriptionResponses,
     remoteNullForwardingPolicy :: Options.RemoteNullForwardingPolicy,
     optimizePermissionFilters :: Options.OptimizePermissionFilters,
     bigqueryStringNumericInput :: Options.BigQueryStringNumericInput

@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::{collections::BTreeMap, fmt::Write};
 
+use open_dds::identifier::SubgraphName;
 use open_dds::types::{BaseType, CustomTypeName, InbuiltType, TypeName, TypeReference};
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, ser::SerializeMap, Deserialize, Serialize};
@@ -10,7 +11,7 @@ use serde_json;
     Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq, Hash, Eq, PartialOrd, Ord,
 )]
 pub struct Qualified<T: Display> {
-    pub subgraph: String,
+    pub subgraph: SubgraphName,
     pub name: T,
 }
 
@@ -22,7 +23,7 @@ impl<T: Display> Display for Qualified<T> {
 }
 
 impl<T: Display> Qualified<T> {
-    pub fn new(subgraph: String, name: T) -> Self {
+    pub fn new(subgraph: SubgraphName, name: T) -> Self {
         Qualified { subgraph, name }
     }
 
@@ -73,10 +74,18 @@ impl QualifiedTypeReference {
     }
 }
 
+// should this argument be converted into an NDC expression
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum ArgumentKind {
+    NDCExpression,
+    Other,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ArgumentInfo {
     pub argument_type: QualifiedTypeReference,
     pub description: Option<String>,
+    pub argument_kind: ArgumentKind,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
@@ -230,7 +239,7 @@ where
 
 pub(crate) fn mk_qualified_type_reference(
     type_reference: &TypeReference,
-    subgraph: &str,
+    subgraph: &SubgraphName,
 ) -> QualifiedTypeReference {
     QualifiedTypeReference {
         nullable: type_reference.nullable,
@@ -238,7 +247,10 @@ pub(crate) fn mk_qualified_type_reference(
     }
 }
 
-pub(crate) fn mk_qualified_base_type(base_type: &BaseType, subgraph: &str) -> QualifiedBaseType {
+pub(crate) fn mk_qualified_base_type(
+    base_type: &BaseType,
+    subgraph: &SubgraphName,
+) -> QualifiedBaseType {
     match base_type {
         BaseType::List(type_reference) => QualifiedBaseType::List(Box::new(
             mk_qualified_type_reference(type_reference, subgraph),
@@ -249,17 +261,21 @@ pub(crate) fn mk_qualified_base_type(base_type: &BaseType, subgraph: &str) -> Qu
     }
 }
 
-pub(crate) fn mk_qualified_type_name(type_name: &TypeName, subgraph: &str) -> QualifiedTypeName {
+pub(crate) fn mk_qualified_type_name(
+    type_name: &TypeName,
+    subgraph: &SubgraphName,
+) -> QualifiedTypeName {
     match type_name {
         TypeName::Inbuilt(inbuilt_type) => QualifiedTypeName::Inbuilt(inbuilt_type.clone()),
         TypeName::Custom(type_name) => {
-            QualifiedTypeName::Custom(Qualified::new(subgraph.to_string(), type_name.to_owned()))
+            QualifiedTypeName::Custom(Qualified::new(subgraph.clone(), type_name.to_owned()))
         }
     }
 }
 
 #[test]
 fn test_btree_map_serialize_deserialize() {
+    use open_dds::subgraph_identifier;
     #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
     struct ObjectForTest {
         #[serde(
@@ -273,7 +289,7 @@ fn test_btree_map_serialize_deserialize() {
         map: BTreeMap::new(),
     };
     obj.map.insert(
-        Qualified::new("subgraph".to_string(), "name".to_string()),
+        Qualified::new(subgraph_identifier!("subgraph"), "name".to_string()),
         "value".to_string(),
     );
     let obj_clone =

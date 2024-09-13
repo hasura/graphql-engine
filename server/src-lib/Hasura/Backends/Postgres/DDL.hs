@@ -10,6 +10,7 @@ module Hasura.Backends.Postgres.DDL
 where
 
 import Data.Aeson
+import Hasura.Authentication.Session (SessionVariable, isSessionVariable, unsafeMkSessionVariable, userIdHeader)
 import Hasura.Backends.Postgres.DDL.BoolExp as M
 import Hasura.Backends.Postgres.DDL.ComputedField as M
 import Hasura.Backends.Postgres.DDL.EventTrigger as M
@@ -26,8 +27,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.SQL.Types
-import Hasura.Server.Utils
-import Hasura.Session
+import Hasura.Server.Utils (isReqUserId)
 
 parseCollectableType ::
   forall pgKind m.
@@ -38,8 +38,8 @@ parseCollectableType ::
 parseCollectableType pgType = \case
   -- When it is a special variable
   String t
-    | isSessionVariable t -> return $ mkTypedSessionVar pgType $ mkSessionVariable t
-    | isReqUserId t -> return $ mkTypedSessionVar pgType userIdHeader
+    | isSessionVariable t -> pure . mkTypedSessionVar pgType $ unsafeMkSessionVariable t
+    | isReqUserId t -> pure $ mkTypedSessionVar pgType userIdHeader
   -- Typical value as Aeson's value
   val -> case pgType of
     CollectableTypeScalar cvType ->

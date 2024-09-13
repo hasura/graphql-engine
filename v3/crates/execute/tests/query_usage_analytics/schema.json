@@ -59,7 +59,7 @@
             "name": "db",
             "url": {
               "singleUrl": {
-                "value": "http://postgres_connector:8080"
+                "value": "http://localhost:8080"
               }
             },
             "headers": {
@@ -2298,6 +2298,20 @@
                             "field": "author_id"
                           }
                         }
+                      },
+                      {
+                        "relationship": {
+                          "name": "Author",
+                          "predicate": {
+                            "fieldComparison": {
+                              "field": "author_id",
+                              "operator": "_eq",
+                              "value": {
+                                "sessionVariable": "x-hasura-user-id"
+                              }
+                            }
+                          }
+                        }
                       }
                     ]
                   }
@@ -2912,7 +2926,10 @@
               },
               {
                 "name": "Fax",
-                "type": "varchar"
+                "type": "varchar",
+                "deprecated": {
+                  "reason": "Fax is no more used; Use Email instead"
+                }
               },
               {
                 "name": "FirstName",

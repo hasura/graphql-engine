@@ -38,16 +38,17 @@ import Data.Hashable qualified as Hash
 import Data.IORef (newIORef, readIORef)
 import Data.List qualified as L
 import Data.Text.Encoding qualified as T
+import Data.Text.Extended ((<<>), (<>>))
 import Data.Time.Clock (UTCTime, getCurrentTime)
+import Hasura.Authentication.Role (RoleName, adminRoleName)
+import Hasura.Authentication.Session (adminSecretHeader, deprecatedAccessKeyHeader, getSessionVariableValue, mkSessionVariablesHeaders)
+import Hasura.Authentication.User (ExtraUserInfo, UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkUserInfo)
 import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import Hasura.Logging
 import Hasura.Prelude
-import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.Server.Auth.JWT hiding (processJwt_)
 import Hasura.Server.Auth.WebHook
-import Hasura.Server.Utils
-import Hasura.Session (ExtraUserInfo, UserAdminSecret (..), UserInfo, UserRoleBuild (..), getSessionVariableValue, mkSessionVariablesHeaders, mkUserInfo)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
@@ -275,11 +276,7 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
         -- Consider unauthorized role, if not found raise admin secret header required exception
         case maybeUnauthRole of
           Nothing ->
-            throw401
-              $ adminSecretHeader
-              <> "/"
-              <> deprecatedAccessKeyHeader
-              <> " required, but not found"
+            throw401 $ adminSecretHeader <<> "/" <> deprecatedAccessKeyHeader <<> " required, but not found"
           Just unAuthRole ->
             mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent sessionVariables
   -- this is the case that actually ends up consuming the request AST
@@ -313,11 +310,11 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
         Nothing -> actionIfNoAdminSecret
         Just requestAdminSecret -> do
           unless (Set.member (hashAdminSecret requestAdminSecret) adminSecretHashSet)
-            $ throw401
+            . throw401
             $ "invalid "
             <> adminSecretHeader
-            <> "/"
-            <> deprecatedAccessKeyHeader
+            <<> "/"
+            <>> deprecatedAccessKeyHeader
           withNoExpTime $ mkUserInfoFallbackAdminRole UAdminSecretSent
 
     withNoExpTime a = (,Nothing,[]) <$> a

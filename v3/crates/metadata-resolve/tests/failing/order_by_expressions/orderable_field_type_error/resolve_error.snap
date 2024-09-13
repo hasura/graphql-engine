@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/order_by_expressions/orderable_field_type_error/metadata.json
+---
+Error in order by expression MyOrderByExpression (in subgraph default): The type of the order by expression FooOrderByExpression referenced in field test does not match the field type. Order by expression type: Bar; field type: Foo (in subgraph default).

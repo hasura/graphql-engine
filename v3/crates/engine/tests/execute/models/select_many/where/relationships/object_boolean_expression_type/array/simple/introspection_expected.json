@@ -1,0 +1,568 @@
+[
+  {
+    "data": {
+      "artist_bool_exp": {
+        "name": "Artist_Where_Exp",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "Albums",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Album_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "ArtistId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Name",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_Comparison_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_and",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Artist_Where_Exp"
+                }
+              }
+            }
+          },
+          {
+            "name": "_not",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Artist_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_or",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Artist_Where_Exp"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "album_bool_exp": {
+        "name": "Album_Where_Exp",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "AlbumId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Artist",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Artist_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "ArtistId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Title",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_Comparison_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Tracks",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Track_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_and",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Album_Where_Exp"
+                }
+              }
+            }
+          },
+          {
+            "name": "_not",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Album_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_or",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Album_Where_Exp"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "track_bool_exp": {
+        "name": "Track_Where_Exp",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "Album",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Album_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "AlbumId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Genre",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Genre_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "GenreId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Name",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_Comparison_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "TrackAlbums",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Album_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "TrackId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_and",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Track_Where_Exp"
+                }
+              }
+            }
+          },
+          {
+            "name": "_not",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Track_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_or",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Track_Where_Exp"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "artist_bool_exp": {
+        "name": "Artist_Where_Exp",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "Albums",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Album_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "ArtistId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Name",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_Comparison_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_and",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Artist_Where_Exp"
+                }
+              }
+            }
+          },
+          {
+            "name": "_not",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Artist_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_or",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Artist_Where_Exp"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "album_bool_exp": {
+        "name": "Album_Where_Exp",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "AlbumId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Artist",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Artist_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "ArtistId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Title",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_Comparison_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Tracks",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Track_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_and",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Album_Where_Exp"
+                }
+              }
+            }
+          },
+          {
+            "name": "_not",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Album_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_or",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Album_Where_Exp"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "track_bool_exp": {
+        "name": "Track_Where_Exp",
+        "description": null,
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "Album",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Album_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "AlbumId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Genre",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Genre_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "GenreId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "Name",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_Comparison_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "TrackAlbums",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Album_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "TrackId",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_and",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Track_Where_Exp"
+                }
+              }
+            }
+          },
+          {
+            "name": "_not",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Track_Where_Exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_or",
+            "description": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Track_Where_Exp"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+]

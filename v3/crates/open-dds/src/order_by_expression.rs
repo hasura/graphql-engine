@@ -1,9 +1,10 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::{
     identifier::Identifier,
     models::{EnableAllOrSpecific, OrderByDirection},
     relationships::RelationshipName,
+    str_newtype,
     types::{CustomTypeName, FieldName, GraphQlTypeName},
 };
 
@@ -55,7 +56,8 @@ impl OrderByExpression {
               ],
               "graphql": {
                 "expressionTypeName": "App_Album_order_by_exp"
-              }
+              },
+              "description": "Order by expression for Albums"
             }
           }
         )
@@ -68,20 +70,7 @@ impl OrderByExpression {
     }
 }
 
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    derive_more::Display,
-    PartialOrd,
-    Ord,
-    opendds_derive::OpenDd,
-)]
-pub struct OrderByExpressionName(pub Identifier);
+str_newtype!(OrderByExpressionName over Identifier | doc "The name of an order by expression.");
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
@@ -93,10 +82,18 @@ pub struct OrderByExpressionV1 {
 
     /// The type that this expression applies to.
     pub ordered_type: CustomTypeName,
+
+    /// Orderable fields of the `orderedType`
     pub orderable_fields: Vec<OrderByExpressionOrderableField>,
 
+    /// Orderable relationships
     pub orderable_relationships: Vec<OrderByExpressionOrderableRelationship>,
+
+    /// Configuration for how this order by expression should appear in the GraphQL schema.
     pub graphql: Option<OrderByExpressionGraqphQlConfiguration>,
+
+    /// The description of the order by expression.
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
@@ -107,7 +104,7 @@ pub struct OrderByExpressionOrderableField {
 
     /// Order by directions supported by this field.
     /// Only applicable if the field has a scalar type.
-    pub enable_order_by_directions: EnableAllOrSpecific<OrderByDirection>,
+    pub enable_order_by_directions: Option<EnableAllOrSpecific<OrderByDirection>>,
 
     /// OrderByExpression to use for this field.
     /// Only applicable if the field has an object type.

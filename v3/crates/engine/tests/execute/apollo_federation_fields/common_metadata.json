@@ -28,7 +28,7 @@
           "version": "v1",
           "definition": {
             "dataConnectorName": "db",
-            "dataConnectorScalarType": "String",
+            "dataConnectorScalarType": "text",
             "representation": "String",
             "graphql": {
               "comparisonExpressionTypeName": "String_Comparison_Exp"
@@ -40,7 +40,7 @@
           "version": "v1",
           "definition": {
             "dataConnectorName": "db",
-            "dataConnectorScalarType": "Int",
+            "dataConnectorScalarType": "int4",
             "representation": "Int"
           }
         },

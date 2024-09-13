@@ -4,7 +4,7 @@ use open_dds::{
     commands::{CommandName, FunctionName},
     models::ModelName,
     relationships::{RelationshipName, RelationshipType},
-    types::CustomTypeName,
+    types::{CustomTypeName, Deprecated},
 };
 
 use serde::{Deserialize, Serialize};
@@ -25,6 +25,7 @@ pub struct ModelRelationshipAnnotation {
     pub target_type: Qualified<CustomTypeName>,
     pub relationship_type: RelationshipType,
     pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -35,6 +36,7 @@ pub struct ModelAggregateRelationshipAnnotation {
     pub target_source: Option<metadata_resolve::ModelTargetSource>,
     pub target_type: Qualified<CustomTypeName>,
     pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -46,6 +48,7 @@ pub struct FilterRelationshipAnnotation {
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
     pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -63,6 +66,7 @@ pub struct OrderByRelationshipAnnotation {
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
     pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -74,6 +78,7 @@ pub struct CommandRelationshipAnnotation {
     pub target_type: QualifiedTypeReference,
     pub target_base_type_kind: TypeKind,
     pub mappings: Vec<metadata_resolve::RelationshipCommandMapping>,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -98,6 +103,9 @@ impl CommandTargetSource {
                         data_connector: command_source.data_connector.clone(),
                         type_mappings: command_source.type_mappings.clone(),
                         argument_mappings: command_source.argument_mappings.clone(),
+                        data_connector_link_argument_presets: command_source
+                            .data_connector_link_argument_presets
+                            .clone(),
                         ndc_type_opendd_type_same: command_source.ndc_type_opendd_type_same,
                     },
                     function_name: match &command_source.source {

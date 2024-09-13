@@ -29,9 +29,9 @@ pub(crate) fn get_collection_by_name(
     state: &AppState,
 ) -> Result<Vec<Row>> {
     match collection_name.as_str() {
-        "actors" => Ok(actors::rows(state)),
-        "movies" => Ok(movies::rows(state)),
-        "institutions" => Ok(institutions::rows(state)),
+        "actors" => actors::rows(arguments, state),
+        "movies" => movies::rows(arguments, state),
+        "institutions" => institutions::rows(arguments, state),
         "actors_by_movie" => actors_by_movie::rows(arguments, state),
         "movies_by_actor_name" => movies_by_actor_name::rows(arguments, state),
         _ => super::functions::get_function_by_name(collection_name, arguments, state),

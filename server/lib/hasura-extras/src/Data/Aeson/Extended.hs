@@ -51,7 +51,7 @@ class FromJSONWithContext ctx a | a -> ctx where
 -- @
 -- object $ ["foo" .= 0] <> catMaybes [ "bar" .=? Nothing, "baz" .=? 2 ]
 -- @
-(.=?) :: (ToJSON v, KeyValue kv) => Key -> Maybe v -> Maybe kv
+(.=?) :: (ToJSON v, KeyValue e kv) => Key -> Maybe v -> Maybe kv
 (.=?) k = fmap (k .=)
 {-# INLINE (.=?) #-}
 

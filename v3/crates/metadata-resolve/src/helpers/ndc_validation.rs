@@ -128,14 +128,7 @@ pub enum NDCValidationError {
     UnsupportedTypeInDataConnectorLinkArgumentPreset {
         representation: String,
         scalar_type: DataConnectorScalarType,
-        argument_name: open_dds::arguments::ArgumentName,
-    },
-
-    #[error("Cannot use argument '{argument_name:}' in command '{command_name:}', as it already used as argument preset in data connector '{data_connector_name:}'.")]
-    CannotUseDataConnectorLinkArgumentPresetInCommand {
-        argument_name: open_dds::arguments::ArgumentName,
-        command_name: Qualified<CommandName>,
-        data_connector_name: Qualified<DataConnectorName>,
+        argument_name: open_dds::types::DataConnectorArgumentName,
     },
 
     #[error("Argument '{argument_name:}' used in argument mapping for the field '{field_name:}' in object type '{object_type_name:}' is not defined in the data connector '{data_connector_name:}'.")]
@@ -326,26 +319,8 @@ pub fn validate_ndc_command(
         }
     };
 
-    let dc_link_argument_presets = db
-        .argument_presets
-        .iter()
-        .map(|preset| &preset.name)
-        .collect::<Vec<_>>();
-
     // Check if the arguments are correctly mapped
-    for (open_dd_argument_name, ndc_argument_name) in &command_source.argument_mappings {
-        // Arguments already used in DataConnectorLink.argumentPresets can't be
-        // used as command arguments
-        if dc_link_argument_presets.contains(&open_dd_argument_name) {
-            return Err(
-                NDCValidationError::CannotUseDataConnectorLinkArgumentPresetInCommand {
-                    argument_name: open_dd_argument_name.clone(),
-                    command_name: command_name.clone(),
-                    data_connector_name: db.name.clone(),
-                },
-            );
-        }
-
+    for ndc_argument_name in command_source.argument_mappings.values() {
         if !command_source_ndc_arguments.contains_key(ndc_argument_name.as_str()) {
             return Err(NDCValidationError::NoSuchArgumentForCommand {
                 db_name: db.name.clone(),
@@ -507,7 +482,7 @@ pub(crate) fn validate_ndc_argument_presets(
 // other than "json", we error out. Later if we added a "map" type then we would support both
 // "map" and "json".
 fn validate_argument_preset_type(
-    preset_argument_name: &open_dds::arguments::ArgumentName,
+    preset_argument_name: &open_dds::types::DataConnectorArgumentName,
     arguments: &BTreeMap<ndc_models::ArgumentName, ndc_models::ArgumentInfo>,
     schema: &data_connectors::DataConnectorSchema,
 ) -> Result<(), NDCValidationError> {

@@ -1,20 +1,24 @@
+use crate::data_connectors::ArgumentPresetValue;
+use crate::helpers::argument::ArgumentMappingIssue;
 use crate::helpers::types::NdcColumnForComparison;
+use crate::stages::order_by_expressions::{OrderByExpressionIdentifier, OrderByExpressions};
 use crate::stages::{data_connectors, object_types};
 use crate::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
 };
 
 use indexmap::IndexMap;
-use open_dds::data_connector::CollectionName;
+use lang_graphql::ast::common as ast;
+use open_dds::data_connector::{CollectionName, DataConnectorName};
 use open_dds::{
     aggregates::AggregateExpressionName,
     arguments::ArgumentName,
     data_connector::DataConnectorObjectType,
-    models::{ModelGraphQlDefinition, ModelName, OrderableField},
+    models::{ModelGraphQlDefinitionV2, ModelName},
     types::{CustomTypeName, DataConnectorArgumentName, FieldName},
 };
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ModelSource {
@@ -27,6 +31,8 @@ pub struct ModelSource {
     )]
     pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    pub data_connector_link_argument_presets:
+        BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     pub source_arguments: BTreeMap<DataConnectorArgumentName, ndc_models::Type>,
 }
 
@@ -35,6 +41,9 @@ pub struct ModelsOutput {
     pub global_id_enabled_types: BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     pub apollo_federation_entity_enabled_types:
         BTreeMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
+    pub order_by_expressions: OrderByExpressions,
+    pub graphql_types: BTreeSet<ast::TypeName>,
+    pub issues: Vec<ModelsIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -47,7 +56,7 @@ pub struct Model {
     pub source: Option<ModelSource>,
     pub global_id_source: Option<NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
-    pub orderable_fields: Vec<OrderableField>,
+    pub order_by_expression: Option<Qualified<OrderByExpressionIdentifier>>,
     pub aggregate_expression: Option<Qualified<AggregateExpressionName>>,
     pub raw: ModelRaw,
 }
@@ -55,11 +64,22 @@ pub struct Model {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelRaw {
     pub filter_expression_type: Option<Qualified<CustomTypeName>>,
-    pub graphql: Option<ModelGraphQlDefinition>,
+    pub graphql: Option<ModelGraphQlDefinitionV2>,
     pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct NDCFieldSourceMapping {
     pub ndc_mapping: BTreeMap<FieldName, NdcColumnForComparison>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ModelsIssue {
+    #[error("An issue occurred while mapping arguments in the model {model_name:} to the collection {collection_name:} in the data connector {data_connector_name:}: {issue:}")]
+    FunctionArgumentMappingIssue {
+        data_connector_name: Qualified<DataConnectorName>,
+        model_name: Qualified<ModelName>,
+        collection_name: CollectionName,
+        issue: ArgumentMappingIssue,
+    },
 }
