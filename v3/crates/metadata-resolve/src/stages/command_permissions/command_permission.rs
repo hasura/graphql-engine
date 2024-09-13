@@ -1,6 +1,7 @@
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 
+use open_dds::identifier::SubgraphName;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 
 use crate::stages::{
@@ -52,7 +53,7 @@ pub fn resolve_command_permissions(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    subgraph: &str,
+    subgraph: &SubgraphName,
 ) -> Result<BTreeMap<Role, CommandPermission>, Error> {
     let mut validated_permissions = BTreeMap::new();
     for command_permission in &permissions.permissions {
@@ -73,13 +74,13 @@ pub fn resolve_command_permissions(
                 .source
                 .as_ref()
                 .map(|source| &source.data_connector.name)
-                .ok_or(Error::CommandSourceRequiredForPredicate {
+                .ok_or(commands::CommandsError::CommandSourceRequiredForPredicate {
                     command_name: command.name.clone(),
                 })?;
 
             let data_connector_context =
                 data_connectors.0.get(data_connector_name).ok_or_else(|| {
-                    Error::UnknownCommandDataConnector {
+                    commands::CommandsError::UnknownCommandDataConnector {
                         command_name: command.name.clone(),
                         data_connector: data_connector_name.clone(),
                     }
@@ -128,10 +129,12 @@ pub fn resolve_command_permissions(
                     );
                 }
                 None => {
-                    return Err(Error::CommandArgumentPresetMismatch {
-                        command_name: command.name.clone(),
-                        argument_name: argument_preset.argument.clone(),
-                    });
+                    return Err(Error::from(
+                        commands::CommandsError::CommandArgumentPresetMismatch {
+                            command_name: command.name.clone(),
+                            argument_name: argument_preset.argument.clone(),
+                        },
+                    ));
                 }
             }
         }

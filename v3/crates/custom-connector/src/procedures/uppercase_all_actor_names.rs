@@ -4,6 +4,7 @@ use axum::{http::StatusCode, Json};
 use ndc_models;
 
 use crate::{
+    arguments::check_all_arguments_used,
     query::{eval_nested_field, Result},
     state::AppState,
 };
@@ -24,10 +25,13 @@ pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
 }
 
 pub(crate) fn execute(
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     fields: &Option<ndc_models::NestedField>,
     collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
+    check_all_arguments_used(arguments)?;
+
     let mut actors_list = vec![];
     let current_state = state.actors.clone();
     for (actor_id, actor) in &current_state {

@@ -93,7 +93,7 @@
               "scalar": {
                 "type": "Int",
                 "comparisonOperators": [
-                  { "name": "equals", "argumentType": "Int!" }
+                  { "name": "fancy_equals_operator", "argumentType": "Int!" }
                 ],
                 "dataConnectorOperatorMapping": [
                   {

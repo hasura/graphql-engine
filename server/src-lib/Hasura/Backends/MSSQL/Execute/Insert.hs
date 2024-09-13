@@ -11,6 +11,7 @@ where
 
 import Data.HashMap.Strict qualified as HashMap
 import Database.MSSQL.Transaction qualified as Tx
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.QueryTags (withQueryTags)
 import Hasura.Backends.MSSQL.FromIr as TSQL
@@ -38,7 +39,6 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (SourceName (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.Session
 
 -- | Execute and insert/upsert mutation against MS SQL Server.
 --   See the documentation for 'buildInsertTx' to see how it's done.

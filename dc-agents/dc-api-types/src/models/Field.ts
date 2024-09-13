@@ -7,5 +7,5 @@ import type { NestedArrayField } from './NestedArrayField';
 import type { NestedObjField } from './NestedObjField';
 import type { RelationshipField } from './RelationshipField';
 
-export type Field = (NestedArrayField | NestedObjField | ColumnField | RelationshipField);
+export type Field = (NestedObjField | NestedArrayField | RelationshipField | ColumnField);
 

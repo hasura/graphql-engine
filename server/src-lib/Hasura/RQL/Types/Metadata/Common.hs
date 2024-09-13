@@ -59,6 +59,7 @@ import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
+import Hasura.Authentication.Role (InheritedRole, Role (..), RoleName)
 import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..), NativeQueryName)
@@ -78,7 +79,6 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RemoteSchema.Metadata

@@ -22,6 +22,7 @@ import Data.IntMap qualified as IntMap
 import Data.Sequence qualified as Seq
 import Data.Tuple.Extra (both)
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.ConnectionTemplate (QueryContext (..), QueryOperationType (..))
 import Hasura.Backends.Postgres.Execute.Insert (convertToSQLTransaction, validateInsertInput, validateInsertRows)
@@ -45,7 +46,7 @@ import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Function qualified as Postgres
 import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error (QErr)
-import Hasura.EncJSON (EncJSON, encJFromJValue)
+import Hasura.EncJSON (EncJSON, encJFromJValue, encJFromList)
 import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.Backend
   ( BackendExecute (..),
@@ -93,7 +94,6 @@ import Hasura.RQL.Types.Permission (ValidateInput (..), ValidateInputHttpDefinit
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (HeaderPrecedence, TraceQueryStatus (TraceQueryEnabled))
-import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
@@ -307,7 +307,9 @@ convertUpdate sourceName modelSourceType env manager logger userInfo updateOpera
       pure $ concat whereModelsList
   let modelNames = [ModelNameInfo (modelName, modelType, sourceName, modelSourceType)] <> (argModelNames) <> preUpdatePermissionModelNames <> postUpdateCheckModelNames <> (returnModels)
   if Postgres.updateVariantIsEmpty $ IR._auUpdateVariant updateOperation
-    then pure $ (OnBaseMonad $ pure $ IR.buildEmptyMutResp $ IR._auOutput preparedUpdate, modelNames)
+    then case mutationUpdateVariant of
+      Postgres.SingleBatch _ -> pure $ (OnBaseMonad $ pure $ IR.buildEmptyMutResp (IR._auOutput preparedUpdate), modelNames)
+      Postgres.MultipleBatches _ -> pure (OnBaseMonad $ pure (encJFromList []), modelNames)
     else
       pure
         $ ( OnBaseMonad
@@ -467,6 +469,7 @@ pgDBLiveQuerySubscriptionPlan ::
     PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
+  Options.RemoveEmptySubscriptionResponses ->
   UserInfo ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
@@ -475,7 +478,7 @@ pgDBLiveQuerySubscriptionPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   m (SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)), [ModelInfoPart])
-pgDBLiveQuerySubscriptionPlan userInfo sourceName sourceConfig namespace unpreparedAST reqHeaders operationName = do
+pgDBLiveQuerySubscriptionPlan removeEmptySubscriptionResponses userInfo sourceName sourceConfig namespace unpreparedAST reqHeaders operationName = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty
       $ for unpreparedAST
@@ -492,7 +495,7 @@ pgDBLiveQuerySubscriptionPlan userInfo sourceName sourceConfig namespace unprepa
   let modelInfo = getModelInfoPartfromModelNames modelNameInfo (ModelOperationType G.OperationTypeSubscription)
 
   subscriptionQueryTagsComment <- ask
-  multiplexedQuery <- PGL.mkMultiplexedQuery userInfo $ InsOrdHashMap.mapKeys _rfaAlias preparedAST
+  multiplexedQuery <- PGL.mkMultiplexedQuery removeEmptySubscriptionResponses userInfo $ InsOrdHashMap.mapKeys _rfaAlias preparedAST
   let multiplexedQueryWithQueryTags =
         multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
       roleName = _uiRole userInfo

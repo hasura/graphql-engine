@@ -1,15 +1,17 @@
 [workspace]
 resolver = "2"
 
-package.version = "0.1.0"
+package.version = "3.0.0"
 package.edition = "2021"
 package.license = "Apache-2.0"
 
 members = [
   "crates/auth/*",
+  "crates/compatibility",
   "crates/custom-connector",
   "crates/engine",
   "crates/execute",
+  "crates/ir",
   "crates/lang-graphql",
   "crates/metadata-resolve",
   "crates/metadata-schema-generator",
@@ -20,6 +22,10 @@ members = [
   "crates/sql",
   "crates/utils/*",
 ]
+
+# generally following guidance from https://nnethercote.github.io/perf-book/build-configuration.html
+[profile.release]
+codegen-units = 1 # reduce parallelisation to increase optimisations
 
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
@@ -42,6 +48,7 @@ must_use_candidate = "allow"
 return_self_not_must_use = "allow"
 struct_field_names = "allow"
 wildcard_imports = "allow"
+trivially_copy_pass_by_ref = "allow"
 # disable these for now, but we should probably fix them
 result_large_err = "allow"
 similar_names = "allow"
@@ -54,28 +61,32 @@ used_underscore_binding = "allow"
 private_intra_doc_links = "allow"
 
 [workspace.dependencies]
-ndc-models = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.2.0-rc.0" }
-ndc-models-v01 = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.5" }
+ndc-models = { git = "https://github.com/hasura/ndc-spec.git", rev = "54baf298b5d6a69f12a701e9f0e3ce8f188a194d" } # When you update this tag, also update the schema references in crates/open-dds/src/data_connector.rs
+ndc-models-v01 = { package = "ndc-models", git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.6" }
 
 anyhow = "1"
 apollo-parser = "0.7"
 async-graphql-parser = "7"
 async-recursion = "1"
+async-trait = "0.1"
 axum = "0.6"
 base64 = "0.22"
 bincode = "1"
 bson = "2"
 build-data = "0.2"
 bytes = "1"
+chrono = "0.4"
 clap = "4"
 convert_case = "0.6"
 cookie = "0.18"
 criterion = "0.5"
 darling = "0.20"
+datafusion = "41"
 derive_more = "0.99"
 diffy = "0.4"
 env_logger = "0.11"
 expect-test = "1"
+futures = "0.3"
 futures-util = "0.3"
 goldenfile = "1"
 graphql-parser = "0.4"
@@ -88,7 +99,8 @@ jsonptr = "0.4"
 jsonwebkey = "0.3"
 jsonwebtoken = "8"
 lexical-core = "0.8"
-mockito = { version = "1", default-features = false }
+mimalloc = "0.1"
+mockito = { version = "~1.4", default-features = false } # v1.5+ depends on http v1
 nonempty = "0.10"
 openssl = "0.10"
 opentelemetry = "0.22"
@@ -108,6 +120,7 @@ ref-cast = "1"
 regex = "1"
 reqwest = "0.11"
 rmp-serde = "1"
+semver = "1.0"
 schemars = "0.8"
 serde = "1"
 serde_json = "1"

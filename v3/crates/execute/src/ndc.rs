@@ -150,7 +150,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
         .await
 }
 
-pub(crate) async fn fetch_from_data_connector_mutation<'s>(
+pub async fn fetch_from_data_connector_mutation<'s>(
     http_context: &HttpContext,
     query_request: &NdcMutationRequest,
     data_connector: &metadata_resolve::DataConnectorLink,

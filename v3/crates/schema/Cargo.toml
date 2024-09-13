@@ -14,6 +14,7 @@ bench = false
 
 [dependencies]
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
+indexmap = { workspace = true, features = ["serde"] }
 json-ext = { path = "../utils/json-ext" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }

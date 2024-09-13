@@ -22,46 +22,27 @@ services:
 
   custom_connector:
     build:
-      dockerfile: debug.Dockerfile
+      dockerfile: custom-connector.Dockerfile
     entrypoint:
       - ./bin/custom-connector
     ports:
-      - "8101:8101"
+      - "8102:8102"
     environment:
       RUST_LOG: info
     healthcheck:
-      test: curl -fsS http://localhost:8101/schema
+      test: curl -fsS http://localhost:8102/schema
       start_period: 5s
       interval: 5s
       timeout: 10s
       retries: 20
 
-  source_only:
-    build:
-      dockerfile: debug.Dockerfile
-    volumes:
-      - ./auth_config.json:/app/auth_config.json
-      - ./benchmark.sh:/app/benchmark.sh
-      - ./coverage.sh:/app/coverage.sh
-      - ./crates:/app/crates
-      - ./coverage:/app/coverage
-
-  test_setup:
-    build:
-      dockerfile: debug.Dockerfile
-    depends_on:
-      postgres:
-        condition: service_healthy
-      postgres_connector:
-        condition: service_healthy
-      custom_connector:
-        condition: service_healthy
-    volumes:
-      - ./auth_config.json:/app/auth_config.json
-      - ./benchmark.sh:/app/benchmark.sh
-      - ./coverage.sh:/app/coverage.sh
-      - ./crates:/app/crates
-      - ./coverage:/app/coverage
+  custom_connector_ndc_v01:
+    # This is the v3-engine commit version before the custom connector got upgraded to ndc_models v0.2.0
+    image: ghcr.io/hasura/v3-custom-connector:bef8a750ca31b067952247ad348683a4faa843f5
+    ports:
+      - "8101:8101"
+    environment:
+      RUST_LOG: info
 
 volumes:
   postgres:

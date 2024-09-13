@@ -20,6 +20,7 @@ module Hasura.RQL.Types.Action
     adOutputType,
     adType,
     adForwardClientHeaders,
+    adIgnoredClientHeaders,
     adHeaders,
     adHandler,
     adTimeout,
@@ -40,6 +41,7 @@ module Hasura.RQL.Types.Action
     aiOutputType,
     aiPermissions,
     aiForwardedClientHeaders,
+    aiIgnoredClientHeaders,
     ActionPermissionInfo (..),
     ResolvedActionDefinition,
 
@@ -68,14 +70,15 @@ import Data.Typeable (Typeable)
 import Data.UUID qualified as UUID
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
+import Hasura.Authentication.Headers (commonClientHeadersIgnored)
+import Hasura.Authentication.Role (RoleName)
+import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing (EventId (..))
 import Hasura.RQL.Types.Headers
-import Hasura.RQL.Types.Roles (RoleName)
-import Hasura.RQL.Types.Session (SessionVariables)
 import Hasura.RQL.Types.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
@@ -160,6 +163,7 @@ data ActionDefinition arg webhook = ActionDefinition
     _adType :: ActionType,
     _adHeaders :: [HeaderConf],
     _adForwardClientHeaders :: Bool,
+    _adIgnoredClientHeaders :: [Text],
     -- | If the timeout is not provided by the user, then
     -- the default timeout of 30 seconds will be used
     _adTimeout :: Timeout,
@@ -193,6 +197,8 @@ instance
           AC..= _adHeaders
             <*> optionalFieldWithOmittedDefault' "forward_client_headers" False
           AC..= _adForwardClientHeaders
+            <*> optionalFieldWithOmittedDefault' "ignored_client_headers" commonClientHeadersIgnored
+          AC..= _adIgnoredClientHeaders
             <*> optionalFieldWithOmittedDefault' "timeout" defaultActionTimeoutSecs
           AC..= _adTimeout
             <*> requiredField' "handler"
@@ -291,6 +297,7 @@ data ActionInfo = ActionInfo
     _aiDefinition :: ResolvedActionDefinition,
     _aiPermissions :: HashMap RoleName ActionPermissionInfo,
     _aiForwardedClientHeaders :: Bool,
+    _aiIgnoredClientHeaders :: [Text],
     _aiComment :: Maybe Text
   }
   deriving (Generic)
@@ -391,6 +398,7 @@ instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
     _adOutputType <- o .: "output_type"
     _adHeaders <- o .:? "headers" .!= []
     _adForwardClientHeaders <- o .:? "forward_client_headers" .!= False
+    _adIgnoredClientHeaders <- o .:? "ignored_client_headers" .!= commonClientHeadersIgnored
     _adHandler <- o .: "handler"
     _adTimeout <- o .:? "timeout" .!= defaultActionTimeoutSecs
     actionType <- o .:? "type" .!= "mutation"

@@ -1,4 +1,4 @@
-use open_dds::types::{CustomTypeName, TypeName};
+use open_dds::types::CustomTypeName;
 
 use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
 
@@ -12,12 +12,6 @@ pub enum DataConnectorScalarTypesError {
     DuplicateDataConnectorScalarRepresentation {
         data_connector: Qualified<DataConnectorName>,
         scalar_type: DataConnectorScalarType,
-    },
-    #[error("conflicting type representations found for data connector {data_connector:}: {old_representation:} and {new_representation:}")]
-    DataConnectorScalarRepresentationMismatch {
-        data_connector: Qualified<DataConnectorName>,
-        old_representation: TypeName,
-        new_representation: TypeName,
     },
     #[error("unknown type represented for scalar type {scalar_type:}: {type_name:}")]
     ScalarTypeUnknownRepresentation {

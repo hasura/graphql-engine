@@ -45,6 +45,7 @@ pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
                 exists: ndc_models::ExistsCapabilities {
                     named_scopes: None,
                     unrelated: Some(ndc_models::LeafCapability {}),
+                    nested_collections: None,
                 },
             },
             relationships: Some(ndc_models::RelationshipCapabilities {

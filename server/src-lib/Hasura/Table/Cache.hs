@@ -124,6 +124,7 @@ import Data.Semigroup (Any (..), Max (..))
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
+import Hasura.Authentication.Role (RoleName, adminRoleName)
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres (PGDescription)
 import Hasura.Base.Error
 import Hasura.Name qualified as Name
@@ -141,7 +142,6 @@ import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Permission (AllowedRootFields (..), QueryRootFieldType (..), SubscriptionRootFieldType (..), ValidateInput (..))
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend (runBackend)
 import Language.GraphQL.Draft.Parser qualified as GParse
@@ -1126,7 +1126,7 @@ instance (Backend b) => FromJSON (ForeignKeyMetadata b) where
 
 instance (Backend b) => ToJSON (ForeignKeyMetadata b) where
   toJSON (ForeignKeyMetadata (ForeignKey constraint foreignTable columnMapping)) =
-    let (columns, foreignColumns) = NE.unzip $ NEHashMap.toList columnMapping
+    let (columns, foreignColumns) = unzip $ NEHashMap.toList columnMapping
      in object
           [ "constraint" .= constraint,
             "foreign_table" .= foreignTable,

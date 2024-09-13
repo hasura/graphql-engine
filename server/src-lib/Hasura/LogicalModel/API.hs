@@ -23,6 +23,7 @@ import Control.Lens (Traversal', has, preview, (^?))
 import Data.Aeson
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
+import Hasura.Authentication.Role (RoleName)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.Lenses (lmmSelectPermissions)
@@ -40,7 +41,6 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission (PermDef (_pdRole), SelPerm)
-import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 

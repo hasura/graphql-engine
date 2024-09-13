@@ -21,7 +21,7 @@ import Hasura.Prelude
 data UpdateOperator v
   = UpdateSet v
   | UpdateInc v
-  deriving (Functor, Foldable, Traversable, Generic, Data)
+  deriving (Functor, Foldable, Traversable, Generic, Data, Show, Eq)
 
 type UpdateSet = HashMap ColumnName (UpdateOperator Expression)
 

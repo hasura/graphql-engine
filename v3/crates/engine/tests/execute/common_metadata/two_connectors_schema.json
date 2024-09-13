@@ -6,7 +6,7 @@
       "name": "custom",
       "url": {
         "singleUrl": {
-          "value": "http://custom_connector:8101"
+          "value": "http://localhost:8102"
         }
       },
       "headers": {},
@@ -584,7 +584,7 @@
       "name": "db",
       "url": {
         "singleUrl": {
-          "value": "http://postgres_connector:8080"
+          "value": "http://localhost:8080"
         }
       },
       "headers": {},

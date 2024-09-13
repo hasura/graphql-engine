@@ -244,14 +244,11 @@ class
   validateNativeQuery ::
     (MonadIO m, MonadError QErr m) =>
     DisableNativeQueryValidation ->
-    Env.Environment ->
-    SourceName ->
-    SourceConnConfiguration b ->
     SourceConfig b ->
     LogicalModelInfo b ->
     NativeQueryMetadata b ->
     m (InterpolatedQuery ArgumentName)
-  validateNativeQuery _ _ _ _ _ _ _ =
+  validateNativeQuery _ _ _ _ =
     throw500 "validateNativeQuery: not implemented for this backend."
 
   validateStoredProcedure ::

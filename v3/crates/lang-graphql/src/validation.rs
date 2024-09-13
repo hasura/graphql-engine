@@ -182,7 +182,7 @@ pub fn normalize_operation<'q, 's, S: schema::SchemaContext, NSGet: schema::Name
             .as_ref()
             .ok_or(Error::NoMutationsAreDefined)?,
         ast::OperationType::Subscription => schema
-            .mutation_type
+            .subscription_type
             .as_ref()
             .ok_or(Error::NoSubscriptionsAreDefined)?,
     };

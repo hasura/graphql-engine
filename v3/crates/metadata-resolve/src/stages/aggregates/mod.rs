@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use lang_graphql::ast::common as ast;
 use open_dds::aggregates::{AggregateExpressionName, AggregationFunctionName};
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
+use open_dds::identifier::SubgraphName;
 use open_dds::types::{CustomTypeName, TypeName};
 
 use crate::helpers::types::{store_new_graphql_type, unwrap_qualified_type_name};
@@ -40,7 +41,7 @@ pub fn resolve(
     } in &metadata_accessor.aggregate_expressions
     {
         let aggregate_expression_name =
-            Qualified::new(subgraph.to_string(), aggregate_expression.name.clone());
+            Qualified::new(subgraph.clone(), aggregate_expression.name.clone());
 
         // Have we seen this aggregate expression name before?
         // Check this before checking anything else, so we can fail fast
@@ -214,7 +215,7 @@ fn resolve_aggregatable_field(
         .aggregate_expressions
         .iter()
         .find(|agg_exp| {
-            agg_exp.subgraph.as_str() == aggregate_expression_name.subgraph.as_str()
+            agg_exp.subgraph == aggregate_expression_name.subgraph
                 && agg_exp.object.name == aggregate_field_def.aggregate_expression
         })
         .map(|agg_exp| &agg_exp.object)
@@ -412,13 +413,13 @@ fn resolve_aggregation_function(
                 })?;
 
             // Check that the mapped data connector aggregate function actually exists
-            let data_connector_fn = data_connector_scalar_type.aggregate_functions.get(fn_mapping.name.0.as_str())
+            let data_connector_fn = data_connector_scalar_type.aggregate_functions.get(fn_mapping.name.as_str())
                 .ok_or_else(||
                     AggregateExpressionError::AggregateOperandDataConnectorFunctionNotFound {
                         name: aggregate_expression_name.clone(),
                         function_name: aggregation_function_def.name.clone(),
                         data_connector_name: data_connector_name.clone(),
-                        data_connector_aggregate_function_name: fn_mapping.name.0.clone(),
+                        data_connector_aggregate_function_name: fn_mapping.name.clone(),
                 })?;
 
             check_aggregation_function_return_type(
@@ -665,7 +666,7 @@ fn resolve_aggregate_expression_graphql_config(
                     .aggregation_functions
                     .iter()
                     .find(|function| {
-                        function.name.0.as_str() == aggregate_config.count_field_name.as_str()
+                        function.name.as_str() == aggregate_config.count_field_name.as_str()
                     })
             {
                 return Err(AggregateExpressionError::AggregationFunctionNameConflict {
@@ -692,7 +693,7 @@ fn resolve_aggregate_expression_graphql_config(
                     .aggregation_functions
                     .iter()
                     .find(|function| {
-                        function.name.0.as_str()
+                        function.name.as_str()
                             == aggregate_config.count_distinct_field_name.as_str()
                     })
             {
@@ -730,6 +731,9 @@ fn resolve_aggregate_count(
     }
 }
 
-fn qualify<T: std::fmt::Display + std::clone::Clone>(item: &T, subgraph: &str) -> Qualified<T> {
-    Qualified::new(subgraph.to_owned(), item.clone())
+fn qualify<T: std::fmt::Display + std::clone::Clone>(
+    item: &T,
+    subgraph: &SubgraphName,
+) -> Qualified<T> {
+    Qualified::new(subgraph.clone(), item.clone())
 }

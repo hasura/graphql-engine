@@ -58,7 +58,7 @@ where
 
 import Data.Bifunctor (second)
 import qualified Data.HashMap.Strict as HashMap
-import Data.List (foldl', mapAccumL)
+import Data.List (mapAccumL)
 import qualified Data.Map.Merge.Strict as Merge
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S

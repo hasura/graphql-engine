@@ -70,6 +70,8 @@ pub enum OpenddObject {
 pub struct FieldUsage {
     pub name: FieldName,
     pub opendd_type: Qualified<CustomTypeName>,
+    pub deprecated: bool,
+    pub deprecated_reason: Option<String>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -88,7 +90,7 @@ pub struct FieldPresetsUsage {
 #[derive(Serialize, JsonSchema, Clone)]
 pub struct FilterPredicateUsage {
     pub fields: Vec<FieldUsage>,
-    pub relationships: Vec<RelationshipUsage>,
+    pub relationships: Vec<PredicateRelationshipUsage>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -101,6 +103,16 @@ pub struct RelationshipUsage {
     pub name: RelationshipName,
     pub source: Qualified<CustomTypeName>,
     pub target: RelationshipTarget,
+    pub deprecated: bool,
+    pub deprecated_reason: Option<String>,
+}
+
+#[derive(Serialize, JsonSchema, Clone)]
+pub struct PredicateRelationshipUsage {
+    pub name: RelationshipName,
+    pub source: Qualified<CustomTypeName>,
+    pub target: RelationshipTarget,
+    pub predicate_usage: Box<FilterPredicateUsage>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -119,8 +131,8 @@ pub enum RelationshipTarget {
 mod tests {
     use super::*;
     use goldenfile::Mint;
-    use open_dds::identifier;
     use open_dds::relationships::RelationshipType;
+    use open_dds::{identifier, subgraph_identifier};
     use schemars::schema_for;
     use std::{io::Write, path::PathBuf};
 
@@ -163,14 +175,19 @@ mod tests {
         */
         let product_relationship = OpenddObject::Relationship(RelationshipUsage {
             name: RelationshipName::new(identifier!("product")),
-            source: Qualified::new("app".to_string(), CustomTypeName(identifier!("Order"))),
+            source: Qualified::new(
+                subgraph_identifier!("app"),
+                CustomTypeName(identifier!("Order")),
+            ),
             target: RelationshipTarget::Model {
                 model_name: Qualified::new(
-                    "app".to_string(),
+                    subgraph_identifier!("app"),
                     ModelName::new(identifier!("Products")),
                 ),
                 relationship_type: RelationshipType::Object,
             },
+            deprecated: false,
+            deprecated_reason: None,
         });
 
         // id: {_eq: 5}
@@ -179,9 +196,11 @@ mod tests {
             used: vec![OpenddObject::Field(FieldUsage {
                 name: FieldName::new(identifier!("id")),
                 opendd_type: Qualified::new(
-                    "app".to_string(),
+                    subgraph_identifier!("app"),
                     CustomTypeName(identifier!("Order")),
                 ),
+                deprecated: false,
+                deprecated_reason: None,
             })],
             fields: vec![GqlInputField {
                 name: "_eq".to_string(),
@@ -197,9 +216,11 @@ mod tests {
                 used: vec![OpenddObject::Field(FieldUsage {
                     name: FieldName::new(identifier!("price")),
                     opendd_type: Qualified::new(
-                        "app".to_string(),
+                        subgraph_identifier!("app"),
                         CustomTypeName(identifier!("Product")),
                     ),
+                    deprecated: false,
+                    deprecated_reason: None,
                 })],
                 fields: vec![GqlInputField {
                     name: "_gt".to_string(),
@@ -227,9 +248,11 @@ mod tests {
                     used: vec![OpenddObject::Field(FieldUsage {
                         name: FieldName::new(identifier!("price")),
                         opendd_type: Qualified::new(
-                            "app".to_string(),
+                            subgraph_identifier!("app"),
                             CustomTypeName(identifier!("Product")),
                         ),
+                        deprecated: false,
+                        deprecated_reason: None,
                     })],
                 }],
                 used: vec![product_relationship.clone()],
@@ -243,9 +266,11 @@ mod tests {
             used: vec![OpenddObject::Field(FieldUsage {
                 name: FieldName::new(identifier!("quantity")),
                 opendd_type: Qualified::new(
-                    "app".to_string(),
+                    subgraph_identifier!("app"),
                     CustomTypeName(identifier!("Product")),
                 ),
+                deprecated: false,
+                deprecated_reason: None,
             })],
             fields: vec![GqlInputField {
                 name: "_gt".to_string(),
@@ -268,9 +293,11 @@ mod tests {
                 used: vec![OpenddObject::Field(FieldUsage {
                     name: FieldName::new(identifier!("quantity")),
                     opendd_type: Qualified::new(
-                        "app".to_string(),
+                        subgraph_identifier!("app"),
                         CustomTypeName(identifier!("Product")),
                     ),
+                    deprecated: false,
+                    deprecated_reason: None,
                 })],
             }],
             used: vec![],
@@ -285,7 +312,7 @@ mod tests {
                 used: vec![
                     OpenddObject::Model {
                         name: Qualified::new(
-                            "app".to_string(),
+                            subgraph_identifier!("app"),
                             ModelName::new(identifier!("Orders")),
                         ),
                     },
@@ -294,9 +321,11 @@ mod tests {
                             fields: vec![FieldUsage {
                                 name: FieldName::new(identifier!("id")),
                                 opendd_type: Qualified::new(
-                                    "app".to_string(),
+                                    subgraph_identifier!("app"),
                                     CustomTypeName(identifier!("Order")),
                                 ),
+                                deprecated: false,
+                                deprecated_reason: None,
                             }],
                             relationships: vec![],
                         },
@@ -309,9 +338,11 @@ mod tests {
                         used: vec![OpenddObject::Field(FieldUsage {
                             name: FieldName::new(identifier!("date")),
                             opendd_type: Qualified::new(
-                                "app".to_string(),
+                                subgraph_identifier!("app"),
                                 CustomTypeName(identifier!("Order")),
                             ),
+                            deprecated: false,
+                            deprecated_reason: None,
                         })],
                         fields: vec![],
                         arguments: vec![],
@@ -329,9 +360,11 @@ mod tests {
                                 used: vec![OpenddObject::Field(FieldUsage {
                                     name: FieldName::new(identifier!("address_line_1")),
                                     opendd_type: Qualified::new(
-                                        "app".to_string(),
+                                        subgraph_identifier!("app"),
                                         CustomTypeName(identifier!("Address")),
                                     ),
+                                    deprecated: false,
+                                    deprecated_reason: None,
                                 })],
                             },
                             GqlField {
@@ -342,18 +375,22 @@ mod tests {
                                 used: vec![OpenddObject::Field(FieldUsage {
                                     name: FieldName::new(identifier!("address_line_2")),
                                     opendd_type: Qualified::new(
-                                        "app".to_string(),
+                                        subgraph_identifier!("app"),
                                         CustomTypeName(identifier!("Address")),
                                     ),
+                                    deprecated: false,
+                                    deprecated_reason: None,
                                 })],
                             },
                         ],
                         used: vec![OpenddObject::Field(FieldUsage {
                             name: FieldName::new(identifier!("address")),
                             opendd_type: Qualified::new(
-                                "app".to_string(),
+                                subgraph_identifier!("app"),
                                 CustomTypeName(identifier!("Order")),
                             ),
+                            deprecated: false,
+                            deprecated_reason: None,
                         })],
                     },
                     GqlField {
@@ -367,9 +404,11 @@ mod tests {
                             used: vec![OpenddObject::Field(FieldUsage {
                                 name: FieldName::new(identifier!("name")),
                                 opendd_type: Qualified::new(
-                                    "app".to_string(),
+                                    subgraph_identifier!("app"),
                                     CustomTypeName(identifier!("Product")),
                                 ),
+                                deprecated: false,
+                                deprecated_reason: None,
                             })],
                             arguments: vec![],
                             fields: vec![],

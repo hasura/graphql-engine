@@ -167,22 +167,22 @@
                   {
                     "name": "_sum",
                     "description": "Sum of all integers",
-                    "returnType": "Int64!"
+                    "returnType": "Int64"
                   },
                   {
                     "name": "_min",
                     "description": "Smallest integer",
-                    "returnType": "Int!"
+                    "returnType": "Int"
                   },
                   {
                     "name": "_max",
                     "description": "Largest integer",
-                    "returnType": "Int!"
+                    "returnType": "Int"
                   },
                   {
                     "name": "_stddev",
                     "description": "Standard deviation across integers",
-                    "returnType": "Numeric!"
+                    "returnType": "Numeric"
                   }
                 ],
                 "dataConnectorAggregationFunctionMapping": [
@@ -232,19 +232,19 @@
                 "aggregationFunctions": [
                   {
                     "name": "_sum",
-                    "returnType": "Numeric!"
+                    "returnType": "Numeric"
                   },
                   {
                     "name": "_min",
-                    "returnType": "Numeric!"
+                    "returnType": "Numeric"
                   },
                   {
                     "name": "_max",
-                    "returnType": "Numeric!"
+                    "returnType": "Numeric"
                   },
                   {
                     "name": "_stddev",
-                    "returnType": "Numeric!"
+                    "returnType": "Numeric"
                   }
                 ],
                 "dataConnectorAggregationFunctionMapping": [
@@ -292,11 +292,11 @@
                 "aggregationFunctions": [
                   {
                     "name": "_min",
-                    "returnType": "String!"
+                    "returnType": "String"
                   },
                   {
                     "name": "_max",
-                    "returnType": "String!"
+                    "returnType": "String"
                   }
                 ],
                 "dataConnectorAggregationFunctionMapping": [
@@ -350,11 +350,11 @@
                 "aggregationFunctions": [
                   {
                     "name": "_min",
-                    "returnType": "Timestamp!"
+                    "returnType": "Timestamp"
                   },
                   {
                     "name": "_max",
-                    "returnType": "Timestamp!"
+                    "returnType": "Timestamp"
                   }
                 ],
                 "dataConnectorAggregationFunctionMapping": [

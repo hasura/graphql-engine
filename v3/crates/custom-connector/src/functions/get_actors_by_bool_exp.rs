@@ -4,6 +4,7 @@ use axum::{http::StatusCode, Json};
 use ndc_models;
 
 use crate::{
+    arguments::{check_all_arguments_used, parse_expression_argument},
     query::Result,
     state::{AppState, Row},
 };
@@ -35,24 +36,12 @@ pub(crate) fn rows(
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,
 ) -> Result<Vec<Row>> {
-    let actor_bool_exp_value = arguments.get("actor_bool_exp").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "missing argument actor_bool_exp".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-
-    let decoded_bool_exp: ndc_models::Expression =
-        serde_json::from_value(actor_bool_exp_value.clone()).map_err(|_| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: "could not decode argument actor_bool_exp".into(),
-                    details: serde_json::Value::Null,
-                }),
-            )
-        })?;
+    let mut arguments = arguments
+        .iter()
+        .map(|(k, v)| (k.clone(), v))
+        .collect::<BTreeMap<_, _>>();
+    let decoded_bool_exp = parse_expression_argument("actor_bool_exp", &mut arguments)?;
+    check_all_arguments_used(&arguments)?;
 
     // the only thing we are able to do is match on a single binary expression
     let (column, operator, value) = match decoded_bool_exp {

@@ -13,12 +13,15 @@
               "scalar": {
                 "type": "String",
                 "comparisonOperators": [
-                  { "name": "_eq", "argumentType": "String!" }
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "String",
+                    "dataConnectorScalarType": "text",
                     "operatorMapping": {}
                   }
                 ]
@@ -47,7 +50,7 @@
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "Int",
+                    "dataConnectorScalarType": "int4",
                     "operatorMapping": {}
                   }
                 ]
@@ -136,8 +139,12 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "AuthorFilter"
             }

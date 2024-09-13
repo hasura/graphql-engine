@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 -- | Types for BigQuery
 module Hasura.Backends.BigQuery.Types
@@ -339,27 +338,15 @@ data Aggregate
 
 newtype CountType field = CountType {getCountType :: Countable (ColumnName, AnnRedactionExp 'BigQuery field)}
 
-deriving stock instance (Backend.Backend 'BigQuery) => Foldable CountType
-
-deriving stock instance (Backend.Backend 'BigQuery) => Functor CountType
-
-deriving stock instance (Backend.Backend 'BigQuery) => Traversable CountType
-
 deriving stock instance
   ( Backend.Backend 'BigQuery,
-    Eq field,
-    Eq (Backend.AggregationPredicates 'BigQuery field),
-    Eq (Backend.BooleanOperators 'BigQuery field),
-    Eq (Backend.FunctionArgumentExp 'BigQuery field)
+    Eq field
   ) =>
   Eq (CountType field)
 
 deriving stock instance
   ( Backend.Backend 'BigQuery,
-    Show field,
-    Show (Backend.AggregationPredicates 'BigQuery field),
-    Show (Backend.BooleanOperators 'BigQuery field),
-    Show (Backend.FunctionArgumentExp 'BigQuery field)
+    Show field
   ) =>
   Show (CountType field)
 
@@ -883,6 +870,8 @@ data ArgumentExp v
   deriving stock (Eq, Show, Functor, Foldable, Traversable, Generic)
 
 instance (Hashable v) => Hashable (ArgumentExp v)
+
+instance (NFData a) => NFData (ArgumentExp a)
 
 type ComputedFieldImplicitArguments = HashMap FunctionArgName ColumnName
 

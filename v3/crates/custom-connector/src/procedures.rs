@@ -43,13 +43,13 @@ pub(crate) fn execute_procedure(
             uppercase_actor_name_by_id::execute(arguments, fields, collection_relationships, state)
         }
         "uppercase_all_actor_names" => {
-            uppercase_all_actor_names::execute(fields, collection_relationships, state)
+            uppercase_all_actor_names::execute(arguments, fields, collection_relationships, state)
         }
         "uppercase_all_actor_names_return_names_list" => {
-            uppercase_all_actor_names_return_names_list::execute(state)
+            uppercase_all_actor_names_return_names_list::execute(arguments, state)
         }
         "login" => login::execute(arguments),
-        "noop_procedure" => Ok(noop_procedure::execute()),
+        "noop_procedure" => noop_procedure::execute(arguments),
         "add_movie_with_genres" => {
             add_movie_with_genres::execute(arguments, fields, collection_relationships, state)
         }

@@ -13,8 +13,10 @@ pub struct GraphqlConfig {
 pub struct GlobalGraphqlConfig {
     pub query_root_type_name: ast::TypeName,
     pub mutation_root_type_name: ast::TypeName,
+    pub subscription_root_type_name: Option<ast::TypeName>,
     pub order_by_input: Option<OrderByInputGraphqlConfig>,
     pub enable_apollo_federation_fields: bool,
+    pub bypass_relation_comparisons_ndc_capability: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

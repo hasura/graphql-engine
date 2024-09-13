@@ -11,7 +11,7 @@
             "name": "custom",
             "url": {
               "singleUrl": {
-                "value": "http://custom_connector:8101"
+                "value": "http://localhost:8102"
               }
             },
             "headers": {},
@@ -821,6 +821,13 @@
                     "name": "movies_by_actor_name",
                     "description": "Movies filtered by actor name search parameters",
                     "arguments": {
+                      "_headers": {
+                        "description": "headers",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
                       "actor_name": {
                         "description": "the actor name components to search by",
                         "type": {
@@ -1302,7 +1309,7 @@
             "name": "custom",
             "url": {
               "singleUrl": {
-                "value": "http://custom_connector:8101"
+                "value": "http://localhost:8102"
               }
             },
             "headers": {},
@@ -2112,6 +2119,13 @@
                     "name": "movies_by_actor_name",
                     "description": "Movies filtered by actor name search parameters",
                     "arguments": {
+                      "_headers": {
+                        "description": "headers",
+                        "type": {
+                          "type": "named",
+                          "name": "HeaderMap"
+                        }
+                      },
                       "actor_name": {
                         "description": "the actor name components to search by",
                         "type": {

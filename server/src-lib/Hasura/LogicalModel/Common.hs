@@ -10,6 +10,7 @@ import Data.Bifunctor (bimap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended (ToTxt (toTxt))
+import Hasura.Authentication.Role (RoleName, adminRoleName)
 import Hasura.GraphQL.Schema.Common
   ( partialSQLExpToUnpreparedValue,
   )
@@ -22,7 +23,6 @@ import Hasura.RQL.IR.BoolExp (AnnRedactionExp (..), gBoolExpTrue)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..), NestedArrayInfo (..), NestedObjectInfo (..), StructuredColumnInfo (..), fromCol)
 import Hasura.RQL.Types.Permission (AllowedRootFields (..))
-import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.Table.Cache (FieldInfo (..), FieldInfoMap, RolePermInfo (..), SelPermInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 

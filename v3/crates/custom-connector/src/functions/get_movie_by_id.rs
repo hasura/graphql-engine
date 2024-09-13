@@ -4,6 +4,7 @@ use axum::{http::StatusCode, Json};
 use ndc_models;
 
 use crate::{
+    arguments::{check_all_arguments_used, parse_i32_argument},
     query::Result,
     state::{AppState, Row},
 };
@@ -31,32 +32,13 @@ pub(crate) fn rows(
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,
 ) -> Result<Vec<Row>> {
-    let id_value = arguments.get("movie_id").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "missing argument movie_id".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-    let id = id_value
-        .as_i64()
-        .ok_or((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ndc_models::ErrorResponse {
-                message: "incorrect type for movie_id".into(),
-                details: serde_json::Value::Null,
-            }),
-        ))?
-        .try_into()
-        .map_err(|_| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: "movie_id is out of range".into(),
-                    details: serde_json::Value::Null,
-                }),
-            )
-        })?;
+    let mut arguments = arguments
+        .iter()
+        .map(|(k, v)| (k.clone(), v))
+        .collect::<BTreeMap<_, _>>();
+    let id = parse_i32_argument("movie_id", &mut arguments)?;
+    check_all_arguments_used(&arguments)?;
+
     let movie = state.movies.get(&id);
 
     match movie {

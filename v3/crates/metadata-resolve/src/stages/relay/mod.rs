@@ -8,15 +8,13 @@ use crate::types::subgraph::Qualified;
 /// Ideally, we could move more Relay-based resolving into this discreet step, haven't
 /// investigated this too deeply yet.
 pub fn resolve(
-    global_id_enabled_types: &BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    global_id_enabled_types: BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
 ) -> Result<(), RelayError> {
     // To check if global_id_fields are defined in object type but no model has global_id_source set to true:
     //   - Throw an error if no model with globalIdSource:true is found for the object type.
     for (object_type, model_name_list) in global_id_enabled_types {
         if model_name_list.is_empty() {
-            return Err(RelayError::GlobalIdSourceNotDefined {
-                object_type: object_type.clone(),
-            });
+            return Err(RelayError::GlobalIdSourceNotDefined { object_type });
         }
     }
 

@@ -9,6 +9,7 @@ where
 
 -- import Control.Monad.Writer.Strict (runWriter)
 import Database.PG.Query (Query)
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types (IsIdentifier (toIdentifier))
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
@@ -29,7 +30,6 @@ import Hasura.RQL.Types.Common
   ( FieldName (FieldName),
     JsonAggSelect,
   )
-import Hasura.RQL.Types.Session (UserInfo)
 
 -- | Translates IR to Postgres queries for simple SELECTs (select queries that
 -- are not aggregations, including subscriptions).

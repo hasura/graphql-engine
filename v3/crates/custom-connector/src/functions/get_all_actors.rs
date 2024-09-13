@@ -4,6 +4,7 @@ use axum::{http::StatusCode, Json};
 use ndc_models;
 
 use crate::{
+    arguments::check_all_arguments_used,
     query::Result,
     state::{AppState, Row},
 };
@@ -21,7 +22,12 @@ pub(crate) fn function_info() -> ndc_models::FunctionInfo {
     }
 }
 
-pub(crate) fn rows(state: &AppState) -> Result<Vec<Row>> {
+pub(crate) fn rows(
+    arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
+    state: &AppState,
+) -> Result<Vec<Row>> {
+    check_all_arguments_used(arguments)?;
+
     let mut actors = vec![];
     for actor in state.actors.values() {
         let actor_value = serde_json::to_value(actor).map_err(|_| {

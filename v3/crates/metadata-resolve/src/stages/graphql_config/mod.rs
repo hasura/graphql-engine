@@ -40,13 +40,13 @@ pub fn resolve(
         if flags.require_graphql_config {
             return Err(GraphqlConfigError::MissingGraphqlConfig);
         }
-        resolve_graphql_config(fallback_graphql_config())
+        resolve_graphql_config(fallback_graphql_config(), flags)
     } else {
         match graphql_configs.as_slice() {
             // There should only be one graphql config in supergraph
             // Because this config can only be defined in once in a supergraph, it doesn't actually
             // matter which subgraph defines it: the outcome will be the same.
-            [graphql_config] => resolve_graphql_config(&graphql_config.object),
+            [graphql_config] => resolve_graphql_config(&graphql_config.object, flags),
             _ => Err(GraphqlConfigError::MultipleGraphqlConfigDefinition),
         }
     }
@@ -56,6 +56,7 @@ pub fn resolve(
 /// For example, make sure all names are valid GraphQL names.
 pub fn resolve_graphql_config(
     graphql_config: &open_dds::graphql_config::GraphqlConfig,
+    flags: open_dds::flags::Flags,
 ) -> Result<GraphqlConfig, GraphqlConfigError> {
     match graphql_config {
         open_dds::graphql_config::GraphqlConfig::V1(graphql_config_metadata) => {
@@ -112,6 +113,15 @@ pub fn resolve_graphql_config(
                     .root_operation_type_name
                     .as_str(),
             )?);
+            let subscription_root_type_name = graphql_config_metadata
+                .subscription
+                .as_ref()
+                .map(|subscription_config| {
+                    Ok(ast::TypeName(mk_name(
+                        subscription_config.root_operation_type_name.as_str(),
+                    )?))
+                })
+                .transpose()?;
 
             let order_by_input = match &graphql_config_metadata.query.order_by_input {
                 None => None,
@@ -192,8 +202,11 @@ pub fn resolve_graphql_config(
                 global: GlobalGraphqlConfig {
                     query_root_type_name,
                     mutation_root_type_name,
+                    subscription_root_type_name,
                     order_by_input,
                     enable_apollo_federation_fields,
+                    bypass_relation_comparisons_ndc_capability: flags
+                        .bypass_relation_comparisons_ndc_capability,
                 },
             })
         }
@@ -247,6 +260,8 @@ fn fallback_graphql_config() -> &'static graphql_config::GraphqlConfig {
             mutation: graphql_config::MutationGraphqlConfig {
                 root_operation_type_name: GraphQlTypeName::from("Mutation"),
             },
+            // TODO: Subscriptions are still unsupported. No need to consider them for now.
+            subscription: None,
             apollo_federation: None,
         })
     })

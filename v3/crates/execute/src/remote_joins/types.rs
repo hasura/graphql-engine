@@ -1,15 +1,13 @@
 //! Join tree and related types for remote joins.
 //!
 use indexmap::IndexMap;
-use serde::Serialize;
 use std::collections::{BTreeMap, HashMap};
 
 use json_ext::ValueExt;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;
 
-use crate::plan::types as plan_types;
-use crate::plan::ProcessResponseAs;
+use crate::plan::{self, ProcessResponseAs};
 
 /// This tree structure captures all the locations (in the selection set IR) where
 /// remote joins are found.
@@ -110,16 +108,16 @@ pub struct RemoteJoin<'s, 'ir> {
     /// target data connector to execute query on
     pub target_data_connector: &'s metadata_resolve::DataConnectorLink,
     /// NDC node to execute on a data connector
-    pub target_ndc_execution: plan_types::QueryExecutionPlan<'s>,
+    pub target_ndc_execution: plan::query::UnresolvedQueryExecutionPlan<'s>,
     /// Mapping of the fields in source to fields in target.
     /// The HashMap has the following info -
     ///   - key: is the field name in the source
     ///   - value->first item: is the alias we create for the
-    ///   source field. If the user did not request the join field in the
-    ///   selection set, we include the join mapping field and call it a phantom
-    ///   field.
+    ///     source field. If the user did not request the join field in the
+    ///     selection set, we include the join mapping field and call it a phantom
+    ///     field.
     ///   - value->second item: is the target NDC field. This could be a model
-    ///   field or an argument name.
+    ///     field or an argument name.
     pub join_mapping: HashMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
     /// Represents how to process the join response.
     pub process_response_as: ProcessResponseAs<'ir>,
@@ -153,13 +151,9 @@ pub enum RemoteJoinType {
 #[derive(Debug, Clone, Copy)]
 pub struct JoinId(pub i16);
 
-/// Name of the variable used in the IR
-#[derive(Debug, PartialEq, Eq, Hash, Ord, PartialOrd, Clone, Serialize)]
-pub struct VariableName(pub String);
-
 /// An 'Argument' is a map of variable name to it's value.
 /// For example, `{"first_name": "John", "last_name": "Doe"}`
-pub type Argument = BTreeMap<VariableName, ValueExt>;
+pub type Argument = BTreeMap<ir::VariableName, ValueExt>;
 
 /// Monotonically increasing counter with i16 value
 pub(crate) struct MonotonicCounter {

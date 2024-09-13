@@ -31,6 +31,8 @@ import Data.HashSet qualified as Set
 import Data.Semigroup.Generic
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.Session (SessionVariable, SessionVariables, fromSessionVariable, getSessionVariableValue, getSessionVariablesSet)
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Error
@@ -50,9 +52,9 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Schema.Options (RemoveEmptySubscriptionResponses (..))
 import Hasura.RQL.Types.Subscription
 import Hasura.SQL.Types
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------------------------------------------
@@ -115,7 +117,7 @@ validateVariablesTx variableValues = do
 -- Multiplexed queries
 
 newtype MultiplexedQuery = MultiplexedQuery {unMultiplexedQuery :: PG.Query}
-  deriving (Eq, Hashable)
+  deriving (Eq, Hashable, Show)
 
 instance ToTxt MultiplexedQuery where
   toTxt = PG.getQueryText . unMultiplexedQuery
@@ -250,16 +252,96 @@ throwErrorForRemoteRelationshipInPermissionPredicate q = do
           TAFAgg _ -> pure ()
           TAFExp _ -> pure ()
 
+-- | Remove multiplexed results from a subscription poll.
+--
+-- The basic multiplexed subscription query groups all requests by query shape
+-- (poller) and then subgroups by current cursor assignments (cohort). Each
+-- poller acts independently, resulting in each one having its own query to the
+-- database.
+--
+-- Within these independent queries, we take arrays of configuration to
+-- represent all our cohorts. We query across all the cohorts in a poller, and
+-- return a list of cohort results. If there are no new results, these cohort
+-- results will be empty.
+--
+-- The question this function answers is: what if I have a million
+-- subscriptions with different cohort variables that are all waiting for new
+-- information? In this case, we end up returning a one-million row result
+-- with each row containing a map of empty arrays. This is a massive amount of
+-- network traffic to spend on a no-op update.
+--
+-- This function very simply filters out any rows that contain no values on the
+-- database side, saving the network overhead. What this means, however, is
+-- that consumers will no longer receive empty results for a subscription: with
+-- this feature enabled, responses are always non-empty, and if there's an
+-- hour's wait between two responses, then so be it.
+removeEmptyMultiplexedResults :: S.Select -> S.Select
+removeEmptyMultiplexedResults inner = do
+  let nonEmptyRowFilter :: S.WhereFrag
+      nonEmptyRowFilter =
+        S.WhereFrag
+          $ S.BEExists
+          $ S.mkSelect
+            { -- For a request that looks like this:
+              --
+              --     subscription Example {
+              --       sub_one { .. }
+              --       sub_two { .. }
+              --     }
+              --
+              -- ... we'll get back an object that looks like this:
+              --
+              --     { "sub_one": [ .. ], "sub_two": [ .. ] }
+              --
+              -- ... so we only want to return if one of the arrays contains
+              -- information. To do this, we sub-select `json_each` of the
+              -- result, filter for rows containing non-empty arrays, and then
+              -- if there exists any remaining information, we have an update.
+              --
+              -- Note that this is a semantic choice: we don't wait until /all/
+              -- the given subscriptions contain data, just /any/ of them,
+              -- which means that you can still end up with empty responses for
+              -- subscription requests containing multiple fields. It's simply
+              -- the case that they can't all be empty at once.
+              S.selFrom =
+                Just
+                  $ S.FromExp
+                    [ S.FIUnqualifiedFunc
+                        ( S.UnqualifiedFunctionExp
+                            (FunctionName "json_each")
+                            (S.FunctionArgs [S.SEIdentifier $ Identifier "result"] mempty)
+                            Nothing
+                        )
+                    ],
+              S.selExtr = S.dummySelectList,
+              S.selWhere =
+                Just
+                  $ S.WhereFrag
+                  $ S.BECompare
+                    S.SGT
+                    (S.SEFnApp "json_array_length" [S.SEIdentifier (Identifier "value")] Nothing)
+                    (S.SELit "0")
+            }
+
+  -- Ultimately, we select all the multiplexed results, and filter according to
+  -- the definition above.
+  S.mkSelect
+    { S.selFrom = Just $ S.FromExp [S.FISelect (S.Lateral False) inner "_multiplex"],
+      S.selExtr = [S.Extractor (S.SEStar Nothing) Nothing],
+      S.selWhere = Just nonEmptyRowFilter
+    }
+
 mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
     DS.PostgresTranslateSelect pgKind,
     MonadIO m,
     MonadError QErr m
   ) =>
+  RemoveEmptySubscriptionResponses ->
   UserInfo ->
   InsOrdHashMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) Void S.SQLExp) ->
   m MultiplexedQuery
-mkMultiplexedQuery userInfo rootFields = do
+mkMultiplexedQuery removeEmptySubscriptionResponses userInfo rootFields = do
   (sqlFrom, customSQLCTEs) <-
     runWriterT
       $ traverse
@@ -268,7 +350,10 @@ mkMultiplexedQuery userInfo rootFields = do
         )
         (InsOrdHashMap.toList rootFields)
   -- multiplexed queries may only contain read only raw queries
-  let selectWith = S.SelectWith [] select
+  let selectWith = case removeEmptySubscriptionResponses of
+        RemoveEmptyResponses -> S.SelectWith [] (removeEmptyMultiplexedResults select)
+        PreserveEmptyResponses -> S.SelectWith [] select
+
       select =
         S.mkSelect
           { S.selExtr =
@@ -397,9 +482,9 @@ resolveMultiplexedValue allSessionVars = \case
       getSessionVariableValue sessVar allSessionVars
         `onNothing` throw400
           NotFound
-          ("missing session variable: " <>> sessionVariableToText sessVar)
+          ("missing session variable: " <>> sessVar)
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
-    pure $ fromResVars ty ["session", sessionVariableToText sessVar]
+    pure $ fromResVars ty ["session", fromSessionVariable sessVar]
   UVLiteral sqlExp -> pure sqlExp
   UVSession -> do
     -- if the entire session is referenced, then add all session vars in referenced vars

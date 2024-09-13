@@ -3,6 +3,24 @@ use reqwest::Method;
 use std::time::Duration;
 use tower_http::cors;
 
+// Allow tracing headers to be retrievable on responses over CORS.
+//
+// Clippy has a false-positive with HeadeName and interior mutability
+// (https://github.com/rust-lang/rust-clippy/issues/9776). This will get fixed
+// when we upgrade Clippy.
+#[allow(clippy::declare_interior_mutable_const)]
+const TRACE_RESPONSE_HEADER_NAMES: [HeaderName; 7] = [
+    // W3C headers
+    HeaderName::from_static("traceresponse"),
+    HeaderName::from_static("traceparent"),
+    HeaderName::from_static("tracestate"),
+    // Zipkin/B3 headers
+    HeaderName::from_static("x-b3-traceid"),
+    HeaderName::from_static("x-b3-spanid"),
+    HeaderName::from_static("x-b3-parentspanid"),
+    HeaderName::from_static("x-b3-sampled"),
+];
+
 /// Add CORS layer to the app.
 pub fn build_cors_layer(cors_allow_origin: &[String]) -> cors::CorsLayer {
     let cors_allow_origin = if cors_allow_origin.is_empty() {
@@ -19,15 +37,13 @@ pub fn build_cors_layer(cors_allow_origin: &[String]) -> cors::CorsLayer {
             })
         })
     };
-    // Allow traceresponse to be retrievable on CORS
-    let trace_response_header_name = HeaderName::from_static("traceresponse");
     cors::CorsLayer::new()
         .max_age(Duration::from_secs(24 * 60 * 60)) // 24 hours
         .allow_headers(cors::AllowHeaders::mirror_request())
         .allow_origin(cors_allow_origin)
         .allow_credentials(true)
         .allow_methods(vec![Method::GET, Method::POST, Method::OPTIONS])
-        .expose_headers([trace_response_header_name])
+        .expose_headers(TRACE_RESPONSE_HEADER_NAMES)
 }
 
 #[cfg(test)]

@@ -6,7 +6,7 @@
       "name": "db",
       "url": {
         "singleUrl": {
-          "value": "http://reference_agent:8102"
+          "value": "http://localhost:8102"
         }
       },
       "schema": {
@@ -235,7 +235,7 @@
       "name": "db2",
       "url": {
         "singleUrl": {
-          "value": "http://reference_agent:8102"
+          "value": "http://localhost:8102"
         }
       },
       "schema": {

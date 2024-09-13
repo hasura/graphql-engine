@@ -1,5 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
-
 -- | Contains types that can be used by backends to structure updates
 -- to batches of rows in a table
 module Hasura.RQL.IR.Update.Batch
@@ -31,16 +29,14 @@ data UpdateBatch (b :: BackendType) updateOperators v = UpdateBatch
 deriving stock instance
   ( Backend b,
     Show v,
-    Show (updateOperators v),
-    Show (AnnBoolExp b v)
+    Show (updateOperators v)
   ) =>
   Show (UpdateBatch b updateOperators v)
 
 deriving stock instance
   ( Backend b,
     Eq v,
-    Eq (updateOperators v),
-    Eq (AnnBoolExp b v)
+    Eq (updateOperators v)
   ) =>
   Eq (UpdateBatch b updateOperators v)
 

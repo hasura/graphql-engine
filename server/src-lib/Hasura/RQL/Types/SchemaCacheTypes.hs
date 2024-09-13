@@ -28,6 +28,7 @@ import Data.Functor.Const
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
+import Hasura.Authentication.Role (RoleName, roleNameToTxt)
 import Hasura.Base.Error
 import Hasura.LogicalModel.Types (LogicalModelLocation, LogicalModelName)
 import Hasura.NativeQuery.Types (NativeQueryName)
@@ -41,7 +42,6 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.Roles (RoleName, roleNameToTxt)
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G

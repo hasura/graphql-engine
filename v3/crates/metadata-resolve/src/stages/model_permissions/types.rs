@@ -8,7 +8,7 @@ use open_dds::{
     models::ModelName,
     permissions::Role,
     relationships::{RelationshipName, RelationshipType},
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, Deprecated, FieldName},
 };
 
 use crate::stages::{data_connectors, models, models_graphql, object_types, relationships};
@@ -31,12 +31,15 @@ pub enum FilterPermission {
     Filter(ModelPredicate),
 }
 
+pub type ArgumentPresets =
+    BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct SelectPermission {
     pub filter: FilterPermission,
     // pub allow_aggregations: bool,
-    pub argument_presets:
-        BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>,
+    pub argument_presets: ArgumentPresets,
+    pub allow_subscriptions: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -46,6 +49,8 @@ pub enum ModelPredicate {
         field_parent_type: Qualified<CustomTypeName>,
         ndc_column: DataConnectorColumnName,
         operator: UnaryComparisonOperator,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: Option<Deprecated>,
     },
     BinaryFieldComparison {
         field: FieldName,
@@ -54,6 +59,8 @@ pub enum ModelPredicate {
         operator: DataConnectorOperatorName,
         argument_type: QualifiedTypeReference,
         value: ValueExpression,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: Option<Deprecated>,
     },
     Relationship {
         relationship_info: PredicateRelationshipInfo,
@@ -64,7 +71,7 @@ pub enum ModelPredicate {
     Not(Box<ModelPredicate>),
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum UnaryComparisonOperator {
     IsNull,
 }

@@ -4,6 +4,7 @@ use axum::{http::StatusCode, Json};
 use ndc_models;
 
 use crate::{
+    arguments::{check_all_arguments_used, parse_i64_argument},
     query::Result,
     state::{AppState, Row},
 };
@@ -42,34 +43,14 @@ pub(crate) fn rows(
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
     state: &AppState,
 ) -> Result<Vec<Row>> {
-    let lower_bound_value = arguments.get("lower_bound").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "missing argument movie id lower bound".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-    let lower_bound = lower_bound_value.as_i64().ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "movie id bound must be an integer".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-    let upper_bound_value = arguments.get("upper_bound").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "missing argument movie id upper bound".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-    let upper_bound = upper_bound_value.as_i64().ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "movie id bound must be an integer".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
+    let mut arguments = arguments
+        .iter()
+        .map(|(k, v)| (k.clone(), v))
+        .collect::<BTreeMap<_, _>>();
+    let lower_bound = parse_i64_argument("lower_bound", &mut arguments)?;
+    let upper_bound = parse_i64_argument("upper_bound", &mut arguments)?;
+    check_all_arguments_used(&arguments)?;
+
     let mut actors_by_movie_id_bounds = vec![];
 
     for actor in state.actors.values() {

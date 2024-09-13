@@ -7,6 +7,7 @@ use crate::helpers;
 enum EnumTagType {
     Internal { tag: String },
     Adjacent { tag: String, content: String },
+    External,
 }
 
 impl EnumTagType {
@@ -22,29 +23,31 @@ impl EnumTagType {
                 tag: "version".to_string(),
                 content: "definition".to_string(),
             },
+            Tagged::External => EnumTagType::External,
         }
     }
 
-    fn generate_tag(&self) -> String {
+    fn generate_tag(&self) -> Option<String> {
         match self {
             EnumTagType::Internal { tag } | EnumTagType::Adjacent { tag, content: _ } => {
-                tag.to_string()
+                Some(tag.to_string())
             }
+            EnumTagType::External => None,
         }
     }
 }
 
 pub fn impl_opendd_enum(impl_style: EnumImplStyle, variants: &[EnumVariant<'_>]) -> TraitImpls {
-    let (tag, deserialize_exp, json_schema_expr) = match impl_style {
+    let (read_tag_value_str_exp, deserialize_exp, json_schema_expr) = match impl_style {
         EnumImplStyle::UntaggedWithKind => (
-            "kind".to_string(),
+            impl_read_tag_value_str(Some("kind".to_string()), variants),
             impl_deserialize_as_untagged(variants),
             impl_json_schema_untagged(variants),
         ),
         EnumImplStyle::Tagged(tag_kind) => {
             let tag_type = EnumTagType::new(&tag_kind);
             (
-                tag_type.generate_tag(),
+                impl_read_tag_value_str(tag_type.generate_tag(), variants),
                 impl_deserialize_as_tagged(variants, &tag_type),
                 impl_json_schema_tagged(variants, &tag_type),
             )
@@ -64,20 +67,8 @@ pub fn impl_opendd_enum(impl_style: EnumImplStyle, variants: &[EnumVariant<'_>])
                 })
             }
         };
-        let __tag_value = __object_map.remove(#tag)
-            .ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
-                error: serde::de::Error::missing_field(#tag),
-                path: open_dds::traits::JSONPath::new(),
-            })?;
-        let __tag_value_str = __tag_value
-            .as_str()
-            .ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
-                error: serde::de::Error::invalid_type(
-                    serde::de::Unexpected::Other("not a string"),
-                    &"string",
-                ),
-                path: open_dds::traits::JSONPath::new_key(#tag),
-            })?;
+
+        #read_tag_value_str_exp
 
         #deserialize_exp
     };
@@ -85,6 +76,82 @@ pub fn impl_opendd_enum(impl_style: EnumImplStyle, variants: &[EnumVariant<'_>])
     TraitImpls {
         deserialize: impl_deserialize,
         json_schema: json_schema_expr,
+    }
+}
+
+/// Generate the code that reads the __tag_value_str
+fn impl_read_tag_value_str(
+    tag: Option<String>,
+    variants: &[EnumVariant<'_>],
+) -> proc_macro2::TokenStream {
+    // If we have a tag property
+    if let Some(tag) = tag {
+        quote! {
+            let __tag_value = __object_map.remove(#tag)
+            .ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
+                error: serde::de::Error::missing_field(#tag),
+                path: open_dds::traits::JSONPath::new(),
+            })?;
+            let __tag_value_str = __tag_value
+                .as_str()
+                .ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
+                    error: serde::de::Error::invalid_type(
+                        serde::de::Unexpected::Other("not a string"),
+                        &"string",
+                    ),
+                    path: open_dds::traits::JSONPath::new_key(#tag),
+                })?;
+        }
+    }
+    // We don't have a tag property, so we're using external tagging
+    else {
+        let variants_list = variants
+            .iter()
+            .filter_map(|var| {
+                if var.hidden {
+                    None
+                } else {
+                    Some(var.renamed_variant.clone())
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        let expected_variants_error =
+            format!("object with only one of the following properties: {variants_list}");
+        quote! {
+            let mut __object_map_iter = __object_map.into_iter();
+            let (__tag_value_string, __inner) = __object_map_iter.next().ok_or_else(||
+                open_dds::traits::OpenDdDeserializeError  {
+                    error: serde::de::Error::invalid_type(
+                        serde::de::Unexpected::Other("found empty object"),
+                        &#expected_variants_error,
+                    ),
+                    path: open_dds::traits::JSONPath::new(),
+                }
+            )?;
+            if let Some(_) = __object_map_iter.next() {
+                return Err(open_dds::traits::OpenDdDeserializeError  {
+                    error: serde::de::Error::invalid_type(
+                        serde::de::Unexpected::Other("found multiple object properties"),
+                        &#expected_variants_error,
+                    ),
+                    path: open_dds::traits::JSONPath::new(),
+                });
+            }
+            let __tag_value_str = __tag_value_string.as_str();
+            let mut __object_map = match __inner {
+                serde_json::Value::Object(map) => map,
+                _ => {
+                    return Err(open_dds::traits::OpenDdDeserializeError  {
+                        error: serde::de::Error::invalid_type(
+                            serde::de::Unexpected::Other("not an object"),
+                            &"object",
+                        ),
+                        path: open_dds::traits::JSONPath::new_key(__tag_value_str),
+                    })
+                }
+            };
+        }
     }
 }
 
@@ -140,11 +207,17 @@ fn impl_deserialize_as_tagged(
 ) -> proc_macro2::TokenStream {
     let variant_names = variants
         .iter()
-        .map(|var| var.renamed_variant.to_string())
+        .filter_map(|var| {
+            if var.hidden {
+                None
+            } else {
+                Some(var.renamed_variant.to_string())
+            }
+        })
         .collect::<Vec<String>>();
     let variants = generate_enum_variants(variants, tag_type);
     let unexpected_variant_error =
-        unexpected_variant_error(&tag_type.generate_tag(), variant_names.as_slice());
+        unexpected_variant_error(tag_type.generate_tag(), variant_names.as_slice());
     quote! {
         match __tag_value_str {
             #variants
@@ -164,7 +237,7 @@ fn generate_enum_variants(
         let variant_name_string = variant.renamed_variant.to_string();
         let variant_name_str = variant_name_string.as_str();
         let parsed_variant = match tag_type {
-            EnumTagType::Internal {..} => quote! {
+            EnumTagType::Internal {..} | EnumTagType::External => quote! {
                 open_dds::traits::OpenDd::deserialize(#deserialize_from)?
             },
             EnumTagType::Adjacent {tag:_, content} => quote! {
@@ -198,7 +271,7 @@ fn generate_enum_variants(
 
 fn gen_deserialize_from(tag_type: &EnumTagType) -> proc_macro2::TokenStream {
     match tag_type {
-        EnumTagType::Internal { .. } => quote! {
+        EnumTagType::Internal { .. } | EnumTagType::External { .. } => quote! {
             serde_json::Value::Object(__object_map)
         },
         EnumTagType::Adjacent { tag: _, content } => quote! {
@@ -210,12 +283,22 @@ fn gen_deserialize_from(tag_type: &EnumTagType) -> proc_macro2::TokenStream {
     }
 }
 
-fn unexpected_variant_error(tag: &str, known_variants: &[String]) -> proc_macro2::TokenStream {
+fn unexpected_variant_error(
+    tag: Option<String>,
+    known_variants: &[String],
+) -> proc_macro2::TokenStream {
     let known_variants = known_variants.join(", ");
+
+    let path_exp = if let Some(tag) = tag {
+        quote! { open_dds::traits::JSONPath::new_key(#tag) }
+    } else {
+        quote! { open_dds::traits::JSONPath::new() }
+    };
+
     quote! {
         Err(open_dds::traits::OpenDdDeserializeError  {
             error: serde::de::Error::unknown_variant(__ver, &[#known_variants]),
-            path: open_dds::traits::JSONPath::new_key(#tag),
+            path: #path_exp,
         })
     }
 }
@@ -336,8 +419,13 @@ fn impl_json_schema_tagged(
                     let content_schema = quote! {
                         open_dds::traits::gen_subschema_for::<#ty>(gen)
                     };
+                    let metadata_expr = build_variant_json_schema_metadata(
+                        variant.doc_description.as_ref(),
+                        &variant.json_schema_opts,
+                    );
                     Some(helpers::schema_object(&quote! {
                         instance_type: Some(schemars::schema::InstanceType::Object.into()),
+                        metadata: Some(Box::new(#metadata_expr)),
                         object: Some(Box::new(schemars::schema::ObjectValidation {
                             properties: {
                                 let mut props = schemars::Map::new();
@@ -359,6 +447,91 @@ fn impl_json_schema_tagged(
                 .collect::<Vec<_>>();
 
             helpers::variant_subschemas(unique_names.len() == count, &variant_schemas)
+        }
+        EnumTagType::External => {
+            let mut unique_names = std::collections::HashSet::new();
+            let mut count = 0;
+            let variant_schemas = variants
+                .iter()
+                .filter_map(|variant| {
+                    if variant.hidden {
+                        return None;
+                    }
+
+                    unique_names.insert(variant.renamed_variant.to_string());
+                    count += 1;
+
+                    let name = &variant.renamed_variant;
+                    let ty = &variant.field.ty.clone();
+                    let content_schema = quote! {
+                        open_dds::traits::gen_subschema_for::<#ty>(gen)
+                    };
+                    let metadata_expr = build_variant_json_schema_metadata(
+                        variant.doc_description.as_ref(),
+                        &variant.json_schema_opts,
+                    );
+                    Some(helpers::schema_object(&quote! {
+                        instance_type: Some(schemars::schema::InstanceType::Object.into()),
+                        metadata: Some(Box::new(#metadata_expr)),
+                        object: Some(Box::new(schemars::schema::ObjectValidation {
+                            properties: {
+                                let mut props = schemars::Map::new();
+                                props.insert(#name.to_owned(), #content_schema);
+                                props
+                            },
+                            required: {
+                                let mut required = schemars::Set::new();
+                                required.insert(#name.to_owned());
+                                required
+                            },
+                            additional_properties: Some(Box::new(false.into())),
+                            ..Default::default()
+                        })),
+                    }))
+                })
+                .collect::<Vec<_>>();
+
+            helpers::variant_subschemas(unique_names.len() == count, &variant_schemas)
+        }
+    }
+}
+
+fn build_variant_json_schema_metadata(
+    doc_description: Option<&String>,
+    json_schema_opts: &JsonSchemaVariantOpts,
+) -> proc_macro2::TokenStream {
+    let description_expr = doc_description
+        .map(|description| {
+            quote! {
+                metadata.description = Some(#description.to_string());
+            }
+        })
+        .unwrap_or_default();
+    let title_expr = json_schema_opts
+        .title
+        .as_ref()
+        .map(|title| {
+            quote! {
+                metadata.title = Some(#title.to_string());
+            }
+        })
+        .unwrap_or_default();
+    let example_expr = json_schema_opts
+        .example
+        .as_ref()
+        .map(|example| {
+            quote! {
+                metadata.examples = [#example()].to_vec();
+            }
+        })
+        .unwrap_or_default();
+    quote! {
+        {
+            let mut metadata = schemars::schema::Metadata::default();
+            #title_expr
+            #description_expr
+            #example_expr
+            metadata
         }
     }
 }

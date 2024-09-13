@@ -627,6 +627,7 @@ impl ObjectBooleanExpressionType {
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "ComparableField"))]
+/// A field of an object type that can be used for comparison when evaluating a boolean expression.
 pub struct ComparableField {
     pub field_name: FieldName,
     pub operators: EnableAllOrSpecific<OperatorName>,
@@ -681,6 +682,7 @@ pub struct Deprecated {
 
 impl_OpenDd_default_for!(Deprecated);
 
+/// Configuration for apollo federation related types and directives.
 #[derive(Serialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd, Eq)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -689,6 +691,7 @@ pub struct ObjectApolloFederationConfig {
     pub keys: Vec<ApolloFederationObjectKey>,
 }
 
+/// The definition of a key for an apollo federation object.
 #[derive(Serialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd, Eq)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -697,6 +700,7 @@ pub struct ApolloFederationObjectKey {
     pub fields: Vec<FieldName>,
 }
 
+/// The definition of an argument for a field in a user-defined object type.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "FieldArgumentDefinition"))]

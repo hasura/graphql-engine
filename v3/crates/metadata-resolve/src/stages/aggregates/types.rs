@@ -193,7 +193,7 @@ pub enum AggregateExpressionError {
         name: Qualified<AggregateExpressionName>,
         function_name: AggregationFunctionName,
         data_connector_name: Qualified<DataConnectorName>,
-        data_connector_aggregate_function_name: String,
+        data_connector_aggregate_function_name: DataConnectorAggregationFunctionName,
     },
 
     #[error("the aggregate expression {name} specifies an aggregation function '{function_name}' which is mapped to the data connector '{data_connector_name}' but the Open DD return type {return_type} is not compatible with the data connector's return type. Reason: {reason}")]

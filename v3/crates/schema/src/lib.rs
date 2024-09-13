@@ -12,15 +12,17 @@ mod mutation_root;
 mod permissions;
 mod query_root;
 mod relay;
+mod subscription_root;
 mod types;
 
 use std::str::FromStr;
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
 use lang_graphql::schema::{self as gql_schema, SchemaContext};
 use lang_graphql::{ast::common as ast, mk_name};
-use metadata_resolve::Qualified;
+use metadata_resolve::{OrderByExpressionIdentifier, Qualified};
 use open_dds::{
     aggregates::AggregateExpressionName,
     commands::CommandName,
@@ -40,8 +42,8 @@ pub use types::{
     Annotation, ApolloFederationRootFields, ArgumentNameAndPath, ArgumentPresets,
     BooleanExpressionAnnotation, CommandSourceDetail, EntityFieldTypeNameMapping, GlobalID,
     InputAnnotation, ModelFilterArgument, ModelInputAnnotation, ModelOrderByDirection,
-    NamespaceAnnotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
-    RootFieldKind, TypeKind,
+    NamespaceAnnotation, NodeFieldTypeNameMapping, ObjectFieldKind, OutputAnnotation,
+    RootFieldAnnotation, RootFieldKind, TypeKind,
 };
 
 /// This 'NamespacedGetter' looks up 'NamespacedNodeInfo's according to actual roles.
@@ -82,28 +84,28 @@ impl lang_graphql::schema::NamespacedGetter<GDS> for GDSNamespaceGetterAgnostic 
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct GDS {
-    pub metadata: metadata_resolve::Metadata,
+    pub metadata: Arc<metadata_resolve::Metadata>,
 }
 
 impl GDS {
     pub fn new(
         user_metadata: open_dds::Metadata,
-        metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
+        metadata_resolve_configuration: &metadata_resolve::configuration::Configuration,
     ) -> Result<Self, Error> {
-        let resolved_metadata =
+        let (resolved_metadata, _) =
             metadata_resolve::resolve(user_metadata, metadata_resolve_configuration)?;
         Ok(GDS {
-            metadata: resolved_metadata,
+            metadata: Arc::new(resolved_metadata),
         })
     }
 
     pub fn new_with_default_flags(user_metadata: open_dds::Metadata) -> Result<Self, Error> {
-        let resolved_metadata = metadata_resolve::resolve(
+        let (resolved_metadata, _) = metadata_resolve::resolve(
             user_metadata,
-            metadata_resolve::configuration::Configuration::default(),
+            &metadata_resolve::configuration::Configuration::default(),
         )?;
         Ok(GDS {
-            metadata: resolved_metadata,
+            metadata: Arc::new(resolved_metadata),
         })
     }
 
@@ -143,6 +145,11 @@ impl gql_schema::SchemaContext for GDS {
             types::TypeId::MutationRoot { graphql_type_name } => Ok(gql_schema::TypeInfo::Object(
                 mutation_root::mutation_root_schema(builder, self, graphql_type_name)?,
             )),
+            types::TypeId::SubscriptionRoot { graphql_type_name } => {
+                Ok(gql_schema::TypeInfo::Object(
+                    subscription_root::subscription_root_schema(builder, self, graphql_type_name)?,
+                ))
+            }
             types::TypeId::OutputType {
                 gds_type_name,
                 graphql_type_name,
@@ -198,13 +205,15 @@ impl gql_schema::SchemaContext for GDS {
                 is_null_operator_name,
             ),
             types::TypeId::ModelOrderByExpression {
-                model_name,
+                order_by_expression_identifier,
                 graphql_type_name,
+                model_name,
             } => model_order_by::build_model_order_by_input_schema(
                 self,
                 builder,
                 graphql_type_name,
                 model_name,
+                order_by_expression_identifier,
             ),
             types::TypeId::OrderByEnumType { graphql_type_name } => {
                 model_order_by::build_order_by_enum_type_schema(self, builder, graphql_type_name)
@@ -255,7 +264,14 @@ impl gql_schema::SchemaContext for GDS {
             mutation: Some(types::TypeId::MutationRoot {
                 graphql_type_name: self.metadata.graphql_config.mutation_root_type_name.clone(),
             }),
-            subscription: None,
+            subscription: self
+                .metadata
+                .graphql_config
+                .subscription_root_type_name
+                .as_ref()
+                .map(|type_name| types::TypeId::SubscriptionRoot {
+                    graphql_type_name: type_name.clone(),
+                }),
         }
     }
 }
@@ -318,6 +334,10 @@ pub enum Error {
     InternalErrorDuplicateEntitySourceFound { type_name: ast::TypeName },
     #[error("internal error while building schema, model not found: {model_name}")]
     InternalModelNotFound { model_name: Qualified<ModelName> },
+    #[error("internal error while building schema, order by expression not found: {order_by_expression_identifier}")]
+    InternalOrderByExpressionNotFound {
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
+    },
     #[error(
         "internal error while building schema, filter_expression for model not found: {model_name}"
     )]
@@ -383,6 +403,10 @@ pub enum Error {
     InternalNoOrderByGraphqlConfig { model_name: Qualified<ModelName> },
     #[error("internal error: Cannot generate order_by enum type for type {type_name} since the order_by_input GraphqlConfig is not defined")]
     InternalNoOrderByGraphqlConfigOrderByEnumType { type_name: ast::TypeName },
+    #[error("internal error: Cannot generate schema for order by expression {order_by_expression_identifier} since the order_by_input GraphqlConfig is not defined")]
+    InternalNoOrderByGraphqlConfigOrderByExpression {
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
+    },
     #[error("duplicate field name {field_name} generated while building query root")]
     DuplicateFieldInQueryRoot { field_name: ast::Name },
     #[error("Cannot have a function based command backed by a procedure or vice versa. Found for command {command_name:}")]
@@ -392,6 +416,10 @@ pub enum Error {
     #[error("relationships to procedure based commands are not supported")]
     RelationshipsToProcedureBasedCommandsAreNotSupported,
 
+    #[error("internal error: type mapping not found for type {type_name:}")]
+    InternalTypeMappingNotFound {
+        type_name: Qualified<CustomTypeName>,
+    },
     #[error("internal error: type mapping or field mapping not found for type {type_name:} and field {field_name:}")]
     InternalMappingNotFound {
         type_name: Qualified<CustomTypeName>,

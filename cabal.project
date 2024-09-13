@@ -16,7 +16,18 @@
 --
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 
-with-compiler: ghc-9.6.5
+
+-- NOTE: we want to be using 9.10.1 with this patch applied for now:
+-- https://gitlab.haskell.org/ghc/ghc/-/issues/25074
+--
+-- which we do on CI. Hope this makes it into 9.10.2
+--
+-- You can run this locally by installing the bindist I've created 
+--
+--   curl 'https://drive.usercontent.google.com/download?id=1ZYKOwmwINRNzo9M2PkdpDX7htgQ98oMG&export=download&confirm=t' --output 9.10.1-fork-bindist.tar.xz
+--   ghcup install ghc -u file:///9.10.1-fork-bindist.tar.xz
+-- 
+with-compiler: ghc-9.10.1
 
 -- package-level parallelism:
 jobs: $ncpus
@@ -28,14 +39,20 @@ packages: server/forks/*/*.cabal
 -- TODO remove these when we are able:
 allow-newer: req:template-haskell
 allow-newer: ekg-core:base
+allow-newer: ekg-core:primitive
 allow-newer: ekg-core:ghc-prim
+allow-newer: ekg-core:containers
 allow-newer: ekg-core:inspection-testing
 allow-newer: ekg-core:text
 allow-newer: ekg-json:base
 allow-newer: ekg-json:text
+allow-newer: ekg-json:aeson
+allow-newer: ekg-json:vector
 allow-newer: ekg-prometheus:base
 allow-newer: ekg-prometheus:text
 allow-newer: ekg-prometheus:bytestring
+allow-newer: ekg-prometheus:primitive
+allow-newer: ekg-prometheus:containers
 -- Migrating to 0.25+ looks like it will be a real pain... :(
 -- https://github.com/morpheusgraphql/morpheus-graphql/pull/766
 allow-newer: relude:base
@@ -58,6 +75,7 @@ allow-newer: morpheus-graphql-server:transformers
 allow-newer: morpheus-graphql-server:vector
 allow-newer: morpheus-graphql-client:text
 allow-newer: morpheus-graphql-client:req
+allow-newer: req:containers
 allow-newer: morpheus-graphql-client:transformers
 allow-newer: morpheus-graphql-client:vector
 allow-newer: morpheus-graphql-subscriptions:text
@@ -65,13 +83,19 @@ allow-newer: morpheus-graphql-subscriptions:transformers
 allow-newer: servant-openapi3:base
 allow-newer: openapi3:base
 allow-newer: servant-client:base
+allow-newer: servant-client:containers
 allow-newer: servant-client:transformers
 allow-newer: servant-client:mtl
 allow-newer: servant-client-core:base
+allow-newer: servant-client-core:containers
 allow-newer: servant-client-core:free
 allow-newer: servant-client-core:template-haskell
 allow-newer: servant-client-core:transformers
 allow-newer: servant-server:base
+allow-newer: servant-server:containers
+allow-newer: servant-server:either
+allow-newer: servant-server:bytestring
+allow-newer: servant-server:filepath
 allow-newer: servant-server:template-haskell
 allow-newer: servant-server:transformers
 allow-newer: servant-server:mtl
@@ -87,9 +111,51 @@ allow-newer: validation:assoc
 allow-newer: aeson:th-abstraction
 allow-newer: optics-th:th-abstraction
 allow-newer: generics-sop:th-abstraction
+allow-newer: insert-ordered-containers:base
+allow-newer: lucid2:base
+allow-newer: insert-ordered-containers:lens
+allow-newer: uuid-types:text
+allow-newer: uuid-types:template-haskell
+allow-newer: string-interpolate:template-haskell 
+allow-newer: postgresql-simple:time
+allow-newer: postgresql-simple:base
+allow-newer: postgresql-simple:template-haskell
+allow-newer: postgresql-simple:bytestring
+allow-newer: postgresql-simple:text
+allow-newer: postgresql-simple:containers
+allow-newer: postgresql-simple:postgresql-libpq
+allow-newer: openapi3:template-haskell 
+allow-newer: superbuffer:bytestring
+allow-newer: websockets:containers
+allow-newer: http-api-data:containers
+allow-newer: stm-hamt:primitive
+allow-newer: stm-hamt:primitive-extras
+allow-newer: quickcheck-instances:base
+allow-newer: quickcheck-instances:bytestring
+allow-newer: uuid:uuid-types
+allow-newer: connection:tls
+allow-newer: proto-lens:base
+allow-newer: proto-lens-runtime:base
+allow-newer: launchdarkly-server-sdk:lens
+allow-newer: launchdarkly-server-sdk:bytestring
+allow-newer: launchdarkly-server-sdk:text
+allow-newer: launchdarkly-server-sdk:containers
+allow-newer: lrucache:containers
+allow-newer: kriti-lang:aeson
+allow-newer: generic-monoid:base
+allow-newer: aeson-optics:base
+allow-newer: testcontainers:bytestring
+allow-newer: postgresql-libpq:base
+allow-newer: xml-lens:text
+allow-newer: xml-lens:containers
+allow-newer: config-ini:text
+allow-newer: hsc2hs:base
+allow-newer: xml-conduit:Cabal
+allow-newer: cabal-doctest:Cabal
+allow-newer: postgresql-libpq:Cabal
+allow-newer: hsc2hs:filepath
+allow-newer: hsc2hs:containers
 
--- https://gitlab.haskell.org/ghc/ghc-debug/-/merge_requests/27
-allow-newer: ghc-debug-stub:ghc-prim
 -- https://github.com/mokus0/th-extras/pull/20
 allow-newer: th-extras:template-haskell
 
@@ -174,15 +240,22 @@ source-repository-package
   location: https://github.com/hasura/ekg-core.git
   tag: df610859603b504494ad770bdbb7053a7f0b9a6c
 
--- because we need 27d87f01, not yet released
-source-repository-package
-  type: git
-  location: https://github.com/snoyberg/yaml.git
-  tag: c1aa7b3991e669e4c6a977712b495d40a54cf819
-  subdir: yaml
-
 source-repository-package
   type: git
   location: https://github.com/hasura/libdeflate-hs.git
   tag: e6f020a1a24d07516d753fbb6f30758774f76372
+
+-- waiting on release:
+source-repository-package
+  type: git
+  location: https://github.com/testcontainers/testcontainers-hs
+  tag: fe0d6bbce6ce74d5843a964ac231929ea37025e8
+
+-- while we wait for 9.10 support to be released, see:
+-- https://gitlab.haskell.org/ghc/ghc-debug/-/merge_requests/60 
+source-repository-package
+  type: git
+  location: https://gitlab.haskell.org/ghc/ghc-debug.git
+  tag: 2541e77d2687b8b3b0c1a52bb4790a602ce17d7d
+  subdir: stub
 

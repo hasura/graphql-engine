@@ -3,63 +3,83 @@
 use std::{any::Any, sync::Arc};
 
 use async_trait::async_trait;
+// use column_metadata::{ColumnMetadata, ColumnMetadataRow, COLUMN_METADATA};
+use foreign_keys::{InferredForeignKeys, InferredForeignKeysRow, INFERRED_FOREIGN_KEY_CONSTRAINTS};
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved, ModelRelationshipTarget};
-mod df {
+use struct_type::{
+    StructTypeFieldRow, StructTypeFields, StructTypeRow, StructTypes, STRUCT_TYPE,
+    STRUCT_TYPE_FIELD,
+};
+use table_metadata::{TableMetadata, TableMetadataRow, TABLE_METADATA};
+use table_valued_function::*;
+mod datafusion {
     pub(super) use datafusion::{
-        arrow::{
-            array::RecordBatch,
-            datatypes::{DataType, Field, Schema, SchemaRef},
-        },
-        catalog::schema::SchemaProvider,
-        common::ScalarValue,
-        datasource::{TableProvider, TableType},
-        error::Result,
-        execution::context::SessionState,
-        logical_expr::Expr,
-        physical_plan::{values::ValuesExec, ExecutionPlan},
+        catalog::SchemaProvider, datasource::TableProvider, error::Result,
     };
 }
 use open_dds::relationships::RelationshipType;
 use serde::{Deserialize, Serialize};
 
+use super::{mem_table::MemTable, types::TypeRegistry};
+
+// mod column_metadata;
+mod foreign_keys;
+mod struct_type;
+mod table_metadata;
+mod table_valued_function;
+
 pub const HASURA_METADATA_SCHEMA: &str = "hasura";
-pub const TABLE_METADATA: &str = "table_metadata";
-pub const COLUMN_METADATA: &str = "column_metadata";
-pub const INFERRED_FOREIGN_KEY_CONSTRAINTS: &str = "inferred_foreign_key_constraints";
 
 /// Describes the database schema structure and metadata.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub(crate) struct Introspection {
-    pub(crate) table_metadata: TableMetadata,
-    pub(crate) column_metadata: ColumnMetadata,
-    pub(crate) inferred_foreign_key_constraints: InferredForeignKeys,
+    struct_types: StructTypes,
+    struct_type_fields: StructTypeFields,
+    table_metadata: TableMetadata,
+    inferred_foreign_key_constraints: InferredForeignKeys,
+    functions: TableValuedFunction,
+    function_arguments: TableValuedFunctionArgument,
 }
 
 impl Introspection {
     /// Derive SQL schema from the Open DDS metadata.
     pub fn from_metadata(
         metadata: &resolved::Metadata,
-        schemas: &IndexMap<String, crate::catalog::schema::Subgraph>,
+        type_registry: &TypeRegistry,
+        schemas: &IndexMap<String, crate::catalog::subgraph::Subgraph>,
+        functions: &IndexMap<String, Arc<super::command::Command>>,
     ) -> Self {
+        let mut struct_types = Vec::new();
+        let mut struct_type_fields = Vec::new();
+
+        for struct_type in type_registry.struct_types().values() {
+            struct_types.push(StructTypeRow::new(
+                struct_type.name().clone(),
+                struct_type.description().cloned(),
+            ));
+            for (field_name, field) in struct_type.fields() {
+                struct_type_fields.push(StructTypeFieldRow::new(
+                    struct_type.name().clone(),
+                    field_name.to_string(),
+                    field.data_type.clone(),
+                    field.normalized_type.clone(),
+                    field.is_nullable,
+                    field.description.clone(),
+                ));
+            }
+        }
+
         let mut table_metadata_rows = Vec::new();
-        let mut column_metadata_rows = Vec::new();
         let mut foreign_key_constraint_rows = Vec::new();
         for (schema_name, schema) in schemas {
-            for (table_name, table) in &schema.models {
-                table_metadata_rows.push(TableRow::new(
-                    schema_name.clone(),
+            for (table_name, table) in &schema.tables {
+                table_metadata_rows.push(TableMetadataRow::new(
+                    schema_name.to_string(),
                     table_name.to_string(),
+                    table.struct_type.clone(),
                     table.description.clone(),
                 ));
-                for (column_name, column_description) in &table.columns {
-                    column_metadata_rows.push(ColumnRow {
-                        schema_name: schema_name.clone(),
-                        table_name: table_name.clone(),
-                        column_name: column_name.clone(),
-                        description: column_description.clone(),
-                    });
-                }
 
                 // TODO:
                 // 1. Need to check if the target_model is part of subgraphs
@@ -77,189 +97,56 @@ impl Introspection {
                         ) = &relationship.target
                         {
                             for mapping in mappings {
-                                foreign_key_constraint_rows.push(ForeignKeyRow {
-                                    from_schema_name: schema_name.clone(),
-                                    from_table_name: table_name.clone(),
-                                    from_column_name: mapping.source_field.field_name.to_string(),
-                                    to_schema_name: model_name.subgraph.clone(),
-                                    to_table_name: model_name.name.to_string(),
-                                    to_column_name: mapping.target_field.field_name.to_string(),
-                                });
+                                foreign_key_constraint_rows.push(InferredForeignKeysRow::new(
+                                    schema_name.to_string(),
+                                    table_name.clone(),
+                                    mapping.source_field.field_name.to_string(),
+                                    model_name.subgraph.to_string(),
+                                    model_name.name.to_string(),
+                                    mapping.target_field.field_name.to_string(),
+                                ));
                             }
                         }
                     }
                 }
             }
         }
+        let mut function_rows = Vec::new();
+        let mut function_argument_rows = Vec::new();
+        for (function_name, function) in functions {
+            function_rows.push(TableValuedFunctionRow::new(
+                function_name.clone(),
+                function.struct_type.clone(),
+                function.description.clone(),
+            ));
+
+            #[allow(clippy::cast_possible_wrap)]
+            for (position, (argument_name, argument)) in function.arguments.iter().enumerate() {
+                function_argument_rows.push(TableValuedFunctionArgumentRow::new(
+                    function_name.clone(),
+                    argument_name.to_string(),
+                    position as i64,
+                    argument.argument_type.clone(),
+                    argument.argument_type_normalized.clone(),
+                    argument.is_nullable,
+                    argument.description.clone(),
+                ));
+            }
+        }
         Introspection {
             table_metadata: TableMetadata::new(table_metadata_rows),
-            column_metadata: ColumnMetadata::new(column_metadata_rows),
             inferred_foreign_key_constraints: InferredForeignKeys::new(foreign_key_constraint_rows),
+            functions: TableValuedFunction::new(function_rows),
+            function_arguments: TableValuedFunctionArgument::new(function_argument_rows),
+            struct_types: StructTypes::new(struct_types),
+            struct_type_fields: StructTypeFields::new(struct_type_fields),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct TableMetadata {
-    schema: df::SchemaRef,
-    rows: Vec<TableRow>,
-}
-
-impl TableMetadata {
-    pub(crate) fn new(rows: Vec<TableRow>) -> Self {
-        let schema_name = df::Field::new("schema_name", df::DataType::Utf8, false);
-        let table_name = df::Field::new("table_name", df::DataType::Utf8, false);
-        let description = df::Field::new("description", df::DataType::Utf8, true);
-        let schema =
-            df::SchemaRef::new(df::Schema::new(vec![schema_name, table_name, description]));
-        TableMetadata { schema, rows }
-    }
-}
-
-impl TableMetadata {
-    fn to_values_table(&self) -> ValuesTable {
-        ValuesTable {
-            schema: self.schema.clone(),
-            rows: self
-                .rows
-                .iter()
-                .map(|row| {
-                    vec![
-                        df::ScalarValue::Utf8(Some(row.schema_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.table_name.clone())),
-                        df::ScalarValue::Utf8(row.description.clone()),
-                    ]
-                })
-                .collect(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct TableRow {
-    schema_name: String,
-    table_name: String,
-    description: Option<String>,
-}
-
-impl TableRow {
-    pub(crate) fn new(
-        schema_name: String,
-        table_name: String,
-        description: Option<String>,
-    ) -> Self {
-        Self {
-            schema_name,
-            table_name,
-            description,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct ColumnMetadata {
-    pub(crate) schema: df::SchemaRef,
-    pub(crate) rows: Vec<ColumnRow>,
-}
-
-impl ColumnMetadata {
-    fn new(rows: Vec<ColumnRow>) -> Self {
-        let schema_name = df::Field::new("schema_name", df::DataType::Utf8, false);
-        let table_name = df::Field::new("table_name", df::DataType::Utf8, false);
-        let column_name = df::Field::new("column_name", df::DataType::Utf8, false);
-        let description = df::Field::new("description", df::DataType::Utf8, true);
-        let schema = df::SchemaRef::new(df::Schema::new(vec![
-            schema_name,
-            table_name,
-            column_name,
-            description,
-        ]));
-        ColumnMetadata { schema, rows }
-    }
-    fn to_values_table(&self) -> ValuesTable {
-        ValuesTable {
-            schema: self.schema.clone(),
-            rows: self
-                .rows
-                .iter()
-                .map(|row| {
-                    vec![
-                        df::ScalarValue::Utf8(Some(row.schema_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.table_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.column_name.clone())),
-                        df::ScalarValue::Utf8(row.description.clone()),
-                    ]
-                })
-                .collect(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct ColumnRow {
-    schema_name: String,
-    table_name: String,
-    column_name: String,
-    description: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct InferredForeignKeys {
-    schema: df::SchemaRef,
-    rows: Vec<ForeignKeyRow>,
-}
-
-impl InferredForeignKeys {
-    fn new(rows: Vec<ForeignKeyRow>) -> Self {
-        let from_schema_name = df::Field::new("from_schema_name", df::DataType::Utf8, false);
-        let from_table_name = df::Field::new("from_table_name", df::DataType::Utf8, false);
-        let from_column_name = df::Field::new("from_column_name", df::DataType::Utf8, false);
-        let to_schema_name = df::Field::new("to_schema_name", df::DataType::Utf8, false);
-        let to_table_name = df::Field::new("to_table_name", df::DataType::Utf8, false);
-        let to_column_name = df::Field::new("to_column_name", df::DataType::Utf8, false);
-        let schema = df::SchemaRef::new(df::Schema::new(vec![
-            from_schema_name,
-            from_table_name,
-            from_column_name,
-            to_schema_name,
-            to_table_name,
-            to_column_name,
-        ]));
-        InferredForeignKeys { schema, rows }
-    }
-    fn to_values_table(&self) -> ValuesTable {
-        ValuesTable {
-            schema: self.schema.clone(),
-            rows: self
-                .rows
-                .iter()
-                .map(|row| {
-                    vec![
-                        df::ScalarValue::Utf8(Some(row.from_schema_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.from_table_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.from_column_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.to_schema_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.to_table_name.clone())),
-                        df::ScalarValue::Utf8(Some(row.to_column_name.clone())),
-                    ]
-                })
-                .collect(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-struct ForeignKeyRow {
-    from_schema_name: String,
-    from_table_name: String,
-    from_column_name: String,
-    to_schema_name: String,
-    to_table_name: String,
-    to_column_name: String,
-}
-
 pub(crate) struct IntrospectionSchemaProvider {
-    tables: IndexMap<String, Arc<dyn df::TableProvider>>,
+    tables: IndexMap<String, Arc<MemTable>>,
 }
 
 impl IntrospectionSchemaProvider {
@@ -267,28 +154,37 @@ impl IntrospectionSchemaProvider {
         let tables = [
             (
                 TABLE_METADATA,
-                introspection.table_metadata.to_values_table(),
-            ),
-            (
-                COLUMN_METADATA,
-                introspection.column_metadata.to_values_table(),
+                introspection.table_metadata.to_table_provider(),
             ),
             (
                 INFERRED_FOREIGN_KEY_CONSTRAINTS,
                 introspection
                     .inferred_foreign_key_constraints
-                    .to_values_table(),
+                    .to_table_provider(),
+            ),
+            (
+                TABLE_VALUED_FUNCTION,
+                introspection.functions.to_table_provider(),
+            ),
+            (
+                TABLE_VALUED_FUNCTION_ARGUMENT,
+                introspection.function_arguments.to_table_provider(),
+            ),
+            (STRUCT_TYPE, introspection.struct_types.to_table_provider()),
+            (
+                STRUCT_TYPE_FIELD,
+                introspection.struct_type_fields.to_table_provider(),
             ),
         ]
         .into_iter()
-        .map(|(k, table)| (k.to_string(), Arc::new(table) as Arc<dyn df::TableProvider>))
+        .map(|(k, table)| (k.to_string(), Arc::new(table)))
         .collect();
         IntrospectionSchemaProvider { tables }
     }
 }
 
 #[async_trait]
-impl df::SchemaProvider for IntrospectionSchemaProvider {
+impl datafusion::SchemaProvider for IntrospectionSchemaProvider {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -300,8 +196,12 @@ impl df::SchemaProvider for IntrospectionSchemaProvider {
     async fn table(
         &self,
         name: &str,
-    ) -> datafusion::error::Result<Option<Arc<dyn df::TableProvider>>> {
-        Ok(self.tables.get(name).cloned())
+    ) -> datafusion::Result<Option<Arc<dyn datafusion::TableProvider>>> {
+        Ok(self
+            .tables
+            .get(name)
+            .cloned()
+            .map(|table| table as Arc<dyn datafusion::TableProvider>))
     }
 
     fn table_exist(&self, name: &str) -> bool {
@@ -309,46 +209,221 @@ impl df::SchemaProvider for IntrospectionSchemaProvider {
     }
 }
 
-// A table with static rows
-struct ValuesTable {
-    schema: df::SchemaRef,
-    rows: Vec<Vec<df::ScalarValue>>,
-}
+// #[cfg(test)]
+// mod tests {
+//     use ::datafusion::{
+//         catalog::{CatalogProvider, SchemaProvider},
+//         catalog_common::MemoryCatalogProvider,
+//     };
 
-#[async_trait]
-impl df::TableProvider for ValuesTable {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
+//     use super::*;
+//     use ::datafusion::prelude::*;
+//     use std::sync::Arc;
 
-    fn schema(&self) -> df::SchemaRef {
-        self.schema.clone()
-    }
+//     fn create_test_introspection() -> Introspection {
+//         let table_metadata = TableMetadata::new(vec![
+//             TableMetadataRow::new(
+//                 "public".to_string(),
+//                 "users".to_string(),
+//                 Some("Users table".to_string()),
+//             ),
+//             TableMetadataRow::new(
+//                 "public".to_string(),
+//                 "posts".to_string(),
+//                 Some("Posts table".to_string()),
+//             ),
+//         ]);
 
-    fn table_type(&self) -> df::TableType {
-        df::TableType::View
-    }
-    async fn scan(
-        &self,
-        _state: &df::SessionState,
-        projection: Option<&Vec<usize>>,
-        // filters and limit can be used here to inject some push-down operations if needed
-        _filters: &[df::Expr],
-        _limit: Option<usize>,
-    ) -> datafusion::error::Result<Arc<dyn df::ExecutionPlan>> {
-        let projected_schema = Arc::new(self.schema.project(projection.unwrap_or(&vec![]))?);
-        let columnar_projection = projection
-            .unwrap_or(&vec![])
-            .iter()
-            .map(|j| self.rows.iter().map(|row| row[*j].clone()))
-            .map(df::ScalarValue::iter_to_array)
-            .collect::<df::Result<Vec<_>>>()?;
-        Ok(Arc::new(df::ValuesExec::try_new_from_batches(
-            projected_schema.clone(),
-            vec![df::RecordBatch::try_new(
-                projected_schema,
-                columnar_projection,
-            )?],
-        )?))
-    }
-}
+//         let column_metadata = ColumnMetadata::new(vec![
+//             ColumnMetadataRow::new(
+//                 "public".to_string(),
+//                 "users".to_string(),
+//                 "id".to_string(),
+//                 Some("User ID".to_string()),
+//             ),
+//             ColumnMetadataRow::new(
+//                 "public".to_string(),
+//                 "users".to_string(),
+//                 "name".to_string(),
+//                 Some("User name".to_string()),
+//             ),
+//             ColumnMetadataRow::new(
+//                 "public".to_string(),
+//                 "posts".to_string(),
+//                 "id".to_string(),
+//                 Some("Post ID".to_string()),
+//             ),
+//             ColumnMetadataRow::new(
+//                 "public".to_string(),
+//                 "posts".to_string(),
+//                 "user_id".to_string(),
+//                 Some("Author's user ID".to_string()),
+//             ),
+//         ]);
+
+//         let inferred_foreign_keys = InferredForeignKeys::new(vec![InferredForeignKeysRow::new(
+//             "public".to_string(),
+//             "posts".to_string(),
+//             "user_id".to_string(),
+//             "public".to_string(),
+//             "users".to_string(),
+//             "id".to_string(),
+//         )]);
+//         let functions = TableValuedFunction::new(vec![TableValuedFunctionRow::new(
+//             "get_user_posts".to_string(),
+//             Some("Get posts for a specific user".to_string()),
+//         )]);
+
+//         let function_fields = TableValuedFunctionField::new(vec![
+//             TableValuedFunctionFieldRow::new(
+//                 "get_user_posts".to_string(),
+//                 "post_id".to_string(),
+//                 &::datafusion::arrow::datatypes::DataType::Int32,
+//                 false,
+//                 Some("Post ID".to_string()),
+//             ),
+//             TableValuedFunctionFieldRow::new(
+//                 "get_user_posts".to_string(),
+//                 "title".to_string(),
+//                 &::datafusion::arrow::datatypes::DataType::Utf8,
+//                 false,
+//                 Some("Post title".to_string()),
+//             ),
+//         ]);
+
+//         let function_arguments =
+//             TableValuedFunctionArgument::new(vec![TableValuedFunctionArgumentRow::new(
+//                 "get_user_posts".to_string(),
+//                 "user_id".to_string(),
+//                 0,
+//                 &::datafusion::arrow::datatypes::DataType::Int32,
+//                 false,
+//                 Some("User ID".to_string()),
+//             )]);
+//         Introspection {
+//             table_metadata,
+//             column_metadata,
+//             inferred_foreign_key_constraints: inferred_foreign_keys,
+//             functions,
+//             function_fields,
+//             function_arguments,
+//         }
+//     }
+
+//     #[tokio::test]
+//     async fn test_introspection_schema_provider_table() {
+//         let introspection = create_test_introspection();
+//         let schema_provider = IntrospectionSchemaProvider::new(&introspection);
+
+//         let table_metadata = schema_provider.table(TABLE_METADATA).await.unwrap();
+//         assert!(table_metadata.is_some());
+
+//         let column_metadata = schema_provider.table(COLUMN_METADATA).await.unwrap();
+//         assert!(column_metadata.is_some());
+
+//         let foreign_keys = schema_provider
+//             .table(INFERRED_FOREIGN_KEY_CONSTRAINTS)
+//             .await
+//             .unwrap();
+//         assert!(foreign_keys.is_some());
+
+//         let non_existent_table = schema_provider.table("non_existent").await.unwrap();
+//         assert!(non_existent_table.is_none());
+//     }
+
+//     // ... (keep the create_test_introspection function and other existing tests)
+
+//     fn create_test_context(introspection: &Introspection) -> SessionContext {
+//         let config = SessionConfig::new().with_default_catalog_and_schema("default", "default");
+//         let schema_provider = Arc::new(IntrospectionSchemaProvider::new(introspection));
+//         let ctx = SessionContext::new_with_config(config);
+//         let catalog = MemoryCatalogProvider::new();
+//         catalog
+//             .register_schema(HASURA_METADATA_SCHEMA, schema_provider)
+//             .unwrap();
+//         ctx.register_catalog("default", Arc::new(catalog));
+//         ctx
+//     }
+
+//     #[tokio::test]
+//     async fn test_query_table_metadata() {
+//         let introspection = create_test_introspection();
+//         let ctx = create_test_context(&introspection);
+
+//         let sql = format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{TABLE_METADATA}");
+//         let df = ctx.sql(&sql).await.unwrap();
+//         let results = df.collect().await.unwrap();
+
+//         assert_eq!(results.len(), 1);
+//         assert_eq!(results[0].num_rows(), 2);
+//     }
+
+//     #[tokio::test]
+//     async fn test_query_column_metadata() {
+//         let introspection = create_test_introspection();
+//         let ctx = create_test_context(&introspection);
+
+//         let sql = format!(
+//             "SELECT * FROM {HASURA_METADATA_SCHEMA}.{COLUMN_METADATA} WHERE table_name = 'users'",
+//         );
+//         let df = ctx.sql(&sql).await.unwrap();
+//         let results = df.collect().await.unwrap();
+
+//         assert_eq!(results.len(), 1);
+//         assert_eq!(results[0].num_rows(), 2);
+//     }
+
+//     #[tokio::test]
+//     async fn test_query_inferred_foreign_keys() {
+//         let introspection = create_test_introspection();
+//         let ctx = create_test_context(&introspection);
+
+//         let sql =
+//             format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{INFERRED_FOREIGN_KEY_CONSTRAINTS}",);
+//         let df = ctx.sql(&sql).await.unwrap();
+//         let results = df.collect().await.unwrap();
+
+//         assert_eq!(results.len(), 1);
+//         assert_eq!(results[0].num_rows(), 1);
+//     }
+
+//     #[tokio::test]
+//     async fn test_query_table_valued_function() {
+//         let introspection = create_test_introspection();
+//         let ctx = create_test_context(&introspection);
+
+//         let sql = format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{TABLE_VALUED_FUNCTION}");
+//         let df = ctx.sql(&sql).await.unwrap();
+//         let results = df.collect().await.unwrap();
+
+//         assert_eq!(results.len(), 1);
+//         assert_eq!(results[0].num_rows(), 1);
+//     }
+
+//     #[tokio::test]
+//     async fn test_query_table_valued_function_field() {
+//         let introspection = create_test_introspection();
+//         let ctx = create_test_context(&introspection);
+
+//         let sql = format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{TABLE_VALUED_FUNCTION_FIELD}");
+//         let df = ctx.sql(&sql).await.unwrap();
+//         let results = df.collect().await.unwrap();
+
+//         assert_eq!(results.len(), 1);
+//         assert_eq!(results[0].num_rows(), 2);
+//     }
+
+//     #[tokio::test]
+//     async fn test_query_table_valued_function_argument() {
+//         let introspection = create_test_introspection();
+//         let ctx = create_test_context(&introspection);
+
+//         let sql =
+//             format!("SELECT * FROM {HASURA_METADATA_SCHEMA}.{TABLE_VALUED_FUNCTION_ARGUMENT}");
+//         let df = ctx.sql(&sql).await.unwrap();
+//         let results = df.collect().await.unwrap();
+
+//         assert_eq!(results.len(), 1);
+//         assert_eq!(results[0].num_rows(), 1);
+//     }
+// }
