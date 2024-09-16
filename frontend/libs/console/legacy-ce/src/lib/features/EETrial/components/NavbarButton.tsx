@@ -8,6 +8,34 @@ import { WithEEBenefits } from './BenefitsView/WithEEBenefits';
 import { getDaysFromNow } from '../utils';
 import { EnableEEButtonWrapper } from './EnableEnterpriseButton';
 import { Analytics } from '../../Analytics';
+import { Badge } from '../../../new-components/Badge';
+import { sendTelemetryEvent } from '../../../telemetry';
+
+const TryDDNButton = () => {
+  return (
+    <Button
+      mode="default"
+      size="md"
+      className="bg-none text-current pointer-effects-none bg-transparent border-[#f0f4ff] hover:border-[#f0f4ff] text-[#f0f4ff] text-sm hover:brightness-90"
+      onClick={() => {
+        sendTelemetryEvent({
+          type: 'CLICK_EVENT',
+          data: {
+            id: 'try-hasura-ddn',
+          },
+        });
+        window.open(
+          'https://console.hasura.io?utm_source=hasura-ce&utm_medium=console&plcmt=banner-button'
+        );
+      }}
+    >
+      <div className="flex items-center">
+        <Badge className="!rounded">NEW</Badge>
+        <span className="font-normal text-lg ml-xs">Hasura DDN</span>
+      </div>
+    </Button>
+  );
+};
 
 export const NavbarButton: React.VFC<{
   className?: string;
@@ -18,6 +46,14 @@ export const NavbarButton: React.VFC<{
 
   if (access === 'forbidden') {
     return null;
+  }
+
+  if (access !== 'active') {
+    return (
+      <div className={props.className}>
+        <TryDDNButton />
+      </div>
+    );
   }
 
   return (
