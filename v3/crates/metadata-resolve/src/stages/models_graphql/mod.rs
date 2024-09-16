@@ -2,9 +2,9 @@ mod filter;
 mod graphql;
 mod types;
 
-use std::collections::{BTreeMap, BTreeSet};
-
+use crate::Warning;
 use indexmap::IndexMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common as ast;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
@@ -64,16 +64,23 @@ pub fn resolve(
                     }),
                 }?;
 
-                Some(filter::resolve_filter_expression_type(
-                    &model.name,
-                    model_source,
-                    &model.data_type,
-                    filter_expression_type_name,
-                    object_boolean_expression_types,
-                    boolean_expression_types,
-                    object_types,
-                    models,
-                )?)
+                let (filter_expression_type, filter_issues) =
+                    filter::resolve_filter_expression_type(
+                        &model.name,
+                        model_source,
+                        &model.data_type,
+                        filter_expression_type_name,
+                        object_boolean_expression_types,
+                        boolean_expression_types,
+                        object_types,
+                        models,
+                    )?;
+
+                output
+                    .issues
+                    .extend(filter_issues.into_iter().map(Warning::from));
+
+                Some(filter_expression_type)
             }
             None => None,
         };

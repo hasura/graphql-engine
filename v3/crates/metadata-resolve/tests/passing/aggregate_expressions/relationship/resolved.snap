@@ -1993,6 +1993,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
                                     supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
                                 },
                             },
                             collection: CollectionName(
@@ -3042,6 +3043,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
                                     supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
                                 },
                             },
                             collection: CollectionName(

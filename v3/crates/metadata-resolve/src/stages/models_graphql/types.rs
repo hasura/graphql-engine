@@ -1,6 +1,5 @@
+use crate::types::warning::Warning;
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
-
 use lang_graphql::ast::common::{self as ast};
 use open_dds::{
     aggregates::AggregateExpressionName,
@@ -8,6 +7,7 @@ use open_dds::{
     models::ModelName,
     types::{Deprecated, FieldName},
 };
+use serde::{Deserialize, Serialize};
 
 use crate::stages::{boolean_expressions, models, object_boolean_expressions};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
@@ -16,7 +16,7 @@ use crate::{helpers::types::NdcColumnForComparison, OrderByExpressionIdentifier}
 #[derive(Debug)]
 pub struct ModelsWithGraphqlOutput {
     pub models_with_graphql: IndexMap<Qualified<ModelName>, ModelWithGraphql>,
-    pub issues: Vec<ModelGraphqlIssue>,
+    pub issues: Vec<Warning>,
 }
 
 /// A Model, once we have added filter expression and graphql for it

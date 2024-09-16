@@ -224,6 +224,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
                                     supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
                                 },
                             },
                             collection: CollectionName(

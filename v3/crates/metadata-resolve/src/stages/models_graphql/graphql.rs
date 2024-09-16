@@ -15,6 +15,7 @@ use crate::stages::order_by_expressions::OrderByExpressions;
 use crate::stages::{data_connector_scalar_types, graphql_config, models, object_types};
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
+use crate::Warning;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
 
@@ -34,7 +35,7 @@ pub(crate) fn resolve_model_graphql_api(
     order_by_expressions: &OrderByExpressions,
     graphql_config: &graphql_config::GraphqlConfig,
     configuration: &Configuration,
-    issues: &mut Vec<ModelGraphqlIssue>,
+    issues: &mut Vec<Warning>,
 ) -> Result<ModelGraphQlApi, Error> {
     let model_name = &model.name;
     let mut graphql_api = ModelGraphQlApi::default();
@@ -228,11 +229,11 @@ pub(crate) fn resolve_model_graphql_api(
             // If the user has an aggregate expression and has specified the graphql select aggregate root field
             // but is missing the global aggregate GraphqlConfig, this is probably a mistake and so let's raise
             // a warning for them
-            issues.push(
+            issues.push(Warning::from(
                 ModelGraphqlIssue::MissingAggregateFilterInputFieldNameInGraphqlConfig {
                     model_name: model_name.clone(),
                 },
-            );
+            ));
             None
         }
         (Some(graphql_aggregate), Some(aggregate_expression_name), Some(aggregate_config)) => {

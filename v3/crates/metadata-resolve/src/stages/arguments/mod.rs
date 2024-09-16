@@ -29,13 +29,14 @@ pub fn resolve(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-) -> Result<(), Error> {
+) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
+    let mut issues = vec![];
     for command in commands.values() {
         let data_connector_link = command.source.as_ref().map(|source| &source.data_connector);
         let type_mapping = command.source.as_ref().map(|source| &source.type_mappings);
 
         // check data source and arguments agree
-        validate_arguments_with_source(
+        issues.extend(validate_arguments_with_source(
             &command.arguments,
             data_connector_link,
             type_mapping,
@@ -44,7 +45,7 @@ pub fn resolve(
             object_boolean_expression_types,
             boolean_expression_types,
             models,
-        )?;
+        )?);
     }
 
     for model in models.values() {
@@ -52,7 +53,7 @@ pub fn resolve(
         let type_mapping = model.source.as_ref().map(|source| &source.type_mappings);
 
         // check data source and arguments agree
-        validate_arguments_with_source(
+        issues.extend(validate_arguments_with_source(
             &model.arguments,
             data_connector_link,
             type_mapping,
@@ -61,10 +62,10 @@ pub fn resolve(
             object_boolean_expression_types,
             boolean_expression_types,
             models,
-        )?;
+        )?);
     }
 
-    Ok(())
+    Ok(issues)
 }
 
 // resolve arguments. if the source is available we check it against any boolean
@@ -81,7 +82,9 @@ pub fn validate_arguments_with_source(
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-) -> Result<(), Error> {
+) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
+    let mut issues = vec![];
+
     for argument_info in arguments.values() {
         // if our argument is a boolean expression type, we need to check it
         if let Some(custom_type_name) = unwrap_custom_type_name(&argument_info.argument_type) {
@@ -107,17 +110,19 @@ pub fn validate_arguments_with_source(
                 data_connector_link,
                 source_type_mapping,
             ) {
-                validate_data_connector_with_object_boolean_expression_type(
-                    data_connector_link,
-                    source_type_mapping,
-                    boolean_expression_type,
-                    boolean_expression_types,
-                    object_types,
-                    models,
-                )?;
+                let data_connector_issues =
+                    validate_data_connector_with_object_boolean_expression_type(
+                        data_connector_link,
+                        source_type_mapping,
+                        boolean_expression_type,
+                        boolean_expression_types,
+                        object_types,
+                        models,
+                    )?;
+                issues.extend(data_connector_issues);
             }
         }
     }
 
-    Ok(())
+    Ok(issues)
 }

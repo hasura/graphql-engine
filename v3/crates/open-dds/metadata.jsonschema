@@ -3073,6 +3073,10 @@
         "bypass_relation_comparisons_ndc_capability": {
           "default": false,
           "type": "boolean"
+        },
+        "require_nested_array_filtering_capability": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -3108,7 +3112,8 @@
               "default": {
                 "require_graphql_config": false,
                 "require_valid_ndc_v01_version": false,
-                "bypass_relation_comparisons_ndc_capability": false
+                "bypass_relation_comparisons_ndc_capability": false,
+                "require_nested_array_filtering_capability": false
               },
               "allOf": [
                 {
@@ -3155,7 +3160,8 @@
               "default": {
                 "require_graphql_config": false,
                 "require_valid_ndc_v01_version": false,
-                "bypass_relation_comparisons_ndc_capability": false
+                "bypass_relation_comparisons_ndc_capability": false,
+                "require_nested_array_filtering_capability": false
               },
               "allOf": [
                 {
@@ -3192,7 +3198,8 @@
               "default": {
                 "require_graphql_config": false,
                 "require_valid_ndc_v01_version": false,
-                "bypass_relation_comparisons_ndc_capability": false
+                "bypass_relation_comparisons_ndc_capability": false,
+                "require_nested_array_filtering_capability": false
               },
               "allOf": [
                 {

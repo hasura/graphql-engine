@@ -231,7 +231,7 @@ pub fn resolve(
         configuration,
     )?;
 
-    all_issues.extend(issues.into_iter().map(Warning::from));
+    all_issues.extend(issues);
 
     let commands_with_permissions = command_permissions::resolve(
         &metadata_accessor,

@@ -6,7 +6,13 @@
 
 ### Fixed
 
-- Disallow recursive types in SQL table column types
+- Raise a warning when nested array comparisons are used without the necessary
+  data connector capability. A new OpenDD flag
+  `require_nested_array_filtering_capability` can be used to promote this
+  warning to an error.
+
+- Disallow recursive types in SQL table column types.
+
 - Previously, if you had `AggregateExpressions` that were configured to be used
   in GraphQL, or `Models` configured for aggregates in GraphQL, but you did not
   set the appropriate configuration in
@@ -17,11 +23,13 @@
   `AggregateExpressions` and configure your `Model` but update your
   `GraphqlConfig` separately, which is useful if they are in separate
   repositories.
-- Add a missing typecheck of `ValueExpression` while resolving model predicates
+
 - A build error is now raised if an `AggregateExpression` specifies an
   `aggregatableField` that has field arguments. This is an unsupported scenario
   and previously would have allowed invalid queries that omitted the required
   field arguments. These queries may have failed with errors at query time.
+
+- Add a missing typecheck of `ValueExpression` while resolving model predicates.
 
 ### Changed
 

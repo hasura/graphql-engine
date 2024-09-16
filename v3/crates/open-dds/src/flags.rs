@@ -3,6 +3,7 @@ use serde::Serialize;
 /// Flags to configure the OpenDD metadata build.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdFlags"))]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Flags {
     #[opendd(default, rename = "require_graphql_config")]
     // By default, OpenDd assumes camel-cased fields, rename to use snake-case
@@ -13,6 +14,9 @@ pub struct Flags {
 
     #[opendd(default, rename = "bypass_relation_comparisons_ndc_capability")]
     pub bypass_relation_comparisons_ndc_capability: bool,
+
+    #[opendd(default, rename = "require_nested_array_filtering_capability")]
+    pub require_nested_array_filtering_capability: bool,
 }
 
 impl Flags {
@@ -22,6 +26,7 @@ impl Flags {
             require_graphql_config: false,
             require_valid_ndc_v01_version: false,
             bypass_relation_comparisons_ndc_capability: false,
+            require_nested_array_filtering_capability: false,
         }
     }
 

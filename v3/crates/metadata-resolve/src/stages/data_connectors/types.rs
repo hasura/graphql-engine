@@ -302,6 +302,12 @@ impl DataConnectorLink {
                 .nested_fields
                 .filter_by
                 .is_some(),
+            supports_nested_array_filtering: context
+                .capabilities
+                .query
+                .exists
+                .nested_collections
+                .is_some(),
             supports_nested_object_aggregations: context
                 .capabilities
                 .query
@@ -452,6 +458,7 @@ pub struct DataConnectorCapabilities {
     pub supports_explaining_mutations: bool,
     pub supports_nested_object_filtering: bool,
     pub supports_nested_object_aggregations: bool,
+    pub supports_nested_array_filtering: bool,
 }
 
 #[cfg(test)]
