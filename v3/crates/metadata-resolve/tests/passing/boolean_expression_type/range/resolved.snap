@@ -3,436 +3,310 @@ source: crates/metadata-resolve/tests/metadata_golden_tests.rs
 expression: resolved
 input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/metadata.json
 ---
-Metadata {
-    object_types: {
-        Qualified {
-            subgraph: "__unknown_namespace",
-            name: CustomTypeName(
-                Identifier(
-                    "int_range",
+(
+    Metadata {
+        object_types: {
+            Qualified {
+                subgraph: SubgraphName(
+                    "__unknown_namespace",
                 ),
-            ),
-        }: ObjectTypeWithRelationships {
-            object_type: ObjectTypeRepresentation {
-                fields: {
-                    FieldName(
-                        Identifier(
-                            "start",
-                        ),
-                    ): FieldDefinition {
-                        field_type: QualifiedTypeReference {
-                            underlying_type: Named(
-                                Inbuilt(
-                                    Int,
-                                ),
-                            ),
-                            nullable: false,
-                        },
-                        description: None,
-                        deprecated: None,
-                        field_arguments: {},
-                    },
-                    FieldName(
-                        Identifier(
-                            "end",
-                        ),
-                    ): FieldDefinition {
-                        field_type: QualifiedTypeReference {
-                            underlying_type: Named(
-                                Inbuilt(
-                                    Int,
-                                ),
-                            ),
-                            nullable: false,
-                        },
-                        description: None,
-                        deprecated: None,
-                        field_arguments: {},
-                    },
-                },
-                global_id_fields: [],
-                apollo_federation_config: None,
-                graphql_output_type_name: Some(
-                    TypeName(
-                        Name(
-                            "IntRange",
-                        ),
+                name: CustomTypeName(
+                    Identifier(
+                        "int_range",
                     ),
                 ),
-                graphql_input_type_name: None,
-                description: None,
-            },
-            type_output_permissions: {},
-            type_input_permissions: {},
-            relationship_fields: {},
-            type_mappings: DataConnectorTypeMappingsForObject(
-                {
-                    Qualified {
-                        subgraph: "__unknown_namespace",
-                        name: DataConnectorName(
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
+                        FieldName(
                             Identifier(
-                                "custom",
+                                "start",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "end",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: Some(
+                        TypeName(
+                            Name(
+                                "IntRange",
                             ),
                         ),
-                    }: {
-                        DataConnectorObjectType(
-                            "int_range",
-                        ): Object {
-                            ndc_object_type_name: DataConnectorObjectType(
-                                "int_range",
+                    ),
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: {},
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
                             ),
-                            field_mappings: {
-                                FieldName(
-                                    Identifier(
-                                        "end",
-                                    ),
-                                ): FieldMapping {
-                                    column: DataConnectorColumnName(
-                                        "lte",
-                                    ),
-                                    column_type: Named {
-                                        name: TypeName(
-                                            "Int",
+                            name: DataConnectorName(
+                                Identifier(
+                                    "elastic",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
+                                "range",
+                            ): Object {
+                                ndc_object_type_name: DataConnectorObjectType(
+                                    "range",
+                                ),
+                                field_mappings: {
+                                    FieldName(
+                                        Identifier(
+                                            "end",
                                         ),
-                                    },
-                                    column_type_representation: None,
-                                    argument_mappings: {},
-                                },
-                                FieldName(
-                                    Identifier(
-                                        "start",
-                                    ),
-                                ): FieldMapping {
-                                    column: DataConnectorColumnName(
-                                        "gte",
-                                    ),
-                                    column_type: Named {
-                                        name: TypeName(
-                                            "Int",
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "lte",
                                         ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "double",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Number,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "match",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "range",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "term",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "terms",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
                                     },
-                                    column_type_representation: None,
-                                    argument_mappings: {},
+                                    FieldName(
+                                        Identifier(
+                                            "start",
+                                        ),
+                                    ): FieldMapping {
+                                        column: DataConnectorColumnName(
+                                            "gte",
+                                        ),
+                                        column_type: Named {
+                                            name: TypeName(
+                                                "double",
+                                            ),
+                                        },
+                                        column_type_representation: Some(
+                                            Number,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "match",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "range",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "term",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "terms",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
+                                        argument_mappings: {},
+                                    },
                                 },
                             },
                         },
                     },
+                    scalar_representations: {
+                        FieldName(
+                            Identifier(
+                                "end",
+                            ),
+                        ): {
+                            Number,
+                        },
+                        FieldName(
+                            Identifier(
+                                "start",
+                            ),
+                        ): {
+                            Number,
+                        },
+                    },
                 },
-            ),
-        },
-        Qualified {
-            subgraph: "__unknown_namespace",
-            name: CustomTypeName(
-                Identifier(
-                    "movie",
+            },
+            Qualified {
+                subgraph: SubgraphName(
+                    "__unknown_namespace",
                 ),
-            ),
-        }: ObjectTypeWithRelationships {
-            object_type: ObjectTypeRepresentation {
-                fields: {
-                    FieldName(
-                        Identifier(
-                            "id",
-                        ),
-                    ): FieldDefinition {
-                        field_type: QualifiedTypeReference {
-                            underlying_type: Named(
-                                Inbuilt(
-                                    Int,
-                                ),
-                            ),
-                            nullable: false,
-                        },
-                        description: None,
-                        deprecated: None,
-                        field_arguments: {},
-                    },
-                    FieldName(
-                        Identifier(
-                            "title",
-                        ),
-                    ): FieldDefinition {
-                        field_type: QualifiedTypeReference {
-                            underlying_type: Named(
-                                Inbuilt(
-                                    String,
-                                ),
-                            ),
-                            nullable: false,
-                        },
-                        description: None,
-                        deprecated: None,
-                        field_arguments: {},
-                    },
-                    FieldName(
-                        Identifier(
-                            "rating",
-                        ),
-                    ): FieldDefinition {
-                        field_type: QualifiedTypeReference {
-                            underlying_type: Named(
-                                Inbuilt(
-                                    Int,
-                                ),
-                            ),
-                            nullable: false,
-                        },
-                        description: None,
-                        deprecated: None,
-                        field_arguments: {},
-                    },
-                },
-                global_id_fields: [],
-                apollo_federation_config: None,
-                graphql_output_type_name: Some(
-                    TypeName(
-                        Name(
-                            "Movie",
-                        ),
+                name: CustomTypeName(
+                    Identifier(
+                        "movie",
                     ),
                 ),
-                graphql_input_type_name: None,
-                description: None,
-            },
-            type_output_permissions: {
-                Role(
-                    "admin",
-                ): TypeOutputPermission {
-                    allowed_fields: {
+            }: ObjectTypeWithRelationships {
+                object_type: ObjectTypeRepresentation {
+                    fields: {
                         FieldName(
                             Identifier(
                                 "id",
                             ),
-                        ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
                         FieldName(
                             Identifier(
                                 "title",
                             ),
-                        ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
                         FieldName(
                             Identifier(
                                 "rating",
                             ),
-                        ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
                     },
-                },
-            },
-            type_input_permissions: {},
-            relationship_fields: {},
-            type_mappings: DataConnectorTypeMappingsForObject(
-                {
-                    Qualified {
-                        subgraph: "__unknown_namespace",
-                        name: DataConnectorName(
-                            Identifier(
-                                "custom",
+                    global_id_fields: [],
+                    apollo_federation_config: None,
+                    graphql_output_type_name: Some(
+                        TypeName(
+                            Name(
+                                "Movie",
                             ),
                         ),
-                    }: {
-                        DataConnectorObjectType(
-                            "movie",
-                        ): Object {
-                            ndc_object_type_name: DataConnectorObjectType(
+                    ),
+                    graphql_input_type_name: None,
+                    description: None,
+                },
+                type_output_permissions: {
+                    Role(
+                        "admin",
+                    ): TypeOutputPermission {
+                        allowed_fields: {
+                            FieldName(
+                                Identifier(
+                                    "id",
+                                ),
+                            ),
+                            FieldName(
+                                Identifier(
+                                    "title",
+                                ),
+                            ),
+                            FieldName(
+                                Identifier(
+                                    "rating",
+                                ),
+                            ),
+                        },
+                    },
+                },
+                type_input_permissions: {},
+                relationship_fields: {},
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "elastic",
+                                ),
+                            ),
+                        }: {
+                            DataConnectorObjectType(
                                 "movie",
-                            ),
-                            field_mappings: {
-                                FieldName(
-                                    Identifier(
-                                        "id",
-                                    ),
-                                ): FieldMapping {
-                                    column: DataConnectorColumnName(
-                                        "id",
-                                    ),
-                                    column_type: Named {
-                                        name: TypeName(
-                                            "Int",
-                                        ),
-                                    },
-                                    column_type_representation: None,
-                                    argument_mappings: {},
-                                },
-                                FieldName(
-                                    Identifier(
-                                        "rating",
-                                    ),
-                                ): FieldMapping {
-                                    column: DataConnectorColumnName(
-                                        "rating",
-                                    ),
-                                    column_type: Named {
-                                        name: TypeName(
-                                            "Int",
-                                        ),
-                                    },
-                                    column_type_representation: None,
-                                    argument_mappings: {},
-                                },
-                                FieldName(
-                                    Identifier(
-                                        "title",
-                                    ),
-                                ): FieldMapping {
-                                    column: DataConnectorColumnName(
-                                        "title",
-                                    ),
-                                    column_type: Named {
-                                        name: TypeName(
-                                            "String",
-                                        ),
-                                    },
-                                    column_type_representation: None,
-                                    argument_mappings: {},
-                                },
-                            },
-                        },
-                    },
-                },
-            ),
-        },
-    },
-    scalar_types: {},
-    models: {
-        Qualified {
-            subgraph: "__unknown_namespace",
-            name: ModelName(
-                Identifier(
-                    "movies",
-                ),
-            ),
-        }: ModelWithPermissions {
-            model: Model {
-                name: Qualified {
-                    subgraph: "__unknown_namespace",
-                    name: ModelName(
-                        Identifier(
-                            "movies",
-                        ),
-                    ),
-                },
-                data_type: Qualified {
-                    subgraph: "__unknown_namespace",
-                    name: CustomTypeName(
-                        Identifier(
-                            "movie",
-                        ),
-                    ),
-                },
-                type_fields: {
-                    FieldName(
-                        Identifier(
-                            "id",
-                        ),
-                    ): FieldDefinition {
-                        field_type: QualifiedTypeReference {
-                            underlying_type: Named(
-                                Inbuilt(
-                                    Int,
-                                ),
-                            ),
-                            nullable: false,
-                        },
-                        description: None,
-                        deprecated: None,
-                        field_arguments: {},
-                    },
-                    FieldName(
-                        Identifier(
-                            "title",
-                        ),
-                    ): FieldDefinition {
-                        field_type: QualifiedTypeReference {
-                            underlying_type: Named(
-                                Inbuilt(
-                                    String,
-                                ),
-                            ),
-                            nullable: false,
-                        },
-                        description: None,
-                        deprecated: None,
-                        field_arguments: {},
-                    },
-                    FieldName(
-                        Identifier(
-                            "rating",
-                        ),
-                    ): FieldDefinition {
-                        field_type: QualifiedTypeReference {
-                            underlying_type: Named(
-                                Inbuilt(
-                                    Int,
-                                ),
-                            ),
-                            nullable: false,
-                        },
-                        description: None,
-                        deprecated: None,
-                        field_arguments: {},
-                    },
-                },
-                global_id_fields: [],
-                arguments: {},
-                source: Some(
-                    ModelSource {
-                        data_connector: DataConnectorLink {
-                            name: Qualified {
-                                subgraph: "__unknown_namespace",
-                                name: DataConnectorName(
-                                    Identifier(
-                                        "custom",
-                                    ),
-                                ),
-                            },
-                            url: SingleUrl(
-                                SerializableUrl(
-                                    Url {
-                                        scheme: "http",
-                                        cannot_be_a_base: false,
-                                        username: "",
-                                        password: None,
-                                        host: Some(
-                                            Domain(
-                                                "custom_connector",
-                                            ),
-                                        ),
-                                        port: Some(
-                                            8101,
-                                        ),
-                                        path: "/",
-                                        query: None,
-                                        fragment: None,
-                                    },
-                                ),
-                            ),
-                            headers: SerializableHeaderMap(
-                                {},
-                            ),
-                            argument_presets: [],
-                            response_config: None,
-                            capabilities: DataConnectorCapabilities {
-                                supported_ndc_version: V01,
-                                supports_explaining_queries: true,
-                                supports_explaining_mutations: false,
-                                supports_nested_object_filtering: true,
-                                supports_nested_object_aggregations: false,
-                            },
-                        },
-                        collection: CollectionName(
-                            "movies",
-                        ),
-                        collection_type: DataConnectorObjectType(
-                            "movie",
-                        ),
-                        type_mappings: {
-                            Qualified {
-                                subgraph: "__unknown_namespace",
-                                name: CustomTypeName(
-                                    Identifier(
-                                        "movie",
-                                    ),
-                                ),
-                            }: Object {
+                            ): Object {
                                 ndc_object_type_name: DataConnectorObjectType(
                                     "movie",
                                 ),
@@ -443,14 +317,39 @@ Metadata {
                                         ),
                                     ): FieldMapping {
                                         column: DataConnectorColumnName(
-                                            "id",
+                                            "_id",
                                         ),
                                         column_type: Named {
                                             name: TypeName(
-                                                "Int",
+                                                "integer",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            Integer,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "match",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "range",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "term",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "terms",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -463,10 +362,35 @@ Metadata {
                                         ),
                                         column_type: Named {
                                             name: TypeName(
-                                                "Int",
+                                                "integer",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            Integer,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "match",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "range",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "term",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "terms",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -479,471 +403,1182 @@ Metadata {
                                         ),
                                         column_type: Named {
                                             name: TypeName(
-                                                "String",
+                                                "text",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            String,
+                                        ),
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "match",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_bool_prefix",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase_prefix",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "prefix",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "range",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "regexp",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "term",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "terms",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "wildcard",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
                             },
                         },
-                        argument_mappings: {},
-                        source_arguments: {},
                     },
-                ),
-                global_id_source: None,
-                apollo_federation_key_source: None,
-                orderable_fields: [
-                    OrderableField {
-                        field_name: FieldName(
+                    scalar_representations: {
+                        FieldName(
                             Identifier(
                                 "id",
                             ),
-                        ),
-                        order_by_directions: EnableAll(
-                            true,
-                        ),
-                    },
-                    OrderableField {
-                        field_name: FieldName(
-                            Identifier(
-                                "title",
-                            ),
-                        ),
-                        order_by_directions: EnableAll(
-                            true,
-                        ),
-                    },
-                    OrderableField {
-                        field_name: FieldName(
+                        ): {
+                            Integer,
+                        },
+                        FieldName(
                             Identifier(
                                 "rating",
                             ),
-                        ),
-                        order_by_directions: EnableAll(
-                            true,
-                        ),
-                    },
-                ],
-                aggregate_expression: None,
-                raw: ModelRaw {
-                    filter_expression_type: None,
-                    graphql: Some(
-                        ModelGraphQlDefinition {
-                            select_uniques: [],
-                            select_many: Some(
-                                SelectManyGraphQlDefinition {
-                                    query_root_field: GraphQlFieldName(
-                                        "MovieMany",
-                                    ),
-                                    description: None,
-                                    deprecated: None,
-                                },
-                            ),
-                            arguments_input_type: None,
-                            order_by_expression_type: None,
-                            apollo_federation: None,
-                            filter_input_type_name: None,
-                            aggregate: None,
+                        ): {
+                            Integer,
                         },
-                    ),
-                    description: None,
+                        FieldName(
+                            Identifier(
+                                "title",
+                            ),
+                        ): {
+                            String,
+                        },
+                    },
                 },
-            },
-            select_permissions: {
-                Role(
-                    "admin",
-                ): SelectPermission {
-                    filter: AllowAll,
-                    argument_presets: {},
-                },
-            },
-            filter_expression_type: None,
-            graphql_api: ModelGraphQlApi {
-                arguments_input_config: None,
-                select_uniques: [],
-                select_many: Some(
-                    SelectManyGraphQlDefinition {
-                        query_root_field: Name(
-                            "MovieMany",
-                        ),
-                        description: None,
-                        deprecated: None,
-                    },
-                ),
-                select_aggregate: None,
-                order_by_expression: None,
-                limit_field: Some(
-                    LimitFieldGraphqlConfig {
-                        field_name: Name(
-                            "limit",
-                        ),
-                    },
-                ),
-                offset_field: Some(
-                    OffsetFieldGraphqlConfig {
-                        field_name: Name(
-                            "offset",
-                        ),
-                    },
-                ),
-                filter_input_type_name: None,
             },
         },
-    },
-    commands: {},
-    object_boolean_expression_types: {},
-    boolean_expression_types: BooleanExpressionTypes {
-        objects: {
+        scalar_types: {},
+        models: {
             Qualified {
-                subgraph: "__unknown_namespace",
-                name: CustomTypeName(
+                subgraph: SubgraphName(
+                    "__unknown_namespace",
+                ),
+                name: ModelName(
                     Identifier(
-                        "movie_bool_exp",
+                        "movies",
                     ),
                 ),
-            }: ResolvedObjectBooleanExpressionType {
-                name: Qualified {
-                    subgraph: "__unknown_namespace",
+            }: ModelWithPermissions {
+                model: Model {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
+                        name: ModelName(
+                            Identifier(
+                                "movies",
+                            ),
+                        ),
+                    },
+                    data_type: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "movie",
+                            ),
+                        ),
+                    },
+                    type_fields: {
+                        FieldName(
+                            Identifier(
+                                "id",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "title",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        String,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                        FieldName(
+                            Identifier(
+                                "rating",
+                            ),
+                        ): FieldDefinition {
+                            field_type: QualifiedTypeReference {
+                                underlying_type: Named(
+                                    Inbuilt(
+                                        Int,
+                                    ),
+                                ),
+                                nullable: false,
+                            },
+                            description: None,
+                            deprecated: None,
+                            field_arguments: {},
+                        },
+                    },
+                    global_id_fields: [],
+                    arguments: {},
+                    source: Some(
+                        ModelSource {
+                            data_connector: DataConnectorLink {
+                                name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "__unknown_namespace",
+                                    ),
+                                    name: DataConnectorName(
+                                        Identifier(
+                                            "elastic",
+                                        ),
+                                    ),
+                                },
+                                url: SingleUrl(
+                                    SerializableUrl(
+                                        Url {
+                                            scheme: "http",
+                                            cannot_be_a_base: false,
+                                            username: "",
+                                            password: None,
+                                            host: Some(
+                                                Domain(
+                                                    "localhost",
+                                                ),
+                                            ),
+                                            port: Some(
+                                                8101,
+                                            ),
+                                            path: "/",
+                                            query: None,
+                                            fragment: None,
+                                        },
+                                    ),
+                                ),
+                                headers: SerializableHeaderMap(
+                                    {},
+                                ),
+                                response_config: None,
+                                capabilities: DataConnectorCapabilities {
+                                    supported_ndc_version: V01,
+                                    supports_explaining_queries: true,
+                                    supports_explaining_mutations: false,
+                                    supports_nested_object_filtering: true,
+                                    supports_nested_object_aggregations: false,
+                                },
+                            },
+                            collection: CollectionName(
+                                "movies",
+                            ),
+                            collection_type: DataConnectorObjectType(
+                                "movie",
+                            ),
+                            type_mappings: {
+                                Qualified {
+                                    subgraph: SubgraphName(
+                                        "__unknown_namespace",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "movie",
+                                        ),
+                                    ),
+                                }: Object {
+                                    ndc_object_type_name: DataConnectorObjectType(
+                                        "movie",
+                                    ),
+                                    field_mappings: {
+                                        FieldName(
+                                            Identifier(
+                                                "id",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "_id",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "integer",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Integer,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "match",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "match_phrase",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "range",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "term",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "terms",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "rating",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "rating",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "integer",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                Integer,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "match",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "match_phrase",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "range",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "term",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "terms",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "title",
+                                            ),
+                                        ): FieldMapping {
+                                            column: DataConnectorColumnName(
+                                                "title",
+                                            ),
+                                            column_type: Named {
+                                                name: TypeName(
+                                                    "text",
+                                                ),
+                                            },
+                                            column_type_representation: Some(
+                                                String,
+                                            ),
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "match",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "match_bool_prefix",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "match_phrase",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "match_phrase_prefix",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "prefix",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "range",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "regexp",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "term",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "terms",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "wildcard",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            argument_mappings: {},
+                                        },
+                                    },
+                                },
+                            },
+                            argument_mappings: {},
+                            data_connector_link_argument_presets: {},
+                            source_arguments: {},
+                        },
+                    ),
+                    global_id_source: None,
+                    apollo_federation_key_source: None,
+                    order_by_expression: Some(
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
+                            name: FromModel(
+                                ModelName(
+                                    Identifier(
+                                        "movies",
+                                    ),
+                                ),
+                            ),
+                        },
+                    ),
+                    aggregate_expression: None,
+                    raw: ModelRaw {
+                        filter_expression_type: Some(
+                            Qualified {
+                                subgraph: SubgraphName(
+                                    "__unknown_namespace",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "movie_bool_exp",
+                                    ),
+                                ),
+                            },
+                        ),
+                        graphql: Some(
+                            ModelGraphQlDefinitionV2 {
+                                select_uniques: [],
+                                select_many: Some(
+                                    SelectManyGraphQlDefinition {
+                                        query_root_field: GraphQlFieldName(
+                                            "MovieMany",
+                                        ),
+                                        description: None,
+                                        deprecated: None,
+                                        subscription: None,
+                                    },
+                                ),
+                                arguments_input_type: None,
+                                apollo_federation: None,
+                                filter_input_type_name: None,
+                                aggregate: None,
+                            },
+                        ),
+                        description: None,
+                    },
+                },
+                select_permissions: {
+                    Role(
+                        "admin",
+                    ): SelectPermission {
+                        filter: AllowAll,
+                        argument_presets: {},
+                        allow_subscriptions: false,
+                    },
+                },
+                filter_expression_type: Some(
+                    BooleanExpressionType(
+                        ResolvedObjectBooleanExpressionType {
+                            name: Qualified {
+                                subgraph: SubgraphName(
+                                    "__unknown_namespace",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "movie_bool_exp",
+                                    ),
+                                ),
+                            },
+                            object_type: Qualified {
+                                subgraph: SubgraphName(
+                                    "__unknown_namespace",
+                                ),
+                                name: CustomTypeName(
+                                    Identifier(
+                                        "movie",
+                                    ),
+                                ),
+                            },
+                            graphql: Some(
+                                BooleanExpressionGraphqlConfig {
+                                    type_name: TypeName(
+                                        Name(
+                                            "InstitutionBoolExp",
+                                        ),
+                                    ),
+                                    object_fields: {},
+                                    scalar_fields: {
+                                        FieldName(
+                                            Identifier(
+                                                "id",
+                                            ),
+                                        ): ComparisonExpressionInfo {
+                                            object_type_name: Some(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "int_bool_exp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                            type_name: TypeName(
+                                                Name(
+                                                    "Int_Comparison_Exp",
+                                                ),
+                                            ),
+                                            operators: {},
+                                            operator_mapping: {
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
+                                                    name: DataConnectorName(
+                                                        Identifier(
+                                                            "elastic",
+                                                        ),
+                                                    ),
+                                                }: {},
+                                            },
+                                            is_null_operator_name: Some(
+                                                Name(
+                                                    "_is_null",
+                                                ),
+                                            ),
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "rating",
+                                            ),
+                                        ): ComparisonExpressionInfo {
+                                            object_type_name: Some(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "int_bool_exp_with_range",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                            type_name: TypeName(
+                                                Name(
+                                                    "Int_Comparison_Exp_With_Range",
+                                                ),
+                                            ),
+                                            operators: {
+                                                OperatorName(
+                                                    "range",
+                                                ): QualifiedTypeReference {
+                                                    underlying_type: Named(
+                                                        Custom(
+                                                            Qualified {
+                                                                subgraph: SubgraphName(
+                                                                    "__unknown_namespace",
+                                                                ),
+                                                                name: CustomTypeName(
+                                                                    Identifier(
+                                                                        "int_range",
+                                                                    ),
+                                                                ),
+                                                            },
+                                                        ),
+                                                    ),
+                                                    nullable: true,
+                                                },
+                                            },
+                                            operator_mapping: {
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
+                                                    name: DataConnectorName(
+                                                        Identifier(
+                                                            "elastic",
+                                                        ),
+                                                    ),
+                                                }: {},
+                                            },
+                                            is_null_operator_name: Some(
+                                                Name(
+                                                    "_is_null",
+                                                ),
+                                            ),
+                                        },
+                                        FieldName(
+                                            Identifier(
+                                                "title",
+                                            ),
+                                        ): ComparisonExpressionInfo {
+                                            object_type_name: Some(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "string_bool_exp",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                            type_name: TypeName(
+                                                Name(
+                                                    "String_Comparison_Exp",
+                                                ),
+                                            ),
+                                            operators: {},
+                                            operator_mapping: {
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
+                                                    name: DataConnectorName(
+                                                        Identifier(
+                                                            "elastic",
+                                                        ),
+                                                    ),
+                                                }: {},
+                                            },
+                                            is_null_operator_name: Some(
+                                                Name(
+                                                    "_is_null",
+                                                ),
+                                            ),
+                                        },
+                                    },
+                                    relationship_fields: {},
+                                    field_config: BooleanExpressionGraphqlFieldConfig {
+                                        where_field_name: Name(
+                                            "where",
+                                        ),
+                                        and_operator_name: Name(
+                                            "_and",
+                                        ),
+                                        or_operator_name: Name(
+                                            "_or",
+                                        ),
+                                        not_operator_name: Name(
+                                            "_not",
+                                        ),
+                                    },
+                                },
+                            ),
+                            include_logical_operators: Yes,
+                        },
+                    ),
+                ),
+                graphql_api: ModelGraphQlApi {
+                    arguments_input_config: None,
+                    select_uniques: [],
+                    select_many: Some(
+                        SelectManyGraphQlDefinition {
+                            query_root_field: Name(
+                                "MovieMany",
+                            ),
+                            description: None,
+                            deprecated: None,
+                            subscription: None,
+                        },
+                    ),
+                    select_aggregate: None,
+                    order_by_expression: None,
+                    limit_field: Some(
+                        LimitFieldGraphqlConfig {
+                            field_name: Name(
+                                "limit",
+                            ),
+                        },
+                    ),
+                    offset_field: Some(
+                        OffsetFieldGraphqlConfig {
+                            field_name: Name(
+                                "offset",
+                            ),
+                        },
+                    ),
+                    filter_input_type_name: None,
+                },
+            },
+        },
+        commands: {},
+        object_boolean_expression_types: {},
+        boolean_expression_types: BooleanExpressionTypes {
+            objects: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
                     name: CustomTypeName(
                         Identifier(
                             "movie_bool_exp",
                         ),
                     ),
-                },
-                object_type: Qualified {
-                    subgraph: "__unknown_namespace",
-                    name: CustomTypeName(
-                        Identifier(
-                            "movie",
+                }: ResolvedObjectBooleanExpressionType {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
                         ),
-                    ),
-                },
-                graphql: Some(
-                    BooleanExpressionGraphqlConfig {
-                        type_name: TypeName(
-                            Name(
-                                "InstitutionBoolExp",
+                        name: CustomTypeName(
+                            Identifier(
+                                "movie_bool_exp",
                             ),
                         ),
-                        object_fields: {},
-                        scalar_fields: {
-                            FieldName(
-                                Identifier(
-                                    "rating",
-                                ),
-                            ): ComparisonExpressionInfo {
-                                object_type_name: Some(
-                                    Qualified {
-                                        subgraph: "__unknown_namespace",
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "int_range_bool_exp",
-                                            ),
-                                        ),
-                                    },
-                                ),
-                                type_name: TypeName(
-                                    Name(
-                                        "Int_Comparison_Exp",
-                                    ),
-                                ),
-                                operators: {
-                                    OperatorName(
-                                        "within",
-                                    ): QualifiedTypeReference {
-                                        underlying_type: Named(
-                                            Custom(
-                                                Qualified {
-                                                    subgraph: "__unknown_namespace",
-                                                    name: CustomTypeName(
-                                                        Identifier(
-                                                            "int_range",
-                                                        ),
-                                                    ),
-                                                },
-                                            ),
-                                        ),
-                                        nullable: true,
-                                    },
-                                },
-                                operator_mapping: {
-                                    Qualified {
-                                        subgraph: "__unknown_namespace",
-                                        name: DataConnectorName(
-                                            Identifier(
-                                                "custom",
-                                            ),
-                                        ),
-                                    }: {
-                                        OperatorName(
-                                            "within",
-                                        ): DataConnectorOperatorName(
-                                            "range",
-                                        ),
-                                    },
-                                },
-                                is_null_operator_name: Some(
-                                    Name(
-                                        "_is_null",
-                                    ),
-                                ),
-                            },
-                            FieldName(
-                                Identifier(
-                                    "title",
-                                ),
-                            ): ComparisonExpressionInfo {
-                                object_type_name: Some(
-                                    Qualified {
-                                        subgraph: "__unknown_namespace",
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "string_bool_exp",
-                                            ),
-                                        ),
-                                    },
-                                ),
-                                type_name: TypeName(
-                                    Name(
-                                        "String_Comparison_Exp",
-                                    ),
-                                ),
-                                operators: {},
-                                operator_mapping: {
-                                    Qualified {
-                                        subgraph: "__unknown_namespace",
-                                        name: DataConnectorName(
-                                            Identifier(
-                                                "custom",
-                                            ),
-                                        ),
-                                    }: {},
-                                },
-                                is_null_operator_name: Some(
-                                    Name(
-                                        "_is_null",
-                                    ),
-                                ),
-                            },
-                        },
-                        relationship_fields: {},
-                        graphql_config: BooleanExpressionGraphqlFieldConfig {
-                            where_field_name: Name(
-                                "where",
-                            ),
-                            and_operator_name: Name(
-                                "_and",
-                            ),
-                            or_operator_name: Name(
-                                "_or",
-                            ),
-                            not_operator_name: Name(
-                                "_not",
-                            ),
-                        },
                     },
-                ),
-                include_logical_operators: Yes,
-            },
-        },
-        scalars: {
-            Qualified {
-                subgraph: "__unknown_namespace",
-                name: CustomTypeName(
-                    Identifier(
-                        "int_bool_exp",
+                    object_type: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "movie",
+                            ),
+                        ),
+                    },
+                    graphql: Some(
+                        BooleanExpressionGraphqlConfig {
+                            type_name: TypeName(
+                                Name(
+                                    "InstitutionBoolExp",
+                                ),
+                            ),
+                            object_fields: {},
+                            scalar_fields: {
+                                FieldName(
+                                    Identifier(
+                                        "id",
+                                    ),
+                                ): ComparisonExpressionInfo {
+                                    object_type_name: Some(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "int_bool_exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                    type_name: TypeName(
+                                        Name(
+                                            "Int_Comparison_Exp",
+                                        ),
+                                    ),
+                                    operators: {},
+                                    operator_mapping: {
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
+                                            name: DataConnectorName(
+                                                Identifier(
+                                                    "elastic",
+                                                ),
+                                            ),
+                                        }: {},
+                                    },
+                                    is_null_operator_name: Some(
+                                        Name(
+                                            "_is_null",
+                                        ),
+                                    ),
+                                },
+                                FieldName(
+                                    Identifier(
+                                        "rating",
+                                    ),
+                                ): ComparisonExpressionInfo {
+                                    object_type_name: Some(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "int_bool_exp_with_range",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                    type_name: TypeName(
+                                        Name(
+                                            "Int_Comparison_Exp_With_Range",
+                                        ),
+                                    ),
+                                    operators: {
+                                        OperatorName(
+                                            "range",
+                                        ): QualifiedTypeReference {
+                                            underlying_type: Named(
+                                                Custom(
+                                                    Qualified {
+                                                        subgraph: SubgraphName(
+                                                            "__unknown_namespace",
+                                                        ),
+                                                        name: CustomTypeName(
+                                                            Identifier(
+                                                                "int_range",
+                                                            ),
+                                                        ),
+                                                    },
+                                                ),
+                                            ),
+                                            nullable: true,
+                                        },
+                                    },
+                                    operator_mapping: {
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
+                                            name: DataConnectorName(
+                                                Identifier(
+                                                    "elastic",
+                                                ),
+                                            ),
+                                        }: {},
+                                    },
+                                    is_null_operator_name: Some(
+                                        Name(
+                                            "_is_null",
+                                        ),
+                                    ),
+                                },
+                                FieldName(
+                                    Identifier(
+                                        "title",
+                                    ),
+                                ): ComparisonExpressionInfo {
+                                    object_type_name: Some(
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
+                                            name: CustomTypeName(
+                                                Identifier(
+                                                    "string_bool_exp",
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                    type_name: TypeName(
+                                        Name(
+                                            "String_Comparison_Exp",
+                                        ),
+                                    ),
+                                    operators: {},
+                                    operator_mapping: {
+                                        Qualified {
+                                            subgraph: SubgraphName(
+                                                "__unknown_namespace",
+                                            ),
+                                            name: DataConnectorName(
+                                                Identifier(
+                                                    "elastic",
+                                                ),
+                                            ),
+                                        }: {},
+                                    },
+                                    is_null_operator_name: Some(
+                                        Name(
+                                            "_is_null",
+                                        ),
+                                    ),
+                                },
+                            },
+                            relationship_fields: {},
+                            field_config: BooleanExpressionGraphqlFieldConfig {
+                                where_field_name: Name(
+                                    "where",
+                                ),
+                                and_operator_name: Name(
+                                    "_and",
+                                ),
+                                or_operator_name: Name(
+                                    "_or",
+                                ),
+                                not_operator_name: Name(
+                                    "_not",
+                                ),
+                            },
+                        },
                     ),
-                ),
-            }: ResolvedScalarBooleanExpressionType {
-                name: Qualified {
-                    subgraph: "__unknown_namespace",
+                    include_logical_operators: Yes,
+                },
+            },
+            scalars: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
                     name: CustomTypeName(
                         Identifier(
                             "int_bool_exp",
                         ),
                     ),
-                },
-                representation: Inbuilt(
-                    Int,
-                ),
-                comparison_operators: {},
-                data_connector_operator_mappings: {
-                    Qualified {
-                        subgraph: "__unknown_namespace",
-                        name: DataConnectorName(
+                }: ResolvedScalarBooleanExpressionType {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
+                        name: CustomTypeName(
                             Identifier(
-                                "custom",
+                                "int_bool_exp",
                             ),
                         ),
-                    }: DataConnectorOperatorMapping {
-                        data_connector_name: DataConnectorName(
-                            Identifier(
-                                "custom",
-                            ),
-                        ),
-                        data_connector_scalar_type: DataConnectorScalarType(
-                            "Int",
-                        ),
-                        operator_mapping: {},
                     },
-                },
-                graphql_name: None,
-                include_is_null: Yes,
-            },
-            Qualified {
-                subgraph: "__unknown_namespace",
-                name: CustomTypeName(
-                    Identifier(
-                        "int_range_bool_exp",
+                    representation: Inbuilt(
+                        Int,
                     ),
-                ),
-            }: ResolvedScalarBooleanExpressionType {
-                name: Qualified {
-                    subgraph: "__unknown_namespace",
-                    name: CustomTypeName(
-                        Identifier(
-                            "int_range_bool_exp",
-                        ),
-                    ),
-                },
-                representation: Inbuilt(
-                    Int,
-                ),
-                comparison_operators: {
-                    OperatorName(
-                        "within",
-                    ): TypeReference {
-                        underlying_type: Named(
-                            Custom(
-                                CustomTypeName(
-                                    Identifier(
-                                        "int_range",
-                                    ),
+                    comparison_operators: {},
+                    data_connector_operator_mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "elastic",
                                 ),
                             ),
-                        ),
-                        nullable: true,
-                    },
-                },
-                data_connector_operator_mappings: {
-                    Qualified {
-                        subgraph: "__unknown_namespace",
-                        name: DataConnectorName(
-                            Identifier(
-                                "custom",
+                        }: DataConnectorOperatorMapping {
+                            data_connector_name: DataConnectorName(
+                                Identifier(
+                                    "elastic",
+                                ),
                             ),
-                        ),
-                    }: DataConnectorOperatorMapping {
-                        data_connector_name: DataConnectorName(
-                            Identifier(
-                                "custom",
+                            data_connector_scalar_type: DataConnectorScalarType(
+                                "integer",
                             ),
-                        ),
-                        data_connector_scalar_type: DataConnectorScalarType(
-                            "Int",
-                        ),
-                        operator_mapping: {
-                            OperatorName(
-                                "within",
-                            ): DataConnectorOperatorName(
-                                "range",
-                            ),
+                            operator_mapping: {},
                         },
                     },
+                    graphql_name: Some(
+                        GraphQlTypeName(
+                            "Int_Comparison_Exp",
+                        ),
+                    ),
+                    include_is_null: Yes,
                 },
-                graphql_name: Some(
-                    GraphQlTypeName(
-                        "Int_Comparison_Exp",
+                Qualified {
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
                     ),
-                ),
-                include_is_null: Yes,
-            },
-            Qualified {
-                subgraph: "__unknown_namespace",
-                name: CustomTypeName(
-                    Identifier(
-                        "string_bool_exp",
+                    name: CustomTypeName(
+                        Identifier(
+                            "int_bool_exp_with_range",
+                        ),
                     ),
-                ),
-            }: ResolvedScalarBooleanExpressionType {
-                name: Qualified {
-                    subgraph: "__unknown_namespace",
+                }: ResolvedScalarBooleanExpressionType {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "int_bool_exp_with_range",
+                            ),
+                        ),
+                    },
+                    representation: Inbuilt(
+                        Int,
+                    ),
+                    comparison_operators: {
+                        OperatorName(
+                            "range",
+                        ): QualifiedTypeReference {
+                            underlying_type: Named(
+                                Custom(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "int_range",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                            ),
+                            nullable: true,
+                        },
+                    },
+                    data_connector_operator_mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "elastic",
+                                ),
+                            ),
+                        }: DataConnectorOperatorMapping {
+                            data_connector_name: DataConnectorName(
+                                Identifier(
+                                    "elastic",
+                                ),
+                            ),
+                            data_connector_scalar_type: DataConnectorScalarType(
+                                "integer",
+                            ),
+                            operator_mapping: {},
+                        },
+                    },
+                    graphql_name: Some(
+                        GraphQlTypeName(
+                            "Int_Comparison_Exp_With_Range",
+                        ),
+                    ),
+                    include_is_null: Yes,
+                },
+                Qualified {
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
+                    ),
                     name: CustomTypeName(
                         Identifier(
                             "string_bool_exp",
                         ),
                     ),
-                },
-                representation: Inbuilt(
-                    String,
-                ),
-                comparison_operators: {},
-                data_connector_operator_mappings: {
-                    Qualified {
-                        subgraph: "__unknown_namespace",
-                        name: DataConnectorName(
+                }: ResolvedScalarBooleanExpressionType {
+                    name: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
+                        name: CustomTypeName(
                             Identifier(
-                                "custom",
+                                "string_bool_exp",
                             ),
                         ),
-                    }: DataConnectorOperatorMapping {
-                        data_connector_name: DataConnectorName(
-                            Identifier(
-                                "custom",
-                            ),
-                        ),
-                        data_connector_scalar_type: DataConnectorScalarType(
-                            "String",
-                        ),
-                        operator_mapping: {},
                     },
-                },
-                graphql_name: Some(
-                    GraphQlTypeName(
-                        "String_Comparison_Exp",
+                    representation: Inbuilt(
+                        String,
                     ),
-                ),
-                include_is_null: Yes,
+                    comparison_operators: {},
+                    data_connector_operator_mappings: {
+                        Qualified {
+                            subgraph: SubgraphName(
+                                "__unknown_namespace",
+                            ),
+                            name: DataConnectorName(
+                                Identifier(
+                                    "elastic",
+                                ),
+                            ),
+                        }: DataConnectorOperatorMapping {
+                            data_connector_name: DataConnectorName(
+                                Identifier(
+                                    "elastic",
+                                ),
+                            ),
+                            data_connector_scalar_type: DataConnectorScalarType(
+                                "text",
+                            ),
+                            operator_mapping: {},
+                        },
+                    },
+                    graphql_name: Some(
+                        GraphQlTypeName(
+                            "String_Comparison_Exp",
+                        ),
+                    ),
+                    include_is_null: Yes,
+                },
             },
         },
-    },
-    aggregate_expressions: {},
-    graphql_config: GlobalGraphqlConfig {
-        query_root_type_name: TypeName(
-            Name(
-                "Query",
-            ),
-        ),
-        mutation_root_type_name: TypeName(
-            Name(
-                "Mutation",
-            ),
-        ),
-        order_by_input: Some(
-            OrderByInputGraphqlConfig {
-                asc_direction_field_value: Name(
-                    "Asc",
-                ),
-                desc_direction_field_value: Name(
-                    "Desc",
-                ),
-                enum_type_name: TypeName(
-                    Name(
-                        "order_by",
+        order_by_expressions: OrderByExpressions(
+            {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "__unknown_namespace",
                     ),
-                ),
+                    name: FromModel(
+                        ModelName(
+                            Identifier(
+                                "movies",
+                            ),
+                        ),
+                    ),
+                }: OrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
+                        name: FromModel(
+                            ModelName(
+                                Identifier(
+                                    "movies",
+                                ),
+                            ),
+                        ),
+                    },
+                    ordered_type: Qualified {
+                        subgraph: SubgraphName(
+                            "__unknown_namespace",
+                        ),
+                        name: CustomTypeName(
+                            Identifier(
+                                "movie",
+                            ),
+                        ),
+                    },
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "id",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "rating",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                        FieldName(
+                            Identifier(
+                                "title",
+                            ),
+                        ): Scalar(
+                            OrderableScalarField {
+                                enable_order_by_directions: EnableAll(
+                                    true,
+                                ),
+                            },
+                        ),
+                    },
+                    orderable_relationships: ModelV1AllowAll,
+                    graphql: None,
+                    description: Some(
+                        "OrderByExpression for Model movies (in subgraph __unknown_namespace)",
+                    ),
+                },
             },
         ),
-        enable_apollo_federation_fields: false,
+        aggregate_expressions: {},
+        graphql_config: GlobalGraphqlConfig {
+            query_root_type_name: TypeName(
+                Name(
+                    "Query",
+                ),
+            ),
+            mutation_root_type_name: TypeName(
+                Name(
+                    "Mutation",
+                ),
+            ),
+            subscription_root_type_name: None,
+            order_by_input: Some(
+                OrderByInputGraphqlConfig {
+                    asc_direction_field_value: Name(
+                        "Asc",
+                    ),
+                    desc_direction_field_value: Name(
+                        "Desc",
+                    ),
+                    enum_type_name: TypeName(
+                        Name(
+                            "order_by",
+                        ),
+                    ),
+                },
+            ),
+            enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+        },
+        pre_parse_plugins: [],
+        roles: [
+            Role(
+                "admin",
+            ),
+            Role(
+                "admin",
+            ),
+        ],
     },
-    roles: [
-        Role(
-            "admin",
-        ),
-        Role(
-            "admin",
-        ),
-    ],
-}
+    [],
+)

@@ -61,7 +61,7 @@
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "int8",
+                    "dataConnectorScalarType": "int4",
                     "operatorMapping": {
                       "equals": "_eq"
                     }
@@ -105,7 +105,7 @@
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "String",
+                    "dataConnectorScalarType": "text",
                     "operatorMapping": {
                       "equals": "_eq"
                     }

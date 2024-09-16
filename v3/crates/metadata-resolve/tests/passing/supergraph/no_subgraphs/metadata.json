@@ -43,6 +43,9 @@
           "mutation": {
             "rootOperationTypeName": "Mutation"
           },
+          "subscription": {
+            "rootOperationTypeName": "Subscription"
+          },
           "apolloFederation": {
             "enableRootFields": false
           }

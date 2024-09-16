@@ -4,7 +4,6 @@ use schemars::schema::{
 };
 use schemars::schema::{InstanceType, SingleOrVec};
 use serde_json;
-use serde_path_to_error;
 use smol_str::SmolStr;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::hash::Hash;
@@ -189,91 +188,13 @@ pub fn gen_root_schema_for<T: OpenDd>(
     root_schema
 }
 
-/// Represents a single element in a JSON path.
-#[derive(Debug)]
-pub enum JSONPathElement {
-    Key(String),
-    Index(usize),
-}
-
-/// Represents a JSON path.
-#[derive(Debug)]
-pub struct JSONPath(pub Vec<JSONPathElement>);
-
-impl Default for JSONPath {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl std::fmt::Display for JSONPath {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let elems = self
-            .0
-            .iter()
-            .map(|element| match element {
-                JSONPathElement::Key(key) => format!(".{key}"),
-                JSONPathElement::Index(index) => format!("[{index}]"),
-            })
-            .collect::<Vec<String>>();
-        let mut path = vec!["$".to_string()];
-        path.extend(elems);
-        write!(f, "{}", path.join(""))
-    }
-}
-
-impl JSONPath {
-    pub fn new() -> Self {
-        JSONPath(Vec::new())
-    }
-
-    pub fn new_key(key: &str) -> Self {
-        JSONPath(vec![JSONPathElement::Key(key.to_string())])
-    }
-
-    pub fn new_index(index: usize) -> Self {
-        JSONPath(vec![JSONPathElement::Index(index)])
-    }
-
-    pub fn prepend_key(self, key: String) -> Self {
-        let mut new_path = vec![JSONPathElement::Key(key)];
-        new_path.extend(self.0);
-        JSONPath(new_path)
-    }
-
-    pub fn prepend_index(self, index: usize) -> Self {
-        let mut new_path = vec![JSONPathElement::Index(index)];
-        new_path.extend(self.0);
-        JSONPath(new_path)
-    }
-
-    pub fn from_serde_path(path: &serde_path_to_error::Path) -> Self {
-        JSONPath(
-            path.iter()
-                .filter_map(|segment| match segment {
-                    serde_path_to_error::Segment::Seq { index } => {
-                        Some(JSONPathElement::Index(*index))
-                    }
-                    serde_path_to_error::Segment::Map { key } => {
-                        Some(JSONPathElement::Key(key.to_string()))
-                    }
-                    serde_path_to_error::Segment::Enum { variant } => {
-                        Some(JSONPathElement::Key(variant.to_string()))
-                    }
-                    serde_path_to_error::Segment::Unknown => None,
-                })
-                .collect(),
-        )
-    }
-}
-
 /// Error type for deserializing OpenDd types from JSON values.
 #[derive(Debug, thiserror::Error)]
 #[error("{error} at path {path}")]
 pub struct OpenDdDeserializeError {
     #[source]
     pub error: serde_json::Error,
-    pub path: JSONPath,
+    pub path: jsonpath::JSONPath,
 }
 
 #[cfg(test)]
@@ -805,6 +726,221 @@ mod tests {
                         "additionalProperties": false
                     }
                 ]
+            }
+        );
+
+        assert_eq!(
+            serde_json::to_string_pretty(&exp).unwrap(),
+            serde_json::to_string_pretty(&root_schema).unwrap()
+        );
+    }
+
+    // Tests for externally tagged enums
+
+    #[derive(Debug, PartialEq, OpenDd)]
+    #[opendd(externally_tagged)]
+    #[allow(clippy::enum_variant_names)]
+    /// An externally tagged enum
+    enum ExternallyTaggedEnum {
+        #[opendd(json_schema(title = "VariantOne"))]
+        /// The first variant
+        VariantOne(VariantOneStruct),
+        #[opendd(json_schema(title = "VariantTwo"))]
+        /// The second variant
+        VariantTwo(VariantTwoStruct),
+        #[opendd(hidden = true)]
+        VariantThree(VariantThreeStruct),
+    }
+
+    #[derive(Debug, PartialEq, OpenDd)]
+    struct VariantOneStruct {
+        prop_a: String,
+        prop_b: i32,
+    }
+
+    #[derive(Debug, PartialEq, OpenDd)]
+    struct VariantTwoStruct {
+        prop_1: bool,
+        prop_2: String,
+    }
+
+    #[derive(Debug, PartialEq, OpenDd)]
+    struct VariantThreeStruct {
+        prop_x: String,
+        prop_y: String,
+    }
+
+    #[test]
+    fn test_externally_tagged_enum() {
+        let json = serde_json::json!({
+            "variantTwo": {
+                "prop1": true,
+                "prop2": "testing"
+            }
+        });
+        let expected = ExternallyTaggedEnum::VariantTwo(VariantTwoStruct {
+            prop_1: true,
+            prop_2: "testing".to_owned(),
+        });
+        assert_eq!(expected, traits::OpenDd::deserialize(json).unwrap());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_deserializes_hidden_variants() {
+        let json = serde_json::json!({
+            "variantThree": {
+                "propX": "testing",
+                "propY": "abcd",
+            }
+        });
+        let expected = ExternallyTaggedEnum::VariantThree(VariantThreeStruct {
+            prop_x: "testing".to_owned(),
+            prop_y: "abcd".to_owned(),
+        });
+        assert_eq!(expected, traits::OpenDd::deserialize(json).unwrap());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_multiple_properties_error() {
+        let json = serde_json::json!({
+            "variantOne": {
+                "propA": "test",
+                "propB": 123,
+            },
+            "variantTwo": {
+                "prop1": true,
+                "prop2": "testing"
+            }
+        });
+        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        assert_eq!(
+            "invalid type: found multiple object properties, expected object with only one of the following properties: variantOne, variantTwo".to_string(),
+            err
+                .error
+                .to_string()
+        );
+        assert_eq!("$", err.path.to_string());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_empty_object_error() {
+        let json = serde_json::json!({});
+        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        assert_eq!(
+            "invalid type: found empty object, expected object with only one of the following properties: variantOne, variantTwo".to_string(),
+            err.error.to_string()
+        );
+        assert_eq!("$", err.path.to_string());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_content_not_object_error() {
+        let json = serde_json::json!({
+            "variantOne": "wrong"
+        });
+        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        assert_eq!(
+            "invalid type: not an object, expected object".to_string(),
+            err.error.to_string()
+        );
+        assert_eq!("$.variantOne", err.path.to_string());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_unexpected_variant() {
+        let json = serde_json::json!({
+            "variantUnknown": {
+                "propA": "test",
+                "propB": 123,
+            }
+        });
+        let err = <ExternallyTaggedEnum as traits::OpenDd>::deserialize(json).unwrap_err();
+        assert_eq!(
+            "unknown variant `variantUnknown`, expected `variantOne, variantTwo`".to_string(),
+            err.error.to_string()
+        );
+        assert_eq!("$", err.path.to_string());
+    }
+
+    #[test]
+    fn test_externally_tagged_enum_json_schema() {
+        let mut gen = schemars::gen::SchemaGenerator::default();
+        let root_schema = traits::gen_root_schema_for::<ExternallyTaggedEnum>(&mut gen);
+        let exp = serde_json::json!(
+            {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "$id": "https://hasura.io/jsonschemas/metadata/ExternallyTaggedEnum",
+                "title": "ExternallyTaggedEnum",
+                "description": "An externally tagged enum",
+                "oneOf": [
+                    {
+                        "title": "VariantOne",
+                        "description": "The first variant",
+                        "type": "object",
+                        "required": [
+                            "variantOne"
+                        ],
+                        "properties": {
+                            "variantOne": {
+                                "$ref": "#/definitions/VariantOneStruct"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    {
+                        "title": "VariantTwo",
+                        "description": "The second variant",
+                        "type": "object",
+                        "required": [
+                            "variantTwo"
+                        ],
+                        "properties": {
+                            "variantTwo": {
+                                "$ref": "#/definitions/VariantTwoStruct"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                ],
+                "definitions": {
+                    "VariantOneStruct": {
+                        "$id": "https://hasura.io/jsonschemas/metadata/VariantOneStruct",
+                        "title": "VariantOneStruct",
+                        "type": "object",
+                        "required": [
+                            "propA",
+                            "propB"
+                        ],
+                        "properties": {
+                            "propA": {
+                                "type": "string"
+                            },
+                            "propB": {
+                                "type": "integer",
+                                "format": "int32"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "VariantTwoStruct": {
+                        "$id": "https://hasura.io/jsonschemas/metadata/VariantTwoStruct",
+                        "title": "VariantTwoStruct",
+                        "type": "object",
+                        "required": [
+                            "prop1",
+                            "prop2"
+                        ],
+                        "properties": {
+                            "prop1": {
+                                "type": "boolean"
+                            },
+                            "prop2": {
+                                "type": "string"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
             }
         );
 

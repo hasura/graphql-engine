@@ -6,8 +6,9 @@ use serde::{Deserialize, Serialize};
 mod v1;
 
 pub use v1::{
-    ArgumentPreset, ArgumentPresetValue, DataConnectorLinkV1,
-    DataConnectorUrlV1 as DataConnectorUrl, HttpHeadersPreset, ReadWriteUrls, ResponseHeaders,
+    DataConnectorArgumentPreset, DataConnectorArgumentPresetValue, DataConnectorLinkV1,
+    DataConnectorUrlV1 as DataConnectorUrl, HttpHeaders, HttpHeadersPreset, ReadWriteUrls,
+    ResponseHeaders,
 };
 
 use crate::{identifier::Identifier, impl_OpenDd_default_for, str_newtype};
@@ -90,15 +91,16 @@ fn ndc_schema_response_v01_schema_reference(
 fn ndc_capabilities_response_v02_schema_reference(
     _gen: &mut schemars::gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
-    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/main/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0-rc.0/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
 }
 
 fn ndc_schema_response_v02_schema_reference(
     _gen: &mut schemars::gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
-    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/main/ndc-models/tests/json_schema/schema_response.jsonschema".into())
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.2.0-rc.0/ndc-models/tests/json_schema/schema_response.jsonschema".into())
 }
 
+/// Versioned schema and capabilities for a data connector.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version")]
 #[serde(rename_all = "camelCase")]
@@ -115,6 +117,7 @@ pub enum VersionedSchemaAndCapabilities {
     V02(SchemaAndCapabilitiesV02),
 }
 
+/// Version 0.1 of schema and capabilities for a data connector.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -129,6 +132,7 @@ pub struct SchemaAndCapabilitiesV01 {
 // Derive OpenDd for `SchemaAdnCapabilitiesV01` by serde Deserialize and schemars JsonSchema implementations.
 impl_OpenDd_default_for!(SchemaAndCapabilitiesV01);
 
+/// Version 0.2 of schema and capabilities for a data connector.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]

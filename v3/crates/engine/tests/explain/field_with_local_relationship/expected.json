@@ -31,14 +31,14 @@
                     }
                   }
                 },
-                "relationship": "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]",
+                "relationship": "default___author__Articles",
                 "arguments": {}
               }
             }
           },
           "arguments": {},
           "collection_relationships": {
-            "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]": {
+            "default___author__Articles": {
               "column_mapping": {
                 "id": "author_id"
               },

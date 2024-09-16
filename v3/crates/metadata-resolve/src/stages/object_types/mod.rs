@@ -1,31 +1,37 @@
+mod error;
 pub mod types;
 
+pub use error::{ObjectTypesError, TypeMappingValidationError};
+use open_dds::identifier::SubgraphName;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
+use types::ComparisonOperators;
 
 use open_dds::commands::ArgumentMapping;
 use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
 pub use types::{
-    DataConnectorTypeMappingsForObject, DataConnectorTypeMappingsOutput, FieldDefinition,
-    FieldMapping, ObjectTypeRepresentation, ObjectTypeWithTypeMappings,
-    ResolvedApolloFederationObjectKey, ResolvedObjectApolloFederationConfig, TypeMapping,
+    DataConnectorTypeMappingsForObject, FieldArgumentInfo, FieldDefinition, FieldMapping,
+    ObjectTypeRepresentation, ObjectTypeWithTypeMappings, ObjectTypesOutput,
+    ObjectTypesWithTypeMappings, ResolvedApolloFederationObjectKey,
+    ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
 use crate::helpers::ndc_validation::get_underlying_named_type;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
-use crate::stages::data_connectors;
+use crate::stages::{apollo, data_connectors};
 
-use crate::types::error::{Error, TypeMappingValidationError};
 use crate::types::subgraph::{mk_qualified_type_reference, Qualified};
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 
+use super::data_connector_scalar_types::get_comparison_operators;
+
 /// resolve object types, matching them to that in the data connectors
 pub(crate) fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
-) -> Result<DataConnectorTypeMappingsOutput, Error> {
+) -> Result<ObjectTypesOutput, ObjectTypesError> {
     let mut object_types = BTreeMap::new();
     let mut graphql_types = BTreeSet::new();
     let mut global_id_enabled_types = BTreeMap::new();
@@ -37,7 +43,7 @@ pub(crate) fn resolve(
     } in &metadata_accessor.object_types
     {
         let qualified_object_type_name =
-            Qualified::new(subgraph.to_string(), object_type_definition.name.clone());
+            Qualified::new(subgraph.clone(), object_type_definition.name.clone());
 
         let resolved_object_type = resolve_object_type(
             object_type_definition,
@@ -53,7 +59,7 @@ pub(crate) fn resolve(
         // resolve object types' type mappings
         for dc_type_mapping in &object_type_definition.data_connector_type_mapping {
             let qualified_data_connector_name = Qualified::new(
-                subgraph.to_string(),
+                subgraph.clone(),
                 dc_type_mapping.data_connector_name.clone(),
             );
             let type_mapping = resolve_data_connector_type_mapping(
@@ -64,7 +70,7 @@ pub(crate) fn resolve(
                 data_connectors,
             )
             .map_err(|type_validation_error| {
-                Error::DataConnectorTypeMappingValidationError {
+                ObjectTypesError::DataConnectorTypeMappingValidationError {
                     type_name: qualified_object_type_name.clone(),
                     error: type_validation_error,
                 }
@@ -88,28 +94,28 @@ pub(crate) fn resolve(
             )
             .is_some()
         {
-            return Err(Error::DuplicateTypeDefinition {
+            return Err(ObjectTypesError::DuplicateTypeDefinition {
                 name: qualified_object_type_name,
             });
         }
     }
 
-    Ok(DataConnectorTypeMappingsOutput {
+    Ok(ObjectTypesOutput {
         graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
-        object_types,
+        object_types: ObjectTypesWithTypeMappings(object_types),
     })
 }
 
 fn resolve_field(
     field: &open_dds::types::FieldDefinition,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     qualified_type_name: &Qualified<CustomTypeName>,
-) -> Result<FieldDefinition, Error> {
+) -> Result<FieldDefinition, ObjectTypesError> {
     let mut field_arguments = IndexMap::new();
     for argument in &field.arguments {
-        let field_argument_definition = crate::ArgumentInfo {
+        let field_argument_definition = FieldArgumentInfo {
             argument_type: mk_qualified_type_reference(&argument.argument_type, subgraph),
             description: argument.description.clone(),
         };
@@ -117,7 +123,7 @@ fn resolve_field(
             .insert(argument.name.clone(), field_argument_definition)
             .is_some()
         {
-            return Err(Error::DuplicateArgumentDefinition {
+            return Err(ObjectTypesError::DuplicateArgumentDefinition {
                 field_name: field.name.clone(),
                 argument_name: argument.name.clone(),
                 type_name: qualified_type_name.clone(),
@@ -136,7 +142,7 @@ pub fn resolve_object_type(
     object_type_definition: &open_dds::types::ObjectTypeV1,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     qualified_type_name: &Qualified<CustomTypeName>,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     global_id_enabled_types: &mut BTreeMap<
         Qualified<CustomTypeName>,
         Vec<Qualified<open_dds::models::ModelName>>,
@@ -145,7 +151,7 @@ pub fn resolve_object_type(
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,
-) -> Result<ObjectTypeRepresentation, Error> {
+) -> Result<ObjectTypeRepresentation, ObjectTypesError> {
     let mut resolved_fields = IndexMap::new();
     let mut resolved_global_id_fields = Vec::new();
 
@@ -157,7 +163,7 @@ pub fn resolve_object_type(
             )
             .is_some()
         {
-            return Err(Error::DuplicateFieldDefinition {
+            return Err(ObjectTypesError::DuplicateFieldDefinition {
                 type_name: qualified_type_name.clone(),
                 field_name: field.name.clone(),
             });
@@ -169,7 +175,7 @@ pub fn resolve_object_type(
                 // Throw error if the object type has a field called id" and has global fields configured.
                 // Because, when the global id fields are configured, the `id` field will be auto-generated.
                 if resolved_fields.contains_key("id") {
-                    return Err(Error::IdFieldConflictingGlobalId {
+                    return Err(ObjectTypesError::IdFieldConflictingGlobalId {
                         type_name: qualified_type_name.clone(),
                     });
                 }
@@ -183,7 +189,7 @@ pub fn resolve_object_type(
                 if resolved_fields.contains_key(global_id_field) {
                     resolved_global_id_fields.push(global_id_field.clone());
                 } else {
-                    return Err(Error::UnknownFieldInGlobalId {
+                    return Err(ObjectTypesError::UnknownFieldInGlobalId {
                         field_name: global_id_field.clone(),
                         type_name: qualified_type_name.clone(),
                     });
@@ -194,7 +200,7 @@ pub fn resolve_object_type(
     }
     let (graphql_type_name, graphql_input_type_name, apollo_federation_config) =
         match object_type_definition.graphql.as_ref() {
-            None => Ok::<_, Error>((None, None, None)),
+            None => Ok::<_, ObjectTypesError>((None, None, None)),
             Some(graphql) => {
                 let graphql_type_name = graphql
                     .type_name
@@ -219,10 +225,12 @@ pub fn resolve_object_type(
                             let mut resolved_key_fields = Vec::new();
                             for field in &key.fields {
                                 if !resolved_fields.contains_key(field) {
-                                    return Err(Error::UnknownFieldInApolloFederationKey {
-                                        field_name: field.clone(),
-                                        object_type: qualified_type_name.clone(),
-                                    });
+                                    return Err(ObjectTypesError::from(
+                                        apollo::ApolloError::UnknownFieldInApolloFederationKey {
+                                            field_name: field.clone(),
+                                            object_type: qualified_type_name.clone(),
+                                        },
+                                    ));
                                 }
                                 resolved_key_fields.push(field.clone());
                             }
@@ -230,9 +238,9 @@ pub fn resolve_object_type(
                                 match nonempty::NonEmpty::from_vec(resolved_key_fields) {
                                     None => {
                                         return Err(
-                                            Error::EmptyFieldsInApolloFederationConfigForObject {
+                                            ObjectTypesError::from(apollo::ApolloError::EmptyFieldsInApolloFederationConfigForObject {
                                                 object_type: qualified_type_name.clone(),
-                                            },
+                                            }),
                                         )
                                     }
                                     Some(fields) => ResolvedApolloFederationObjectKey { fields },
@@ -242,9 +250,11 @@ pub fn resolve_object_type(
                         apollo_federation_entity_enabled_types
                             .insert(qualified_type_name.clone(), None);
                         match nonempty::NonEmpty::from_vec(resolved_keys) {
-                            None => Err(Error::EmptyKeysInApolloFederationConfigForObject {
-                                object_type: qualified_type_name.clone(),
-                            }),
+                            None => Err(ObjectTypesError::from(
+                                apollo::ApolloError::EmptyKeysInApolloFederationConfigForObject {
+                                    object_type: qualified_type_name.clone(),
+                                },
+                            )),
                             Some(keys) => Ok(Some(ResolvedObjectApolloFederationConfig { keys })),
                         }
                     }
@@ -256,6 +266,7 @@ pub fn resolve_object_type(
                 ))
             }
         }?;
+
     store_new_graphql_type(existing_graphql_types, graphql_type_name.as_ref())?;
     store_new_graphql_type(existing_graphql_types, graphql_input_type_name.as_ref())?;
 
@@ -273,12 +284,12 @@ pub fn resolve_object_type(
 pub fn resolve_data_connector_type_mapping(
     data_connector_type_mapping: &open_dds::types::DataConnectorTypeMapping,
     qualified_type_name: &Qualified<CustomTypeName>,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     type_representation: &ObjectTypeRepresentation,
     data_connectors: &data_connectors::DataConnectors,
 ) -> Result<TypeMapping, TypeMappingValidationError> {
     let qualified_data_connector_name = Qualified::new(
-        subgraph.to_string(),
+        subgraph.clone(),
         data_connector_type_mapping.data_connector_name.clone(),
     );
 
@@ -335,15 +346,27 @@ pub fn resolve_data_connector_type_mapping(
         let source_column =
             get_column(ndc_object_type, field_name, &resolved_field_mapping_column)?;
         let underlying_column_type = get_underlying_named_type(&source_column.r#type);
-        let column_type_representation = data_connector_context
+        let scalar_type = data_connector_context
             .schema
             .scalar_types
-            .get(underlying_column_type.as_str())
-            .and_then(|scalar_type| scalar_type.representation.clone());
+            .get(underlying_column_type.as_str());
+
+        let column_type_representation = scalar_type.and_then(|ty| ty.representation.clone());
+
+        let comparison_operators = scalar_type.map(|ty| {
+            let c = get_comparison_operators(ty);
+            ComparisonOperators {
+                equality_operators: c.equal_operators,
+                in_operators: c.in_operators,
+                other_operators: c.other_operators,
+            }
+        });
+
         let resolved_field_mapping = FieldMapping {
             column: resolved_field_mapping_column.into_owned(),
             column_type: source_column.r#type.clone(),
             column_type_representation,
+            comparison_operators,
             argument_mappings: resolved_argument_mappings.0,
         };
 

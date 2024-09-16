@@ -52,7 +52,7 @@ fn impl_deserialize_named_fields<'a>(
                         serde::de::Unexpected::Other("not an object"),
                         &"object",
                     ),
-                    path: open_dds::traits::JSONPath::new(),
+                    path: jsonpath::JSONPath::new(),
                 })
             },
         };
@@ -66,7 +66,7 @@ fn impl_deserialize_named_fields<'a>(
                     __remaining_keys.join(", "),
                     [#(#expected_fields),*].join(", "),
                 )),
-                path: open_dds::traits::JSONPath::new(),
+                path: jsonpath::JSONPath::new(),
             });
         }
         Ok(__value)
@@ -113,7 +113,7 @@ fn generate_named_fields_value<'a>(
             quote! {
                 .ok_or_else(|| open_dds::traits::OpenDdDeserializeError {
                     error: serde::de::Error::missing_field(#field_name_str),
-                    path: open_dds::traits::JSONPath::new(),
+                    path: jsonpath::JSONPath::new(),
                 })?
             }
         };
@@ -161,6 +161,14 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
             proc_macro2::TokenStream::new()
         };
 
+        let title = if let Some(t) = &field.title {
+            quote! {
+                metadata.title = Some(#t.to_string());
+            }
+        } else {
+            proc_macro2::TokenStream::new()
+        };
+
         // We only modify the schema if necessary, as doing so adds extra levels
         // of nesting for the `$ref` value. (According to JSON Schema, `$ref`
         // cannot be mixed with other properties, and so `schemars` will nest
@@ -175,6 +183,7 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
                 let metadata = schema_object.metadata();
                 #default_prop
                 #description
+                #title
                 schemars::schema::Schema::Object(schema_object)
             }
         };

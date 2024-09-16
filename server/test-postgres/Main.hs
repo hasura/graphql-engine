@@ -107,6 +107,8 @@ main = do
                 Options.Don'tStringifyNumbers
                 Options.Don'tDangerouslyCollapseBooleans
                 Options.Don'tAllowNullInNonNullableVariables
+                Options.DefaultUnboundNullableVariablesToNull
+                Options.PreserveEmptyResponses
                 Options.RemoteForwardAccurately
                 Options.Don'tOptimizePermissionFilters
                 Options.EnableBigQueryStringNumericInput

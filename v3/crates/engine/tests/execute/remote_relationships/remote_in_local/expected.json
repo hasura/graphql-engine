@@ -43,6 +43,18 @@
           "rating": 5,
           "Actors": [
             {
+              "name": "Peter",
+              "Movie": {
+                "title": "Slumdog Millionaire",
+                "Analytics": [
+                  {
+                    "num_users_faved": 4,
+                    "num_views_day": 13
+                  }
+                ]
+              }
+            },
+            {
               "name": "Irfan Khan",
               "Movie": {
                 "title": "Slumdog Millionaire",
@@ -137,6 +149,18 @@
           "rating": 5,
           "Actors": [
             {
+              "name": "Peter",
+              "Movie": {
+                "title": "Slumdog Millionaire",
+                "Analytics": [
+                  {
+                    "num_users_faved": 4,
+                    "num_views_day": 13
+                  }
+                ]
+              }
+            },
+            {
               "name": "Irfan Khan",
               "Movie": {
                 "title": "Slumdog Millionaire",
@@ -166,6 +190,13 @@
           "title": "Slumdog Millionaire",
           "rating": 5,
           "Actors": [
+            {
+              "name": "Peter",
+              "Movie": {
+                "title": "Slumdog Millionaire",
+                "Analytics": []
+              }
+            },
             {
               "name": "Irfan Khan",
               "Movie": {

@@ -201,7 +201,9 @@ fn object_type_fields(
         .fields
         .iter()
         .map(|(field_name, field_definition)| -> Result<_, Error> {
-            let graphql_field_name = mk_name(field_name.as_str())?;
+            let graphql_field_name =
+                mk_name(field_name.as_str()).map_err(metadata_resolve::Error::from)?;
+
             let field_arguments = field_definition
                 .field_arguments
                 .iter()
@@ -230,6 +232,7 @@ fn object_type_fields(
                     field_base_type_kind: get_type_kind(gds, &field_definition.field_type)?,
                     parent_type: type_name.to_owned(),
                     argument_types: field_argument_types,
+                    deprecated: field_definition.deprecated.clone(),
                 }),
                 get_output_type(gds, builder, &field_definition.field_type)?,
                 field_arguments,
@@ -382,6 +385,7 @@ fn command_relationship_field(
                         &command_relationship_target.target_type,
                     )?,
                     mappings: command_relationship_target.mappings.clone(),
+                    deprecated: relationship.deprecated.clone(),
                 },
             )),
             relationship_output_type,
@@ -458,6 +462,7 @@ fn model_relationship_field(
                     target_type: model_relationship_target.target_typename.clone(),
                     relationship_type: model_relationship_target.relationship_type.clone(),
                     mappings: model_relationship_target.mappings.clone(),
+                    deprecated: relationship.deprecated.clone(),
                 },
             )),
             relationship_output_type,
@@ -533,6 +538,7 @@ fn model_aggregate_relationship_field(
                     target_source: metadata_resolve::ModelTargetSource::new(model, relationship)?,
                     target_type: model_aggregate_relationship_target.target_typename.clone(),
                     mappings: model_aggregate_relationship_target.mappings.clone(),
+                    deprecated: relationship.deprecated.clone(),
                 },
             )),
             ast::TypeContainer::named_non_null(aggregate_select_output_type),

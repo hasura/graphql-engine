@@ -1,0 +1,10 @@
+[
+  {
+    "plan_type": "logical_plan",
+    "plan": "ModelAggregate: model=default:InvoiceLine, selection=count(*)"
+  },
+  {
+    "plan_type": "physical_plan",
+    "plan": "NDCAggregatePushdown\n"
+  }
+]

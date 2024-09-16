@@ -169,7 +169,15 @@
                     "booleanExpressionType": "int_bool_exp"
                   }
                 ],
-                "comparableRelationships": [{ "relationshipName": "Album" }]
+                "comparableRelationships": [
+                  { "relationshipName": "Album" },
+                  {
+                    "relationshipName": "TrackAlbums"
+                  },
+                  {
+                    "relationshipName": "Genre"
+                  }
+                ]
               }
             },
             "logicalOperators": { "enable": true },
@@ -621,7 +629,6 @@
           "version": "v1",
           "kind": "ObjectType"
         },
-
         {
           "kind": "BooleanExpressionType",
           "version": "v1",
@@ -631,12 +638,13 @@
               "scalar": {
                 "type": "String",
                 "comparisonOperators": [
-                  { "name": "_eq", "argumentType": "String!" }
+                  { "name": "_eq", "argumentType": "String!" },
+                  { "name": "_ilike", "argumentType": "String!" }
                 ],
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "String",
+                    "dataConnectorScalarType": "text",
                     "operatorMapping": {}
                   }
                 ]
@@ -664,7 +672,7 @@
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "Int",
+                    "dataConnectorScalarType": "int4",
                     "operatorMapping": {}
                   }
                 ]
@@ -696,7 +704,7 @@
                     "booleanExpressionType": "string_bool_exp"
                   }
                 ],
-                "comparableRelationships": []
+                "comparableRelationships": [{ "relationshipName": "Albums" }]
               }
             },
             "logicalOperators": { "enable": true },

@@ -18,10 +18,12 @@ pub(crate) fn get_procedures() -> Vec<ndc_models::ProcedureInfo> {
     vec![
         upsert_actor::procedure_info(),
         update_actor_name_by_id::procedure_info(),
+        uppercase_actor_name_by_id::procedure_info(),
+        uppercase_all_actor_names::procedure_info(),
+        uppercase_all_actor_names_return_names_list::procedure_info(),
         login::procedure_info(),
         noop_procedure::procedure_info(),
         add_movie_with_genres::procedure_info(),
-        // TODO: Looks like the other procedures where never added to the schema?
     ]
 }
 
@@ -41,13 +43,13 @@ pub(crate) fn execute_procedure(
             uppercase_actor_name_by_id::execute(arguments, fields, collection_relationships, state)
         }
         "uppercase_all_actor_names" => {
-            uppercase_all_actor_names::execute(fields, collection_relationships, state)
+            uppercase_all_actor_names::execute(arguments, fields, collection_relationships, state)
         }
         "uppercase_all_actor_names_return_names_list" => {
-            uppercase_all_actor_names_return_names_list::execute(state)
+            uppercase_all_actor_names_return_names_list::execute(arguments, state)
         }
         "login" => login::execute(arguments),
-        "noop_procedure" => Ok(noop_procedure::execute()),
+        "noop_procedure" => noop_procedure::execute(arguments),
         "add_movie_with_genres" => {
             add_movie_with_genres::execute(arguments, fields, collection_relationships, state)
         }

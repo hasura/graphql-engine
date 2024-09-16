@@ -9,6 +9,9 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
+#[derive(Debug, thiserror::Error, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub enum BooleanExpressionIssue {}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionTypes {
     pub objects: BTreeMap<Qualified<CustomTypeName>, ResolvedObjectBooleanExpressionType>,
@@ -19,10 +22,16 @@ pub struct BooleanExpressionTypes {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-
 pub struct BooleanExpressionsOutput {
     pub boolean_expression_types: BooleanExpressionTypes,
     pub graphql_types: BTreeSet<ast::TypeName>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum ComparableFieldKind {
+    Scalar,
+    Object,
+    Array,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -54,10 +63,17 @@ pub struct ComparisonExpressionInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum ObjectComparisonKind {
+    Object,
+    Array,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ObjectComparisonExpressionInfo {
     pub graphql_type_name: ast::TypeName,
     pub object_type_name: Qualified<CustomTypeName>,
     pub underlying_object_type_name: Qualified<CustomTypeName>,
+    pub field_kind: ObjectComparisonKind,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -83,5 +99,5 @@ pub struct BooleanExpressionGraphqlConfig {
     pub object_fields: BTreeMap<FieldName, ObjectComparisonExpressionInfo>,
     pub scalar_fields: BTreeMap<FieldName, ComparisonExpressionInfo>,
     pub relationship_fields: BTreeMap<FieldName, BooleanExpressionComparableRelationship>,
-    pub graphql_config: BooleanExpressionGraphqlFieldConfig,
+    pub field_config: BooleanExpressionGraphqlFieldConfig,
 }

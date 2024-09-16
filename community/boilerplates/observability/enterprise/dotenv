@@ -1,6 +1,7 @@
 # HGE
 HGE_IMAGE=hasura/graphql-engine:v2.40.0.cli-migrations-v3
 HGE_PORT=8080
+HGE_PRO_KEY=
 HGE_EE_LICENSE_KEY=
 HGE_ADMIN_SECRET=myadminsecretkey
 HASURA_GRAPHQL_METRICS_SECRET=

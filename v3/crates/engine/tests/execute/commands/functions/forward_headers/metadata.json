@@ -71,7 +71,7 @@
             "arguments": [
               {
                 "name": "userId",
-                "type": "String!"
+                "type": "Int!"
               }
             ],
             "outputType": "SessionInfo",

@@ -3,6 +3,11 @@
     "data": {
       "uppercaseAllActorNames": [
         {
+          "actor_id": 0,
+          "movie_id": 2,
+          "name": "PETER"
+        },
+        {
           "actor_id": 1,
           "movie_id": 1,
           "name": "LEONARDO DICAPRIO"
@@ -43,6 +48,11 @@
   {
     "data": {
       "uppercaseAllActorNames": [
+        {
+          "actor_id": 0,
+          "movie_id": 2,
+          "name": "PETER"
+        },
         {
           "actor_id": 1,
           "movie_id": 1,

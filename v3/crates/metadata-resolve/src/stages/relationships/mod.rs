@@ -6,6 +6,7 @@ use indexmap::IndexMap;
 
 use lang_graphql::ast::common::{self as ast};
 use open_dds::aggregates::AggregateExpressionName;
+use open_dds::identifier::SubgraphName;
 use open_dds::relationships::{
     self, FieldAccess, RelationshipName, RelationshipType, RelationshipV1,
 };
@@ -20,7 +21,7 @@ use crate::stages::{
     aggregates, commands, data_connector_scalar_types, data_connectors, graphql_config, models,
     object_types, type_permissions,
 };
-use crate::types::error::{Error, GraphqlConfigError, RelationshipError};
+use crate::types::error::{Error, RelationshipError};
 use crate::types::subgraph::Qualified;
 
 pub use types::{
@@ -34,16 +35,13 @@ pub use types::{
 /// returns updated `types` value
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    configuration: Configuration,
+    configuration: &Configuration,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types_with_permissions: &BTreeMap<
-        Qualified<CustomTypeName>,
-        type_permissions::ObjectTypeWithPermissions,
-    >,
+    object_types_with_permissions: &type_permissions::ObjectTypesWithPermissions,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     aggregate_expressions: &BTreeMap<
@@ -61,7 +59,7 @@ pub fn resolve(
             object_type,
             type_mappings,
         },
-    ) in object_types_with_permissions
+    ) in object_types_with_permissions.iter()
     {
         object_types_with_relationships.insert(
             object_type_name.clone(),
@@ -80,7 +78,7 @@ pub fn resolve(
     } in &metadata_accessor.relationships
     {
         let qualified_relationship_source_type_name =
-            Qualified::new(subgraph.to_string(), relationship.source_type.clone());
+            Qualified::new(subgraph.clone(), relationship.source_type.clone());
         let object_representation = object_types_with_relationships
             .get_mut(&qualified_relationship_source_type_name)
             .ok_or_else(|| Error::RelationshipDefinedOnUnknownType {
@@ -384,15 +382,17 @@ fn get_relationship_capabilities(
             .0
             .get(&data_connector.name)
             .ok_or_else(|| match target_name {
-                RelationshipTargetName::Model(model_name) => Error::UnknownModelDataConnector {
-                    model_name: model_name.clone(),
-                    data_connector: data_connector.name.clone(),
-                },
+                RelationshipTargetName::Model(model_name) => {
+                    Error::from(models::ModelsError::UnknownModelDataConnector {
+                        model_name: model_name.clone(),
+                        data_connector: data_connector.name.clone(),
+                    })
+                }
                 RelationshipTargetName::Command(command_name) => {
-                    Error::UnknownCommandDataConnector {
+                    Error::from(commands::CommandsError::UnknownCommandDataConnector {
                         command_name: command_name.clone(),
                         data_connector: data_connector.name.clone(),
-                    }
+                    })
                 }
             })?;
 
@@ -448,7 +448,7 @@ fn resolve_aggregate_relationship_field(
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<Option<RelationshipField>, Error> {
     // If an aggregate has been specified
@@ -470,7 +470,7 @@ fn resolve_aggregate_relationship_field(
             // Validate its usage with the relationship's target model
             let aggregate_expression_name = models::resolve_aggregate_expression(
                 &Qualified::new(
-                    resolved_target_model.name.subgraph.to_string(),
+                    resolved_target_model.name.subgraph.clone(),
                     aggregate.aggregate_expression.clone(),
                 ),
                 &resolved_target_model.name,
@@ -509,7 +509,7 @@ fn resolve_aggregate_relationship_field(
                 .map(|agg| agg.filter_input_field_name.clone())
                 .ok_or_else::<Error, _>(|| Error::GraphqlConfigError {
                     graphql_config_error:
-                        GraphqlConfigError::MissingAggregateFilterInputFieldNameInGraphqlConfig,
+                        graphql_config::GraphqlConfigError::MissingAggregateFilterInputFieldNameInGraphqlConfig,
                 })?;
 
             Ok(RelationshipField {
@@ -533,7 +533,7 @@ fn resolve_aggregate_relationship_field(
 
 fn resolve_model_relationship_fields(
     target_model: &relationships::ModelRelationshipTarget,
-    subgraph: &open_dds::identifier::SubgraphIdentifier,
+    subgraph: &open_dds::identifier::SubgraphName,
     models: &IndexMap<Qualified<ModelName>, crate::Model>,
     data_connectors: &data_connectors::DataConnectors,
     source_type_name: &Qualified<CustomTypeName>,
@@ -547,11 +547,11 @@ fn resolve_model_relationship_fields(
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<Vec<RelationshipField>, Error> {
     let qualified_target_model_name = Qualified::new(
-        target_model.subgraph().unwrap_or(subgraph).to_string(),
+        target_model.subgraph().unwrap_or(subgraph.clone()),
         target_model.name.clone(),
     );
     let resolved_target_model = models.get(&qualified_target_model_name).ok_or_else(|| {
@@ -621,12 +621,12 @@ fn resolve_model_relationship_fields(
 pub fn make_relationship_field_name(
     relationship_name: &RelationshipName,
 ) -> Result<ast::Name, Error> {
-    mk_name(relationship_name.as_str())
+    mk_name(relationship_name.as_str()).map_err(Error::from)
 }
 
 fn resolve_command_relationship_field(
     target_command: &relationships::CommandRelationshipTarget,
-    subgraph: &open_dds::identifier::SubgraphIdentifier,
+    subgraph: &open_dds::identifier::SubgraphName,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connectors::DataConnectors,
     source_type_name: &Qualified<CustomTypeName>,
@@ -634,7 +634,7 @@ fn resolve_command_relationship_field(
     source_type: &object_types::ObjectTypeRepresentation,
 ) -> Result<RelationshipField, Error> {
     let qualified_target_command_name = Qualified::new(
-        target_command.subgraph().unwrap_or(subgraph).to_string(),
+        target_command.subgraph().unwrap_or(subgraph.clone()),
         target_command.name.clone(),
     );
     let resolved_target_command =
@@ -684,10 +684,10 @@ fn resolve_command_relationship_field(
 }
 
 fn resolve_relationships(
-    configuration: Configuration,
+    configuration: &Configuration,
     relationship: &RelationshipV1,
-    subgraph: &open_dds::identifier::SubgraphIdentifier,
-    known_subgraphs: &HashSet<open_dds::identifier::SubgraphIdentifier>,
+    subgraph: &open_dds::identifier::SubgraphName,
+    known_subgraphs: &HashSet<open_dds::identifier::SubgraphName>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connectors::DataConnectors,
@@ -699,14 +699,18 @@ fn resolve_relationships(
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     graphql_config: &graphql_config::GraphqlConfig,
     source_type: &object_types::ObjectTypeRepresentation,
 ) -> Result<Vec<RelationshipField>, Error> {
-    let source_type_name = Qualified::new(subgraph.to_string(), relationship.source_type.clone());
+    let source_type_name = Qualified::new(subgraph.clone(), relationship.source_type.clone());
     match &relationship.target {
         relationships::RelationshipTarget::Model(target_model) => {
-            if should_skip(configuration, known_subgraphs, target_model.subgraph()) {
+            if should_skip(
+                configuration,
+                known_subgraphs,
+                target_model.subgraph().as_ref(),
+            ) {
                 return Ok(vec![]);
             }
             resolve_model_relationship_fields(
@@ -724,7 +728,11 @@ fn resolve_relationships(
             )
         }
         relationships::RelationshipTarget::Command(target_command) => {
-            if should_skip(configuration, known_subgraphs, target_command.subgraph()) {
+            if should_skip(
+                configuration,
+                known_subgraphs,
+                target_command.subgraph().as_ref(),
+            ) {
                 return Ok(vec![]);
             }
             let command_relationship_field = resolve_command_relationship_field(
@@ -748,9 +756,9 @@ fn resolve_relationships(
 // the same functionality to that stage of metadata resolution, and perhaps think about creating an
 // abstraction for that purpose.
 fn should_skip(
-    configuration: Configuration,
-    known_subgraphs: &HashSet<open_dds::identifier::SubgraphIdentifier>,
-    target_subgraph: Option<&str>,
+    configuration: &Configuration,
+    known_subgraphs: &HashSet<open_dds::identifier::SubgraphName>,
+    target_subgraph: Option<&SubgraphName>,
 ) -> bool {
     configuration.allow_unknown_subgraphs
         && target_subgraph.is_some_and(|subgraph| !known_subgraphs.contains(subgraph))

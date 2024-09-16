@@ -230,7 +230,9 @@ fn test_disallow_object_mapped_to_scalar() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: ResolveError::ModelTypeMappingCollectionError { .. }
+                error: ResolveError::ModelsError(
+                    metadata_resolve::ModelsError::ModelTypeMappingCollectionError { .. }
+                )
             })
         ),
         "actual: {gds:?}"
@@ -268,47 +270,9 @@ fn test_disallow_filter_expression_with_object_type_mismatch() -> anyhow::Result
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: ResolveError::BooleanExpressionError {
-                    boolean_expression_error:
-                        BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
-                }
-            })
-        ),
-        "actual: {gds:?}"
-    );
-    Ok(())
-}
-
-#[test]
-fn test_disallow_filter_expression_with_data_connector_mismatch() -> anyhow::Result<()> {
-    let metadata = read_metadata("validate_metadata_artifacts/boolean_expressions/filter_expression_with_data_connector_mismatch.json")?;
-
-    let gds = GDS::new_with_default_flags(metadata);
-
-    assert!(
-        matches!(
-            gds,
-            Err(SchemaError::ResolveError {
-                error: ResolveError::DifferentDataConnectorInFilterExpression { .. }
-            })
-        ),
-        "actual: {gds:?}"
-    );
-    Ok(())
-}
-
-#[test]
-fn test_disallow_filter_expression_with_data_connector_object_type_mismatch() -> anyhow::Result<()>
-{
-    let metadata = read_metadata("validate_metadata_artifacts/boolean_expressions/filter_expression_with_data_connector_object_type_mismatch.json")?;
-
-    let gds = GDS::new_with_default_flags(metadata);
-
-    assert!(
-        matches!(
-            gds,
-            Err(SchemaError::ResolveError {
-                error: ResolveError::DifferentDataConnectorObjectTypeInFilterExpression { .. }
+                error: ResolveError::BooleanExpressionError(
+                    BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
+                )
             })
         ),
         "actual: {gds:?}"
@@ -327,7 +291,7 @@ fn test_disallow_boolean_expression_without_mapping() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: ResolveError::BooleanExpressionError { boolean_expression_error:BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression { .. }}
+                error: ResolveError::BooleanExpressionError (BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression { .. })
             })
         ),
         "actual: {gds:?}"

@@ -15,13 +15,15 @@ use open_dds::{
     commands,
     data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorOperatorName},
     models,
-    types::{self, DataConnectorArgumentName},
+    types::{self, DataConnectorArgumentName, Deprecated},
 };
 
 use metadata_resolve::{
-    self, deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
-    serialize_non_string_key_btreemap, serialize_qualified_btreemap, DataConnectorLink,
-    NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping, ValueExpression,
+    self, data_connectors::ArgumentPresetValue, deserialize_non_string_key_btreemap,
+    deserialize_qualified_btreemap, serialize_non_string_key_btreemap,
+    serialize_qualified_btreemap, DataConnectorLink, FieldPresetInfo, NdcColumnForComparison,
+    OrderByExpressionIdentifier, Qualified, QualifiedTypeReference, TypeMapping,
+    ValueExpressionOrPredicate,
 };
 
 use json_ext::HashMapWithJsonKey;
@@ -78,6 +80,13 @@ pub enum RootFieldKind {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum ObjectFieldKind {
+    Scalar,
+    Object,
+    Array,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ModelFilterArgument {
     AndOp,
     OrOp,
@@ -85,6 +94,9 @@ pub enum ModelFilterArgument {
     Field {
         field_name: types::FieldName,
         object_type: Qualified<types::CustomTypeName>,
+        object_field_kind: ObjectFieldKind,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: Option<Deprecated>,
     },
     RelationshipField(FilterRelationshipAnnotation),
 }
@@ -105,6 +117,8 @@ pub struct CommandSourceDetail {
     )]
     pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
+    pub data_connector_link_argument_presets:
+        BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     pub ndc_type_opendd_type_same: bool,
 }
 
@@ -174,6 +188,8 @@ pub enum OutputAnnotation {
         /// Field usage is reported with the name of object type where the field is defined.
         parent_type: Qualified<types::CustomTypeName>,
         argument_types: BTreeMap<ast::Name, QualifiedTypeReference>,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: Option<Deprecated>,
     },
     GlobalIDField {
         /// The `global_id_fields` are required to calculate the
@@ -202,6 +218,7 @@ pub enum ModelInputAnnotation {
     ModelArgumentsExpression,
     ModelArgument {
         argument_type: QualifiedTypeReference,
+        argument_kind: metadata_resolve::ArgumentKind,
         ndc_table_argument: Option<DataConnectorArgumentName>,
     },
     ComparisonOperation {
@@ -213,12 +230,17 @@ pub enum ModelInputAnnotation {
     },
     IsNullOperation,
     ModelOrderByExpression,
+    ModelOrderByNestedExpression {
+        ndc_column: DataConnectorColumnName,
+    },
     ModelOrderByArgument {
         field_name: types::FieldName,
         /// The parent type is required to report field usage while analyzing query usage.
         /// Field usage is reported with the name of object type where the field is defined.
         parent_type: Qualified<types::CustomTypeName>,
         ndc_column: DataConnectorColumnName,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: Option<Deprecated>,
     },
     ModelOrderByRelationshipArgument(OrderByRelationshipAnnotation),
 
@@ -261,10 +283,13 @@ pub enum InputAnnotation {
         field_name: types::FieldName,
         field_type: QualifiedTypeReference,
         parent_type: Qualified<types::CustomTypeName>,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: Option<Deprecated>,
     },
     BooleanExpression(BooleanExpressionAnnotation),
     CommandArgument {
         argument_type: QualifiedTypeReference,
+        argument_kind: metadata_resolve::ArgumentKind,
         ndc_func_proc_argument: Option<DataConnectorArgumentName>,
     },
     Relay(RelayInputAnnotation),
@@ -289,14 +314,15 @@ pub enum Annotation {
     Input(InputAnnotation),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 /// Preset arguments for models or commands
 pub struct ArgumentPresets {
     #[serde(
         serialize_with = "serialize_non_string_key_btreemap",
         deserialize_with = "deserialize_non_string_key_btreemap"
     )]
-    pub argument_presets: BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, ValueExpression)>,
+    pub argument_presets:
+        BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, ValueExpressionOrPredicate)>,
 }
 
 impl Display for ArgumentPresets {
@@ -332,7 +358,7 @@ pub enum NamespaceAnnotation {
     /// AST is used to analyze query usage, and additional context is not available.
     /// Therefore, the field presets are annotated to track their usage.
     InputFieldPresets {
-        presets_fields: Vec<types::FieldName>,
+        presets_fields: BTreeMap<types::FieldName, FieldPresetInfo>,
         type_name: Qualified<types::CustomTypeName>,
     },
     /// The `NodeFieldTypeMappings` contains a Hashmap of typename to the filter permission.
@@ -358,6 +384,9 @@ pub enum TypeId {
     MutationRoot {
         graphql_type_name: ast::TypeName,
     },
+    SubscriptionRoot {
+        graphql_type_name: ast::TypeName,
+    },
     OutputType {
         gds_type_name: Qualified<types::CustomTypeName>,
         graphql_type_name: ast::TypeName,
@@ -381,6 +410,7 @@ pub enum TypeId {
     },
     ModelOrderByExpression {
         model_name: Qualified<models::ModelName>,
+        order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         graphql_type_name: ast::TypeName,
     },
     ScalarTypeComparisonExpression {
@@ -425,6 +455,7 @@ impl TypeId {
         match self {
             TypeId::QueryRoot { graphql_type_name }
             | TypeId::MutationRoot { graphql_type_name }
+            | TypeId::SubscriptionRoot { graphql_type_name }
             | TypeId::OutputType {
                 graphql_type_name, ..
             }

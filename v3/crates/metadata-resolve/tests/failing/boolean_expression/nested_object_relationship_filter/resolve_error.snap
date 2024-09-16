@@ -1,0 +1,6 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/boolean_expression/nested_object_relationship_filter/metadata.json
+---
+The nested object field 'songs' within 'institution_boolexp (in subgraph default)' cannot be used for comparison because its boolean expression type 'institution_songs_boolexp (in subgraph default)' involves a relationship comparison field.

@@ -8,6 +8,7 @@ where
 
 -- import Control.Monad.Writer (runWriter)
 import Database.PG.Query (Query)
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
@@ -24,7 +25,6 @@ import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.BackendType (BackendType (Postgres))
 import Hasura.RQL.Types.Common (FieldName (FieldName))
-import Hasura.RQL.Types.Session (UserInfo)
 
 -- | Translates IR to Postgres queries for "connection" queries (used for Relay).
 --

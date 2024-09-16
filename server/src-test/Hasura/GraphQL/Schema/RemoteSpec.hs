@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wno-x-partial #-}
 
 module Hasura.GraphQL.Schema.RemoteSpec (spec) where
 
@@ -10,11 +11,15 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString.Lazy qualified as LBS
+import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty qualified as NEText
 import Data.Text.RawString
+import Hasura.Authentication.Role (adminRoleName)
+import Hasura.Authentication.Session (SessionVariables, unsafeMkSessionVariable)
+import Hasura.Authentication.User (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (ErrorMessage, fromErrorMessage)
 import Hasura.GraphQL.Execute.Inline
@@ -33,11 +38,9 @@ import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Root
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.RemoteSchema.SchemaCache
-import Hasura.Session (BackendOnlyFieldAccess (..), SessionVariables, UserInfo (..), mkSessionVariable)
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -95,7 +98,7 @@ mkTestRemoteSchema schema = RemoteSchemaIntrospection
                 Just $ case value of
                   G.VString "x-hasura-test" ->
                     G.VVariable
-                      $ SessionPresetVariable (mkSessionVariable "x-hasura-test") GName._String SessionArgumentPresetScalar
+                      $ SessionPresetVariable (unsafeMkSessionVariable ("x-hasura-test" :: CI.CI Text)) GName._String SessionArgumentPresetScalar
                   _ -> absurd <$> value
         }
 
@@ -160,7 +163,7 @@ runQueryParser ::
   HashMap.HashMap G.Name J.Value ->
   any
 runQueryParser parser (varDefs, selSet) vars = runIdentity . runError $ do
-  (_, resolvedSelSet) <- resolveVariables Options.Don'tAllowNullInNonNullableVariables varDefs vars [] selSet
+  (_, resolvedSelSet) <- resolveVariables Options.Don'tAllowNullInNonNullableVariables Options.DefaultUnboundNullableVariablesToNull varDefs vars [] selSet
   field <- case resolvedSelSet of
     [G.SelectionField f] -> pure f
     _ -> error "expecting only one field in the query"

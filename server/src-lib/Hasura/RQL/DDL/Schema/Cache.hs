@@ -41,6 +41,8 @@ import Data.Sequence qualified as Seq
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.Text.Extended
+import Hasura.Authentication.Role
+import Hasura.Authentication.User (UserInfoM)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Backend
@@ -95,7 +97,6 @@ import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -112,7 +113,6 @@ import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
 import Hasura.Services
-import Hasura.Session
 import Hasura.StoredProcedure.Cache (StoredProcedureCache, StoredProcedureInfo (..))
 import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata (..))
 import Hasura.Table.API
@@ -1051,7 +1051,7 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
                           _lmiDescription = _nqmDescription,
                           _lmiPermissions = logicalModelPermissions
                         }
-                nqmCode <- validateNativeQuery @b disableNativeQueryValidation env sourceName (_smConfiguration sourceMetadata) sourceConfig logicalModel preValidationNativeQuery
+                nqmCode <- validateNativeQuery @b disableNativeQueryValidation sourceConfig logicalModel preValidationNativeQuery
 
                 case maybeDependency of
                   Just dependency ->
@@ -1709,7 +1709,8 @@ buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryCont
           withRecordInconsistencyM (mkActionMetadataObject action) $ modifyErr addActionContext do
             (resolvedDef, outObject) <- resolveAction env resolvedCustomTypes def scalarsMap
             let forwardClientHeaders = _adForwardClientHeaders resolvedDef
-            return $ ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders comment
+            let ignoredClientHeaders = _adIgnoredClientHeaders resolvedDef
+            return $ ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders ignoredClientHeaders comment
 
 buildRemoteSchemaRemoteRelationship ::
   (MonadWriter (Seq CollectItem) m) =>

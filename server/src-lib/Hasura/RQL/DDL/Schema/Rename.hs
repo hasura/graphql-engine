@@ -15,6 +15,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.Text.Extended
+import Hasura.Authentication.Role (RoleName)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission
@@ -30,7 +31,6 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Relationships.ToSource
-import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RemoteSchema.Metadata

@@ -48,7 +48,7 @@
 //! - Command Remote relationship - [build_remote_command_relationship]
 //!
 //! ## Join Tree generation
-//! - The join tree is generated as part of query plan. See [process_selection_set_ir] function.
+//! - The join tree is generated as part of query plan. See [plan_selection_set] function.
 //! - To know about the types for remote joins, see the [types] module.
 //!
 //! ## Execution
@@ -57,30 +57,32 @@
 //! 1. Make the first top-level NDC query, and call the response as LHS response.
 //!
 //! 2. Traverse the join tree to get to the next remote join. Iterate through
-//! all the rows in the LHS response, use the field mapping in the remote join node
-//! to collect the values of those fields. In the above example, these would be
-//! collecting the city codes from the LHS city query.
+//!    all the rows in the LHS response, use the field mapping in the remote join node
+//!    to collect the values of those fields. In the above example, these would be
+//!    collecting the city codes from the LHS city query.
 //!
 //! 3. Get the NDC query from the remote join node, and attach the values in the
-//! above step as variables in the NDC query. This NDC query already has a
-//! "where" filter clause with a variable on the join mapping field. Make the
-//! NDC query, and call the response as RHS response.
+//!    above step as variables in the NDC query. This NDC query already has a
+//!    "where" filter clause with a variable on the join mapping field. Make the
+//!    NDC query, and call the response as RHS response.
 //!
 //! 4. If there is a sub-tree from this remote join node, recursively perform
-//! this algorithm.
+//!    this algorithm.
 //!
 //! 5. Perform join on LHS response and RHS response
 //!
-//! [process_selection_set_ir]: crate::plan::selection_set::process_selection_set_ir
-//! [generate_selection_set_ir]: crate::ir::selection_set::generate_selection_set_ir
-//! [build_remote_relationship]: crate::ir::relationship::build_remote_relationship
-//! [build_remote_command_relationship]: crate::ir::relationship::build_remote_command_relationship
+//! [plan_selection_set]: crate::plan::selection_set::plan_selection_set
+//! [generate_selection_set_ir]: ir::generate_selection_set_ir
+//! [build_remote_relationship]: ir::build_remote_relationship
+//! [build_remote_command_relationship]: ir::build_remote_command_relationship
 
 use async_recursion::async_recursion;
 
 use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;
+
+use crate::plan;
 
 use super::ndc::execute_ndc_query;
 use super::plan::ProcessResponseAs;
@@ -140,17 +142,16 @@ where
             continue;
         }
         // patch the target/RHS IR with variable values
-        let foreach_variables: Vec<BTreeMap<ndc_models::VariableName, json::Value>> = arguments
+        let foreach_variables: Vec<BTreeMap<ir::VariableName, json::Value>> = arguments
             .iter()
-            .map(|bmap| {
-                bmap.iter()
-                    .map(|(k, v)| (ndc_models::VariableName::from(k.0.as_str()), v.0.clone()))
-                    .collect()
-            })
+            .map(|bmap| bmap.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect())
             .collect();
-        join_node
-            .target_ndc_ir
-            .set_variables(Some(foreach_variables));
+
+        join_node.target_ndc_execution.variables = Some(foreach_variables);
+
+        let execution_node = join_node.target_ndc_execution.clone();
+        let resolved_execution_plan = execution_node.resolve(http_context).await?;
+        let ndc_query = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)?;
 
         // execute the remote query
         let mut target_response = tracer
@@ -161,7 +162,7 @@ where
                 || {
                     Box::pin(execute_ndc_query(
                         http_context,
-                        &join_node.target_ndc_ir,
+                        &ndc_query,
                         join_node.target_data_connector,
                         execution_span_attribute,
                         remote_alias.clone(),

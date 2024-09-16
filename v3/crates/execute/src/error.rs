@@ -8,13 +8,12 @@ use transitive::Transitive;
 
 use crate::ndc::client as ndc_client;
 
-use super::ir;
 use super::plan;
 use schema::Annotation;
 
 /// Request errors are raised before execution of root fields begins.
 /// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Request-errors>
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum RequestError {
     #[error("parsing failed: {0}")]
     ParseFailure(#[from] gql::ast::spanning::Positioned<gql::parser::Error>),
@@ -23,7 +22,7 @@ pub enum RequestError {
     ValidationFailed(#[from] gql::validation::Error),
 
     #[error("{0}")]
-    IRConversionError(#[from] ir::error::Error),
+    IRConversionError(#[from] ir::Error),
 
     #[error("error while generating plan: {0}")]
     PlanError(#[from] plan::error::Error),
@@ -40,7 +39,7 @@ impl RequestError {
         let message = match (self, expose_internal_errors) {
             // Error messages for internal errors from IR conversion and Plan generations are masked.
             (
-                Self::IRConversionError(ir::error::Error::Internal(_))
+                Self::IRConversionError(ir::Error::Internal(_))
                 | Self::PlanError(plan::error::Error::Internal(_)),
                 crate::ExposeInternalErrors::Censor,
             ) => "internal error".into(),
@@ -75,6 +74,7 @@ impl TraceableError for RequestError {
 #[transitive(from(NDCUnexpectedError, FieldInternalError))]
 #[transitive(from(gql::normalized_ast::Error, FieldInternalError))]
 #[transitive(from(gql::introspection::Error, FieldInternalError))]
+#[transitive(from(FilterPredicateError, FieldInternalError))]
 pub enum FieldError {
     #[error("error from data source: {}", connector_error.error_response.message())]
     NDCExpected {
@@ -131,7 +131,7 @@ impl TraceableError for FieldError {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum FieldInternalError {
     #[error("ndc_unexpected: {0}")]
     NDCUnexpected(#[from] NDCUnexpectedError),
@@ -150,6 +150,12 @@ pub enum FieldInternalError {
 
     #[error("unexpected annotation: {annotation}")]
     UnexpectedAnnotation { annotation: Annotation },
+
+    #[error("unable to execute remote filter predicate: {0}")]
+    UnableToResolveFilterPredicate(#[from] FilterPredicateError),
+
+    #[error("failed to serialise an Expression to JSON: {0}")]
+    ExpressionSerializationError(serde_json::Error),
 
     #[error("internal error: {description}")]
     InternalGeneric { description: String },
@@ -170,16 +176,47 @@ impl TraceableError for FieldInternalError {
             Self::NDCUnexpected(_) | Self::GlobalIdTypenameMappingNotFound { .. } => {
                 ErrorVisibility::User
             }
+            Self::UnableToResolveFilterPredicate(filter_predicate_error) => {
+                filter_predicate_error.visibility()
+            }
             Self::UnexpectedAnnotation { .. }
             | Self::JsonSerialization(_)
             | Self::InternalGeneric { .. }
             | Self::NormalizedAstError(_)
+            | Self::ExpressionSerializationError(_)
             | Self::IntrospectionError(_) => ErrorVisibility::Internal,
         }
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
+pub enum FilterPredicateError {
+    #[error("{0}")]
+    RemoteRelationshipPlanError(Box<plan::error::Error>),
+
+    #[error("remote connector request error: {0}")]
+    RemoteRelationshipNDCRequest(ndc_client::Error),
+
+    #[error("not a single row set returned from remote connector request: {0}")]
+    NotASingleRowSet(String),
+
+    #[error("too many rows returned from remote connector request")]
+    TooManyRowsReturned,
+}
+
+impl TraceableError for FilterPredicateError {
+    fn visibility(&self) -> ErrorVisibility {
+        match self {
+            Self::RemoteRelationshipPlanError(error) => error.visibility(),
+            Self::RemoteRelationshipNDCRequest(_) | Self::NotASingleRowSet(_) => {
+                ErrorVisibility::Internal
+            }
+            Self::TooManyRowsReturned => ErrorVisibility::User,
+        }
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
 pub enum NDCUnexpectedError {
     #[error("ndc_client error: {0}")]
     NDCClientError(ndc_client::Error),
@@ -222,7 +259,7 @@ impl From<ndc_client::Error> for FieldError {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 #[error("Query usage analytics encoding failed: {0}")]
 /// Error occurs while generating query usage analytics JSON.
 /// Wraps JSON encoding error, the only error currently encountered.

@@ -22,7 +22,9 @@ str_newtype!(ProcedureName | doc "The name of a procedure backing the command.")
 #[schemars(title = "DataConnectorCommand")]
 pub enum DataConnectorCommand {
     #[schemars(title = "Function")]
+    /// A function as data connector command.
     Function(FunctionName),
+    /// A procedure as data connector command.
     #[schemars(title = "Procedure")]
     Procedure(ProcedureName),
 }

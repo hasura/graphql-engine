@@ -34,6 +34,6 @@ instance BackendMetadata 'BigQuery where
   listAllTables = BigQuery.listAllTables
   listAllTrackables _ = throw400 UnexpectedPayload "listAllTrackables not supported by BigQuery!"
   getTableInfo _ _ = throw400 UnexpectedPayload "get_table_info not yet supported in BigQuery!"
-  validateNativeQuery _disableNativeQueryValidation _ _ _ _ _ nq = do
+  validateNativeQuery _disableNativeQueryValidation _ _ nq = do
     validateArgumentDeclaration nq
     pure (trimQueryEnd (_nqmCode nq)) -- for now, all queries are valid

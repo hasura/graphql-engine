@@ -9,7 +9,7 @@
           "ndcRequest": {
             "type": "query",
             "value": {
-              "version": "v0.1.x",
+              "version": "v0.2.x",
               "collection": "get_actor_by_id",
               "query": {
                 "fields": {
@@ -100,7 +100,7 @@
           "ndcRequest": {
             "type": "query",
             "value": {
-              "version": "v0.1.x",
+              "version": "v0.2.x",
               "collection": "movies",
               "query": {
                 "fields": {

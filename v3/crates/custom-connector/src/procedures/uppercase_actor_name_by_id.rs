@@ -4,9 +4,29 @@ use axum::{http::StatusCode, Json};
 use ndc_models;
 
 use crate::{
+    arguments::{check_all_arguments_used, parse_i32_argument},
     query::{eval_nested_field, Result},
     state::AppState,
 };
+
+pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
+    ndc_models::ProcedureInfo {
+        name: "uppercase_actor_name_by_id".into(),
+        description: Some("Uppercase an actor name given the ID".into()),
+        arguments: BTreeMap::from_iter([(
+            "id".into(),
+            ndc_models::ArgumentInfo {
+                description: Some("the id of the actor to update".into()),
+                argument_type: ndc_models::Type::Named { name: "Int".into() },
+            },
+        )]),
+        result_type: ndc_models::Type::Nullable {
+            underlying_type: Box::new(ndc_models::Type::Named {
+                name: "actor".into(),
+            }),
+        },
+    }
+}
 
 pub(crate) fn execute(
     arguments: &BTreeMap<ndc_models::ArgumentName, serde_json::Value>,
@@ -14,32 +34,13 @@ pub(crate) fn execute(
     collection_relationships: &BTreeMap<ndc_models::RelationshipName, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
-    let id = arguments.get("id").ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "required argument field 'id' is missing".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
-    let id_int = id
-        .as_i64()
-        .ok_or((
-            StatusCode::BAD_REQUEST,
-            Json(ndc_models::ErrorResponse {
-                message: "argument 'id' is not an integer".into(),
-                details: serde_json::Value::Null,
-            }),
-        ))?
-        .try_into()
-        .map_err(|_| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: "argument 'id' is out of range".into(),
-                    details: serde_json::Value::Null,
-                }),
-            )
-        })?;
+    let mut arguments = arguments
+        .iter()
+        .map(|(k, v)| (k.clone(), v))
+        .collect::<BTreeMap<_, _>>();
+    let id_int = parse_i32_argument("id", &mut arguments)?;
+    check_all_arguments_used(&arguments)?;
+
     let current_state = state.actors.clone();
     let old_row = current_state.get(&id_int);
     match &old_row {

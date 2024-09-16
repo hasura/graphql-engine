@@ -1,7 +1,4 @@
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
-use thiserror::Error;
-
+use crate::stages::graphql_config;
 use open_dds::{
     aggregates::{
         AggregateExpressionName, AggregationFunctionName, DataConnectorAggregationFunctionName,
@@ -9,6 +6,8 @@ use open_dds::{
     data_connector::{DataConnectorName, DataConnectorScalarType},
     types::{CustomTypeName, FieldName},
 };
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common::{self as ast};
 
@@ -18,6 +17,7 @@ use crate::{Qualified, QualifiedTypeName, QualifiedTypeReference};
 pub struct AggregateExpressionsOutput {
     pub aggregate_expressions: BTreeMap<Qualified<AggregateExpressionName>, AggregateExpression>,
     pub graphql_types: BTreeSet<ast::TypeName>,
+    pub issues: Vec<AggregateExpressionIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -73,17 +73,20 @@ pub struct AggregateExpressionGraphqlConfig {
     pub select_output_type_name: ast::TypeName,
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error, PartialEq, Eq, Clone)]
+pub enum AggregateExpressionIssue {
+    #[error("the aggregate expression {name} defines a graphql section but it will not appear in the GraphQL API unless {config_name} is also configured in the GraphqlConfig")]
+    ConfigMissingFromGraphQlConfig {
+        name: Qualified<AggregateExpressionName>,
+        config_name: String,
+    },
+}
+
+#[derive(Debug, thiserror::Error)]
 pub enum AggregateExpressionError {
     #[error("the following aggregate expression is defined more than once: {name}")]
     DuplicateAggregateExpressionDefinition {
         name: Qualified<AggregateExpressionName>,
-    },
-
-    #[error("the aggregate expression {name} defines a graphql section and so {config_name} must be set in the GraphqlConfig")]
-    ConfigMissingFromGraphQlConfig {
-        name: Qualified<AggregateExpressionName>,
-        config_name: String,
     },
 
     #[error("the name used by {config_name} from the GraphqlConfig conflicts with the aggregatable field name {aggregatable_field_name} in the aggregate expression {name}")]
@@ -114,6 +117,13 @@ pub enum AggregateExpressionError {
 
     #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' that does not exist on its operand type {operand_type}")]
     AggregateOperandObjectFieldNotFound {
+        name: Qualified<AggregateExpressionName>,
+        operand_type: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
+
+    #[error("the aggregate expression {name} specifies an aggregatable field '{field_name}' (from the operand type {operand_type}) that has field arguments. Fields with arguments cannot be aggregated")]
+    AggregateOperandObjectFieldHasArguments {
         name: Qualified<AggregateExpressionName>,
         operand_type: Qualified<CustomTypeName>,
         field_name: FieldName,
@@ -194,7 +204,7 @@ pub enum AggregateExpressionError {
         name: Qualified<AggregateExpressionName>,
         function_name: AggregationFunctionName,
         data_connector_name: Qualified<DataConnectorName>,
-        data_connector_aggregate_function_name: String,
+        data_connector_aggregate_function_name: DataConnectorAggregationFunctionName,
     },
 
     #[error("the aggregate expression {name} specifies an aggregation function '{function_name}' which is mapped to the data connector '{data_connector_name}' but the Open DD return type {return_type} is not compatible with the data connector's return type. Reason: {reason}")]
@@ -211,5 +221,10 @@ pub enum AggregateExpressionError {
         name: Qualified<AggregateExpressionName>,
         data_connector_name: Qualified<DataConnectorName>,
         field_name: FieldName,
+    },
+    #[error("graphql config error in {aggregate_expression_name:}: {graphql_config_error:}")]
+    GraphqlConfigError {
+        aggregate_expression_name: Qualified<AggregateExpressionName>,
+        graphql_config_error: graphql_config::GraphqlConfigError,
     },
 }

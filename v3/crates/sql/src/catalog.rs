@@ -1,209 +1,146 @@
-use std::{any::Any, collections::HashMap, sync::Arc};
+use std::{any::Any, sync::Arc};
 
-use ::datafusion::{
-    execution::{context::SessionState, runtime_env::RuntimeEnv},
-    sql::TableReference,
-};
-use async_trait::async_trait;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
-use open_dds::permissions::Role;
-use schema::OpenDDSchemaProvider;
+use model::WithSession;
 use serde::{Deserialize, Serialize};
+use types::TypeRegistry;
+
+use crate::execute::optimizer;
 
 mod datafusion {
     pub(super) use datafusion::{
-        catalog::{schema::SchemaProvider, CatalogProvider},
-        datasource::TableProvider,
-        error::Result,
+        catalog::{CatalogProvider, SchemaProvider},
+        execution::{session_state::SessionStateBuilder, SessionStateDefaults},
         prelude::{SessionConfig, SessionContext},
         scalar::ScalarValue,
     };
 }
 
+pub mod command;
 pub mod introspection;
-pub mod schema;
-pub mod table;
-
+pub mod mem_table;
+pub mod model;
+pub mod subgraph;
+pub mod types;
 /// The context in which to compile and execute SQL queries.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct Context {
-    pub(crate) subgraphs: IndexMap<String, schema::Subgraph>,
-    pub(crate) type_permissions: HashMap<Role, Arc<table::TypePermissionsOfRole>>,
-    pub(crate) introspection: introspection::Introspection,
+pub struct Catalog {
+    pub(crate) metadata: Arc<resolved::Metadata>,
+    pub(crate) subgraphs: IndexMap<String, Arc<subgraph::Subgraph>>,
+    pub(crate) table_valued_functions: IndexMap<String, Arc<command::Command>>,
+    pub(crate) introspection: Arc<introspection::IntrospectionSchemaProvider>,
+    pub(crate) default_schema: Option<String>,
 }
 
-impl Context {
+impl Catalog {
+    /// Create a no-op Catalog, used when `sql` layer is disabled
+    pub fn empty_from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
+        Catalog {
+            metadata,
+            subgraphs: IndexMap::default(),
+            table_valued_functions: IndexMap::default(),
+            introspection: Arc::new(introspection::IntrospectionSchemaProvider::new(
+                &introspection::Introspection::default(),
+            )),
+            default_schema: None,
+        }
+    }
     /// Derive a SQL Context from resolved Open DDS metadata.
-    pub fn from_metadata(metadata: &resolved::Metadata) -> Self {
+    pub fn from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
+        let type_registry = TypeRegistry::build_type_registry(&metadata);
+        // process models
         let mut subgraphs = IndexMap::new();
         for (model_name, model) in &metadata.models {
-            let schema_name = &model_name.subgraph;
-            let table_name = &model_name.name;
-            let subgraph =
-                subgraphs
-                    .entry(schema_name.clone())
-                    .or_insert_with(|| schema::Subgraph {
-                        models: IndexMap::new(),
-                    });
-            subgraph.models.insert(
-                table_name.to_string(),
-                table::Model::from_resolved_model(model),
-            );
-        }
-
-        let mut type_permissions = HashMap::new();
-        for (type_name, object_type) in &metadata.object_types {
-            for (role, output_permission) in &object_type.type_output_permissions {
-                let output_permission = table::TypePermission {
-                    output: output_permission.clone(),
-                };
-                let role_permissions =
-                    type_permissions
-                        .entry(role)
-                        .or_insert_with(|| table::TypePermissionsOfRole {
-                            permissions: HashMap::new(),
-                        });
-                role_permissions
-                    .permissions
-                    .insert(type_name.clone(), output_permission);
+            if let Some(table) = model::Model::from_resolved_model(&type_registry, model) {
+                let schema_name = &model_name.subgraph;
+                let table_name = &model_name.name;
+                let subgraph = subgraphs.entry(schema_name.to_string()).or_insert_with(|| {
+                    subgraph::Subgraph {
+                        metadata: metadata.clone(),
+                        tables: IndexMap::new(),
+                    }
+                });
+                subgraph
+                    .tables
+                    .insert(table_name.to_string(), Arc::new(table));
             }
         }
-        let introspection = introspection::Introspection::from_metadata(metadata, &subgraphs);
-        Context {
-            subgraphs,
-            type_permissions: type_permissions
-                .into_iter()
-                .map(|(role, role_permissions)| (role.clone(), Arc::new(role_permissions)))
-                .collect(),
-            introspection,
-        }
-    }
-}
 
-pub struct OpenDDCatalogProvider {
-    schemas: IndexMap<String, Arc<HasuraSchemaProvider>>,
-}
-
-impl OpenDDCatalogProvider {
-    fn new(
-        session: &Arc<Session>,
-        http_context: &Arc<execute::HttpContext>,
-        context: &Context,
-    ) -> Self {
-        let type_permissions = context.type_permissions.get(&session.role).cloned();
-        let mut schemas = IndexMap::new();
-        for (subgraph_name, subgraph) in &context.subgraphs {
-            let mut tables = IndexMap::new();
-            for model in subgraph.models.values() {
-                let select_permission = model.permissions.get(&session.role).cloned();
-                let provider = table::OpenDDTableProvider {
-                    session: session.clone(),
-                    http_context: http_context.clone(),
-                    name: model.name.clone(),
-                    data_type: model.data_type.clone(),
-                    source: model.source.clone(),
-                    schema: model.schema.clone(),
-                    select_permission,
-                    type_permissions: type_permissions.clone(),
+        // derive default schema
+        let default_schema = type_registry.default_schema().map(ToString::to_string);
+        // process commands
+        let mut table_valued_functions = IndexMap::new();
+        for (command_name, command) in &metadata.commands {
+            if let Some(command) = command::Command::from_resolved_command(&type_registry, command)
+            {
+                let schema_name = command_name.subgraph.to_string();
+                let command_name = &command_name.name;
+                let table_valued_function_name = if Some(&schema_name) == default_schema.as_ref() {
+                    format!("{command_name}")
+                } else {
+                    format!("{schema_name}_{command_name}")
                 };
-                tables.insert(model.name.to_string(), Arc::new(provider));
+                table_valued_functions.insert(table_valued_function_name, Arc::new(command));
             }
-            let provider = HasuraSchemaProvider::OpenDD(schema::OpenDDSchemaProvider { tables });
-            schemas.insert(subgraph_name.clone(), Arc::new(provider));
         }
-        schemas.insert(
-            introspection::HASURA_METADATA_SCHEMA.to_string(),
-            Arc::new(HasuraSchemaProvider::Introspection(
-                introspection::IntrospectionSchemaProvider::new(&context.introspection),
-            )),
+
+        let introspection = introspection::IntrospectionSchemaProvider::new(
+            &introspection::Introspection::from_metadata(
+                &metadata,
+                &type_registry,
+                &subgraphs,
+                &table_valued_functions,
+            ),
         );
-        OpenDDCatalogProvider { schemas }
-    }
-    pub(crate) fn get(
-        &self,
-        default_schema: Option<&str>,
-        table: &TableReference,
-    ) -> Option<&table::OpenDDTableProvider> {
-        let schema = table.schema().or(default_schema);
-        let table = table.table();
-        if let Some(schema) = schema {
-            if let HasuraSchemaProvider::OpenDD(schema) = self.schemas.get(schema)?.as_ref() {
-                schema.tables.get(table).map(std::convert::AsRef::as_ref)
-            } else {
-                None
-            }
-        } else {
-            None
+
+        Catalog {
+            metadata,
+            subgraphs: subgraphs
+                .into_iter()
+                .map(|(k, v)| (k, Arc::new(v)))
+                .collect(),
+            table_valued_functions,
+            introspection: Arc::new(introspection),
+            default_schema,
         }
     }
 }
 
-enum HasuraSchemaProvider {
-    OpenDD(OpenDDSchemaProvider),
-    Introspection(introspection::IntrospectionSchemaProvider),
-}
-
-#[async_trait]
-impl datafusion::SchemaProvider for HasuraSchemaProvider {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn table_names(&self) -> Vec<String> {
-        match self {
-            HasuraSchemaProvider::OpenDD(schema) => schema.table_names(),
-            HasuraSchemaProvider::Introspection(schema) => schema.table_names(),
-        }
-    }
-
-    async fn table(
-        &self,
-        name: &str,
-    ) -> datafusion::Result<Option<Arc<dyn datafusion::TableProvider>>> {
-        match self {
-            HasuraSchemaProvider::OpenDD(schema) => schema.table(name).await,
-            HasuraSchemaProvider::Introspection(schema) => schema.table(name).await,
-        }
-    }
-
-    fn table_exist(&self, name: &str) -> bool {
-        match self {
-            HasuraSchemaProvider::OpenDD(schema) => schema.table_exist(name),
-            HasuraSchemaProvider::Introspection(schema) => schema.table_exist(name),
-        }
-    }
-}
-
-impl datafusion::CatalogProvider for OpenDDCatalogProvider {
+impl datafusion::CatalogProvider for model::WithSession<Catalog> {
     fn as_any(&self) -> &dyn Any {
         self
     }
 
     fn schema_names(&self) -> Vec<String> {
-        self.schemas.keys().cloned().collect()
+        let mut schema_names: Vec<String> = self.value.subgraphs.keys().cloned().collect();
+        schema_names.push(introspection::HASURA_METADATA_SCHEMA.to_string());
+        schema_names
     }
 
     fn schema(&self, name: &str) -> Option<Arc<dyn datafusion::SchemaProvider>> {
-        self.schemas
-            .get(name)
-            .cloned()
-            .map(|schema| schema as Arc<dyn datafusion::SchemaProvider>)
+        let subgraph_provider = self.value.subgraphs.get(name).cloned().map(|schema| {
+            Arc::new(model::WithSession {
+                value: schema,
+                session: self.session.clone(),
+            }) as Arc<dyn datafusion::SchemaProvider>
+        });
+        if subgraph_provider.is_none() && name == introspection::HASURA_METADATA_SCHEMA {
+            Some(self.value.introspection.clone() as Arc<dyn datafusion::SchemaProvider>)
+        } else {
+            subgraph_provider
+        }
     }
 }
 
-impl Context {
+impl Catalog {
     pub fn create_session_context(
-        &self,
+        self: Arc<Self>,
+        request_headers: &Arc<reqwest::header::HeaderMap>,
         session: &Arc<Session>,
         http_context: &Arc<execute::HttpContext>,
     ) -> datafusion::SessionContext {
-        let default_schema_name = if self.subgraphs.len() == 1 {
-            self.subgraphs.get_index(0).map(|v| v.0)
-        } else {
-            None
-        };
         let session_config = datafusion::SessionConfig::new()
             .set(
                 "datafusion.catalog.default_catalog",
@@ -226,7 +163,7 @@ impl Context {
                 datafusion::ScalarValue::Boolean(Some(false)),
             );
 
-        let session_config = if let Some(default_schema_name) = default_schema_name {
+        let session_config = if let Some(default_schema_name) = &self.default_schema {
             session_config.set(
                 "datafusion.catalog.default_schema",
                 datafusion::ScalarValue::Utf8(Some(default_schema_name.clone())),
@@ -234,26 +171,40 @@ impl Context {
         } else {
             session_config
         };
-        let catalog = Arc::new(OpenDDCatalogProvider::new(session, http_context, self));
-        let query_planner = Arc::new(super::execute::planner::NDCQueryPlanner {
-            default_schema: default_schema_name.map(|s| Arc::new(s.clone())),
-            catalog: catalog.clone(),
+        let query_planner = Arc::new(super::execute::planner::OpenDDQueryPlanner {
+            catalog: self.clone(),
+            session: session.clone(),
+            http_context: http_context.clone(),
+            request_headers: request_headers.clone(),
         });
-        let session_state =
-            SessionState::new_with_config_rt(session_config, Arc::new(RuntimeEnv::default()))
-                .with_analyzer_rules(vec![Arc::new(
-                    super::execute::analyzer::ReplaceTableScan::new(
-                        default_schema_name.map(|s| Arc::new(s.clone())),
-                        catalog.clone(),
-                    ),
-                )])
-                .with_query_planner(query_planner)
-                .add_optimizer_rule(Arc::new(
-                    super::execute::optimizer::NDCPushDownProjection {},
-                ));
+        let session_state = datafusion::SessionStateBuilder::new()
+            .with_config(session_config)
+            .with_query_planner(query_planner)
+            .with_optimizer_rule(Arc::new(optimizer::ReplaceTableScan {}))
+            .with_optimizer_rule(Arc::new(optimizer::NDCPushDownSort {}))
+            .with_optimizer_rule(Arc::new(optimizer::NDCPushDownLimit {}))
+            .with_optimizer_rule(Arc::new(optimizer::NDCPushDownAggregate {}))
+            .with_expr_planners(datafusion::SessionStateDefaults::default_expr_planners())
+            .with_scalar_functions(datafusion::SessionStateDefaults::default_scalar_functions())
+            .with_aggregate_functions(
+                datafusion::SessionStateDefaults::default_aggregate_functions(),
+            )
+            .build();
         let session_context = datafusion::SessionContext::new_with_state(session_state);
-        session_context
-            .register_catalog("default", catalog as Arc<dyn datafusion::CatalogProvider>);
+        for (function_name, function) in &self.table_valued_functions {
+            let function_impl = WithSession {
+                session: session.clone(),
+                value: function.clone(),
+            };
+            session_context.register_udtf(function_name, Arc::new(function_impl));
+        }
+        session_context.register_catalog(
+            "default",
+            Arc::new(model::WithSession {
+                session: session.clone(),
+                value: self,
+            }) as Arc<dyn datafusion::CatalogProvider>,
+        );
         session_context
     }
 }

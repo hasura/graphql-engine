@@ -15,6 +15,7 @@ module Hasura.Backends.Postgres.Translate.Returning
 where
 
 import Data.Coerce
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select
@@ -31,7 +32,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.RQL.Types.Session (UserInfo)
 import Hasura.Table.Cache
 
 -- | The postgres common table expression (CTE) for mutation queries.

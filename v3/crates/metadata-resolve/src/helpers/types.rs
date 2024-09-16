@@ -1,15 +1,18 @@
 use crate::stages::{
-    boolean_expressions, object_boolean_expressions, relationships, scalar_boolean_expressions,
-    scalar_types,
+    boolean_expressions, graphql_config, object_boolean_expressions, relationships,
+    scalar_boolean_expressions, scalar_types,
 };
-use crate::types::error::{BooleanExpressionError, Error};
+use crate::types::error::Error;
 
 use crate::types::subgraph::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };
 use lang_graphql::ast::common as ast;
 
-use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
+use open_dds::{
+    data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
+    types::CustomTypeName,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
@@ -17,7 +20,7 @@ use std::str::FromStr;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct NdcColumnForComparison {
     pub column: DataConnectorColumnName,
-    pub equal_operator: ndc_models::ComparisonOperatorName,
+    pub equal_operator: DataConnectorOperatorName,
 }
 
 /// try to add `new_graphql_type` to `existing_graphql_types`, returning an error
@@ -25,11 +28,11 @@ pub struct NdcColumnForComparison {
 pub fn store_new_graphql_type(
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     new_graphql_type: Option<&ast::TypeName>,
-) -> Result<(), Error> {
+) -> Result<(), graphql_config::GraphqlConfigError> {
     if let Some(new_graphql_type) = new_graphql_type {
         // Fail on conflicting graphql type names
         if !(existing_graphql_types.insert(new_graphql_type.clone())) {
-            return Err(Error::ConflictingGraphQlType {
+            return Err(graphql_config::GraphqlConfigError::ConflictingGraphQlType {
                 graphql_type_name: new_graphql_type.clone(),
             });
         }
@@ -111,10 +114,10 @@ pub(crate) fn get_object_type_for_boolean_expression<'a>(
     object_types
         .get(&boolean_expression_type.object_type)
         .ok_or(Error::from(
-            BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
-                type_name: boolean_expression_type.object_type.clone(),
-            },
-        ))
+        boolean_expressions::BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
+            type_name: boolean_expression_type.object_type.clone(),
+        },
+    ))
 }
 
 pub(crate) fn get_object_type_for_object_boolean_expression<'a>(
@@ -127,7 +130,7 @@ pub(crate) fn get_object_type_for_object_boolean_expression<'a>(
     object_types
         .get(&object_boolean_expression_type.object_type)
         .ok_or(Error::from(
-            BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
+            boolean_expressions::BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
                 type_name: object_boolean_expression_type.object_type.clone(),
             },
         ))
@@ -169,8 +172,8 @@ pub fn unwrap_qualified_type_name(type_reference: &QualifiedTypeReference) -> &Q
 }
 
 /// Helper function to create GraphQL compliant name
-pub fn mk_name(name: &str) -> Result<ast::Name, Error> {
-    ast::Name::from_str(name).map_err(|_| Error::InvalidGraphQlName {
+pub fn mk_name(name: &str) -> Result<ast::Name, graphql_config::GraphqlConfigError> {
+    ast::Name::from_str(name).map_err(|_| graphql_config::GraphqlConfigError::InvalidGraphQlName {
         name: name.to_string(),
     })
 }

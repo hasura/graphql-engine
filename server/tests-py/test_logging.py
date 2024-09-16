@@ -12,7 +12,12 @@ def parse_logs(stream):
 
     def aggregate_logs():
         for line in stream:
-            logs.append(json.loads(line.strip()))
+            try:
+                logs.append(json.loads(line.strip()))
+            except:
+                print('Failed to parse log line:')
+                print(line)
+                raise
 
     # We aggregate the logs in a separate thread because otherwise, this will
     # block forever. The thread will finish after the test finishes and HGE
@@ -108,10 +113,9 @@ class TestLogging:
                 x['detail']['kind'] == 'server_configuration'
 
         config_logs = [l for l in logs_from_requests if _get_server_config(l)]
-        print(config_logs)
+        print('config logs:', config_logs)
         assert len(config_logs) == 1
         config_log = config_logs[0]
-        print(config_log)
         info = config_log['detail']['info']
 
         # we can improve this later by checking the actual value and
@@ -142,12 +146,12 @@ class TestLogging:
         def _get_http_logs(x):
             return x['type'] == 'http-log'
 
-        print('all logs gathered', logs_from_requests)
+        print('logs:', logs_from_requests)
         http_logs = [l for l in logs_from_requests if _get_http_logs(l)]
-        print('http logs', http_logs)
+        print('http logs:', http_logs)
         assert len(http_logs) > 0
         for http_log in http_logs:
-            print(http_log)
+            print('log:', http_log)
 
             http_info = http_log['detail']['http_info']
             assert 'url' in http_info
@@ -184,9 +188,8 @@ class TestLogging:
                 x['detail']['operation']['request_id'] == 'json-parse-fail-log-test'
 
         http_logs = [l for l in logs_from_requests if _get_logs(l)]
-        print('parse failed logs', http_logs)
+        print('parse failed logs:', http_logs)
         assert len(http_logs) > 0
-        print(http_logs[0])
         assert 'error' in http_logs[0]['detail']['operation']
         assert http_logs[0]['detail']['operation']['error']['code'] == 'parse-failed'
 
@@ -196,9 +199,8 @@ class TestLogging:
                 x['detail']['operation']['request_id'] == 'unauthorized-query-log-test'
 
         http_logs = [l for l in logs_from_requests if _get_logs(l)]
-        print('unauthorized failed logs', http_logs)
+        print('unauthorized failed logs:', http_logs)
         assert len(http_logs) > 0
-        print(http_logs[0])
         assert 'error' in http_logs[0]['detail']['operation']
         assert http_logs[0]['detail']['operation']['error']['code'] == 'access-denied'
         assert http_logs[0]['detail']['operation'].get('query') is None
@@ -210,9 +212,8 @@ class TestLogging:
                 x['detail']['operation']['request_id'] == 'successful-run-sql-log-test'
 
         http_logs = [l for l in logs_from_requests if _get_logs(l)]
-        print('successful run SQL logs', http_logs)
+        print('successful run SQL logs:', http_logs)
         assert len(http_logs) > 0
-        print(http_logs[0])
         assert http_logs[0]['detail']['operation']['query']['type'] == 'run_sql'
 
     def test_failed_run_sql(self, logs_from_requests):
@@ -221,9 +222,8 @@ class TestLogging:
                 x['detail']['operation']['request_id'] == 'failed-run-sql-log-test'
 
         http_logs = [l for l in logs_from_requests if _get_logs(l)]
-        print('failed run SQL logs', http_logs)
+        print('failed run SQL logs:', http_logs)
         assert len(http_logs) > 0
-        print(http_logs[0])
         assert http_logs[0]['detail']['operation']['error']['code'] == 'postgres-error'
         assert http_logs[0]['detail']['operation']['query']['type'] == 'run_sql'
 
@@ -233,9 +233,8 @@ class TestLogging:
                 x['detail']['operation']['request_id'] == 'unauthorized-metadata-log-test'
 
         http_logs = [l for l in logs_from_requests if _get_logs(l)]
-        print('unauthorized failed logs', http_logs)
+        print('unauthorized failed logs:', http_logs)
         assert len(http_logs) > 0
-        print(http_logs[0])
         assert 'error' in http_logs[0]['detail']['operation']
         assert http_logs[0]['detail']['operation']['error']['code'] == 'access-denied'
         assert "type" in http_logs[0]['detail']['operation'].get('query')

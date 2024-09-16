@@ -1,0 +1,6 @@
+[
+  {
+    "plan_type": "logical_plan",
+    "plan": "TableScan: tmp_table projection=[actor_id, name, movie_id]"
+  }
+]

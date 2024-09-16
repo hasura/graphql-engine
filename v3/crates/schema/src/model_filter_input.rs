@@ -185,7 +185,8 @@ pub fn add_where_input_field(
                     .map(|graphql_config| {
                         (
                             object_boolean_expression_type.name.clone(),
-                            graphql_config.clone(),
+                            &graphql_config.type_name,
+                            &graphql_config.field_config,
                         )
                     }),
                 metadata_resolve::ModelExpressionType::BooleanExpressionType(
@@ -196,18 +197,23 @@ pub fn add_where_input_field(
                     .map(|graphql_config| {
                         (
                             boolean_expression_object_type.name.clone(),
-                            graphql_config.clone(),
+                            &graphql_config.type_name,
+                            &graphql_config.field_config,
                         )
                     }),
             });
 
-    if let Some((boolean_expression_type_name, boolean_expression_graphql_config)) =
-        boolean_expression_filter_type
+    if let Some((
+        boolean_expression_type_name,
+        boolean_expression_graphql_type_name,
+        boolean_expression_graphql_field_config,
+    )) = boolean_expression_filter_type
     {
         let where_argument = get_where_expression_input_field(
             builder,
             boolean_expression_type_name.clone(),
-            boolean_expression_graphql_config,
+            boolean_expression_graphql_field_config,
+            boolean_expression_graphql_type_name,
         );
 
         fields.insert(
@@ -222,7 +228,9 @@ fn generate_int_input_argument(
     name: &str,
     annotation: Annotation,
 ) -> Result<gql_schema::InputField<GDS>, crate::Error> {
-    let input_field_name = metadata_resolve::mk_name(name)?;
+    let input_field_name =
+        metadata_resolve::mk_name(name).map_err(metadata_resolve::Error::from)?;
+
     Ok(gql_schema::InputField::new(
         input_field_name,
         None,

@@ -1,7 +1,8 @@
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
+use execute::HttpContext;
 use execute::{execute_mutation_plan, execute_query_plan, generate_request_plan};
-use execute::{execute_query_internal, generate_ir, HttpContext};
+use graphql_frontend::{execute_query_internal, generate_ir};
 use hasura_authn_core::Identity;
 use lang_graphql::http::RawRequest;
 use open_dds::permissions::Role;
@@ -18,6 +19,10 @@ use serde_json::Value;
 use std::path::Path;
 
 use lang_graphql as gql;
+
+// match allocator used by engine binary
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 pub fn merge_with_common_metadata(
     common_metadata_path: &Path,
@@ -71,8 +76,9 @@ pub fn bench_execute(
     let mut group = c.benchmark_group(benchmark_group);
 
     // these numbers are fairly low, optimising for runtime of benchmark suite
-    group.warm_up_time(Duration::from_millis(500));
-    group.sample_size(20);
+    group.warm_up_time(Duration::from_millis(100));
+    group.sample_size(1000);
+    group.measurement_time(Duration::from_secs(5));
     group.sampling_mode(SamplingMode::Flat);
 
     // Parse request

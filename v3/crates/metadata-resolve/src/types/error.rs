@@ -1,139 +1,34 @@
-use open_dds::aggregates::AggregateExpressionName;
-use open_dds::data_connector::{CollectionName, DataConnectorObjectType};
-use thiserror::Error;
-
-use crate::helpers::argument::ArgumentMappingError;
-use crate::stages::aggregates::AggregateExpressionError;
-use crate::types::subgraph::{Qualified, QualifiedTypeName, QualifiedTypeReference};
-use lang_graphql::ast::common as ast;
+use crate::helpers::typecheck::TypecheckError;
+use crate::stages::{
+    aggregates::AggregateExpressionError, apollo, boolean_expressions, commands,
+    data_connector_scalar_types, data_connectors, graphql_config, models, object_types,
+    order_by_expressions, relay, scalar_boolean_expressions, type_permissions,
+};
+use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::flags;
+use open_dds::order_by_expression::OrderByExpressionName;
 use open_dds::{
     arguments::ArgumentName,
-    commands::{CommandName, FunctionName, ProcedureName},
-    data_connector::{DataConnectorName, DataConnectorScalarType},
+    commands::CommandName,
+    data_connector::{DataConnectorName, DataConnectorObjectType},
     models::ModelName,
     relationships::RelationshipName,
-    types::{CustomTypeName, FieldName, OperatorName, TypeName, TypeReference},
+    types::{CustomTypeName, FieldName, OperatorName},
 };
+use std::fmt::Display;
 
 use crate::helpers::{
     ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
 };
 
 // TODO: This enum really needs structuring
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("the following data connector is defined more than once: {name:}")]
-    DuplicateDataConnectorDefinition { name: Qualified<DataConnectorName> },
-    #[error("the following type is defined more than once: {name:}")]
-    DuplicateTypeDefinition { name: Qualified<CustomTypeName> },
-    #[error("the following field in type {type_name:} is defined more than once: {field_name:}")]
-    DuplicateFieldDefinition {
-        type_name: Qualified<CustomTypeName>,
-        field_name: FieldName,
-    },
-    #[error("{error:} in object type {type_name:}")]
-    DataConnectorTypeMappingValidationError {
-        type_name: Qualified<CustomTypeName>,
-        error: TypeMappingValidationError,
-    },
-    #[error("Multiple mappings have been defined from object {data_connector_object_type:} of data connector {data_connector:}")]
-    DuplicateDataConnectorObjectTypeMapping {
-        data_connector: Qualified<DataConnectorName>,
-        data_connector_object_type: String,
-    },
-    #[error("the following model is defined more than once: {name:}")]
-    DuplicateModelDefinition { name: Qualified<ModelName> },
-    #[error("'globalIdFields' for type {object_type:} found, but no model found with 'globalIdSource: true' for type {object_type:}")]
-    GlobalIdSourceNotDefined {
-        object_type: Qualified<CustomTypeName>,
-    },
-    #[error("'apolloFederation.keys' for type {object_type:} found, but no model found with 'apolloFederation.entitySource: true' for type {object_type:}")]
-    ApolloFederationEntitySourceNotDefined {
-        object_type: Qualified<CustomTypeName>,
-    },
-    #[error("the data type {data_type:} for model {model_name:} has not been defined")]
-    UnknownModelDataType {
-        model_name: Qualified<ModelName>,
-        data_type: Qualified<CustomTypeName>,
-    },
-    #[error(
-        "the following argument in model {model_name:} is defined more than once: {argument_name:}"
-    )]
-    DuplicateModelArgumentDefinition {
-        model_name: Qualified<ModelName>,
-        argument_name: ArgumentName,
-    },
     #[error("unknown field {field_name:} in filterable fields defined for model {model_name:}")]
     UnknownFieldInFilterableFields {
         model_name: ModelName,
         field_name: FieldName,
-    },
-    #[error("unknown field {field_name:} in orderable fields defined for model {model_name:}")]
-    UnknownFieldInOrderableFields {
-        model_name: ModelName,
-        field_name: FieldName,
-    },
-    #[error("source for the following model is defined more than once: {model_name:}")]
-    DuplicateModelSourceDefinition { model_name: Qualified<ModelName> },
-    #[error("{error:} in model {model_name:}")]
-    ModelTypeMappingCollectionError {
-        model_name: Qualified<ModelName>,
-        error: TypeMappingCollectionError,
-    },
-    // ------- Errors for commands ---------
-    #[error("the following command is defined more than once: {name:}")]
-    DuplicateCommandDefinition { name: Qualified<CommandName> },
-    #[error("the following argument {argument_name:} with argument type {argument_type:} in command {command_name:} ) has not been defined")]
-    UnknownCommandArgumentType {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-        argument_type: TypeReference,
-    },
-    #[error(
-        "the following argument in command {command_name:} is defined more than once: {argument_name:}"
-    )]
-    DuplicateCommandArgumentDefinition {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-    },
-    #[error("source for the following command is defined more than once: {command_name:}")]
-    DuplicateCommandSourceDefinition {
-        command_name: Qualified<CommandName>,
-    },
-    #[error("the source data connector {data_connector:} for command {command_name:} has not been defined")]
-    UnknownCommandDataConnector {
-        command_name: Qualified<CommandName>,
-        data_connector: Qualified<DataConnectorName>,
-    },
-    #[error(
-        "the mapping for type {type_name:} in command {command_name:} is defined more than once"
-    )]
-    DuplicateTypeMappingDefinitionInCommandSource {
-        command_name: Qualified<CommandName>,
-        type_name: CustomTypeName,
-    },
-    #[error(
-        "unknown argument {argument_name:} referenced in argument mappings for command {command_name:}"
-    )]
-    UnknownCommandSourceArgument {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-    },
-    #[error("command source is required for command '{command_name:}' to resolve predicate")]
-    CommandSourceRequiredForPredicate {
-        command_name: Qualified<CommandName>,
-    },
-    #[error(
-        "the mapping for argument {argument_name:} of command {command_name:} has been defined more than once"
-    )]
-    DuplicateCommandArgumentMapping {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-    },
-    #[error("a preset argument {argument_name:} has been set for the command {command_name:} but no such argument exists for this command")]
-    CommandArgumentPresetMismatch {
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
     },
     #[error("a preset argument {argument_name:} has been set for the model {model_name:} but no such argument exists for this model")]
     ModelArgumentPresetMismatch {
@@ -151,23 +46,6 @@ pub enum Error {
         argument_name: ArgumentName,
     },
 
-    #[error("the procedure {procedure:} in the data connector {data_connector:} for command {command_name:} has not been defined")]
-    UnknownCommandProcedure {
-        command_name: Qualified<CommandName>,
-        data_connector: Qualified<DataConnectorName>,
-        procedure: ProcedureName,
-    },
-    #[error("the function {function:} in the data connector {data_connector:} for command {command_name:} has not been defined")]
-    UnknownCommandFunction {
-        command_name: Qualified<CommandName>,
-        data_connector: Qualified<DataConnectorName>,
-        function: FunctionName,
-    },
-    #[error("{error:} in command {command_name:}")]
-    CommandTypeMappingCollectionError {
-        command_name: Qualified<CommandName>,
-        error: TypeMappingCollectionError,
-    },
     // ----------------
     #[error("the mapping for type {type_name:} in model {model_name:} is defined more than once")]
     DuplicateTypeMappingDefinitionInModelSource {
@@ -178,19 +56,6 @@ pub enum Error {
     MultipleNDCObjectForOpenDDObjectType {
         type_name: Qualified<CustomTypeName>,
         ndc_object_types: Vec<String>,
-    },
-    #[error(
-        "the source data connector {data_connector:} for model {model_name:} has not been defined"
-    )]
-    UnknownModelDataConnector {
-        model_name: Qualified<ModelName>,
-        data_connector: Qualified<DataConnectorName>,
-    },
-    #[error("the collection {collection:} in the data connector {data_connector:} for model {model_name:} has not been defined")]
-    UnknownModelCollection {
-        model_name: Qualified<ModelName>,
-        data_connector: Qualified<DataConnectorName>,
-        collection: CollectionName,
     },
     #[error(
         "unknown argument {argument_name:} referenced in argument mappings for model {model_name:}"
@@ -212,58 +77,13 @@ pub enum Error {
     UnnecessaryFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
     #[error("filter input type name graphql configuration must be specified for model {model_name:} because aggregates are used with it")]
     MissingFilterInputTypeNameGraphqlConfiguration { model_name: Qualified<ModelName> },
-    #[error("multiple graphql types found with the same name: {graphql_type_name:}")]
-    ConflictingGraphQlType { graphql_type_name: ast::TypeName },
     #[error("unknown field {field_name:} in unique identifier defined for model {model_name:}")]
     UnknownFieldInUniqueIdentifier {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
-    #[error("unknown field {field_name:} in apollo federation keys defined for the object type {object_type:}")]
-    UnknownFieldInApolloFederationKey {
-        field_name: FieldName,
-        object_type: Qualified<CustomTypeName>,
-    },
-    #[error(
-        "empty keys in apollo federation configuration defined for the object type {object_type:}"
-    )]
-    EmptyKeysInApolloFederationConfigForObject {
-        object_type: Qualified<CustomTypeName>,
-    },
-    #[error("empty fields in apollo federation keys defined for the object type {object_type:}")]
-    EmptyFieldsInApolloFederationConfigForObject {
-        object_type: Qualified<CustomTypeName>,
-    },
-    #[error("multiple models are marked as entity source for the object type {type_name:}")]
-    MultipleEntitySourcesForType {
-        type_name: Qualified<CustomTypeName>,
-    },
     #[error("duplicate field {field_name:} in unique identifier defined for model {model_name:}")]
     DuplicateFieldInUniqueIdentifier {
-        model_name: Qualified<ModelName>,
-        field_name: FieldName,
-    },
-    #[error("no equality operator has been defined in the data connector for field {field_name:} of model {model_name:} used in {comparison_location}")]
-    NoEqualOperatorForComparedField {
-        comparison_location: String,
-        model_name: Qualified<ModelName>,
-        field_name: FieldName,
-    },
-    #[error("multiple equality operators have been defined in the data connector for field {field_name:} of model {model_name:} used in {comparison_location}")]
-    MultipleEqualOperatorsForComparedField {
-        comparison_location: String,
-        model_name: Qualified<ModelName>,
-        field_name: FieldName,
-    },
-    #[error("no field mapping was found for field {field_name:} of model {model_name:} used in {comparison_location}")]
-    NoFieldMappingForComparedField {
-        comparison_location: String,
-        model_name: Qualified<ModelName>,
-        field_name: FieldName,
-    },
-    #[error("comparison for non-scalar field {field_name:} of model {model_name:} used in {comparison_location} is unsupported")]
-    UncomparableNonScalarFieldType {
-        comparison_location: String,
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
@@ -287,39 +107,6 @@ pub enum Error {
         model_data_connector_object_type: DataConnectorObjectType,
         filter_expression_type: Qualified<CustomTypeName>,
         filter_expression_data_connector_object_type: DataConnectorObjectType,
-    },
-    // Permission errors
-    // Type Output Permissions
-    #[error("unsupported type in output type permissions definition: {type_name:}; only object types are supported")]
-    UnsupportedTypeInOutputPermissions { type_name: CustomTypeName },
-    #[error("multiple output type permissions have been defined for type: {type_name:}")]
-    DuplicateOutputTypePermissions { type_name: CustomTypeName },
-    #[error("unknown type used in output permissions: {type_name:}")]
-    UnknownTypeInOutputPermissionsDefinition {
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("unknown field '{field_name:}' used in output permissions of type '{type_name:}'")]
-    UnknownFieldInOutputPermissionsDefinition {
-        field_name: FieldName,
-        type_name: CustomTypeName,
-    },
-    // Type Input Permissions
-    #[error("unsupported type in input type permissions definition: {type_name:}; only object types are supported")]
-    UnsupportedTypeInInputPermissions { type_name: CustomTypeName },
-    #[error("unknown field '{field_name:}' used in output permissions of type '{type_name:}'")]
-    UnknownFieldInInputPermissionsDefinition {
-        field_name: FieldName,
-        type_name: CustomTypeName,
-    },
-    #[error("multiple input type permissions have been defined for type: {type_name:}")]
-    DuplicateInputTypePermissions { type_name: CustomTypeName },
-    #[error(
-        "Type error in field preset of {field_name:}, for input type permissions definition of type {type_name:}: {type_error:}"
-    )]
-    FieldPresetTypeError {
-        field_name: FieldName,
-        type_name: CustomTypeName,
-        type_error: typecheck::TypecheckError,
     },
     #[error("Type error in argument {argument_name:}: {type_error:}")]
     ArgumentTypeError {
@@ -393,8 +180,6 @@ pub enum Error {
     SecretNotFound { secret_name: String },
     #[error("{0}")]
     DeserializationError(#[from] serde_json::Error),
-    #[error("NDC validation error: {0}")]
-    NDCValidationError(#[from] NDCValidationError),
     #[error(
         "duplicate relationship {relationship_name:} associated with source type {type_name:}"
     )]
@@ -432,84 +217,6 @@ pub enum Error {
         relationship_name: RelationshipName,
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("unknown data connector {data_connector:} referenced in scalar type representation of {scalar_type:}")]
-    ScalarTypeFromUnknownDataConnector {
-        data_connector: Qualified<DataConnectorName>,
-        scalar_type: DataConnectorScalarType,
-    },
-    #[error("cannot find scalar type {scalar_type:} in data connector {data_connector:}")]
-    UnknownScalarTypeInDataConnector {
-        data_connector: Qualified<DataConnectorName>,
-        scalar_type: DataConnectorScalarType,
-    },
-    #[error("unknown type represented for scalar type {scalar_type:}: {type_name:}")]
-    ScalarTypeUnknownRepresentation {
-        scalar_type: DataConnectorScalarType,
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("multiple type representations defined for scalar {scalar_type:} from data connector {data_connector:}")]
-    DuplicateDataConnectorScalarRepresentation {
-        data_connector: Qualified<DataConnectorName>,
-        scalar_type: DataConnectorScalarType,
-    },
-    #[error("conflicting type representations found for data connector {data_connector:}: {old_representation:} and {new_representation:}")]
-    DataConnectorScalarRepresentationMismatch {
-        data_connector: Qualified<DataConnectorName>,
-        old_representation: TypeName,
-        new_representation: TypeName,
-    },
-    #[error(
-        "scalar type representation required for type {scalar_type:} in data connector {data_connector:}"
-    )]
-    DataConnectorScalarRepresentationRequired {
-        data_connector: Qualified<DataConnectorName>,
-        scalar_type: DataConnectorScalarType,
-    },
-    #[error("type mapping required for type {type_name:} in model source {model_name:} backed by data connector {data_connector:}")]
-    TypeMappingRequired {
-        model_name: Qualified<ModelName>,
-        type_name: Qualified<CustomTypeName>,
-        data_connector: Qualified<DataConnectorName>,
-    },
-    #[error("Unknown field {field_name:} in global_id defined for the type {type_name:}")]
-    UnknownFieldInGlobalId {
-        field_name: FieldName,
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("Model {model_name:} is marked as a global ID source but there are no global id fields present in the related object type {type_name:}")]
-    NoGlobalFieldsPresentInGlobalIdSource {
-        type_name: Qualified<CustomTypeName>,
-        model_name: ModelName,
-    },
-    #[error("Model {model_name:} is marked as an Apollo Federation entity source but there are no keys fields present in the related object type {type_name:}")]
-    NoKeysFieldsPresentInEntitySource {
-        type_name: Qualified<CustomTypeName>,
-        model_name: ModelName,
-    },
-    #[error("A field named `id` cannot be present in the object type {type_name} when global_id fields are non-empty.")]
-    IdFieldConflictingGlobalId {
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("Found multiple models  {model_1:}, {model_2:} that implement the same object type {object_type:} to be global ID sources.")]
-    DuplicateModelGlobalIdSource {
-        model_1: Qualified<ModelName>,
-        model_2: Qualified<ModelName>,
-        object_type: Qualified<CustomTypeName>,
-    },
-    #[error("\"{name:}\" is not a valid GraphQL name.")]
-    InvalidGraphQlName { name: String },
-    #[error("Invalid header name {header_name} specified for data connector: {data_connector}.")]
-    InvalidHeaderName {
-        data_connector: Qualified<DataConnectorName>,
-        header_name: String,
-    },
-    #[error(
-        "Invalid value specified for header {header_name} for data connector: {data_connector}."
-    )]
-    InvalidHeaderValue {
-        data_connector: Qualified<DataConnectorName>,
-        header_name: String,
-    },
     #[error("the data type {data_type:} has not been defined")]
     UnknownType {
         data_type: Qualified<CustomTypeName>,
@@ -522,41 +229,6 @@ pub enum Error {
     UnknownScalarType {
         data_type: Qualified<CustomTypeName>,
     },
-
-    #[error("model {model_name:} with arguments is unsupported as a global ID source")]
-    ModelWithArgumentsAsGlobalIdSource { model_name: Qualified<ModelName> },
-    #[error(
-        "model {model_name:} with arguments is unsupported as an Apollo Federation entity source"
-    )]
-    ModelWithArgumentsAsApolloFederationEntitySource { model_name: Qualified<ModelName> },
-    #[error("An error occurred while mapping arguments in the model {model_name:} to the collection {collection_name:} in the data connector {data_connector_name:}: {error:}")]
-    ModelCollectionArgumentMappingError {
-        data_connector_name: Qualified<DataConnectorName>,
-        model_name: Qualified<ModelName>,
-        collection_name: CollectionName,
-        error: ArgumentMappingError,
-    },
-    #[error("An error occurred while mapping arguments in the command {command_name:} to the function {function_name:} in the data connector {data_connector_name:}: {error:}")]
-    CommandFunctionArgumentMappingError {
-        data_connector_name: Qualified<DataConnectorName>,
-        command_name: Qualified<CommandName>,
-        function_name: FunctionName,
-        error: ArgumentMappingError,
-    },
-    #[error("An error occurred while mapping arguments in the command {command_name:} to the procedure {procedure_name:} in the data connector {data_connector_name:}: {error:}")]
-    CommandProcedureArgumentMappingError {
-        data_connector_name: Qualified<DataConnectorName>,
-        command_name: Qualified<CommandName>,
-        procedure_name: ProcedureName,
-        error: ArgumentMappingError,
-    },
-    #[error("The url for the data connector {data_connector_name:} is invalid: {error:}")]
-    InvalidDataConnectorUrl {
-        data_connector_name: Qualified<DataConnectorName>,
-        error: url::ParseError,
-    },
-    #[error("Predicate types in data connectors are unsupported")]
-    PredicateTypesUnsupported,
     #[error(
         "Type error in preset argument {argument_name:} for command {command_name:}: {type_error:}"
     )]
@@ -575,178 +247,90 @@ pub enum Error {
     },
     #[error("{graphql_config_error:}")]
     GraphqlConfigError {
-        graphql_config_error: GraphqlConfigError,
+        #[from]
+        graphql_config_error: graphql_config::GraphqlConfigError,
     },
     #[error("{relationship_error:}")]
     RelationshipError {
         relationship_error: RelationshipError,
     },
-    #[error("{boolean_expression_error:}")]
-    BooleanExpressionError {
-        boolean_expression_error: BooleanExpressionError,
+    #[error("Error in order by expression {order_by_expression_name}: {error}")]
+    OrderByExpressionError {
+        order_by_expression_name: Qualified<OrderByExpressionName>,
+        error: order_by_expressions::OrderByExpressionError,
     },
+    #[error("{0}")]
+    BooleanExpressionError(#[from] boolean_expressions::BooleanExpressionError),
+    #[error("{0}")]
+    ScalarBooleanExpressionTypeError(
+        #[from] scalar_boolean_expressions::ScalarBooleanExpressionTypeError,
+    ),
     #[error("{type_predicate_error:}")]
     TypePredicateError {
         type_predicate_error: TypePredicateError,
     },
+    #[error("{0}")]
+    DataConnectorError(#[from] data_connectors::NamedDataConnectorError),
+    #[error("NDC validation error: {0}")]
+    NDCValidationError(#[from] NDCValidationError),
+
     #[error("{type_error:}")]
     TypeError { type_error: TypeError },
-    #[error("{0:}")]
+    #[error("{0}")]
     AggregateExpressionError(AggregateExpressionError),
     #[error("{0}")]
-    ModelAggregateExpressionError(ModelAggregateExpressionError),
-
-    // TODO: (anon) refactor the data connector error types
-    #[error(
-        "Boolean Expression in ValueExpression for Data Connector headers preset is not supported."
-    )]
-    BooleanExpressionInValueExpressionForHeaderPresetsNotSupported,
-
-    #[error("the following argument for field {field_name:} in type {type_name:} is defined more than once: {argument_name:}")]
-    DuplicateArgumentDefinition {
-        field_name: FieldName,
-        argument_name: ArgumentName,
-        type_name: Qualified<CustomTypeName>,
-    },
-
-    #[error("The data connector {data_connector} uses ndc-spec v0.2.* and is not yet supported")]
-    NdcV02DataConnectorNotSupported {
-        data_connector: Qualified<DataConnectorName>,
-    },
-}
-
-#[derive(Debug, Error)]
-pub enum ModelAggregateExpressionError {
-    #[error("a source must be defined for model {model:} in order to use aggregate expressions")]
-    CannotUseAggregateExpressionsWithoutSource { model: Qualified<ModelName> },
-    #[error("the aggregate expression {aggregate_expression} used with model {model_name} has not been defined")]
-    UnknownModelAggregateExpression {
-        model_name: Qualified<ModelName>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-    },
-    #[error("the aggregate expression {aggregate_expression} is used with the model {model_name} but its operand type {aggregate_operand_type} does not match the model's type {model_type}")]
-    ModelAggregateExpressionOperandTypeMismatch {
-        model_name: Qualified<ModelName>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-        model_type: QualifiedTypeName,
-        aggregate_operand_type: QualifiedTypeName,
-    },
-    #[error("the aggregate expression {aggregate_expression} is used with the model {model_name} which has the countDistinct aggregation enabled, but countDistinct is not valid when aggregating a model as every object is already logically distinct")]
-    ModelAggregateExpressionCountDistinctNotAllowed {
-        model_name: Qualified<ModelName>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-    },
-    #[error("the aggregate expression {aggregate_expression} is used with the model {model_name} but the NDC type of the field {field_name} for data connector {data_connector_name} was not a optionally nullable named type")]
-    ModelAggregateExpressionUnexpectedDataConnectorType {
-        model_name: Qualified<ModelName>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-        data_connector_name: Qualified<DataConnectorName>,
-        field_name: FieldName,
-    },
-    #[error("the aggregate expression {aggregate_expression} is used with the model {model_name} but for the data connector {data_connector_name} and scalar type {data_connector_operand_type}, mappings are not provided for all aggregation functions in the aggregate expression")]
-    ModelAggregateExpressionDataConnectorMappingMissing {
-        model_name: Qualified<ModelName>,
-        aggregate_expression: Qualified<AggregateExpressionName>,
-        data_connector_name: Qualified<DataConnectorName>,
-        data_connector_operand_type: DataConnectorScalarType,
-    },
+    TypePermissionError(type_permissions::TypePermissionError),
     #[error("{0}")]
-    OtherError(Box<Error>),
+    ObjectTypesError(#[from] object_types::ObjectTypesError),
+    #[error("{0}")]
+    ApolloError(#[from] apollo::ApolloError),
+    #[error("{0}")]
+    RelayError(#[from] relay::RelayError),
+    #[error("{0}")]
+    ModelsError(#[from] models::ModelsError),
+    #[error("{0}")]
+    CommandsError(#[from] commands::CommandsError),
+
+    #[error("{0}")]
+    DataConnectorScalarTypesError(
+        #[from] data_connector_scalar_types::DataConnectorScalarTypesError,
+    ),
+    #[error(
+        "The following issues were raised but disallowed by compatibility configuration:\n\n{warnings_as_errors}"
+    )]
+    CompatibilityError {
+        warnings_as_errors: SeparatedBy<crate::Warning>,
+    },
+    #[error("Subscriptions are currently unstable. Please add 'subscriptions' to unstable features to enable them.")]
+    UnstableFeatureSubscriptions,
 }
 
-impl From<ModelAggregateExpressionError> for Error {
-    fn from(val: ModelAggregateExpressionError) -> Self {
-        Error::ModelAggregateExpressionError(val)
-    }
+pub trait ShouldBeAnError {
+    fn should_be_an_error(&self, flags: &flags::Flags) -> bool;
 }
 
-impl From<BooleanExpressionError> for Error {
-    fn from(val: BooleanExpressionError) -> Self {
-        Error::BooleanExpressionError {
-            boolean_expression_error: val,
+// A small utility type which exists for the sole purpose of displaying a vector with a certain
+// separator.
+#[derive(Debug)]
+pub struct SeparatedBy<T> {
+    pub lines_of: Vec<T>,
+    pub separator: String,
+}
+
+impl<T: Display> Display for SeparatedBy<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (index, elem) in self.lines_of.iter().enumerate() {
+            elem.fmt(f)?;
+            if index < self.lines_of.len() - 1 {
+                self.separator.fmt(f)?;
+            }
         }
+
+        Ok(())
     }
 }
 
-#[derive(Debug, Error)]
-pub enum BooleanExpressionError {
-    #[error("unknown type used in object boolean expression: {type_name:}")]
-    UnknownTypeInObjectBooleanExpressionType {
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("unsupported type used in object boolean expression: {type_name:}; only object types are supported")]
-    UnsupportedTypeInObjectBooleanExpressionType {
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("unknown data connector {data_connector:} referenced in object boolean expression type {object_boolean_expression_type:}")]
-    UnknownDataConnectorInObjectBooleanExpressionType {
-        data_connector: Qualified<DataConnectorName>,
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-    },
-    #[error("unknown data connector object type {data_connector_object_type:} (in data connector {data_connector:}) referenced in object boolean expression type {object_boolean_expression_type:}")]
-    UnknownDataConnectorTypeInObjectBooleanExpressionType {
-        data_connector: Qualified<DataConnectorName>,
-        data_connector_object_type: DataConnectorObjectType,
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-    },
-    #[error("unknown field '{field_name:}' used in object boolean expression type {object_boolean_expression_type:}")]
-    UnknownFieldInObjectBooleanExpressionType {
-        field_name: FieldName,
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-    },
-    #[error("the object type '{object_type:}' used in boolean expression type {object_boolean_expression_type:} does not have a mapping to object {data_connector_object_type:} of data connector {data_connector:}")]
-    NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
-        object_type: Qualified<CustomTypeName>,
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-        data_connector_object_type: DataConnectorObjectType,
-        data_connector: Qualified<DataConnectorName>,
-    },
-    #[error("{error:} in boolean expression type {object_boolean_expression_type:}")]
-    BooleanExpressionTypeMappingCollectionError {
-        object_boolean_expression_type: Qualified<CustomTypeName>,
-        error: TypeMappingCollectionError,
-    },
-    #[error("the following object boolean expression type is defined more than once: {name:}")]
-    DuplicateObjectBooleanExpressionTypeDefinition { name: Qualified<CustomTypeName> },
-    #[error("unknown object boolean expression type {name:} is used in model {model:}")]
-    UnknownBooleanExpressionTypeInModel {
-        name: Qualified<CustomTypeName>,
-        model: Qualified<ModelName>,
-    },
-    #[error("could not find boolean expression type {child_boolean_expression:} referenced within boolean expression {parent_boolean_expression:}")]
-    BooleanExpressionCouldNotBeFound {
-        parent_boolean_expression: Qualified<CustomTypeName>,
-        child_boolean_expression: Qualified<CustomTypeName>,
-    },
-    #[error("the boolean expression type {name:} used in model {model:} corresponds to object type {boolean_expression_object_type:} whereas the model's object type is {model_object_type:}")]
-    BooleanExpressionTypeForInvalidObjectTypeInModel {
-        name: Qualified<CustomTypeName>,
-        boolean_expression_object_type: Qualified<CustomTypeName>,
-        model: Qualified<ModelName>,
-        model_object_type: Qualified<CustomTypeName>,
-    },
-    #[error("field {field:} is missing a mapping for data connector {data_connector_name:} in boolean expression {boolean_expression_name:}")]
-    DataConnectorMappingMissingForField {
-        boolean_expression_name: Qualified<CustomTypeName>,
-        field: FieldName,
-        data_connector_name: Qualified<DataConnectorName>,
-    },
-    #[error("The data connector {data_connector_name} cannot be used for filtering nested object {nested_type_name:} within {parent_type_name:} as it has not defined any capabilities for nested object filtering")]
-    NoNestedObjectFilteringCapabilitiesDefined {
-        parent_type_name: Qualified<CustomTypeName>,
-        nested_type_name: Qualified<CustomTypeName>,
-        data_connector_name: Qualified<DataConnectorName>,
-    },
-    #[error("The field {field_name:} has type {field_type:} but the field's boolean expression type {field_boolean_expression_type_name:} has type {underlying_type:}")]
-    FieldTypeMismatch {
-        field_name: FieldName,
-        field_type: QualifiedTypeName,
-        field_boolean_expression_type_name: Qualified<CustomTypeName>,
-        underlying_type: QualifiedTypeName,
-    },
-}
-
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum RelationshipError {
     #[error("source field {field_name} in field mapping for relationship {relationship_name} on type {source_type} is unknown.")]
     UnknownSourceFieldInRelationshipMapping {
@@ -808,7 +392,8 @@ pub enum RelationshipError {
     ModelAggregateExpressionError {
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
-        error: ModelAggregateExpressionError,
+        error: models::ModelsError, // ideally, this would return the more accurate
+                                    // `ModelAggregateExpressionError` instead
     },
 }
 
@@ -820,12 +405,16 @@ impl From<RelationshipError> for Error {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum TypePredicateError {
     #[error("unknown field '{field_name:}' used in predicate for type '{type_name:}'")]
     UnknownFieldInTypePredicate {
         field_name: FieldName,
         type_name: Qualified<CustomTypeName>,
+    },
+    #[error("boolean expression '{boolean_expression_name:}' not found")]
+    BooleanExpressionNotFound {
+        boolean_expression_name: Qualified<CustomTypeName>,
     },
     #[error(
         "the source data connector {data_connector:} for type {type_name:} has not been defined"
@@ -848,7 +437,7 @@ pub enum TypePredicateError {
     NestedPredicateInTypePredicate {
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("relationship '{relationship_name:}' used in predicate for type '{type_name:}' does not exist")]
+    #[error("relationship '{relationship_name:}' is used in predicate but does not exist in comparableRelationships in boolean expression for type '{type_name:}'")]
     UnknownRelationshipInTypePredicate {
         relationship_name: RelationshipName,
         type_name: Qualified<CustomTypeName>,
@@ -886,6 +475,45 @@ pub enum TypePredicateError {
     OperatorMappingsNotFound {
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error(
+        "no type mapping found for type {type_name:} in data connector {data_connector_name:}"
+    )]
+    UnknownTypeMapping {
+        type_name: Qualified<CustomTypeName>,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error("no field mapping found for field {field_name:} in type {type_name:} in data connector {data_connector_name:}")]
+    UnknownFieldMapping {
+        type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error("Operator {operator_name:} not found for field {field_name:}")]
+    OperatorNotFoundForField {
+        field_name: FieldName,
+        operator_name: OperatorName,
+    },
+    #[error(
+        "{location:} - missing equality operator for source column {ndc_column:} in data connector {data_connector_name:} \
+         which is mapped to field {field_name:} in type {type_name:}"
+    )]
+    MissingEqualOperator {
+        location: String,
+        type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+        ndc_column: DataConnectorColumnName,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error(
+        "Relationships across subgraphs are not supported in filter predicates. \
+         Relationship: {relationship_name:} is defined between source data connector: {source_data_connector:} \
+         and target data connector: {target_data_connector:}"
+    )]
+    RelationshipAcrossSubgraphs {
+        relationship_name: RelationshipName,
+        source_data_connector: Qualified<DataConnectorName>,
+        target_data_connector: Qualified<DataConnectorName>,
+    },
 }
 
 impl From<TypePredicateError> for Error {
@@ -896,112 +524,26 @@ impl From<TypePredicateError> for Error {
     }
 }
 
-#[derive(Debug, Error)]
-pub enum GraphqlConfigError {
-    #[error("graphql configuration is not defined in supergraph")]
-    MissingGraphqlConfig,
-    #[error("graphql configuration should be defined only once in supergraph")]
-    MultipleGraphqlConfigDefinition,
-    #[error("the fieldName for limitInput needs to be defined in GraphqlConfig, when models have a selectMany graphql API")]
-    MissingLimitFieldInGraphqlConfig,
-    #[error("the fieldName for offsetInput needs to be defined in GraphqlConfig, when models have a selectMany graphql API")]
-    MissingOffsetFieldInGraphqlConfig,
-    #[error("the filterInput needs to be defined in GraphqlConfig, when models have filterExpressionType")]
-    MissingFilterInputFieldInGraphqlConfig,
-    #[error("the orderByInput needs to be defined in GraphqlConfig, when models have orderByExpressionType")]
-    MissingOrderByInputFieldInGraphqlConfig,
-    #[error("the orderByInput.enumTypeNames needs to be defined in GraphqlConfig, when models have orderByExpressionType")]
-    MissingOrderByEnumTypeNamesInGraphqlConfig,
-    #[error("only one enumTypeNames can be defined in GraphqlConfig, whose direction values are both 'asc' and 'desc'.")]
-    MultipleOrderByEnumTypeNamesInGraphqlConfig,
-    #[error(
-            "invalid directions: {directions} defined in orderByInput of GraphqlConfig , currently there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
-        )]
-    InvalidOrderByDirection { directions: String },
-    #[error("the fieldName for argumentsInput needs to be defined in GraphqlConfig, when models have argumentsInputType")]
-    MissingArgumentsInputFieldInGraphqlConfig,
-    #[error("the filterInputFieldName for aggregate needs to be defined in GraphqlConfig, when models have a selectAggregate graphql API")]
-    MissingAggregateFilterInputFieldNameInGraphqlConfig,
-}
-
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum TypeError {
     #[error("expected to find a custom named type in {qualified_type_reference:} but none found")]
     NoNamedTypeFound {
         qualified_type_reference: QualifiedTypeReference,
     },
-}
-
-#[derive(Error, Debug)]
-pub enum TypeMappingValidationError {
-    #[error("data connector {data_connector:} referenced in type mappings of type {type_name:} is not found")]
-    UnknownDataConnector {
-        data_connector: Qualified<DataConnectorName>,
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("the type {type_name:} referenced in type mappings has not been defined")]
-    UnknownSourceType {
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error(
-        "the following fields in field mappings of type {type_name:} are unknown: {}",
-        field_names.join(", ")
-    )]
-    UnknownSourceFields {
-        type_name: Qualified<CustomTypeName>,
-        field_names: Vec<FieldName>,
-    },
-    #[error("unknown target column name {column_name:} for field {field_name:}")]
-    UnknownTargetColumn {
-        column_name: String,
-        field_name: FieldName,
-    },
-    #[error(
-        "the mapping for field {field_name:} of type {type_name:} has been defined more than once"
-    )]
-    DuplicateFieldMapping {
-        type_name: Qualified<CustomTypeName>,
-        field_name: FieldName,
-    },
-    #[error(
-        "the type {unknown_field_type_name:} referenced by the field {field_name:} in type {type_name:} has not been defined"
-    )]
-    UnknownFieldType {
-        type_name: Qualified<CustomTypeName>,
-        field_name: FieldName,
-        unknown_field_type_name: Qualified<CustomTypeName>,
-    },
-    #[error("could not find mappings for {object_type_name:} to the {data_connector_object_type:} on data connector {data_connector_name:}")]
-    DataConnectorTypeMappingNotFound {
-        object_type_name: Qualified<CustomTypeName>,
-        data_connector_name: Qualified<DataConnectorName>,
-        data_connector_object_type: DataConnectorObjectType,
-    },
-    #[error(
-        "the type {unknown_ndc_type:} is not defined as an object type in the connector's schema. This type is being mapped to by the type {type_name:}"
-    )]
-    UnknownNdcType {
-        type_name: Qualified<CustomTypeName>,
-        unknown_ndc_type: DataConnectorObjectType,
-    },
-    #[error("expected to find a predicate type for argument {argument_name:} but did not")]
-    PredicateTypeNotFound { argument_name: ArgumentName },
-    #[error(
-        "the type {unknown_ndc_field_type_name:} is not defined as an object type in the connector's schema. This type is referenced by the field {ndc_field_name:} in the connector's schema type {ndc_type_name:}, which is mapped to the field {field_name:} in the type {type_name:}"
-    )]
-    UnknownNdcFieldObjectType {
-        type_name: Qualified<CustomTypeName>,
-        field_name: FieldName,
-        ndc_type_name: String,
-        ndc_field_name: String,
-        unknown_ndc_field_type_name: String,
-    },
-    #[error("ndc validation error: {0}")]
-    NDCValidationError(#[from] NDCValidationError),
+    #[error("type mismatch: {error:}")]
+    TypeCheckError { error: TypecheckError },
 }
 
 impl From<AggregateExpressionError> for Error {
     fn from(val: AggregateExpressionError) -> Self {
         Error::AggregateExpressionError(val)
+    }
+}
+
+impl From<TypecheckError> for Error {
+    fn from(type_error: TypecheckError) -> Self {
+        Error::TypeError {
+            type_error: TypeError::TypeCheckError { error: type_error },
+        }
     }
 }

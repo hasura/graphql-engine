@@ -1,24 +1,25 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 use axum::{
     body::HttpBody,
-    http::{HeaderMap, Request, StatusCode},
+    http::{HeaderMap, HeaderName, Request, StatusCode},
     response::IntoResponse,
 };
 use serde::Serialize;
 
-use crate::configuration::PrePluginConfig;
 use hasura_authn_core::Session;
 use lang_graphql::{ast::common as ast, http::RawRequest};
-use thiserror::Error;
+use open_dds::plugins::LifecyclePluginHookPreParse;
 use tracing_util::{
     set_attribute_on_active_span, ErrorVisibility, SpanVisibility, Traceable, TraceableError,
 };
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Error while making the HTTP request to the pre-execution plugin {0} - {1}")]
+    #[error("Error while making the HTTP request to the pre-parse plugin {0} - {1}")]
     ErrorWhileMakingHTTPRequestToTheHook(String, reqwest::Error),
+    #[error("Error while building the request for the pre-parse plugin {0} - {1}")]
+    BuildRequestError(String, String),
     #[error("Reqwest error: {0}")]
     ReqwestError(reqwest::Error),
     #[error("Unexpected status code: {0}")]
@@ -45,16 +46,14 @@ impl IntoResponse for Error {
 
 #[derive(Debug, Clone)]
 pub enum ErrorResponse {
-    UserError(Vec<u8>),
-    InternalError(Option<Vec<u8>>),
+    UserError(serde_json::Value),
+    InternalError(Option<serde_json::Value>),
 }
 
 impl std::fmt::Display for ErrorResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let message = match self {
             ErrorResponse::UserError(error) | ErrorResponse::InternalError(Some(error)) => {
-                let error = serde_json::from_slice::<serde_json::Value>(error)
-                    .map_err(|_| std::fmt::Error)?;
                 error.to_string()
             }
             ErrorResponse::InternalError(None) => String::new(),
@@ -107,17 +106,36 @@ pub struct PreExecutePluginRequestBody {
 
 fn build_request(
     http_client: &reqwest::Client,
-    config: &PrePluginConfig,
+    config: &LifecyclePluginHookPreParse,
     client_headers: &HeaderMap,
     session: &Session,
     raw_request: &RawRequest,
-) -> reqwest::RequestBuilder {
+) -> Result<reqwest::RequestBuilder, String> {
     let mut pre_plugin_headers = tracing_util::get_trace_headers();
-    if config.request.headers {
-        pre_plugin_headers.extend(client_headers.clone());
+    if let Some(header_config) = config.config.request.headers.as_ref() {
+        let mut headers = HeaderMap::new();
+        if let Some(additional_headers) = &header_config.additional {
+            for (key, value) in &additional_headers.0 {
+                let header_name =
+                    HeaderName::from_str(key).map_err(|_| format!("Invalid header name {key}"))?;
+                let header_value = value
+                    .value
+                    .parse()
+                    .map_err(|_| format!("Invalid value for the header {key}"))?;
+                headers.insert(header_name, header_value);
+            }
+        }
+        for header in &header_config.forward {
+            if let Some(header_value) = client_headers.get(header) {
+                let header_name = HeaderName::from_str(header)
+                    .map_err(|_| format!("Invalid header name {header}"))?;
+                headers.insert(header_name, header_value.clone());
+            }
+        }
+        pre_plugin_headers.extend(headers);
     }
     let mut request_builder = http_client
-        .post(config.url.clone())
+        .post(config.url.value.clone())
         .headers(pre_plugin_headers);
     let mut request_body = PreExecutePluginRequestBody {
         session: None,
@@ -127,25 +145,25 @@ fn build_request(
             operation_name: raw_request.operation_name.clone(),
         },
     };
-    if config.request.session {
+    if config.config.request.session.is_some() {
         request_body.session = Some(session.clone());
     };
-    if config.request.raw_request.query {
+    if config.config.request.raw_request.query.is_some() {
         request_body.raw_request.query = Some(raw_request.query.clone());
     };
-    if config.request.raw_request.variables {
+    if config.config.request.raw_request.variables.is_some() {
         request_body
             .raw_request
             .variables
             .clone_from(&raw_request.variables);
     };
     request_builder = request_builder.json(&request_body);
-    request_builder
+    Ok(request_builder)
 }
 
 pub async fn execute_plugin(
     http_client: &reqwest::Client,
-    config: &PrePluginConfig,
+    config: &LifecyclePluginHookPreParse,
     client_headers: &HeaderMap,
     session: &Session,
     raw_request: &RawRequest,
@@ -159,7 +177,8 @@ pub async fn execute_plugin(
             || {
                 Box::pin(async {
                     let http_request_builder =
-                        build_request(http_client, config, client_headers, session, raw_request);
+                        build_request(http_client, config, client_headers, session, raw_request)
+                            .map_err(|err| Error::BuildRequestError(config.name.clone(), err))?;
                     let req = http_request_builder.build().map_err(Error::ReqwestError)?;
                     http_client.execute(req).await.map_err(|e| {
                         Error::ErrorWhileMakingHTTPRequestToTheHook(config.name.clone(), e)
@@ -175,16 +194,17 @@ pub async fn execute_plugin(
             Ok(PreExecutePluginResponse::Return(body.to_vec()))
         }
         StatusCode::INTERNAL_SERVER_ERROR => {
-            let body = response.bytes().await.map_err(Error::ReqwestError)?;
+            let body = response.json().await.map_err(Error::ReqwestError)?;
 
             Ok(PreExecutePluginResponse::ReturnError(
-                ErrorResponse::InternalError(Some(body.to_vec())),
+                ErrorResponse::InternalError(Some(body)),
             ))
         }
         StatusCode::BAD_REQUEST => {
-            let body = response.bytes().await.map_err(Error::ReqwestError)?;
+            let response_json: serde_json::Value =
+                response.json().await.map_err(Error::ReqwestError)?;
             Ok(PreExecutePluginResponse::ReturnError(
-                ErrorResponse::UserError(body.to_vec()),
+                ErrorResponse::UserError(response_json),
             ))
         }
         _ => Err(Error::UnexpectedStatusCode(response.status().as_u16())),
@@ -192,7 +212,7 @@ pub async fn execute_plugin(
 }
 
 pub async fn pre_execution_plugins_handler<'a, B>(
-    pre_execution_plugins_config: &Vec<PrePluginConfig>,
+    pre_execution_plugins_config: &nonempty::NonEmpty<LifecyclePluginHookPreParse>,
     http_client: &reqwest::Client,
     session: Session,
     request: Request<B>,
@@ -219,7 +239,7 @@ where
             .in_span_async(
                 "pre_execution_plugin_middleware",
                 "Pre-execution Plugin middleware",
-                SpanVisibility::Internal,
+                SpanVisibility::User,
                 || {
                     Box::pin(async {
                         set_attribute_on_active_span(
@@ -239,10 +259,8 @@ where
                             ErrorResponse::InternalError(error_value),
                         )) = &plugin_response
                         {
-                            let error_value = serde_json::from_slice::<serde_json::Value>(
-                                error_value.as_ref().unwrap_or(&vec![]),
-                            )
-                            .map_err(Error::PluginResponseParseError)?;
+                            let error_value =
+                                error_value.as_ref().unwrap_or(&serde_json::Value::Null);
                             set_attribute_on_active_span(
                                 tracing_util::AttributeVisibility::Default,
                                 "plugin.internal_error",
@@ -253,9 +271,6 @@ where
                             ErrorResponse::UserError(error_value),
                         )) = &plugin_response
                         {
-                            let error_value =
-                                serde_json::from_slice::<serde_json::Value>(error_value)
-                                    .map_err(Error::PluginResponseParseError)?;
                             set_attribute_on_active_span(
                                 tracing_util::AttributeVisibility::Default,
                                 "plugin.user_error",
@@ -274,8 +289,6 @@ where
             }
             PreExecutePluginResponse::Continue => (),
             PreExecutePluginResponse::ReturnError(ErrorResponse::UserError(error_value)) => {
-                let error_value = serde_json::from_slice::<serde_json::Value>(&error_value)
-                    .map_err(Error::PluginResponseParseError)?;
                 let user_error_response =
                     lang_graphql::http::Response::error_message_with_status_and_details(
                         reqwest::StatusCode::BAD_REQUEST,

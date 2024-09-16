@@ -2,7 +2,7 @@ use hasura_authn_core::Role;
 use serde::{Deserialize, Serialize};
 
 use crate::stages::commands;
-use crate::types::permission::ValueExpression;
+use crate::types::permission::ValueExpressionOrPredicate;
 use crate::types::subgraph::QualifiedTypeReference;
 use open_dds::arguments::ArgumentName;
 
@@ -17,5 +17,6 @@ pub struct CommandWithPermissions {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct CommandPermission {
     pub allow_execution: bool,
-    pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
+    pub argument_presets:
+        BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>,
 }

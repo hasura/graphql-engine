@@ -27,6 +27,8 @@ import Data.Text.Extended
 import Data.Text.Extended qualified as T
 import Database.MSSQL.Transaction qualified as Tx
 import Database.ODBC.SQLServer qualified as ODBC
+import Hasura.Authentication.Session (SessionVariables, filterSessionVariables, getSessionVariables)
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.Delete
 import Hasura.Backends.MSSQL.Execute.Insert
@@ -56,7 +58,6 @@ import Hasura.RQL.Types.Common as RQLTypes
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (HeaderPrecedence, TraceQueryStatus)
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client as HTTP
 import Network.HTTP.Types qualified as HTTP
@@ -68,7 +69,10 @@ instance BackendExecute 'MSSQL where
 
   mkDBQueryPlan = msDBQueryPlan
   mkDBMutationPlan = msDBMutationPlan
-  mkLiveQuerySubscriptionPlan = msDBLiveQuerySubscriptionPlan
+
+  -- TODO: MSSQL currently does not recognise the
+  -- RemoveEmptySubscriptionResponses flag.
+  mkLiveQuerySubscriptionPlan _ = msDBLiveQuerySubscriptionPlan
   mkDBStreamingSubscriptionPlan _ _ _ _ _ _ = throw500 "Streaming subscriptions are not supported for MS-SQL sources yet"
   mkDBQueryExplain = msDBQueryExplain
   mkSubscriptionExplain = msDBSubscriptionExplain

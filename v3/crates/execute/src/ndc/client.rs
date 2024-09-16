@@ -12,7 +12,7 @@ use super::{
 };
 
 /// Error type for the NDC API client interactions
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(
         "request to connector failed with status code {}: {0}",

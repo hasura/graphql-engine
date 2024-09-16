@@ -28,9 +28,6 @@ To start the reference agent only, you can do:
 docker compose up reference_agent
 ```
 
-and point the host name `reference_agent` to localhost in your `/etc/hosts`
-file.
-
 ## Run v3-engine (with reference agent)
 
 ### Building locally using `cargo`
@@ -49,7 +46,7 @@ and the new V3 concepts.
 ```sh
 RUST_LOG=DEBUG cargo run --release --bin engine -- \
   --metadata-path crates/open-dds/examples/reference.json \
- --authn-config-path auth_config.json
+ --authn-config-path static/auth/auth_config.json
 ```
 
 A dev webhook implementation is provided in `crates/auth/dev-auth-webhook`, that
@@ -84,7 +81,7 @@ You can also start v3-engine, along with a Postgres data connector and Jaeger
 for tracing using Docker:
 
 ```sh
-METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=auth_config.json docker compose up
+METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=static/auth/auth_config.json docker compose up
 ```
 
 Open <http://localhost:3001> for GraphiQL, or <http://localhost:4002> to view
@@ -223,12 +220,8 @@ v3-engine run with the chinook database as a data connector.
 To get this running, you can run the following command:
 
 ```bash
-METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=auth_config.json docker compose up postgres_connector engine
+METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=static/auth/auth_config.json docker compose up postgres_connector engine
 ```
-
-If you are running the v3-engine locally through cargo, then you'll need to
-update the value of the `singleUrl` present in
-`crates/engine/tests/chinook/schema.json** from `"http://postgres_connector:8080"`to`"http://localhost:8100"`.
 
 ### Running tests with a single command
 
@@ -244,7 +237,7 @@ There are some tests where we compare the output of the test against an expected
 golden file. If you make some changes which expectedly change the goldenfile,
 you can regenerate them like this:
 
-Locally (with postgres_connector pointing to localhost)
+Locally
 
 ```sh
   UPDATE_GOLDENFILES=1 cargo test
@@ -254,21 +247,6 @@ Docker:
 
 ```sh
   just update-golden-files
-```
-
-### Running coverage report
-
-We can check for coverage of unit tests by running:
-
-```sh
-just coverage
-```
-
-You can also give a filter expression (which is passed to `grep -E`) to give
-coverage only for matched files:
-
-```sh
-just coverage "open-dds|engine"
 ```
 
 ## Run benchmarks
@@ -282,10 +260,4 @@ To run benchmarks for the lexer, parser and validation:
 cargo bench -p lang-graphql "lexer"
 cargo bench -p lang-graphql "parser"
 cargo bench -p lang-graphql "validation/.*"
-```
-
-Alternatively, the benchmarks can be run in the same Docker image as CI:
-
-```sh
-just ci-bench
 ```

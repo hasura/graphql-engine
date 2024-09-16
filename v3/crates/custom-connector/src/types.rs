@@ -38,14 +38,20 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
                         },
                     ),
                 ]),
-                comparison_operators: BTreeMap::from_iter([(
-                    "like".into(),
-                    ndc_models::ComparisonOperatorDefinition::Custom {
-                        argument_type: ndc_models::Type::Named {
-                            name: "String".into(),
+                comparison_operators: BTreeMap::from_iter([
+                    (
+                        "like".into(),
+                        ndc_models::ComparisonOperatorDefinition::Custom {
+                            argument_type: ndc_models::Type::Named {
+                                name: "String".into(),
+                            },
                         },
-                    },
-                )]),
+                    ),
+                    (
+                        "_eq".into(),
+                        ndc_models::ComparisonOperatorDefinition::Equal,
+                    ),
+                ]),
             },
         ),
         (
@@ -74,7 +80,10 @@ pub(crate) fn scalar_types() -> BTreeMap<ndc_models::ScalarTypeName, ndc_models:
                         },
                     ),
                 ]),
-                comparison_operators: BTreeMap::from_iter([]),
+                comparison_operators: BTreeMap::from_iter([(
+                    "_eq".into(),
+                    ndc_models::ComparisonOperatorDefinition::Equal,
+                )]),
             },
         ),
         (

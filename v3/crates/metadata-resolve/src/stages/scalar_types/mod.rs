@@ -1,10 +1,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use lang_graphql::ast::common as ast;
-
 use crate::helpers::types::{mk_name, store_new_graphql_type};
+use crate::stages::object_types;
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
+use lang_graphql::ast::common as ast;
 
 pub mod types;
 pub use types::{ScalarTypeRepresentation, ScalarTypesOutput};
@@ -12,10 +12,9 @@ pub use types::{ScalarTypeRepresentation, ScalarTypesOutput};
 /// resolve scalar types
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    existing_graphql_types: &BTreeSet<ast::TypeName>,
+    mut graphql_types: BTreeSet<ast::TypeName>,
 ) -> Result<ScalarTypesOutput, Error> {
     let mut scalar_types = BTreeMap::new();
-    let mut graphql_types = existing_graphql_types.clone();
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -29,8 +28,7 @@ pub fn resolve(
                 .map(Some),
         }?;
 
-        let qualified_scalar_type_name =
-            Qualified::new(subgraph.to_string(), scalar_type.name.clone());
+        let qualified_scalar_type_name = Qualified::new(subgraph.clone(), scalar_type.name.clone());
 
         if scalar_types
             .insert(
@@ -42,9 +40,11 @@ pub fn resolve(
             )
             .is_some()
         {
-            return Err(Error::DuplicateTypeDefinition {
-                name: qualified_scalar_type_name,
-            });
+            return Err(Error::from(
+                object_types::ObjectTypesError::DuplicateTypeDefinition {
+                    name: qualified_scalar_type_name,
+                },
+            ));
         }
         store_new_graphql_type(&mut graphql_types, graphql_type_name.as_ref())?;
     }

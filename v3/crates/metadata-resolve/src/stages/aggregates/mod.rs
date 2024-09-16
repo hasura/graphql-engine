@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use lang_graphql::ast::common as ast;
 use open_dds::aggregates::{AggregateExpressionName, AggregationFunctionName};
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
+use open_dds::identifier::SubgraphName;
 use open_dds::types::{CustomTypeName, TypeName};
 
 use crate::helpers::types::{store_new_graphql_type, unwrap_qualified_type_name};
@@ -12,9 +13,7 @@ use crate::stages::{
     type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference};
-use crate::{
-    mk_name, Error, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
-};
+use crate::{mk_name, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 
 mod types;
 pub use types::*;
@@ -28,13 +27,14 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     mut existing_graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<AggregateExpressionsOutput, Error> {
+) -> Result<AggregateExpressionsOutput, AggregateExpressionError> {
     let mut resolved_aggregate_expressions =
         BTreeMap::<Qualified<AggregateExpressionName>, AggregateExpression>::new();
+    let mut issues = vec![];
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -42,7 +42,7 @@ pub fn resolve(
     } in &metadata_accessor.aggregate_expressions
     {
         let aggregate_expression_name =
-            Qualified::new(subgraph.to_string(), aggregate_expression.name.clone());
+            Qualified::new(subgraph.clone(), aggregate_expression.name.clone());
 
         // Have we seen this aggregate expression name before?
         // Check this before checking anything else, so we can fail fast
@@ -50,8 +50,7 @@ pub fn resolve(
             return Err(
                 AggregateExpressionError::DuplicateAggregateExpressionDefinition {
                     name: aggregate_expression_name,
-                }
-                .into(),
+                },
             );
         }
 
@@ -65,6 +64,7 @@ pub fn resolve(
             graphql_config,
             &aggregate_expression_name,
             aggregate_expression,
+            &mut issues,
         )?;
 
         resolved_aggregate_expressions
@@ -74,6 +74,7 @@ pub fn resolve(
     Ok(AggregateExpressionsOutput {
         aggregate_expressions: resolved_aggregate_expressions,
         graphql_types: existing_graphql_types,
+        issues,
     })
 }
 
@@ -84,13 +85,14 @@ fn resolve_aggregate_expression(
         Qualified<DataConnectorName>,
         ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     aggregate_expression: &open_dds::aggregates::AggregateExpressionV1,
-) -> Result<AggregateExpression, Error> {
+    issues: &mut Vec<AggregateExpressionIssue>,
+) -> Result<AggregateExpression, AggregateExpressionError> {
     let operand = match &aggregate_expression.operand {
         open_dds::aggregates::AggregateOperand::Object(object_operand) => resolve_object_operand(
             metadata_accessor,
@@ -114,6 +116,7 @@ fn resolve_aggregate_expression(
         aggregate_expression_name,
         &operand,
         &aggregate_expression.graphql,
+        issues,
     )?;
 
     Ok(AggregateExpression {
@@ -128,37 +131,32 @@ fn resolve_aggregate_expression(
 
 fn resolve_object_operand(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     object_operand: &open_dds::aggregates::ObjectAggregateOperand,
-) -> Result<AggregateOperand, Error> {
+) -> Result<AggregateOperand, AggregateExpressionError> {
     let operand_object_type_name = qualify(
         &object_operand.aggregated_type,
         &aggregate_expression_name.subgraph,
     );
 
     // Does the operand object type exist?
-    let operand_object_type =
-        object_types
-            .get(&operand_object_type_name)
-            .ok_or_else(|| -> Error {
-                AggregateExpressionError::AggregateOperandObjectTypeNotFound {
-                    name: aggregate_expression_name.clone(),
-                    type_name: operand_object_type_name.clone(),
-                }
-                .into()
-            })?;
+    let operand_object_type = object_types.get(&operand_object_type_name).map_err(|_| {
+        AggregateExpressionError::AggregateOperandObjectTypeNotFound {
+            name: aggregate_expression_name.clone(),
+            type_name: operand_object_type_name.clone(),
+        }
+    })?;
 
     // Check that no fields have been duplicated
     check_for_duplicates(&object_operand.aggregatable_fields, |agg_field_def| {
         &agg_field_def.field_name
     })
-    .map_err(|agg_field_def| -> Error {
+    .map_err(|agg_field_def| {
         AggregateExpressionError::AggregateOperandObjectFieldDuplicated {
             name: aggregate_expression_name.clone(),
             field_name: agg_field_def.field_name.clone(),
         }
-        .into()
     })?;
 
     let aggregatable_fields = object_operand
@@ -173,7 +171,7 @@ fn resolve_object_operand(
                 metadata_accessor,
             )
         })
-        .collect::<Result<Vec<_>, Error>>()?;
+        .collect::<Result<Vec<_>, AggregateExpressionError>>()?;
 
     Ok(AggregateOperand {
         aggregated_type: QualifiedTypeName::Custom(operand_object_type_name),
@@ -188,30 +186,39 @@ fn resolve_aggregatable_field(
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     operand_object_type_name: &Qualified<CustomTypeName>,
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-) -> Result<AggregatableFieldInfo, Error> {
+) -> Result<AggregatableFieldInfo, AggregateExpressionError> {
     // Does the field exist in the operand object type?
     let field_def = operand_object_type
         .object_type
         .fields
         .get(&aggregate_field_def.field_name)
-        .ok_or_else(|| -> Error {
-            AggregateExpressionError::AggregateOperandObjectFieldNotFound {
+        .ok_or_else(
+            || AggregateExpressionError::AggregateOperandObjectFieldNotFound {
                 name: aggregate_expression_name.clone(),
                 operand_type: operand_object_type_name.clone(),
                 field_name: aggregate_field_def.field_name.clone(),
-            }
-            .into()
-        })?;
+            },
+        )?;
+
+    // If the field has arguments, then we don't support aggregating over it
+    if !field_def.field_arguments.is_empty() {
+        return Err(
+            AggregateExpressionError::AggregateOperandObjectFieldHasArguments {
+                name: aggregate_expression_name.clone(),
+                operand_type: operand_object_type_name.clone(),
+                field_name: aggregate_field_def.field_name.clone(),
+            },
+        );
+    }
 
     // Get the underlying type of the field (ie. ignore nullability and unwrap one level of array)
     let field_agg_type_name =
-        get_underlying_aggregatable_type(&field_def.field_type).ok_or_else(|| -> Error {
+        get_underlying_aggregatable_type(&field_def.field_type).ok_or_else(|| {
             AggregateExpressionError::MultipleNestedArrayAggregationNotSupported {
                 name: aggregate_expression_name.clone(),
                 field_name: aggregate_field_def.field_name.clone(),
                 field_type: field_def.field_type.clone(),
             }
-            .into()
         })?;
 
     let field_aggregate_expression_name = Qualified::new(
@@ -224,17 +231,16 @@ fn resolve_aggregatable_field(
         .aggregate_expressions
         .iter()
         .find(|agg_exp| {
-            agg_exp.subgraph.as_str() == aggregate_expression_name.subgraph.as_str()
+            agg_exp.subgraph == aggregate_expression_name.subgraph
                 && agg_exp.object.name == aggregate_field_def.aggregate_expression
         })
         .map(|agg_exp| &agg_exp.object)
-        .ok_or_else(|| -> Error {
+        .ok_or_else(|| {
             AggregateExpressionError::AggregateOperandObjectFieldAggregateExpressionNotFound {
                 name: aggregate_expression_name.clone(),
                 field_name: aggregate_field_def.field_name.clone(),
                 field_aggregate_expression: field_aggregate_expression_name.clone(),
             }
-            .into()
         })?;
 
     // Get the operand type of the field's referenced aggregate expression
@@ -261,8 +267,7 @@ fn resolve_aggregatable_field(
                 field_type: field_def.field_type.clone(),
                 field_aggregate_exp_name: field_aggregate_expression_name,
                 field_aggregate_exp_operand_type: field_aggregate_expression_operand_type_name,
-            }
-            .into(),
+            },
         );
     }
 
@@ -279,11 +284,11 @@ fn resolve_scalar_operand(
         Qualified<DataConnectorName>,
         ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     scalar_operand: &open_dds::aggregates::ScalarAggregateOperand,
-) -> Result<AggregateOperand, Error> {
+) -> Result<AggregateOperand, AggregateExpressionError> {
     // If a custom scalar type has been specified, check that it exists
     match &scalar_operand.aggregated_type {
         TypeName::Inbuilt(_) => (),
@@ -295,8 +300,7 @@ fn resolve_scalar_operand(
                     AggregateExpressionError::AggregateOperandScalarTypeNotFound {
                         name: aggregate_expression_name.clone(),
                         type_name: qualified_custom_scalar_name,
-                    }
-                    .into(),
+                    },
                 );
             }
         }
@@ -311,13 +315,12 @@ fn resolve_scalar_operand(
     check_for_duplicates(&scalar_operand.aggregation_functions, |agg_fn_def| {
         &agg_fn_def.name
     })
-    .map_err(|agg_fn_def| -> Error {
-        AggregateExpressionError::AggregateOperandFunctionDuplicated {
+    .map_err(
+        |agg_fn_def| AggregateExpressionError::AggregateOperandFunctionDuplicated {
             name: aggregate_expression_name.clone(),
             function_name: agg_fn_def.name.clone(),
-        }
-        .into()
-    })?;
+        },
+    )?;
 
     // Resolve the aggregation functions
     let aggregation_functions = scalar_operand
@@ -334,7 +337,7 @@ fn resolve_scalar_operand(
                 data_connector_scalars,
             )
         })
-        .collect::<Result<Vec<_>, Error>>()?;
+        .collect::<Result<Vec<_>, AggregateExpressionError>>()?;
 
     // Check that none of the data connector mappings references an aggregation function that does not exist
 
@@ -349,14 +352,14 @@ fn resolve_aggregation_function(
     aggregation_function_def: &open_dds::aggregates::AggregationFunctionDefinition,
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_operand: &open_dds::aggregates::ScalarAggregateOperand,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         ScalarTypeWithRepresentationInfoMap,
     >,
-) -> Result<AggregationFunctionInfo, Error> {
+) -> Result<AggregationFunctionInfo, AggregateExpressionError> {
     let return_type = mk_qualified_type_reference(
         &aggregation_function_def.return_type,
         &aggregate_expression_name.subgraph,
@@ -373,8 +376,7 @@ fn resolve_aggregation_function(
                     name: aggregate_expression_name.clone(),
                     function_name: aggregation_function_def.name.clone(),
                     type_name: custom_type_name.name.clone(),
-                }
-                .into(),
+                },
             );
         }
     }
@@ -387,58 +389,53 @@ fn resolve_aggregation_function(
             // Check if the data connector exists
             let data_connector_name = qualify(&data_connector_fn_mappings.data_connector_name, &aggregate_expression_name.subgraph);
             let scalars = data_connector_scalars.get(&data_connector_name)
-                .ok_or_else(|| -> Error {
+                .ok_or_else(||
                     AggregateExpressionError::AggregateOperandDataConnectorMissing {
                         name: aggregate_expression_name.clone(),
                         data_connector_name: data_connector_name.clone(),
-                    }.into()
                 })?;
 
             // Check if the data connector supports aggregations
             let data_connector = data_connectors.0.get(&data_connector_name)
-                .ok_or_else(|| -> Error {
+                .ok_or_else(||
                     AggregateExpressionError::AggregateOperandDataConnectorMissing {
                         name: aggregate_expression_name.clone(),
                         data_connector_name: data_connector_name.clone(),
-                    }.into()
                 })?;
             if data_connector.capabilities.query.aggregates.is_none() {
                 return Err(AggregateExpressionError::AggregateOperandDataConnectorNotSupported {
                     name: aggregate_expression_name.clone(),
                     data_connector_name: data_connector_name.clone(),
-                }.into())
+                })
             }
 
             // Make sure there is a mapping for this aggregation function
             let fn_mapping = data_connector_fn_mappings.function_mapping.get(&aggregation_function_def.name)
-                .ok_or_else(|| -> Error {
+                .ok_or_else(||
                     AggregateExpressionError::AggregateOperandDataConnectorFunctionMappingMissing {
                         name: aggregate_expression_name.clone(),
                         function_name: aggregation_function_def.name.clone(),
                         data_connector_name: data_connector_name.clone(),
-                    }.into()
                 })?;
 
             // Check that the data connector operand scalar type actually exists on the data connector
             let data_connector_scalar_type = scalars.0.get(&data_connector_fn_mappings.data_connector_scalar_type)
-                .ok_or_else(|| -> Error {
+                .ok_or_else(||
                     AggregateExpressionError::AggregateOperandDataConnectorFunctionUnknownScalarType {
                         name: aggregate_expression_name.clone(),
                         function_name: aggregation_function_def.name.clone(),
                         data_connector_name: data_connector_name.clone(),
                         scalar_type: data_connector_fn_mappings.data_connector_scalar_type.clone(),
-                    }.into()
                 })?;
 
             // Check that the mapped data connector aggregate function actually exists
-            let data_connector_fn = data_connector_scalar_type.aggregate_functions.get(fn_mapping.name.0.as_str())
-                .ok_or_else(|| -> Error {
+            let data_connector_fn = data_connector_scalar_type.aggregate_functions.get(fn_mapping.name.as_str())
+                .ok_or_else(||
                     AggregateExpressionError::AggregateOperandDataConnectorFunctionNotFound {
                         name: aggregate_expression_name.clone(),
                         function_name: aggregation_function_def.name.clone(),
                         data_connector_name: data_connector_name.clone(),
-                        data_connector_aggregate_function_name: fn_mapping.name.0.clone(),
-                    }.into()
+                        data_connector_aggregate_function_name: fn_mapping.name.clone(),
                 })?;
 
             check_aggregation_function_return_type(
@@ -459,7 +456,7 @@ fn resolve_aggregation_function(
             };
             Ok(function_info)
         })
-        .collect::<Result<Vec<DataConnectorAggregationFunctionInfo>, Error>>()?;
+        .collect::<Result<Vec<DataConnectorAggregationFunctionInfo>, AggregateExpressionError>>()?;
 
     Ok(AggregationFunctionInfo {
         name: aggregation_function_def.name.clone(),
@@ -477,9 +474,9 @@ fn check_aggregation_function_return_type(
     data_connector_name: &Qualified<DataConnectorName>,
     data_connector_scalars: &ScalarTypeWithRepresentationInfoMap,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-) -> Result<(), Error> {
-    let mk_error = |reason: &str| -> Error {
+    object_types: &type_permissions::ObjectTypesWithPermissions,
+) -> Result<(), AggregateExpressionError> {
+    let mk_error = |reason: &str| {
         AggregateExpressionError::AggregateOperandDataConnectorFunctionReturnTypeIncompatible {
             name: aggregate_expression_name.clone(),
             function_name: aggregation_function_name.clone(),
@@ -487,7 +484,6 @@ fn check_aggregation_function_return_type(
             data_connector_name: data_connector_name.clone(),
             reason: reason.to_owned(),
         }
-        .into()
     };
 
     // Unwrap and check all nullablity and array types
@@ -499,7 +495,7 @@ fn check_aggregation_function_return_type(
         data_connector_name,
     )?;
 
-    let validate_scalar_representation = || -> Result<(), Error> {
+    let validate_scalar_representation = || -> Result<(), AggregateExpressionError> {
         let type_name = data_connector_scalars.0.get(ndc_named_return_type.as_str())
             .ok_or_else(||
                 mk_error(format!("The data connector's return type ({ndc_named_return_type}) isn't a scalar type").as_str())
@@ -527,7 +523,7 @@ fn check_aggregation_function_return_type(
             }
             // If the Open DD type is an object type, check that there is a mapping from that object type to the NDC object type
             else {
-                let return_object_type = object_types.get(custom_type_name).ok_or_else(|| {
+                let return_object_type = object_types.get(custom_type_name).map_err(|_| {
                     mk_error("The Open DD return type is not a scalar type or an object type")
                 })?;
                 let ndc_object_type_name =
@@ -549,8 +545,8 @@ fn unwrap_aggregation_function_return_type<'a>(
     aggregate_expression_name: &'a Qualified<AggregateExpressionName>,
     aggregation_function_name: &'a AggregationFunctionName,
     data_connector_name: &'a Qualified<DataConnectorName>,
-) -> Result<(&'a QualifiedTypeName, &'a ndc_models::TypeName), Error> {
-    let mk_error = |reason: &str| -> Error {
+) -> Result<(&'a QualifiedTypeName, &'a ndc_models::TypeName), AggregateExpressionError> {
+    let mk_error = |reason: &str| {
         AggregateExpressionError::AggregateOperandDataConnectorFunctionReturnTypeIncompatible {
             name: aggregate_expression_name.clone(),
             function_name: aggregation_function_name.clone(),
@@ -558,7 +554,6 @@ fn unwrap_aggregation_function_return_type<'a>(
             data_connector_name: data_connector_name.clone(),
             reason: reason.to_owned(),
         }
-        .into()
     };
 
     // Check that the Open DD type is nullable if the NDC return type is nullable
@@ -636,29 +631,39 @@ fn resolve_aggregate_expression_graphql_config(
     aggregate_expression_graphql_definition: &Option<
         open_dds::aggregates::AggregateExpressionGraphQlDefinition,
     >,
-) -> Result<Option<AggregateExpressionGraphqlConfig>, Error> {
+    issues: &mut Vec<AggregateExpressionIssue>,
+) -> Result<Option<AggregateExpressionGraphqlConfig>, AggregateExpressionError> {
     let select_type_name = aggregate_expression_graphql_definition
         .as_ref()
         .map(|def| mk_name(def.select_type_name.as_ref()).map(ast::TypeName))
-        .transpose()?;
+        .transpose()
+        .map_err(
+            |graphql_config_error| AggregateExpressionError::GraphqlConfigError {
+                aggregate_expression_name: aggregate_expression_name.clone(),
+                graphql_config_error,
+            },
+        )?;
 
-    store_new_graphql_type(existing_graphql_types, select_type_name.as_ref())?;
+    store_new_graphql_type(existing_graphql_types, select_type_name.as_ref()).map_err(
+        |graphql_config_error| AggregateExpressionError::GraphqlConfigError {
+            aggregate_expression_name: aggregate_expression_name.clone(),
+            graphql_config_error,
+        },
+    )?;
 
-    let graphql_config = select_type_name
-        .map(|select_type_name| -> Result<_, Error> {
-            // Check that the aggregate config is configured in graphql config
-            let aggregate_config = graphql_config
-                .query
-                .aggregate_config
-                .as_ref()
-                .ok_or_else::<Error, _>(|| {
-                    AggregateExpressionError::ConfigMissingFromGraphQlConfig {
-                        name: aggregate_expression_name.clone(),
-                        config_name: "query.aggregate".to_string(),
-                    }
-                    .into()
-                })?;
-
+    let graphql_config = match (select_type_name, &graphql_config.query.aggregate_config) {
+        (None, _) => None,
+        (Some(_select_type_name), None) => {
+            // If the a select type name has been configured, but global aggregate config
+            // is missing from GraphqlConfig, raise a warning since this is likely a user
+            // misconfiguration issue.
+            issues.push(AggregateExpressionIssue::ConfigMissingFromGraphQlConfig {
+                name: aggregate_expression_name.clone(),
+                config_name: "query.aggregate".to_string(),
+            });
+            None
+        }
+        (Some(select_type_name), Some(aggregate_config)) => {
             // Check that no aggregatable field conflicts with the _count field
             if let Some(field) = aggregate_operand.aggregatable_fields.iter().find(|field| {
                 field.field_name.as_str() == aggregate_config.count_field_name.as_str()
@@ -667,8 +672,7 @@ fn resolve_aggregate_expression_graphql_config(
                     name: aggregate_expression_name.clone(),
                     config_name: "query.aggregate.countFieldName".to_string(),
                     aggregatable_field_name: field.field_name.clone(),
-                }
-                .into());
+                });
             }
 
             // Check that no aggregation function conflicts with the _count field
@@ -677,15 +681,14 @@ fn resolve_aggregate_expression_graphql_config(
                     .aggregation_functions
                     .iter()
                     .find(|function| {
-                        function.name.0.as_str() == aggregate_config.count_field_name.as_str()
+                        function.name.as_str() == aggregate_config.count_field_name.as_str()
                     })
             {
                 return Err(AggregateExpressionError::AggregationFunctionNameConflict {
                     name: aggregate_expression_name.clone(),
                     config_name: "query.aggregate.countFieldName".to_string(),
                     function_name: function.name.clone(),
-                }
-                .into());
+                });
             }
 
             // Check that no aggregatable field conflicts with the _count_distinct field
@@ -696,8 +699,7 @@ fn resolve_aggregate_expression_graphql_config(
                     name: aggregate_expression_name.clone(),
                     config_name: "query.aggregate.countDistinctFieldName".to_string(),
                     aggregatable_field_name: field.field_name.clone(),
-                }
-                .into());
+                });
             }
 
             // Check that no aggregation function conflicts with the _count_distinct field
@@ -706,7 +708,7 @@ fn resolve_aggregate_expression_graphql_config(
                     .aggregation_functions
                     .iter()
                     .find(|function| {
-                        function.name.0.as_str()
+                        function.name.as_str()
                             == aggregate_config.count_distinct_field_name.as_str()
                     })
             {
@@ -714,17 +716,16 @@ fn resolve_aggregate_expression_graphql_config(
                     name: aggregate_expression_name.clone(),
                     config_name: "query.aggregate.countDistinctFieldName".to_string(),
                     function_name: function.name.clone(),
-                }
-                .into());
+                });
             }
 
-            Ok(AggregateExpressionGraphqlConfig {
+            Some(AggregateExpressionGraphqlConfig {
                 select_output_type_name: select_type_name,
                 count_field_name: aggregate_config.count_field_name.clone(),
                 count_distinct_field_name: aggregate_config.count_distinct_field_name.clone(),
             })
-        })
-        .transpose()?;
+        }
+    };
 
     Ok(graphql_config)
 }
@@ -745,6 +746,9 @@ fn resolve_aggregate_count(
     }
 }
 
-fn qualify<T: std::fmt::Display + std::clone::Clone>(item: &T, subgraph: &str) -> Qualified<T> {
-    Qualified::new(subgraph.to_owned(), item.clone())
+fn qualify<T: std::fmt::Display + std::clone::Clone>(
+    item: &T,
+    subgraph: &SubgraphName,
+) -> Qualified<T> {
+    Qualified::new(subgraph.clone(), item.clone())
 }

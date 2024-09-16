@@ -31,12 +31,14 @@ pub(crate) fn get_functions() -> Vec<ndc_models::FunctionInfo> {
         get_actor_by_id::function_info(),
         get_movie_by_id::function_info(),
         get_actors_by_name::function_info(),
-        get_actors_by_movie_id::function_info(),
+        actor_names_by_movie::function_info(),
         get_all_actors::function_info(),
         get_all_movies::function_info(),
+        get_actors_by_movie_id_bounds::function_info(),
+        get_actors_by_bool_exp::function_info(),
+        get_actors_by_movie_id::function_info(),
         get_institutions_by_institution_query::function_info(),
         get_session_details::function_info(),
-        // TODO: Looks like the other functions where never added to the schema?
     ]
 }
 
@@ -46,15 +48,15 @@ pub(crate) fn get_function_by_name(
     state: &AppState,
 ) -> Result<Vec<Row>> {
     match collection_name.as_str() {
-        "latest_actor_id" => latest_actor_id::rows(state),
-        "latest_actor_name" => latest_actor_name::rows(state),
-        "latest_actor" => latest_actor::rows(state),
+        "latest_actor_id" => latest_actor_id::rows(arguments, state),
+        "latest_actor_name" => latest_actor_name::rows(arguments, state),
+        "latest_actor" => latest_actor::rows(arguments, state),
         "get_actor_by_id" => get_actor_by_id::rows(arguments, state),
         "get_movie_by_id" => get_movie_by_id::rows(arguments, state),
         "get_actors_by_name" => get_actors_by_name::rows(arguments, state),
         "actor_names_by_movie" => actor_names_by_movie::rows(arguments, state),
-        "get_all_actors" => get_all_actors::rows(state),
-        "get_all_movies" => get_all_movies::rows(state),
+        "get_all_actors" => get_all_actors::rows(arguments, state),
+        "get_all_movies" => get_all_movies::rows(arguments, state),
         "get_actors_by_movie_id_bounds" => get_actors_by_movie_id_bounds::rows(arguments, state),
         "get_actors_by_bool_exp" => get_actors_by_bool_exp::rows(arguments, state),
         "get_actors_by_movie_id" => get_actors_by_movie_id::rows(arguments, state),

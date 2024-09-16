@@ -29,7 +29,7 @@ pub fn main() {
     let gds = schema::GDS::new_with_default_flags(metadata).unwrap();
     let sch = gds.build_schema().unwrap();
 
-    let dedup_roles: BTreeSet<Role> = gds.metadata.roles.into_iter().collect();
+    let dedup_roles: BTreeSet<&Role> = gds.metadata.roles.iter().collect();
 
     for role in dedup_roles {
         println!("-------------------------------:");

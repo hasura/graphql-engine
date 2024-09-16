@@ -22,6 +22,11 @@ import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
+import Hasura.Authentication.Header (mkSetCookieHeaders)
+import Hasura.Authentication.Headers (commonClientHeadersIgnored)
+import Hasura.Authentication.Role (adminRoleName)
+import Hasura.Authentication.Session (mkClientHeadersForward, sessionVariablesToHeaders)
+import Hasura.Authentication.User (UserInfo, adminUserInfo, _uiSession)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Monad (Parse)
 import Hasura.GraphQL.Parser.Name qualified as GName
@@ -33,13 +38,10 @@ import Hasura.HTTP
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
-import Hasura.Server.Utils
 import Hasura.Services.Network
-import Hasura.Session (UserInfo, adminUserInfo, sessionVariablesToHeaders, _uiSession)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -149,7 +151,7 @@ execRemoteGQ env tracesPropagator userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
   when (G._todType _grQuery == G.OperationTypeSubscription)
     $ throwRemoteSchema "subscription to remote server is not supported"
   confHdrs <- makeHeadersFromConf env hdrConf
-  let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
+  let clientHdrs = bool [] (mkClientHeadersForward commonClientHeadersIgnored reqHdrs) fwdClientHdrs
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
       hdrMaps =

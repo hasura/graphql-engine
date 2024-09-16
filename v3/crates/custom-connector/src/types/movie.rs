@@ -40,7 +40,7 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     description: Some("The movie's genres".into()),
                     r#type: ndc_models::Type::Array {
                         element_type: Box::new(ndc_models::Type::Named {
-                            name: "Movie".into(),
+                            name: "genre".into(),
                         }),
                     },
                     arguments: BTreeMap::new(),

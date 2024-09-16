@@ -1,26 +1,25 @@
-pub mod types;
+mod error;
+mod types;
+pub use error::DataConnectorScalarTypesError;
+use open_dds::identifier::SubgraphName;
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
-    ComparisonOperators, ScalarTypeWithRepresentationInfo, ScalarTypeWithRepresentationInfoMap,
+    ComparisonOperators, DataConnectorWithScalarsOutput, ScalarTypeWithRepresentationInfo,
+    ScalarTypeWithRepresentationInfoMap,
 };
 
 use lang_graphql::ast::common as ast;
 
 use open_dds::types::{CustomTypeName, TypeName};
 
-use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
+use open_dds::data_connector::{
+    DataConnectorName, DataConnectorOperatorName, DataConnectorScalarType,
+};
 
 use crate::helpers::types::mk_name;
-use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
 use crate::stages::{data_connectors, scalar_boolean_expressions, scalar_types};
-
-pub struct DataConnectorWithScalarsOutput<'a> {
-    pub data_connector_scalars:
-        BTreeMap<Qualified<DataConnectorName>, ScalarTypeWithRepresentationInfoMap<'a>>,
-    pub graphql_types: BTreeSet<ast::TypeName>,
-}
 
 /// resolve data connector scalar representations
 /// also use scalar `BooleanExpressionType`s
@@ -28,14 +27,8 @@ pub fn resolve<'a>(
     metadata_accessor: &'a open_dds::accessor::MetadataAccessor,
     data_connectors: &'a data_connectors::DataConnectors,
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    scalar_boolean_expression_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
-    >,
-    existing_graphql_types: &'a BTreeSet<ast::TypeName>,
-) -> Result<DataConnectorWithScalarsOutput<'a>, Error> {
-    let mut graphql_types = existing_graphql_types.clone();
-
+    mut graphql_types: BTreeSet<ast::TypeName>,
+) -> Result<DataConnectorWithScalarsOutput<'a>, DataConnectorScalarTypesError> {
     // we convert data from the old types to the new types and then start mutating everything
     // there is no doubt room for improvement here, but at least we are keeping the mutation
     // contained to this resolving stage
@@ -49,13 +42,13 @@ pub fn resolve<'a>(
         let scalar_type_name = &scalar_type_representation.data_connector_scalar_type;
 
         let qualified_data_connector_name = Qualified::new(
-            subgraph.to_string(),
+            subgraph.clone(),
             scalar_type_representation.data_connector_name.clone(),
         );
 
         let scalars = data_connector_scalars
             .get_mut(&qualified_data_connector_name)
-            .ok_or_else(|| Error::ScalarTypeFromUnknownDataConnector {
+            .ok_or_else(|| scalar_boolean_expressions::ScalarBooleanExpressionTypeError::ScalarTypeFromUnknownDataConnector {
                 scalar_type: scalar_type_name.clone(),
                 data_connector: qualified_data_connector_name.clone(),
             })?;
@@ -63,7 +56,7 @@ pub fn resolve<'a>(
         let scalar_type = scalars
             .0
             .get_mut(&scalar_type_representation.data_connector_scalar_type)
-            .ok_or_else(|| Error::UnknownScalarTypeInDataConnector {
+            .ok_or_else(|| scalar_boolean_expressions::ScalarBooleanExpressionTypeError::UnknownScalarTypeInDataConnector {
                 scalar_type: scalar_type_name.clone(),
                 data_connector: qualified_data_connector_name.clone(),
             })?;
@@ -78,10 +71,12 @@ pub fn resolve<'a>(
 
             scalar_type.representation = Some(scalar_type_representation.representation.clone());
         } else {
-            return Err(Error::DuplicateDataConnectorScalarRepresentation {
-                data_connector: qualified_data_connector_name.clone(),
-                scalar_type: scalar_type_name.clone(),
-            });
+            return Err(
+                DataConnectorScalarTypesError::DuplicateDataConnectorScalarRepresentation {
+                    data_connector: qualified_data_connector_name.clone(),
+                    scalar_type: scalar_type_name.clone(),
+                },
+            );
         }
         scalar_type.comparison_expression_name = match scalar_type_representation.graphql.as_ref() {
             None => Ok(None),
@@ -102,48 +97,6 @@ pub fn resolve<'a>(
         };
     }
 
-    for scalar_boolean_expression in scalar_boolean_expression_types.values() {
-        for (data_connector_name, operator_mapping) in
-            &scalar_boolean_expression.data_connector_operator_mappings
-        {
-            let scalar_type_name = &operator_mapping.data_connector_scalar_type;
-
-            let scalars = data_connector_scalars
-                .get_mut(data_connector_name)
-                .ok_or_else(|| Error::ScalarTypeFromUnknownDataConnector {
-                    scalar_type: scalar_type_name.clone(),
-                    data_connector: data_connector_name.clone(),
-                })?;
-
-            let scalar_type = scalars.0.get_mut(scalar_type_name).ok_or_else(|| {
-                Error::UnknownScalarTypeInDataConnector {
-                    scalar_type: scalar_type_name.clone(),
-                    data_connector: data_connector_name.clone(),
-                }
-            })?;
-
-            validate_type_name(
-                &scalar_boolean_expression.representation,
-                &scalar_boolean_expression.name.subgraph,
-                scalar_types,
-                scalar_type_name,
-            )?;
-
-            // we may have multiple `BooleanExpressionType` for the same type,
-            // we allow it but check their OpenDD types don't conflict
-            if let Some(existing_representation) = &scalar_type.representation {
-                if *existing_representation != scalar_boolean_expression.representation {
-                    return Err(Error::DataConnectorScalarRepresentationMismatch {
-                        data_connector: data_connector_name.clone(),
-                        old_representation: existing_representation.clone(),
-                        new_representation: scalar_boolean_expression.representation.clone(),
-                    });
-                }
-            }
-            scalar_type.representation = Some(scalar_boolean_expression.representation.clone());
-        }
-    }
-
     Ok(DataConnectorWithScalarsOutput {
         data_connector_scalars,
         graphql_types,
@@ -152,16 +105,16 @@ pub fn resolve<'a>(
 
 fn validate_type_name(
     type_name: &TypeName,
-    subgraph: &str,
+    subgraph: &SubgraphName,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     scalar_type_name: &DataConnectorScalarType,
-) -> Result<(), Error> {
+) -> Result<(), DataConnectorScalarTypesError> {
     match type_name {
         TypeName::Inbuilt(_) => {} // TODO: Validate Nullable and Array types in Inbuilt
         TypeName::Custom(type_name) => {
-            let qualified_type_name = Qualified::new(subgraph.to_string(), type_name.to_owned());
+            let qualified_type_name = Qualified::new(subgraph.clone(), type_name.to_owned());
             let _representation = scalar_types.get(&qualified_type_name).ok_or_else(|| {
-                Error::ScalarTypeUnknownRepresentation {
+                DataConnectorScalarTypesError::ScalarTypeUnknownRepresentation {
                     scalar_type: scalar_type_name.clone(),
                     type_name: qualified_type_name,
                 }
@@ -201,21 +154,33 @@ fn convert_data_connectors_contexts<'a>(
     data_connector_scalars
 }
 
-fn get_comparison_operators(scalar_type: &ndc_models::ScalarType) -> ComparisonOperators {
+pub(crate) fn get_comparison_operators(
+    scalar_type: &ndc_models::ScalarType,
+) -> ComparisonOperators {
     let mut comparison_operators = ComparisonOperators::default();
     for (operator_name, operator_definition) in &scalar_type.comparison_operators {
         match operator_definition {
             ndc_models::ComparisonOperatorDefinition::Equal => {
                 comparison_operators
                     .equal_operators
-                    .push(operator_name.clone());
+                    .push(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
             }
             ndc_models::ComparisonOperatorDefinition::In => {
                 comparison_operators
                     .in_operators
-                    .push(operator_name.clone());
+                    .push(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
             }
-            ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {}
+            ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {
+                comparison_operators
+                    .other_operators
+                    .push(DataConnectorOperatorName::new(
+                        operator_name.inner().clone(),
+                    ));
+            }
         };
     }
     comparison_operators

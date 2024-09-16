@@ -11,9 +11,8 @@ use crate::schema::RegisteredTypeName;
 
 use indexmap::IndexMap;
 use serde_json as json;
-use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("internal introspection error: normalized introspection ast not as expected: {0}")]
     InternalNormalizationError(normalized::Error),
@@ -633,6 +632,18 @@ fn collect_accessible_types<S: schema::SchemaContext, NSGet: schema::NamespacedG
     if let Some(mutation_type) = &schema.mutation_type {
         accessible_types.insert(mutation_type.clone());
         collect_accessible_types_(namespaced_getter, schema, mutation_type, accessible_types);
+    }
+
+    // insert subscription root always to accessible types if it exists in schema
+    // and collect related accessible types
+    if let Some(subscription_type) = &schema.subscription_type {
+        accessible_types.insert(subscription_type.clone());
+        collect_accessible_types_(
+            namespaced_getter,
+            schema,
+            subscription_type,
+            accessible_types,
+        );
     }
 }
 

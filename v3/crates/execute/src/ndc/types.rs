@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use serde::Serialize;
 use serde_json;
 
@@ -15,20 +13,6 @@ pub enum NdcQueryRequest {
     V01(ndc_models_v01::QueryRequest),
     #[serde(rename = "v0.2.x")]
     V02(ndc_models_v02::QueryRequest),
-}
-
-impl NdcQueryRequest {
-    pub fn set_variables(
-        &mut self,
-        variables: Option<Vec<BTreeMap<ndc_models::VariableName, serde_json::Value>>>,
-    ) {
-        match self {
-            NdcQueryRequest::V01(request) => {
-                request.variables = migration::v01::downgrade_v02_variables(variables);
-            }
-            NdcQueryRequest::V02(request) => request.variables = variables,
-        }
-    }
 }
 
 #[derive(Serialize, Debug, Clone, PartialEq)]

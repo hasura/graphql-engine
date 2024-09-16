@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
@@ -11,18 +9,23 @@ use open_dds::{
     types::{Deprecated, FieldName},
 };
 
-use crate::helpers::types::NdcColumnForComparison;
 use crate::stages::{boolean_expressions, models, object_boolean_expressions};
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use crate::{helpers::types::NdcColumnForComparison, OrderByExpressionIdentifier};
+
+#[derive(Debug)]
+pub struct ModelsWithGraphqlOutput {
+    pub models_with_graphql: IndexMap<Qualified<ModelName>, ModelWithGraphql>,
+    pub issues: Vec<ModelGraphqlIssue>,
+}
 
 /// A Model, once we have added filter expression and graphql for it
+#[derive(Debug)]
 pub(crate) struct ModelWithGraphql {
     pub inner: models::Model,
     pub filter_expression_type: Option<ModelExpressionType>,
     pub graphql_api: ModelGraphQlApi,
 }
-
-pub(crate) type ModelsWithGraphql = IndexMap<Qualified<ModelName>, ModelWithGraphql>;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ModelExpressionType {
@@ -42,6 +45,7 @@ pub struct SelectUniqueGraphQlDefinition {
     pub unique_identifier: IndexMap<FieldName, UniqueIdentifierField>,
     pub description: Option<String>,
     pub deprecated: Option<Deprecated>,
+    pub subscription: Option<SubscriptionGraphQlDefinition>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -49,6 +53,7 @@ pub struct SelectManyGraphQlDefinition {
     pub query_root_field: ast::Name,
     pub description: Option<String>,
     pub deprecated: Option<Deprecated>,
+    pub subscription: Option<SubscriptionGraphQlDefinition>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -58,6 +63,14 @@ pub struct SelectAggregateGraphQlDefinition {
     pub deprecated: Option<Deprecated>,
     pub aggregate_expression_name: Qualified<AggregateExpressionName>,
     pub filter_input_field_name: ast::Name,
+    pub subscription: Option<SubscriptionGraphQlDefinition>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct SubscriptionGraphQlDefinition {
+    pub root_field: ast::Name,
+    pub description: Option<String>,
+    pub deprecated: Option<Deprecated>,
 }
 
 // TODO: add support for aggregates
@@ -70,8 +83,8 @@ pub struct OrderByExpressionInfo {
 pub struct ModelOrderByExpression {
     pub data_connector_name: Qualified<DataConnectorName>,
     pub order_by_type_name: ast::TypeName,
-    pub order_by_fields: BTreeMap<FieldName, OrderByExpressionInfo>,
     pub order_by_field_name: ast::Name,
+    pub order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -99,4 +112,10 @@ pub struct ModelGraphQlApi {
     pub limit_field: Option<LimitFieldGraphqlConfig>,
     pub offset_field: Option<OffsetFieldGraphqlConfig>,
     pub filter_input_type_name: Option<ast::TypeName>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ModelGraphqlIssue {
+    #[error("the model {model_name} has defined a selectAggregate graphql API, but it will not appear in the GraphQL API unless query.aggregate.filterInputFieldName is also configured in GraphqlConfig")]
+    MissingAggregateFilterInputFieldNameInGraphqlConfig { model_name: Qualified<ModelName> },
 }

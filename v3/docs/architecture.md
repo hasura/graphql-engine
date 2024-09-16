@@ -21,7 +21,10 @@ crates
 ├── schema
 │   ├── operations
 │   ├── types
+├── ir
 ├── execute
+├── frontends
+│   ├── graphql
 ├── engine
 │   ├── bin
 │   │   ├── engine
@@ -117,11 +120,20 @@ Each module under `types` defines the following:
 - Logic to parse a normalized object (selection set or input value) from the
   request into the defined IR format.
 
+### `ir`
+
+Responsible for combining the user input and our resolved metadata into our
+intermediate representation ready to plan a request.
+
 ### `execute`
 
 Responsible for the core operation of the engine in the context of a user
-provided metadata, including the web server, requests processing, executing
-requests, etc.
+provided metadata, including requests processing, executing requests, etc.
+
+### `frontends/graphql`
+
+Entrypoints for GraphQL requests. Orchestrates parsing, validation and planning
+requests.
 
 #### `engine/bin`
 

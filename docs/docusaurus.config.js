@@ -10,17 +10,16 @@ const config = {
   title: 'Hasura GraphQL Docs',
   tagline: 'Instant GraphQL on all your data',
   url: 'https://hasura.io',
-  baseUrl: '/docs/',
+  baseUrl: '/docs/2.0',
   trailingSlash: true,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
-  favicon: '/docs/img/favicon.png',
+  favicon: '/img/favicon.png',
   organizationName: 'hasura',
   projectName: 'graphql-engine',
   staticDirectories: ['static', 'public'],
   customFields: {
     docsBotEndpointURL: (() => {
-      console.log('process.env.release_mode docs-bot', process.env.release_mode);
       switch (process.env.release_mode) {
         case 'development':
           return 'ws://localhost:8000/hasura-docs-ai';
@@ -72,7 +71,7 @@ const config = {
             current: {
               label: 'v2.x',
               badge: true,
-              path: 'latest',
+              path: '',
             },
           },
         },
@@ -157,7 +156,7 @@ const config = {
       },
       announcementBar: {
         id: 'announcementBar-1', // Increment on change
-        content: `This is the documentation for Hasura v2. <a target="_blank" rel="noopener noreferrer" href="https://hasura.io/docs/3.0/index/">Click here for the Hasura DDN docs</a>, the future of data delivery.`,
+        content: `The new version of Hasura has launched. <a target="_blank" rel="noopener" href="https://hasura.io/docs/3.0/getting-started/quickstart/?utm_source=hasura&utm_medium=v2_docs">Get started with Hasura DDN here.</a>`,
         // isCloseable: true,
         // backgroundColor: '#fafbfc',
         // textColor: '#091E42',
@@ -201,13 +200,13 @@ const config = {
             position: 'left',
           },
           {
-            to: '/latest/hasura-cloud/overview',
+            to: '/hasura-cloud/overview',
             label: 'Hasura Cloud',
             className: 'header-hasura-cloud-link',
             position: 'left',
           },
           {
-            to: '/latest/enterprise/overview',
+            to: '/enterprise/overview',
             label: 'Hasura Enterprise',
             className: 'header-hasura-ee-link',
             position: 'left',

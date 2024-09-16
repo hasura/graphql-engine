@@ -1,5 +1,5 @@
 query getSession {
-  getSessionInfo(userId: "johndoe") {
+  getSessionInfo(userId: 123) {
     token
     expiry
   }

@@ -17,7 +17,6 @@ use schemars::JsonSchema;
 use serde::{de::Error as SerdeDeError, Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{json, Value};
 use std::collections::HashSet;
-use thiserror::Error;
 use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError};
 use url::Url;
 
@@ -25,7 +24,7 @@ use url::Url;
 /// in the claims obtained after decoding the JWT.
 pub(crate) const DEFAULT_HASURA_CLAIMS_NAMESPACE: &str = "claims.jwt.hasura.io";
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Error decoding the `Authorization` header - {0}")]
     ErrorDecodingAuthorizationHeader(jwt::errors::Error),
@@ -67,7 +66,7 @@ impl TraceableError for Error {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum InternalError {
     #[error("Error while constructing the JWT decoding key: {0}")]
     JWTDecodingKeyError(jwt::errors::Error),
@@ -217,6 +216,7 @@ fn json_pointer_schema(gen: &mut SchemaGenerator) -> Schema {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "JWTClaimsMappingPathEntry")]
+/// Entry to lookup the Hasura claims at the specified JSON Pointer
 pub struct JWTClaimsMappingPathEntry<T> {
     /// JSON pointer to find the particular claim in the decoded
     /// JWT token.
@@ -1059,7 +1059,13 @@ mod tests {
     #[tokio::test]
     // This test emulates scenarios where multiple JWKs are present and only the correct encoded JWT is used to decode the Hasura claims
     async fn test_jwk() -> anyhow::Result<()> {
-        tracing_util::initialize_tracing(None, "test_jwk", "0")?;
+        tracing_util::initialize_tracing(
+            None,
+            "test_jwk",
+            None,
+            tracing_util::PropagateBaggage::Disable,
+            tracing_util::ExportTracesStdout::Disable,
+        )?;
         let mut server = mockito::Server::new_async().await;
 
         let url = server.url();

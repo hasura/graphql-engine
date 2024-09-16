@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
-input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/missing_aggregate_graphql_config/metadata.json
----
-the aggregate expression Invoice_aggregate_exp (in subgraph default) defines a graphql section and so query.aggregate must be set in the GraphqlConfig

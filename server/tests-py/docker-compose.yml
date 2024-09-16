@@ -1,7 +1,5 @@
 # These services are brought up in 'run.sh' (see that file)
 
-version: "3.6"
-
 name: hge-python-tests
 
 services:

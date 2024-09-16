@@ -8,6 +8,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Tagged qualified as Tagged
 import Data.Text.Extended (toTxt, (<>>))
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Base.Error
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Action
@@ -39,7 +40,6 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types
 import Hasura.Services
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
@@ -106,7 +106,7 @@ convertMutationSelectionSet
   tracesPropagator
   prometheusMetrics
   gqlContext
-  SQLGenCtx {stringifyNum, nullInNonNullableVariables}
+  SQLGenCtx {stringifyNum, noNullUnboundVariableDefault, nullInNonNullableVariables}
   userInfo
   reqHeaders
   directives
@@ -122,7 +122,7 @@ convertMutationSelectionSet
       onNothing (gqlMutationParser gqlContext)
         $ throw400 ValidationFailed "no mutations exist"
 
-    (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
+    (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables noNullUnboundVariableDefault varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
     -- Parse the GraphQL query into the RQL AST
     (unpreparedQueries :: RootFieldMap (MutationRootField UnpreparedValue)) <-
       Tracing.newSpan "Parse mutation IR" Tracing.SKInternal $ liftEither $ mutationParser resolvedSelSet

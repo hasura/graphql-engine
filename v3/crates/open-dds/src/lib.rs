@@ -15,6 +15,8 @@ pub mod identifier;
 pub mod models;
 pub mod order_by_expression;
 pub mod permissions;
+pub mod plugins;
+pub mod query;
 pub mod relationships;
 pub mod session_variables;
 pub mod test_utils;
@@ -34,7 +36,7 @@ pub struct EnvironmentValue {
 impl traits::OpenDd for EnvironmentValue {
     fn deserialize(json: serde_json::Value) -> Result<Self, traits::OpenDdDeserializeError> {
         serde_path_to_error::deserialize(json).map_err(|e| traits::OpenDdDeserializeError {
-            path: traits::JSONPath::from_serde_path(e.path()),
+            path: jsonpath::JSONPath::from_serde_path(e.path()),
             error: e.into_inner(),
         })
     }
@@ -114,6 +116,9 @@ pub enum OpenDdSubgraphObject {
     TypePermissions(permissions::TypePermissions),
     ModelPermissions(permissions::ModelPermissions),
     CommandPermissions(permissions::CommandPermissions),
+
+    // Plugin
+    LifecyclePluginHook(plugins::LifecyclePluginHook),
 }
 
 /// All of the metadata required to run Hasura v3 engine.
@@ -139,7 +144,7 @@ impl traits::OpenDd for Metadata {
                 ))?,
             )),
             _ => Err(traits::OpenDdDeserializeError {
-                path: traits::JSONPath::new(),
+                path: jsonpath::JSONPath::new(),
                 error: serde::de::Error::invalid_type(
                     serde::de::Unexpected::Other("not a sequence or map"),
                     &"a sequence or map",
@@ -192,13 +197,14 @@ impl Metadata {
                 <Metadata as traits::OpenDd>::deserialize(json)
             }
             Err(e) => Err(traits::OpenDdDeserializeError {
-                path: traits::JSONPath::from_serde_path(&track.path()),
+                path: jsonpath::JSONPath::from_serde_path(&track.path()),
                 error: e,
             }),
         }
     }
 }
 
+/// Metadata with versioning.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", rename_all = "camelCase")]
 #[opendd(
@@ -217,6 +223,7 @@ pub enum MetadataWithVersion {
     V3(MetadataV3),
 }
 
+/// The v1 metadata.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdMetadataV1"))]
 pub struct MetadataV1 {
@@ -225,12 +232,14 @@ pub struct MetadataV1 {
     pub flags: flags::Flags,
 }
 
+/// A collection of objects that are related to each other.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 pub struct NamespacedObjects {
     pub name: String,
     pub objects: Vec<OpenDdSubgraphObject>,
 }
 
+/// The v2 metadata.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdMetadataV2"))]
 pub struct MetadataV2 {
@@ -242,6 +251,7 @@ pub struct MetadataV2 {
     pub flags: flags::Flags,
 }
 
+/// The v3 metadata.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdMetadataV3"))]
 pub struct MetadataV3 {
@@ -257,10 +267,11 @@ pub struct MetadataV3 {
 #[serde(tag = "kind")]
 #[opendd(as_kind)]
 pub enum OpenDdSupergraphObject {
-    // GraphQL schema configuration
+    /// GraphQL schema configuration
     GraphqlConfig(graphql_config::GraphqlConfig),
 }
 
+/// A collection of objects that apply to the entire supergraph.
 #[derive(Serialize, Default, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdSupergraph"))]
 pub struct Supergraph {
@@ -276,10 +287,11 @@ impl Supergraph {
     }
 }
 
+/// A subgraph is a collection of objects that belong to the same data domain.
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdSubgraph"))]
 pub struct Subgraph {
-    pub name: identifier::SubgraphIdentifier,
+    pub name: identifier::SubgraphNameInput,
     pub objects: Vec<OpenDdSubgraphObject>,
 }
 

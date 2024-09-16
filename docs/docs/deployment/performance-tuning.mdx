@@ -77,7 +77,7 @@ This value needs to be kept in balance. If you don't have an idea to determine w
 The Hasura GraphQL Engine binary is containerized by default, so it is easy to scale horizontally. Workloads will be
 spread across instances but may however not be spread equally. This is normal. In cases where you have many event
 triggers, consider tweaking
-[http timeout / max event processing threads per instance](https://hasura.io/docs/latest/deployment/graphql-engine-flags/reference/#serve-sub-command-flags-environment-variables)
+[http timeout / max event processing threads per instance](/deployment/graphql-engine-flags/reference.mdx#serve-sub-command-flags-environment-variables)
 to suit your needs.
 
 To calculate your total nodes, you will need to estimate the expected concurrent requests per second and benchmark the

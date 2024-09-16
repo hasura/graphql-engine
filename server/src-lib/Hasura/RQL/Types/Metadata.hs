@@ -57,6 +57,7 @@ import Data.Aeson.Ordered qualified as AO
 import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Monoid (Dual (..), Endo (..))
+import Hasura.Authentication.Role (RoleName)
 import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.Incremental qualified as Inc
@@ -82,7 +83,6 @@ import Hasura.RQL.Types.Metadata.Common
 import Hasura.RQL.Types.Metadata.Serialization
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)

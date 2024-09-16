@@ -8,6 +8,7 @@ license.workspace = true
 bench = false
 
 [dependencies]
+jsonpath = { path = "../utils/jsonpath" }
 jsonschema-tidying = { path = "../utils/jsonschema-tidying" }
 opendds-derive = { path = "../utils/opendds-derive" }
 

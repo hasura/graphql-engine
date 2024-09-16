@@ -1,13 +1,14 @@
+mod error;
 mod scalar;
 mod types;
 
+pub use error::ScalarBooleanExpressionTypeError;
 use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common as ast;
-use open_dds::boolean_expression::BooleanExpressionOperand;
+use open_dds::{boolean_expression::BooleanExpressionOperand, types::CustomTypeName};
 
-use crate::stages::data_connectors;
-use crate::types::error::Error;
+use crate::stages::{data_connectors, object_types, scalar_types};
 use crate::Qualified;
 
 pub use types::{
@@ -16,13 +17,12 @@ pub use types::{
 
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    existing_graphql_types: &BTreeSet<ast::TypeName>,
+    mut graphql_types: BTreeSet<ast::TypeName>,
     data_connectors: &data_connectors::DataConnectors,
-) -> Result<ScalarBooleanExpressionsOutput, Error> {
+    object_types: &object_types::ObjectTypesWithTypeMappings,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+) -> Result<ScalarBooleanExpressionsOutput, ScalarBooleanExpressionTypeError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
-
-    // TODO: make sure we are adding new types here, we are almost certainly not doing this atm
-    let graphql_types = existing_graphql_types.clone();
 
     // first we collect all the boolean_expression_types
     // so we have a full set to refer to when resolving them
@@ -32,7 +32,7 @@ pub fn resolve(
     } in &metadata_accessor.boolean_expression_types
     {
         raw_boolean_expression_types.insert(
-            Qualified::new(subgraph.to_string(), boolean_expression_type.name.clone()),
+            Qualified::new(subgraph.clone(), boolean_expression_type.name.clone()),
             (subgraph, boolean_expression_type),
         );
     }
@@ -53,7 +53,10 @@ pub fn resolve(
                 &boolean_expression_type.is_null,
                 subgraph,
                 data_connectors,
+                object_types,
+                scalar_types,
                 &boolean_expression_type.graphql,
+                &mut graphql_types,
             )?;
 
             boolean_expression_scalar_types.insert(
@@ -65,6 +68,7 @@ pub fn resolve(
 
     Ok(ScalarBooleanExpressionsOutput {
         boolean_expression_scalar_types,
+        // TODO: make sure we are adding new types to graphql_types
         graphql_types,
     })
 }

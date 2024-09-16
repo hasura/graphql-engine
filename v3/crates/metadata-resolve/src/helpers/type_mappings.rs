@@ -56,12 +56,12 @@ pub(crate) struct SpecialCaseTypeMapping<'a> {
 pub(crate) fn collect_type_mapping_for_source(
     mapping_to_collect: &TypeMappingToCollect,
     data_connector_name: &Qualified<DataConnectorName>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     special_case: &Option<SpecialCaseTypeMapping>,
 ) -> Result<(), TypeMappingCollectionError> {
-    match object_types.get(mapping_to_collect.type_name) {
+    match object_types.get(mapping_to_collect.type_name).ok() {
         Some(object_type_representation) => {
             let type_mapping = match object_type_representation.type_mappings.get(
                 data_connector_name,
@@ -165,14 +165,14 @@ fn handle_special_case_type_mapping<'a>(
     {
         if ndc_object_type
             .fields
-            .contains_key(&response_config.headers_field)
+            .contains_key(response_config.headers_field.as_str())
             && ndc_object_type
                 .fields
-                .contains_key(&response_config.result_field)
+                .contains_key(response_config.result_field.as_str())
         {
             let ndc_object_type = &ndc_object_type
                 .fields
-                .get(&response_config.result_field)
+                .get(response_config.result_field.as_str())
                 .unwrap()
                 .r#type;
             let ndc_object_type_name = unwrap_ndc_object_type_name(ndc_object_type);

@@ -6,7 +6,7 @@ use smol_str::SmolStr;
 
 use crate::{
     impl_JsonSchema_with_OpenDd_for,
-    traits::{JSONPath, OpenDd, OpenDdDeserializeError},
+    traits::{OpenDd, OpenDdDeserializeError},
 };
 
 // Macro to produce a validated identifier using a string literal that crashes
@@ -74,11 +74,11 @@ impl OpenDd for Identifier {
         let string: String =
             serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
                 error,
-                path: JSONPath::default(),
+                path: jsonpath::JSONPath::default(),
             })?;
         Identifier::new(string).map_err(|e| OpenDdDeserializeError {
             error: serde_json::Error::custom(e),
-            path: JSONPath::default(),
+            path: jsonpath::JSONPath::default(),
         })
     }
 
@@ -117,46 +117,24 @@ impl<'de> Deserialize<'de> for Identifier {
     }
 }
 
-// Macro to produce a validated subgraph identifier using a string literal that crashes if the
-// literal is invalid. Does not work for non-literal strings to avoid use on user supplied input.
-#[macro_export]
-macro_rules! subgraph_identifier {
-    ($name:literal) => {
-        open_dds::identifier::SubgraphIdentifier::new($name.to_string()).unwrap()
-    };
-}
-
-/// Type capturing a subgraph identifier used within the metadata. The wrapped String
-/// is guaranteed to be a valid identifier, i.e.
+/// Type capturing a subgraph identifier for a user defined subgraph.
+/// The wrapped String is guaranteed to be a valid identifier, i.e.
 /// - does not start with __
 /// - starts with an alphabet or underscore
 /// - all characters are either alphanumeric or underscore
 #[derive(
     Clone, Debug, derive_more::Display, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize,
 )]
-pub struct SubgraphIdentifier(SmolStr);
+pub struct SubgraphNameInput(SmolStr);
 
-impl SubgraphIdentifier {
-    pub fn new(value: impl AsRef<str>) -> Result<SubgraphIdentifier, &'static str> {
+impl SubgraphNameInput {
+    pub fn new(value: impl AsRef<str>) -> Result<SubgraphNameInput, &'static str> {
         let value = value.as_ref();
         let Identifier(inner) = Identifier::new(value)?;
         if inner.starts_with("__") {
             return Err("__ is a reserved prefix for subgraph names");
         }
-        Ok(SubgraphIdentifier(SmolStr::new(value)))
-    }
-
-    /// Creates a new subgraph identifier, skipping validation.
-    pub fn new_without_validation(value: impl AsRef<str>) -> SubgraphIdentifier {
-        SubgraphIdentifier(SmolStr::new(value))
-    }
-
-    /// Creates a new subgraph identifier from a static string, skipping
-    /// validation.
-    ///
-    /// Panics if the string is more than 23 characters.
-    pub const fn new_inline_static(value: &'static str) -> SubgraphIdentifier {
-        SubgraphIdentifier(SmolStr::new_inline(value))
+        Ok(SubgraphNameInput(SmolStr::new(value)))
     }
 
     pub fn as_str(&self) -> &str {
@@ -164,7 +142,7 @@ impl SubgraphIdentifier {
     }
 }
 
-impl Deref for SubgraphIdentifier {
+impl Deref for SubgraphNameInput {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
@@ -172,22 +150,22 @@ impl Deref for SubgraphIdentifier {
     }
 }
 
-impl std::borrow::Borrow<str> for SubgraphIdentifier {
+impl std::borrow::Borrow<str> for SubgraphNameInput {
     fn borrow(&self) -> &str {
         &self.0
     }
 }
 
-impl OpenDd for SubgraphIdentifier {
+impl OpenDd for SubgraphNameInput {
     fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
         let string: String =
             serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
                 error,
-                path: JSONPath::default(),
+                path: jsonpath::JSONPath::default(),
             })?;
-        SubgraphIdentifier::new(string).map_err(|e| OpenDdDeserializeError {
+        SubgraphNameInput::new(string).map_err(|e| OpenDdDeserializeError {
             error: serde_json::Error::custom(e),
-            path: JSONPath::default(),
+            path: jsonpath::JSONPath::default(),
         })
     }
 
@@ -205,7 +183,7 @@ impl OpenDd for SubgraphIdentifier {
     }
 
     fn _schema_name() -> String {
-        "SubgraphIdentifier".to_string()
+        "SubgraphNameInput".to_string()
     }
 
     fn _schema_is_referenceable() -> bool {
@@ -213,4 +191,85 @@ impl OpenDd for SubgraphIdentifier {
         // indirection in the overall JSONSchema.
         false
     }
+}
+
+impl<'de> Deserialize<'de> for SubgraphNameInput {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        OpenDd::deserialize(serde_json::Value::deserialize(deserializer)?).map_err(D::Error::custom)
+    }
+}
+
+impl_JsonSchema_with_OpenDd_for!(SubgraphNameInput);
+
+/// The name of a subgraph.
+///
+/// This is different from 'SubgraphNameInput' which is more restrictive.
+/// A SubgraphName may refer to a user defined subgraph (through 'SubgraphNameInput') or
+/// a restricted namespace such as '__globals' or '__unknown_namespace'
+///
+/// Further, it may not be a valid identifier as v2 version of Metadata did not do any validation
+/// on namespaces. When we deprecate v2 version of metadata, this can switch to str_newtype over
+/// Identifier
+///
+/// This is also not meant to be used in any of the user facing metadata types, hence there is on
+/// 'OpenDD' trait implementation. However, there is a 'JsonSchema' trait implementation to help
+/// with query analytics
+#[derive(
+    Clone,
+    Debug,
+    derive_more::Display,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+)]
+pub struct SubgraphName(SmolStr);
+
+impl From<SubgraphNameInput> for SubgraphName {
+    fn from(SubgraphNameInput(value): SubgraphNameInput) -> Self {
+        SubgraphName(value)
+    }
+}
+
+impl From<&SubgraphNameInput> for SubgraphName {
+    fn from(SubgraphNameInput(value): &SubgraphNameInput) -> Self {
+        SubgraphName(value.clone())
+    }
+}
+
+impl SubgraphName {
+    pub fn try_new(value: impl AsRef<str>) -> Result<SubgraphName, &'static str> {
+        let value = value.as_ref();
+        let Identifier(_inner) = Identifier::new(value)?;
+        Ok(SubgraphName(SmolStr::new(value)))
+    }
+
+    /// Creates a new subgraph identifier, skipping validation.
+    pub fn new_without_validation(value: impl AsRef<str>) -> SubgraphName {
+        SubgraphName(SmolStr::new(value))
+    }
+
+    /// Creates a new subgraph identifier from a static string, skipping
+    /// validation.
+    ///
+    /// Panics if the string is more than 23 characters.
+    pub const fn new_inline_static(value: &'static str) -> SubgraphName {
+        SubgraphName(SmolStr::new_inline(value))
+    }
+}
+
+// Macro to produce a validated subgraph identifier using a string literal that crashes if the
+// literal is invalid. Does not work for non-literal strings to avoid use on user supplied input.
+#[macro_export]
+macro_rules! subgraph_identifier {
+    ($name:literal) => {
+        open_dds::identifier::SubgraphName::try_new($name.to_string()).unwrap()
+    };
 }

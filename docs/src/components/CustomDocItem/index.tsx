@@ -6,6 +6,7 @@ import styles from './styles.module.scss';
 import { Redirect } from '@docusaurus/router';
 import { AiChatBot } from "@site/src/components/AiChatBot/AiChatBot";
 import BrowserOnly from '@docusaurus/BrowserOnly';
+import { NewVersionModal } from "@site/src/components/NewVersionModal/NewVersionModal";
 const CustomDocItem = props => {
   useEffect(() => {
     // This function is adds <wbr> tags to code blocks within a table
@@ -55,13 +56,13 @@ const CustomDocItem = props => {
   // redirect them to the index if they attempt to directly navigate to a path with
   // _heading_ in it
   if (props.location.pathname.includes('_heading_')) {
-    return <Redirect to="/docs/latest/index/" />;
+    return <Redirect to="/docs/2.0/index/" />;
   }
 
   return (
     <div
       className={
-        props.location.pathname === `/docs/latest/index/`
+        props.location.pathname === `/docs/2.0/index/`
           ? `custom_doc_item_wrapper custom_doc_item_wrapper-x-wide`
           : `custom_doc_item_wrapper ${styles['custom_doc_item_wrapper']}`
       }
@@ -69,7 +70,7 @@ const CustomDocItem = props => {
       <ActualDocItem {...props} />
       <div
         className={
-          props.location.pathname === `/docs/latest/index/` || props.location.pathname.includes('overview')
+          props.location.pathname === `/docs/2.0/index/` || props.location.pathname.includes('overview')
             ? `custom_doc_item_footer-x-wide`
             : styles['custom_doc_item_footer']
         }
@@ -78,6 +79,9 @@ const CustomDocItem = props => {
         <GraphQLWithHasuraBanner />
         <BrowserOnly fallback={<div>Loading...</div>}>
           {() => <AiChatBot/>}
+        </BrowserOnly>
+        <BrowserOnly fallback={<div>Loading...</div>}>
+          {() => <NewVersionModal/>}
         </BrowserOnly>
         <CustomFooter />
       </div>

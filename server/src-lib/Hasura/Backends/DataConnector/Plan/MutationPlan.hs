@@ -11,6 +11,7 @@ import Data.Semigroup.Foldable (toNonEmpty)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text.Extended (toTxt)
+import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
@@ -33,7 +34,6 @@ import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.Session (SessionVariables)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Witch qualified
 

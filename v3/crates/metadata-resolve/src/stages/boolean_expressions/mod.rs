@@ -1,7 +1,9 @@
+mod error;
 mod graphql;
 mod helpers;
 mod object;
 mod types;
+pub use error::BooleanExpressionError;
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -9,13 +11,13 @@ use lang_graphql::ast::common as ast;
 use open_dds::{boolean_expression::BooleanExpressionOperand, types::CustomTypeName};
 
 use crate::stages::{graphql_config, scalar_boolean_expressions, type_permissions};
-use crate::types::error::Error;
 use crate::Qualified;
 
 pub use types::{
     BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
-    BooleanExpressionGraphqlFieldConfig, BooleanExpressionTypes, BooleanExpressionsOutput,
-    ComparisonExpressionInfo, IncludeLogicalOperators, ObjectComparisonExpressionInfo,
+    BooleanExpressionGraphqlFieldConfig, BooleanExpressionIssue, BooleanExpressionTypes,
+    BooleanExpressionsOutput, ComparableFieldKind, ComparisonExpressionInfo,
+    IncludeLogicalOperators, ObjectComparisonExpressionInfo, ObjectComparisonKind,
     ResolvedObjectBooleanExpressionType,
 };
 
@@ -25,14 +27,11 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
-    existing_graphql_types: &BTreeSet<ast::TypeName>,
+    mut graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-) -> Result<BooleanExpressionsOutput, Error> {
+    object_types: &type_permissions::ObjectTypesWithPermissions,
+) -> Result<BooleanExpressionsOutput, BooleanExpressionError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
-
-    // TODO: make sure we are adding new types here, we are almost certainly not doing this atm
-    let graphql_types = existing_graphql_types.clone();
 
     // first we collect all the boolean_expression_types
     // so we have a full set to refer to when resolving them
@@ -42,7 +41,7 @@ pub fn resolve(
     } in &metadata_accessor.boolean_expression_types
     {
         raw_boolean_expression_types.insert(
-            Qualified::new(subgraph.to_string(), boolean_expression_type.name.clone()),
+            Qualified::new(subgraph.clone(), boolean_expression_type.name.clone()),
             (subgraph, boolean_expression_type),
         );
     }
@@ -65,6 +64,7 @@ pub fn resolve(
                 boolean_expression_scalar_types,
                 &raw_boolean_expression_types,
                 graphql_config,
+                &mut graphql_types,
             )?;
 
             boolean_expression_object_types.insert(
@@ -79,6 +79,7 @@ pub fn resolve(
             objects: boolean_expression_object_types,
             scalars: boolean_expression_scalar_types.clone(),
         },
+        // TODO: make sure we are adding new types to graphql_types
         graphql_types,
     })
 }

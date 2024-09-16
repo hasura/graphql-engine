@@ -9,10 +9,10 @@ import Data.ByteString qualified as B
 import Data.CaseInsensitive qualified as CI
 import Data.IORef
 import Data.Text.Encoding qualified as TE
+import Hasura.Authentication.Header (getRequestHeader)
 import Hasura.CachedTime
 import Hasura.Prelude
 import Hasura.Server.Cors
-import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai
 

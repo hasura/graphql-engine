@@ -2,6 +2,352 @@
 
 ## [Unreleased]
 
+### Added
+
+### Fixed
+
+- Disallow recursive types in SQL table column types
+- Previously, if you had `AggregateExpressions` that were configured to be used
+  in GraphQL, or `Models` configured for aggregates in GraphQL, but you did not
+  set the appropriate configuration in
+  `GraphqlConfig.definition.query.aggregates`, the build would fail with an
+  error. This has been relaxed so that the build now succeeds, but warnings are
+  raised instead. However, the aggregates will not appear in your GraphQL API
+  until the `GraphqlConfig` is updated. This allows you to add
+  `AggregateExpressions` and configure your `Model` but update your
+  `GraphqlConfig` separately, which is useful if they are in separate
+  repositories.
+- Add a missing typecheck of `ValueExpression` while resolving model predicates
+- A build error is now raised if an `AggregateExpression` specifies an
+  `aggregatableField` that has field arguments. This is an unsupported scenario
+  and previously would have allowed invalid queries that omitted the required
+  field arguments. These queries may have failed with errors at query time.
+
+### Changed
+
+## [v2024.09.05]
+
+### Added
+
+- SQL endpoint can utilize uniqueness constraints
+
+### Fixed
+
+- Fix the name and description of the span resolving relationship predicates in
+  the Engine.
+
+### Changed
+
+## [v2024.09.02]
+
+### Added
+
+- Enhanced handling of relationships in predicates
+- Filter nested arrays
+- Order by nested fields
+- A new GraphQL config flag `require_valid_ndc_v01_version` to promote warnings
+  about NDC version as errors.
+
+#### Enhanced Handling of Relationships in Predicates
+
+Improved support for using relationships in boolean expressions even when the
+data connector lacks the `relation_comparisons` capability. This update
+introduces two strategies for handling relationship predicates:
+
+- **Data Connector Pushdown**: When the source and target connectors are the
+  same and the target connector supports relationship comparisons, predicates
+  are pushed down to the NDC (Data Connector) for more efficient processing.
+  This strategy optimizes query execution by leveraging the data connector’s
+  capabilities.
+
+- **Engine-Based Resolution**: When the data connector does not support
+  relationship comparisons or when dealing with relationships targeting models
+  from other data connectors (remote relationships), predicates are resolved
+  internally within the engine. This approach involves querying the target
+  model’s field values and constructing the necessary comparison expressions.
+
+This enhancement updates the GraphQL schema's boolean expression input types by
+introducing relationship predicates. The feature is gated by a compatibility
+date to ensure backward compatibility. To enable it, set the date to
+`2024-09-03` or later in your DDN project's `globals/compatibility-config.hml`
+file.
+
+#### Filter Nested Arrays
+
+If `institution` is a big JSON document, and `staff` is an array of objects
+inside it, we can now filter `institutions` based on matches that exist within
+that array.
+
+```graphql
+query MyQuery {
+  where_does_john_hughes_work: InstitutionMany(
+    where: { staff: { last_name: { _eq: "Hughes" } } }
+  ) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+```
+
+This query would return us details of `Chalmers University of Technology`, where
+`John Hughes` is a member of staff.
+
+#### Order by Nested Fields
+
+Add support for ordering by nested fields.
+
+Example query:
+
+```graphql
+query MyQuery {
+  InstitutionMany(order_by: { location: { city: Asc } }) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+}
+```
+
+This will order by the value of the nested field `city` within the `location`
+JSONB column.
+
+### Fixed
+
+- Stack overflow error on startup. Even if the (experimental) SQL feature was
+  turned off, engine would try to build a SQL catalog on startup. Now it will
+  build an empty catalog.
+
+### Changed
+
+## [v2024.08.22]
+
+### Added
+
+#### Pre-parse Engine Plugins
+
+Add support for pre-parse engine plugins. Engine now supports calling a HTTP
+webhook in pre-parse execution step. This can be used to add a bunch of
+functionalities to the DDN, such as an [allow list][plugin-allowlist].
+
+The following is an example of the OpenDD metadata for the plugins:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+name: allow list
+url: http://localhost:8787
+pre: parse
+config:
+  request:
+    headers:
+      additional:
+      hasura-m-auth:
+        value: "your-strong-m-auth-key"
+    session: {}
+    rawRequest:
+      query: {}
+      variables: {}
+```
+
+The pre-parse plugin hook's request can be customized using the
+`LifecyclePluginHook` metadata object. Currently we support the following
+customizations:
+
+- adding/removing session information
+- adding new headers
+- forwarding specific headers
+- adding/removing graphql query and variables
+
+### Fixed
+
+- Disallow model filter boolean expressions having relationship comparisons in
+  their nested object filters.
+
+### Changed
+
+[plugin-allowlist]: https://github.com/hasura/plugin-allowlist
+
+## [v2024.08.07]
+
+### Added
+
+- A new CLI flag (`--export-traces-stdout`) and env var (`EXPORT_TRACES_STDOUT`)
+  is introduced to enable logging of traces to STDOUT. By default, logging is
+  disabled.
+
+#### Remote Relationships Predicates
+
+We have significantly enhanced our permission capabilities to support remote
+relationships in filter predicates. It is important to note that the
+relationship source and target models should be from the same subgraph.
+
+**Example:** API traces are stored in a separate database. Users should only be
+able to view traces of their own API requests.
+
+```yaml
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: traces
+  permissions:
+    - role: user
+      select:
+        filter:
+          relationship:
+            name: User
+            predicate:
+              fieldComparison:
+                field: user_id
+                operator: _eq
+                value:
+                  sessionVariable: x-hasura-user-id
+```
+
+In the above configuration, a permission filter is defined on the `traces`
+model. The filter predicate employs the `User` remote relationship, ensuring the
+`user_id` field is equal to the `x-hasura-user-id` session variable.
+
+- New `NoAuth` mode in auth config can be used to provide a static role and
+  session variables to use whilst running the engine, to make getting started
+  easier.
+
+### Fixed
+
+- Fixes a bug where queries with nested relationship selection and filter
+  predicates fail due to an issue with NDC relationship collection
+
+- Reduce error for using nested arrays in boolean expressions to a warning to
+  maintain backwards compatibility
+
+- Fix use of object types as comparison operator arguments by correctly
+  utilising user-provided OpenDD types.
+
+- Fixes a bug where argument presets set in the DataConnectorLink were sent to
+  every connector function/procedure regardless of whether the
+  function/procedure actually declared that argument
+
+- Fixes a bug where argument presets set in the DataConnectorLink were not sent
+  to connector collections that backed Models
+
+- Fixes a bug where the type of the argument name in the DataConnectorLink's
+  argument presets was incorrect in the Open DD schema. It was `ArgumentName`
+  but should have been `DataConnectorArgumentName`
+
+- Fixes a bug where the check to ensure that argument presets in the
+  DataConnectorLink does not overlap with arguments defined on Models/Commands
+  was comparing against the Model/Command argument name not the data connector
+  argument name
+
+### Changed
+
+- Introduced `AuthConfig` `v2`. This new version removes role emulation in
+  engine (`allowRoleEmulationBy`) field.
+
+- Raise a warning when an invalid data connector capabilities version is used in
+  in a `DataConnectorLink` and prevent the usage of incompatible data connector
+  capabilities versions
+
+- Models and commands that do not define all the necessary arguments to satisfy
+  the underlying data connector collection/function/procedure now cause warnings
+  to be raised. The warnings will be turned into errors in the future.
+
+## [v2024.07.25]
+
+### Fixed
+
+- Ensured `traceresponse` header is returned
+
+## [v2024.07.24]
+
+### Added
+
+- The metadata resolve step now emits warnings to let users know about
+  soon-to-be deprecated features and suggest fixes.
+
+### Fixed
+
+- Fixes a bug where boolean expressions passed as arguments would not be
+  translated into NDC `Expression` types before being sent to the data
+  connector.
+
+- Fixes a bug where relationships within nested columns would throw an internal
+  error. While generating NDC relationship definitions, engine would ignore
+  columns with nested selection.
+
+- Renamed the `ArgumentPreset` for data connectors to
+  `DataConnectorArgumentPreset` to avoid ambiguity in generated JSONSchema.
+
+### Changed
+
+- Fixed a bug where command targeted relationships were not using the Open DD
+  argument name instead of the data connector's argument name when querying the
+  data connector
+
+## [v2024.07.18]
+
+### Added
+
+#### Remote Relationships in Query Filter
+
+We have enhanced the GraphQL query capabilities to support array and object
+relationships targeting models backed by different data connectors. This allows
+you to specify remote relationships directly within the `where` expression of
+your queries.
+
+**Example:** Retrieve a list of customers who have been impacted by cancelled
+orders during the current sale event. This data should be filtered based on
+order logs stored in a separate data source.
+
+```graphql
+query CustomersWithFailedOrders {
+  Customers(
+    where: {
+      OrderLogs: {
+        _and: [
+          { timestamp: { _gt: "2024-10-10" } }
+          { status: { _eq: "cancelled" } }
+        ]
+      }
+    }
+  ) {
+    CustomerId
+    EmailId
+    OrderLogs {
+      OrderId
+    }
+  }
+}
+```
+
+By incorporating remote relationships into the where expression, you can
+seamlessly query and filter data that spans across multiple data sources, making
+your GraphQL queries more versatile and powerful.
+
+### Fixed
+
+- Build-time check to ensure boolean expressions cannot be built over nested
+  array fields until these are supported.
+
+- Fixed a bug where command targeted relationships were not using the OpenDD
+  argument name instead of the data connector's argument name when querying the
+  data connector.
+
+## [v2024.07.10]
+
+### Fixed
+
+- Fixes a bug with variable nullability coercion. Specifically, providing a
+  non-null variable for a nullable field should work, as all non-nullable
+  variables can be used as nullable variables via "coercion".
+
+- Fixes a bug where data connectors without the `foreach` capability were not
+  allowed to create local relationships
+
 ## [v2024.07.04]
 
 ### Added
@@ -163,6 +509,12 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.06.13...HEAD
-[v2024.06.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.06.13
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.09.02...HEAD
+[v2024.09.02]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.02
+[v2024.08.07]: https://github.com/hasura/v3-engine/releases/tag/v2024.08.07
+[v2024.07.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.25
+[v2024.07.24]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.24
+[v2024.07.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.18
+[v2024.07.10]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.10
 [v2024.07.04]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.04
+[v2024.06.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.06.13
