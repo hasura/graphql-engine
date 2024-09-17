@@ -1,8 +1,7 @@
 module Test.Specs.QuerySpec.CustomOperatorsSpec (spec) where
 
 import Control.Lens ((&), (?~))
-import Control.Monad (forM_)
-import Control.Monad.List (guard)
+import Control.Monad
 import Data.HashMap.Strict qualified as HashMap
 import Data.Maybe (maybeToList)
 import Data.Text qualified as Text

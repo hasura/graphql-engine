@@ -5,5 +5,5 @@
 import type { RelatedTable } from './RelatedTable';
 import type { UnrelatedTable } from './UnrelatedTable';
 
-export type ExistsInTable = (UnrelatedTable | RelatedTable);
+export type ExistsInTable = (RelatedTable | UnrelatedTable);
 

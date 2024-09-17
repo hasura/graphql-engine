@@ -30,7 +30,6 @@ module Test.Schema.RemoteRelationships.MetadataAPI.Common
     remoteSchemaToDBRemoteRelationshipFixture,
     remoteSchemaToremoteSchemaRemoteRelationshipFixture,
     LocalTestTestEnvironment (..),
-    hasuraTypeOptions,
     lhsRemoteServerMkLocalTestEnvironment,
   )
 where
@@ -41,8 +40,9 @@ where
 import Data.Char (isUpper, toLower)
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
-import Data.Morpheus.Types
+import Data.Morpheus.Server.Types
 import Data.Morpheus.Types qualified as Morpheus
+import Data.Text qualified as Text
 import Data.Typeable (Typeable)
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -414,27 +414,57 @@ rhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 -- names and field names for Haskell records to be consistent with their
 -- corresponding GraphQL equivalents, we define most of the schema manually with
 -- the following options.
-hasuraTypeOptions :: Morpheus.GQLTypeOptions
-hasuraTypeOptions =
-  Morpheus.defaultTypeOptions
-    { -- transformation to apply to constructors, for enums; we simply map to
-      -- lower case:
-      --   Asc -> asc
-      Morpheus.constructorTagModifier = map toLower,
-      -- transformation to apply to field names; we drop all characters up to and
-      -- including the first underscore:
-      --   hta_where -> where
-      Morpheus.fieldLabelModifier = tail . dropWhile (/= '_'),
-      -- transformation to apply to type names; we remove the leading "LHS" we
-      -- use to differentiate those types from the RHS ones, split the name on
-      -- uppercase letters, intercalate with underscore, and map everything to
-      -- lowercase: LHSHasuraTrack -> hasura_track
-      Morpheus.typeNameModifier = \_ ->
-        map toLower
-          . intercalate "_"
-          . split (dropBlanks $ keepDelimsL $ whenElt isUpper)
-          . drop 3
-    }
+--
+-- NOTE: A LOT OF COPY-PASTE OF THESE IN OTHER MODULES. Would be better to DRY,
+-- but some have variations it seems.
+data HasuraTypeOptions = HasuraTypeOptions
+  deriving (Generic)
+
+instance GQLType HasuraTypeOptions where
+  type KIND HasuraTypeOptions = DIRECTIVE
+
+instance GQLDirective HasuraTypeOptions where
+  excludeFromSchema _ = True
+  type
+    DIRECTIVE_LOCATIONS HasuraTypeOptions =
+      '[ 'LOCATION_OBJECT,
+         'LOCATION_ENUM,
+         'LOCATION_INPUT_OBJECT,
+         'LOCATION_UNION,
+         'LOCATION_SCALAR,
+         'LOCATION_INTERFACE,
+         'LOCATION_ENUM_VALUE,
+         'LOCATION_FIELD_DEFINITION,
+         'LOCATION_INPUT_FIELD_DEFINITION
+       ]
+
+-- I don't understand how these relate to VisitType. Hopefully this works...
+instance VisitEnum HasuraTypeOptions
+
+instance VisitField HasuraTypeOptions
+
+instance VisitType HasuraTypeOptions where
+  -- transformation to apply to constructors, for enums; we simply map to
+  -- lower case:
+  --   Asc -> asc
+  visitEnumNames _ = Text.map toLower
+
+  -- transformation to apply to type names; we remove the leading "LHS" we
+  -- use to differentiate those types from the RHS ones, split the name on
+  -- uppercase letters, intercalate with underscore, and map everything to
+  -- lowercase: LHSHasuraTrack -> hasura_track
+  visitTypeName _ _isInput =
+    Text.map toLower
+      . Text.intercalate "_"
+      . map Text.pack
+      . split (dropBlanks $ keepDelimsL $ whenElt isUpper)
+      . Text.unpack
+      . Text.drop 3
+
+  -- transformation to apply to field names; we drop all characters up to and
+  -- including the first underscore:
+  --   hta_where -> where
+  visitFieldNames _ = Text.tail . Text.dropWhile (/= '_')
 
 data LHSQuery m = LHSQuery
   { q_hasura_track :: LHSHasuraTrackArgs -> m [LHSHasuraTrack m]
@@ -442,7 +472,7 @@ data LHSQuery m = LHSQuery
   deriving (Generic)
 
 instance (Typeable m) => Morpheus.GQLType (LHSQuery m) where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 data LHSHasuraTrackArgs = LHSHasuraTrackArgs
   { ta_where :: Maybe LHSHasuraTrackBoolExp,
@@ -452,7 +482,7 @@ data LHSHasuraTrackArgs = LHSHasuraTrackArgs
   deriving (Generic)
 
 instance Morpheus.GQLType LHSHasuraTrackArgs where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 data LHSHasuraTrack m = LHSHasuraTrack
   { t_id :: m (Maybe Int),
@@ -462,7 +492,7 @@ data LHSHasuraTrack m = LHSHasuraTrack
   deriving (Generic)
 
 instance (Typeable m) => Morpheus.GQLType (LHSHasuraTrack m) where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 data LHSHasuraTrackOrderBy = LHSHasuraTrackOrderBy
   { tob_id :: Maybe LHSOrderType,
@@ -472,7 +502,7 @@ data LHSHasuraTrackOrderBy = LHSHasuraTrackOrderBy
   deriving (Generic)
 
 instance Morpheus.GQLType LHSHasuraTrackOrderBy where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 data LHSHasuraTrackBoolExp = LHSHasuraTrackBoolExp
   { tbe__and :: Maybe [LHSHasuraTrackBoolExp],
@@ -485,13 +515,13 @@ data LHSHasuraTrackBoolExp = LHSHasuraTrackBoolExp
   deriving (Generic)
 
 instance Morpheus.GQLType LHSHasuraTrackBoolExp where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 data LHSOrderType = Asc | Desc
   deriving (Show, Generic)
 
 instance Morpheus.GQLType LHSOrderType where
-  typeOptions _ _ = hasuraTypeOptions
+  directives _ = typeDirective HasuraTypeOptions
 
 [gqlDocument|
 
