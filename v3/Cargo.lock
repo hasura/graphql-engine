@@ -2687,7 +2687,7 @@ dependencies = [
 [[package]]
 name = "jsonapi"
 version = "0.7.0"
-source = "git+https://github.com/hasura/jsonapi-rust.git?rev=a7a656c5ce2a552d2a8d6ff7421ec878e2069ba0#a7a656c5ce2a552d2a8d6ff7421ec878e2069ba0"
+source = "git+https://github.com/hasura/jsonapi-rust.git?rev=b908b340ddfc620d33b71f279b88a0233bd5ff5c#b908b340ddfc620d33b71f279b88a0233bd5ff5c"
 dependencies = [
  "error-chain",
  "log",
@@ -2704,13 +2704,17 @@ dependencies = [
  "axum",
  "derive_more",
  "execute",
+ "graphql-ir",
  "hasura-authn-core",
  "indexmap 2.5.0",
  "insta",
  "jsonapi 0.7.0",
+ "lang-graphql",
  "metadata-resolve",
+ "ndc-models 0.2.0",
  "open-dds",
- "serde",
+ "reqwest",
+ "schema",
  "serde_json",
  "tokio",
  "tracing-util",

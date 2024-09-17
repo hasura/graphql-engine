@@ -52,6 +52,7 @@ async fn handle_request(
             || {
                 {
                     Box::pin(jsonapi::handler_internal(
+                        &state.http_context,
                         &state.jsonapi_state,
                         method,
                         uri,
@@ -65,17 +66,28 @@ async fn handle_request(
     set_status_on_current_span(&response);
     match response {
         Ok(r) => (axum::http::StatusCode::OK, Json(r)).into_response(),
-        Err(e) => match e {
+        Err(e) => (match e {
             jsonapi::RequestError::BadRequest(err) => (
                 axum::http::StatusCode::BAD_REQUEST,
                 Json(serde_json::json!({"error": err})),
-            )
-                .into_response(),
+            ),
             jsonapi::RequestError::NotFound => (
                 axum::http::StatusCode::NOT_FOUND,
                 Json(serde_json::json!({"error": "invalid route or path"})),
-            )
-                .into_response(),
-        },
+            ),
+            jsonapi::RequestError::InternalError(jsonapi::InternalError::EmptyQuerySet) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "Internal error"})),
+            ),
+            jsonapi::RequestError::PlanError(jsonapi::PlanError::InternalError(msg)) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": msg })),
+            ),
+            jsonapi::RequestError::ExecuteError(field_error) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": field_error.to_string() })),
+            ),
+        })
+        .into_response(),
     }
 }

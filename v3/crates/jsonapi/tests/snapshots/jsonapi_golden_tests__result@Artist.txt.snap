@@ -1,0 +1,74 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/fixtures/select_model/Artist.txt
+---
+Ok(
+    DocumentData {
+        data: Some(
+            Multiple(
+                [
+                    Resource {
+                        _type: "Artist (in subgraph default)",
+                        id: "1",
+                        attributes: {
+                            "ArtistId": Number(1),
+                            "Name": String("AC/DC"),
+                        },
+                        relationships: None,
+                        links: None,
+                        meta: None,
+                    },
+                    Resource {
+                        _type: "Artist (in subgraph default)",
+                        id: "2",
+                        attributes: {
+                            "ArtistId": Number(2),
+                            "Name": String("Accept"),
+                        },
+                        relationships: None,
+                        links: None,
+                        meta: None,
+                    },
+                    Resource {
+                        _type: "Artist (in subgraph default)",
+                        id: "3",
+                        attributes: {
+                            "ArtistId": Number(3),
+                            "Name": String("Aerosmith"),
+                        },
+                        relationships: None,
+                        links: None,
+                        meta: None,
+                    },
+                    Resource {
+                        _type: "Artist (in subgraph default)",
+                        id: "4",
+                        attributes: {
+                            "ArtistId": Number(4),
+                            "Name": String("Alanis Morissette"),
+                        },
+                        relationships: None,
+                        links: None,
+                        meta: None,
+                    },
+                    Resource {
+                        _type: "Artist (in subgraph default)",
+                        id: "5",
+                        attributes: {
+                            "ArtistId": Number(5),
+                            "Name": String("Alice In Chains"),
+                        },
+                        relationships: None,
+                        links: None,
+                        meta: None,
+                    },
+                ],
+            ),
+        ),
+        included: None,
+        links: None,
+        meta: None,
+        jsonapi: None,
+    },
+)

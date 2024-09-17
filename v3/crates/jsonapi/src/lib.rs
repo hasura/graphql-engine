@@ -1,24 +1,29 @@
+mod process_response;
+mod to_plan;
 use axum::{
     http::{Method, Request, Uri},
     middleware::Next,
 };
 use indexmap::IndexMap;
-use metadata_resolve::ModelExpressionType;
-use metadata_resolve::ModelWithPermissions;
+use metadata_resolve::{
+    ModelExpressionType, ModelWithPermissions, ObjectTypeWithRelationships, Qualified,
+};
 use open_dds::{
     identifier,
     identifier::{Identifier, SubgraphName},
     models::ModelName,
+    types::CustomTypeName,
 };
-use serde::Serialize;
-use std::{collections::HashMap, fmt::Display};
-use tracing_util::{
-    ErrorVisibility, SpanVisibility, Traceable, TraceableError, TraceableHttpResponse,
-};
+use std::collections::{BTreeMap, HashMap};
+use to_plan::query_to_plan;
+pub use to_plan::PlanError;
+use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError, TraceableHttpResponse};
 
 #[derive(Debug)]
 pub struct State {
     pub routes: HashMap<String, ModelWithPermissions>,
+    pub models: IndexMap<Qualified<ModelName>, ModelWithPermissions>,
+    pub object_types: BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
 }
 
 impl State {
@@ -34,7 +39,11 @@ impl State {
                 )
             })
             .collect::<HashMap<_, _>>();
-        Self { routes }
+        Self {
+            routes,
+            models: metadata.models.clone(),
+            object_types: metadata.object_types.clone(),
+        }
     }
 }
 
@@ -42,26 +51,34 @@ impl State {
 pub enum RequestError {
     NotFound,
     BadRequest(String),
+    InternalError(InternalError),
+    PlanError(to_plan::PlanError),
+    ExecuteError(execute::FieldError),
+}
+
+#[derive(Debug, derive_more::Display)]
+pub enum InternalError {
+    EmptyQuerySet,
 }
 
 #[allow(clippy::unused_async)]
 pub async fn handler_internal(
+    http_context: &execute::HttpContext,
     state: &State,
     http_method: Method,
     uri: Uri,
     query_string: jsonapi_library::query::Query,
-) -> Result<JsonApiDocument, RequestError> {
+) -> Result<jsonapi_library::api::DocumentData, RequestError> {
     // route matching/validation
     match validate_route(state, &uri) {
         None => Err(RequestError::NotFound),
         Some(model) => {
             // create the query IR
             let query_ir = create_query_ir(model, &http_method, &uri, &query_string)?;
-            dbg!(&query_ir);
             // execute the query with the query-engine
-            let result = query_engine_execute(&query_ir, state)?;
+            let result = query_engine_execute(http_context, &query_ir, state).await?;
             // process result to JSON:API compliant response
-            Ok(process_result(&result))
+            Ok(process_response::process_result(result))
         }
     }
 }
@@ -77,45 +94,50 @@ fn validate_route<'a>(state: &'a State, uri: &'a Uri) -> Option<&'a ModelWithPer
     None
 }
 
-#[derive(Serialize, Debug)]
-pub struct JsonApiDocument {
-    foo: String,
-    bar: i32,
-}
-
-impl Display for JsonApiDocument {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "foo: {} - bar: {}", self.foo, self.bar)
-    }
-}
-
-/// Implement traceable for GraphQL Response
-impl Traceable for JsonApiDocument {
-    type ErrorType<'a> = RequestError;
-
-    fn get_error(&self) -> Option<RequestError> {
-        None
-    }
-}
-
 impl TraceableError for RequestError {
     fn visibility(&self) -> ErrorVisibility {
         ErrorVisibility::User
     }
 }
 
-fn process_result(_result: &QueryResult) -> JsonApiDocument {
-    JsonApiDocument {
-        foo: "foo".to_string(),
-        bar: 1,
+async fn query_engine_execute(
+    http_context: &execute::HttpContext,
+    query_ir: &open_dds::query::QueryRequest,
+    metadata: &State,
+) -> Result<QueryResult, RequestError> {
+    match query_ir {
+        open_dds::query::QueryRequest::V1(open_dds::query::QueryRequestV1 { queries }) => {
+            if let Some((_alias, query)) = queries.iter().next() {
+                let (query_execution_plan, query_context) =
+                    query_to_plan(query, metadata).map_err(RequestError::PlanError)?;
+
+                let rowsets = resolve_ndc_query_execution(http_context, query_execution_plan)
+                    .await
+                    .map_err(RequestError::ExecuteError)?;
+
+                return Ok(QueryResult {
+                    rowsets,
+                    type_name: query_context.type_name,
+                });
+            }
+        }
     }
+    Err(RequestError::InternalError(InternalError::EmptyQuerySet))
 }
 
-fn query_engine_execute(
-    _query_ir: &open_dds::query::QueryRequest,
-    _metadata: &State,
-) -> Result<QueryResult, RequestError> {
-    Err(RequestError::BadRequest("Not implemented".to_string()))
+// run ndc query, do any joins, and process result
+async fn resolve_ndc_query_execution<'s, 'ir>(
+    http_context: &execute::HttpContext,
+    query_execution_plan: execute::UnresolvedQueryExecutionPlan<'s>,
+) -> Result<Vec<ndc_models::RowSet>, execute::FieldError> {
+    execute::plan::execute_ndc_query(
+        http_context,
+        query_execution_plan,
+        "jsonapi",
+        "jsonapi",
+        None,
+    )
+    .await
 }
 
 fn create_query_ir(
@@ -172,6 +194,7 @@ fn create_query_ir(
         .page
         .as_ref()
         .map(|page| usize::try_from(page.size).unwrap());
+
     let offset = query_string
         .page
         .as_ref()
@@ -259,7 +282,7 @@ fn build_order_by_element(elem: &String) -> Result<open_dds::query::OrderByEleme
 */
 fn build_boolean_expression(
     model: &ModelWithPermissions,
-    _filter: &HashMap<String, Vec<String>>,
+    _filter: &BTreeMap<String, Vec<String>>,
 ) -> open_dds::query::BooleanExpression {
     // TODO: actually parse and create a BooleanExpression
     if let Some(filter_exp_type) = &model.filter_expression_type {
@@ -330,7 +353,11 @@ fn parse_url(uri: &Uri) -> Result<ModelInfo, ParseError> {
     })
 }
 
-struct QueryResult;
+// this is not the correct output type, we should be outputting a JSONAPI document instead
+struct QueryResult {
+    pub type_name: Qualified<CustomTypeName>,
+    pub rowsets: Vec<ndc_models::RowSet>,
+}
 
 /// Middleware to start tracing of the `/v1/jsonapi` request. This middleware
 /// must be active for the entire duration of the request i.e. this middleware

@@ -7,6 +7,7 @@ use std::str::FromStr;
 fn test_get_requests() {
     insta::glob!("fixtures/**/*.txt", |path| {
         let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all() // this enables time and IO
             .build()
             .unwrap();
 
@@ -55,7 +56,13 @@ fn test_get_requests() {
             // always test in `default` subgraph for now
             let path = format!("/default/{model_name}");
 
+            let http_context = execute::HttpContext {
+                client: reqwest::Client::new(),
+                ndc_response_size_limit: None,
+            };
+
             let result = jsonapi::handler_internal(
+                &http_context,
                 &jsonapi_state,
                 axum::http::method::Method::GET,
                 axum::http::uri::Uri::from_str(&path).unwrap(),

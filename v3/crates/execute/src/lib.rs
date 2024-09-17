@@ -11,7 +11,9 @@ pub use error::{FieldError, QueryUsageAnalyzeError, RequestError};
 pub use ndc::fetch_from_data_connector;
 pub use plan::error::Error as PlanError;
 pub use plan::filter::plan_remote_predicate;
-pub use plan::query::ResolvedQueryExecutionPlan;
+pub use plan::query::{
+    QueryExecutionPlan, QueryNode, ResolvedQueryExecutionPlan, UnresolvedQueryExecutionPlan,
+};
 pub use plan::{
     execute_mutation_plan, execute_query_plan, generate_request_plan, ExecuteQueryResult,
     RequestPlan,

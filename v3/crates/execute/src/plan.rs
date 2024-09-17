@@ -982,7 +982,8 @@ async fn resolve_ndc_query_execution<'s, 'ir>(
 }
 
 // run ndc query, return results
-async fn execute_ndc_query<'s, 'ir>(
+// only `public` whilst JSONAPI pipeline is using it, probably doesn't want to be
+pub async fn execute_ndc_query<'s, 'ir>(
     http_context: &HttpContext,
     query_execution_plan: query::UnresolvedQueryExecutionPlan<'s>,
     field_span_attribute: &str,
