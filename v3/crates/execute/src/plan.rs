@@ -12,7 +12,9 @@ pub(crate) mod selection_set;
 
 pub use arguments::{Argument, MutationArgument};
 pub use field::ResolvedField;
-pub use filter::{plan_expression, resolve_expression, ResolvedFilterExpression};
+pub use filter::{
+    plan_expression, resolve_expression, ResolveFilterExpressionContext, ResolvedFilterExpression,
+};
 pub use mutation::ResolvedMutationExecutionPlan;
 pub use query::{ResolvedQueryExecutionPlan, ResolvedQueryNode, UnresolvedQueryNode};
 pub use relationships::Relationship;
@@ -60,6 +62,7 @@ pub struct MutationPlan<'n, 's, 'ir> {
 pub enum RequestPlan<'n, 's, 'ir> {
     QueryPlan(QueryPlan<'n, 's, 'ir>),
     MutationPlan(MutationPlan<'n, 's, 'ir>),
+    SubscriptionPlan(ast::Alias, NDCSubscriptionExecution<'s, 'ir>),
 }
 
 /// Query plan of individual root field or node
@@ -97,6 +100,14 @@ pub struct NDCQueryExecution<'s, 'ir> {
     // This selection set can either be owned by the IR structures or by the normalized query request itself.
     // We use the more restrictive lifetime `'ir` here which allows us to construct this struct using the selection
     // set either from the IR or from the normalized query request.
+    pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
+}
+
+pub struct NDCSubscriptionExecution<'s, 'ir> {
+    pub query_execution_plan: query::UnresolvedQueryExecutionPlan<'s>,
+    pub execution_span_attribute: &'static str,
+    pub field_span_attribute: String,
+    pub process_response_as: ProcessResponseAs<'ir>,
     pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
 }
 
@@ -193,6 +204,10 @@ pub fn generate_request_plan<'n, 's, 'ir>(
             }
             Ok(RequestPlan::MutationPlan(mutation_plan))
         }
+        ir::IR::Subscription(alias, ir) => Ok(RequestPlan::SubscriptionPlan(
+            alias.clone(),
+            plan_subscription(ir)?,
+        )),
     }
 }
 
@@ -218,6 +233,61 @@ fn plan_mutation<'n, 's, 'ir>(
             response_config: &ir.command_info.data_connector.response_config,
         },
     })
+}
+
+fn plan_subscription<'s, 'ir>(
+    root_field: &'ir ir::SubscriptionRootField<'_, 's>,
+) -> Result<NDCSubscriptionExecution<'s, 'ir>, error::Error> {
+    match root_field {
+        ir::SubscriptionRootField::ModelSelectOne { ir, selection_set } => {
+            let execution_tree = generate_execution_tree(&ir.model_selection)?;
+            let query_execution_plan = reject_remote_joins(execution_tree)?;
+            Ok(NDCSubscriptionExecution {
+                query_execution_plan,
+                selection_set,
+                execution_span_attribute: "execute_model_select_one",
+                field_span_attribute: ir.field_name.to_string(),
+                process_response_as: ProcessResponseAs::Object {
+                    is_nullable: ir.type_container.nullable.to_owned(),
+                },
+            })
+        }
+
+        ir::SubscriptionRootField::ModelSelectMany { ir, selection_set } => {
+            let execution_tree = generate_execution_tree(&ir.model_selection)?;
+            let query_execution_plan = reject_remote_joins(execution_tree)?;
+            Ok(NDCSubscriptionExecution {
+                query_execution_plan,
+                selection_set,
+                execution_span_attribute: "execute_model_select_many",
+                field_span_attribute: ir.field_name.to_string(),
+                process_response_as: ProcessResponseAs::Array {
+                    is_nullable: ir.type_container.nullable.to_owned(),
+                },
+            })
+        }
+
+        ir::SubscriptionRootField::ModelSelectAggregate { ir, selection_set } => {
+            let execution_tree = generate_execution_tree(&ir.model_selection)?;
+            let query_execution_plan = reject_remote_joins(execution_tree)?;
+            Ok(NDCSubscriptionExecution {
+                query_execution_plan,
+                selection_set,
+                execution_span_attribute: "execute_model_select_aggregate",
+                field_span_attribute: ir.field_name.to_string(),
+                process_response_as: ProcessResponseAs::Aggregates,
+            })
+        }
+    }
+}
+
+fn reject_remote_joins<'s>(
+    tree: ExecutionTree<'s, '_>,
+) -> Result<query::UnresolvedQueryExecutionPlan<'s>, error::Error> {
+    if !tree.remote_join_executions.is_empty() {
+        return Err(error::Error::RemoteJoinsAreNotSupportedSubscriptions);
+    }
+    Ok(tree.query_execution_plan)
 }
 
 // Given a singular root field of a query, plan the execution of that root field.
@@ -917,7 +987,9 @@ async fn execute_ndc_query<'s, 'ir>(
     execution_span_attribute: &'static str,
     project_id: Option<&ProjectId>,
 ) -> Result<Vec<ndc_models::RowSet>, FieldError> {
-    let resolved_execution_plan = query_execution_plan.resolve(http_context).await?;
+    let resolve_context =
+        ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context.clone());
+    let resolved_execution_plan = query_execution_plan.resolve(&resolve_context).await?;
 
     let data_connector = resolved_execution_plan.data_connector;
     let query_request = ndc_request::make_ndc_query_request(resolved_execution_plan)?;
@@ -976,7 +1048,9 @@ async fn resolve_ndc_mutation_execution(
         join_locations: _,
     } = ndc_mutation_execution;
 
-    let resolved_execution_plan = execution_node.resolve(http_context).await?;
+    let resolve_context =
+        ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context.clone());
+    let resolved_execution_plan = execution_node.resolve(&resolve_context).await?;
 
     let mutation_request = ndc_request::make_ndc_mutation_request(resolved_execution_plan)?;
 

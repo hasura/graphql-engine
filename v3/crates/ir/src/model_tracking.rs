@@ -105,6 +105,20 @@ pub fn get_all_usage_counts_in_query(ir: &IR<'_, '_>) -> UsagesCounts {
                 }
             }
         }
+        IR::Subscription(_, ir_field) => match ir_field {
+            root_field::SubscriptionRootField::ModelSelectOne { ir, .. } => {
+                let usage_counts = ir.usage_counts.clone();
+                extend_usage_count(usage_counts, &mut all_usage_counts);
+            }
+            root_field::SubscriptionRootField::ModelSelectMany { ir, .. } => {
+                let usage_counts = ir.usage_counts.clone();
+                extend_usage_count(usage_counts, &mut all_usage_counts);
+            }
+            root_field::SubscriptionRootField::ModelSelectAggregate { ir, .. } => {
+                let usage_counts = ir.usage_counts.clone();
+                extend_usage_count(usage_counts, &mut all_usage_counts);
+            }
+        },
     }
     all_usage_counts
 }

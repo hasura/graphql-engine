@@ -1,4 +1,4 @@
-use crate::{error, HttpContext};
+use crate::error;
 use ir::NdcRelationshipName;
 use open_dds::{commands::ProcedureName, types::DataConnectorArgumentName};
 use std::collections::BTreeMap;
@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 use super::arguments;
 use super::field;
 use super::filter;
+use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 
 pub type UnresolvedMutationExecutionPlan<'s> = MutationExecutionPlan<'s, ir::Expression<'s>>;
@@ -30,7 +31,7 @@ pub struct MutationExecutionPlan<'s, TFilterExpression> {
 impl<'s> UnresolvedMutationExecutionPlan<'s> {
     pub async fn resolve(
         self,
-        http_context: &'s HttpContext,
+        resolve_context: &'s ResolveFilterExpressionContext,
     ) -> Result<ResolvedMutationExecutionPlan<'s>, error::FieldError> {
         let MutationExecutionPlan {
             procedure_name,
@@ -41,12 +42,12 @@ impl<'s> UnresolvedMutationExecutionPlan<'s> {
         } = self;
 
         let resolved_fields = match procedure_fields {
-            Some(fields) => Some(fields.resolve(http_context).await?),
+            Some(fields) => Some(fields.resolve(resolve_context).await?),
             None => None,
         };
 
         let resolved_arguments =
-            arguments::resolve_mutation_arguments(http_context, procedure_arguments).await?;
+            arguments::resolve_mutation_arguments(resolve_context, procedure_arguments).await?;
 
         Ok(MutationExecutionPlan {
             procedure_name,

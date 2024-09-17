@@ -283,11 +283,34 @@ impl ResolvedFilterExpression {
     }
 }
 
+/// Context required to resolve the filter expressions
+pub enum ResolveFilterExpressionContext {
+    /// Allow only expressions that can be pushed down to NDC.
+    /// Reject relationships that require resolution in engine such as remote relationship comparison
+    /// and local relationships without NDC 'relation_comparisoins' capability.
+    OnlyNdcPushdown,
+    /// Allow predicate resolution in engine for relationships.
+    /// Requires the HTTP context to fetch the relationship data.
+    AllowInEngineResolution { http_context: HttpContext },
+}
+
+impl ResolveFilterExpressionContext {
+    /// Create a new context to allow predicate resolution in engine
+    pub fn new_allow_in_engine_resolution(http_context: HttpContext) -> Self {
+        ResolveFilterExpressionContext::AllowInEngineResolution { http_context }
+    }
+
+    /// Create a new context to reject predicate resolution in engine
+    pub fn new_only_allow_ndc_pushdown_expressions() -> Self {
+        ResolveFilterExpressionContext::OnlyNdcPushdown
+    }
+}
+
 /// Resolve the filter expression plan and generate NDC expression.
 #[async_recursion]
 pub async fn resolve_expression<'s>(
     expression: ir::Expression<'s>,
-    http_context: &HttpContext,
+    resolve_context: &ResolveFilterExpressionContext,
 ) -> Result<ResolvedFilterExpression, error::FieldError>
 where
     's: 'async_recursion,
@@ -296,7 +319,8 @@ where
         ir::Expression::And { expressions } => {
             let mut resolved_expressions: Vec<ResolvedFilterExpression> = Vec::new();
             for subexpression in expressions {
-                let resolved_expression = resolve_expression(subexpression, http_context).await?;
+                let resolved_expression =
+                    resolve_expression(subexpression, resolve_context).await?;
                 resolved_expressions.push(resolved_expression);
             }
             Ok(ResolvedFilterExpression::And {
@@ -306,7 +330,7 @@ where
         ir::Expression::Or { expressions } => {
             let mut resolved_expressions = Vec::new();
             for subexpression in expressions {
-                let resolve_expression = resolve_expression(subexpression, http_context).await?;
+                let resolve_expression = resolve_expression(subexpression, resolve_context).await?;
                 resolved_expressions.push(resolve_expression);
             }
             Ok(ResolvedFilterExpression::Or {
@@ -316,7 +340,7 @@ where
         ir::Expression::Not {
             expression: subexpression,
         } => {
-            let resolved_expression = resolve_expression(*subexpression, http_context).await?;
+            let resolved_expression = resolve_expression(*subexpression, resolve_context).await?;
             Ok(ResolvedFilterExpression::Not {
                 expression: Box::new(resolved_expression),
             })
@@ -329,7 +353,7 @@ where
             predicate,
             info: _,
         } => {
-            let resolved_expression = resolve_expression(*predicate, http_context).await?;
+            let resolved_expression = resolve_expression(*predicate, resolve_context).await?;
             Ok(ResolvedFilterExpression::LocalRelationshipComparison {
                 relationship,
                 predicate: Box::new(resolved_expression),
@@ -340,7 +364,7 @@ where
             field_path,
             predicate,
         } => {
-            let resolved_expression = resolve_expression(*predicate, http_context).await?;
+            let resolved_expression = resolve_expression(*predicate, resolve_context).await?;
             Ok(ResolvedFilterExpression::LocalNestedArray {
                 column,
                 field_path,
@@ -354,6 +378,16 @@ where
             ndc_column_mapping,
             predicate,
         } => {
+            let http_context = match resolve_context {
+                ResolveFilterExpressionContext::AllowInEngineResolution { http_context } => {
+                    http_context
+                }
+                ResolveFilterExpressionContext::OnlyNdcPushdown => {
+                    return Err(error::FieldError::RelationshipPredicatesNotSupported {
+                        name: relationship.clone(),
+                    })
+                }
+            };
             let tracer = tracing_util::global_tracer();
             tracer
                 .in_span_async(
@@ -374,7 +408,7 @@ where
                                 })?;
 
                             let query_execution_plan = query::QueryExecutionPlan {
-                                query_node: remote_query_node.resolve(http_context).await?,
+                                query_node: remote_query_node.resolve(resolve_context).await?,
                                 collection: target_model_source.collection.clone(),
                                 arguments: BTreeMap::new(),
                                 collection_relationships,

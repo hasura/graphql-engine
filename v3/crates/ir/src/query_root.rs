@@ -173,7 +173,7 @@ fn generate_type_field_ir<'n, 's>(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn generate_model_rootfield_ir<'n, 's>(
+pub fn generate_model_rootfield_ir<'n, 's>(
     type_name: &ast::TypeName,
     source: &'s Option<metadata_resolve::ModelSource>,
     data_type: &metadata_resolve::Qualified<CustomTypeName>,

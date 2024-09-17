@@ -50,6 +50,9 @@ pub enum Error {
         field_name: String,
     },
 
+    #[error("Only one subscription root field is allowed")]
+    NoneOrMoreSubscriptionRootFields,
+
     #[error("internal: {0}")]
     Internal(#[from] InternalError),
 }
@@ -183,9 +186,6 @@ pub enum InternalDeveloperError {
 
     #[error("The relationship '{relationship_name}' is from a nested object and cannot be used in a predicate")]
     NestedObjectRelationshipInPredicate { relationship_name: RelationshipName },
-
-    #[error("subscription are not supported yet")]
-    SubscriptionsNotSupported,
 }
 
 #[derive(Debug, thiserror::Error)]

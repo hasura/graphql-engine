@@ -1,5 +1,6 @@
 use gql::{ast::common as ast, http::GraphQLError};
 use lang_graphql as gql;
+use open_dds::relationships::RelationshipName;
 use reqwest::StatusCode;
 use serde_json as json;
 use thiserror::Error;
@@ -84,6 +85,12 @@ pub enum FieldError {
     #[error("field '{field_name:} not found in _Service")]
     FieldNotFoundInService { field_name: String },
 
+    #[error("subscription are not supported over HTTP")]
+    SubscriptionsNotSupported,
+
+    #[error("Relationship '{name}' is either remote or not having 'relation_comparisons' NDC capability; not supported for filtering")]
+    RelationshipPredicatesNotSupported { name: RelationshipName },
+
     #[error("internal error: {0}")]
     InternalError(#[from] FieldInternalError),
 }
@@ -95,7 +102,9 @@ impl FieldError {
                 Some(connector_error.error_response.details().clone())
             }
             Self::InternalError(internal) => internal.get_details(),
-            Self::FieldNotFoundInService { .. } => None,
+            Self::FieldNotFoundInService { .. }
+            | Self::SubscriptionsNotSupported
+            | Self::RelationshipPredicatesNotSupported { .. } => None,
         }
     }
 
@@ -125,7 +134,10 @@ impl FieldError {
 impl TraceableError for FieldError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Self::NDCExpected { .. } | Self::FieldNotFoundInService { .. } => ErrorVisibility::User,
+            Self::NDCExpected { .. }
+            | Self::FieldNotFoundInService { .. }
+            | Self::RelationshipPredicatesNotSupported { .. }
+            | Self::SubscriptionsNotSupported => ErrorVisibility::User,
             Self::InternalError(internal_error) => internal_error.visibility(),
         }
     }

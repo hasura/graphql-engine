@@ -128,7 +128,12 @@ pub fn generate_ir<'n, 's>(
             Ok(ir::IR::Mutation(mutation_ir))
         }
         ast::OperationType::Subscription => {
-            Err(ir::InternalDeveloperError::SubscriptionsNotSupported)?
+            let (alias, field) = ir::generate_subscription_ir(
+                session,
+                request_headers,
+                &normalized_request.selection_set,
+            )?;
+            Ok(ir::IR::Subscription(alias, field))
         }
     }
 }

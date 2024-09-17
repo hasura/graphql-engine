@@ -83,6 +83,7 @@ use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;
 
 use crate::plan;
+use crate::plan::filter::ResolveFilterExpressionContext;
 
 use super::ndc::execute_ndc_query;
 use super::plan::ProcessResponseAs;
@@ -150,7 +151,9 @@ where
         join_node.target_ndc_execution.variables = Some(foreach_variables);
 
         let execution_node = join_node.target_ndc_execution.clone();
-        let resolved_execution_plan = execution_node.resolve(http_context).await?;
+        let resolve_context =
+            ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context.clone());
+        let resolved_execution_plan = execution_node.resolve(&resolve_context).await?;
         let ndc_query = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)?;
 
         // execute the remote query

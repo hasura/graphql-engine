@@ -1,8 +1,11 @@
 use super::steps;
-use execute::plan;
+use indexmap::IndexMap;
 
 use super::types::GraphQLResponse;
-use execute::{HttpContext, ProjectId};
+use execute::{
+    plan::{self, RootFieldResult},
+    ExecuteQueryResult, HttpContext, ProjectId,
+};
 
 use hasura_authn_core::Session;
 use lang_graphql as gql;
@@ -124,6 +127,27 @@ pub async fn execute_query_internal(
                                             project_id,
                                         )
                                         .await
+                                    }
+                                    plan::RequestPlan::SubscriptionPlan(
+                                        alias,
+                                        subscription_plan,
+                                    ) => {
+                                        // subscriptions are not supported over HTTP
+                                        let result =
+                                            Err(execute::FieldError::SubscriptionsNotSupported);
+                                        let root_field_result = RootFieldResult {
+                                            is_nullable: subscription_plan
+                                                .process_response_as
+                                                .is_nullable(),
+                                            result,
+                                            headers: None,
+                                        };
+                                        ExecuteQueryResult {
+                                            root_fields: IndexMap::from([(
+                                                alias,
+                                                root_field_result,
+                                            )]),
+                                        }
                                     }
                                 };
 

@@ -22,6 +22,10 @@ impl<T> JoinLocations<T> {
     pub fn new() -> JoinLocations<T> {
         JoinLocations::default()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.locations.is_empty()
+    }
 }
 
 impl<T> Default for JoinLocations<T> {

@@ -8,6 +8,7 @@ use async_recursion::async_recursion;
 use execute::ndc::client as ndc_client;
 use execute::plan::{
     self, ApolloFederationSelect, NDCQueryExecution, NodeQueryPlan, ProcessResponseAs,
+    ResolveFilterExpressionContext,
 };
 use execute::HttpContext;
 use execute::{JoinId, JoinLocations, JoinNode, RemoteJoin, RemoteJoinType};
@@ -113,6 +114,16 @@ async fn explain_query_internal(
                                             )
                                             .await
                                         }
+                                        plan::RequestPlan::SubscriptionPlan(
+                                            _alias,
+                                            _subscription_plan,
+                                        ) => {
+                                            // subscriptions are not supported over HTTP
+                                            Err(execute::RequestError::ExplainError(
+                                                "Subscriptions are not supported in explain API"
+                                                    .to_string(),
+                                            ))
+                                        }
                                     };
                                     // convert the query plan to explain step
                                     match request_result {
@@ -139,6 +150,9 @@ pub(crate) async fn explain_query_plan(
     query_plan: plan::QueryPlan<'_, '_, '_>,
 ) -> Result<types::Step, execute::RequestError> {
     let mut parallel_root_steps = vec![];
+    // Allow resolving in-engine relationship predicates
+    let resolve_context =
+        ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context.clone());
     // Here, we are assuming that all root fields are executed in parallel.
     for (alias, node) in query_plan {
         match node {
@@ -161,7 +175,7 @@ pub(crate) async fn explain_query_plan(
 
                 let resolved_execution_plan = execution_tree
                     .query_execution_plan
-                    .resolve(http_context)
+                    .resolve(&resolve_context)
                     .await
                     .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
@@ -173,6 +187,7 @@ pub(crate) async fn explain_query_plan(
                 let sequence_steps = get_execution_steps(
                     expose_internal_errors,
                     http_context,
+                    &resolve_context,
                     alias,
                     &process_response_as,
                     execution_tree.remote_join_executions,
@@ -206,7 +221,7 @@ pub(crate) async fn explain_query_plan(
 
                     let resolved_execution_plan = execution_tree
                         .query_execution_plan
-                        .resolve(http_context)
+                        .resolve(&resolve_context)
                         .await
                         .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
@@ -218,6 +233,7 @@ pub(crate) async fn explain_query_plan(
                     let sequence_steps = get_execution_steps(
                         expose_internal_errors,
                         http_context,
+                        &resolve_context,
                         alias.clone(),
                         &process_response_as,
                         execution_tree.remote_join_executions,
@@ -295,9 +311,12 @@ pub(crate) async fn explain_mutation_plan(
             )
             .await?;
 
+            let resolve_context = ResolveFilterExpressionContext::new_allow_in_engine_resolution(
+                http_context.clone(),
+            );
             let resolved_execution_plan = ndc_mutation_execution
                 .execution_node
-                .resolve(http_context)
+                .resolve(&resolve_context)
                 .await
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
@@ -308,6 +327,7 @@ pub(crate) async fn explain_mutation_plan(
             let sequence_steps = get_execution_steps(
                 expose_internal_errors,
                 http_context,
+                &resolve_context,
                 alias,
                 &ndc_mutation_execution.process_response_as,
                 ndc_mutation_execution.join_locations,
@@ -338,6 +358,7 @@ pub(crate) async fn explain_mutation_plan(
 async fn get_execution_steps<'s>(
     expose_internal_errors: execute::ExposeInternalErrors,
     http_context: &HttpContext,
+    resolve_context: &ResolveFilterExpressionContext,
     alias: gql::ast::common::Alias,
     process_response_as: &ProcessResponseAs<'s>,
     join_locations: JoinLocations<(RemoteJoin<'s, '_>, JoinId)>,
@@ -380,8 +401,13 @@ async fn get_execution_steps<'s>(
             })))
         }
     };
-    if let Some(join_steps) =
-        get_join_steps(expose_internal_errors, join_locations, http_context).await?
+    if let Some(join_steps) = get_join_steps(
+        expose_internal_errors,
+        join_locations,
+        http_context,
+        resolve_context,
+    )
+    .await?
     {
         sequence_steps.push(Box::new(types::Step::Sequence(join_steps)));
         sequence_steps.push(Box::new(types::Step::HashJoin));
@@ -398,6 +424,7 @@ async fn get_join_steps(
     expose_internal_errors: execute::ExposeInternalErrors,
     join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'async_recursion>, JoinId)>,
     http_context: &HttpContext,
+    resolve_context: &ResolveFilterExpressionContext,
 ) -> Result<Option<NonEmpty<Box<types::Step>>>, execute::RequestError> {
     let mut sequence_join_steps = vec![];
     for (alias, location) in join_locations.locations {
@@ -405,7 +432,7 @@ async fn get_join_steps(
         if let JoinNode::Remote((remote_join, _join_id)) = location.join_node {
             let mut resolved_execution_plan = remote_join
                 .target_ndc_execution
-                .resolve(http_context)
+                .resolve(resolve_context)
                 .await
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
@@ -443,8 +470,13 @@ async fn get_join_steps(
                 },
             )));
         };
-        if let Some(rest_join_steps) =
-            get_join_steps(expose_internal_errors, location.rest, http_context).await?
+        if let Some(rest_join_steps) = get_join_steps(
+            expose_internal_errors,
+            location.rest,
+            http_context,
+            resolve_context,
+        )
+        .await?
         {
             sequence_steps.push(Box::new(types::Step::Sequence(rest_join_steps)));
             sequence_steps.push(Box::new(types::Step::HashJoin));

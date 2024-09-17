@@ -3,7 +3,7 @@ use super::types;
 use async_recursion::async_recursion;
 use execute::plan;
 use execute::plan::field::{UnresolvedField, UnresolvedNestedField};
-use execute::plan::UnresolvedQueryNode;
+use execute::plan::{ResolveFilterExpressionContext, UnresolvedQueryNode};
 use execute::HttpContext;
 use indexmap::IndexMap;
 use ir::NdcFieldAlias;
@@ -152,7 +152,11 @@ async fn explain_query_predicate<'s>(
             .await?;
 
             let resolved_query_node = remote_query_node
-                .resolve(http_context)
+                .resolve(
+                    &ResolveFilterExpressionContext::new_allow_in_engine_resolution(
+                        http_context.clone(),
+                    ),
+                )
                 .await
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 

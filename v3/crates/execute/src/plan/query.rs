@@ -1,4 +1,4 @@
-use crate::{error, HttpContext};
+use crate::error;
 use ir::{AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, VariableName};
 
 use async_recursion::async_recursion;
@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 use super::arguments;
 use super::field;
 use super::filter;
+use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 
 pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, ir::Expression<'s>>;
@@ -33,7 +34,7 @@ pub struct QueryExecutionPlan<'s, TFilterExpression> {
 impl<'s> UnresolvedQueryExecutionPlan<'s> {
     pub async fn resolve(
         self,
-        http_context: &'s HttpContext,
+        resolve_context: &'s ResolveFilterExpressionContext,
     ) -> Result<ResolvedQueryExecutionPlan<'s>, error::FieldError> {
         let QueryExecutionPlan {
             query_node,
@@ -44,9 +45,9 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
             data_connector,
         } = self;
         let query_request = QueryExecutionPlan {
-            query_node: query_node.resolve(http_context).await?,
+            query_node: query_node.resolve(resolve_context).await?,
             collection,
-            arguments: arguments::resolve_arguments(http_context, arguments).await?,
+            arguments: arguments::resolve_arguments(resolve_context, arguments).await?,
             collection_relationships,
             variables,
             data_connector,
@@ -79,7 +80,7 @@ impl<'s> UnresolvedQueryNode<'s> {
     #[async_recursion]
     pub async fn resolve(
         self,
-        http_context: &'s HttpContext,
+        resolve_context: &'s ResolveFilterExpressionContext,
     ) -> Result<ResolvedQueryNode, error::FieldError>
     where
         's: 'async_recursion,
@@ -93,14 +94,14 @@ impl<'s> UnresolvedQueryNode<'s> {
             fields,
         } = self;
         let predicate = match predicate {
-            Some(predicate) => Some(filter::resolve_expression(predicate, http_context).await?),
+            Some(predicate) => Some(filter::resolve_expression(predicate, resolve_context).await?),
             None => None,
         };
         let fields = match fields {
             Some(fields) => {
                 let mut ndc_fields_ = IndexMap::new();
                 for (name, field) in fields {
-                    ndc_fields_.insert(name, field.resolve(http_context).await?);
+                    ndc_fields_.insert(name, field.resolve(resolve_context).await?);
                 }
                 Some(ndc_fields_)
             }

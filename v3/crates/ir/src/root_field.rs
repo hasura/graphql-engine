@@ -80,3 +80,23 @@ pub enum MutationRootField<'n, 's> {
         ir: commands::ProcedureBasedCommand<'s>,
     },
 }
+
+/// IR of a subscription root field
+#[derive(Serialize, Debug)]
+pub enum SubscriptionRootField<'n, 's> {
+    // Operation that selects a single row from a model
+    ModelSelectOne {
+        selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
+        ir: select_one::ModelSelectOne<'n, 's>,
+    },
+    // Operation that selects many rows from a model
+    ModelSelectMany {
+        selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
+        ir: select_many::ModelSelectMany<'n, 's>,
+    },
+    // Operation that selects an aggregate of rows from a model
+    ModelSelectAggregate {
+        selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
+        ir: select_aggregate::ModelSelectAggregate<'n, 's>,
+    },
+}

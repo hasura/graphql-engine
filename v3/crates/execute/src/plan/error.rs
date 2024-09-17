@@ -11,12 +11,16 @@ use tracing_util::TraceableError;
 pub enum Error {
     #[error("internal: {0}")]
     Internal(#[from] InternalError),
+
+    #[error("remote joins are not supported in subscriptions")]
+    RemoteJoinsAreNotSupportedSubscriptions,
 }
 
 impl TraceableError for Error {
     fn visibility(&self) -> tracing_util::ErrorVisibility {
         match self {
             Self::Internal(_internal) => tracing_util::ErrorVisibility::Internal,
+            Self::RemoteJoinsAreNotSupportedSubscriptions => tracing_util::ErrorVisibility::User,
         }
     }
 }

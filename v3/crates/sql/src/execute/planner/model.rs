@@ -214,7 +214,11 @@ pub(crate) async fn model_target_to_ndc_query(
                 })?;
             // TODO: this thing has to change, need to be pushed into the
             // execution plan. We shouldn't be running this in the planning phase
-            let filter = execute::plan::resolve_expression(filter_plan, &http_context.clone())
+            let resolve_context =
+                execute::plan::ResolveFilterExpressionContext::new_allow_in_engine_resolution(
+                    http_context.clone(),
+                );
+            let filter = execute::plan::resolve_expression(filter_plan, &resolve_context)
                 .await
                 .map_err(|e| {
                     DataFusionError::Internal(format!(

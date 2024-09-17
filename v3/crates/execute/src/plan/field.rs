@@ -1,4 +1,4 @@
-use crate::{error, HttpContext};
+use crate::error;
 use async_recursion::async_recursion;
 use indexmap::IndexMap;
 use ir::{NdcFieldAlias, NdcRelationshipName};
@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 
 use super::arguments;
 use super::filter;
+use super::filter::ResolveFilterExpressionContext;
 use super::query;
 
 pub type UnresolvedField<'s> = Field<ir::Expression<'s>>;
@@ -37,7 +38,7 @@ impl<'s> UnresolvedField<'s> {
     /// Resolve field plan into NDC field
     pub async fn resolve(
         self,
-        http_context: &'s HttpContext,
+        resolve_context: &'s ResolveFilterExpressionContext,
     ) -> Result<ResolvedField, error::FieldError> {
         match self {
             Field::Column {
@@ -46,13 +47,13 @@ impl<'s> UnresolvedField<'s> {
                 arguments,
             } => {
                 let resolved_fields = match fields {
-                    Some(nested_field) => Some(nested_field.resolve(http_context).await?),
+                    Some(nested_field) => Some(nested_field.resolve(resolve_context).await?),
                     None => None,
                 };
                 Ok(Field::Column {
                     column,
                     fields: resolved_fields,
-                    arguments: arguments::resolve_arguments(http_context, arguments).await?,
+                    arguments: arguments::resolve_arguments(resolve_context, arguments).await?,
                 })
             }
             Field::Relationship {
@@ -60,11 +61,11 @@ impl<'s> UnresolvedField<'s> {
                 relationship,
                 arguments,
             } => {
-                let query_node = query_node.resolve(http_context).await?;
+                let query_node = query_node.resolve(resolve_context).await?;
                 Ok(Field::Relationship {
                     query_node: Box::new(query_node),
                     relationship,
-                    arguments: arguments::resolve_arguments(http_context, arguments).await?,
+                    arguments: arguments::resolve_arguments(resolve_context, arguments).await?,
                 })
             }
         }
@@ -84,17 +85,17 @@ impl<'s> UnresolvedNestedField<'s> {
     #[async_recursion]
     pub async fn resolve(
         self,
-        http_context: &'s HttpContext,
+        resolve_context: &'s ResolveFilterExpressionContext,
     ) -> Result<ResolvedNestedField, error::FieldError>
     where
         's: 'async_recursion,
     {
         match self {
             NestedField::Object(nested_object) => Ok(NestedField::Object(
-                nested_object.resolve(http_context).await?,
+                nested_object.resolve(resolve_context).await?,
             )),
             NestedField::Array(nested_array) => Ok(NestedField::Array(
-                nested_array.resolve(http_context).await?,
+                nested_array.resolve(resolve_context).await?,
             )),
         }
     }
@@ -111,11 +112,11 @@ pub struct NestedObject<TFilterExpression> {
 impl<'s> UnresolvedNestedObject<'s> {
     pub async fn resolve(
         self,
-        http_context: &'s HttpContext,
+        resolve_context: &'s ResolveFilterExpressionContext,
     ) -> Result<ResolvedNestedObject, error::FieldError> {
         let mut fields = IndexMap::new();
         for (name, field) in self.fields {
-            fields.insert(name, field.resolve(http_context).await?);
+            fields.insert(name, field.resolve(resolve_context).await?);
         }
         Ok(NestedObject { fields })
     }
@@ -132,9 +133,9 @@ pub struct NestedArray<TFilterExpression> {
 impl<'s> UnresolvedNestedArray<'s> {
     pub async fn resolve(
         self,
-        http_context: &'s HttpContext,
+        resolve_context: &'s ResolveFilterExpressionContext,
     ) -> Result<ResolvedNestedArray, error::FieldError> {
-        let fields = self.fields.resolve(http_context).await?;
+        let fields = self.fields.resolve(resolve_context).await?;
         Ok(NestedArray {
             fields: Box::new(fields),
         })

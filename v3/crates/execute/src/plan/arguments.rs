@@ -3,8 +3,9 @@ use std::collections::BTreeMap;
 
 use super::error as plan_error;
 use super::filter;
+use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
-use crate::{error, HttpContext};
+use crate::error;
 use ir::{NdcRelationshipName, VariableName};
 
 pub type UnresolvedArgument<'s> = Argument<ir::Expression<'s>>;
@@ -48,14 +49,14 @@ impl<'s> UnresolvedArgument<'s> {
 
     pub async fn resolve(
         self,
-        http_context: &HttpContext,
+        resolve_context: &ResolveFilterExpressionContext,
     ) -> Result<ResolvedArgument, error::FieldError> {
         match self {
             Argument::Literal { value } => Ok(Argument::Literal { value }),
             Argument::Variable { name } => Ok(Argument::Variable { name }),
             Argument::BooleanExpression { predicate } => {
                 let resolved_predicate =
-                    filter::resolve_expression(predicate, http_context).await?;
+                    filter::resolve_expression(predicate, resolve_context).await?;
                 Ok(Argument::BooleanExpression {
                     predicate: resolved_predicate,
                 })
@@ -101,13 +102,13 @@ impl<'s> UnresolvedMutationArgument<'s> {
 
     pub async fn resolve(
         self,
-        http_context: &HttpContext,
+        resolve_context: &ResolveFilterExpressionContext,
     ) -> Result<ResolvedMutationArgument, error::FieldError> {
         match self {
             MutationArgument::Literal { value } => Ok(MutationArgument::Literal { value }),
             MutationArgument::BooleanExpression { predicate } => {
                 let resolved_predicate =
-                    filter::resolve_expression(predicate, http_context).await?;
+                    filter::resolve_expression(predicate, resolve_context).await?;
                 Ok(MutationArgument::BooleanExpression {
                     predicate: resolved_predicate,
                 })
@@ -147,7 +148,7 @@ pub fn plan_mutation_arguments<'s>(
 }
 
 pub(crate) async fn resolve_arguments<'s>(
-    http_context: &HttpContext,
+    resolve_context: &ResolveFilterExpressionContext,
     arguments: BTreeMap<DataConnectorArgumentName, Argument<ir::Expression<'s>>>,
 ) -> Result<
     BTreeMap<DataConnectorArgumentName, Argument<filter::ResolvedFilterExpression>>,
@@ -155,13 +156,16 @@ pub(crate) async fn resolve_arguments<'s>(
 > {
     let mut result = BTreeMap::new();
     for (argument_name, argument_value) in arguments {
-        result.insert(argument_name, argument_value.resolve(http_context).await?);
+        result.insert(
+            argument_name,
+            argument_value.resolve(resolve_context).await?,
+        );
     }
     Ok(result)
 }
 
 pub(crate) async fn resolve_mutation_arguments<'s>(
-    http_context: &HttpContext,
+    resolve_context: &ResolveFilterExpressionContext,
     arguments: BTreeMap<DataConnectorArgumentName, MutationArgument<ir::Expression<'s>>>,
 ) -> Result<
     BTreeMap<DataConnectorArgumentName, MutationArgument<filter::ResolvedFilterExpression>>,
@@ -169,7 +173,10 @@ pub(crate) async fn resolve_mutation_arguments<'s>(
 > {
     let mut result = BTreeMap::new();
     for (argument_name, argument_value) in arguments {
-        result.insert(argument_name, argument_value.resolve(http_context).await?);
+        result.insert(
+            argument_name,
+            argument_value.resolve(resolve_context).await?,
+        );
     }
     Ok(result)
 }

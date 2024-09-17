@@ -4,6 +4,7 @@ use execute::HttpContext;
 use execute::{execute_mutation_plan, execute_query_plan, generate_request_plan};
 use graphql_frontend::{execute_query_internal, generate_ir};
 use hasura_authn_core::Identity;
+use indexmap::IndexMap;
 use lang_graphql::http::RawRequest;
 use open_dds::permissions::Role;
 use schema::GDS;
@@ -166,6 +167,18 @@ pub fn bench_execute(
                     }
                     execute::RequestPlan::MutationPlan(mutation_plan) => {
                         execute_mutation_plan(&http_context, mutation_plan, None).await
+                    }
+                    execute::RequestPlan::SubscriptionPlan(alias, subscription_plan) => {
+                        // subscriptions are not supported
+                        let result = Err(execute::FieldError::SubscriptionsNotSupported);
+                        let root_field_result = execute::plan::RootFieldResult {
+                            is_nullable: subscription_plan.process_response_as.is_nullable(),
+                            result,
+                            headers: None,
+                        };
+                        execute::plan::ExecuteQueryResult {
+                            root_fields: IndexMap::from([(alias, root_field_result)]),
+                        }
                     }
                 }
             });

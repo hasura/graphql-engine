@@ -18,6 +18,7 @@ mod relationship;
 mod remote_joins;
 mod root_field;
 mod selection_set;
+mod subscription_root;
 
 pub use error::{Error, InternalDeveloperError, InternalEngineError};
 pub use remote_joins::VariableName;
@@ -43,15 +44,20 @@ pub use relationship::{
     build_remote_command_relationship, build_remote_relationship, get_field_mapping_of_field_name,
     LocalCommandRelationshipInfo, LocalModelRelationshipInfo,
 };
-pub use root_field::{ApolloFederationRootFields, MutationRootField, QueryRootField};
+pub use root_field::{
+    ApolloFederationRootFields, MutationRootField, QueryRootField, SubscriptionRootField,
+};
 pub use selection_set::{
     generate_selection_set_ir, FieldSelection, NdcFieldAlias, NdcRelationshipName, NestedSelection,
     ResultSelectionSet,
 };
+pub use subscription_root::generate_ir as generate_subscription_ir;
 
 /// The IR is the intermediate representation of the GraphQL operation.
 #[derive(Serialize, Debug)]
 pub enum IR<'n, 's> {
     Query(IndexMap<ast::Alias, root_field::QueryRootField<'n, 's>>),
     Mutation(IndexMap<ast::Alias, root_field::MutationRootField<'n, 's>>),
+    /// Only one root field is allowed in a subscription
+    Subscription(ast::Alias, root_field::SubscriptionRootField<'n, 's>),
 }

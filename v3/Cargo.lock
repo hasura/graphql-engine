@@ -1787,6 +1787,7 @@ dependencies = [
  "hasura-authn-jwt",
  "hasura-authn-noauth",
  "hasura-authn-webhook",
+ "indexmap 2.5.0",
  "json_value_merge",
  "jsonapi 0.7.0",
  "jsonapi 3.0.0",
