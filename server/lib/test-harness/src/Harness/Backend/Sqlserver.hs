@@ -23,7 +23,6 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Concurrent.Extended (sleep)
-import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.String (fromString)
 import Data.String.Interpolate (i)

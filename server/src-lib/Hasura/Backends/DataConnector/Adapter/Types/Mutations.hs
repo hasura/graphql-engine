@@ -36,10 +36,14 @@ deriving stock instance (Backend 'DataConnector) => Foldable DataConnectorUpdate
 
 deriving stock instance (Backend 'DataConnector) => Traversable DataConnectorUpdateVariant
 
+deriving stock instance (Backend 'DataConnector, Show v) => Show (DataConnectorUpdateVariant v)
+
+deriving stock instance (Backend 'DataConnector, Eq v) => Eq (DataConnectorUpdateVariant v)
+
 --------------------------------------------------------------------------------
 
 -- | The operators that are used to mutate specific columns on a table
 data UpdateOperator v
   = UpdateSet v
   | UpdateCustomOperator API.UpdateColumnOperatorName v
-  deriving stock (Functor, Foldable, Traversable)
+  deriving stock (Functor, Foldable, Traversable, Eq, Show)

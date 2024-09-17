@@ -5,6 +5,7 @@ module Data.Parser.JSONPath
 where
 
 import Control.Applicative
+import Control.Monad
 import Data.Aeson (Key)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K

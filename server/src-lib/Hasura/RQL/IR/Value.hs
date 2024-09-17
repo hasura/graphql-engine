@@ -1,5 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
-
 module Hasura.RQL.IR.Value
   ( UnpreparedValue (..),
     Provenance (..),
@@ -39,14 +37,12 @@ data UnpreparedValue (b :: BackendType)
     UVSessionVar (SessionVarType b) SessionVariable
 
 deriving instance
-  ( Backend b,
-    Eq (ColumnValue b)
+  ( Backend b
   ) =>
   Eq (UnpreparedValue b)
 
 deriving instance
-  ( Backend b,
-    Show (ColumnValue b)
+  ( Backend b
   ) =>
   Show (UnpreparedValue b)
 

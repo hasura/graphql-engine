@@ -4880,10 +4880,10 @@
                 },
                 "oneOf": [
                     {
-                        "$ref": "#/components/schemas/InferredFunctionResponse"
+                        "$ref": "#/components/schemas/TableFunctionResponse"
                     },
                     {
-                        "$ref": "#/components/schemas/TableFunctionResponse"
+                        "$ref": "#/components/schemas/InferredFunctionResponse"
                     }
                 ]
             },

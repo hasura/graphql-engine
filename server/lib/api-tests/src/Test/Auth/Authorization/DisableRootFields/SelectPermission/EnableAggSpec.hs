@@ -187,8 +187,8 @@ internal:
     comment: null
     permission:
       query_root_fields:
-      - select_aggregate
       - select
+      - select_aggregate
       allow_aggregations: false
       computed_fields: []
       columns:

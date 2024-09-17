@@ -1,4 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
+-- TODO:
+-- In the use of ‘unregisteredClaims’ (imported from Crypto.JWT):
+--     Deprecated: "use a sub-type"
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- |
 -- Module      : Hasura.Server.Auth.JWT
@@ -95,7 +99,7 @@ import Hasura.Server.Auth.JWT.Logging
 import Hasura.Server.Utils (executeJSONPath)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.HTTP.Types as N
-import Network.URI (URI)
+import Network.URI.Extended (URI)
 import Network.Wreq qualified as Wreq
 import Web.Spock.Internal.Cookies qualified as Spock
 

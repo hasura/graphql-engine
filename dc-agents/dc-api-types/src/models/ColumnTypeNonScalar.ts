@@ -5,5 +5,5 @@
 import type { ColumnTypeArray } from './ColumnTypeArray';
 import type { ColumnTypeObject } from './ColumnTypeObject';
 
-export type ColumnTypeNonScalar = (ColumnTypeArray | ColumnTypeObject);
+export type ColumnTypeNonScalar = (ColumnTypeObject | ColumnTypeArray);
 

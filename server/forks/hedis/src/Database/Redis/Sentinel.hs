@@ -44,6 +44,7 @@ module Database.Redis.Sentinel
 import           Control.Concurrent
 import           Control.Exception     (Exception, IOException, evaluate, throwIO)
 import           Control.Monad
+import           Control.Monad.IO.Class
 import           Control.Monad.Catch   (Handler (..), MonadCatch, catches, throwM)
 import           Control.Monad.Except
 import           Data.ByteString       (ByteString)

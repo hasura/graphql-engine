@@ -161,6 +161,9 @@ common common-all
     -fmax-simplifier-iterations=2
     -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
     -Weverything
+    -Wno-missing-role-annotations
+    -Wno-term-variable-capture
+    -Wno-missing-poly-kind-signatures
     -Wno-missing-exported-signatures
     -Wno-missing-import-lists
     -Wno-missed-specialisations
@@ -191,12 +194,9 @@ common common-all
       -- in the graphql-engine 'executable' stanza below, and in any other dependent
       -- executables (See mono #2610):
       -fexpose-all-unfoldings
-      -- Use O1 over O2, as (as of writing) it improves compile times a little, without
-      -- hurting performance:
-      -O1
-      -- This seems like a better default for us, lowering memory residency without
-      -- impacting compile times too much, though it does increase binary size:
-      -funfolding-use-threshold=640
+      -O2
+      -- This is lowered to limit compile time and binary size (default 80)
+      -funfolding-use-threshold=40
   else
     -- we just want to build fast:
     ghc-options: -O0
@@ -288,7 +288,6 @@ common lib-depends
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , dependent-sum
-                     , dependent-sum-template
                      , either
                      , extra
                      , hasura-error-message
@@ -371,12 +370,12 @@ common lib-depends
                      , byteorder
 
                      -- for parsing RSA keys
-                     , cryptonite
+                     , crypton
 
                      -- for jwt verification
                      , jose
                      , pem
-                     , x509
+                     , crypton-x509
                      , asn1-encoding
                      , asn1-types
 
@@ -479,12 +478,12 @@ common lib-depends
 
                      -- bigquery support
                      , memory
-                     , x509-store
-                     , connection
+                     , crypton-x509-store
+                     , crypton-connection
                      , tls
-                     , x509-validation
+                     , crypton-x509-validation
                      , data-default-class
-                     , x509-system
+                     , crypton-x509-system
                      , tagged
                       -- dependency of vendored 'ip':
                      , wide-word

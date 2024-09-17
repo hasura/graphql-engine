@@ -1,5 +1,4 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 -- | Removed from `RQL.IR.Select` to speed up compilation
 module Hasura.RQL.IR.Select.Args
@@ -40,14 +39,12 @@ type SelectStreamArgs b = SelectStreamArgsG b (SQLExpression b)
 
 deriving instance
   ( Backend b,
-    Eq (AnnBoolExp b v),
     Eq v
   ) =>
   Eq (SelectStreamArgsG b v)
 
 deriving instance
   ( Backend b,
-    Show (AnnBoolExp b v),
     Show v
   ) =>
   Show (SelectStreamArgsG b v)
@@ -63,25 +60,19 @@ data SelectArgsG (b :: BackendType) v = SelectArgs
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnBoolExp b v),
-    Eq (AnnotatedOrderByItemG b v),
-    Eq (AnnDistinctColumn b v)
+    Eq v
   ) =>
   Eq (SelectArgsG b v)
 
 instance
   ( Backend b,
-    Hashable (AnnBoolExp b v),
-    Hashable (AnnotatedOrderByItemG b v),
-    Hashable (AnnDistinctColumn b v)
+    Hashable v
   ) =>
   Hashable (SelectArgsG b v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnBoolExp b v),
-    Show (AnnotatedOrderByItemG b v),
-    Show (AnnDistinctColumn b v)
+    Show v
   ) =>
   Show (SelectArgsG b v)
 
@@ -100,19 +91,19 @@ data AnnDistinctColumn b v = AnnDistinctColumn
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnRedactionExp b v)
+    Eq v
   ) =>
   Eq (AnnDistinctColumn b v)
 
 instance
   ( Backend b,
-    Hashable (AnnRedactionExp b v)
+    Hashable v
   ) =>
   Hashable (AnnDistinctColumn b v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnRedactionExp b v)
+    Show v
   ) =>
   Show (AnnDistinctColumn b v)
 
@@ -130,6 +121,6 @@ data StreamCursorItem (b :: BackendType) v = StreamCursorItem
   }
   deriving (Generic, Functor, Foldable, Traversable)
 
-deriving instance (Backend b, Eq (AnnRedactionExp b v)) => Eq (StreamCursorItem b v)
+deriving instance (Backend b, Eq v) => Eq (StreamCursorItem b v)
 
-deriving instance (Backend b, Show (AnnRedactionExp b v)) => Show (StreamCursorItem b v)
+deriving instance (Backend b, Show v) => Show (StreamCursorItem b v)

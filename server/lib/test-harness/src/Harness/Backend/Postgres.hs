@@ -42,7 +42,6 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Concurrent.Extended (sleep)
-import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Aeson qualified as J
 import Data.Monoid (Last (..))
