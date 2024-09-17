@@ -459,8 +459,8 @@ buildLogicalModelSelectPermission sourceName sourceConfig tableCache logicalMode
           $ SOILogicalModelObj @b logicalModelLocation
           $ LMOPerm role PTSelect
 
-      modifyError :: ExceptT QErr m a -> ExceptT QErr m a
-      modifyError = modifyErr \err ->
+      addErrContext :: ExceptT QErr m a -> ExceptT QErr m a
+      addErrContext = modifyErr \err ->
         addLogicalModelContext logicalModelLocation
           $ "in permission for role "
           <> role
@@ -468,7 +468,7 @@ buildLogicalModelSelectPermission sourceName sourceConfig tableCache logicalMode
           <> err
 
   logicalModels <- getLogicalModelFieldsLookup @b
-  select <- withRecordInconsistencyM metadataObject $ modifyError do
+  select <- withRecordInconsistencyM metadataObject $ addErrContext do
     when (role == adminRoleName)
       $ throw400 ConstraintViolation "cannot define permission for admin role"
 

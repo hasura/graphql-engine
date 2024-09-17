@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Hasura.App.State
   ( -- * application state

@@ -1,4 +1,6 @@
---
+-- TODO "Deprecated: "Compatibility module for users of ansi-wl-pprint - use "Prettyprinter" instead" "
+{-# OPTIONS_GHC -Wno-deprecations #-}
+
 module Hasura.Server.Init.Arg.PrettyPrinter
   ( (PP.<$>),
     PP.Doc,
