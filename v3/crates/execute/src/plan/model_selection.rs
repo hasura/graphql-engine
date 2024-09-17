@@ -9,8 +9,8 @@ use super::query;
 use super::relationships;
 use super::selection_set;
 use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
-use ir::ModelSelection;
-use ir::NdcRelationshipName;
+use graphql_ir::ModelSelection;
+use graphql_ir::NdcRelationshipName;
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings
 // #[async_recursion]

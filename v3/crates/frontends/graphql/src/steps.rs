@@ -78,7 +78,7 @@ pub(crate) fn build_ir<'n, 's>(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     normalized_request: &'s Operation<'s, GDS>,
-) -> Result<ir::IR<'n, 's>, ir::Error> {
+) -> Result<graphql_ir::IR<'n, 's>, graphql_ir::Error> {
     let tracer = tracing_util::global_tracer();
     let ir = tracer.in_span(
         "generate_ir",
@@ -91,7 +91,7 @@ pub(crate) fn build_ir<'n, 's>(
 
 /// Build a plan to execute the request
 pub(crate) fn build_request_plan<'n, 's, 'ir>(
-    ir: &'ir ir::IR<'n, 's>,
+    ir: &'ir graphql_ir::IR<'n, 's>,
 ) -> Result<execute::RequestPlan<'n, 's, 'ir>, execute::PlanError> {
     let tracer = tracing_util::global_tracer();
     let plan = tracer.in_span(
@@ -108,32 +108,32 @@ pub fn generate_ir<'n, 's>(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     normalized_request: &'s Operation<'s, GDS>,
-) -> Result<ir::IR<'n, 's>, ir::Error> {
+) -> Result<graphql_ir::IR<'n, 's>, graphql_ir::Error> {
     match &normalized_request.ty {
         ast::OperationType::Query => {
-            let query_ir = ir::generate_query_ir(
+            let query_ir = graphql_ir::generate_query_ir(
                 schema,
                 session,
                 request_headers,
                 &normalized_request.selection_set,
             )?;
-            Ok(ir::IR::Query(query_ir))
+            Ok(graphql_ir::IR::Query(query_ir))
         }
         ast::OperationType::Mutation => {
-            let mutation_ir = ir::generate_mutation_ir(
+            let mutation_ir = graphql_ir::generate_mutation_ir(
                 &normalized_request.selection_set,
                 &session.variables,
                 request_headers,
             )?;
-            Ok(ir::IR::Mutation(mutation_ir))
+            Ok(graphql_ir::IR::Mutation(mutation_ir))
         }
         ast::OperationType::Subscription => {
-            let (alias, field) = ir::generate_subscription_ir(
+            let (alias, field) = graphql_ir::generate_subscription_ir(
                 session,
                 request_headers,
                 &normalized_request.selection_set,
             )?;
-            Ok(ir::IR::Subscription(alias, field))
+            Ok(graphql_ir::IR::Subscription(alias, field))
         }
     }
 }

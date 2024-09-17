@@ -52,8 +52,8 @@ pub(crate) fn to_resolved_filter_expr(
                 field_mapping: _,
             } = to_resolved_column(metadata, type_mappings, type_name, model_object_type, field)?;
             Ok(ResolvedFilterExpression::LocalFieldComparison(
-                ir::LocalFieldComparison::UnaryComparison {
-                    column: ir::ComparisonTarget::Column {
+                graphql_ir::LocalFieldComparison::UnaryComparison {
+                    column: graphql_ir::ComparisonTarget::Column {
                         name: column_name,
                         field_path,
                     },
@@ -73,7 +73,7 @@ pub(crate) fn to_resolved_filter_expr(
             } = to_resolved_column(metadata, type_mappings, type_name, model_object_type, field)?;
 
             let value = match argument.as_ref() {
-                open_dds::query::Value::Literal(value) => Ok(ir::ComparisonValue::Scalar {
+                open_dds::query::Value::Literal(value) => Ok(graphql_ir::ComparisonValue::Scalar {
                     value: value.clone(),
                 }),
                 open_dds::query::Value::BooleanExpression(b) => Err(DataFusionError::Internal(
@@ -100,8 +100,8 @@ pub(crate) fn to_resolved_filter_expr(
                         .clone();
 
                     let eq_expr = ResolvedFilterExpression::LocalFieldComparison(
-                        ir::LocalFieldComparison::BinaryComparison {
-                            column: ir::ComparisonTarget::Column {
+                        graphql_ir::LocalFieldComparison::BinaryComparison {
+                            column: graphql_ir::ComparisonTarget::Column {
                                 name: column_name,
                                 field_path,
                             },
@@ -139,8 +139,8 @@ pub(crate) fn to_resolved_filter_expr(
                         .clone();
 
                     let expr = ResolvedFilterExpression::LocalFieldComparison(
-                        ir::LocalFieldComparison::BinaryComparison {
-                            column: ir::ComparisonTarget::Column {
+                        graphql_ir::LocalFieldComparison::BinaryComparison {
+                            column: graphql_ir::ComparisonTarget::Column {
                                 name: column_name,
                                 field_path,
                             },

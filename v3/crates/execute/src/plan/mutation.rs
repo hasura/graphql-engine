@@ -1,5 +1,5 @@
 use crate::error;
-use ir::NdcRelationshipName;
+use graphql_ir::NdcRelationshipName;
 use open_dds::{commands::ProcedureName, types::DataConnectorArgumentName};
 use std::collections::BTreeMap;
 
@@ -9,7 +9,8 @@ use super::filter;
 use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 
-pub type UnresolvedMutationExecutionPlan<'s> = MutationExecutionPlan<'s, ir::Expression<'s>>;
+pub type UnresolvedMutationExecutionPlan<'s> =
+    MutationExecutionPlan<'s, graphql_ir::Expression<'s>>;
 pub type ResolvedMutationExecutionPlan<'s> =
     MutationExecutionPlan<'s, filter::ResolvedFilterExpression>;
 

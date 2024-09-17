@@ -19,7 +19,7 @@ use super::types::{
 };
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use crate::plan::ProcessResponseAs;
-use ir::VariableName;
+use graphql_ir::VariableName;
 
 /// An executable join node is a remote join node, it's collected join values
 /// from a LHS response, and the rest of the join sub-tree

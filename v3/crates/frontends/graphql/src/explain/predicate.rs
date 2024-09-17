@@ -5,8 +5,8 @@ use execute::plan;
 use execute::plan::field::{UnresolvedField, UnresolvedNestedField};
 use execute::plan::{ResolveFilterExpressionContext, UnresolvedQueryNode};
 use execute::HttpContext;
+use graphql_ir::NdcFieldAlias;
 use indexmap::IndexMap;
-use ir::NdcFieldAlias;
 use std::collections::BTreeMap;
 
 #[async_recursion]
@@ -107,32 +107,32 @@ pub(crate) async fn explain_query_predicate_nested_field<'s, 'a>(
 async fn explain_query_predicate<'s>(
     expose_internal_errors: &execute::ExposeInternalErrors,
     http_context: &HttpContext,
-    predicate: &ir::Expression<'s>,
+    predicate: &graphql_ir::Expression<'s>,
     steps: &mut Vec<types::Step>,
 ) -> Result<(), execute::RequestError> {
     match predicate {
-        ir::Expression::And { expressions } => {
+        graphql_ir::Expression::And { expressions } => {
             for expression in expressions {
                 explain_query_predicate(expose_internal_errors, http_context, expression, steps)
                     .await?;
             }
             Ok(())
         }
-        ir::Expression::Or { expressions } => {
+        graphql_ir::Expression::Or { expressions } => {
             for expression in expressions {
                 explain_query_predicate(expose_internal_errors, http_context, expression, steps)
                     .await?;
             }
             Ok(())
         }
-        ir::Expression::Not { expression } => {
+        graphql_ir::Expression::Not { expression } => {
             explain_query_predicate(expose_internal_errors, http_context, expression, steps).await
         }
-        ir::Expression::LocalField { .. }
-        | ir::Expression::RelationshipNdcPushdown { .. }
-        | ir::Expression::LocalNestedArray { .. } => Ok(()),
+        graphql_ir::Expression::LocalField { .. }
+        | graphql_ir::Expression::RelationshipNdcPushdown { .. }
+        | graphql_ir::Expression::LocalNestedArray { .. } => Ok(()),
 
-        ir::Expression::RelationshipEngineResolved {
+        graphql_ir::Expression::RelationshipEngineResolved {
             relationship: _,
             target_model_name,
             target_model_source,

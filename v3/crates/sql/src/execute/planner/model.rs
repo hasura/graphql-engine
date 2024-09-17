@@ -46,7 +46,7 @@ use execute::{
     },
     HttpContext,
 };
-use ir::{AggregateFieldSelection, NdcFieldAlias, NdcRelationshipName, ResolvedOrderBy};
+use graphql_ir::{AggregateFieldSelection, NdcFieldAlias, NdcRelationshipName, ResolvedOrderBy};
 use open_dds::data_connector::CollectionName;
 
 use crate::catalog::model::filter;
@@ -188,14 +188,14 @@ pub(crate) async fn model_target_to_ndc_query(
         ))
     })?;
 
-    let mut usage_counts = ir::UsagesCounts::default();
-    let mut relationships: BTreeMap<ir::NdcRelationshipName, execute::plan::Relationship> =
+    let mut usage_counts = graphql_ir::UsagesCounts::default();
+    let mut relationships: BTreeMap<graphql_ir::NdcRelationshipName, execute::plan::Relationship> =
         BTreeMap::new();
 
     let permission_filter = match &model_select_permission.filter {
         FilterPermission::AllowAll => Ok::<_, DataFusionError>(None),
         FilterPermission::Filter(filter) => {
-            let filter_ir = ir::process_model_predicate(
+            let filter_ir = graphql_ir::process_model_predicate(
                 &model_source.data_connector,
                 &model_source.type_mappings,
                 filter,
@@ -297,7 +297,7 @@ pub(crate) async fn model_target_to_ndc_query(
         filter,
         limit,
         offset,
-        order_by: ir::ResolvedOrderBy {
+        order_by: graphql_ir::ResolvedOrderBy {
             order_by_elements,
             relationships: BTreeMap::new(),
         },
@@ -977,7 +977,7 @@ impl ExecutionPlan for NDCAggregatePushdown {
         let query_execution_plan = ResolvedQueryExecutionPlan {
             query_node: ResolvedQueryNode {
                 fields: None,
-                aggregates: Some(ir::AggregateSelectionSet {
+                aggregates: Some(graphql_ir::AggregateSelectionSet {
                     fields: self.fields.clone(),
                 }),
                 limit: self.query.limit,

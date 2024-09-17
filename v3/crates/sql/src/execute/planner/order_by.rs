@@ -12,7 +12,7 @@ pub(crate) fn to_resolved_order_by_element(
     type_name: &Qualified<CustomTypeName>,
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
     element: &OrderByElement,
-) -> Result<ir::OrderByElement> {
+) -> Result<graphql_ir::OrderByElement> {
     match &element.operand {
         open_dds::query::Operand::Field(operand) => {
             let ResolvedColumn {
@@ -27,7 +27,7 @@ pub(crate) fn to_resolved_order_by_element(
                 operand,
             )?;
 
-            let target = ir::OrderByTarget::Column {
+            let target = graphql_ir::OrderByTarget::Column {
                 name: column_name,
                 field_path: if field_path.is_empty() {
                     None
@@ -37,7 +37,7 @@ pub(crate) fn to_resolved_order_by_element(
                 relationship_path: vec![],
             };
 
-            Ok(ir::OrderByElement {
+            Ok(graphql_ir::OrderByElement {
                 order_direction: match element.direction {
                     open_dds::models::OrderByDirection::Asc => schema::ModelOrderByDirection::Asc,
                     open_dds::models::OrderByDirection::Desc => schema::ModelOrderByDirection::Desc,

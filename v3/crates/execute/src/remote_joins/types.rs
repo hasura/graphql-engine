@@ -157,7 +157,7 @@ pub struct JoinId(pub i16);
 
 /// An 'Argument' is a map of variable name to it's value.
 /// For example, `{"first_name": "John", "last_name": "Doe"}`
-pub type Argument = BTreeMap<ir::VariableName, ValueExt>;
+pub type Argument = BTreeMap<graphql_ir::VariableName, ValueExt>;
 
 /// Monotonically increasing counter with i16 value
 pub(crate) struct MonotonicCounter {

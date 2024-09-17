@@ -12,7 +12,7 @@ members = [
   "crates/engine",
   "crates/execute",
   "crates/frontends/*",
-  "crates/ir",
+  "crates/graphql/*",
   "crates/jsonapi",
   "crates/lang-graphql",
   "crates/metadata-resolve",

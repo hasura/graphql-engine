@@ -23,7 +23,7 @@ use execute::{
     },
     HttpContext,
 };
-use ir::{NdcFieldAlias, NdcRelationshipName};
+use graphql_ir::{NdcFieldAlias, NdcRelationshipName};
 use open_dds::{
     commands::ProcedureName, data_connector::DataConnectorColumnName,
     types::DataConnectorArgumentName,

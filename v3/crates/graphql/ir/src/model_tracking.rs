@@ -51,7 +51,7 @@ pub struct ModelCount {
 pub fn get_all_usage_counts_in_query(ir: &IR<'_, '_>) -> UsagesCounts {
     let mut all_usage_counts = UsagesCounts::new();
     match ir {
-        IR::Query(ir) => {
+        crate::IR::Query(ir) => {
             for ir_field in ir.values() {
                 match ir_field {
                     root_field::QueryRootField::TypeName { .. }
@@ -94,7 +94,7 @@ pub fn get_all_usage_counts_in_query(ir: &IR<'_, '_>) -> UsagesCounts {
                 }
             }
         }
-        IR::Mutation(ir) => {
+        crate::IR::Mutation(ir) => {
             for ir_field in ir.values() {
                 match ir_field {
                     root_field::MutationRootField::TypeName { .. } => {}

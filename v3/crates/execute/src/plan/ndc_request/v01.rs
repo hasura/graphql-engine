@@ -11,7 +11,7 @@ use super::super::mutation;
 use super::super::query;
 use super::super::relationships;
 use crate::error::{FieldError, FieldInternalError};
-use ir::VariableName;
+use graphql_ir::VariableName;
 
 pub fn make_query_request(
     query_execution_plan: query::ResolvedQueryExecutionPlan,
@@ -232,7 +232,7 @@ fn make_expression(
             })
         }
         filter::ResolvedFilterExpression::LocalFieldComparison(
-            ir::LocalFieldComparison::BinaryComparison {
+            graphql_ir::LocalFieldComparison::BinaryComparison {
                 column,
                 operator,
                 value,
@@ -263,7 +263,7 @@ fn make_expression(
             })
         }
         filter::ResolvedFilterExpression::LocalFieldComparison(
-            ir::LocalFieldComparison::UnaryComparison { column, operator },
+            graphql_ir::LocalFieldComparison::UnaryComparison { column, operator },
         ) => Ok(ndc_models_v01::Expression::UnaryComparisonOperator {
             column: make_comparison_target(column),
             operator: match operator {
@@ -289,10 +289,10 @@ fn make_expression(
 }
 
 fn make_comparison_target(
-    comparison_target: ir::ComparisonTarget,
+    comparison_target: graphql_ir::ComparisonTarget,
 ) -> ndc_models_v01::ComparisonTarget {
     match comparison_target {
-        ir::ComparisonTarget::Column { name, field_path } => {
+        graphql_ir::ComparisonTarget::Column { name, field_path } => {
             ndc_models_v01::ComparisonTarget::Column {
                 name: ndc_models_v01::FieldName::new(name.into_inner()),
                 field_path: if field_path.is_empty() {
@@ -311,12 +311,18 @@ fn make_comparison_target(
     }
 }
 
-fn make_comparison_value(comparison_value: ir::ComparisonValue) -> ndc_models_v01::ComparisonValue {
+fn make_comparison_value(
+    comparison_value: graphql_ir::ComparisonValue,
+) -> ndc_models_v01::ComparisonValue {
     match comparison_value {
-        ir::ComparisonValue::Scalar { value } => ndc_models_v01::ComparisonValue::Scalar { value },
-        ir::ComparisonValue::Variable { name } => ndc_models_v01::ComparisonValue::Variable {
-            name: ndc_models_v01::VariableName::from(name.0.as_str()),
-        },
+        graphql_ir::ComparisonValue::Scalar { value } => {
+            ndc_models_v01::ComparisonValue::Scalar { value }
+        }
+        graphql_ir::ComparisonValue::Variable { name } => {
+            ndc_models_v01::ComparisonValue::Variable {
+                name: ndc_models_v01::VariableName::from(name.0.as_str()),
+            }
+        }
     }
 }
 
@@ -389,7 +395,10 @@ fn make_nested_array(
 }
 
 fn make_collection_relationships(
-    collection_relationships: BTreeMap<ir::NdcRelationshipName, relationships::Relationship>,
+    collection_relationships: BTreeMap<
+        graphql_ir::NdcRelationshipName,
+        relationships::Relationship,
+    >,
 ) -> BTreeMap<ndc_models_v01::RelationshipName, ndc_models_v01::Relationship> {
     collection_relationships
         .into_iter()
@@ -429,7 +438,7 @@ fn make_relationship(relationship: relationships::Relationship) -> ndc_models_v0
     }
 }
 
-fn make_order_by(order_by_elements: Vec<ir::OrderByElement>) -> ndc_models_v01::OrderBy {
+fn make_order_by(order_by_elements: Vec<graphql_ir::OrderByElement>) -> ndc_models_v01::OrderBy {
     ndc_models_v01::OrderBy {
         elements: order_by_elements
             .into_iter()
@@ -444,9 +453,9 @@ fn make_order_by(order_by_elements: Vec<ir::OrderByElement>) -> ndc_models_v01::
     }
 }
 
-fn make_order_by_target(target: ir::OrderByTarget) -> ndc_models_v01::OrderByTarget {
+fn make_order_by_target(target: graphql_ir::OrderByTarget) -> ndc_models_v01::OrderByTarget {
     match target {
-        ir::OrderByTarget::Column {
+        graphql_ir::OrderByTarget::Column {
             name,
             field_path,
             relationship_path,
@@ -502,20 +511,20 @@ fn make_order_by_target(target: ir::OrderByTarget) -> ndc_models_v01::OrderByTar
 
 /// Translates the internal IR 'AggregateSelectionSet' into an NDC query aggregates selection
 fn make_aggregates(
-    aggregate_selection_set: ir::AggregateSelectionSet,
+    aggregate_selection_set: graphql_ir::AggregateSelectionSet,
 ) -> IndexMap<ndc_models_v01::FieldName, ndc_models_v01::Aggregate> {
     aggregate_selection_set
         .fields
         .into_iter()
         .map(|(field_name, aggregate_selection)| {
             let aggregate = match aggregate_selection {
-                ir::AggregateFieldSelection::Count { column_path, .. } => {
+                graphql_ir::AggregateFieldSelection::Count { column_path, .. } => {
                     make_count_aggregate(column_path, false)
                 }
-                ir::AggregateFieldSelection::CountDistinct { column_path, .. } => {
+                graphql_ir::AggregateFieldSelection::CountDistinct { column_path, .. } => {
                     make_count_aggregate(column_path, true)
                 }
-                ir::AggregateFieldSelection::AggregationFunction {
+                graphql_ir::AggregateFieldSelection::AggregationFunction {
                     function_name,
                     column_path,
                 } => {

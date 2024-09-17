@@ -1,5 +1,7 @@
 use crate::error;
-use ir::{AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, VariableName};
+use graphql_ir::{
+    AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, VariableName,
+};
 
 use async_recursion::async_recursion;
 use indexmap::IndexMap;
@@ -12,7 +14,7 @@ use super::filter;
 use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 
-pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, ir::Expression<'s>>;
+pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, graphql_ir::Expression<'s>>;
 pub type ResolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -56,7 +58,7 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
     }
 }
 
-pub type UnresolvedQueryNode<'s> = QueryNode<ir::Expression<'s>>;
+pub type UnresolvedQueryNode<'s> = QueryNode<graphql_ir::Expression<'s>>;
 pub type ResolvedQueryNode = QueryNode<filter::ResolvedFilterExpression>;
 
 /// Query plan for fetching data

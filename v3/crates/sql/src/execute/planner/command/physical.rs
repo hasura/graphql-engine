@@ -7,8 +7,8 @@ use indexmap::IndexMap;
 use std::{collections::BTreeMap, sync::Arc};
 
 use execute::plan::ResolvedField;
+use graphql_ir::NdcFieldAlias;
 use hasura_authn_core::Session;
-use ir::NdcFieldAlias;
 use open_dds::query::{CommandSelection, ObjectSubSelection};
 
 mod function;
@@ -183,7 +183,7 @@ pub fn build_execution_plan(
     }
 
     // preset arguments from `DataConnectorLink` argument presets
-    for (argument_name, value) in ir::process_connector_link_presets(
+    for (argument_name, value) in graphql_ir::process_connector_link_presets(
         &command_source.data_connector_link_argument_presets,
         &session.variables,
         request_headers,

@@ -12,7 +12,7 @@ use super::relationships;
 use super::selection_set;
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
-use ir::{
+use graphql_ir::{
     CommandInfo, FunctionBasedCommand, NdcFieldAlias, NdcRelationshipName, ProcedureBasedCommand,
     VariableName,
 };

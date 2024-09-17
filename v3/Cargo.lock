@@ -1874,9 +1874,9 @@ dependencies = [
  "bytes",
  "futures-ext",
  "futures-util",
+ "graphql-ir",
  "hasura-authn-core",
  "indexmap 2.5.0",
- "ir",
  "json-ext",
  "lang-graphql",
  "metadata-resolve",
@@ -2159,9 +2159,9 @@ dependencies = [
  "criterion",
  "execute",
  "goldenfile",
+ "graphql-ir",
  "hasura-authn-core",
  "indexmap 2.5.0",
- "ir",
  "lang-graphql",
  "metadata-resolve",
  "ndc-models 0.1.6",
@@ -2174,6 +2174,31 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tracing-util",
+]
+
+[[package]]
+name = "graphql-ir"
+version = "3.0.0"
+dependencies = [
+ "base64 0.22.1",
+ "derive_more",
+ "hasura-authn-core",
+ "indexmap 2.5.0",
+ "json-ext",
+ "lang-graphql",
+ "metadata-resolve",
+ "ndc-models 0.2.0",
+ "nonempty",
+ "open-dds",
+ "reqwest",
+ "schema",
+ "schemars",
+ "serde",
+ "serde_json",
+ "smol_str",
+ "thiserror",
+ "tracing-util",
+ "transitive",
 ]
 
 [[package]]
@@ -2573,31 +2598,6 @@ name = "ipnet"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f518f335dce6725a761382244631d86cf0ccb2863413590b31338feb467f9c3"
-
-[[package]]
-name = "ir"
-version = "3.0.0"
-dependencies = [
- "base64 0.22.1",
- "derive_more",
- "hasura-authn-core",
- "indexmap 2.5.0",
- "json-ext",
- "lang-graphql",
- "metadata-resolve",
- "ndc-models 0.2.0",
- "nonempty",
- "open-dds",
- "reqwest",
- "schema",
- "schemars",
- "serde",
- "serde_json",
- "smol_str",
- "thiserror",
- "tracing-util",
- "transitive",
-]
 
 [[package]]
 name = "is-terminal"
@@ -4594,9 +4594,9 @@ dependencies = [
  "datafusion",
  "execute",
  "futures",
+ "graphql-ir",
  "hasura-authn-core",
  "indexmap 2.5.0",
- "ir",
  "metadata-resolve",
  "ndc-models 0.2.0",
  "open-dds",
