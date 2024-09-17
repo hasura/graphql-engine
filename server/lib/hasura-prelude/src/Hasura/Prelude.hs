@@ -1,6 +1,12 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE StandaloneKindSignatures #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Prelude
   ( module M,
@@ -68,6 +74,8 @@ module Hasura.Prelude
     findWithIndex,
     alphabet,
     alphaNumerics,
+    LiftedConstraint,
+    ComposeConstraint,
 
     -- * Extensions to @Data.Foldable@
     module Data.Time.Clock.Units,
@@ -80,8 +88,11 @@ import Control.Applicative as M (Alternative (..), liftA2)
 import Control.Arrow as M (first, second, (&&&), (***), (<<<), (>>>))
 import Control.DeepSeq as M (NFData, deepseq, force)
 import Control.Lens as M (ix, (%~))
+import Control.Monad as M
 import Control.Monad.Base as M
 import Control.Monad.Except as M
+import Control.Monad.Fix as M
+import Control.Monad.IO.Class as M
 import Control.Monad.Identity as M
 import Control.Monad.Reader as M
 import Control.Monad.State.Strict as M
@@ -121,6 +132,7 @@ import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet as M (HashSet)
 import Data.Hashable as M (Hashable)
+import Data.Kind
 import Data.List as M
   ( find,
     findIndex,
@@ -430,3 +442,23 @@ alphabet = ['a' .. 'z'] ++ ['A' .. 'Z']
 {-# NOINLINE alphaNumerics #-}
 alphaNumerics :: String
 alphaNumerics = alphabet ++ "0123456789"
+
+-- | Generalizes @Eq1@ etc. but without any instance body
+--
+-- This is currently only used in @class Backend@; see that declaration for details.
+class (forall a. (c a) => c (f a)) => LiftedConstraint c f
+
+type LiftedConstraint :: (k -> Constraint) -> (k -> k) -> Constraint
+
+-- | The only instance. NOTE: this should probably require @UndecidableInstances@ but
+-- perhaps doesn't due to a bug: https://stackoverflow.com/q/78840628/176841
+instance (forall a. (c a) => c (f a)) => LiftedConstraint c f
+
+-- ...else we need this, and a load of other instances scattered across 100 modules:
+--   instance LiftedConstraint Eq (Const Void)
+
+class (forall a. (c2 a) => c1 (f a)) => ComposeConstraint c1 c2 f
+
+type ComposeConstraint :: (k -> Constraint) -> (k -> Constraint) -> (k -> k) -> Constraint
+
+instance (forall a. (c2 a) => c1 (f a)) => ComposeConstraint c1 c2 f

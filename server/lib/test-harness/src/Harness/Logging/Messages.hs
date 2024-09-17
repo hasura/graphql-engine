@@ -162,6 +162,11 @@ instance LoggableMessage LogHspecEvent where
       encFailureReason :: FailureReason -> Value
       encFailureReason = \case
         NoReason -> object [("failure_reason", String "NoReason")]
+        ColorizedReason reason ->
+          object
+            [ ("failure_reason", String "Reason"),
+              ("reason", toJSON reason)
+            ]
         Reason reason ->
           object
             [ ("failure_reason", String "Reason"),

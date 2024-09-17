@@ -18,6 +18,7 @@ module Data.Parser.CacheControl
   )
 where
 
+import Control.Monad
 import Data.Attoparsec.Text qualified as AT
 import Data.Bifunctor (first)
 import Data.Text qualified as T

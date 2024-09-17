@@ -23,7 +23,10 @@ where
 
 import Control.Concurrent (threadWaitRead)
 import Control.Exception.Safe (displayException, try)
+import Control.Monad
 import Control.Monad.Except
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
 import Data.Foldable
 import Data.String (IsString)
 import Data.Text qualified as T

@@ -1,5 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
-
 -- | This module contains the default types and function that model aggregation
 -- predicates.
 module Hasura.RQL.IR.BoolExp.AggregationPredicates
@@ -49,43 +47,31 @@ data AggregationPredicatesImplementation (b :: BackendType) field = AggregationP
 
 deriving instance
   ( B.Backend b,
-    Eq (AggregationPredicate b field),
-    Eq (AnnBoolExp b field)
+    Eq field
   ) =>
   Eq (AggregationPredicatesImplementation b field)
 
 deriving instance
   ( B.Backend b,
-    Show (AggregationPredicate b field),
-    Show (AnnBoolExp b field)
+    Show field
   ) =>
   Show (AggregationPredicatesImplementation b field)
 
 instance
   ( B.Backend b,
-    Hashable (AggregationPredicate b field),
-    Hashable (AnnBoolExp b field)
+    Hashable field
   ) =>
   Hashable (AggregationPredicatesImplementation b field)
 
 instance
   ( B.Backend b,
-    NFData (AggregationPredicate b field),
-    NFData (AnnBoolExp b field)
+    NFData field
   ) =>
   NFData (AggregationPredicatesImplementation b field)
 
 instance
-  ( ToJSON (AnnBoolExp b field),
-    ToJSON (AggregationPredicate b field),
-    ToJSON (OpExpG b field),
-    B.Backend b
-  ) =>
-  ToJSON (AggregationPredicatesImplementation b field)
-
-instance
   ( Backend b,
-    ToJSONKeyValue (AggregationPredicate b field)
+    ToJSON field
   ) =>
   ToJSONKeyValue (AggregationPredicatesImplementation b field)
   where
@@ -108,40 +94,31 @@ data AggregationPredicate (b :: BackendType) field = AggregationPredicate
 
 deriving instance
   ( B.Backend b,
-    Eq (AnnBoolExp b field),
-    Eq (OpExpG b field),
-    Eq (AggregationPredicateArguments b field)
+    Eq field
   ) =>
   Eq (AggregationPredicate b field)
 
 deriving instance
   ( B.Backend b,
-    Show (AnnBoolExp b field),
-    Show (OpExpG b field),
-    Show (AggregationPredicateArguments b field)
+    Show field
   ) =>
   Show (AggregationPredicate b field)
 
 instance
   ( B.Backend b,
-    Hashable (B.BooleanOperators b field),
-    Hashable (AnnBoolExp b field),
     Hashable field
   ) =>
   Hashable (AggregationPredicate b field)
 
 instance
   ( B.Backend b,
-    NFData (AggregationPredicateArguments b field),
-    NFData (AnnBoolExp b field),
-    NFData (OpExpG b field)
+    NFData field
   ) =>
   NFData (AggregationPredicate b field)
 
 instance
-  ( ToJSON (AggregationPredicateArguments b field),
-    ToJSON (AnnBoolExp b field),
-    ToJSONKeyValue (OpExpG b field)
+  ( Backend b,
+    ToJSON field
   ) =>
   ToJSONKeyValue (AggregationPredicate b field)
   where
@@ -160,12 +137,12 @@ data AggregationPredicateArguments (b :: BackendType) field
   | AggregationPredicateArguments (NonEmpty (Column b, AnnRedactionExp b field))
   deriving stock (Generic, Foldable, Traversable, Functor)
 
-deriving instance (Backend b, Eq (AnnRedactionExp b field)) => Eq (AggregationPredicateArguments b field)
+deriving instance (Backend b, Eq field) => Eq (AggregationPredicateArguments b field)
 
-deriving instance (Backend b, Show (AnnRedactionExp b field)) => Show (AggregationPredicateArguments b field)
+deriving instance (Backend b, Show field) => Show (AggregationPredicateArguments b field)
 
-instance (Backend b, Hashable (AnnRedactionExp b field)) => Hashable (AggregationPredicateArguments b field)
+instance (Backend b, Hashable field) => Hashable (AggregationPredicateArguments b field)
 
-instance (Backend b, NFData (AnnRedactionExp b field)) => NFData (AggregationPredicateArguments b field)
+instance (Backend b, NFData field) => NFData (AggregationPredicateArguments b field)
 
-instance (Backend b, ToJSON (AnnRedactionExp b field)) => ToJSON (AggregationPredicateArguments b field)
+instance (Backend b, ToJSON field) => ToJSON (AggregationPredicateArguments b field)

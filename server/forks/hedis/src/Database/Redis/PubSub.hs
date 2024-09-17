@@ -30,7 +30,6 @@ import Control.Exception (throwIO)
 import Control.Monad
 import Control.Monad.State
 import Data.ByteString.Char8 (ByteString)
-import Data.List (foldl')
 import Data.Maybe (isJust)
 import Data.Pool
 #if __GLASGOW_HASKELL__ < 808

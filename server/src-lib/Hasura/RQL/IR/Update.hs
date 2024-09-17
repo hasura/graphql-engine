@@ -1,5 +1,4 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.IR.Update
   ( AnnotatedUpdate,
@@ -49,20 +48,14 @@ data AnnotatedUpdateG (b :: BackendType) (r :: Type) v = AnnotatedUpdateG
 deriving stock instance
   ( Backend b,
     Show v,
-    Show r,
-    Show (AnnBoolExp b v),
-    Show (UpdateVariant b v),
-    Show (MutationOutputG b r v)
+    Show r
   ) =>
   Show (AnnotatedUpdateG b r v)
 
 deriving stock instance
   ( Backend b,
     Eq v,
-    Eq r,
-    Eq (AnnBoolExp b v),
-    Eq (UpdateVariant b v),
-    Eq (MutationOutputG b r v)
+    Eq r
   ) =>
   Eq (AnnotatedUpdateG b r v)
 
