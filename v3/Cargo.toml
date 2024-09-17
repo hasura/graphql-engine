@@ -20,7 +20,6 @@ members = [
   "crates/open-dds",
   "crates/plugins/*",
   "crates/query-usage-analytics",
-  "crates/schema",
   "crates/sql",
   "crates/utils/*",
 ]

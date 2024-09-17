@@ -7,11 +7,11 @@ use execute::{
     ExecuteQueryResult, HttpContext, ProjectId,
 };
 
+use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
-use schema::GDS;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
 pub async fn execute_query(

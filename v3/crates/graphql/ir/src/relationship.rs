@@ -25,12 +25,12 @@ use crate::{
     model_tracking::{count_model, UsagesCounts},
     remote_joins::VariableName,
 };
-use metadata_resolve::{self, serialize_qualified_btreemap, Qualified, RelationshipModelMapping};
-use schema::{
+use graphql_schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, CommandTargetSource,
     InputAnnotation, ModelAggregateRelationshipAnnotation, ModelInputAnnotation,
     ModelRelationshipAnnotation, GDS,
 };
+use metadata_resolve::{self, serialize_qualified_btreemap, Qualified, RelationshipModelMapping};
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct LocalModelRelationshipInfo<'s> {

@@ -1,5 +1,8 @@
 use std::collections::BTreeMap;
 
+use graphql_schema::{
+    AggregateOutputAnnotation, AggregationFunctionAnnotation, Annotation, OutputAnnotation, GDS,
+};
 use indexmap::IndexMap;
 use lang_graphql::{ast::common::Alias, normalized_ast};
 use metadata_resolve::{Qualified, QualifiedTypeName, TypeMapping};
@@ -7,9 +10,6 @@ use open_dds::{
     aggregates::DataConnectorAggregationFunctionName,
     data_connector::{DataConnectorColumnName, DataConnectorName},
     types::{CustomTypeName, FieldName},
-};
-use schema::{
-    AggregateOutputAnnotation, AggregationFunctionAnnotation, Annotation, OutputAnnotation, GDS,
 };
 use serde::Serialize;
 

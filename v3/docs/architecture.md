@@ -90,8 +90,8 @@ Contains the logic to define and execute the operations that would be defined by
 the Open DDS spec.
 
 Technically, these are fields of the `query_root`, `subscription_root` or
-`mutation_root` and as such can be defined in `schema::types::*_root` module.
-However, this separation makes it easier to organize them (for example
+`mutation_root` and as such can be defined in `graphql_schema::types::*_root`
+module. However, this separation makes it easier to organize them (for example
 `subscription_root` can also import the same set of operations).
 
 Each module under `operations` would roughly define the following:

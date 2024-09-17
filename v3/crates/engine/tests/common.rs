@@ -20,7 +20,7 @@ use std::{
 
 use execute::HttpContext;
 use graphql_frontend::execute_query;
-use schema::GDS;
+use graphql_schema::GDS;
 
 extern crate json_value_merge;
 use json_value_merge::Merge;

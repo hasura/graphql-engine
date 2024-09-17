@@ -39,8 +39,12 @@ pub(crate) fn to_resolved_order_by_element(
 
             Ok(graphql_ir::OrderByElement {
                 order_direction: match element.direction {
-                    open_dds::models::OrderByDirection::Asc => schema::ModelOrderByDirection::Asc,
-                    open_dds::models::OrderByDirection::Desc => schema::ModelOrderByDirection::Desc,
+                    open_dds::models::OrderByDirection::Asc => {
+                        graphql_schema::ModelOrderByDirection::Asc
+                    }
+                    open_dds::models::OrderByDirection::Desc => {
+                        graphql_schema::ModelOrderByDirection::Desc
+                    }
                 },
                 target,
             })

@@ -21,8 +21,8 @@ use super::relationship::{
 use crate::error;
 use crate::global_id;
 use crate::model_tracking::UsagesCounts;
-use schema::TypeKind;
-use schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
+use graphql_schema::TypeKind;
+use graphql_schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
 
 #[derive(Debug, Serialize)]
 pub enum NestedSelection<'s> {

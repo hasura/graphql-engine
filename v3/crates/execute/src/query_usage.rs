@@ -1,3 +1,4 @@
+use graphql_schema::GDS;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast::{self, Operation};
 use metadata_resolve::{FieldPresetInfo, FilterPermission, ModelPredicate};
@@ -8,7 +9,6 @@ use query_usage_analytics::{
     GqlInputField, GqlOperation, OpenddObject, PermissionUsage, PredicateRelationshipUsage,
     RelationshipTarget, RelationshipUsage,
 };
-use schema::GDS;
 
 pub fn analyze_query_usage<'s>(normalized_request: &'s Operation<'s, GDS>) -> GqlOperation {
     let operation_name = normalized_request
@@ -95,10 +95,10 @@ fn analyze_node_info<'s>(
 ) -> Vec<OpenddObject> {
     let mut result = Vec::new();
     match node_info.generic {
-        schema::Annotation::Output(output_annotation) => {
+        graphql_schema::Annotation::Output(output_annotation) => {
             result.extend(analyze_output_annotation(output_annotation));
         }
-        schema::Annotation::Input(input_annotation) => {
+        graphql_schema::Annotation::Input(input_annotation) => {
             result.extend(analyze_input_annotation(input_annotation));
         }
     }
@@ -111,13 +111,13 @@ fn analyze_node_info<'s>(
     result
 }
 
-fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddObject> {
+fn analyze_input_annotation(annotation: &graphql_schema::InputAnnotation) -> Vec<OpenddObject> {
     let mut result = Vec::new();
     match annotation {
-        schema::InputAnnotation::Model(model_input_annotation) => {
+        graphql_schema::InputAnnotation::Model(model_input_annotation) => {
             result.extend(analyze_model_input_annotation(model_input_annotation));
         }
-        schema::InputAnnotation::InputObjectField {
+        graphql_schema::InputAnnotation::InputObjectField {
             field_name,
             parent_type,
             deprecated,
@@ -134,10 +134,10 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
                 deprecated_reason: reason,
             }));
         }
-        schema::InputAnnotation::BooleanExpression(
-            schema::BooleanExpressionAnnotation::BooleanExpressionArgument { field },
+        graphql_schema::InputAnnotation::BooleanExpression(
+            graphql_schema::BooleanExpressionAnnotation::BooleanExpressionArgument { field },
         ) => match field {
-            schema::ModelFilterArgument::Field {
+            graphql_schema::ModelFilterArgument::Field {
                 field_name,
                 object_type,
                 deprecated,
@@ -154,7 +154,7 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
                     deprecated_reason: reason,
                 }));
             }
-            schema::ModelFilterArgument::RelationshipField(relationship_annotation) => {
+            graphql_schema::ModelFilterArgument::RelationshipField(relationship_annotation) => {
                 let DeprecatedDetails {
                     is_deprecated,
                     reason,
@@ -170,25 +170,27 @@ fn analyze_input_annotation(annotation: &schema::InputAnnotation) -> Vec<OpenddO
                     deprecated_reason: reason,
                 }));
             }
-            schema::ModelFilterArgument::AndOp
-            | schema::ModelFilterArgument::OrOp
-            | schema::ModelFilterArgument::NotOp => {}
+            graphql_schema::ModelFilterArgument::AndOp
+            | graphql_schema::ModelFilterArgument::OrOp
+            | graphql_schema::ModelFilterArgument::NotOp => {}
         },
-        schema::InputAnnotation::BooleanExpression(
-            schema::BooleanExpressionAnnotation::BooleanExpression,
+        graphql_schema::InputAnnotation::BooleanExpression(
+            graphql_schema::BooleanExpressionAnnotation::BooleanExpression,
         )
-        | schema::InputAnnotation::CommandArgument { .. }
-        | schema::InputAnnotation::Relay(_)
-        | schema::InputAnnotation::FieldArgument
-        | schema::InputAnnotation::ApolloFederationRepresentationsInput(_) => {}
+        | graphql_schema::InputAnnotation::CommandArgument { .. }
+        | graphql_schema::InputAnnotation::Relay(_)
+        | graphql_schema::InputAnnotation::FieldArgument
+        | graphql_schema::InputAnnotation::ApolloFederationRepresentationsInput(_) => {}
     }
     result
 }
 
-fn analyze_model_input_annotation(annotation: &schema::ModelInputAnnotation) -> Vec<OpenddObject> {
+fn analyze_model_input_annotation(
+    annotation: &graphql_schema::ModelInputAnnotation,
+) -> Vec<OpenddObject> {
     let mut result = Vec::new();
     match annotation {
-        schema::ModelInputAnnotation::ModelOrderByArgument {
+        graphql_schema::ModelInputAnnotation::ModelOrderByArgument {
             field_name,
             parent_type,
             deprecated,
@@ -205,7 +207,9 @@ fn analyze_model_input_annotation(annotation: &schema::ModelInputAnnotation) -> 
                 deprecated_reason: reason,
             }));
         }
-        schema::ModelInputAnnotation::ModelOrderByRelationshipArgument(relationship_orderby) => {
+        graphql_schema::ModelInputAnnotation::ModelOrderByRelationshipArgument(
+            relationship_orderby,
+        ) => {
             let DeprecatedDetails {
                 is_deprecated,
                 reason,
@@ -221,41 +225,41 @@ fn analyze_model_input_annotation(annotation: &schema::ModelInputAnnotation) -> 
                 deprecated_reason: reason,
             }));
         }
-        schema::ModelInputAnnotation::ModelArgumentsExpression
-        | schema::ModelInputAnnotation::ModelArgument { .. }
-        | schema::ModelInputAnnotation::ComparisonOperation { .. }
-        | schema::ModelInputAnnotation::IsNullOperation
-        | schema::ModelInputAnnotation::ModelOrderByExpression
-        | schema::ModelInputAnnotation::ModelOrderByNestedExpression { .. }
-        | schema::ModelInputAnnotation::ModelOrderByDirection { .. }
-        | schema::ModelInputAnnotation::ModelLimitArgument
-        | schema::ModelInputAnnotation::ModelOffsetArgument
-        | schema::ModelInputAnnotation::ModelUniqueIdentifierArgument { .. }
-        | schema::ModelInputAnnotation::ModelFilterInputArgument => {}
+        graphql_schema::ModelInputAnnotation::ModelArgumentsExpression
+        | graphql_schema::ModelInputAnnotation::ModelArgument { .. }
+        | graphql_schema::ModelInputAnnotation::ComparisonOperation { .. }
+        | graphql_schema::ModelInputAnnotation::IsNullOperation
+        | graphql_schema::ModelInputAnnotation::ModelOrderByExpression
+        | graphql_schema::ModelInputAnnotation::ModelOrderByNestedExpression { .. }
+        | graphql_schema::ModelInputAnnotation::ModelOrderByDirection { .. }
+        | graphql_schema::ModelInputAnnotation::ModelLimitArgument
+        | graphql_schema::ModelInputAnnotation::ModelOffsetArgument
+        | graphql_schema::ModelInputAnnotation::ModelUniqueIdentifierArgument { .. }
+        | graphql_schema::ModelInputAnnotation::ModelFilterInputArgument => {}
     }
     result
 }
 
-fn analyze_output_annotation(annotation: &schema::OutputAnnotation) -> Vec<OpenddObject> {
+fn analyze_output_annotation(annotation: &graphql_schema::OutputAnnotation) -> Vec<OpenddObject> {
     let mut result = Vec::new();
     match annotation {
-        schema::OutputAnnotation::RootField(root_field) => match root_field {
-            schema::RootFieldAnnotation::Model { name, .. } => {
+        graphql_schema::OutputAnnotation::RootField(root_field) => match root_field {
+            graphql_schema::RootFieldAnnotation::Model { name, .. } => {
                 result.push(OpenddObject::Model {
                     name: name.to_owned(),
                 });
             }
-            schema::RootFieldAnnotation::FunctionCommand { name, .. }
-            | schema::RootFieldAnnotation::ProcedureCommand { name, .. } => {
+            graphql_schema::RootFieldAnnotation::FunctionCommand { name, .. }
+            | graphql_schema::RootFieldAnnotation::ProcedureCommand { name, .. } => {
                 result.push(OpenddObject::Command {
                     name: name.to_owned(),
                 });
             }
-            schema::RootFieldAnnotation::Introspection
-            | schema::RootFieldAnnotation::RelayNode { .. }
-            | schema::RootFieldAnnotation::ApolloFederation(_) => {}
+            graphql_schema::RootFieldAnnotation::Introspection
+            | graphql_schema::RootFieldAnnotation::RelayNode { .. }
+            | graphql_schema::RootFieldAnnotation::ApolloFederation(_) => {}
         },
-        schema::OutputAnnotation::Field {
+        graphql_schema::OutputAnnotation::Field {
             name,
             parent_type,
             deprecated,
@@ -272,7 +276,7 @@ fn analyze_output_annotation(annotation: &schema::OutputAnnotation) -> Vec<Opend
                 deprecated_reason: reason,
             }));
         }
-        schema::OutputAnnotation::RelationshipToModel(relationship) => {
+        graphql_schema::OutputAnnotation::RelationshipToModel(relationship) => {
             let DeprecatedDetails {
                 is_deprecated,
                 reason,
@@ -288,7 +292,7 @@ fn analyze_output_annotation(annotation: &schema::OutputAnnotation) -> Vec<Opend
                 deprecated_reason: reason,
             }));
         }
-        schema::OutputAnnotation::RelationshipToCommand(relationship) => {
+        graphql_schema::OutputAnnotation::RelationshipToCommand(relationship) => {
             let DeprecatedDetails {
                 is_deprecated,
                 reason,
@@ -303,7 +307,7 @@ fn analyze_output_annotation(annotation: &schema::OutputAnnotation) -> Vec<Opend
                 deprecated_reason: reason,
             }));
         }
-        schema::OutputAnnotation::RelationshipToModelAggregate(relationship) => {
+        graphql_schema::OutputAnnotation::RelationshipToModelAggregate(relationship) => {
             let DeprecatedDetails {
                 is_deprecated,
                 reason,
@@ -319,28 +323,30 @@ fn analyze_output_annotation(annotation: &schema::OutputAnnotation) -> Vec<Opend
                 deprecated_reason: reason,
             }));
         }
-        schema::OutputAnnotation::GlobalIDField { .. }
-        | schema::OutputAnnotation::RelayNodeInterfaceID { .. }
-        | schema::OutputAnnotation::SDL
-        | schema::OutputAnnotation::Aggregate(_) => {}
+        graphql_schema::OutputAnnotation::GlobalIDField { .. }
+        | graphql_schema::OutputAnnotation::RelayNodeInterfaceID { .. }
+        | graphql_schema::OutputAnnotation::SDL
+        | graphql_schema::OutputAnnotation::Aggregate(_) => {}
     }
     result
 }
 
-fn analyze_namespace_annotation(annotation: &schema::NamespaceAnnotation) -> Vec<OpenddObject> {
+fn analyze_namespace_annotation(
+    annotation: &graphql_schema::NamespaceAnnotation,
+) -> Vec<OpenddObject> {
     let mut result = Vec::new();
     match annotation {
-        schema::NamespaceAnnotation::Command(argument_presets) => {
+        graphql_schema::NamespaceAnnotation::Command(argument_presets) => {
             result.extend(analyze_argument_presets(argument_presets));
         }
-        schema::NamespaceAnnotation::Model {
+        graphql_schema::NamespaceAnnotation::Model {
             filter,
             argument_presets,
         } => {
             result.extend(analyze_filter_permission(filter));
             result.extend(analyze_argument_presets(argument_presets));
         }
-        schema::NamespaceAnnotation::InputFieldPresets {
+        graphql_schema::NamespaceAnnotation::InputFieldPresets {
             presets_fields,
             type_name,
         } => result.push(OpenddObject::Permission(PermissionUsage::FieldPresets(
@@ -370,13 +376,15 @@ fn analyze_namespace_annotation(annotation: &schema::NamespaceAnnotation) -> Vec
                     .collect(),
             },
         ))),
-        schema::NamespaceAnnotation::NodeFieldTypeMappings(_)
-        | schema::NamespaceAnnotation::EntityTypeMappings(_) => {}
+        graphql_schema::NamespaceAnnotation::NodeFieldTypeMappings(_)
+        | graphql_schema::NamespaceAnnotation::EntityTypeMappings(_) => {}
     }
     result
 }
 
-fn analyze_argument_presets(argument_presets: &schema::ArgumentPresets) -> Option<OpenddObject> {
+fn analyze_argument_presets(
+    argument_presets: &graphql_schema::ArgumentPresets,
+) -> Option<OpenddObject> {
     let mut arguments = Vec::new();
     for argument in argument_presets.argument_presets.keys() {
         if let Some(connector_argument) = &argument.ndc_argument_name {

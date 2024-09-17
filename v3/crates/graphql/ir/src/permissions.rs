@@ -10,11 +10,11 @@ use open_dds::{
 use crate::error;
 use crate::filter::expression as filter_expression;
 use crate::model_tracking::{count_model, UsagesCounts};
+use graphql_schema::GDS;
 use metadata_resolve::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference, TypeMapping,
     UnaryComparisonOperator,
 };
-use schema::GDS;
 
 use super::arguments::Argument;
 
@@ -29,11 +29,11 @@ pub(crate) fn get_select_filter_predicate<'s>(
         .namespaced
         .as_ref()
         .and_then(|annotation| match annotation {
-            schema::NamespaceAnnotation::Model { filter, .. } => Some(filter),
-            schema::NamespaceAnnotation::NodeFieldTypeMappings(_)
-            | schema::NamespaceAnnotation::EntityTypeMappings(_)
-            | schema::NamespaceAnnotation::Command(_)
-            | schema::NamespaceAnnotation::InputFieldPresets { .. } => None,
+            graphql_schema::NamespaceAnnotation::Model { filter, .. } => Some(filter),
+            graphql_schema::NamespaceAnnotation::NodeFieldTypeMappings(_)
+            | graphql_schema::NamespaceAnnotation::EntityTypeMappings(_)
+            | graphql_schema::NamespaceAnnotation::Command(_)
+            | graphql_schema::NamespaceAnnotation::InputFieldPresets { .. } => None,
         })
         // If we're hitting this case, it means that the caller of this
         // function expects a filter predicate, but it was not annotated
@@ -49,13 +49,13 @@ pub(crate) fn get_select_filter_predicate<'s>(
 /// of the field call. If there are no annotations, this is fine,
 /// but if unexpected ones are found an error will be thrown.
 pub(crate) fn get_argument_presets(
-    namespaced_info: &'_ Option<schema::NamespaceAnnotation>,
-) -> Result<Option<&'_ schema::ArgumentPresets>, error::Error> {
+    namespaced_info: &'_ Option<graphql_schema::NamespaceAnnotation>,
+) -> Result<Option<&'_ graphql_schema::ArgumentPresets>, error::Error> {
     match namespaced_info.as_ref() {
         None => Ok(None), // no annotation is fine...
         Some(annotation) => match annotation {
-            schema::NamespaceAnnotation::Command(argument_presets)
-            | schema::NamespaceAnnotation::Model {
+            graphql_schema::NamespaceAnnotation::Command(argument_presets)
+            | graphql_schema::NamespaceAnnotation::Model {
                 argument_presets, ..
             } => Ok(Some(argument_presets)),
             other_namespace_annotation =>

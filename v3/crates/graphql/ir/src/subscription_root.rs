@@ -8,9 +8,9 @@ use open_dds::{models, types::CustomTypeName};
 use super::error;
 use super::query_root::{select_aggregate, select_many, select_one};
 use super::root_field;
-use schema::RootFieldKind;
-use schema::GDS;
-use schema::{Annotation, OutputAnnotation, RootFieldAnnotation};
+use graphql_schema::RootFieldKind;
+use graphql_schema::GDS;
+use graphql_schema::{Annotation, OutputAnnotation, RootFieldAnnotation};
 
 pub fn generate_ir<'n, 's>(
     session: &Session,

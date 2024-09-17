@@ -24,10 +24,10 @@ use super::selection_set::ResultSelectionSet;
 use crate::error;
 use crate::model_tracking::{count_command, UsagesCounts};
 use crate::permissions;
+use graphql_schema::CommandSourceDetail;
+use graphql_schema::TypeKind;
+use graphql_schema::GDS;
 use metadata_resolve::{Qualified, QualifiedTypeReference};
-use schema::CommandSourceDetail;
-use schema::TypeKind;
-use schema::GDS;
 
 /// IR for the 'command' operations
 #[derive(Serialize, Debug)]

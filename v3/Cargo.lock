@@ -1783,6 +1783,7 @@ dependencies = [
  "futures-util",
  "goldenfile",
  "graphql-frontend",
+ "graphql-schema",
  "hasura-authn-core",
  "hasura-authn-jwt",
  "hasura-authn-noauth",
@@ -1801,7 +1802,6 @@ dependencies = [
  "pre-execution-plugin",
  "pretty_assertions",
  "reqwest",
- "schema",
  "schemars",
  "serde",
  "serde_json",
@@ -1875,6 +1875,7 @@ dependencies = [
  "futures-ext",
  "futures-util",
  "graphql-ir",
+ "graphql-schema",
  "hasura-authn-core",
  "indexmap 2.5.0",
  "json-ext",
@@ -1888,7 +1889,6 @@ dependencies = [
  "pretty_assertions",
  "query-usage-analytics",
  "reqwest",
- "schema",
  "serde",
  "serde_json",
  "thiserror",
@@ -2160,6 +2160,7 @@ dependencies = [
  "execute",
  "goldenfile",
  "graphql-ir",
+ "graphql-schema",
  "hasura-authn-core",
  "indexmap 2.5.0",
  "lang-graphql",
@@ -2169,7 +2170,6 @@ dependencies = [
  "nonempty",
  "open-dds",
  "reqwest",
- "schema",
  "serde",
  "serde_json",
  "thiserror",
@@ -2182,6 +2182,7 @@ version = "3.0.0"
 dependencies = [
  "base64 0.22.1",
  "derive_more",
+ "graphql-schema",
  "hasura-authn-core",
  "indexmap 2.5.0",
  "json-ext",
@@ -2191,7 +2192,6 @@ dependencies = [
  "nonempty",
  "open-dds",
  "reqwest",
- "schema",
  "schemars",
  "serde",
  "serde_json",
@@ -2208,6 +2208,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2ebc8013b4426d5b81a4364c419a95ed0b404af2b82e2457de52d9348f0e474"
 dependencies = [
  "combine",
+ "thiserror",
+]
+
+[[package]]
+name = "graphql-schema"
+version = "3.0.0"
+dependencies = [
+ "hasura-authn-core",
+ "indexmap 2.5.0",
+ "insta",
+ "json-ext",
+ "lang-graphql",
+ "metadata-resolve",
+ "open-dds",
+ "serde",
+ "serde_json",
+ "strum_macros",
  "thiserror",
 ]
 
@@ -2705,6 +2722,7 @@ dependencies = [
  "derive_more",
  "execute",
  "graphql-ir",
+ "graphql-schema",
  "hasura-authn-core",
  "indexmap 2.5.0",
  "insta",
@@ -2714,7 +2732,6 @@ dependencies = [
  "ndc-models 0.2.0",
  "open-dds",
  "reqwest",
- "schema",
  "serde_json",
  "tokio",
  "tracing-util",
@@ -4217,23 +4234,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "schema"
-version = "3.0.0"
-dependencies = [
- "hasura-authn-core",
- "indexmap 2.5.0",
- "insta",
- "json-ext",
- "lang-graphql",
- "metadata-resolve",
- "open-dds",
- "serde",
- "serde_json",
- "strum_macros",
- "thiserror",
-]
-
-[[package]]
 name = "schemars"
 version = "0.8.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4599,13 +4599,13 @@ dependencies = [
  "execute",
  "futures",
  "graphql-ir",
+ "graphql-schema",
  "hasura-authn-core",
  "indexmap 2.5.0",
  "metadata-resolve",
  "ndc-models 0.2.0",
  "open-dds",
  "reqwest",
- "schema",
  "serde",
  "serde_json",
  "thiserror",

@@ -19,8 +19,8 @@ use open_dds;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-use schema::GDS;
-use schema::{self, Annotation, ModelInputAnnotation};
+use graphql_schema::GDS;
+use graphql_schema::{self, Annotation, ModelInputAnnotation};
 
 /// IR for the 'select_one' operation on a model
 #[derive(Serialize, Debug)]
@@ -52,7 +52,7 @@ pub fn select_one_generate_ir<'n, 's>(
     let mut model_argument_fields = Vec::new();
     for argument in field_call.arguments.values() {
         match argument.info.generic {
-            annotation @ Annotation::Input(schema::InputAnnotation::Model(
+            annotation @ Annotation::Input(graphql_schema::InputAnnotation::Model(
                 model_input_argument_annotation,
             )) => match model_input_argument_annotation {
                 ModelInputAnnotation::ModelArgument { .. } => {

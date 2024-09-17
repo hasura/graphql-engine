@@ -444,8 +444,12 @@ fn make_order_by(order_by_elements: Vec<graphql_ir::OrderByElement>) -> ndc_mode
             .into_iter()
             .map(|element| ndc_models_v01::OrderByElement {
                 order_direction: match element.order_direction {
-                    schema::ModelOrderByDirection::Asc => ndc_models_v01::OrderDirection::Asc,
-                    schema::ModelOrderByDirection::Desc => ndc_models_v01::OrderDirection::Desc,
+                    graphql_schema::ModelOrderByDirection::Asc => {
+                        ndc_models_v01::OrderDirection::Asc
+                    }
+                    graphql_schema::ModelOrderByDirection::Desc => {
+                        ndc_models_v01::OrderDirection::Desc
+                    }
                 },
                 target: make_order_by_target(element.target),
             })

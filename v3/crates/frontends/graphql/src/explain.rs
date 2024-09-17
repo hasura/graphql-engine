@@ -12,12 +12,12 @@ use execute::plan::{
 };
 use execute::HttpContext;
 use execute::{JoinId, JoinLocations, JoinNode, RemoteJoin, RemoteJoinType};
+use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use nonempty::NonEmpty;
-use schema::GDS;
 use tracing_util::{AttributeVisibility, SpanVisibility};
 
 pub async fn execute_explain(

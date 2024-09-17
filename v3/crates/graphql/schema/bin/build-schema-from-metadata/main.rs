@@ -8,8 +8,8 @@ use std::{
     process::exit,
 };
 
+use graphql_schema::{GDSNamespaceGetterAgnostic, GDSRoleNamespaceGetter};
 use hasura_authn_core::Role;
-use schema::{GDSNamespaceGetterAgnostic, GDSRoleNamespaceGetter};
 
 #[allow(clippy::print_stdout)]
 pub fn main() {
@@ -26,7 +26,7 @@ pub fn main() {
     let metadata =
         open_dds::traits::OpenDd::deserialize(serde_json::from_str(&metadata_string).unwrap())
             .unwrap();
-    let gds = schema::GDS::new_with_default_flags(metadata).unwrap();
+    let gds = graphql_schema::GDS::new_with_default_flags(metadata).unwrap();
     let sch = gds.build_schema().unwrap();
 
     let dedup_roles: BTreeSet<&Role> = gds.metadata.roles.iter().collect();

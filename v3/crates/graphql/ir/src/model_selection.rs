@@ -1,5 +1,8 @@
 //! IR for the 'model_selection' type - selecting fields from a model
 
+use graphql_schema::{
+    Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation,
+};
 use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
@@ -9,7 +12,6 @@ use open_dds::{
     data_connector::CollectionName,
     types::{CustomTypeName, DataConnectorArgumentName},
 };
-use schema::{Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -20,8 +22,8 @@ use super::{
 };
 use crate::error;
 use crate::model_tracking::{count_model, UsagesCounts};
+use graphql_schema::GDS;
 use metadata_resolve::Qualified;
-use schema::GDS;
 
 /// IR fragment for any 'select' operation on a model
 #[derive(Debug, Serialize)]

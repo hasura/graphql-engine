@@ -10,7 +10,7 @@ use transitive::Transitive;
 use crate::ndc::client as ndc_client;
 
 use super::plan;
-use schema::Annotation;
+use graphql_schema::Annotation;
 
 /// Request errors are raised before execution of root fields begins.
 /// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Request-errors>

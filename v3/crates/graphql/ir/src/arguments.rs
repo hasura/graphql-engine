@@ -4,6 +4,10 @@ use crate::error;
 use crate::filter;
 use crate::filter::expression as filter_expression;
 use crate::model_tracking::UsagesCounts;
+use graphql_schema::GDS;
+use graphql_schema::{
+    Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
+};
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
@@ -17,10 +21,6 @@ use nonempty::NonEmpty;
 use open_dds::{
     data_connector::DataConnectorColumnName,
     types::{CustomTypeName, DataConnectorArgumentName, InbuiltType},
-};
-use schema::GDS;
-use schema::{
-    Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
 };
 use serde::Serialize;
 
@@ -141,7 +141,7 @@ where
                         let preset_value = match actual_value {
                             Argument::Literal { value } => Ok(value),
                             Argument::BooleanExpression { predicate: _ } => {
-                                // See schema::Error::BooleanExpressionInTypePresetArgument
+                                // See graphql_schema::Error::BooleanExpressionInTypePresetArgument
                                 Err(error::InternalEngineError::ArgumentPresetExecution {
                                     description: "unexpected; type input presets cannot contain a boolean expression preset value"
                                         .to_owned(),

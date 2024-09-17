@@ -1,17 +1,17 @@
 use std::collections::BTreeMap;
 
 use crate::model_tracking::{count_model, UsagesCounts};
+use graphql_schema::OrderByRelationshipAnnotation;
+use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField};
 use open_dds::data_connector::DataConnectorColumnName;
-use schema::OrderByRelationshipAnnotation;
-use schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use serde::Serialize;
 
 use super::relationship::LocalModelRelationshipInfo;
 use super::selection_set::NdcRelationshipName;
 
 use crate::error;
-use schema::GDS;
+use graphql_schema::GDS;
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct ResolvedOrderBy<'s> {
@@ -23,7 +23,7 @@ pub struct ResolvedOrderBy<'s> {
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct OrderByElement {
-    pub order_direction: schema::ModelOrderByDirection,
+    pub order_direction: graphql_schema::ModelOrderByDirection,
     pub target: OrderByTarget,
 }
 
@@ -128,7 +128,7 @@ pub fn build_ndc_order_by_element<'s>(
         // a relationship column, we'll have to join all the paths to specify NDC,
         // what relationships needs to be traversed to access this column
         Annotation::Input(InputAnnotation::Model(
-            schema::ModelInputAnnotation::ModelOrderByArgument { ndc_column, .. },
+            graphql_schema::ModelInputAnnotation::ModelOrderByArgument { ndc_column, .. },
         )) => {
             let order_by_value = argument.value.as_enum()?;
             let order_direction = match &order_by_value.info.generic {
@@ -169,7 +169,7 @@ pub fn build_ndc_order_by_element<'s>(
         // A relationship is being used to order the results. This relationship can
         // either point to another relationship or a column.
         Annotation::Input(InputAnnotation::Model(
-            schema::ModelInputAnnotation::ModelOrderByRelationshipArgument(
+            graphql_schema::ModelInputAnnotation::ModelOrderByRelationshipArgument(
                 OrderByRelationshipAnnotation {
                     relationship_name,
                     relationship_type,
@@ -223,7 +223,7 @@ pub fn build_ndc_order_by_element<'s>(
             Ok(order_by_elements)
         }
         Annotation::Input(InputAnnotation::Model(
-            schema::ModelInputAnnotation::ModelOrderByNestedExpression { ndc_column },
+            graphql_schema::ModelInputAnnotation::ModelOrderByNestedExpression { ndc_column },
         )) => {
             field_paths.push(ndc_column.clone());
             let argument_list = argument.value.as_list()?;

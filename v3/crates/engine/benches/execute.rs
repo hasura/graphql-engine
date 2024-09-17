@@ -3,11 +3,11 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Samplin
 use execute::HttpContext;
 use execute::{execute_mutation_plan, execute_query_plan, generate_request_plan};
 use graphql_frontend::{execute_query_internal, generate_ir};
+use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use indexmap::IndexMap;
 use lang_graphql::http::RawRequest;
 use open_dds::permissions::Role;
-use schema::GDS;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -112,7 +112,7 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 gql::validation::normalize_request(
-                    &schema::GDSRoleNamespaceGetter {
+                    &graphql_schema::GDSRoleNamespaceGetter {
                         scope: session.role.clone(),
                     },
                     schema,
@@ -124,7 +124,7 @@ pub fn bench_execute(
     );
 
     let normalized_request = gql::validation::normalize_request(
-        &schema::GDSRoleNamespaceGetter {
+        &graphql_schema::GDSRoleNamespaceGetter {
             scope: session.role.clone(),
         },
         &schema,

@@ -31,13 +31,13 @@ use engine::{
     VERSION,
 };
 use execute::HttpContext;
+use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use hasura_authn_jwt::auth as jwt_auth;
 use hasura_authn_jwt::jwt;
 use hasura_authn_noauth as noauth;
 use hasura_authn_webhook::webhook;
 use lang_graphql as gql;
-use schema::GDS;
 use tracing_util::{
     add_event_on_active_span, set_attribute_on_active_span, set_status_on_current_span,
     ErrorVisibility, SpanVisibility, TraceableError, TraceableHttpResponse,
@@ -776,7 +776,7 @@ fn build_state(
         sql::catalog::Catalog::empty_from_metadata(resolved_metadata.clone())
     };
 
-    let schema = schema::GDS {
+    let schema = graphql_schema::GDS {
         metadata: resolved_metadata.clone(),
     }
     .build_schema()?;

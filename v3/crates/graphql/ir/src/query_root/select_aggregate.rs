@@ -13,9 +13,9 @@ use serde::Serialize;
 use crate::error;
 use crate::model_selection;
 use crate::model_tracking::UsagesCounts;
+use graphql_schema::GDS;
 use metadata_resolve;
 use metadata_resolve::Qualified;
-use schema::GDS;
 
 /// IR for the 'select_many' operation on a model
 #[derive(Debug, Serialize)]

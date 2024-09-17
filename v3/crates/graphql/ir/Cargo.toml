@@ -9,7 +9,7 @@ hasura-authn-core = { path = "../../auth/hasura-authn-core" }
 json-ext = { path = "../../utils/json-ext" }
 lang-graphql = { path = "../../lang-graphql" }
 open-dds = { path = "../../open-dds" }
-schema = { path = "../../schema" }
+graphql-schema = { path = "../../graphql/schema" }
 tracing-util = { path = "../../utils/tracing-util" }
 metadata-resolve = {path = "../../metadata-resolve" }
 

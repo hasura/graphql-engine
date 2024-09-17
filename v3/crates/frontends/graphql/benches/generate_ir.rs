@@ -1,10 +1,10 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
+use graphql_schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::Request;
 use lang_graphql::parser::Parser;
 use lang_graphql::validation::normalize_request;
 use open_dds::permissions::Role;
-use schema::GDS;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -51,7 +51,7 @@ pub fn bench_generate_ir(c: &mut Criterion) {
         };
 
         let normalized_request = normalize_request(
-            &schema::GDSRoleNamespaceGetter {
+            &graphql_schema::GDSRoleNamespaceGetter {
                 scope: session.role.clone(),
             },
             &schema,

@@ -10,14 +10,16 @@ use serde::Serialize;
 
 use crate::error;
 use crate::model_tracking::{count_model, UsagesCounts};
+use graphql_schema::FilterRelationshipAnnotation;
+use graphql_schema::GDS;
+use graphql_schema::{self};
+use graphql_schema::{
+    BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation, ObjectFieldKind,
+};
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
     types::{CustomTypeName, FieldName},
 };
-use schema::FilterRelationshipAnnotation;
-use schema::GDS;
-use schema::{self};
-use schema::{BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation, ObjectFieldKind};
 
 use super::relationship::LocalModelRelationshipInfo;
 use crate::selection_set::NdcRelationshipName;
@@ -88,7 +90,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
     match boolean_expression_annotation {
         // "_and"
         BooleanExpressionAnnotation::BooleanExpressionArgument {
-            field: schema::ModelFilterArgument::AndOp,
+            field: graphql_schema::ModelFilterArgument::AndOp,
         } => {
             // The "_and" field value should be a list
             let and_values = field.value.as_list()?;
@@ -110,7 +112,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
         }
         // "_or"
         BooleanExpressionAnnotation::BooleanExpressionArgument {
-            field: schema::ModelFilterArgument::OrOp,
+            field: graphql_schema::ModelFilterArgument::OrOp,
         } => {
             // The "_or" field value should be a list
             let or_values = field.value.as_list()?;
@@ -132,7 +134,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
         }
         // "_not"
         BooleanExpressionAnnotation::BooleanExpressionArgument {
-            field: schema::ModelFilterArgument::NotOp,
+            field: graphql_schema::ModelFilterArgument::NotOp,
         } => {
             // The "_not" field value should be an object
             let not_value = field.value.as_object()?;
@@ -144,7 +146,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
         // The column that we want to use for filtering.
         BooleanExpressionAnnotation::BooleanExpressionArgument {
             field:
-                schema::ModelFilterArgument::Field {
+                graphql_schema::ModelFilterArgument::Field {
                     field_name,
                     object_type,
                     object_field_kind,
@@ -169,7 +171,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
         // This relationship can either point to another relationship or a column.
         BooleanExpressionAnnotation::BooleanExpressionArgument {
             field:
-                schema::ModelFilterArgument::RelationshipField(FilterRelationshipAnnotation {
+                graphql_schema::ModelFilterArgument::RelationshipField(FilterRelationshipAnnotation {
                     relationship_name,
                     relationship_type,
                     source_type,
@@ -217,7 +219,7 @@ fn build_filter_expression_from_boolean_expression<'s>(
             )
         }
         other_boolean_annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
-            annotation: schema::Annotation::Input(InputAnnotation::BooleanExpression(
+            annotation: graphql_schema::Annotation::Input(InputAnnotation::BooleanExpression(
                 other_boolean_annotation.clone(),
             )),
         })?,
@@ -369,14 +371,14 @@ fn build_comparison_expression<'s>(
 
     for (_op_name, op_value) in field.value.as_object()? {
         match op_value.info.generic {
-            schema::Annotation::Input(InputAnnotation::Model(
+            graphql_schema::Annotation::Input(InputAnnotation::Model(
                 ModelInputAnnotation::IsNullOperation,
             )) => {
                 let expression =
                     build_is_null_expression(column, &op_value.value, field_path.clone())?;
                 expressions.push(expression);
             }
-            schema::Annotation::Input(InputAnnotation::Model(
+            graphql_schema::Annotation::Input(InputAnnotation::Model(
                 ModelInputAnnotation::ComparisonOperation { operator_mapping },
             )) => {
                 let operator =
@@ -400,10 +402,10 @@ fn build_comparison_expression<'s>(
                 expressions.push(expression);
             }
             // Nested field comparison
-            schema::Annotation::Input(InputAnnotation::BooleanExpression(
+            graphql_schema::Annotation::Input(InputAnnotation::BooleanExpression(
                 BooleanExpressionAnnotation::BooleanExpressionArgument {
                     field:
-                        schema::ModelFilterArgument::Field {
+                        graphql_schema::ModelFilterArgument::Field {
                             field_name: inner_field_name,
                             object_field_kind,
                             object_type: inner_object_type,
@@ -460,13 +462,14 @@ fn build_comparison_expression<'s>(
                 }
             }
             // Nested relationship comparison
-            schema::Annotation::Input(InputAnnotation::BooleanExpression(
+            graphql_schema::Annotation::Input(InputAnnotation::BooleanExpression(
                 BooleanExpressionAnnotation::BooleanExpressionArgument {
                     field:
-                        schema::ModelFilterArgument::RelationshipField(FilterRelationshipAnnotation {
-                            relationship_name,
-                            ..
-                        }),
+                        graphql_schema::ModelFilterArgument::RelationshipField(
+                            FilterRelationshipAnnotation {
+                                relationship_name, ..
+                            },
+                        ),
                 },
             )) => Err(
                 error::InternalDeveloperError::NestedObjectRelationshipInPredicate {
@@ -547,10 +550,10 @@ fn resolve_filter_object<'s>(
 }
 
 fn get_boolean_expression_annotation(
-    annotation: &schema::Annotation,
+    annotation: &graphql_schema::Annotation,
 ) -> Result<&BooleanExpressionAnnotation, error::Error> {
     match annotation {
-        schema::Annotation::Input(InputAnnotation::BooleanExpression(
+        graphql_schema::Annotation::Input(InputAnnotation::BooleanExpression(
             boolean_expression_annotation,
         )) => Ok(boolean_expression_annotation),
         _ => Err(error::InternalEngineError::UnexpectedAnnotation {

@@ -1,5 +1,5 @@
 ---
-source: crates/schema/src/lib.rs
+source: crates/graphql/schema/src/lib.rs
 expression: "make_role_agnostic_sdl_from_metadata_file(PathBuf::from(\"tests/metadata_with_presets.json\").as_ref())"
 ---
 schema {

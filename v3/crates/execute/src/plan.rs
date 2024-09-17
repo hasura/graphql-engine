@@ -38,8 +38,8 @@ use super::{HttpContext, ProjectId};
 use crate::error::FieldError;
 use crate::process_response::{process_mutation_response, ProcessedResponse};
 use graphql_ir::ModelSelection;
-use schema::GDSRoleNamespaceGetter;
-use schema::GDS;
+use graphql_schema::GDSRoleNamespaceGetter;
+use graphql_schema::GDS;
 
 pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir>>;
 

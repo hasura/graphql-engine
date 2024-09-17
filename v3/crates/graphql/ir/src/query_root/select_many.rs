@@ -18,10 +18,10 @@ use crate::model_selection;
 use crate::model_tracking::{count_model, UsagesCounts};
 use crate::order_by::build_ndc_order_by;
 use crate::permissions;
+use graphql_schema::GDS;
+use graphql_schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 use metadata_resolve;
 use metadata_resolve::Qualified;
-use schema::GDS;
-use schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 
 /// IR for the 'select_many' operation on a model
 #[derive(Debug, Serialize)]
@@ -61,7 +61,7 @@ pub fn select_many_generate_ir<'n, 's>(
 
     for argument in field_call.arguments.values() {
         match argument.info.generic {
-            annotation @ Annotation::Input(schema::InputAnnotation::Model(
+            annotation @ Annotation::Input(graphql_schema::InputAnnotation::Model(
                 model_argument_annotation,
             )) => match model_argument_annotation {
                 ModelInputAnnotation::ModelLimitArgument => {
@@ -108,7 +108,7 @@ pub fn select_many_generate_ir<'n, 's>(
                 }
             },
 
-            Annotation::Input(schema::InputAnnotation::BooleanExpression(
+            Annotation::Input(graphql_schema::InputAnnotation::BooleanExpression(
                 BooleanExpressionAnnotation::BooleanExpression,
             )) => {
                 where_clause = Some(filter::resolve_filter_expression(

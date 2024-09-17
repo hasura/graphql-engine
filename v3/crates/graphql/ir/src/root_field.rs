@@ -8,7 +8,7 @@ use super::{
     commands,
     query_root::{apollo_federation, node_field, select_aggregate, select_many, select_one},
 };
-use schema::GDS;
+use graphql_schema::GDS;
 
 /// IR of a query root field
 #[derive(Serialize, Debug)]

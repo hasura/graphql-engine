@@ -24,6 +24,7 @@ harness = false
 axum-ext = { path = "../utils/axum-ext" }
 execute = { path = "../execute" }
 graphql-frontend = { path = "../frontends/graphql" }
+graphql-schema = { path = "../graphql/schema" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 hasura-authn-jwt = { path = "../auth/hasura-authn-jwt" }
 hasura-authn-noauth = { path = "../auth/hasura-authn-noauth" }
@@ -34,7 +35,6 @@ lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }
 opendds-derive = { path = "../utils/opendds-derive" }
 pre-execution-plugin = { path = "../plugins/pre-execution-plugin" }
-schema = { path = "../schema" }
 sql = { path = "../sql" }
 tracing-util = { path = "../utils/tracing-util" }
 metadata-resolve = {path = "../metadata-resolve" }

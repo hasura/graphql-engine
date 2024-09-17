@@ -13,8 +13,8 @@ use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
+use graphql_schema::{Annotation, NamespaceAnnotation};
 use metadata_resolve::{Qualified, QualifiedTypeName};
-use schema::{Annotation, NamespaceAnnotation};
 
 #[allow(clippy::duplicated_attributes)] // suppress spurious warnings from Clippy
 #[derive(Error, Debug, Transitive)]

@@ -12,12 +12,12 @@ use crate::filter;
 use crate::filter::expression as filter_expression;
 use crate::model_selection;
 use crate::model_tracking::UsagesCounts;
+use graphql_schema::GDS;
+use graphql_schema::{EntityFieldTypeNameMapping, NamespaceAnnotation};
 use json_ext::HashMapWithJsonKey;
 use metadata_resolve;
 use metadata_resolve::mk_name;
 use metadata_resolve::Qualified;
-use schema::GDS;
-use schema::{EntityFieldTypeNameMapping, NamespaceAnnotation};
 
 /// IR for the '_entities' operation for a model
 #[derive(Serialize, Debug)]

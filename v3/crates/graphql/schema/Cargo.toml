@@ -1,5 +1,5 @@
 [package]
-name = "schema"
+name = "graphql-schema"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -13,13 +13,13 @@ path = "bin/build-schema-from-metadata/main.rs"
 bench = false
 
 [dependencies]
-hasura-authn-core = { path = "../auth/hasura-authn-core" }
-indexmap = { workspace = true, features = ["serde"] }
-json-ext = { path = "../utils/json-ext" }
-lang-graphql = { path = "../lang-graphql" }
-open-dds = { path = "../open-dds" }
-metadata-resolve = {path = "../metadata-resolve" }
+hasura-authn-core = { path = "../../auth/hasura-authn-core" }
+json-ext = { path = "../../utils/json-ext" }
+lang-graphql = { path = "../../lang-graphql" }
+open-dds = { path = "../../open-dds" }
+metadata-resolve = {path = "../../metadata-resolve" }
 
+indexmap = { workspace = true, features = ["serde"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 strum_macros = { workspace = true }

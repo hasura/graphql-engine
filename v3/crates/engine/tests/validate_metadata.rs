@@ -1,10 +1,10 @@
 use std::fs;
 use std::path::PathBuf;
 
+use graphql_schema::Error as SchemaError;
+use graphql_schema::GDS;
 use metadata_resolve::BooleanExpressionError;
 use metadata_resolve::Error as ResolveError;
-use schema::Error as SchemaError;
-use schema::GDS;
 
 #[test]
 fn test_select_many_model_arguments_without_arguments_input_type() -> anyhow::Result<()> {

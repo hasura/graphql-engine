@@ -27,7 +27,7 @@ mod tests {
 
     use crate::generate_ir;
     use execute::analyze_query_usage;
-    use schema::GDS;
+    use graphql_schema::GDS;
 
     #[test]
     fn test_generate_ir() -> Result<(), Box<dyn std::error::Error>> {
@@ -64,7 +64,7 @@ mod tests {
             };
 
             let normalized_request = normalize_request(
-                &schema::GDSRoleNamespaceGetter {
+                &graphql_schema::GDSRoleNamespaceGetter {
                     scope: session.role.clone(),
                 },
                 &schema,
@@ -127,7 +127,7 @@ mod tests {
             };
 
             let normalized_request = normalize_request(
-                &schema::GDSRoleNamespaceGetter {
+                &graphql_schema::GDSRoleNamespaceGetter {
                     scope: session.role.clone(),
                 },
                 &schema,
