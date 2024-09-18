@@ -502,13 +502,17 @@ isQueryIncludedInLogs requestStatus urlPath LoggingSettings {..}
     metadataUrlPaths = ["/v1/metadata", "/v1/query"]
     isMetadataRequest = urlPath `elem` metadataUrlPaths
 
--- | Add the 'query' field to the http-log if `MetadataQueryLoggingMode`
--- is set to `MetadataQueryLoggingEnabled` else only adds the `query.type` field.
+-- | Add the 'query' field to the http-log
 addQuery :: RequestStatus -> Maybe J.Value -> Text -> LoggingSettings -> Maybe J.Value
-addQuery requestStatus parsedReq path loggingSettings =
-  if isQueryIncludedInLogs requestStatus path loggingSettings
-    then parsedReq
-    else Just $ J.object ["type" J..= (fmap (^? key "type" . _String)) parsedReq]
+addQuery requestStatus parsedReq path loggingSettings
+  -- Attach parsed request payload to 'query' field as is.
+  | isQueryIncludedInLogs requestStatus path loggingSettings = parsedReq
+  -- If the query cannot be included, attach only the 'operationName' when the
+  -- 'HASURA_GRAPHQL_HTTP_LOG_QUERY_ONLY_ON_ERROR' option is enabled.
+  | _lsHttpLogQueryOnlyOnError loggingSettings == HttpLogQueryOnlyOnErrorEnabled =
+      Just $ J.object ["operationName" J..= (fmap (^? key "operationName" . _String)) parsedReq]
+  -- Otherwise, include only the 'type' field for metadata requests. For other requests, 'type' will be null.
+  | otherwise = Just $ J.object ["type" J..= (fmap (^? key "type" . _String)) parsedReq]
 
 mkHttpAccessLogContext ::
   -- | Maybe because it may not have been resolved
