@@ -120,7 +120,8 @@ serveOptsToLog so =
           "events_fetch_batch_size" .= Config.soEventsFetchBatchSize so,
           "graceful_shutdown_timeout" .= Config.soGracefulShutdownTimeout so,
           "websocket_connection_init_timeout" .= show (Config.soWebSocketConnectionInitTimeout so),
-          "enable_metadata_query_logging" .= Config.soEnableMetadataQueryLogging so
+          "enable_metadata_query_logging" .= Config.soEnableMetadataQueryLogging so,
+          "http_log_query_only_on_error" .= Config.soHttpLogQueryOnlyOnError so
         ]
 
 mkGenericLog :: (ToJSON a) => Logging.LogLevel -> Text -> a -> Server.Logging.StartupLog

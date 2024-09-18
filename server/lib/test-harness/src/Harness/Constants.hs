@@ -52,7 +52,7 @@ import Hasura.Server.Init
     ServeOptions (..),
   )
 import Hasura.Server.Init qualified as Init
-import Hasura.Server.Logging (MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
+import Hasura.Server.Logging (HttpLogQueryOnlyOnError (HttpLogQueryOnlyOnErrorDisabled), MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
 import Hasura.Server.Types
   ( ApolloFederationStatus (ApolloFederationDisabled),
     EventingMode (EventingEnabled),
@@ -307,6 +307,7 @@ serveOptions =
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
+      soHttpLogQueryOnlyOnError = HttpLogQueryOnlyOnErrorDisabled,
       soDefaultNamingConvention = Init._default Init.defaultNamingConventionOption,
       soExtensionsSchema = ExtensionsSchema "public",
       soMetadataDefaults = emptyMetadataDefaults,
