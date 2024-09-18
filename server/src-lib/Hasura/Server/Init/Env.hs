@@ -272,6 +272,9 @@ instance FromEnv (Server.Types.MaintenanceMode ()) where
 instance FromEnv Server.Logging.MetadataQueryLoggingMode where
   fromEnv = fmap (bool Server.Logging.MetadataQueryLoggingDisabled Server.Logging.MetadataQueryLoggingEnabled) . fromEnv @Bool
 
+instance FromEnv Server.Logging.HttpLogQueryOnlyOnError where
+  fromEnv = fmap (bool Server.Logging.HttpLogQueryOnlyOnErrorDisabled Server.Logging.HttpLogQueryOnlyOnErrorEnabled) . fromEnv @Bool
+
 instance FromEnv Query.TxIsolation where
   fromEnv = Utils.readIsoLevel
 
