@@ -74,26 +74,30 @@
           "version": "v1",
           "definition": {
             "name": "InstitutionOrderByExpression",
-            "orderedType": "institution",
-            "orderableFields": [
-              {
-                "fieldName": "id",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "name",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "location",
-                "orderByExpression": "LocationOrderByExpression"
+            "operand": {
+              "object": {
+                "orderedType": "institution",
+                "orderableFields": [
+                  {
+                    "fieldName": "id",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  },
+                  {
+                    "fieldName": "name",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  },
+                  {
+                    "fieldName": "location",
+                    "orderByExpression": "LocationOrderByExpression"
+                  }
+                ],
+                "orderableRelationships": []
               }
-            ],
-            "orderableRelationships": [],
+            },
             "graphql": {
               "expressionTypeName": "InstitutionOrderBy"
             }
@@ -172,22 +176,26 @@
           "version": "v1",
           "definition": {
             "name": "LocationOrderByExpression",
-            "orderedType": "location",
-            "orderableFields": [
-              {
-                "fieldName": "city",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "country",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "location",
+                "orderableFields": [
+                  {
+                    "fieldName": "city",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  },
+                  {
+                    "fieldName": "country",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  }
+                ],
+                "orderableRelationships": []
               }
-            ],
-            "orderableRelationships": [],
+            },
             "graphql": {
               "expressionTypeName": "LocationOrderBy"
             }

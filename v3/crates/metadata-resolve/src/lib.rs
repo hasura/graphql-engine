@@ -56,7 +56,7 @@ pub use stages::object_types::{
     ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 pub use stages::order_by_expressions::{
-    OrderByExpression, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
+    ObjectOrderByExpression, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
     OrderByExpressions, OrderableField, OrderableObjectField, OrderableRelationship,
     OrderableRelationships, OrderableScalarField,
 };

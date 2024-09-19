@@ -21,9 +21,9 @@ pub enum OrderByExpressionIdentifier {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct OrderByExpressions(
-    pub BTreeMap<Qualified<OrderByExpressionIdentifier>, OrderByExpression>,
-);
+pub struct OrderByExpressions {
+    pub objects: BTreeMap<Qualified<OrderByExpressionIdentifier>, ObjectOrderByExpression>,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct OrderByExpressionsOutput {
@@ -32,7 +32,7 @@ pub struct OrderByExpressionsOutput {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct OrderByExpression {
+pub struct ObjectOrderByExpression {
     pub identifier: Qualified<OrderByExpressionIdentifier>,
     pub ordered_type: Qualified<CustomTypeName>,
     pub orderable_fields: BTreeMap<FieldName, OrderableField>,

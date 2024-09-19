@@ -396,8 +396,8 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
             objects: {},
             scalars: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {
+        order_by_expressions: OrderByExpressions {
+            objects: {
                 Qualified {
                     subgraph: SubgraphName(
                         "default",
@@ -409,7 +409,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -460,7 +460,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
                     ),
                 },
             },
-        ),
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(

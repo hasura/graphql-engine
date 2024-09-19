@@ -611,7 +611,7 @@
     "BooleanExpressionScalarOperand": {
       "$id": "https://hasura.io/jsonschemas/metadata/BooleanExpressionScalarOperand",
       "title": "BooleanExpressionScalarOperand",
-      "description": "Definition of a scalar type representing a boolean expression on an OpenDD object type.",
+      "description": "Definition of a scalar type representing a boolean expression on an OpenDD scalar type.",
       "type": "object",
       "required": [
         "comparisonOperators",

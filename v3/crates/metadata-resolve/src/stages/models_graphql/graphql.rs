@@ -113,7 +113,7 @@ pub(crate) fn resolve_model_graphql_api(
         .map(
             |model_source: &Arc<models::ModelSource>| -> Result<Option<ModelOrderByExpression>, Error> {
                 let order_by_expression = model.order_by_expression.as_ref().map(|n|
-                    order_by_expressions.0.get(n)
+                    order_by_expressions.objects.get(n)
                     .ok_or_else(|| models::ModelsError::UnknownOrderByExpressionIdentifier {
                         model_name: model.name.clone(),
                         order_by_expression_identifier: n.clone()

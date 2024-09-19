@@ -222,9 +222,9 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/issue_when_
             objects: {},
             scalars: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {},
-        ),
+        order_by_expressions: OrderByExpressions {
+            objects: {},
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(

@@ -1461,8 +1461,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                 },
             },
         },
-        order_by_expressions: OrderByExpressions(
-            {
+        order_by_expressions: OrderByExpressions {
+            objects: {
                 Qualified {
                     subgraph: SubgraphName(
                         "__unknown_namespace",
@@ -1474,7 +1474,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "__unknown_namespace",
@@ -1539,7 +1539,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     ),
                 },
             },
-        ),
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(

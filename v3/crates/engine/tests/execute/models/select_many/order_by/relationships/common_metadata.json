@@ -183,36 +183,40 @@
           "version": "v1",
           "definition": {
             "name": "album_order_by",
-            "orderedType": "Album",
-            "orderableFields": [
-              {
-                "fieldName": "AlbumId",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Title",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "ArtistId",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "Album",
+                "orderableFields": [
+                  {
+                    "fieldName": "AlbumId",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  },
+                  {
+                    "fieldName": "Title",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  },
+                  {
+                    "fieldName": "ArtistId",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  }
+                ],
+                "orderableRelationships": [
+                  {
+                    "relationshipName": "Tracks"
+                  },
+                  {
+                    "relationshipName": "Artist",
+                    "orderByExpression": "artist_order_by"
+                  }
+                ]
               }
-            ],
-            "orderableRelationships": [
-              {
-                "relationshipName": "Tracks"
-              },
-              {
-                "relationshipName": "Artist",
-                "orderByExpression": "artist_order_by"
-              }
-            ],
+            },
             "graphql": {
               "expressionTypeName": "Album_Order_By"
             }
@@ -281,32 +285,36 @@
           "version": "v1",
           "definition": {
             "name": "track_order_by",
-            "orderedType": "Track",
-            "orderableFields": [
-              {
-                "fieldName": "TrackId",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Name",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "AlbumId",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "Track",
+                "orderableFields": [
+                  {
+                    "fieldName": "TrackId",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  },
+                  {
+                    "fieldName": "Name",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  },
+                  {
+                    "fieldName": "AlbumId",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  }
+                ],
+                "orderableRelationships": [
+                  {
+                    "relationshipName": "Album"
+                  }
+                ]
               }
-            ],
-            "orderableRelationships": [
-              {
-                "relationshipName": "Album"
-              }
-            ],
+            },
             "graphql": {
               "expressionTypeName": "Track_Order_By"
             }
@@ -587,16 +595,20 @@
           "version": "v1",
           "definition": {
             "name": "artist_order_by_limited",
-            "orderedType": "Artist",
-            "orderableFields": [
-              {
-                "fieldName": "Name",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "Artist",
+                "orderableFields": [
+                  {
+                    "fieldName": "Name",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  }
+                ],
+                "orderableRelationships": []
               }
-            ],
-            "orderableRelationships": [],
+            },
             "graphql": {
               "expressionTypeName": "Artist_Order_By_Limited"
             }
@@ -607,22 +619,26 @@
           "version": "v1",
           "definition": {
             "name": "artist_order_by",
-            "orderedType": "Artist",
-            "orderableFields": [
-              {
-                "fieldName": "ArtistId",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Name",
-                "enableOrderByDirections": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "orderedType": "Artist",
+                "orderableFields": [
+                  {
+                    "fieldName": "ArtistId",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  },
+                  {
+                    "fieldName": "Name",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  }
+                ],
+                "orderableRelationships": []
               }
-            ],
-            "orderableRelationships": [],
+            },
             "graphql": {
               "expressionTypeName": "Artist_Order_By"
             }

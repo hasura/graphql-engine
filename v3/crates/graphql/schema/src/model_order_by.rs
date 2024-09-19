@@ -133,7 +133,7 @@ pub fn build_model_order_by_input_schema(
     let order_by_expression = gds
         .metadata
         .order_by_expressions
-        .0
+        .objects
         .get(order_by_expression_identifier)
         .ok_or_else(|| Error::InternalOrderByExpressionNotFound {
             order_by_expression_identifier: order_by_expression_identifier.clone(),
@@ -221,7 +221,7 @@ pub fn build_model_order_by_input_schema(
                 let nested_order_by_expression = gds
                     .metadata
                     .order_by_expressions
-                    .0
+                    .objects
                     .get(order_by_expression_identifier)
                     .ok_or_else(|| Error::InternalOrderByExpressionNotFound {
                         order_by_expression_identifier: order_by_expression_identifier.clone(),
@@ -454,7 +454,7 @@ fn build_orderable_relationships(
                                     let target_order_by_expression = gds
                                         .metadata
                                         .order_by_expressions
-                                        .0
+                                        .objects
                                         .get(&qualified_target_order_by_identifier)
                                         .ok_or_else(|| {
                                             Error::InternalOrderByExpressionNotFound {

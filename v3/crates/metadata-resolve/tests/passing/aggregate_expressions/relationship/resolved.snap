@@ -3514,8 +3514,8 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
             objects: {},
             scalars: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {
+        order_by_expressions: OrderByExpressions {
+            objects: {
                 Qualified {
                     subgraph: SubgraphName(
                         "default",
@@ -3527,7 +3527,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -3668,7 +3668,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -3755,7 +3755,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                     ),
                 },
             },
-        ),
+        },
         aggregate_expressions: {
             Qualified {
                 subgraph: SubgraphName(

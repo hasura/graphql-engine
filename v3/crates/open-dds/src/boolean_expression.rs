@@ -165,7 +165,7 @@ pub struct DataConnectorOperatorMapping {
     pub operator_mapping: BTreeMap<OperatorName, DataConnectorOperatorName>,
 }
 
-/// Definition of a scalar type representing a boolean expression on an OpenDD object type.
+/// Definition of a scalar type representing a boolean expression on an OpenDD scalar type.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[opendd(json_schema(title = "BooleanExpressionScalarOperand"))]

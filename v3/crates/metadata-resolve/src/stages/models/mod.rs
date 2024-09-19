@@ -1,6 +1,8 @@
 use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
-use open_dds::order_by_expression::{OrderByExpressionName, OrderByExpressionOrderableField};
+use open_dds::order_by_expression::{
+    OrderByExpressionName, OrderByExpressionOperand, OrderByExpressionOrderableField,
+};
 use std::sync::Arc;
 pub use types::{Model, ModelRaw, ModelSource, ModelsIssue, ModelsOutput, NDCFieldSourceMapping};
 mod aggregation;
@@ -12,13 +14,13 @@ pub use error::ModelsError;
 
 pub use crate::helpers::argument::get_argument_kind;
 use crate::helpers::types::store_new_graphql_type;
-use crate::{mk_name, OrderByExpression};
+use crate::mk_name;
 pub use aggregation::resolve_aggregate_expression;
 pub use helpers::get_ndc_column_for_comparison;
 
 use crate::stages::{
     aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors,
-    object_boolean_expressions, relay, scalar_types, type_permissions,
+    object_boolean_expressions, order_by_expressions, relay, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 
@@ -74,7 +76,11 @@ pub fn resolve(
         metadata_accessor
             .order_by_expressions
             .iter()
-            .map(|o| (o.object.name.clone(), o.object.ordered_type.clone()))
+            .map(|o| match &o.object.operand {
+                OrderByExpressionOperand::Object(object_operand) => {
+                    (o.object.name.clone(), object_operand.ordered_type.clone())
+                }
+            })
             .collect();
 
     for open_dds::accessor::QualifiedObject {
@@ -343,8 +349,9 @@ fn resolve_model(
                         order_by_expression_name.clone(),
                     ),
                 );
-                if let Some(order_by_expression) =
-                    order_by_expressions.0.get(&order_by_expression_identifier)
+                if let Some(order_by_expression) = order_by_expressions
+                    .objects
+                    .get(&order_by_expression_identifier)
                 {
                     if order_by_expression.ordered_type == qualified_object_type_name {
                         Ok(Some(order_by_expression_identifier))
@@ -437,7 +444,7 @@ fn make_order_by_expression(
         })
         .transpose()?;
 
-    let order_by_expression = OrderByExpression {
+    let object_order_by_expression = order_by_expressions::ObjectOrderByExpression {
         identifier: identifier.clone(),
         ordered_type,
         orderable_fields,
@@ -447,8 +454,10 @@ fn make_order_by_expression(
             "OrderByExpression for Model {qualified_model_name}"
         )),
     };
+
     order_by_expressions
-        .0
-        .insert(identifier.clone(), order_by_expression);
+        .objects
+        .insert(identifier.clone(), object_order_by_expression);
+
     Ok(identifier)
 }

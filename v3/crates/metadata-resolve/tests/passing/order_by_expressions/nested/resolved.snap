@@ -529,8 +529,8 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
             objects: {},
             scalars: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {
+        order_by_expressions: OrderByExpressions {
+            objects: {
                 Qualified {
                     subgraph: SubgraphName(
                         "default",
@@ -542,7 +542,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -605,7 +605,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -667,7 +667,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/nested/me
                     ),
                 },
             },
-        ),
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
