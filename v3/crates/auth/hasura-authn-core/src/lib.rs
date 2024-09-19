@@ -1,7 +1,10 @@
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum::Extension;
-use axum::{http::Request, http::StatusCode};
+use axum::{
+    http::StatusCode,
+    http::{HeaderMap, Request},
+};
 use lang_graphql::http::Response;
 use schemars::JsonSchema;
 use std::{
@@ -164,10 +167,21 @@ pub async fn resolve_session<'a, B>(
     mut request: Request<B>,
     next: Next<B>,
 ) -> axum::response::Result<axum::response::Response> {
+    let session = authorize_identity(&identity, request.headers())?;
+    request.extensions_mut().insert(session);
+    let response = next.run(request).await;
+    Ok(response)
+}
+
+/// Authorize the authenticated identity based on the provided headers.
+pub fn authorize_identity(
+    identity: &Identity,
+    headers: &HeaderMap,
+) -> Result<Session, SessionError> {
     let mut session_variables = HashMap::new();
     let mut role = None;
     // traverse through the headers and collect role and session variables
-    for (header_name, header_value) in request.headers() {
+    for (header_name, header_value) in headers {
         if let Ok(session_variable) = SessionVariable::from_str(header_name.as_str()) {
             let variable_value = match header_value.to_str() {
                 Err(e) => Err(SessionError::InvalidHeaderValue {
@@ -188,9 +202,8 @@ pub async fn resolve_session<'a, B>(
     let session = identity
         .get_role_authorization(role.as_ref())?
         .build_session(session_variables);
-    request.extensions_mut().insert(session);
-    let response = next.run(request).await;
-    Ok(response)
+
+    Ok(session)
 }
 
 #[cfg(test)]

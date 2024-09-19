@@ -967,6 +967,40 @@ fn resolve_schema_field<NSGet: NamespacedGetter<GDS>>(
     )?)?)
 }
 
+/// A subscription NDC query.
+/// Contains required information to execute a NDC query for a subscription in a polling loop.
+pub struct NDCSubscriptionQuery<'s, 'ir> {
+    pub query_request: ndc::NdcQueryRequest,
+    pub data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub process_response_as: ProcessResponseAs<'ir>,
+    pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
+}
+
+/// Resolve a subscription execution plan to a NDC query.
+pub async fn resolve_ndc_subscription_execution<'s, 'ir>(
+    execution: NDCSubscriptionExecution<'s, 'ir>,
+) -> Result<NDCSubscriptionQuery<'s, 'ir>, FieldError> {
+    let NDCSubscriptionExecution {
+        query_execution_plan,
+        selection_set,
+        execution_span_attribute: _,
+        field_span_attribute: _,
+        process_response_as,
+    } = execution;
+    // Remote relationships and relationships without NDC comparison capability are not allowed in predicates for subscriptions.
+    // Only allow local relationships and fields that can be pushed down to NDC.
+    let resolve_context = ResolveFilterExpressionContext::new_only_allow_ndc_pushdown_expressions();
+    let resolved_execution_plan = query_execution_plan.resolve(&resolve_context).await?;
+    let data_connector = resolved_execution_plan.data_connector;
+    let query_request = ndc_request::make_ndc_query_request(resolved_execution_plan)?;
+    Ok(NDCSubscriptionQuery {
+        query_request,
+        data_connector,
+        process_response_as,
+        selection_set,
+    })
+}
+
 // run ndc query, do any joins, and process result
 async fn resolve_ndc_query_execution<'s, 'ir>(
     http_context: &HttpContext,

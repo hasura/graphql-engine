@@ -1,5 +1,7 @@
-use hasura_authn_core::Role;
-use hasura_authn_jwt::jwt;
+use axum::http::HeaderMap;
+use execute::HttpContext;
+use hasura_authn_core::{Identity, Role};
+use hasura_authn_jwt::{auth as jwt_auth, jwt};
 use hasura_authn_noauth as noauth;
 use hasura_authn_webhook::webhook;
 
@@ -116,6 +118,70 @@ pub fn resolve_auth_config(
         AuthConfig::V2(_) => (),
     }
     Ok((auth_config, warnings))
+}
+
+/// Errors that can occur during authentication
+#[derive(Debug, thiserror::Error)]
+pub enum AuthError {
+    #[error("JWT auth error: {0}")]
+    Jwt(#[from] jwt::Error),
+    #[error("Webhook auth error: {0}")]
+    Webhook(#[from] webhook::Error),
+}
+
+impl tracing_util::TraceableError for AuthError {
+    fn visibility(&self) -> tracing_util::ErrorVisibility {
+        match self {
+            AuthError::Jwt(e) => e.visibility(),
+            AuthError::Webhook(e) => e.visibility(),
+        }
+    }
+}
+
+impl axum::response::IntoResponse for AuthError {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            AuthError::Jwt(e) => e.into_response(),
+            AuthError::Webhook(e) => e.into_response(),
+        }
+    }
+}
+
+/// Authenticate the user based on the headers and the auth config
+pub async fn authenticate(
+    headers_map: &HeaderMap,
+    http_context: &HttpContext,
+    auth_config: &AuthConfig,
+) -> Result<Identity, AuthError> {
+    // We are still supporting AuthConfig::V1, hence we need to
+    // support role emulation
+    let (auth_mode, allow_role_emulation_by) = match auth_config {
+        AuthConfig::V1(auth_config) => (
+            &auth_config.mode,
+            auth_config.allow_role_emulation_by.as_ref(),
+        ),
+        // There is no role emulation in AuthConfig::V2
+        AuthConfig::V2(auth_config) => (&auth_config.mode, None),
+    };
+    match auth_mode {
+        AuthModeConfig::NoAuth(no_auth_config) => Ok(noauth::identity_from_config(no_auth_config)),
+        AuthModeConfig::Webhook(webhook_config) => webhook::authenticate_request(
+            &http_context.client,
+            webhook_config,
+            headers_map,
+            allow_role_emulation_by,
+        )
+        .await
+        .map_err(AuthError::from),
+        AuthModeConfig::Jwt(jwt_secret_config) => jwt_auth::authenticate_request(
+            &http_context.client,
+            *jwt_secret_config.clone(),
+            headers_map,
+            allow_role_emulation_by,
+        )
+        .await
+        .map_err(AuthError::from),
+    }
 }
 
 #[cfg(test)]

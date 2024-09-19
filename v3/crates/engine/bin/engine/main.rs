@@ -1,3 +1,4 @@
+use engine::authentication::authenticate;
 use futures_util::FutureExt;
 use json_api::create_json_api_router;
 use std::fmt::Display;
@@ -26,17 +27,13 @@ use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
 use engine::{
-    authentication::{resolve_auth_config, AuthConfig, AuthModeConfig},
+    authentication::{resolve_auth_config, AuthConfig},
     internal_flags::{resolve_unstable_features, UnstableFeature},
     VERSION,
 };
 use execute::HttpContext;
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
-use hasura_authn_jwt::auth as jwt_auth;
-use hasura_authn_jwt::jwt;
-use hasura_authn_noauth as noauth;
-use hasura_authn_webhook::webhook;
 use lang_graphql as gql;
 use tracing_util::{
     add_event_on_active_span, set_attribute_on_active_span, set_status_on_current_span,
@@ -488,32 +485,6 @@ async fn sql_request_tracing_middleware<B: Send>(
         .response
 }
 
-#[derive(Debug, thiserror::Error)]
-enum AuthError {
-    #[error("JWT auth error: {0}")]
-    Jwt(#[from] jwt::Error),
-    #[error("Webhook auth error: {0}")]
-    Webhook(#[from] webhook::Error),
-}
-
-impl TraceableError for AuthError {
-    fn visibility(&self) -> tracing_util::ErrorVisibility {
-        match self {
-            AuthError::Jwt(e) => e.visibility(),
-            AuthError::Webhook(e) => e.visibility(),
-        }
-    }
-}
-
-impl IntoResponse for AuthError {
-    fn into_response(self) -> axum::response::Response {
-        match self {
-            AuthError::Jwt(e) => e.into_response(),
-            AuthError::Webhook(e) => e.into_response(),
-        }
-    }
-}
-
 /// This middleware authenticates the incoming GraphQL request according to the
 /// authentication configuration present in the `auth_config` of `EngineState`. The
 /// result of the authentication is `hasura-authn-core::Identity`, which is then
@@ -536,39 +507,11 @@ where
             "Authentication middleware",
             SpanVisibility::Internal,
             || {
-                Box::pin(async {
-                    // We are still supporting AuthConfig::V1, hence we need to
-                    // support role emulation
-                    let (auth_mode, allow_role_emulation_by) = match &engine_state.auth_config {
-                        AuthConfig::V1(auth_config) => (
-                            &auth_config.mode,
-                            auth_config.allow_role_emulation_by.as_ref(),
-                        ),
-                        // There is no role emulation in AuthConfig::V2
-                        AuthConfig::V2(auth_config) => (&auth_config.mode, None),
-                    };
-                    match auth_mode {
-                        AuthModeConfig::NoAuth(no_auth_config) => {
-                            Ok(noauth::identity_from_config(no_auth_config))
-                        }
-                        AuthModeConfig::Webhook(webhook_config) => webhook::authenticate_request(
-                            &engine_state.http_context.client,
-                            webhook_config,
-                            &headers_map,
-                            allow_role_emulation_by,
-                        )
-                        .await
-                        .map_err(AuthError::from),
-                        AuthModeConfig::Jwt(jwt_secret_config) => jwt_auth::authenticate_request(
-                            &engine_state.http_context.client,
-                            *jwt_secret_config.clone(),
-                            &headers_map,
-                            allow_role_emulation_by,
-                        )
-                        .await
-                        .map_err(AuthError::from),
-                    }
-                })
+                Box::pin(authenticate(
+                    &headers_map,
+                    &engine_state.http_context,
+                    &engine_state.auth_config,
+                ))
             },
         )
         .await?;
