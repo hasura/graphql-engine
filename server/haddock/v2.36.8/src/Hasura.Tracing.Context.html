@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html"><span class="hs-identifier">Hasura.Tracing.Context</span></a></span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier">TraceContext</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceMetadata"><span class="hs-identifier">TraceMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator">(.=)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html"><span class="hs-identifier">Hasura.Tracing.Sampling</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html"><span class="hs-identifier">Hasura.Tracing.TraceId</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html"><span class="hs-identifier">Hasura.Tracing.TraceState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceState.html#TraceState"><span class="hs-identifier">TraceState</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-comment">-- | Any additional human-readable key-value pairs relevant to the execution of</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- a span.</span><span>
+</span><span id="line-16"></span><span class="hs-comment">--</span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- When the Open Telemetry exporter is in use these become attributes. Where</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- possible and appropriate, consider using key names from the documented OT</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- semantic conventions here:</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- This can serve to document the metadata, even for users not using open telemetry.</span><span>
+</span><span id="line-22"></span><span class="hs-comment">--</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- We may make this type more closely align with the OT data model in the future</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- (e.g. supporting int, etc)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">type</span><span> </span><span id="TraceMetadata"><span class="annot"><a href="Hasura.Tracing.Context.html#TraceMetadata"><span class="hs-identifier hs-var">TraceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- | A trace context records the current active trace, the active span</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- within that trace, and the span's parent, unless the current span</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- is the root. This is like a call stack.</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">data</span><span> </span><span id="TraceContext"><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-var">TraceContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TraceContext"><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-var">TraceContext</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="tcCurrentTrace"><span class="annot"><span class="annottext">TraceContext -&gt; TraceId
+</span><a href="Hasura.Tracing.Context.html#tcCurrentTrace"><span class="hs-identifier hs-var hs-var">tcCurrentTrace</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html#TraceId"><span class="hs-identifier hs-type">TraceId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span id="tcCurrentSpan"><span class="annot"><span class="annottext">TraceContext -&gt; SpanId
+</span><a href="Hasura.Tracing.Context.html#tcCurrentSpan"><span class="hs-identifier hs-var hs-var">tcCurrentSpan</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-type">SpanId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span id="tcCurrentParent"><span class="annot"><span class="annottext">TraceContext -&gt; Maybe SpanId
+</span><a href="Hasura.Tracing.Context.html#tcCurrentParent"><span class="hs-identifier hs-var hs-var">tcCurrentParent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-type">SpanId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span id="tcSamplingState"><span class="annot"><span class="annottext">TraceContext -&gt; SamplingState
+</span><a href="Hasura.Tracing.Context.html#tcSamplingState"><span class="hs-identifier hs-var hs-var">tcSamplingState</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingState"><span class="hs-identifier hs-type">SamplingState</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="hs-comment">-- Optional vendor-specific trace identification information across different distributed tracing systems.</span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-comment">-- It's used for the W3C Trace Context only https://www.w3.org/TR/trace-context/#tracestate-header</span><span>
+</span><span id="line-37"></span><span>    </span><span id="tcStateState"><span class="annot"><span class="annottext">TraceContext -&gt; TraceState
+</span><a href="Hasura.Tracing.Context.html#tcStateState"><span class="hs-identifier hs-var hs-var">tcStateState</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html#TraceState"><span class="hs-identifier hs-type">TraceState</span></a></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- Should this be here? This implicitly ties Tracing to the name of fields in HTTP headers.</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687749396"><span id="local-6989586621687749400"><span id="local-6989586621687749403"><span id="local-6989586621687749406"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621687749427"><span class="annot"><span class="annottext">toJSON :: TraceContext -&gt; Value
+</span><a href="#local-6989586621687749427"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687749429"><span id="local-6989586621687749430"><span id="local-6989586621687749431"><span id="local-6989586621687749432"><span id="local-6989586621687749433"><span class="annot"><span class="annottext">Maybe SpanId
+SamplingState
+SpanId
+TraceId
+TraceState
+tcCurrentTrace :: TraceContext -&gt; TraceId
+tcCurrentSpan :: TraceContext -&gt; SpanId
+tcCurrentParent :: TraceContext -&gt; Maybe SpanId
+tcSamplingState :: TraceContext -&gt; SamplingState
+tcStateState :: TraceContext -&gt; TraceState
+tcCurrentTrace :: TraceId
+tcCurrentSpan :: SpanId
+tcCurrentParent :: Maybe SpanId
+tcSamplingState :: SamplingState
+tcStateState :: TraceState
+</span><a href="Hasura.Tracing.Context.html#tcCurrentTrace"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687749434"><span class="annot"><span class="annottext">idFields :: [Pair]
+</span><a href="#local-6989586621687749434"><span class="hs-identifier hs-var hs-var">idFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-44"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;trace_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceId -&gt; ByteString
+</span><a href="Hasura.Tracing.TraceId.html#traceIdToHex"><span class="hs-identifier hs-var">traceIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">TraceId
+</span><a href="#local-6989586621687749429"><span class="hs-identifier hs-var">tcCurrentTrace</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;span_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SpanId -&gt; ByteString
+</span><a href="Hasura.Tracing.TraceId.html#spanIdToHex"><span class="hs-identifier hs-var">spanIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621687749430"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-47"></span><span>        </span><span id="local-6989586621687749438"><span class="annot"><span class="annottext">samplingFieldMaybe :: Maybe Pair
+</span><a href="#local-6989586621687749438"><span class="hs-identifier hs-var hs-var">samplingFieldMaybe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-48"></span><span>          </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; SamplingState -&gt; Maybe s
+</span><a href="Hasura.Tracing.Sampling.html#samplingStateToHeader"><span class="hs-identifier hs-var">samplingStateToHeader</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="#local-6989586621687749432"><span class="hs-identifier hs-var">tcSamplingState</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; (Text -&gt; Pair) -&gt; Maybe Pair
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687749441"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687749441"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-49"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;sampling_state&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687749441"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-50"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span> </span><span class="annot"><span class="annottext">([Pair] -&gt; Value) -&gt; [Pair] -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair]
+</span><a href="#local-6989586621687749434"><span class="hs-identifier hs-var">idFields</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Maybe Pair -&gt; [Pair]
+forall a. Maybe a -&gt; [a]
+</span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">Maybe Pair
+</span><a href="#local-6989586621687749438"><span class="hs-identifier hs-var">samplingFieldMaybe</span></a></span><span>
+</span><span id="line-51"></span></pre></body></html>

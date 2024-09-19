@@ -1,0 +1,881 @@
+/* @group Fundamentals */
+
+* { margin: 0; padding: 0 }
+
+/* Is this portable? */
+html {
+  background-color: white;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #fefefe;
+  color: #111;
+  text-align: left;
+  min-height: 100vh;
+  position: relative;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-feature-settings: "kern" 1, "liga" 0;
+  -moz-font-feature-settings: "kern" 1, "liga" 0;
+  -o-font-feature-settings: "kern" 1, "liga" 0;
+  font-feature-settings: "kern" 1, "liga" 0;
+  letter-spacing: 0.0015rem;
+}
+
+#content a {
+  overflow-wrap: break-word;
+}
+
+p {
+  margin: 0.8em 0;
+}
+
+ul, ol {
+  margin: 0.8em 0 0.8em 2em;
+}
+
+dl {
+  margin: 0.8em 0;
+}
+
+dt {
+  font-weight: bold;
+}
+dd {
+  margin-left: 2em;
+}
+
+a { text-decoration: none; }
+a[href]:link { color: #9E358F; }
+a[href]:visited {color: #6F5F9C; }
+a[href]:hover { text-decoration:underline; }
+
+a[href].def:link, a[href].def:visited { color: rgba(69, 59, 97, 0.8); }
+a[href].def:hover { color: rgb(78, 98, 114); }
+
+/* @end */
+
+/* @group Show and hide with JS */
+
+body.js-enabled .hide-when-js-enabled {
+  display: none;
+}
+
+/* @end */
+
+
+/* @group responsive */
+
+#package-header .caption {
+  margin: 0px 1em 0 2em;
+}
+
+@media only screen and (min-width: 1280px) {
+  #content {
+    width: 63vw;
+    max-width: 1450px;
+  }
+
+  #table-of-contents {
+    position: fixed;
+    max-width: 10vw;
+    top: 10.2em;
+    left: 2em;
+    bottom: 1em;
+    overflow-y: auto;
+  }
+
+  #synopsis {
+    display: block;
+    position: fixed;
+    float: left;
+    top: 5em;
+    bottom: 1em;
+    right: 0;
+    max-width: 65vw;
+    overflow-y: auto;
+    /* Ensure that synopsis covers everything (including MathJAX markup) */
+    z-index: 1;
+  }
+
+  #synopsis .show {
+    border: 1px solid #5E5184;
+    padding: 0.7em;
+    max-height: 65vh;
+  }
+
+}
+
+@media only screen and (max-width: 1279px) {
+  #content {
+    width: 80vw;
+  }
+
+  #synopsis {
+    display: block;
+    padding: 0;
+    position: relative;
+    margin: 0;
+    width: 100%;
+  }
+}
+
+@media only screen and (max-width: 999px) {
+  #content {
+    width: 93vw;
+  }
+}
+
+
+/* menu for wider screens
+
+  Display the package name at the left and the menu links at the right,
+  inline with each other:
+  The package name                                   Source . Contents . Index
+*/
+@media only screen and (min-width: 1000px) {
+  #package-header {
+      text-align: left;
+      white-space: nowrap;
+      height: 40px;
+      padding: 4px 1.5em 0px 1.5em;
+      overflow: visible;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+  }
+
+  #package-header .caption {
+    display: inline-block;
+    margin: 0;
+  }
+
+  #package-header ul.links {
+    margin: 0;
+    display: inline-table;
+  }
+
+  #package-header .caption + ul.links {
+    margin-left: 1em;
+  }
+}
+
+/* menu for smaller screens
+
+Display the package name on top of the menu links and center both elements:
+                  The package name
+              Source . Contents . Index
+*/
+@media only screen and (max-width: 999px) {
+  #package-header {
+    text-align: center;
+    padding: 6px 0 4px 0;
+    overflow: hidden;
+  }
+
+  #package-header ul.links {
+    display: block;
+    text-align: center;
+    margin: 0;
+
+    /* Hide scrollbar but allow scrolling menu links horizontally */
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-bottom: -17px;
+    height: 50px;
+  }
+
+  #package-header .caption {
+    display: block;
+    margin: 4px 0;
+    text-align: center;
+  }
+
+  #package-header ul.links::-webkit-scrollbar {
+    display: none;
+  }
+
+  #package-header ul.links li:first-of-type {
+    padding-left: 1em;
+  }
+
+  #package-header ul.links li:last-of-type {
+    /*
+    The last link of the menu should offer the same distance to the right
+    as the #package-header enforces at the left.
+    */
+    padding-right: 1em;
+  }
+
+  #package-header .caption + ul.links {
+    padding-top: 9px;
+  }
+
+  #module-header table.info {
+    float: none;
+    top: 0;
+    margin: 0 auto;
+    overflow: hidden;
+    max-width: 80vw;
+  }
+}
+
+/* @end */
+
+
+/* @group Fonts & Sizes */
+
+/* Basic technique & IE workarounds from YUI 3
+   For reasons, see:
+      http://yui.yahooapis.com/3.1.1/build/cssfonts/fonts.css
+ */
+
+ body, button {
+   font: 400 14px/1.4 'PT Sans',
+     /* Fallback Font Stack */
+     -apple-system,
+	  BlinkMacSystemFont,
+     'Segoe UI',
+	  Roboto,
+	  Oxygen-Sans,
+	  Cantarell,
+	  'Helvetica Neue',
+     sans-serif;
+   *font-size: medium; /* for IE */
+   *font:x-small; /* for IE in quirks mode */
+ }
+
+h1 { font-size: 146.5%; /* 19pt */ }
+h2 { font-size: 131%;   /* 17pt */ }
+h3 { font-size: 116%;   /* 15pt */ }
+h4 { font-size: 100%;   /* 13pt */ }
+h5 { font-size: 100%;   /* 13pt */ }
+
+table {
+	font-size:inherit;
+	font:100%;
+}
+
+pre, code, kbd, samp, tt, .src {
+	font-family:monospace;
+}
+
+.links, .link {
+  font-size: 85%; /* 11pt */
+}
+
+#module-header .caption {
+  font-size: 182%; /* 24pt */
+}
+
+#module-header .caption sup {
+  font-size: 80%;
+  font-weight: normal;
+}
+
+#package-header #page-menu a:link, #package-header #page-menu a:visited { color: white; }
+
+
+.info {
+  font-size: 90%;
+}
+
+
+/* @end */
+
+/* @group Common */
+
+.caption, h1, h2, h3, h4, h5, h6, summary {
+  font-weight: bold;
+  color: #5E5184;
+  margin: 1.5em 0 1em 0;
+}
+
+
+* + h1, * + h2, * + h3, * + h4, * + h5, * + h6 {
+  margin-top: 2em;
+}
+
+h1 + h2, h2 + h3, h3 + h4, h4 + h5, h5 + h6 {
+  margin-top: inherit;
+}
+
+ul li + li {
+	margin-top: 0.2rem;
+}
+
+ul + p {
+  margin-top: 0.93em;
+}
+
+p + ul {
+  margin-top: 0.5em;
+}
+
+p {
+  margin-top: 0.7rem;
+}
+
+ul, ol {
+  margin: 0.8em 0 0.8em 2em;
+}
+
+ul.links {
+  list-style: none;
+  text-align: left;
+  font-size: 0.95em;
+}
+
+#package-header ul.links, #package-header ul.links button {
+  font-size: 1rem;
+}
+
+ul.links li {
+  display: inline;
+  white-space: nowrap;
+  padding: 0;
+}
+
+ul.links > li + li:before {
+  content: '\00B7';
+}
+
+ul.links li a {
+  padding: 0.2em 0.5em;
+}
+
+.hide { display: none; }
+.show { display: inherit; }
+.clear { clear: both; }
+
+.collapser:before, .expander:before, .noexpander:before {
+  font-size: 1.2em;
+  color: #9C5791;
+  display: inline-block;
+  padding-right: 7px;
+}
+
+.collapser:before {
+  content: '▿';
+}
+.expander:before {
+  content: '▹';
+}
+.noexpander:before {
+  content: '▿';
+  visibility: hidden;
+}
+
+.collapser, .expander {
+  cursor: pointer;
+}
+
+.instance.collapser, .instance.expander {
+  margin-left: 0px;
+  background-position: left center;
+  min-width: 9px;
+  min-height: 9px;
+}
+
+summary {
+  cursor: pointer;
+  outline: none;
+}
+
+pre {
+  padding: 0.5rem 1rem;
+  margin: 1em 0 0 0;
+  background-color: #f7f7f7;
+  overflow: auto;
+  border: 1px solid #ddd;
+  border-radius: 0.3em;
+}
+
+pre + p {
+  margin-top: 1em;
+}
+
+pre + pre {
+  margin-top: 0.5em;
+}
+
+blockquote {
+  border-left: 3px solid #c7a5d3;
+  background-color: #eee4f1;
+  margin: 0.5em;
+  padding: 0.0005em 0.3em 0.5em 0.5em;
+}
+
+.src {
+  background: #f2f2f2;
+  padding: 0.2em 0.5em;
+}
+
+.keyword { font-weight: normal; }
+.def { font-weight: bold; }
+
+@media print {
+  #footer { display: none; }
+}
+
+/* @end */
+
+/* @group Page Structure */
+
+#content {
+  margin: 3em auto 6em auto;
+  padding: 0;
+}
+
+#package-header {
+  background: #5E5184;
+  border-bottom: 5px solid rgba(69, 59, 97, 0.5);
+  color: #ddd;
+  position: relative;
+  font-size: 1.2em;
+  text-align: left;
+  margin: 0 auto;
+}
+
+#package-header .caption {
+  color: white;
+  font-style: normal;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+#module-header .caption {
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+}
+
+table.info {
+  float: right;
+  padding: 0.5em 1em;
+  border: 1px solid #ddd;
+  color: rgb(78,98,114);
+  background-color: #fff;
+  max-width: 60%;
+  border-spacing: 0;
+  position: relative;
+  top: -0.78em;
+  margin: 0 0 0 2em;
+}
+
+.info th {
+  padding: 0 1em 0 0;
+  text-align: right;
+}
+
+#style-menu li {
+	display: block;
+	border-style: none;
+	list-style-type: none;
+}
+
+#footer {
+  background: #ededed;
+  border-top: 1px solid #aaa;
+  padding: 0.5em 0;
+  color: #222;
+  text-align: center;
+  width: 100%;
+  height: 3em;
+  margin-top: 3em;
+  position: relative;
+  clear: both;
+}
+
+/* @end */
+
+/* @group Front Matter */
+
+#synopsis .caption,
+#contents-list .caption {
+  font-size: 1rem;
+}
+
+#synopsis, #table-of-contents {
+  font-size: 16px;
+}
+
+#contents-list {
+  background: #f4f4f4;
+  padding: 1em;
+  margin: 0;
+}
+
+#contents-list .caption {
+  text-align: left;
+  margin: 0;
+}
+
+#contents-list ul {
+  list-style: none;
+  margin: 0;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+#contents-list ul ul {
+  margin-left: 1.5em;
+}
+
+#description .caption {
+  display: none;
+}
+
+#synopsis summary {
+  display: block;
+  float: right;
+  width: 29px;
+  color: rgba(255,255,255,0);
+  height: 110px;
+  margin: 0;
+  font-size: 1px;
+  padding: 0;
+  background: url(synopsis.png) no-repeat 0px -8px;
+}
+
+#synopsis details[open] > summary {
+  background: url(synopsis.png) no-repeat -75px -8px;
+}
+
+#synopsis details:not([open]) > ul {
+  visibility: hidden;
+}
+
+#synopsis ul {
+  height: 100%;
+  overflow: auto;
+  padding: 0.5em;
+  margin: 0;
+}
+
+#synopsis ul ul {
+  overflow: hidden;
+}
+
+#synopsis ul,
+#synopsis ul li.src {
+  background-color: rgb(250,247,224);
+  white-space: nowrap;
+  list-style: none;
+  margin-left: 0;
+}
+
+#interface td.src {
+  white-space: nowrap;
+}
+
+/* @end */
+
+/* @group Main Content */
+
+#interface div.top + div.top {
+  margin-top: 1.5em;
+}
+
+#interface p + div.top,
+#interface h1 + div.top,
+#interface h2 + div.top,
+#interface h3 + div.top,
+#interface h4 + div.top,
+#interface h5 + div.top {
+	margin-top: 1em;
+}
+#interface .src .selflink,
+#interface .src .link {
+  float: right;
+  color: #888;
+  padding: 0 7px;
+  -moz-user-select: none;
+  font-weight: bold;
+  line-height: 30px;
+}
+#interface .src .selflink {
+  margin: 0 -0.5em 0 0.5em;
+}
+
+#interface span.fixity {
+  color: #919191;
+  border-left: 1px solid #919191;
+  padding: 0.2em 0.5em 0.2em 0.5em;
+  margin: 0 -1em 0 1em;
+}
+
+#interface span.rightedge {
+  border-left: 1px solid #919191;
+  padding: 0.2em 0 0.2em 0;
+  margin: 0 0 0 1em;
+}
+
+#interface table { border-spacing: 2px; }
+#interface td {
+  vertical-align: top;
+  padding-left: 0.5em;
+}
+
+#interface td.doc p {
+  margin: 0;
+}
+#interface td.doc p + p {
+  margin-top: 0.8em;
+}
+
+.doc table {
+  border-collapse: collapse;
+  border-spacing: 0px;
+}
+
+.doc th,
+.doc td {
+  padding: 5px;
+  border: 1px solid #ddd;
+}
+
+.doc th {
+  background-color: #f0f0f0;
+}
+
+.clearfix:after {
+  clear: both;
+  content: " ";
+  display: block;
+  height: 0;
+  visibility: hidden;
+}
+
+.subs, .top > .doc, .subs > .doc {
+  padding-left: 1em;
+  border-left: 1px solid gainsboro;
+  margin-bottom: 1em;
+}
+
+.top .subs {
+  margin-bottom: 0.6em;
+}
+
+.subs.fields ul {
+  list-style: none;
+  display: table;
+  margin: 0;
+}
+
+.subs.fields ul li {
+  display: table-row;
+}
+
+.subs ul li dfn {
+  display: table-cell;
+  font-style: normal;
+  font-weight: bold;
+  margin: 1px 0;
+  white-space: nowrap;
+}
+
+.subs ul li > .doc {
+  display: table-cell;
+  padding-left: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.subs ul li > .doc p {
+  margin: 0;
+}
+
+.subs .subs p.src {
+  border: none;
+  background-color: #f8f8f8;
+}
+
+.subs .subs .caption {
+  margin-top: 1em ;
+  margin-bottom: 0px;
+}
+
+.subs p.caption {
+    margin-top: 0;
+}
+
+.subs .subs .caption + .src {
+  margin: 0px;
+  margin-top: 8px;
+}
+
+.subs .subs .src + .src {
+  margin: 7px 0 0 0;
+}
+
+/* Render short-style data instances */
+.inst ul {
+  height: 100%;
+  padding: 0.5em;
+  margin: 0;
+}
+
+.inst, .inst li {
+  list-style: none;
+  margin-left: 1em;
+}
+
+/* Workaround for bug in Firefox (issue #384) */
+.inst-left {
+  float: left;
+}
+
+.top p.src {
+  border-bottom: 3px solid #e5e5e5;
+  line-height: 2rem;
+  margin-bottom: 1em;
+}
+
+.warning {
+  color: red;
+}
+
+.arguments {
+  margin-top: -0.4em;
+}
+.arguments .caption {
+  display: none;
+}
+
+.fields { padding-left: 1em; }
+
+.fields .caption { display: none; }
+
+.fields p { margin: 0 0; }
+
+/* this seems bulky to me
+.methods, .constructors {
+  background: #f8f8f8;
+  border: 1px solid #eee;
+}
+*/
+
+/* @end */
+
+/* @group Auxillary Pages */
+
+
+.extension-list {
+    list-style-type: none;
+    margin-left: 0;
+}
+
+#mini {
+  margin: 0 auto;
+  padding: 0 1em 1em;
+}
+
+#mini > * {
+  font-size: 93%; /* 12pt */
+}
+
+#mini #module-list .caption,
+#mini #module-header .caption {
+  font-size: 125%; /* 15pt */
+}
+
+#mini #interface h1,
+#mini #interface h2,
+#mini #interface h3,
+#mini #interface h4 {
+  font-size: 109%; /* 13pt */
+  margin: 1em 0 0;
+}
+
+#mini #interface .top,
+#mini #interface .src {
+  margin: 0;
+}
+
+#mini #module-list ul {
+  list-style: none;
+  margin: 0;
+}
+
+#alphabet ul {
+	list-style: none;
+	padding: 0;
+	margin: 0.5em 0 0;
+	text-align: center;
+}
+
+#alphabet li {
+	display: inline;
+	margin: 0 0.25em;
+}
+
+#alphabet a {
+	font-weight: bold;
+}
+
+#index .caption,
+#module-list .caption { font-size: 131%; /* 17pt */ }
+
+#index table {
+  margin-left: 2em;
+}
+
+#index .src {
+  font-weight: bold;
+}
+#index .alt {
+  font-size: 77%; /* 10pt */
+  font-style: italic;
+  padding-left: 2em;
+}
+
+#index td + td {
+  padding-left: 1em;
+}
+
+#module-list ul {
+  list-style: none;
+  margin: 0 0 0 2em;
+}
+
+#module-list li {
+  clear: right;
+}
+
+#module-list span.collapser,
+#module-list span.expander {
+  background-position: 0 0.3em;
+}
+
+#module-list .package {
+  float: right;
+}
+
+:target {
+  background: -webkit-linear-gradient(top, transparent 0%, transparent 65%, #fbf36d 60%, #fbf36d 100%);
+  background: -moz-linear-gradient(top, transparent 0%, transparent 65%, #fbf36d 60%, #fbf36d 100%);
+  background: -o-linear-gradient(top, transparent 0%, transparent 65%, #fbf36d 60%, #fbf36d 100%);
+  background: -ms-linear-gradient(top, transparent 0%, transparent 65%, #fbf36d 60%, #fbf36d 100%);
+  background: linear-gradient(to bottom, transparent 0%, transparent 65%, #fbf36d 60%, #fbf36d 100%);
+}
+
+:target:hover {
+  background: -webkit-linear-gradient(top, transparent 0%, transparent 0%, #fbf36d 0%, #fbf36d 100%);
+  background: -moz-linear-gradient(top, transparent 0%, transparent 0%, #fbf36d 0%, #fbf36d 100%);
+  background: -o-linear-gradient(top, transparent 0%, transparent 0%, #fbf36d 0%, #fbf36d 100%);
+  background: -ms-linear-gradient(top, transparent 0%, transparent 0%, #fbf36d 0%, #fbf36d 100%);
+  background: linear-gradient(to bottom, transparent 0%, transparent 0%, #fbf36d 0%, #fbf36d 100%);
+}
+
+/* @end */
+
+/* @group Dropdown menus */
+
+#preferences-menu, #style-menu {
+  width: 25em;
+  overflow-y: auto;
+}
+
+/* @end */
