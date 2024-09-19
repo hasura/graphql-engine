@@ -65,7 +65,10 @@ pub fn resolve(
     let scalar_types::ScalarTypesOutput {
         scalar_types,
         graphql_types,
+        issues,
     } = scalar_types::resolve(&metadata_accessor, graphql_types)?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Validate scalar `BooleanExpressionType`s
     let scalar_boolean_expressions::ScalarBooleanExpressionsOutput {

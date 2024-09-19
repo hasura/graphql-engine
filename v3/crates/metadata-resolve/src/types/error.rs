@@ -2,7 +2,7 @@ use crate::helpers::typecheck::TypecheckError;
 use crate::stages::{
     aggregates::AggregateExpressionError, apollo, boolean_expressions, commands,
     data_connector_scalar_types, data_connectors, graphql_config, models, object_types,
-    order_by_expressions, relay, scalar_boolean_expressions, type_permissions,
+    order_by_expressions, relay, scalar_boolean_expressions, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use open_dds::data_connector::DataConnectorColumnName;
@@ -273,7 +273,8 @@ pub enum Error {
     DataConnectorError(#[from] data_connectors::NamedDataConnectorError),
     #[error("NDC validation error: {0}")]
     NDCValidationError(#[from] NDCValidationError),
-
+    #[error("{0}")]
+    ScalarTypesError(#[from] scalar_types::ScalarTypesError),
     #[error("{type_error:}")]
     TypeError { type_error: TypeError },
     #[error("{0}")]

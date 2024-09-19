@@ -17,6 +17,12 @@ pub struct Flags {
 
     #[opendd(default, rename = "require_nested_array_filtering_capability")]
     pub require_nested_array_filtering_capability: bool,
+
+    #[opendd(
+        default,
+        rename = "disallow_scalar_type_names_conflicting_with_inbuilt_types"
+    )]
+    pub disallow_scalar_type_names_conflicting_with_inbuilt_types: bool,
 }
 
 impl Flags {
@@ -27,6 +33,7 @@ impl Flags {
             require_valid_ndc_v01_version: false,
             bypass_relation_comparisons_ndc_capability: false,
             require_nested_array_filtering_capability: false,
+            disallow_scalar_type_names_conflicting_with_inbuilt_types: false,
         }
     }
 

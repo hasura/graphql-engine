@@ -6,6 +6,9 @@
 
 ### Fixed
 
+- Disallow defining custom scalar types with names that conflict with built-in
+  types, such as `String` or `Int`.
+
 ### Changed
 
 ## [v2024.09.16]

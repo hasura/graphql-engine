@@ -2,7 +2,7 @@ use open_dds::flags;
 
 use crate::stages::{
     aggregates, boolean_expressions, commands, data_connectors, models, models_graphql,
-    object_boolean_expressions,
+    object_boolean_expressions, scalar_types,
 };
 
 use super::error::ShouldBeAnError;
@@ -25,6 +25,8 @@ pub enum Warning {
     CommandIssue(#[from] commands::CommandsIssue),
     #[error("{0}")]
     AggregateExpressionIssue(#[from] aggregates::AggregateExpressionIssue),
+    #[error("{0}")]
+    ScalarTypesIssue(#[from] scalar_types::ScalarTypesIssue),
 }
 
 impl ShouldBeAnError for Warning {
@@ -32,6 +34,7 @@ impl ShouldBeAnError for Warning {
         match self {
             Warning::DataConnectorIssue(issue) => issue.should_be_an_error(flags),
             Warning::BooleanExpressionIssue(issue) => issue.should_be_an_error(flags),
+            Warning::ScalarTypesIssue(issue) => issue.should_be_an_error(flags),
             _ => false,
         }
     }
