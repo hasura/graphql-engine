@@ -1,6 +1,7 @@
 use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
 use open_dds::order_by_expression::{OrderByExpressionName, OrderByExpressionOrderableField};
+use std::sync::Arc;
 pub use types::{Model, ModelRaw, ModelSource, ModelsIssue, ModelsOutput, NDCFieldSourceMapping};
 mod aggregation;
 mod error;
@@ -124,7 +125,7 @@ pub fn resolve(
                 object_boolean_expression_types,
                 boolean_expression_types,
             )?;
-            resolved_model.source = Some(resolved_model_source);
+            resolved_model.source = Some(Arc::new(resolved_model_source));
             issues.extend(model_source_issues);
         }
 

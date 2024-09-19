@@ -1,5 +1,7 @@
 //! IR of the query root type
 
+use std::sync::Arc;
+
 use hasura_authn_core::{Session, SessionVariables};
 use indexmap::IndexMap;
 use lang_graphql as gql;
@@ -175,7 +177,7 @@ fn generate_type_field_ir<'n, 's>(
 #[allow(clippy::too_many_arguments)]
 pub fn generate_model_rootfield_ir<'n, 's>(
     type_name: &ast::TypeName,
-    source: &'s Option<metadata_resolve::ModelSource>,
+    source: &'s Option<Arc<metadata_resolve::ModelSource>>,
     data_type: &metadata_resolve::Qualified<CustomTypeName>,
     kind: &RootFieldKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,

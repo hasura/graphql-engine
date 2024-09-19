@@ -3,6 +3,7 @@ use open_dds::data_connector::{
     DataConnectorName, DataConnectorObjectType, DataConnectorScalarType,
 };
 use ref_cast::RefCast;
+use std::sync::Arc;
 
 use super::error::{ModelAggregateExpressionError, ModelsError};
 use crate::stages::{aggregates, data_connectors, models, object_types, type_permissions};
@@ -15,7 +16,7 @@ pub fn resolve_aggregate_expression(
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     model_name: &Qualified<ModelName>,
     model_object_type_name: &Qualified<CustomTypeName>,
-    model_source: &Option<models::ModelSource>,
+    model_source: &Option<Arc<models::ModelSource>>,
     aggregate_expressions: &BTreeMap<
         Qualified<AggregateExpressionName>,
         aggregates::AggregateExpression,

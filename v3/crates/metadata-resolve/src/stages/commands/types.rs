@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::data_connectors::ArgumentPresetValue;
 use crate::helpers::argument::ArgumentMappingIssue;
 use crate::stages::{data_connectors, object_types};
@@ -53,7 +55,7 @@ pub struct Command {
     pub output_type: QualifiedTypeReference,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub graphql_api: Option<CommandGraphQlApi>,
-    pub source: Option<CommandSource>,
+    pub source: Option<Arc<CommandSource>>,
     pub description: Option<String>,
 }
 

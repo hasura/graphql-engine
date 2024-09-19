@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use open_dds::aggregates::AggregateExpressionName;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::models::{ModelGraphQlDefinitionV2, ModelName};
@@ -109,7 +111,7 @@ pub(crate) fn resolve_model_graphql_api(
         .source
         .as_ref()
         .map(
-            |model_source: &models::ModelSource| -> Result<Option<ModelOrderByExpression>, Error> {
+            |model_source: &Arc<models::ModelSource>| -> Result<Option<ModelOrderByExpression>, Error> {
                 let order_by_expression = model.order_by_expression.as_ref().map(|n|
                     order_by_expressions.0.get(n)
                     .ok_or_else(|| models::ModelsError::UnknownOrderByExpressionIdentifier {

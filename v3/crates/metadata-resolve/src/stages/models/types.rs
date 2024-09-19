@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::data_connectors::ArgumentPresetValue;
 use crate::helpers::argument::ArgumentMappingIssue;
 use crate::helpers::types::NdcColumnForComparison;
@@ -53,7 +55,7 @@ pub struct Model {
     pub type_fields: IndexMap<FieldName, object_types::FieldDefinition>,
     pub global_id_fields: Vec<FieldName>,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
-    pub source: Option<ModelSource>,
+    pub source: Option<Arc<ModelSource>>, // wrapped in Arc because we include these in our `Plan`
     pub global_id_source: Option<NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
     pub order_by_expression: Option<Qualified<OrderByExpressionIdentifier>>,

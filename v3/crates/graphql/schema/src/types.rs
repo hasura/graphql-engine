@@ -7,6 +7,7 @@ use serde_json::Value;
 use std::{
     collections::{BTreeMap, HashMap},
     fmt::Display,
+    sync::Arc,
 };
 
 use open_dds::{
@@ -59,7 +60,7 @@ pub struct NodeFieldTypeNameMapping {
     pub type_name: Qualified<types::CustomTypeName>,
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
-    pub model_source: Option<metadata_resolve::ModelSource>,
+    pub model_source: Option<Arc<metadata_resolve::ModelSource>>,
     pub global_id_fields_ndc_mapping: BTreeMap<types::FieldName, NdcColumnForComparison>,
 }
 
@@ -68,7 +69,7 @@ pub struct EntityFieldTypeNameMapping {
     pub type_name: Qualified<types::CustomTypeName>,
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
-    pub model_source: Option<metadata_resolve::ModelSource>,
+    pub model_source: Option<Arc<metadata_resolve::ModelSource>>,
     pub key_fields_ndc_mapping: BTreeMap<types::FieldName, NdcColumnForComparison>,
 }
 
@@ -138,7 +139,7 @@ pub enum RootFieldAnnotation {
     },
     Model {
         data_type: Qualified<types::CustomTypeName>,
-        source: Option<metadata_resolve::ModelSource>,
+        source: Option<Arc<metadata_resolve::ModelSource>>,
         // select_permissions: HashMap<Role, metadata_resolve::SelectPermission>,
         kind: RootFieldKind,
         name: Qualified<models::ModelName>,

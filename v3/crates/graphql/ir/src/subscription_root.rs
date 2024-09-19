@@ -1,5 +1,7 @@
 //! IR of the subscription root type
 
+use std::sync::Arc;
+
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
@@ -68,7 +70,7 @@ pub fn generate_ir<'n, 's>(
 #[allow(clippy::too_many_arguments)]
 fn generate_model_rootfield_ir<'n, 's>(
     type_name: &ast::TypeName,
-    source: &'s Option<metadata_resolve::ModelSource>,
+    source: &'s Option<Arc<metadata_resolve::ModelSource>>,
     data_type: &metadata_resolve::Qualified<CustomTypeName>,
     kind: &RootFieldKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,

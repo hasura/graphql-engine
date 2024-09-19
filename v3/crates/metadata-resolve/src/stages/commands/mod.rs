@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 mod command;
 mod error;
 mod source;
@@ -56,7 +58,7 @@ pub fn resolve(
                 object_boolean_expression_types,
                 boolean_expression_types,
             )?;
-            resolved_command.source = Some(command_source);
+            resolved_command.source = Some(Arc::new(command_source));
             issues.extend(command_source_issues);
         }
         let qualified_command_name = Qualified::new(subgraph.clone(), command.name.clone());
