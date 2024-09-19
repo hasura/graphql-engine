@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use open_dds::{
     arguments::ArgumentName,
@@ -95,7 +95,7 @@ pub struct PredicateRelationshipInfo {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ModelTargetSource {
-    pub model: models::ModelSource,
+    pub model: Arc<models::ModelSource>,
     pub capabilities: relationships::RelationshipCapabilities,
 }
 
@@ -108,12 +108,12 @@ impl ModelTargetSource {
             .model
             .source
             .as_ref()
-            .map(|model_source| Self::from_model_source(model_source, relationship))
+            .map(|model_source| Self::from_model_source(&model_source.clone(), relationship))
             .transpose()
     }
 
     pub fn from_model_source(
-        model_source: &models::ModelSource,
+        model_source: &Arc<models::ModelSource>,
         relationship: &relationships::RelationshipField,
     ) -> Result<Self, Error> {
         Ok(Self {

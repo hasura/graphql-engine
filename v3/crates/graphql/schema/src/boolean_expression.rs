@@ -7,6 +7,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 use std::collections::{BTreeMap, HashMap};
+use std::sync::Arc;
 
 use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::FilterRelationshipAnnotation;
@@ -494,7 +495,7 @@ fn build_model_relationship_schema(
     target_object_type_representation: &ObjectTypeWithRelationships,
     target_filter_expression_graphql_type: &ast::TypeName,
     target_model: &ModelWithPermissions,
-    target_source: &metadata_resolve::ModelSource,
+    target_source: &Arc<metadata_resolve::ModelSource>,
     relationship: &RelationshipField,
     relationship_type: &RelationshipType,
     relationship_model_mappings: &[RelationshipModelMapping],

@@ -531,7 +531,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                             }
 
                             let target_source = ModelTargetSource::from_model_source(
-                                target_model_source,
+                                &target_model_source.clone(),
                                 relationship,
                             )?;
 

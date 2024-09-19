@@ -3,6 +3,7 @@ use open_dds::data_connector::{DataConnectorColumnName, DataConnectorOperatorNam
 use open_dds::models::ModelName;
 use open_dds::relationships::RelationshipName;
 use serde::Serialize;
+use std::sync::Arc;
 
 use crate::relationship::LocalModelRelationshipInfo;
 use crate::remote_joins::VariableName;
@@ -38,7 +39,7 @@ pub enum Expression<'s> {
     RelationshipEngineResolved {
         relationship: RelationshipName,
         target_model_name: &'s Qualified<ModelName>,
-        target_model_source: &'s metadata_resolve::ModelSource,
+        target_model_source: Arc<metadata_resolve::ModelSource>,
         ndc_column_mapping: Vec<RelationshipColumnMapping>,
         predicate: Box<Expression<'s>>,
     },

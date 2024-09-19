@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
@@ -7,6 +5,7 @@ use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified};
 use open_dds::models::ModelName;
 use open_dds::relationships::{RelationshipName, RelationshipType};
 use serde::Serialize;
+use std::collections::BTreeMap;
 
 use crate::error;
 use crate::model_tracking::{count_model, UsagesCounts};
@@ -351,7 +350,7 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
             Ok(expression::Expression::RelationshipEngineResolved {
                 relationship: relationship_name.clone(),
                 target_model_name,
-                target_model_source: &target_source.model,
+                target_model_source: target_source.model.clone(),
                 ndc_column_mapping,
                 predicate: Box::new(relationship_predicate),
             })

@@ -121,7 +121,7 @@ pub fn plan_expression<'s, 'a>(
             Ok(graphql_ir::Expression::RelationshipEngineResolved {
                 relationship: relationship.clone(),
                 target_model_name,
-                target_model_source,
+                target_model_source: target_model_source.clone(),
                 ndc_column_mapping: ndc_column_mapping.clone(),
                 predicate: predicate.clone(),
             })
