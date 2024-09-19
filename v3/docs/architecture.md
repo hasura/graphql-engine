@@ -18,11 +18,14 @@ crates
 │   │   ├── introspection
 │   │   ├── validation
 ├── metadata-resolve
-├── schema
-│   ├── operations
-│   ├── types
-├── ir
+├── graphql
+│   ├── schema
+│   │   ├── operations
+│   │   ├── types
+│   ├── ir
 ├── execute
+├── jsonapi
+├── sql
 ├── frontends
 │   ├── graphql
 ├── engine
@@ -79,12 +82,12 @@ contain additional relevant data from the schema.
 Resolves and validates the input Open DDS metadata and creates intermediate
 structures that are used in the `engine` crate for schema generation.
 
-##### `schema`
+##### `graphql/schema`
 
 Provides functions to resolve the Open DDS metadata, generate the GraphQL scehma
 from it, and execute queries against the schema.
 
-##### `schema/operations`
+##### `graphql/schema/operations`
 
 Contains the logic to define and execute the operations that would be defined by
 the Open DDS spec.
@@ -102,7 +105,7 @@ Each module under `operations` would roughly define the following:
 - Logic to parse a normalized field from the request into the defined IR format.
 - Logic to execute the operation.
 
-##### `schema/types`
+##### `graphql/schema/types`
 
 TODO: This is a bit outdated, so we should fix this.
 
@@ -120,7 +123,7 @@ Each module under `types` defines the following:
 - Logic to parse a normalized object (selection set or input value) from the
   request into the defined IR format.
 
-### `ir`
+### `graphql/ir`
 
 Responsible for combining the user input and our resolved metadata into our
 intermediate representation ready to plan a request.
@@ -134,6 +137,14 @@ provided metadata, including requests processing, executing requests, etc.
 
 Entrypoints for GraphQL requests. Orchestrates parsing, validation and planning
 requests.
+
+### `sql`
+
+Responsible for SQL frontend currently in development
+
+### `jsonapi`
+
+Responsible for JSONAPI frontend currently in development
 
 #### `engine/bin`
 
