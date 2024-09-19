@@ -355,20 +355,18 @@ headers on any request.
 | **Default**         | `false`                       |
 | **Supported in**    | CE, Enterprise Edition        |
 
-
 ### Disable Native Query validation
 
 Disable validation of Native Queries against the database.
 
-|                     |                                                     |
-| ------------------- | --------------------------------------------------- |
-| **Flag**            | `--disable-native-query-validation`                 |
-| **Env var**         | `HASURA_GRAPHQL_DISABLE_NATIVE_QUERY_VALIDATION`    |
-| **Accepted values** | Boolean                                             |
-| **Options**         | `true` or `false`                                   |
-| **Default**         | `false`                                             |
-| **Supported in**    | CE, Enterprise Edition, Cloud                       |
-
+|                     |                                                  |
+| ------------------- | ------------------------------------------------ |
+| **Flag**            | `--disable-native-query-validation`              |
+| **Env var**         | `HASURA_GRAPHQL_DISABLE_NATIVE_QUERY_VALIDATION` |
+| **Accepted values** | Boolean                                          |
+| **Options**         | `true` or `false`                                |
+| **Default**         | `false`                                          |
+| **Supported in**    | CE, Enterprise Edition, Cloud                    |
 
 ### Dynamic Secrets Allowed Path Prefix
 
@@ -613,28 +611,28 @@ The maximum number of events to be fetched from the DB in a single batch.
 ### Events Fetch Interval
 
 The interval, in milliseconds, to sleep before trying to fetch events again after a fetch returned no events from
-Postgres.
+Postgres. Setting this value to `0` will stop event trigger processing.
 
 |                     |                                            |
 | ------------------- | ------------------------------------------ |
 | **Flag**            | `--events-fetch-interval <INTERVAL_IN_MS>` |
 | **Env var**         | `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL`     |
 | **Accepted values** | Integer                                    |
-| **Default**         | `null`                                     |
+| **Default**         | `1000`                                     |
 | **Supported in**    | CE, Enterprise Edition                     |
 
 ### Experimental Features
 
 List of experimental features to be enabled.
 
-|                     |                                                                                                                                                                                                                                                                   |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                                              |
-| **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                                            |
-| **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                                                     |
+|                     |                                                                                                                                                                                                                                                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                                                                                                                         |
+| **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                                                                                                                       |
+| **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                                                                                                                                |
 | **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays`, `remove_empty_subscription_responses`, `no_null_unbound_variable_default` |
-| **Default**         | `null`                                                                                                                                                                                                                                                            |
-| **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                     |
+| **Default**         | `null`                                                                                                                                                                                                                                                                                                                                       |
+| **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                                                                                                |
 
 ### Header Size Limit
 
@@ -1248,14 +1246,14 @@ This sets transaction isolation.
 
 Add SQL and GraphQL queries to the OTLP traces.
 
-|                     |                                          |
-| ------------------- | ---------------------------------------- |
-| **Flag**            | `--trace-sql-query`                      |
-| **Env var**         | `HASURA_GRAPHQL_ENABLE_QUERY_TRACING`    |
-| **Accepted values** | Boolean                                  |
-| **Options**         | `true` or `false`                        |
-| **Default**         | `false`                                  |
-| **Supported in**    | Enterprise Edition, Cloud                |
+|                     |                                       |
+| ------------------- | ------------------------------------- |
+| **Flag**            | `--trace-sql-query`                   |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_QUERY_TRACING` |
+| **Accepted values** | Boolean                               |
+| **Options**         | `true` or `false`                     |
+| **Default**         | `false`                               |
+| **Supported in**    | Enterprise Edition, Cloud             |
 
 ### Unauthorized Role
 
