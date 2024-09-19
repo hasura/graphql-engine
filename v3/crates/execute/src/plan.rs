@@ -84,9 +84,17 @@ pub enum NodeQueryPlan<'n, 's, 'ir> {
         role: Role,
     },
     /// NDC query to be executed
-    NDCQueryExecution(NDCQueryExecution<'s, 'ir>),
+    NDCQueryExecution {
+        query_execution: NDCQueryExecution<'s, 'ir>,
+        selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
+    },
     /// NDC query for Relay 'node' to be executed
-    RelayNodeSelect(Option<NDCQueryExecution<'s, 'ir>>),
+    RelayNodeSelect(
+        Option<(
+            NDCQueryExecution<'s, 'ir>,
+            &'ir normalized_ast::SelectionSet<'s, GDS>,
+        )>,
+    ),
     /// Apollo Federation query to be executed
     ApolloFederationSelect(ApolloFederationSelect<'n, 's, 'ir>),
 }
@@ -97,10 +105,6 @@ pub struct NDCQueryExecution<'s, 'ir> {
     pub execution_span_attribute: &'static str,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs<'ir>,
-    // This selection set can either be owned by the IR structures or by the normalized query request itself.
-    // We use the more restrictive lifetime `'ir` here which allows us to construct this struct using the selection
-    // set either from the IR or from the normalized query request.
-    pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
 }
 
 pub struct NDCSubscriptionExecution<'s, 'ir> {
@@ -114,7 +118,12 @@ pub struct NDCSubscriptionExecution<'s, 'ir> {
 #[derive(Debug)]
 pub enum ApolloFederationSelect<'n, 's, 'ir> {
     /// NDC queries for Apollo Federation '_entities' to be executed
-    EntitiesSelect(Vec<NDCQueryExecution<'s, 'ir>>),
+    EntitiesSelect(
+        Vec<(
+            NDCQueryExecution<'s, 'ir>,
+            &'ir normalized_ast::SelectionSet<'s, GDS>,
+        )>,
+    ),
     ServiceField {
         sdl: String,
         selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
@@ -321,49 +330,57 @@ fn plan_query<'n, 's, 'ir>(
         },
         graphql_ir::QueryRootField::ModelSelectOne { ir, selection_set } => {
             let execution_tree = generate_execution_tree(&ir.model_selection)?;
-            NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
-                execution_tree,
+            NodeQueryPlan::NDCQueryExecution {
                 selection_set,
-                execution_span_attribute: "execute_model_select_one",
-                field_span_attribute: ir.field_name.to_string(),
-                process_response_as: ProcessResponseAs::Object {
-                    is_nullable: ir.type_container.nullable.to_owned(),
+                query_execution: NDCQueryExecution {
+                    execution_tree,
+                    execution_span_attribute: "execute_model_select_one",
+                    field_span_attribute: ir.field_name.to_string(),
+                    process_response_as: ProcessResponseAs::Object {
+                        is_nullable: ir.type_container.nullable.to_owned(),
+                    },
                 },
-            })
+            }
         }
 
         graphql_ir::QueryRootField::ModelSelectMany { ir, selection_set } => {
             let execution_tree = generate_execution_tree(&ir.model_selection)?;
-            NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
-                execution_tree,
+            NodeQueryPlan::NDCQueryExecution {
                 selection_set,
-                execution_span_attribute: "execute_model_select_many",
-                field_span_attribute: ir.field_name.to_string(),
-                process_response_as: ProcessResponseAs::Array {
-                    is_nullable: ir.type_container.nullable.to_owned(),
+                query_execution: NDCQueryExecution {
+                    execution_tree,
+                    execution_span_attribute: "execute_model_select_many",
+                    field_span_attribute: ir.field_name.to_string(),
+                    process_response_as: ProcessResponseAs::Array {
+                        is_nullable: ir.type_container.nullable.to_owned(),
+                    },
                 },
-            })
+            }
         }
         graphql_ir::QueryRootField::ModelSelectAggregate { ir, selection_set } => {
             let execution_tree = generate_execution_tree(&ir.model_selection)?;
-            NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
-                execution_tree,
+            NodeQueryPlan::NDCQueryExecution {
+                query_execution: NDCQueryExecution {
+                    execution_tree,
+                    execution_span_attribute: "execute_model_select_aggregate",
+                    field_span_attribute: ir.field_name.to_string(),
+                    process_response_as: ProcessResponseAs::Aggregates,
+                },
                 selection_set,
-                execution_span_attribute: "execute_model_select_aggregate",
-                field_span_attribute: ir.field_name.to_string(),
-                process_response_as: ProcessResponseAs::Aggregates,
-            })
+            }
         }
         graphql_ir::QueryRootField::NodeSelect(optional_ir) => match optional_ir {
             Some(ir) => {
                 let execution_tree = generate_execution_tree(&ir.model_selection)?;
-                NodeQueryPlan::RelayNodeSelect(Some(NDCQueryExecution {
-                    execution_tree,
-                    selection_set: &ir.selection_set,
-                    execution_span_attribute: "execute_node",
-                    field_span_attribute: "node".into(),
-                    process_response_as: ProcessResponseAs::Object { is_nullable: true }, // node(id: ID!): Node; the node field is nullable,
-                }))
+                NodeQueryPlan::RelayNodeSelect(Some((
+                    NDCQueryExecution {
+                        execution_tree,
+                        execution_span_attribute: "execute_node",
+                        field_span_attribute: "node".into(),
+                        process_response_as: ProcessResponseAs::Object { is_nullable: true }, // node(id: ID!): Node; the node field is nullable,
+                    },
+                    &ir.selection_set,
+                )))
             }
             None => NodeQueryPlan::RelayNodeSelect(None),
         },
@@ -375,17 +392,19 @@ fn plan_query<'n, 's, 'ir>(
                 query_execution_plan,
                 remote_join_executions: join_locations_ids,
             };
-            NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
-                execution_tree,
+            NodeQueryPlan::NDCQueryExecution {
                 selection_set,
-                execution_span_attribute: "execute_command",
-                field_span_attribute: ir.command_info.field_name.to_string(),
-                process_response_as: ProcessResponseAs::CommandResponse {
-                    command_name: &ir.command_info.command_name,
-                    type_container: &ir.command_info.type_container,
-                    response_config: &ir.command_info.data_connector.response_config,
+                query_execution: NDCQueryExecution {
+                    execution_tree,
+                    execution_span_attribute: "execute_command",
+                    field_span_attribute: ir.command_info.field_name.to_string(),
+                    process_response_as: ProcessResponseAs::CommandResponse {
+                        command_name: &ir.command_info.command_name,
+                        type_container: &ir.command_info.type_container,
+                        response_config: &ir.command_info.data_connector.response_config,
+                    },
                 },
-            })
+            }
         }
         graphql_ir::QueryRootField::ApolloFederation(
             graphql_ir::ApolloFederationRootFields::EntitiesSelect(irs),
@@ -393,13 +412,15 @@ fn plan_query<'n, 's, 'ir>(
             let mut ndc_query_executions = Vec::new();
             for ir in irs {
                 let execution_tree = generate_execution_tree(&ir.model_selection)?;
-                ndc_query_executions.push(NDCQueryExecution {
-                    execution_tree,
-                    selection_set: &ir.selection_set,
-                    execution_span_attribute: "execute_entity",
-                    field_span_attribute: "entity".into(),
-                    process_response_as: ProcessResponseAs::Object { is_nullable: true },
-                });
+                ndc_query_executions.push((
+                    NDCQueryExecution {
+                        execution_tree,
+                        execution_span_attribute: "execute_entity",
+                        field_span_attribute: "entity".into(),
+                        process_response_as: ProcessResponseAs::Object { is_nullable: true },
+                    },
+                    &ir.selection_set,
+                ));
             }
             NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::EntitiesSelect(
                 ndc_query_executions,
@@ -731,12 +752,12 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                                 resolve_schema_field(selection_set, schema, &GDSRoleNamespaceGetter{scope:namespace}),
                             )
                         }
-                        NodeQueryPlan::NDCQueryExecution(ndc_query) => RootFieldResult::from_processed_response(
+                        NodeQueryPlan::NDCQueryExecution { query_execution: ndc_query, selection_set} => RootFieldResult::from_processed_response(
                             ndc_query.process_response_as.is_nullable(),
-                            resolve_ndc_query_execution(http_context, ndc_query, project_id).await,
+                            resolve_ndc_query_execution(http_context, ndc_query, selection_set, project_id).await,
                         ),
                         NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::from_processed_response(
-                            optional_query.as_ref().map_or(true, |ndc_query| {
+                            optional_query.as_ref().map_or(true, |(ndc_query,_selection_set)| {
                                 ndc_query.process_response_as.is_nullable()
                             }),
                             resolve_optional_ndc_select(http_context, optional_query, project_id)
@@ -950,11 +971,11 @@ fn resolve_schema_field<NSGet: NamespacedGetter<GDS>>(
 async fn resolve_ndc_query_execution<'s, 'ir>(
     http_context: &HttpContext,
     ndc_query: NDCQueryExecution<'s, 'ir>,
+    selection_set: &normalized_ast::SelectionSet<'ir, GDS>,
     project_id: Option<&ProjectId>,
 ) -> Result<ProcessedResponse, FieldError> {
     let NDCQueryExecution {
         execution_tree,
-        selection_set,
         execution_span_attribute,
         ref field_span_attribute,
         process_response_as,
@@ -1073,7 +1094,10 @@ async fn resolve_ndc_mutation_execution(
 
 async fn resolve_optional_ndc_select(
     http_context: &HttpContext,
-    optional_query: Option<NDCQueryExecution<'_, '_>>,
+    optional_query: Option<(
+        NDCQueryExecution<'_, '_>,
+        &normalized_ast::SelectionSet<'_, GDS>,
+    )>,
     project_id: Option<&ProjectId>,
 ) -> Result<ProcessedResponse, FieldError> {
     match optional_query {
@@ -1081,6 +1105,8 @@ async fn resolve_optional_ndc_select(
             response_headers: None,
             response: json::Value::Null,
         }),
-        Some(ndc_query) => resolve_ndc_query_execution(http_context, ndc_query, project_id).await,
+        Some((ndc_query, selection_set)) => {
+            resolve_ndc_query_execution(http_context, ndc_query, selection_set, project_id).await
+        }
     }
 }

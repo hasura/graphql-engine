@@ -156,8 +156,11 @@ pub(crate) async fn explain_query_plan(
     // Here, we are assuming that all root fields are executed in parallel.
     for (alias, node) in query_plan {
         match node {
-            NodeQueryPlan::NDCQueryExecution(ndc_query_execution)
-            | NodeQueryPlan::RelayNodeSelect(Some(ndc_query_execution)) => {
+            NodeQueryPlan::NDCQueryExecution {
+                query_execution: ndc_query_execution,
+                ..
+            }
+            | NodeQueryPlan::RelayNodeSelect(Some((ndc_query_execution, _))) => {
                 let NDCQueryExecution {
                     execution_tree,
                     process_response_as,
@@ -204,7 +207,7 @@ pub(crate) async fn explain_query_plan(
                 parallel_ndc_query_executions,
             )) => {
                 let mut parallel_steps = Vec::new();
-                for ndc_query_execution in parallel_ndc_query_executions {
+                for (ndc_query_execution, _) in parallel_ndc_query_executions {
                     let NDCQueryExecution {
                         execution_tree,
                         process_response_as,
