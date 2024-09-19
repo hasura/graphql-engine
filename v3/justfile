@@ -144,6 +144,29 @@ update-schema-in-test-metadata PORT NDC_VERSION: && fix-format
 
     docker compose -f ci.docker-compose.yaml down
 
+# ensures metadata objects in test json have their properties ordered as kind, version, then definition
+reorder-json-in-test-metadata: && fix-format
+    #!/usr/bin/env bash
+    set -e
+
+    # Should only be folders that contain json metadata tests
+    test_directories=(./crates/engine/tests/execute ./crates/metadata-resolve/tests)
+
+    find "${test_directories[@]}" -name '*.json' -print0 |
+    while IFS= read -r -d '' file; do
+      # Check if the file actually contains metadata
+      if jq -e '(. | type == "object") and has("subgraphs") and (.subgraphs | length > 0) and (.subgraphs[] | has("objects") and (.objects | length > 0))' "$file" >/dev/null; then
+
+        # Reformat each metadata object so that kind, version, and definition properties come first
+        jq '.subgraphs[].objects |= map({ kind: .kind, version: .version, definition: .definition } + .)' $file \
+        | sponge $file
+
+        echo "Updated $file"
+      else
+        echo "Skipping $file: Does not appear to be a metadata file"
+      fi
+    done
+
 # run the engine using schema from tests
 run METADATA_PATH="static/sample-schema.json": start-docker-test-deps start-docker-run-deps
     RUST_LOG=DEBUG cargo run --bin engine -- \

@@ -5,6 +5,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "DataConnectorLink",
+          "version": "v1",
           "definition": {
             "name": "db",
             "url": {
@@ -10372,9 +10374,7 @@
                 }
               }
             }
-          },
-          "version": "v1",
-          "kind": "DataConnectorLink"
+          }
         }
       ]
     }

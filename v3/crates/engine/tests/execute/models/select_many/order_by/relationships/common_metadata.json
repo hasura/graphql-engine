@@ -5,6 +5,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "name": "Album",
             "fields": [
@@ -47,11 +49,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ObjectType"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "name": "Track",
             "fields": [
@@ -94,9 +96,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ObjectType"
+          }
         },
         {
           "kind": "DataConnectorScalarRepresentation",
@@ -154,6 +154,8 @@
           }
         },
         {
+          "kind": "Model",
+          "version": "v2",
           "definition": {
             "name": "Albums",
             "objectType": "Album",
@@ -174,9 +176,7 @@
             },
             "filterExpressionType": "album_bool_exp",
             "orderByExpression": "album_order_by"
-          },
-          "version": "v2",
-          "kind": "Model"
+          }
         },
         {
           "kind": "OrderByExpression",
@@ -252,6 +252,8 @@
           }
         },
         {
+          "kind": "Model",
+          "version": "v2",
           "definition": {
             "name": "Tracks",
             "objectType": "Track",
@@ -272,9 +274,7 @@
             },
             "filterExpressionType": "track_bool_exp",
             "orderByExpression": "track_order_by"
-          },
-          "version": "v2",
-          "kind": "Model"
+          }
         },
         {
           "kind": "OrderByExpression",
@@ -313,6 +313,8 @@
           }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "typeName": "Album",
             "permissions": [
@@ -329,11 +331,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "TypePermissions"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "typeName": "Track",
             "permissions": [
@@ -350,11 +352,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "TypePermissions"
+          }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Albums",
             "permissions": [
@@ -371,11 +373,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ModelPermissions"
+          }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Tracks",
             "permissions": [
@@ -392,11 +394,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ModelPermissions"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "Album",
             "name": "Tracks",
@@ -424,11 +426,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "Track",
             "name": "Album",
@@ -456,11 +458,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "Track",
             "name": "TrackAlbums",
@@ -488,11 +490,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "name": "Artist",
             "fields": [
@@ -526,9 +528,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ObjectType"
+          }
         },
         {
           "kind": "ObjectBooleanExpressionType",
@@ -558,6 +558,8 @@
           }
         },
         {
+          "kind": "Model",
+          "version": "v2",
           "definition": {
             "name": "Artists",
             "objectType": "Artist",
@@ -578,9 +580,7 @@
             },
             "orderByExpression": "artist_order_by_limited",
             "filterExpressionType": "artist_bool_exp"
-          },
-          "version": "v2",
-          "kind": "Model"
+          }
         },
         {
           "kind": "OrderByExpression",
@@ -629,6 +629,8 @@
           }
         },
         {
+          "kind": "ModelPermissions",
+          "version": "v1",
           "definition": {
             "modelName": "Artists",
             "permissions": [
@@ -645,11 +647,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ModelPermissions"
+          }
         },
         {
+          "kind": "TypePermissions",
+          "version": "v1",
           "definition": {
             "typeName": "Artist",
             "permissions": [
@@ -666,11 +668,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "TypePermissions"
+          }
         },
         {
+          "kind": "Relationship",
+          "version": "v1",
           "definition": {
             "sourceType": "Album",
             "name": "Artist",
@@ -698,9 +700,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Relationship"
+          }
         },
         {
           "kind": "DataConnectorScalarRepresentation",

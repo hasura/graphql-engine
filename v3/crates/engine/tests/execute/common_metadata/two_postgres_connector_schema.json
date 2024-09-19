@@ -5,6 +5,8 @@
       "name": "connector_1",
       "objects": [
         {
+          "kind": "DataConnectorLink",
+          "version": "v1",
           "definition": {
             "name": "db",
             "url": {
@@ -10372,9 +10374,7 @@
                 }
               }
             }
-          },
-          "version": "v1",
-          "kind": "DataConnectorLink"
+          }
         }
       ]
     },
@@ -10382,6 +10382,8 @@
       "name": "connector_2",
       "objects": [
         {
+          "kind": "DataConnectorLink",
+          "version": "v1",
           "definition": {
             "name": "db",
             "url": {
@@ -20749,9 +20751,7 @@
                 }
               }
             }
-          },
-          "version": "v1",
-          "kind": "DataConnectorLink"
+          }
         }
       ]
     }
