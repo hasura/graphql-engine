@@ -274,6 +274,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/all_args_ar
             ),
             enable_apollo_federation_fields: false,
             bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
         },
         pre_parse_plugins: [],
         roles: [],

@@ -3081,6 +3081,10 @@
         "disallow_scalar_type_names_conflicting_with_inbuilt_types": {
           "default": false,
           "type": "boolean"
+        },
+        "propagate_boolean_expression_deprecation_status": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -3118,7 +3122,8 @@
                 "require_valid_ndc_v01_version": false,
                 "bypass_relation_comparisons_ndc_capability": false,
                 "require_nested_array_filtering_capability": false,
-                "disallow_scalar_type_names_conflicting_with_inbuilt_types": false
+                "disallow_scalar_type_names_conflicting_with_inbuilt_types": false,
+                "propagate_boolean_expression_deprecation_status": false
               },
               "allOf": [
                 {
@@ -3167,7 +3172,8 @@
                 "require_valid_ndc_v01_version": false,
                 "bypass_relation_comparisons_ndc_capability": false,
                 "require_nested_array_filtering_capability": false,
-                "disallow_scalar_type_names_conflicting_with_inbuilt_types": false
+                "disallow_scalar_type_names_conflicting_with_inbuilt_types": false,
+                "propagate_boolean_expression_deprecation_status": false
               },
               "allOf": [
                 {
@@ -3206,7 +3212,8 @@
                 "require_valid_ndc_v01_version": false,
                 "bypass_relation_comparisons_ndc_capability": false,
                 "require_nested_array_filtering_capability": false,
-                "disallow_scalar_type_names_conflicting_with_inbuilt_types": false
+                "disallow_scalar_type_names_conflicting_with_inbuilt_types": false,
+                "propagate_boolean_expression_deprecation_status": false
               },
               "allOf": [
                 {

@@ -5281,6 +5281,9 @@
           "definition": {
             "sourceType": "author",
             "name": "Articles",
+            "deprecated": {
+              "reason": "No more articles anymore"
+            },
             "target": {
               "model": {
                 "name": "Articles",

@@ -12,6 +12,8 @@
 - Fixed bug where relationships defined on a boolean expression would not take
   the target subgraph into account.
 
+- Propagate deprecation status to boolean expression relationship fields.
+
 ### Changed
 
 ## [v2024.09.16]

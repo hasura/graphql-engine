@@ -23,6 +23,9 @@ pub struct Flags {
         rename = "disallow_scalar_type_names_conflicting_with_inbuilt_types"
     )]
     pub disallow_scalar_type_names_conflicting_with_inbuilt_types: bool,
+
+    #[opendd(default, rename = "propagate_boolean_expression_deprecation_status")]
+    pub propagate_boolean_expression_deprecation_status: bool,
 }
 
 impl Flags {
@@ -34,6 +37,7 @@ impl Flags {
             bypass_relation_comparisons_ndc_capability: false,
             require_nested_array_filtering_capability: false,
             disallow_scalar_type_names_conflicting_with_inbuilt_types: false,
+            propagate_boolean_expression_deprecation_status: false,
         }
     }
 

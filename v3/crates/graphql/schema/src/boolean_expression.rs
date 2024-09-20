@@ -20,6 +20,7 @@ use metadata_resolve::{
     RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
 };
 
+use crate::mk_deprecation_status;
 use crate::permissions;
 use crate::types;
 use crate::GDS;
@@ -195,7 +196,15 @@ fn build_comparable_fields_schema(
                 annotation,
                 field_type,
                 None,
-                gql_schema::DeprecationStatus::NotDeprecated,
+                if gds
+                    .metadata
+                    .graphql_config
+                    .propagate_boolean_expression_deprecation_status
+                {
+                    mk_deprecation_status(&field_definition.deprecated)
+                } else {
+                    gql_schema::DeprecationStatus::NotDeprecated
+                },
             ),
             field_permissions,
         );
@@ -260,7 +269,15 @@ fn build_comparable_fields_schema(
                 annotation,
                 field_type,
                 None,
-                gql_schema::DeprecationStatus::NotDeprecated,
+                if gds
+                    .metadata
+                    .graphql_config
+                    .propagate_boolean_expression_deprecation_status
+                {
+                    mk_deprecation_status(&field_definition.deprecated)
+                } else {
+                    gql_schema::DeprecationStatus::NotDeprecated
+                },
             ),
             field_permissions,
         );
@@ -542,7 +559,15 @@ fn build_model_relationship_schema(
                     target_filter_expression_graphql_type.0.clone(),
                 )),
                 None,
-                gql_schema::DeprecationStatus::NotDeprecated,
+                if gds
+                    .metadata
+                    .graphql_config
+                    .propagate_boolean_expression_deprecation_status
+                {
+                    mk_deprecation_status(relationship_deprecated)
+                } else {
+                    gql_schema::DeprecationStatus::NotDeprecated
+                },
             ),
             namespace_annotations,
         ),

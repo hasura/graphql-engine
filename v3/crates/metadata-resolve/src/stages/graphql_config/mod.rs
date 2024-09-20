@@ -207,6 +207,8 @@ pub fn resolve_graphql_config(
                     enable_apollo_federation_fields,
                     bypass_relation_comparisons_ndc_capability: flags
                         .bypass_relation_comparisons_ndc_capability,
+                    propagate_boolean_expression_deprecation_status: flags
+                        .propagate_boolean_expression_deprecation_status,
                 },
             })
         }
