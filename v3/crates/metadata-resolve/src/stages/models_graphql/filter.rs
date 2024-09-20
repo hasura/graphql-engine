@@ -2,7 +2,9 @@ use crate::types::error::Error;
 
 use super::types::ModelExpressionType;
 use crate::helpers::boolean_expression::validate_data_connector_with_object_boolean_expression_type;
-use crate::stages::{boolean_expressions, models, object_boolean_expressions, relationships};
+use crate::stages::{
+    boolean_expressions, models, object_boolean_expressions, object_relationships,
+};
 use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use open_dds::{models::ModelName, types::CustomTypeName};
@@ -20,7 +22,10 @@ pub(crate) fn resolve_filter_expression_type(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
 ) -> Result<
     (

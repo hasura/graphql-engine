@@ -11,6 +11,7 @@ pub mod model_permissions;
 pub mod models;
 pub mod models_graphql;
 pub mod object_boolean_expressions;
+pub mod object_relationships;
 pub mod object_types;
 pub mod order_by_expressions;
 pub mod plugins;
@@ -98,6 +99,9 @@ pub fn resolve(
     let object_types_with_permissions =
         type_permissions::resolve(&metadata_accessor, object_types)?;
 
+    // collect raw relationships information
+    let relationships = relationships::resolve(&metadata_accessor)?;
+
     // Resolve fancy new boolean expression types
     let boolean_expressions::BooleanExpressionsOutput {
         boolean_expression_types,
@@ -108,6 +112,7 @@ pub fn resolve(
         graphql_types,
         &graphql_config,
         &object_types_with_permissions,
+        &relationships,
     )?;
 
     let order_by_expressions::OrderByExpressionsOutput {
@@ -193,7 +198,7 @@ pub fn resolve(
 
     relay::resolve(global_id_enabled_types)?;
 
-    let object_types_with_relationships = relationships::resolve(
+    let object_types_with_relationships = object_relationships::resolve(
         &metadata_accessor,
         configuration,
         &data_connectors,

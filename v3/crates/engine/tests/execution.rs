@@ -600,6 +600,14 @@ fn test_model_select_many_where_remote_object_relationship_nested() -> anyhow::R
     )
 }
 
+#[test]
+fn test_model_select_many_where_remote_object_relationship_simple_across_subgraphs(
+) -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/remote_relationships/boolean_expression_type/object/simple_across_subgraphs";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+}
+
 // Relationships in boolean expressions without 'relation_comparisons' capability
 // What is being tested:
 // 1. Remote and Local array relationships in boolean expressions (Simple, Nested relationships). We also test multi column boolean expressions

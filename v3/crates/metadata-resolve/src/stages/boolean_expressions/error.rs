@@ -1,5 +1,5 @@
 use crate::helpers::type_mappings::TypeMappingCollectionError;
-use crate::stages::{data_connectors, graphql_config, scalar_boolean_expressions};
+use crate::stages::{data_connectors, graphql_config, relationships, scalar_boolean_expressions};
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType},
@@ -112,4 +112,7 @@ pub enum BooleanExpressionError {
         boolean_expression_name: Qualified<CustomTypeName>,
         data_connector_error: data_connectors::NamedDataConnectorError,
     },
+
+    #[error("{0}")]
+    RelationshipError(#[from] relationships::RelationshipError),
 }

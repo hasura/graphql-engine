@@ -1,7 +1,7 @@
 mod types;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, models_graphql,
-    object_boolean_expressions, relationships, scalar_types,
+    object_boolean_expressions, object_relationships, scalar_types,
 };
 use indexmap::IndexMap;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
@@ -25,7 +25,10 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     object_boolean_expression_types: &BTreeMap<

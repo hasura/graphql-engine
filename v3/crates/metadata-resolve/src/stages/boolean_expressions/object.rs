@@ -5,7 +5,9 @@ pub use super::{
     BooleanExpressionComparableRelationship, ComparableFieldKind,
     ResolvedObjectBooleanExpressionType,
 };
-use crate::stages::{graphql_config, object_types, scalar_boolean_expressions, type_permissions};
+use crate::stages::{
+    graphql_config, object_types, relationships, scalar_boolean_expressions, type_permissions,
+};
 use crate::types::subgraph::mk_qualified_type_name;
 use crate::{Qualified, QualifiedBaseType};
 use lang_graphql::ast::common::{self as ast};
@@ -41,6 +43,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
+    relationships: &relationships::Relationships,
     graphql_config: &graphql_config::GraphqlConfig,
     graphql_types: &mut BTreeSet<ast::TypeName>,
 ) -> Result<ResolvedObjectBooleanExpressionType, BooleanExpressionError> {
@@ -71,7 +74,9 @@ pub(crate) fn resolve_object_boolean_expression_type(
     // resolve any comparable relationships
     let comparable_relationships = resolve_comparable_relationships(
         boolean_expression_type_name,
+        &qualified_object_type_name,
         &object_boolean_expression_operand.comparable_relationships,
+        relationships,
         subgraph,
         raw_boolean_expression_types,
     )?;
@@ -101,44 +106,60 @@ pub(crate) fn resolve_object_boolean_expression_type(
     })
 }
 
-// resolve comparable relationships. These should only be local relationships (ie, in the same data
-// connector), however we are unable to ascertain this early in the pipeline. More indepth checks
+// resolve comparable relationships. More indepth checks
 // should occur when resolving models, when the model source is known.
 fn resolve_comparable_relationships(
     boolean_expression_type_name: &Qualified<CustomTypeName>,
+    underlying_object_type_name: &Qualified<CustomTypeName>,
     comparable_relationships: &Vec<
         open_dds::boolean_expression::BooleanExpressionComparableRelationship,
     >,
+    relationships: &relationships::Relationships,
     subgraph: &SubgraphName,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
 ) -> Result<BTreeMap<FieldName, BooleanExpressionComparableRelationship>, BooleanExpressionError> {
     let mut resolved_comparable_relationships = BTreeMap::new();
 
     for comparable_relationship in comparable_relationships {
-        // if the relationship has provided an optional boolean_expression_type...
-        if let Some(target_boolean_expression_type_name) =
-            &comparable_relationship.boolean_expression_type
-        {
-            // ...check it exists
-            let _raw_boolean_expression_type = helpers::lookup_raw_boolean_expression(
-                boolean_expression_type_name,
-                &Qualified::new(
-                    subgraph.clone(),
+        // if the relationship has provided an optional boolean_expression_type, let's
+        // check it makes sense
+        let target_boolean_expression_type: Result<
+            Option<Qualified<CustomTypeName>>,
+            BooleanExpressionError,
+        > = match &comparable_relationship.boolean_expression_type {
+            Some(target_boolean_expression_type_name) => {
+                // we need to look up the target subgraph in the relationship
+                let relationship = relationships.get(
+                    underlying_object_type_name,
+                    &comparable_relationship.relationship_name,
+                )?;
+
+                // create target boolean expression name
+                let target_boolean_expression_type = Qualified::new(
+                    relationship
+                        .get_target_subgraph()
+                        .unwrap_or(subgraph.clone()),
                     target_boolean_expression_type_name.clone(),
-                ),
-                raw_boolean_expression_types,
-            )?;
-        }
-        let resolved_comparable_relationship = BooleanExpressionComparableRelationship {
-            relationship_name: comparable_relationship.relationship_name.clone(),
-            boolean_expression_type: comparable_relationship
-                .boolean_expression_type
-                .as_ref()
-                .map(|bool_exp| Qualified::new(subgraph.clone(), bool_exp.clone())),
+                );
+
+                // ...and ensure it exists
+                let _raw_boolean_expression_type = helpers::lookup_raw_boolean_expression(
+                    boolean_expression_type_name,
+                    &target_boolean_expression_type,
+                    raw_boolean_expression_types,
+                )?;
+
+                Ok(Some(target_boolean_expression_type))
+            }
+            None => Ok(None),
         };
+
         resolved_comparable_relationships.insert(
             FieldName::new(comparable_relationship.relationship_name.inner().clone()),
-            resolved_comparable_relationship,
+            BooleanExpressionComparableRelationship {
+                relationship_name: comparable_relationship.relationship_name.clone(),
+                boolean_expression_type: target_boolean_expression_type?,
+            },
         );
     }
 

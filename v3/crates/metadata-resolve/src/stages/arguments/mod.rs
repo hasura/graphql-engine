@@ -2,7 +2,7 @@ use crate::helpers::boolean_expression::validate_data_connector_with_object_bool
 use crate::helpers::types::{get_type_representation, unwrap_custom_type_name, TypeRepresentation};
 use crate::stages::{
     boolean_expressions, commands, data_connectors, models, object_boolean_expressions,
-    relationships, scalar_types,
+    object_relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::{ArgumentInfo, Qualified};
@@ -22,7 +22,10 @@ use super::object_types;
 pub fn resolve(
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -74,7 +77,10 @@ pub fn validate_arguments_with_source(
     arguments: &IndexMap<ArgumentName, ArgumentInfo>,
     data_connector_link: Option<&data_connectors::DataConnectorLink>,
     source_type_mapping: Option<&BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,

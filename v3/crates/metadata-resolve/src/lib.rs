@@ -2,7 +2,7 @@
 //! and building structures that contain all of the relevant information
 //! necessary for the engine to function.
 //!
-//! `stages::resolve` is the function responsible for resolving the metadata,
+//! `stages::resolve` is the function responsible for resolving the metadata,src/lie
 //! and it returns a resolved and validated `stages::Metadata` object.
 
 // No modules outside this should know about its internal structure.
@@ -51,6 +51,12 @@ pub use stages::models_graphql::{
 pub use stages::object_boolean_expressions::{
     ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
 };
+pub use stages::object_relationships::{
+    relationship_execution_category, CommandRelationshipTarget, ModelAggregateRelationshipTarget,
+    ModelRelationshipTarget, ObjectTypeWithRelationships, RelationshipCapabilities,
+    RelationshipCommandMapping, RelationshipExecutionCategory, RelationshipField,
+    RelationshipModelMapping, RelationshipTarget,
+};
 pub use stages::object_types::{
     FieldArgumentInfo, FieldMapping, ObjectTypeRepresentation,
     ResolvedObjectApolloFederationConfig, TypeMapping,
@@ -59,12 +65,6 @@ pub use stages::order_by_expressions::{
     ObjectOrderByExpression, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
     OrderByExpressions, OrderableField, OrderableObjectField, OrderableRelationship,
     OrderableRelationships, OrderableScalarField,
-};
-pub use stages::relationships::{
-    relationship_execution_category, CommandRelationshipTarget, ModelAggregateRelationshipTarget,
-    ModelRelationshipTarget, ObjectTypeWithRelationships, RelationshipCapabilities,
-    RelationshipCommandMapping, RelationshipExecutionCategory, RelationshipField,
-    RelationshipModelMapping, RelationshipTarget,
 };
 pub use stages::scalar_types::ScalarTypeRepresentation;
 pub use stages::type_permissions::{FieldPresetInfo, TypeInputPermission};

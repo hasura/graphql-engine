@@ -9,6 +9,9 @@
 - Disallow defining custom scalar types with names that conflict with built-in
   types, such as `String` or `Int`.
 
+- Fixed bug where relationships defined on a boolean expression would not take
+  the target subgraph into account.
+
 ### Changed
 
 ## [v2024.09.16]

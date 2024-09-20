@@ -1,7 +1,7 @@
 use crate::types::error::{Error, TypePredicateError};
 
 use crate::stages::{
-    boolean_expressions, data_connectors, models, object_types, relationships,
+    boolean_expressions, data_connectors, models, object_relationships, object_types,
     scalar_boolean_expressions,
 };
 use crate::types::subgraph::Qualified;
@@ -24,7 +24,10 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     object_boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
 ) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
     // collect any issues found whilst resolving
@@ -149,7 +152,10 @@ fn validate_data_connector_with_comparable_relationship(
     source_type_mappings: &BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     object_boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
     comparable_relationship: &boolean_expressions::BooleanExpressionComparableRelationship,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
 ) -> Result<(), Error> {
     let underlying_object = object_types
@@ -158,8 +164,9 @@ fn validate_data_connector_with_comparable_relationship(
             data_type: object_boolean_expression_type.object_type.clone(),
         })?;
 
-    let relationship_field_name =
-        relationships::make_relationship_field_name(&comparable_relationship.relationship_name)?;
+    let relationship_field_name = object_relationships::make_relationship_field_name(
+        &comparable_relationship.relationship_name,
+    )?;
 
     let relationship = underlying_object
         .relationship_fields
@@ -171,7 +178,7 @@ fn validate_data_connector_with_comparable_relationship(
             },
         })?;
 
-    if let relationships::RelationshipTarget::Model(relationship_target_model) =
+    if let object_relationships::RelationshipTarget::Model(relationship_target_model) =
         &relationship.target
     {
         let target_model = models

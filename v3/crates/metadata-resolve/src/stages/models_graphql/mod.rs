@@ -12,7 +12,7 @@ use open_dds::{data_connector::DataConnectorName, models::ModelName, types::Cust
 use crate::configuration::Configuration;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, graphql_config, models,
-    object_boolean_expressions, relationships,
+    object_boolean_expressions, object_relationships,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
@@ -33,7 +33,10 @@ pub fn resolve(
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,

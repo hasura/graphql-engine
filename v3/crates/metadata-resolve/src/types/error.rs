@@ -2,7 +2,8 @@ use crate::helpers::typecheck::TypecheckError;
 use crate::stages::{
     aggregates::AggregateExpressionError, apollo, boolean_expressions, commands,
     data_connector_scalar_types, data_connectors, graphql_config, models, object_types,
-    order_by_expressions, relay, scalar_boolean_expressions, scalar_types, type_permissions,
+    order_by_expressions, relationships, relay, scalar_boolean_expressions, scalar_types,
+    type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use open_dds::data_connector::DataConnectorColumnName;
@@ -251,7 +252,7 @@ pub enum Error {
         graphql_config_error: graphql_config::GraphqlConfigError,
     },
     #[error("{relationship_error:}")]
-    RelationshipError {
+    ObjectRelationshipError {
         relationship_error: RelationshipError,
     },
     #[error("Error in order by expression {order_by_expression_name}: {error}")]
@@ -291,7 +292,8 @@ pub enum Error {
     ModelsError(#[from] models::ModelsError),
     #[error("{0}")]
     CommandsError(#[from] commands::CommandsError),
-
+    #[error("{0}")]
+    RelationshipError(#[from] relationships::RelationshipError),
     #[error("{0}")]
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,
@@ -400,7 +402,7 @@ pub enum RelationshipError {
 
 impl From<RelationshipError> for Error {
     fn from(val: RelationshipError) -> Self {
-        Error::RelationshipError {
+        Error::ObjectRelationshipError {
             relationship_error: val,
         }
     }

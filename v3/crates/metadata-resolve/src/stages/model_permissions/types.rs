@@ -11,7 +11,7 @@ use open_dds::{
     types::{CustomTypeName, Deprecated, FieldName},
 };
 
-use crate::stages::{data_connectors, models, models_graphql, object_types, relationships};
+use crate::stages::{data_connectors, models, models_graphql, object_relationships, object_types};
 use crate::types::error::{Error, RelationshipError};
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
@@ -90,19 +90,19 @@ pub struct PredicateRelationshipInfo {
     pub target_source: ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
-    pub mappings: Vec<relationships::RelationshipModelMapping>,
+    pub mappings: Vec<object_relationships::RelationshipModelMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ModelTargetSource {
     pub model: Arc<models::ModelSource>,
-    pub capabilities: relationships::RelationshipCapabilities,
+    pub capabilities: object_relationships::RelationshipCapabilities,
 }
 
 impl ModelTargetSource {
     pub fn new(
         model: &ModelWithPermissions,
-        relationship: &relationships::RelationshipField,
+        relationship: &object_relationships::RelationshipField,
     ) -> Result<Option<Self>, Error> {
         model
             .model
@@ -114,14 +114,14 @@ impl ModelTargetSource {
 
     pub fn from_model_source(
         model_source: &Arc<models::ModelSource>,
-        relationship: &relationships::RelationshipField,
+        relationship: &object_relationships::RelationshipField,
     ) -> Result<Self, Error> {
         Ok(Self {
             model: model_source.clone(),
             capabilities: relationship
                 .target_capabilities
                 .as_ref()
-                .ok_or_else(|| Error::RelationshipError {
+                .ok_or_else(|| Error::ObjectRelationshipError {
                     relationship_error: RelationshipError::NoRelationshipCapabilitiesDefined {
                         type_name: relationship.source.clone(),
                         relationship_name: relationship.relationship_name.clone(),

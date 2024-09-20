@@ -1,5 +1,5 @@
 use crate::stages::{
-    boolean_expressions, graphql_config, object_boolean_expressions, relationships,
+    boolean_expressions, graphql_config, object_boolean_expressions, object_relationships,
     scalar_boolean_expressions, scalar_types,
 };
 use crate::types::error::Error;
@@ -108,9 +108,9 @@ pub(crate) fn get_object_type_for_boolean_expression<'a>(
     boolean_expression_type: &boolean_expressions::ResolvedObjectBooleanExpressionType,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
-        relationships::ObjectTypeWithRelationships,
+        object_relationships::ObjectTypeWithRelationships,
     >,
-) -> Result<&'a relationships::ObjectTypeWithRelationships, Error> {
+) -> Result<&'a object_relationships::ObjectTypeWithRelationships, Error> {
     object_types
         .get(&boolean_expression_type.object_type)
         .ok_or(Error::from(
@@ -124,9 +124,9 @@ pub(crate) fn get_object_type_for_object_boolean_expression<'a>(
     object_boolean_expression_type: &object_boolean_expressions::ObjectBooleanExpressionType,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
-        relationships::ObjectTypeWithRelationships,
+        object_relationships::ObjectTypeWithRelationships,
     >,
-) -> Result<&'a relationships::ObjectTypeWithRelationships, Error> {
+) -> Result<&'a object_relationships::ObjectTypeWithRelationships, Error> {
     object_types
         .get(&object_boolean_expression_type.object_type)
         .ok_or(Error::from(

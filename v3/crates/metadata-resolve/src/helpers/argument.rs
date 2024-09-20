@@ -9,7 +9,7 @@ use crate::helpers::types::{
 };
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, data_connectors, model_permissions,
-    models_graphql, object_boolean_expressions, object_types, relationships, scalar_types,
+    models_graphql, object_boolean_expressions, object_relationships, object_types, scalar_types,
     type_permissions,
 };
 use crate::types::error::{Error, TypeError, TypePredicateError};
@@ -259,7 +259,10 @@ pub(crate) fn resolve_value_expression_for_argument(
     source_argument_type: Option<&ndc_models::Type>,
     data_connector_link: &data_connectors::DataConnectorLink,
     subgraph: &SubgraphName,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,

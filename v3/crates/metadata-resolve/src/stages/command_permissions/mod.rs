@@ -8,7 +8,7 @@ use open_dds::{
 
 use crate::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, models_graphql,
-    object_boolean_expressions, relationships, scalar_types,
+    object_boolean_expressions, object_relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
@@ -21,7 +21,10 @@ pub use types::CommandWithPermissions;
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
