@@ -30,11 +30,12 @@ pub fn generate_ir<'n, 's>(
             match field_call.info.generic {
                 annotation @ Annotation::Output(OutputAnnotation::RootField(root_field)) => {
                     match root_field {
-                        RootFieldAnnotation::Model {
+                        RootFieldAnnotation::ModelSubscription {
                             data_type,
                             source,
                             kind,
                             name: model_name,
+                            polling_interval_ms,
                         } => {
                             let ir = generate_model_rootfield_ir(
                                 &type_name,
@@ -46,6 +47,7 @@ pub fn generate_ir<'n, 's>(
                                 session,
                                 request_headers,
                                 model_name,
+                                polling_interval_ms,
                             )?;
                             Ok((alias.clone(), ir))
                         }
@@ -78,6 +80,7 @@ fn generate_model_rootfield_ir<'n, 's>(
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
     model_name: &'s metadata_resolve::Qualified<models::ModelName>,
+    polling_interval_ms: &u64,
 ) -> Result<root_field::SubscriptionRootField<'n, 's>, error::Error> {
     let source =
         source
@@ -98,6 +101,7 @@ fn generate_model_rootfield_ir<'n, 's>(
                 request_headers,
                 model_name,
             )?,
+            polling_interval_ms: *polling_interval_ms,
         },
         RootFieldKind::SelectMany => root_field::SubscriptionRootField::ModelSelectMany {
             selection_set: &field.selection_set,
@@ -110,6 +114,7 @@ fn generate_model_rootfield_ir<'n, 's>(
                 request_headers,
                 model_name,
             )?,
+            polling_interval_ms: *polling_interval_ms,
         },
         RootFieldKind::SelectAggregate => root_field::SubscriptionRootField::ModelSelectAggregate {
             selection_set: &field.selection_set,
@@ -122,6 +127,7 @@ fn generate_model_rootfield_ir<'n, 's>(
                 request_headers,
                 model_name,
             )?,
+            polling_interval_ms: *polling_interval_ms,
         },
     };
     Ok(ir)

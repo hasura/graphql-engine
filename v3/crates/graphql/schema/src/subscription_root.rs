@@ -119,11 +119,12 @@ fn select_one_field(
             subscription_root_field.clone(),
             subscription.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
-                types::RootFieldAnnotation::Model {
+                types::RootFieldAnnotation::ModelSubscription {
                     data_type: model.model.data_type.clone(),
                     source: model.model.source.clone(),
                     kind: types::RootFieldKind::SelectOne,
                     name: model.model.name.clone(),
+                    polling_interval_ms: subscription.polling_interval_ms,
                 },
             )),
             ast::TypeContainer::named_null(output_typename),
@@ -170,11 +171,12 @@ fn select_many_field(
             subscription_root_field.clone(),
             subscription.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
-                types::RootFieldAnnotation::Model {
+                types::RootFieldAnnotation::ModelSubscription {
                     data_type: model.model.data_type.clone(),
                     source: model.model.source.clone(),
                     kind: types::RootFieldKind::SelectMany,
                     name: model.model.name.clone(),
+                    polling_interval_ms: subscription.polling_interval_ms,
                 },
             )),
             field_type,
@@ -236,11 +238,12 @@ fn select_aggregate_field(
             subscription_field_name.clone(),
             subscription.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
-                types::RootFieldAnnotation::Model {
+                types::RootFieldAnnotation::ModelSubscription {
                     data_type: model.model.data_type.clone(),
                     source: model.model.source.clone(),
                     kind: types::RootFieldKind::SelectAggregate,
                     name: model.model.name.clone(),
+                    polling_interval_ms: subscription.polling_interval_ms,
                 },
             )),
             ast::TypeContainer::named_null(output_typename),

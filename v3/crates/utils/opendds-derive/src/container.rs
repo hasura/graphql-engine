@@ -27,12 +27,40 @@ struct StructOpts {
 #[derive(FromField, Default)]
 #[darling(default, attributes(opendd))]
 struct FieldOpts {
-    default: Option<bool>,
+    default: Option<DefaultAttribute>,
     rename: Option<String>,
     alias: Option<String>,
     #[darling(default)]
     json_schema: JsonSchemaFieldOpts,
     hidden: Option<bool>,
+}
+
+pub enum DefaultAttribute {
+    Flag,
+    Expr(syn::Expr),
+}
+
+impl darling::FromMeta for DefaultAttribute {
+    fn from_word() -> darling::Result<Self> {
+        Ok(DefaultAttribute::Flag)
+    }
+
+    fn from_value(value: &syn::Lit) -> darling::Result<Self> {
+        match value {
+            syn::Lit::Str(s) => {
+                let expr: syn::Expr = syn::parse_str(&s.value())?;
+                Ok(DefaultAttribute::Expr(expr))
+            }
+            syn::Lit::Int(i) => {
+                let expr = syn::Expr::Lit(syn::ExprLit {
+                    attrs: vec![],
+                    lit: syn::Lit::Int(i.clone()),
+                });
+                Ok(DefaultAttribute::Expr(expr))
+            }
+            _ => Err(darling::Error::unexpected_lit_type(value)),
+        }
+    }
 }
 
 /// JSON schema field attributes
@@ -188,7 +216,7 @@ pub struct NamedField<'a> {
     pub field_type: &'a syn::Type,
     pub renamed_field: String,
     pub field_alias: Option<String>,
-    pub is_default: bool,
+    pub default: Option<DefaultAttribute>,
     pub is_optional: bool,
     pub default_exp: Option<syn::Expr>,
     pub description: Option<String>,
@@ -209,7 +237,8 @@ impl<'a> NamedField<'a> {
             .rename
             .unwrap_or_else(|| field_name.to_string().to_case(Case::Camel));
         let field_alias = field_opts.alias;
-        let is_default = field_opts.default.unwrap_or(false);
+        let default = field_opts.default;
+        let is_default = default.is_some();
         let is_optional = is_option_type(&field.ty);
         let default_exp = field_opts.json_schema.default_exp;
         let title = field_opts.json_schema.title;
@@ -225,7 +254,7 @@ impl<'a> NamedField<'a> {
             field_type,
             renamed_field,
             field_alias,
-            is_default,
+            default,
             is_optional,
             default_exp,
             description,

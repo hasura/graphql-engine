@@ -101,9 +101,18 @@ fn generate_named_fields_value<'a>(
             },
         };
 
-        let field_value_fallback = if field.is_default {
-            quote! {
-                .unwrap_or_default()
+        let field_value_fallback = if let Some(default) = &field.default {
+            match default {
+                DefaultAttribute::Flag => {
+                    quote! {
+                        .unwrap_or_default()
+                    }
+                }
+                DefaultAttribute::Expr(default_exp) => {
+                    quote! {
+                        .unwrap_or(#default_exp)
+                    }
+                }
             }
         } else if field.is_optional {
             quote! {
@@ -137,11 +146,18 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
         let field_name = field.renamed_field.as_str();
         let ty = field.field_type.clone();
 
-        let default_prop = if field.is_default {
+        let default_prop = if let Some(default) = &field.default {
             let default_exp = field.default_exp.as_ref().map_or_else(
-                || {
-                    quote! {
-                        serde_json::json!(<#ty as Default>::default())
+                || match default {
+                    DefaultAttribute::Flag => {
+                        quote! {
+                            serde_json::json!(<#ty as Default>::default())
+                        }
+                    }
+                    DefaultAttribute::Expr(default_exp) => {
+                        quote! {
+                            serde_json::json!(#default_exp)
+                        }
                     }
                 },
                 quote::ToTokens::to_token_stream,
@@ -199,7 +215,7 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
                 #field_name.to_string(), #field_schema_exp
             );
         };
-        let required_insert = if !field.is_default && !field.is_optional {
+        let required_insert = if field.default.is_none() && !field.is_optional {
             quote! {
                 required.insert(#field_name.to_string());
             }

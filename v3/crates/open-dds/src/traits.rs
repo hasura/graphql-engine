@@ -37,6 +37,7 @@ impl_OpenDd_default_for!(SmolStr);
 impl_OpenDd_default_for!(bool);
 impl_OpenDd_default_for!(i32);
 impl_OpenDd_default_for!(u32);
+impl_OpenDd_default_for!(u64);
 impl_OpenDd_default_for!(());
 
 impl<T: OpenDd> OpenDd for Box<T> {

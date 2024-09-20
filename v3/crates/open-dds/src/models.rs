@@ -419,6 +419,9 @@ pub struct SubscriptionGraphQlDefinition {
     /// Whether this subscription root field is deprecated.
     /// If set, the deprecation status is added to the subscription root field's graphql schema.
     pub deprecated: Option<Deprecated>,
+    /// Polling interval in milliseconds for the subscription.
+    #[opendd(default = 1000)]
+    pub polling_interval_ms: u64,
 }
 
 /// A field that can be used to order the objects in a model.

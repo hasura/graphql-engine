@@ -144,6 +144,14 @@ pub enum RootFieldAnnotation {
         kind: RootFieldKind,
         name: Qualified<models::ModelName>,
     },
+    ModelSubscription {
+        data_type: Qualified<types::CustomTypeName>,
+        source: Option<Arc<metadata_resolve::ModelSource>>,
+        // select_permissions: HashMap<Role, metadata_resolve::SelectPermission>,
+        kind: RootFieldKind,
+        name: Qualified<models::ModelName>,
+        polling_interval_ms: u64,
+    },
     FunctionCommand {
         name: Qualified<commands::CommandName>,
         result_type: QualifiedTypeReference,

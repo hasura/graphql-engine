@@ -88,15 +88,18 @@ pub enum SubscriptionRootField<'n, 's> {
     ModelSelectOne {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
         ir: select_one::ModelSelectOne<'n, 's>,
+        polling_interval_ms: u64,
     },
     // Operation that selects many rows from a model
     ModelSelectMany {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
         ir: select_many::ModelSelectMany<'n, 's>,
+        polling_interval_ms: u64,
     },
     // Operation that selects an aggregate of rows from a model
     ModelSelectAggregate {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
         ir: select_aggregate::ModelSelectAggregate<'n, 's>,
+        polling_interval_ms: u64,
     },
 }

@@ -109,6 +109,7 @@ pub struct NDCQueryExecution<'s, 'ir> {
 
 pub struct NDCSubscriptionExecution<'s, 'ir> {
     pub query_execution_plan: query::UnresolvedQueryExecutionPlan<'s>,
+    pub polling_interval_ms: u64,
     pub execution_span_attribute: &'static str,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs<'ir>,
@@ -248,11 +249,16 @@ fn plan_subscription<'s, 'ir>(
     root_field: &'ir graphql_ir::SubscriptionRootField<'_, 's>,
 ) -> Result<NDCSubscriptionExecution<'s, 'ir>, error::Error> {
     match root_field {
-        graphql_ir::SubscriptionRootField::ModelSelectOne { ir, selection_set } => {
+        graphql_ir::SubscriptionRootField::ModelSelectOne {
+            ir,
+            selection_set,
+            polling_interval_ms,
+        } => {
             let execution_tree = generate_execution_tree(&ir.model_selection)?;
             let query_execution_plan = reject_remote_joins(execution_tree)?;
             Ok(NDCSubscriptionExecution {
                 query_execution_plan,
+                polling_interval_ms: *polling_interval_ms,
                 selection_set,
                 execution_span_attribute: "execute_model_select_one",
                 field_span_attribute: ir.field_name.to_string(),
@@ -262,11 +268,16 @@ fn plan_subscription<'s, 'ir>(
             })
         }
 
-        graphql_ir::SubscriptionRootField::ModelSelectMany { ir, selection_set } => {
+        graphql_ir::SubscriptionRootField::ModelSelectMany {
+            ir,
+            selection_set,
+            polling_interval_ms,
+        } => {
             let execution_tree = generate_execution_tree(&ir.model_selection)?;
             let query_execution_plan = reject_remote_joins(execution_tree)?;
             Ok(NDCSubscriptionExecution {
                 query_execution_plan,
+                polling_interval_ms: *polling_interval_ms,
                 selection_set,
                 execution_span_attribute: "execute_model_select_many",
                 field_span_attribute: ir.field_name.to_string(),
@@ -276,11 +287,16 @@ fn plan_subscription<'s, 'ir>(
             })
         }
 
-        graphql_ir::SubscriptionRootField::ModelSelectAggregate { ir, selection_set } => {
+        graphql_ir::SubscriptionRootField::ModelSelectAggregate {
+            ir,
+            selection_set,
+            polling_interval_ms,
+        } => {
             let execution_tree = generate_execution_tree(&ir.model_selection)?;
             let query_execution_plan = reject_remote_joins(execution_tree)?;
             Ok(NDCSubscriptionExecution {
                 query_execution_plan,
+                polling_interval_ms: *polling_interval_ms,
                 selection_set,
                 execution_span_attribute: "execute_model_select_aggregate",
                 field_span_attribute: ir.field_name.to_string(),
@@ -974,6 +990,7 @@ pub struct NDCSubscriptionQuery<'s, 'ir> {
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
     pub process_response_as: ProcessResponseAs<'ir>,
     pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
+    pub polling_interval_ms: u64,
 }
 
 /// Resolve a subscription execution plan to a NDC query.
@@ -986,6 +1003,7 @@ pub async fn resolve_ndc_subscription_execution<'s, 'ir>(
         execution_span_attribute: _,
         field_span_attribute: _,
         process_response_as,
+        polling_interval_ms,
     } = execution;
     // Remote relationships and relationships without NDC comparison capability are not allowed in predicates for subscriptions.
     // Only allow local relationships and fields that can be pushed down to NDC.
@@ -998,6 +1016,7 @@ pub async fn resolve_ndc_subscription_execution<'s, 'ir>(
         data_connector,
         process_response_as,
         selection_set,
+        polling_interval_ms,
     })
 }
 

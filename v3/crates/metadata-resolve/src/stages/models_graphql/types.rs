@@ -71,6 +71,7 @@ pub struct SubscriptionGraphQlDefinition {
     pub root_field: ast::Name,
     pub description: Option<String>,
     pub deprecated: Option<Deprecated>,
+    pub polling_interval_ms: u64,
 }
 
 // TODO: add support for aggregates

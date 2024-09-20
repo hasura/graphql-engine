@@ -346,11 +346,13 @@ fn resolve_subscription_graphql_api(
         root_field,
         description,
         deprecated,
+        polling_interval_ms,
     } = subscription;
     let root_field_name = mk_name(root_field.as_str())?;
     Ok(SubscriptionGraphQlDefinition {
         root_field: root_field_name,
         description: description.clone(),
         deprecated: deprecated.clone(),
+        polling_interval_ms: *polling_interval_ms,
     })
 }

@@ -244,7 +244,8 @@ fn analyze_output_annotation(annotation: &graphql_schema::OutputAnnotation) -> V
     let mut result = Vec::new();
     match annotation {
         graphql_schema::OutputAnnotation::RootField(root_field) => match root_field {
-            graphql_schema::RootFieldAnnotation::Model { name, .. } => {
+            graphql_schema::RootFieldAnnotation::Model { name, .. }
+            | graphql_schema::RootFieldAnnotation::ModelSubscription { name, .. } => {
                 result.push(OpenddObject::Model {
                     name: name.to_owned(),
                 });
