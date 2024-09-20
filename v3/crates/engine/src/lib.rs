@@ -1,4 +1,3 @@
-pub mod authentication;
 pub mod build;
 pub mod internal_flags;
 

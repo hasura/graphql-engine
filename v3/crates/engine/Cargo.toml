@@ -25,15 +25,11 @@ axum-ext = { path = "../utils/axum-ext" }
 execute = { path = "../execute" }
 graphql-frontend = { path = "../frontends/graphql" }
 graphql-schema = { path = "../graphql/schema" }
+hasura-authn = { path = "../auth/hasura-authn" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
-hasura-authn-jwt = { path = "../auth/hasura-authn-jwt" }
-hasura-authn-noauth = { path = "../auth/hasura-authn-noauth" }
-hasura-authn-webhook = { path = "../auth/hasura-authn-webhook" }
 jsonapi = { path = "../jsonapi" }
-jsonpath = { path = "../utils/jsonpath" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }
-opendds-derive = { path = "../utils/opendds-derive" }
 pre-execution-plugin = { path = "../plugins/pre-execution-plugin" }
 sql = { path = "../sql" }
 tracing-util = { path = "../utils/tracing-util" }
@@ -50,10 +46,8 @@ jsonapi_library = { workspace =  true }
 mimalloc = { workspace = true }
 nonempty = { workspace = true }
 reqwest = { workspace = true, features = ["json", "multipart"] }
-schemars = { workspace = true, features = ["smol_str"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-serde_path_to_error = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
 tower = { workspace = true }
@@ -72,8 +66,6 @@ tokio-test = { workspace = true }
 [package.metadata.cargo-machete]
 ignored = [
   "build_data",          # cargo-machete ignores build dependencies
-  "jsonpath",            # used by opendds-derive
-  "serde_path_to_error", # used by opendds-derive
 ]
 
 [lints]

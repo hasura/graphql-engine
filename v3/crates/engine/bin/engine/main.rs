@@ -1,5 +1,5 @@
-use engine::authentication::authenticate;
 use futures_util::FutureExt;
+use hasura_authn::{authenticate, resolve_auth_config, AuthConfig};
 use json_api::create_json_api_router;
 use std::fmt::Display;
 use std::hash;
@@ -27,7 +27,6 @@ use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
 use engine::{
-    authentication::{resolve_auth_config, AuthConfig},
     internal_flags::{resolve_unstable_features, UnstableFeature},
     VERSION,
 };
@@ -509,7 +508,7 @@ where
             || {
                 Box::pin(authenticate(
                     &headers_map,
-                    &engine_state.http_context,
+                    &engine_state.http_context.client,
                     &engine_state.auth_config,
                 ))
             },

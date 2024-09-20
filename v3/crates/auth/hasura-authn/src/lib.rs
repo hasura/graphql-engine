@@ -1,5 +1,4 @@
 use axum::http::HeaderMap;
-use execute::HttpContext;
 use hasura_authn_core::{Identity, Role};
 use hasura_authn_jwt::{auth as jwt_auth, jwt};
 use hasura_authn_noauth as noauth;
@@ -150,7 +149,7 @@ impl axum::response::IntoResponse for AuthError {
 /// Authenticate the user based on the headers and the auth config
 pub async fn authenticate(
     headers_map: &HeaderMap,
-    http_context: &HttpContext,
+    client: &reqwest::Client,
     auth_config: &AuthConfig,
 ) -> Result<Identity, AuthError> {
     // We are still supporting AuthConfig::V1, hence we need to
@@ -166,7 +165,7 @@ pub async fn authenticate(
     match auth_mode {
         AuthModeConfig::NoAuth(no_auth_config) => Ok(noauth::identity_from_config(no_auth_config)),
         AuthModeConfig::Webhook(webhook_config) => webhook::authenticate_request(
-            &http_context.client,
+            client,
             webhook_config,
             headers_map,
             allow_role_emulation_by,
@@ -174,7 +173,7 @@ pub async fn authenticate(
         .await
         .map_err(AuthError::from),
         AuthModeConfig::Jwt(jwt_secret_config) => jwt_auth::authenticate_request(
-            &http_context.client,
+            client,
             *jwt_secret_config.clone(),
             headers_map,
             allow_role_emulation_by,
@@ -216,6 +215,7 @@ mod tests {
     fn test_serialize_reference_auth_config() {
         let path = {
             let mut path_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            path_buf.pop();
             path_buf.pop();
             path_buf.pop();
             path_buf.join("static/auth/auth_config.json")

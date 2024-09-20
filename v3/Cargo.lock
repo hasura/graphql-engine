@@ -1784,28 +1784,22 @@ dependencies = [
  "goldenfile",
  "graphql-frontend",
  "graphql-schema",
+ "hasura-authn",
  "hasura-authn-core",
- "hasura-authn-jwt",
- "hasura-authn-noauth",
- "hasura-authn-webhook",
  "indexmap 2.5.0",
  "json_value_merge",
  "jsonapi 0.7.0",
  "jsonapi 3.0.0",
- "jsonpath",
  "lang-graphql",
  "metadata-resolve",
  "mimalloc",
  "nonempty",
  "open-dds",
- "opendds-derive",
  "pre-execution-plugin",
  "pretty_assertions",
  "reqwest",
- "schemars",
  "serde",
  "serde_json",
- "serde_path_to_error",
  "sql",
  "thiserror",
  "tokio",
@@ -2292,6 +2286,30 @@ checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
 dependencies = [
  "ahash",
  "allocator-api2",
+]
+
+[[package]]
+name = "hasura-authn"
+version = "3.0.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "goldenfile",
+ "hasura-authn-core",
+ "hasura-authn-jwt",
+ "hasura-authn-noauth",
+ "hasura-authn-webhook",
+ "jsonpath",
+ "open-dds",
+ "opendds-derive",
+ "pretty_assertions",
+ "reqwest",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "thiserror",
+ "tracing-util",
 ]
 
 [[package]]
