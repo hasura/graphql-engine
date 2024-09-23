@@ -11,7 +11,7 @@ use super::query;
 use super::relationships;
 use super::selection_set;
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
-use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
+use crate::remote_joins::types::{JoinLocations, RemoteJoin};
 use graphql_ir::{
     CommandInfo, FunctionBasedCommand, NdcFieldAlias, NdcRelationshipName, ProcedureBasedCommand,
     VariableName,
@@ -20,7 +20,6 @@ use open_dds::commands::ProcedureName;
 
 pub(crate) fn plan_query_node<'s, 'ir>(
     ir: &'ir CommandInfo<'s>,
-    join_id_counter: &mut MonotonicCounter,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
 ) -> Result<
     (
@@ -34,7 +33,6 @@ pub(crate) fn plan_query_node<'s, 'ir>(
     if let Some(nested_selection) = &ir.selection {
         let (fields, locations) = selection_set::plan_nested_selection(
             nested_selection,
-            join_id_counter,
             ir.data_connector.capabilities.supported_ndc_version,
             relationships,
         )?;
@@ -61,7 +59,6 @@ pub(crate) fn plan_query_node<'s, 'ir>(
 
 pub(crate) fn plan_query_execution<'s, 'ir>(
     ir: &'ir FunctionBasedCommand<'s>,
-    join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
         query::UnresolvedQueryExecutionPlan<'s>,
@@ -83,11 +80,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
         );
     }
 
-    let (query_node, jl) = plan_query_node(
-        &ir.command_info,
-        join_id_counter,
-        &mut collection_relationships,
-    )?;
+    let (query_node, jl) = plan_query_node(&ir.command_info, &mut collection_relationships)?;
 
     let query_request = query::UnresolvedQueryExecutionPlan {
         query_node,
@@ -103,7 +96,6 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
 pub(crate) fn plan_mutation_execution<'s, 'ir>(
     procedure_name: &'ir ProcedureName,
     ir: &'ir ProcedureBasedCommand<'s>,
-    join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
         mutation::UnresolvedMutationExecutionPlan<'s>,
@@ -117,7 +109,6 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
     if let Some(nested_selection) = &ir.command_info.selection {
         let (fields, locations) = selection_set::plan_nested_selection(
             nested_selection,
-            join_id_counter,
             ir.command_info
                 .data_connector
                 .capabilities

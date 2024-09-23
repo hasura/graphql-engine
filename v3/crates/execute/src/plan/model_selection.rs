@@ -8,7 +8,7 @@ use super::filter;
 use super::query;
 use super::relationships;
 use super::selection_set;
-use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
+use crate::remote_joins::types::{JoinLocations, RemoteJoin};
 use graphql_ir::ModelSelection;
 use graphql_ir::NdcRelationshipName;
 
@@ -17,7 +17,6 @@ use graphql_ir::NdcRelationshipName;
 pub(crate) fn plan_query_node<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-    join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
         query::UnresolvedQueryNode<'s>,
@@ -30,7 +29,6 @@ pub(crate) fn plan_query_node<'s, 'ir>(
     if let Some(selection) = &ir.selection {
         let (fields, locations) = selection_set::plan_selection_set(
             selection,
-            join_id_counter,
             ir.data_connector.capabilities.supported_ndc_version,
             relationships,
         )?;
@@ -54,7 +52,6 @@ pub(crate) fn plan_query_node<'s, 'ir>(
 /// Generate query execution plan from internal IR (`ModelSelection`)
 pub(crate) fn plan_query_execution<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
-    join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
         query::UnresolvedQueryExecutionPlan<'s>,
@@ -63,8 +60,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
     error::Error,
 > {
     let mut collection_relationships = BTreeMap::new();
-    let (query, join_locations) =
-        plan_query_node(ir, &mut collection_relationships, join_id_counter)?;
+    let (query, join_locations) = plan_query_node(ir, &mut collection_relationships)?;
     // collection relationships from order_by clause
     relationships::collect_relationships_from_order_by(ir, &mut collection_relationships)?;
     let execution_node = query::UnresolvedQueryExecutionPlan {

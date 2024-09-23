@@ -31,9 +31,7 @@ use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable}
 use super::ndc;
 use super::process_response::process_response;
 use super::remote_joins::execute_join_locations;
-use super::remote_joins::types::{
-    JoinId, JoinLocations, JoinNode, Location, LocationKind, MonotonicCounter, RemoteJoin,
-};
+use super::remote_joins::types::{JoinLocations, RemoteJoin};
 use super::{HttpContext, ProjectId};
 use crate::error::FieldError;
 use crate::process_response::{process_mutation_response, ProcessedResponse};
@@ -134,7 +132,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 #[derive(Debug)]
 pub struct NDCMutationExecution<'n, 's, 'ir> {
     pub execution_node: mutation::UnresolvedMutationExecutionPlan<'s>,
-    pub join_locations: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
+    pub join_locations: JoinLocations<RemoteJoin<'s, 'ir>>,
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
@@ -145,7 +143,7 @@ pub struct NDCMutationExecution<'n, 's, 'ir> {
 #[derive(Debug)]
 pub struct ExecutionTree<'s, 'ir> {
     pub query_execution_plan: query::UnresolvedQueryExecutionPlan<'s>,
-    pub remote_join_executions: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
+    pub remote_join_executions: JoinLocations<RemoteJoin<'s, 'ir>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -226,13 +224,10 @@ fn plan_mutation<'n, 's, 'ir>(
     selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
     ir: &'ir graphql_ir::ProcedureBasedCommand<'s>,
 ) -> Result<NDCMutationExecution<'n, 's, 'ir>, error::Error> {
-    let mut join_id_counter = MonotonicCounter::new();
-    let (ndc_ir, join_locations) =
-        commands::plan_mutation_execution(ir.procedure_name, ir, &mut join_id_counter)?;
-    let join_locations_ids = assign_with_join_ids(join_locations)?;
+    let (ndc_ir, join_locations) = commands::plan_mutation_execution(ir.procedure_name, ir)?;
     Ok(NDCMutationExecution {
         execution_node: ndc_ir,
-        join_locations: join_locations_ids,
+        join_locations,
         data_connector: ir.command_info.data_connector,
         selection_set,
         execution_span_attribute: "execute_command".into(),
@@ -319,7 +314,6 @@ fn reject_remote_joins<'s>(
 fn plan_query<'n, 's, 'ir>(
     ir: &'ir graphql_ir::QueryRootField<'n, 's>,
 ) -> Result<NodeQueryPlan<'n, 's, 'ir>, error::Error> {
-    let mut counter = MonotonicCounter::new();
     let query_plan = match ir {
         graphql_ir::QueryRootField::TypeName { type_name } => NodeQueryPlan::TypeName {
             type_name: type_name.clone(),
@@ -401,12 +395,10 @@ fn plan_query<'n, 's, 'ir>(
             None => NodeQueryPlan::RelayNodeSelect(None),
         },
         graphql_ir::QueryRootField::FunctionBasedCommand { ir, selection_set } => {
-            let (query_execution_plan, join_locations) =
-                commands::plan_query_execution(ir, &mut counter)?;
-            let join_locations_ids = assign_with_join_ids(join_locations)?;
+            let (query_execution_plan, join_locations) = commands::plan_query_execution(ir)?;
             let execution_tree = ExecutionTree {
                 query_execution_plan,
-                remote_join_executions: join_locations_ids,
+                remote_join_executions: join_locations,
             };
             NodeQueryPlan::NDCQueryExecution {
                 selection_set,
@@ -464,130 +456,11 @@ fn plan_query<'n, 's, 'ir>(
 fn generate_execution_tree<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
 ) -> Result<ExecutionTree<'s, 'ir>, error::Error> {
-    let mut counter = MonotonicCounter::new();
-    let (query_execution_plan, join_locations) =
-        model_selection::plan_query_execution(ir, &mut counter)?;
-    let join_locations_with_ids = assign_with_join_ids(join_locations)?;
+    let (query_execution_plan, join_locations) = model_selection::plan_query_execution(ir)?;
     Ok(ExecutionTree {
         query_execution_plan,
-        remote_join_executions: join_locations_with_ids,
+        remote_join_executions: join_locations,
     })
-}
-
-fn assign_with_join_ids<'s, 'ir>(
-    join_locations: JoinLocations<RemoteJoin<'s, 'ir>>,
-) -> Result<JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>, error::Error> {
-    let mut state = RemoteJoinCounter::new();
-    let join_ids = assign_join_ids(&join_locations, &mut state);
-    zip_with_join_ids(join_locations, join_ids)
-}
-
-fn zip_with_join_ids<'s, 'ir>(
-    join_locations: JoinLocations<RemoteJoin<'s, 'ir>>,
-    mut join_ids: JoinLocations<JoinId>,
-) -> Result<JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>, error::Error> {
-    let mut new_locations = IndexMap::new();
-    for (key, location) in join_locations.locations {
-        let join_id_location =
-            join_ids
-                .locations
-                .swap_remove(&key)
-                .ok_or(error::InternalError::InternalGeneric {
-                    description: "unexpected; could not find {key} in join ids tree".to_string(),
-                })?;
-        let new_node = match (location.join_node, join_id_location.join_node) {
-            (JoinNode::Remote(rj), JoinNode::Remote(join_id)) => {
-                Ok(JoinNode::Remote((rj, join_id)))
-            }
-            (
-                JoinNode::Local(LocationKind::NestedData),
-                JoinNode::Local(LocationKind::NestedData),
-            ) => Ok(JoinNode::Local(LocationKind::NestedData)),
-            (
-                JoinNode::Local(LocationKind::LocalRelationship),
-                JoinNode::Local(LocationKind::LocalRelationship),
-            ) => Ok(JoinNode::Local(LocationKind::LocalRelationship)),
-            _ => Err(error::InternalError::InternalGeneric {
-                description: "unexpected join node mismatch".to_string(),
-            }),
-        }?;
-        let new_rest = zip_with_join_ids(location.rest, join_id_location.rest)?;
-        new_locations.insert(
-            key,
-            Location {
-                join_node: new_node,
-                rest: new_rest,
-            },
-        );
-    }
-    Ok(JoinLocations {
-        locations: new_locations,
-    })
-}
-
-/// Once `JoinLocations<RemoteJoin>` is generated, traverse the tree and assign
-/// join ids. All the join nodes (`RemoteJoin`) that are equal, are assigned the
-/// same join id.
-fn assign_join_ids<'s, 'ir>(
-    join_locations: &'s JoinLocations<RemoteJoin<'s, 'ir>>,
-    state: &mut RemoteJoinCounter<'s, 'ir>,
-) -> JoinLocations<JoinId> {
-    let new_locations = join_locations
-        .locations
-        .iter()
-        .map(|(key, location)| {
-            let new_node = match &location.join_node {
-                JoinNode::Local(location_kind) => JoinNode::Local(*location_kind),
-                JoinNode::Remote(remote_join) => {
-                    JoinNode::Remote(assign_join_id(remote_join, state))
-                }
-            };
-            let new_location = Location {
-                join_node: new_node,
-                rest: assign_join_ids(&location.rest, state),
-            };
-            (key.to_string(), new_location)
-        })
-        .collect::<IndexMap<_, _>>();
-    JoinLocations {
-        locations: new_locations,
-    }
-}
-
-/// We use an associative list and check for equality of `RemoteJoin` to
-/// generate it's `JoinId`. This is because `Hash` trait is not implemented for
-/// `ndc_models::QueryRequest`
-fn assign_join_id<'s, 'ir>(
-    remote_join: &'s RemoteJoin<'s, 'ir>,
-    state: &mut RemoteJoinCounter<'s, 'ir>,
-) -> JoinId {
-    let found = state
-        .remote_joins
-        .iter()
-        .find(|(rj, _id)| rj == &remote_join);
-
-    match found {
-        None => {
-            let next_id = JoinId(state.counter.get_next());
-            state.remote_joins.push((remote_join, next_id));
-            next_id
-        }
-        Some((_rj, id)) => *id,
-    }
-}
-
-struct RemoteJoinCounter<'s, 'ir> {
-    remote_joins: Vec<(&'s RemoteJoin<'s, 'ir>, JoinId)>,
-    counter: MonotonicCounter,
-}
-
-impl<'s, 'ir> RemoteJoinCounter<'s, 'ir> {
-    pub fn new() -> RemoteJoinCounter<'s, 'ir> {
-        RemoteJoinCounter {
-            remote_joins: Vec::new(),
-            counter: MonotonicCounter::new(),
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -1087,7 +960,7 @@ pub async fn execute_ndc_query<'s, 'ir>(
 // given results of ndc query, do any joins, and process result
 async fn process_ndc_query_response<'s, 'ir>(
     http_context: &HttpContext,
-    remote_join_executions: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
+    remote_join_executions: JoinLocations<RemoteJoin<'s, 'ir>>,
     execution_span_attribute: &'static str,
     selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
     process_response_as: ProcessResponseAs<'ir>,

@@ -11,7 +11,7 @@ use execute::plan::{
     ResolveFilterExpressionContext,
 };
 use execute::HttpContext;
-use execute::{JoinId, JoinLocations, JoinNode, RemoteJoin, RemoteJoinType};
+use execute::{JoinLocations, JoinNode, RemoteJoin, RemoteJoinType};
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
@@ -364,7 +364,7 @@ async fn get_execution_steps<'s>(
     resolve_context: &ResolveFilterExpressionContext,
     alias: gql::ast::common::Alias,
     process_response_as: &ProcessResponseAs<'s>,
-    join_locations: JoinLocations<(RemoteJoin<'s, '_>, JoinId)>,
+    join_locations: JoinLocations<RemoteJoin<'s, '_>>,
     ndc_request: types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
 ) -> Result<NonEmpty<Box<types::Step>>, execute::RequestError> {
@@ -425,14 +425,14 @@ async fn get_execution_steps<'s>(
 #[async_recursion]
 async fn get_join_steps(
     expose_internal_errors: execute::ExposeInternalErrors,
-    join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'async_recursion>, JoinId)>,
+    join_locations: JoinLocations<RemoteJoin<'async_recursion, 'async_recursion>>,
     http_context: &HttpContext,
     resolve_context: &ResolveFilterExpressionContext,
 ) -> Result<Option<NonEmpty<Box<types::Step>>>, execute::RequestError> {
     let mut sequence_join_steps = vec![];
     for (alias, location) in join_locations.locations {
         let mut sequence_steps = vec![];
-        if let JoinNode::Remote((remote_join, _join_id)) = location.join_node {
+        if let JoinNode::Remote(remote_join) = location.join_node {
             let mut resolved_execution_plan = remote_join
                 .target_ndc_execution
                 .resolve(resolve_context)

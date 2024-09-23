@@ -7,7 +7,7 @@ use super::ProcessResponseAs;
 use crate::plan::error;
 use crate::remote_joins::types::SourceFieldAlias;
 use crate::remote_joins::types::{
-    JoinLocations, JoinNode, LocationKind, MonotonicCounter, RemoteJoinType, TargetField,
+    JoinLocations, JoinNode, LocationKind, RemoteJoinType, TargetField,
 };
 use crate::remote_joins::types::{Location, RemoteJoin};
 use graphql_ir::NdcFieldAlias;
@@ -21,7 +21,6 @@ use std::collections::{BTreeMap, HashMap};
 
 pub(crate) fn plan_nested_selection<'s, 'ir>(
     nested_selection: &'ir NestedSelection<'s>,
-    join_id_counter: &mut MonotonicCounter,
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
 ) -> Result<
@@ -34,19 +33,15 @@ pub(crate) fn plan_nested_selection<'s, 'ir>(
     match nested_selection {
         NestedSelection::Object(model_selection) => {
             let (fields, join_locations) =
-                plan_selection_set(model_selection, join_id_counter, ndc_version, relationships)?;
+                plan_selection_set(model_selection, ndc_version, relationships)?;
             Ok((
                 field::NestedField::Object(field::NestedObject { fields }),
                 join_locations,
             ))
         }
         NestedSelection::Array(nested_selection) => {
-            let (field, join_locations) = plan_nested_selection(
-                nested_selection,
-                join_id_counter,
-                ndc_version,
-                relationships,
-            )?;
+            let (field, join_locations) =
+                plan_nested_selection(nested_selection, ndc_version, relationships)?;
             Ok((
                 field::NestedField::Array(field::NestedArray {
                     fields: Box::new(field),
@@ -64,7 +59,6 @@ pub(crate) fn plan_nested_selection<'s, 'ir>(
 #[allow(irrefutable_let_patterns)]
 pub(crate) fn plan_selection_set<'s, 'ir>(
     model_selection: &'ir ResultSelectionSet<'s>,
-    join_id_counter: &mut MonotonicCounter,
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
 ) -> Result<
@@ -86,12 +80,8 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                 let mut nested_field = None;
                 let mut nested_join_locations = JoinLocations::new();
                 if let Some(nested_selection) = nested_selection {
-                    let (nested_fields, jl) = plan_nested_selection(
-                        nested_selection,
-                        join_id_counter,
-                        ndc_version,
-                        relationships,
-                    )?;
+                    let (nested_fields, jl) =
+                        plan_nested_selection(nested_selection, ndc_version, relationships)?;
                     nested_field = Some(nested_fields);
                     nested_join_locations = jl;
                 }
@@ -124,7 +114,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                     relationships::process_model_relationship_definition(relationship_info)?,
                 );
                 let (relationship_query, jl) =
-                    model_selection::plan_query_node(query, relationships, join_id_counter)?;
+                    model_selection::plan_query_node(query, relationships)?;
                 let ndc_field = field::Field::Relationship {
                     query_node: Box::new(relationship_query),
                     relationship: name.clone(),
@@ -152,7 +142,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                     relationships::process_command_relationship_definition(relationship_info)?,
                 );
                 let (relationship_query, jl) =
-                    commands::plan_query_node(&ir.command_info, join_id_counter, relationships)?;
+                    commands::plan_query_node(&ir.command_info, relationships)?;
 
                 let relationship_arguments: BTreeMap<_, _> =
                     arguments::plan_arguments(&ir.command_info.arguments, relationships)?;
@@ -196,7 +186,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                 }
                 // Construct the `JoinLocations` tree
                 let (query_execution, sub_join_locations) =
-                    model_selection::plan_query_execution(ir, join_id_counter)?;
+                    model_selection::plan_query_execution(ir)?;
                 let rj_info = RemoteJoin {
                     target_ndc_execution: query_execution,
                     target_data_connector: ir.data_connector,
@@ -234,8 +224,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                     );
                 }
                 // Construct the `JoinLocations` tree
-                let (ndc_ir, sub_join_locations) =
-                    commands::plan_query_execution(ir, join_id_counter)?;
+                let (ndc_ir, sub_join_locations) = commands::plan_query_execution(ir)?;
                 let rj_info = RemoteJoin {
                     target_ndc_execution: ndc_ir,
                     target_data_connector: ir.command_info.data_connector,

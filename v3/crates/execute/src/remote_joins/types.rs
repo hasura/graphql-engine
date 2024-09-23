@@ -151,32 +151,6 @@ pub enum RemoteJoinType {
     ToCommand,
 }
 
-/// For assigning a unique number to each unique join
-#[derive(Debug, Clone, Copy)]
-pub struct JoinId(pub i16);
-
 /// An 'Argument' is a map of variable name to it's value.
 /// For example, `{"first_name": "John", "last_name": "Doe"}`
 pub type Argument = BTreeMap<graphql_ir::VariableName, ValueExt>;
-
-/// Monotonically increasing counter with i16 value
-pub(crate) struct MonotonicCounter {
-    id: i16,
-}
-
-impl MonotonicCounter {
-    pub fn new() -> MonotonicCounter {
-        MonotonicCounter { id: 0 }
-    }
-    /// increment the counter and get the value
-    pub fn get_next(&mut self) -> i16 {
-        self.id += 1;
-        self.id
-    }
-}
-
-impl Default for MonotonicCounter {
-    fn default() -> Self {
-        Self::new()
-    }
-}

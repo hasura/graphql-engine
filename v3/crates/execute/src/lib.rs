@@ -19,5 +19,5 @@ pub use plan::{
     RequestPlan,
 };
 pub use query_usage::analyze_query_usage;
-pub use remote_joins::types::{JoinId, JoinLocations, JoinNode, RemoteJoin, RemoteJoinType};
+pub use remote_joins::types::{JoinLocations, JoinNode, RemoteJoin, RemoteJoinType};
 pub use types::{ExposeInternalErrors, HttpContext, ProjectId};

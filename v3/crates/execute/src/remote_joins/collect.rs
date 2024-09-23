@@ -14,8 +14,7 @@ use json_ext::ValueExt;
 
 use super::error;
 use super::types::{
-    Argument, JoinId, JoinLocations, JoinNode, LocationKind, RemoteJoin, SourceFieldAlias,
-    TargetField,
+    Argument, JoinLocations, JoinNode, LocationKind, RemoteJoin, SourceFieldAlias, TargetField,
 };
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use crate::plan::ProcessResponseAs;
@@ -29,7 +28,7 @@ pub(crate) struct ExecutableJoinNode<'s, 'ir> {
     pub(crate) remote_alias: String,
     pub(crate) location_path: Vec<LocationInfo>,
     pub(crate) arguments: HashSet<Argument>,
-    pub(crate) sub_tree: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
+    pub(crate) sub_tree: JoinLocations<RemoteJoin<'s, 'ir>>,
 }
 
 /// Indicates a field alias which might have more nesting inside
@@ -44,7 +43,7 @@ pub(crate) struct LocationInfo {
 pub(crate) fn collect_next_join_nodes<'s, 'ir>(
     lhs_response: &Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
-    join_locations: &JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
+    join_locations: &JoinLocations<RemoteJoin<'s, 'ir>>,
     path: &mut [LocationInfo],
 ) -> Result<Vec<ExecutableJoinNode<'s, 'ir>>, error::FieldError> {
     let mut arguments_results = Vec::new();
@@ -56,7 +55,7 @@ pub(crate) fn collect_next_join_nodes<'s, 'ir>(
 
     for (alias, location) in &join_locations.locations {
         match &location.join_node {
-            JoinNode::Remote((join_node, _join_id)) => {
+            JoinNode::Remote(join_node) => {
                 let join_fields = get_join_fields(join_node);
                 let arguments = collect_argument_from_rows(
                     lhs_response,
