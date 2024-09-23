@@ -24,7 +24,7 @@ fn test_passing_metadata() {
             let metadata_json_value = serde_json::from_str(&metadata_json_text)
                 .unwrap_or_else(|error| panic!("{}: Could not parse JSON: {error}",directory.display()));
 
-            let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)
+            let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new())
                 .unwrap_or_else(|error| panic!("{}: Could not deserialize metadata: {error}", directory.display()));
 
             let resolved = metadata_resolve::resolve(metadata, &configuration)
@@ -52,7 +52,7 @@ fn test_failing_metadata() {
 
             match serde_json::from_str(&metadata_json_text) {
                 Ok(metadata_json_value) => {
-                    match open_dds::traits::OpenDd::deserialize(metadata_json_value) {
+                    match open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new()) {
                         Ok(metadata) => {
                             match metadata_resolve::resolve(metadata, &configuration) {
                                 Ok(_) => {

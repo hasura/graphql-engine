@@ -477,9 +477,11 @@ mod tests {
     fn make_sdl_from_metadata_file_for_role(path: &Path, role: &Role) -> String {
         println!("{path:#?}");
         let metadata_string = fs::read_to_string(path).unwrap();
-        let metadata =
-            open_dds::traits::OpenDd::deserialize(serde_json::from_str(&metadata_string).unwrap())
-                .unwrap();
+        let metadata = open_dds::traits::OpenDd::deserialize(
+            serde_json::from_str(&metadata_string).unwrap(),
+            jsonpath::JSONPath::new(),
+        )
+        .unwrap();
         let gds = crate::GDS::new_with_default_flags(metadata).unwrap();
         let sch = gds.build_schema().unwrap();
 
@@ -492,9 +494,11 @@ mod tests {
     fn make_role_agnostic_sdl_from_metadata_file(path: &Path) -> String {
         println!("{path:#?}");
         let metadata_string = fs::read_to_string(path).unwrap();
-        let metadata =
-            open_dds::traits::OpenDd::deserialize(serde_json::from_str(&metadata_string).unwrap())
-                .unwrap();
+        let metadata = open_dds::traits::OpenDd::deserialize(
+            serde_json::from_str(&metadata_string).unwrap(),
+            jsonpath::JSONPath::new(),
+        )
+        .unwrap();
         let gds = crate::GDS::new_with_default_flags(metadata).unwrap();
         let sch = gds.build_schema().unwrap();
 

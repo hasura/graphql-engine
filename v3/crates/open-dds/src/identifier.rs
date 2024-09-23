@@ -70,7 +70,10 @@ impl From<Identifier> for String {
 }
 
 impl OpenDd for Identifier {
-    fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
+    fn deserialize(
+        json: serde_json::Value,
+        _path: jsonpath::JSONPath,
+    ) -> Result<Self, OpenDdDeserializeError> {
         let string: String =
             serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
                 error,
@@ -113,7 +116,11 @@ impl<'de> Deserialize<'de> for Identifier {
     where
         D: serde::Deserializer<'de>,
     {
-        OpenDd::deserialize(serde_json::Value::deserialize(deserializer)?).map_err(D::Error::custom)
+        OpenDd::deserialize(
+            serde_json::Value::deserialize(deserializer)?,
+            jsonpath::JSONPath::new(),
+        )
+        .map_err(D::Error::custom)
     }
 }
 
@@ -157,7 +164,10 @@ impl std::borrow::Borrow<str> for SubgraphNameInput {
 }
 
 impl OpenDd for SubgraphNameInput {
-    fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
+    fn deserialize(
+        json: serde_json::Value,
+        _path: jsonpath::JSONPath,
+    ) -> Result<Self, OpenDdDeserializeError> {
         let string: String =
             serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
                 error,
@@ -198,7 +208,11 @@ impl<'de> Deserialize<'de> for SubgraphNameInput {
     where
         D: serde::Deserializer<'de>,
     {
-        OpenDd::deserialize(serde_json::Value::deserialize(deserializer)?).map_err(D::Error::custom)
+        OpenDd::deserialize(
+            serde_json::Value::deserialize(deserializer)?,
+            jsonpath::JSONPath::new(),
+        )
+        .map_err(D::Error::custom)
     }
 }
 

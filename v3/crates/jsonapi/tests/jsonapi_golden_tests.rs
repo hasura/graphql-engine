@@ -38,8 +38,11 @@ fn test_get_requests() {
 
             let metadata_json_value = serde_json::from_str(&metadata_string).unwrap();
 
-            let input_metadata: open_dds::Metadata =
-                open_dds::traits::OpenDd::deserialize(metadata_json_value).unwrap();
+            let input_metadata: open_dds::Metadata = open_dds::traits::OpenDd::deserialize(
+                metadata_json_value,
+                jsonpath::JSONPath::new(),
+            )
+            .unwrap();
 
             let configuration = get_metadata_resolve_configuration();
 

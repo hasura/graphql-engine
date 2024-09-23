@@ -7,10 +7,7 @@ pub fn impl_opendd_struct(name: &syn::Ident, data: &StructData<'_>) -> TraitImpl
     let (impl_deserialize, json_schema_expr) = match &data {
         StructData::Newtype(field) => (
             quote! {
-                let __internal = open_dds::traits::OpenDd::deserialize(json).map_err(|e| open_dds::traits::OpenDdDeserializeError{
-                    path: e.path.prepend_index(0),
-                    error: e.error,
-                })?;
+                let __internal = open_dds::traits::deserialize_index(json, path.clone(), 0)?;
                 Ok(#name(__internal))
             },
             impl_json_schema_newtype(field),
@@ -83,11 +80,7 @@ fn generate_named_fields_value<'a>(
         let field_name_str = field.renamed_field.as_str();
 
         let field_value_deserialize = quote! {
-            |__value| open_dds::traits::OpenDd::deserialize(__value)
-                .map_err(|e| open_dds::traits::OpenDdDeserializeError {
-                    path: e.path.prepend_key(#field_name_str.to_string()),
-                    error: e.error,
-                })
+            |__value| open_dds::traits::deserialize_key(__value, path.clone(), #field_name_str.to_string())
         };
 
         let deserialize_field = quote! {

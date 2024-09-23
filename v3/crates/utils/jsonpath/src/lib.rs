@@ -44,10 +44,24 @@ impl JSONPath {
         JSONPath(vec![JSONPathElement::Index(index)])
     }
 
+    pub fn append_key(self, key: String) -> Self {
+        let mut updated = self.0;
+        updated.push(JSONPathElement::Key(key));
+
+        JSONPath(updated)
+    }
+
     pub fn prepend_key(self, key: String) -> Self {
         let mut new_path = vec![JSONPathElement::Key(key)];
         new_path.extend(self.0);
         JSONPath(new_path)
+    }
+
+    pub fn append_index(self, key: usize) -> Self {
+        let mut updated = self.0;
+        updated.push(JSONPathElement::Index(key));
+
+        JSONPath(updated)
     }
 
     pub fn prepend_index(self, index: usize) -> Self {

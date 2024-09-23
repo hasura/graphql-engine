@@ -77,7 +77,8 @@ pub fn test_execution_expectation_legacy(
                 .map(|path| root_test_dir.join(path)),
         )?;
 
-        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
+        let metadata =
+            open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new())?;
 
         // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
         assert_eq!(
@@ -163,7 +164,8 @@ pub(crate) fn test_introspection_expectation(
                 .map(|path| root_test_dir.join(path)),
         )?;
 
-        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
+        let metadata =
+            open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new())?;
 
         // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
         assert_eq!(
@@ -306,7 +308,10 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                     .map(|path| root_test_dir.join(path)),
             )?;
 
-            let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
+            let metadata = open_dds::traits::OpenDd::deserialize(
+                metadata_json_value,
+                jsonpath::JSONPath::new(),
+            )?;
 
             // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
             assert_eq!(
@@ -494,7 +499,7 @@ pub fn test_execute_explain(
             ..Default::default()
         };
         let gds = GDS::new(
-            open_dds::traits::OpenDd::deserialize(metadata)?,
+            open_dds::traits::OpenDd::deserialize(metadata, jsonpath::JSONPath::new())?,
             &configuration,
         )?;
 
@@ -574,7 +579,8 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
 
         let metadata_json_value = merge_with_common_metadata(&metadata_path, iter::empty())?;
 
-        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
+        let metadata =
+            open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new())?;
 
         // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
         assert_eq!(

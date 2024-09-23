@@ -54,16 +54,19 @@ pub struct AuthConfigV2 {
 
 impl AuthConfigV2 {
     fn example() -> Self {
-        open_dds::traits::OpenDd::deserialize(serde_json::json!(
-            {
-                "mode": {
-                  "webhook": {
-                    "url": "http://auth_hook:3050/validate-request",
-                    "method": "Post"
-                  }
+        open_dds::traits::OpenDd::deserialize(
+            serde_json::json!(
+                {
+                    "mode": {
+                      "webhook": {
+                        "url": "http://auth_hook:3050/validate-request",
+                        "method": "Post"
+                      }
+                    }
                 }
-            }
-        ))
+            ),
+            jsonpath::JSONPath::new(),
+        )
         .unwrap()
     }
 }
@@ -81,17 +84,20 @@ pub struct AuthConfigV1 {
 
 impl AuthConfigV1 {
     fn example() -> Self {
-        open_dds::traits::OpenDd::deserialize(serde_json::json!(
-            {
-                "allowRoleEmulationBy": "admin",
-                "mode": {
-                  "webhook": {
-                    "url": "http://auth_hook:3050/validate-request",
-                    "method": "Post"
-                  }
+        open_dds::traits::OpenDd::deserialize(
+            serde_json::json!(
+                {
+                    "allowRoleEmulationBy": "admin",
+                    "mode": {
+                      "webhook": {
+                        "url": "http://auth_hook:3050/validate-request",
+                        "method": "Post"
+                      }
+                    }
                 }
-            }
-        ))
+            ),
+            jsonpath::JSONPath::new(),
+        )
         .unwrap()
     }
 }
@@ -110,8 +116,10 @@ pub fn resolve_auth_config(
     raw_auth_config: &str,
 ) -> Result<(AuthConfig, Vec<Warning>), anyhow::Error> {
     let mut warnings = vec![];
-    let auth_config: AuthConfig =
-        open_dds::traits::OpenDd::deserialize(serde_json::from_str(raw_auth_config)?)?;
+    let auth_config: AuthConfig = open_dds::traits::OpenDd::deserialize(
+        serde_json::from_str(raw_auth_config)?,
+        jsonpath::JSONPath::new(),
+    )?;
     match &auth_config {
         AuthConfig::V1(_) => warnings.push(Warning::PleaseUpgradeToV2),
         AuthConfig::V2(_) => (),
@@ -222,12 +230,16 @@ mod tests {
         };
         let auth_config_from_json = <super::AuthConfig as open_dds::traits::OpenDd>::deserialize(
             serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap(),
+            jsonpath::JSONPath::new(),
         )
         .unwrap();
         let auth_config_serialized = serde_json::to_value(auth_config_from_json.clone()).unwrap();
         let auth_config_from_serialized =
-            <super::AuthConfig as open_dds::traits::OpenDd>::deserialize(auth_config_serialized)
-                .unwrap();
+            <super::AuthConfig as open_dds::traits::OpenDd>::deserialize(
+                auth_config_serialized,
+                jsonpath::JSONPath::new(),
+            )
+            .unwrap();
         assert_eq!(auth_config_from_json, auth_config_from_serialized);
     }
 

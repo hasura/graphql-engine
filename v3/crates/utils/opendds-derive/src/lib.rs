@@ -38,7 +38,7 @@ fn impl_opendd(input: &DeriveInput) -> MacroResult<proc_macro2::TokenStream> {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     Ok(quote! {
         impl #impl_generics open_dds::traits::OpenDd for #name #ty_generics #where_clause {
-            fn deserialize(json: serde_json::Value) -> Result<Self, open_dds::traits::OpenDdDeserializeError> {
+            fn deserialize(json: serde_json::Value, path: jsonpath::JSONPath) -> Result<Self, open_dds::traits::OpenDdDeserializeError> {
                 #impl_deserialize
             }
 

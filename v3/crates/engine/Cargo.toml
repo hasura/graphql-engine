@@ -28,12 +28,13 @@ graphql-schema = { path = "../graphql/schema" }
 hasura-authn = { path = "../auth/hasura-authn" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 jsonapi = { path = "../jsonapi" }
+jsonpath = { path = "../utils/jsonpath" }
 lang-graphql = { path = "../lang-graphql" }
+metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
 pre-execution-plugin = { path = "../plugins/pre-execution-plugin" }
 sql = { path = "../sql" }
 tracing-util = { path = "../utils/tracing-util" }
-metadata-resolve = {path = "../metadata-resolve" }
 
 anyhow = { workspace = true }
 axum = { workspace = true }

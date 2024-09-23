@@ -34,7 +34,10 @@ pub struct EnvironmentValue {
 
 // Requires a custom OpenDd impl since the json schema generation is based on 'EnvironmentValueImpl'
 impl traits::OpenDd for EnvironmentValue {
-    fn deserialize(json: serde_json::Value) -> Result<Self, traits::OpenDdDeserializeError> {
+    fn deserialize(
+        json: serde_json::Value,
+        _path: jsonpath::JSONPath,
+    ) -> Result<Self, traits::OpenDdDeserializeError> {
         serde_path_to_error::deserialize(json).map_err(|e| traits::OpenDdDeserializeError {
             path: jsonpath::JSONPath::from_serde_path(e.path()),
             error: e.into_inner(),
@@ -131,17 +134,22 @@ pub enum Metadata {
 }
 
 impl traits::OpenDd for Metadata {
-    fn deserialize(json: serde_json::Value) -> Result<Self, traits::OpenDdDeserializeError> {
+    fn deserialize(
+        json: serde_json::Value,
+        path: jsonpath::JSONPath,
+    ) -> Result<Self, traits::OpenDdDeserializeError> {
         match json {
             serde_json::Value::Array(arr) => Ok(Self::WithoutNamespaces(<Vec<
                 OpenDdSubgraphObject,
             > as traits::OpenDd>::deserialize(
                 serde_json::Value::Array(arr),
+                path,
             )?)),
             serde_json::Value::Object(obj) => Ok(Self::Versioned(
-                <MetadataWithVersion as traits::OpenDd>::deserialize(serde_json::Value::Object(
-                    obj,
-                ))?,
+                <MetadataWithVersion as traits::OpenDd>::deserialize(
+                    serde_json::Value::Object(obj),
+                    path,
+                )?,
             )),
             _ => Err(traits::OpenDdDeserializeError {
                 path: jsonpath::JSONPath::new(),
@@ -194,7 +202,7 @@ impl Metadata {
         match serde_json::Value::deserialize(json_deserializer_with_path) {
             Ok(json) => {
                 // Then deserialize the serde_json::Value into the OpenDd type using the OpenDd trait.
-                <Metadata as traits::OpenDd>::deserialize(json)
+                <Metadata as traits::OpenDd>::deserialize(json, jsonpath::JSONPath::new())
             }
             Err(e) => Err(traits::OpenDdDeserializeError {
                 path: jsonpath::JSONPath::from_serde_path(&track.path()),
@@ -329,8 +337,11 @@ pub mod tests {
         let metadata =
             open_dds::Metadata::from_json_str(&std::fs::read_to_string(path).unwrap()).unwrap();
         let metadata_json = serde_json::to_value(metadata.clone()).unwrap();
-        let metadata_from_json =
-            <super::Metadata as super::traits::OpenDd>::deserialize(metadata_json).unwrap();
+        let metadata_from_json = <super::Metadata as super::traits::OpenDd>::deserialize(
+            metadata_json,
+            jsonpath::JSONPath::new(),
+        )
+        .unwrap();
         assert_eq!(metadata, metadata_from_json);
     }
 

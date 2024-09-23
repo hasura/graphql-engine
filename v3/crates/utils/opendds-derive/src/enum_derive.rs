@@ -194,7 +194,7 @@ fn gen_variant_match_if_exp<'a>(variant: &'a EnumVariant<'a>) -> proc_macro2::To
             // Inserting it again to fecilitate deserialize into internal enums
             __object_map.insert("kind".to_string(), serde_json::json!(__tag_value_str));
             return Ok(Self::#variant_name(
-                open_dds::traits::OpenDd::deserialize(serde_json::Value::Object(__object_map))?,
+                open_dds::traits::OpenDd::deserialize(serde_json::Value::Object(__object_map), path)?,
             ));
         }
     }
@@ -238,13 +238,10 @@ fn generate_enum_variants(
         let variant_name_str = variant_name_string.as_str();
         let parsed_variant = match tag_type {
             EnumTagType::Internal {..} | EnumTagType::External => quote! {
-                open_dds::traits::OpenDd::deserialize(#deserialize_from)?
+                open_dds::traits::OpenDd::deserialize(#deserialize_from, path)?
             },
             EnumTagType::Adjacent {tag:_, content} => quote! {
-                open_dds::traits::OpenDd::deserialize(#deserialize_from).map_err(|e| open_dds::traits::OpenDdDeserializeError {
-                    path: e.path.prepend_key(#content.to_string()),
-                    error: e.error,
-                })?
+                open_dds::traits::deserialize_key(#deserialize_from, path, #content.to_string())?
             },
         };
 

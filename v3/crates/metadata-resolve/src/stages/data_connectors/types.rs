@@ -510,7 +510,7 @@ mod tests {
                         }
                     }
                 }
-            ))
+            ), jsonpath::JSONPath::new())
             .unwrap();
 
         let explicit_capabilities: ndc_models::Capabilities =
@@ -551,7 +551,7 @@ mod tests {
                         }
                     }
                 }
-            ))
+            ), jsonpath::JSONPath::new())
             .unwrap();
 
         let explicit_capabilities: ndc_models::Capabilities =

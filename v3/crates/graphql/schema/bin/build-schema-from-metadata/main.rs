@@ -23,9 +23,11 @@ pub fn main() {
         exit(-1);
     }
 
-    let metadata =
-        open_dds::traits::OpenDd::deserialize(serde_json::from_str(&metadata_string).unwrap())
-            .unwrap();
+    let metadata = open_dds::traits::OpenDd::deserialize(
+        serde_json::from_str(&metadata_string).unwrap(),
+        jsonpath::JSONPath::new(),
+    )
+    .unwrap();
     let gds = graphql_schema::GDS::new_with_default_flags(metadata).unwrap();
     let sch = gds.build_schema().unwrap();
 
