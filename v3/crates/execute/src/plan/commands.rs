@@ -11,7 +11,7 @@ use super::query;
 use super::relationships;
 use super::selection_set;
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
-use crate::remote_joins::types::{JoinLocations, RemoteJoin};
+use crate::remote_joins::types::JoinLocations;
 use graphql_ir::{
     CommandInfo, FunctionBasedCommand, NdcFieldAlias, NdcRelationshipName, ProcedureBasedCommand,
     VariableName,
@@ -21,13 +21,7 @@ use open_dds::commands::ProcedureName;
 pub(crate) fn plan_query_node<'s, 'ir>(
     ir: &'ir CommandInfo<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<
-    (
-        query::UnresolvedQueryNode<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
-    ),
-    error::Error,
-> {
+) -> Result<(query::UnresolvedQueryNode<'s>, JoinLocations<'s, 'ir>), error::Error> {
     let mut ndc_nested_field = None;
     let mut jl = JoinLocations::new();
     if let Some(nested_selection) = &ir.selection {
@@ -62,7 +56,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
 ) -> Result<
     (
         query::UnresolvedQueryExecutionPlan<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
+        JoinLocations<'s, 'ir>,
     ),
     error::Error,
 > {
@@ -99,7 +93,7 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
 ) -> Result<
     (
         mutation::UnresolvedMutationExecutionPlan<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
+        JoinLocations<'s, 'ir>,
     ),
     error::Error,
 > {

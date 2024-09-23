@@ -90,7 +90,7 @@ use super::plan::ProcessResponseAs;
 use super::{error, HttpContext, ProjectId};
 
 use self::collect::ExecutableJoinNode;
-use types::{Argument, JoinLocations, RemoteJoin};
+use types::{Argument, JoinLocations};
 
 pub(crate) mod collect;
 pub(crate) mod join;
@@ -104,7 +104,7 @@ pub(crate) async fn execute_join_locations<'ir>(
     execution_span_attribute: &'static str,
     lhs_response: &mut Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
-    join_locations: &JoinLocations<RemoteJoin<'async_recursion, 'ir>>,
+    join_locations: &JoinLocations<'async_recursion, 'ir>,
     project_id: Option<&ProjectId>,
 ) -> Result<(), error::FieldError>
 where

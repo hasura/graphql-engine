@@ -14,12 +14,12 @@ use crate::plan::{self, ProcessResponseAs};
 ///
 /// It also includes other info, like field mapping etc., for the join
 #[derive(Debug, Clone)]
-pub struct JoinLocations<T> {
-    pub locations: IndexMap<String, Location<T>>,
+pub struct JoinLocations<'s, 'ir> {
+    pub locations: IndexMap<String, Location<'s, 'ir>>,
 }
 
-impl<T> JoinLocations<T> {
-    pub fn new() -> JoinLocations<T> {
+impl<'s, 'ir> JoinLocations<'s, 'ir> {
+    pub fn new() -> Self {
         JoinLocations::default()
     }
 
@@ -28,7 +28,7 @@ impl<T> JoinLocations<T> {
     }
 }
 
-impl<T> Default for JoinLocations<T> {
+impl<'s, 'ir> Default for JoinLocations<'s, 'ir> {
     fn default() -> Self {
         JoinLocations {
             locations: IndexMap::new(),
@@ -43,9 +43,9 @@ pub enum LocationKind {
 }
 
 #[derive(Debug, Clone)]
-pub enum JoinNode<T> {
+pub enum JoinNode<'s, 'ir> {
     Local(LocationKind),
-    Remote(T),
+    Remote(RemoteJoin<'s, 'ir>),
 }
 
 /// Location indicates if the current node/field is a join node.
@@ -101,9 +101,9 @@ pub enum JoinNode<T> {
 /// Note: `join_node` and `rest` both cannot be empty; it is an invalid/illegal
 /// state.
 #[derive(Debug, Clone)]
-pub struct Location<T> {
-    pub join_node: JoinNode<T>,
-    pub rest: JoinLocations<T>,
+pub struct Location<'s, 'ir> {
+    pub join_node: JoinNode<'s, 'ir>,
+    pub rest: JoinLocations<'s, 'ir>,
 }
 
 /// Contains information to be captured for a join node

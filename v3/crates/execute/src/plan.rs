@@ -31,7 +31,7 @@ use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable}
 use super::ndc;
 use super::process_response::process_response;
 use super::remote_joins::execute_join_locations;
-use super::remote_joins::types::{JoinLocations, RemoteJoin};
+use super::remote_joins::types::JoinLocations;
 use super::{HttpContext, ProjectId};
 use crate::error::FieldError;
 use crate::process_response::{process_mutation_response, ProcessedResponse};
@@ -132,7 +132,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 #[derive(Debug)]
 pub struct NDCMutationExecution<'n, 's, 'ir> {
     pub execution_node: mutation::UnresolvedMutationExecutionPlan<'s>,
-    pub join_locations: JoinLocations<RemoteJoin<'s, 'ir>>,
+    pub join_locations: JoinLocations<'s, 'ir>,
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
@@ -143,7 +143,7 @@ pub struct NDCMutationExecution<'n, 's, 'ir> {
 #[derive(Debug)]
 pub struct ExecutionTree<'s, 'ir> {
     pub query_execution_plan: query::UnresolvedQueryExecutionPlan<'s>,
-    pub remote_join_executions: JoinLocations<RemoteJoin<'s, 'ir>>,
+    pub remote_join_executions: JoinLocations<'s, 'ir>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -960,7 +960,7 @@ pub async fn execute_ndc_query<'s, 'ir>(
 // given results of ndc query, do any joins, and process result
 async fn process_ndc_query_response<'s, 'ir>(
     http_context: &HttpContext,
-    remote_join_executions: JoinLocations<RemoteJoin<'s, 'ir>>,
+    remote_join_executions: JoinLocations<'s, 'ir>,
     execution_span_attribute: &'static str,
     selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
     process_response_as: ProcessResponseAs<'ir>,

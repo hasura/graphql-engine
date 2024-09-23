@@ -8,7 +8,7 @@ use super::filter;
 use super::query;
 use super::relationships;
 use super::selection_set;
-use crate::remote_joins::types::{JoinLocations, RemoteJoin};
+use crate::remote_joins::types::JoinLocations;
 use graphql_ir::ModelSelection;
 use graphql_ir::NdcRelationshipName;
 
@@ -17,13 +17,7 @@ use graphql_ir::NdcRelationshipName;
 pub(crate) fn plan_query_node<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<
-    (
-        query::UnresolvedQueryNode<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
-    ),
-    error::Error,
-> {
+) -> Result<(query::UnresolvedQueryNode<'s>, JoinLocations<'s, 'ir>), error::Error> {
     let mut query_fields = None;
     let mut join_locations = JoinLocations::new();
     if let Some(selection) = &ir.selection {
@@ -55,7 +49,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
 ) -> Result<
     (
         query::UnresolvedQueryExecutionPlan<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
+        JoinLocations<'s, 'ir>,
     ),
     error::Error,
 > {

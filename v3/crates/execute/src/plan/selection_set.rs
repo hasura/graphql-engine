@@ -23,13 +23,7 @@ pub(crate) fn plan_nested_selection<'s, 'ir>(
     nested_selection: &'ir NestedSelection<'s>,
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<
-    (
-        field::UnresolvedNestedField<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
-    ),
-    error::Error,
-> {
+) -> Result<(field::UnresolvedNestedField<'s>, JoinLocations<'s, 'ir>), error::Error> {
     match nested_selection {
         NestedSelection::Object(model_selection) => {
             let (fields, join_locations) =
@@ -64,7 +58,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
 ) -> Result<
     (
         IndexMap<NdcFieldAlias, field::UnresolvedField<'s>>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
+        JoinLocations<'s, 'ir>,
     ),
     error::Error,
 > {

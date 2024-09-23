@@ -11,7 +11,7 @@ use execute::plan::{
     ResolveFilterExpressionContext,
 };
 use execute::HttpContext;
-use execute::{JoinLocations, JoinNode, RemoteJoin, RemoteJoinType};
+use execute::{JoinLocations, JoinNode, RemoteJoinType};
 use graphql_schema::GDS;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
@@ -364,7 +364,7 @@ async fn get_execution_steps<'s>(
     resolve_context: &ResolveFilterExpressionContext,
     alias: gql::ast::common::Alias,
     process_response_as: &ProcessResponseAs<'s>,
-    join_locations: JoinLocations<RemoteJoin<'s, '_>>,
+    join_locations: JoinLocations<'s, '_>,
     ndc_request: types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
 ) -> Result<NonEmpty<Box<types::Step>>, execute::RequestError> {
@@ -425,7 +425,7 @@ async fn get_execution_steps<'s>(
 #[async_recursion]
 async fn get_join_steps(
     expose_internal_errors: execute::ExposeInternalErrors,
-    join_locations: JoinLocations<RemoteJoin<'async_recursion, 'async_recursion>>,
+    join_locations: JoinLocations<'async_recursion, 'async_recursion>,
     http_context: &HttpContext,
     resolve_context: &ResolveFilterExpressionContext,
 ) -> Result<Option<NonEmpty<Box<types::Step>>>, execute::RequestError> {

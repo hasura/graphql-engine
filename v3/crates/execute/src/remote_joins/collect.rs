@@ -28,7 +28,7 @@ pub(crate) struct ExecutableJoinNode<'s, 'ir> {
     pub(crate) remote_alias: String,
     pub(crate) location_path: Vec<LocationInfo>,
     pub(crate) arguments: HashSet<Argument>,
-    pub(crate) sub_tree: JoinLocations<RemoteJoin<'s, 'ir>>,
+    pub(crate) sub_tree: JoinLocations<'s, 'ir>,
 }
 
 /// Indicates a field alias which might have more nesting inside
@@ -43,7 +43,7 @@ pub(crate) struct LocationInfo {
 pub(crate) fn collect_next_join_nodes<'s, 'ir>(
     lhs_response: &Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
-    join_locations: &JoinLocations<RemoteJoin<'s, 'ir>>,
+    join_locations: &JoinLocations<'s, 'ir>,
     path: &mut [LocationInfo],
 ) -> Result<Vec<ExecutableJoinNode<'s, 'ir>>, error::FieldError> {
     let mut arguments_results = Vec::new();
