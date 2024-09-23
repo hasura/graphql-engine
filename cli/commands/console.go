@@ -136,7 +136,7 @@ func (o *ConsoleOptions) Run() error {
 		return errors.E(op, "cannot validate version, object is nil")
 	}
 
-	apiServer, err := console.NewAPIServer(o.APIHost.Host, o.APIPort, o.EC)
+	apiServer, err := console.NewAPIServer(o.Address, o.APIPort, o.EC)
 	if err != nil {
 		return errors.E(op, err)
 	}
