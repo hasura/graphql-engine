@@ -6,6 +6,12 @@
 
 ### Fixed
 
+### Changed
+
+## [v2024.09.23]
+
+### Fixed
+
 - Disallow defining custom scalar types with names that conflict with built-in
   types, such as `String` or `Int`.
 
@@ -13,8 +19,6 @@
   the target subgraph into account.
 
 - Propagate deprecation status to boolean expression relationship fields.
-
-### Changed
 
 ## [v2024.09.16]
 
@@ -529,7 +533,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.09.16...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.09.23...HEAD
+[v2024.09.23]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.23
 [v2024.09.16]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.16
 [v2024.09.05]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.05
 [v2024.09.02]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.02
