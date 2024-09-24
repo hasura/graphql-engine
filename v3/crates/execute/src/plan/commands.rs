@@ -18,10 +18,10 @@ use graphql_ir::{
 };
 use open_dds::commands::ProcedureName;
 
-pub(crate) fn plan_query_node<'s, 'ir>(
-    ir: &'ir CommandInfo<'s>,
+pub(crate) fn plan_query_node<'s>(
+    ir: &CommandInfo<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<(query::UnresolvedQueryNode<'s>, JoinLocations<'s, 'ir>), error::Error> {
+) -> Result<(query::UnresolvedQueryNode<'s>, JoinLocations<'s>), error::Error> {
     let mut ndc_nested_field = None;
     let mut jl = JoinLocations::new();
     if let Some(nested_selection) = &ir.selection {
@@ -51,15 +51,9 @@ pub(crate) fn plan_query_node<'s, 'ir>(
     Ok((query, jl))
 }
 
-pub(crate) fn plan_query_execution<'s, 'ir>(
-    ir: &'ir FunctionBasedCommand<'s>,
-) -> Result<
-    (
-        query::UnresolvedQueryExecutionPlan<'s>,
-        JoinLocations<'s, 'ir>,
-    ),
-    error::Error,
-> {
+pub(crate) fn plan_query_execution<'s>(
+    ir: &FunctionBasedCommand<'s>,
+) -> Result<(query::UnresolvedQueryExecutionPlan<'s>, JoinLocations<'s>), error::Error> {
     let mut collection_relationships = BTreeMap::new();
     let mut arguments =
         arguments::plan_arguments(&ir.command_info.arguments, &mut collection_relationships)?;
@@ -93,7 +87,7 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
 ) -> Result<
     (
         mutation::UnresolvedMutationExecutionPlan<'s>,
-        JoinLocations<'s, 'ir>,
+        JoinLocations<'s>,
     ),
     error::Error,
 > {

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 mod arguments;
 mod commands;
 pub mod error;
@@ -47,10 +49,10 @@ pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir
 /// transactional requests. In a mutation plan, we group nodes by connector, allowing us to issue
 /// transactional commands to connectors whose capabilities allow for transactional mutations.
 /// Otherwise, we can just send them one-by-one (though still sequentially).
-pub struct MutationPlan<'n, 's, 'ir> {
+pub struct MutationPlan<'n, 's> {
     pub nodes: IndexMap<
         metadata_resolve::DataConnectorLink,
-        IndexMap<ast::Alias, NDCMutationExecution<'n, 's, 'ir>>,
+        IndexMap<ast::Alias, NDCMutationExecution<'n, 's>>,
     >,
     pub type_names: IndexMap<ast::Alias, ast::TypeName>,
 }
@@ -59,7 +61,7 @@ pub struct MutationPlan<'n, 's, 'ir> {
 // treated as an invalid request. We may want to change this in the future.
 pub enum RequestPlan<'n, 's, 'ir> {
     QueryPlan(QueryPlan<'n, 's, 'ir>),
-    MutationPlan(MutationPlan<'n, 's, 'ir>),
+    MutationPlan(MutationPlan<'n, 's>),
     SubscriptionPlan(ast::Alias, NDCSubscriptionExecution<'s, 'ir>),
 }
 
@@ -83,13 +85,13 @@ pub enum NodeQueryPlan<'n, 's, 'ir> {
     },
     /// NDC query to be executed
     NDCQueryExecution {
-        query_execution: NDCQueryExecution<'s, 'ir>,
+        query_execution: NDCQueryExecution<'s>,
         selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
     },
     /// NDC query for Relay 'node' to be executed
     RelayNodeSelect(
         Option<(
-            NDCQueryExecution<'s, 'ir>,
+            NDCQueryExecution<'s>,
             &'ir normalized_ast::SelectionSet<'s, GDS>,
         )>,
     ),
@@ -98,11 +100,11 @@ pub enum NodeQueryPlan<'n, 's, 'ir> {
 }
 
 #[derive(Debug)]
-pub struct NDCQueryExecution<'s, 'ir> {
-    pub execution_tree: ExecutionTree<'s, 'ir>,
+pub struct NDCQueryExecution<'s> {
+    pub execution_tree: ExecutionTree<'s>,
     pub execution_span_attribute: &'static str,
     pub field_span_attribute: String,
-    pub process_response_as: ProcessResponseAs<'ir>,
+    pub process_response_as: ProcessResponseAs,
 }
 
 pub struct NDCSubscriptionExecution<'s, 'ir> {
@@ -110,7 +112,7 @@ pub struct NDCSubscriptionExecution<'s, 'ir> {
     pub polling_interval_ms: u64,
     pub execution_span_attribute: &'static str,
     pub field_span_attribute: String,
-    pub process_response_as: ProcessResponseAs<'ir>,
+    pub process_response_as: ProcessResponseAs,
     pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
 }
 
@@ -119,7 +121,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
     /// NDC queries for Apollo Federation '_entities' to be executed
     EntitiesSelect(
         Vec<(
-            NDCQueryExecution<'s, 'ir>,
+            NDCQueryExecution<'s>,
             &'ir normalized_ast::SelectionSet<'s, GDS>,
         )>,
     ),
@@ -130,24 +132,24 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 }
 
 #[derive(Debug)]
-pub struct NDCMutationExecution<'n, 's, 'ir> {
+pub struct NDCMutationExecution<'n, 's> {
     pub execution_node: mutation::UnresolvedMutationExecutionPlan<'s>,
-    pub join_locations: JoinLocations<'s, 'ir>,
+    pub join_locations: JoinLocations<'s>,
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
-    pub process_response_as: ProcessResponseAs<'ir>,
+    pub process_response_as: ProcessResponseAs,
     pub selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
 }
 
 #[derive(Debug)]
-pub struct ExecutionTree<'s, 'ir> {
+pub struct ExecutionTree<'s> {
     pub query_execution_plan: query::UnresolvedQueryExecutionPlan<'s>,
-    pub remote_join_executions: JoinLocations<'s, 'ir>,
+    pub remote_join_executions: JoinLocations<'s>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum ProcessResponseAs<'ir> {
+#[derive(Clone, Debug, PartialEq)]
+pub enum ProcessResponseAs {
     Object {
         is_nullable: bool,
     },
@@ -155,15 +157,15 @@ pub enum ProcessResponseAs<'ir> {
         is_nullable: bool,
     },
     CommandResponse {
-        command_name: &'ir metadata_resolve::Qualified<open_dds::commands::CommandName>,
-        type_container: &'ir ast::TypeContainer<ast::TypeName>,
+        command_name: Arc<metadata_resolve::Qualified<open_dds::commands::CommandName>>,
+        type_container: ast::TypeContainer<ast::TypeName>,
         // how to process a command response
-        response_config: &'ir Option<metadata_resolve::data_connectors::CommandsResponseConfig>,
+        response_config: Option<Arc<metadata_resolve::data_connectors::CommandsResponseConfig>>,
     },
     Aggregates,
 }
 
-impl<'ir> ProcessResponseAs<'ir> {
+impl ProcessResponseAs {
     pub fn is_nullable(&self) -> bool {
         match self {
             ProcessResponseAs::Object { is_nullable }
@@ -220,10 +222,10 @@ pub fn generate_request_plan<'n, 's, 'ir>(
 }
 
 // Given a singular root field of a mutation, plan the execution of that root field.
-fn plan_mutation<'n, 's, 'ir>(
+fn plan_mutation<'n, 's>(
     selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-    ir: &'ir graphql_ir::ProcedureBasedCommand<'s>,
-) -> Result<NDCMutationExecution<'n, 's, 'ir>, error::Error> {
+    ir: &graphql_ir::ProcedureBasedCommand<'s>,
+) -> Result<NDCMutationExecution<'n, 's>, error::Error> {
     let (ndc_ir, join_locations) = commands::plan_mutation_execution(ir.procedure_name, ir)?;
     Ok(NDCMutationExecution {
         execution_node: ndc_ir,
@@ -233,9 +235,9 @@ fn plan_mutation<'n, 's, 'ir>(
         execution_span_attribute: "execute_command".into(),
         field_span_attribute: ir.command_info.field_name.to_string(),
         process_response_as: ProcessResponseAs::CommandResponse {
-            command_name: &ir.command_info.command_name,
-            type_container: &ir.command_info.type_container,
-            response_config: &ir.command_info.data_connector.response_config,
+            command_name: ir.command_info.command_name.clone(),
+            type_container: ir.command_info.type_container.clone(),
+            response_config: ir.command_info.data_connector.response_config.clone(),
         },
     })
 }
@@ -301,9 +303,9 @@ fn plan_subscription<'s, 'ir>(
     }
 }
 
-fn reject_remote_joins<'s>(
-    tree: ExecutionTree<'s, '_>,
-) -> Result<query::UnresolvedQueryExecutionPlan<'s>, error::Error> {
+fn reject_remote_joins(
+    tree: ExecutionTree,
+) -> Result<query::UnresolvedQueryExecutionPlan, error::Error> {
     if !tree.remote_join_executions.is_empty() {
         return Err(error::Error::RemoteJoinsAreNotSupportedSubscriptions);
     }
@@ -407,9 +409,9 @@ fn plan_query<'n, 's, 'ir>(
                     execution_span_attribute: "execute_command",
                     field_span_attribute: ir.command_info.field_name.to_string(),
                     process_response_as: ProcessResponseAs::CommandResponse {
-                        command_name: &ir.command_info.command_name,
-                        type_container: &ir.command_info.type_container,
-                        response_config: &ir.command_info.data_connector.response_config,
+                        command_name: ir.command_info.command_name.clone(),
+                        type_container: ir.command_info.type_container.clone(),
+                        response_config: ir.command_info.data_connector.response_config.clone(),
                     },
                 },
             }
@@ -453,9 +455,7 @@ fn plan_query<'n, 's, 'ir>(
     Ok(query_plan)
 }
 
-fn generate_execution_tree<'s, 'ir>(
-    ir: &'ir ModelSelection<'s>,
-) -> Result<ExecutionTree<'s, 'ir>, error::Error> {
+fn generate_execution_tree<'s>(ir: &ModelSelection<'s>) -> Result<ExecutionTree<'s>, error::Error> {
     let (query_execution_plan, join_locations) = model_selection::plan_query_execution(ir)?;
     Ok(ExecutionTree {
         query_execution_plan,
@@ -734,9 +734,9 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
 }
 
 /// Execute a single root field's mutation plan to produce a result.
-async fn execute_mutation_field_plan<'n, 's, 'ir>(
+async fn execute_mutation_field_plan<'n, 's>(
     http_context: &HttpContext,
-    mutation_plan: NDCMutationExecution<'n, 's, 'ir>,
+    mutation_plan: NDCMutationExecution<'n, 's>,
     project_id: Option<&ProjectId>,
 ) -> RootFieldResult {
     let tracer = tracing_util::global_tracer();
@@ -761,9 +761,9 @@ async fn execute_mutation_field_plan<'n, 's, 'ir>(
 /// Given an entire plan for a mutation, produce a result. We do this by executing the singular
 /// root fields of the mutation sequentially rather than concurrently, in the order defined by the
 /// `IndexMap`'s keys.
-pub async fn execute_mutation_plan<'n, 's, 'ir>(
+pub async fn execute_mutation_plan<'n, 's>(
     http_context: &HttpContext,
-    mutation_plan: MutationPlan<'n, 's, 'ir>,
+    mutation_plan: MutationPlan<'n, 's>,
     project_id: Option<&ProjectId>,
 ) -> ExecuteQueryResult {
     let mut root_fields = IndexMap::new();
@@ -861,7 +861,7 @@ fn resolve_schema_field<NSGet: NamespacedGetter<GDS>>(
 pub struct NDCSubscriptionQuery<'s, 'ir> {
     pub query_request: ndc::NdcQueryRequest,
     pub data_connector: &'s metadata_resolve::DataConnectorLink,
-    pub process_response_as: ProcessResponseAs<'ir>,
+    pub process_response_as: ProcessResponseAs,
     pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
     pub polling_interval_ms: u64,
 }
@@ -896,7 +896,7 @@ pub async fn resolve_ndc_subscription_execution<'s, 'ir>(
 // run ndc query, do any joins, and process result
 async fn resolve_ndc_query_execution<'s, 'ir>(
     http_context: &HttpContext,
-    ndc_query: NDCQueryExecution<'s, 'ir>,
+    ndc_query: NDCQueryExecution<'s>,
     selection_set: &normalized_ast::SelectionSet<'ir, GDS>,
     project_id: Option<&ProjectId>,
 ) -> Result<ProcessedResponse, FieldError> {
@@ -960,10 +960,10 @@ pub async fn execute_ndc_query<'s, 'ir>(
 // given results of ndc query, do any joins, and process result
 async fn process_ndc_query_response<'s, 'ir>(
     http_context: &HttpContext,
-    remote_join_executions: JoinLocations<'s, 'ir>,
+    remote_join_executions: JoinLocations<'s>,
     execution_span_attribute: &'static str,
     selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
-    process_response_as: ProcessResponseAs<'ir>,
+    process_response_as: ProcessResponseAs,
     project_id: Option<&ProjectId>,
     mut response_rowsets: Vec<ndc_models::RowSet>,
 ) -> Result<ProcessedResponse, FieldError> {
@@ -984,7 +984,7 @@ async fn process_ndc_query_response<'s, 'ir>(
 
 async fn resolve_ndc_mutation_execution(
     http_context: &HttpContext,
-    ndc_mutation_execution: NDCMutationExecution<'_, '_, '_>,
+    ndc_mutation_execution: NDCMutationExecution<'_, '_>,
     project_id: Option<&ProjectId>,
 ) -> Result<ProcessedResponse, FieldError> {
     let NDCMutationExecution {
@@ -1021,7 +1021,7 @@ async fn resolve_ndc_mutation_execution(
 async fn resolve_optional_ndc_select(
     http_context: &HttpContext,
     optional_query: Option<(
-        NDCQueryExecution<'_, '_>,
+        NDCQueryExecution<'_>,
         &normalized_ast::SelectionSet<'_, GDS>,
     )>,
     project_id: Option<&ProjectId>,

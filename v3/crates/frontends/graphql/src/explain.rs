@@ -290,7 +290,7 @@ pub(crate) async fn explain_query_plan(
 pub(crate) async fn explain_mutation_plan(
     expose_internal_errors: execute::ExposeInternalErrors,
     http_context: &HttpContext,
-    mutation_plan: plan::MutationPlan<'_, '_, '_>,
+    mutation_plan: plan::MutationPlan<'_, '_>,
 ) -> Result<types::Step, execute::RequestError> {
     let mut root_steps = vec![];
 
@@ -363,8 +363,8 @@ async fn get_execution_steps<'s>(
     http_context: &HttpContext,
     resolve_context: &ResolveFilterExpressionContext,
     alias: gql::ast::common::Alias,
-    process_response_as: &ProcessResponseAs<'s>,
-    join_locations: JoinLocations<'s, '_>,
+    process_response_as: &ProcessResponseAs,
+    join_locations: JoinLocations<'s>,
     ndc_request: types::NDCRequest,
     data_connector: &metadata_resolve::DataConnectorLink,
 ) -> Result<NonEmpty<Box<types::Step>>, execute::RequestError> {
@@ -425,7 +425,7 @@ async fn get_execution_steps<'s>(
 #[async_recursion]
 async fn get_join_steps(
     expose_internal_errors: execute::ExposeInternalErrors,
-    join_locations: JoinLocations<'async_recursion, 'async_recursion>,
+    join_locations: JoinLocations<'async_recursion>,
     http_context: &HttpContext,
     resolve_context: &ResolveFilterExpressionContext,
 ) -> Result<Option<NonEmpty<Box<types::Step>>>, execute::RequestError> {

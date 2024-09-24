@@ -22,6 +22,7 @@ use open_dds::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 use strum_macros::EnumIter;
 
 pub struct DataConnectorsOutput<'a> {
@@ -245,7 +246,7 @@ pub struct DataConnectorLink {
     /// HTTP response headers configuration that is forwarded from a NDC
     /// function/procedure to the client.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub response_config: Option<CommandsResponseConfig>,
+    pub response_config: Option<Arc<CommandsResponseConfig>>,
     pub capabilities: DataConnectorCapabilities,
 }
 
@@ -320,7 +321,7 @@ impl DataConnectorLink {
             url,
             headers,
             capabilities,
-            response_config: context.response_headers.clone(),
+            response_config: context.response_headers.clone().map(Arc::new),
         })
     }
 }

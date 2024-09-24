@@ -99,17 +99,14 @@ pub(crate) mod types;
 /// Execute remote joins. As an entry-point it assumes the response is available
 /// for the top-level query, and executes further remote joins recursively.
 #[async_recursion]
-pub(crate) async fn execute_join_locations<'ir>(
+pub(crate) async fn execute_join_locations(
     http_context: &HttpContext,
     execution_span_attribute: &'static str,
     lhs_response: &mut Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
-    join_locations: &JoinLocations<'async_recursion, 'ir>,
+    join_locations: &JoinLocations<'async_recursion>,
     project_id: Option<&ProjectId>,
-) -> Result<(), error::FieldError>
-where
-    'ir: 'async_recursion,
-{
+) -> Result<(), error::FieldError> {
     let tracer = tracing_util::global_tracer();
 
     // collect the join column arguments from the LHS response

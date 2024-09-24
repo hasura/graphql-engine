@@ -14,6 +14,7 @@ use open_dds::commands::ProcedureName;
 use open_dds::types::DataConnectorArgumentName;
 use serde::Serialize;
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use super::arguments;
 use super::selection_set;
@@ -33,7 +34,7 @@ use metadata_resolve::{Qualified, QualifiedTypeReference};
 #[derive(Serialize, Debug)]
 pub struct CommandInfo<'s> {
     /// The name of the command
-    pub command_name: Qualified<commands::CommandName>,
+    pub command_name: Arc<Qualified<commands::CommandName>>,
 
     /// The name of the field as published in the schema
     pub field_name: ast::Name,
@@ -137,7 +138,7 @@ pub fn generate_command_info<'n, 's>(
     let selection = wrap_selection_in_response_config(command_source, selection);
 
     Ok(CommandInfo {
-        command_name: command_name.clone(),
+        command_name: Arc::new(command_name.clone()),
         field_name: field_call.name.clone(),
         data_connector: &command_source.data_connector,
         arguments: command_arguments,

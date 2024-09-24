@@ -14,11 +14,11 @@ use crate::plan::{self, ProcessResponseAs};
 ///
 /// It also includes other info, like field mapping etc., for the join
 #[derive(Debug, Clone)]
-pub struct JoinLocations<'s, 'ir> {
-    pub locations: IndexMap<String, Location<'s, 'ir>>,
+pub struct JoinLocations<'s> {
+    pub locations: IndexMap<String, Location<'s>>,
 }
 
-impl<'s, 'ir> JoinLocations<'s, 'ir> {
+impl<'s> JoinLocations<'s> {
     pub fn new() -> Self {
         JoinLocations::default()
     }
@@ -28,7 +28,7 @@ impl<'s, 'ir> JoinLocations<'s, 'ir> {
     }
 }
 
-impl<'s, 'ir> Default for JoinLocations<'s, 'ir> {
+impl<'s> Default for JoinLocations<'s> {
     fn default() -> Self {
         JoinLocations {
             locations: IndexMap::new(),
@@ -43,9 +43,9 @@ pub enum LocationKind {
 }
 
 #[derive(Debug, Clone)]
-pub enum JoinNode<'s, 'ir> {
+pub enum JoinNode<'s> {
     Local(LocationKind),
-    Remote(RemoteJoin<'s, 'ir>),
+    Remote(RemoteJoin<'s>),
 }
 
 /// Location indicates if the current node/field is a join node.
@@ -101,14 +101,14 @@ pub enum JoinNode<'s, 'ir> {
 /// Note: `join_node` and `rest` both cannot be empty; it is an invalid/illegal
 /// state.
 #[derive(Debug, Clone)]
-pub struct Location<'s, 'ir> {
-    pub join_node: JoinNode<'s, 'ir>,
-    pub rest: JoinLocations<'s, 'ir>,
+pub struct Location<'s> {
+    pub join_node: JoinNode<'s>,
+    pub rest: JoinLocations<'s>,
 }
 
 /// Contains information to be captured for a join node
 #[derive(Debug, Clone, PartialEq)]
-pub struct RemoteJoin<'s, 'ir> {
+pub struct RemoteJoin<'s> {
     /// target data connector to execute query on
     pub target_data_connector: &'s metadata_resolve::DataConnectorLink,
     /// NDC node to execute on a data connector
@@ -124,7 +124,7 @@ pub struct RemoteJoin<'s, 'ir> {
     ///     field or an argument name.
     pub join_mapping: HashMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
     /// Represents how to process the join response.
-    pub process_response_as: ProcessResponseAs<'ir>,
+    pub process_response_as: ProcessResponseAs,
     /// Represents the type of the remote join
     pub remote_join_type: RemoteJoinType,
 }

@@ -14,10 +14,10 @@ use graphql_ir::NdcRelationshipName;
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings
 // #[async_recursion]
-pub(crate) fn plan_query_node<'s, 'ir>(
-    ir: &'ir ModelSelection<'s>,
+pub(crate) fn plan_query_node<'s>(
+    ir: &ModelSelection<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<(query::UnresolvedQueryNode<'s>, JoinLocations<'s, 'ir>), error::Error> {
+) -> Result<(query::UnresolvedQueryNode<'s>, JoinLocations<'s>), error::Error> {
     let mut query_fields = None;
     let mut join_locations = JoinLocations::new();
     if let Some(selection) = &ir.selection {
@@ -44,15 +44,9 @@ pub(crate) fn plan_query_node<'s, 'ir>(
 }
 
 /// Generate query execution plan from internal IR (`ModelSelection`)
-pub(crate) fn plan_query_execution<'s, 'ir>(
-    ir: &'ir ModelSelection<'s>,
-) -> Result<
-    (
-        query::UnresolvedQueryExecutionPlan<'s>,
-        JoinLocations<'s, 'ir>,
-    ),
-    error::Error,
-> {
+pub(crate) fn plan_query_execution<'s>(
+    ir: &ModelSelection<'s>,
+) -> Result<(query::UnresolvedQueryExecutionPlan<'s>, JoinLocations<'s>), error::Error> {
     let mut collection_relationships = BTreeMap::new();
     let (query, join_locations) = plan_query_node(ir, &mut collection_relationships)?;
     // collection relationships from order_by clause

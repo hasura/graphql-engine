@@ -19,11 +19,11 @@ use metadata_resolve::FieldMapping;
 use open_dds::data_connector::DataConnectorColumnName;
 use std::collections::{BTreeMap, HashMap};
 
-pub(crate) fn plan_nested_selection<'s, 'ir>(
-    nested_selection: &'ir NestedSelection<'s>,
+pub(crate) fn plan_nested_selection<'s>(
+    nested_selection: &NestedSelection<'s>,
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<(field::UnresolvedNestedField<'s>, JoinLocations<'s, 'ir>), error::Error> {
+) -> Result<(field::UnresolvedNestedField<'s>, JoinLocations<'s>), error::Error> {
     match nested_selection {
         NestedSelection::Object(model_selection) => {
             let (fields, join_locations) =
@@ -58,7 +58,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
 ) -> Result<
     (
         IndexMap<NdcFieldAlias, field::UnresolvedField<'s>>,
-        JoinLocations<'s, 'ir>,
+        JoinLocations<'s>,
     ),
     error::Error,
 > {
@@ -224,9 +224,9 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                     target_data_connector: ir.command_info.data_connector,
                     join_mapping,
                     process_response_as: ProcessResponseAs::CommandResponse {
-                        command_name: &ir.command_info.command_name,
-                        type_container: &ir.command_info.type_container,
-                        response_config: &ir.command_info.data_connector.response_config,
+                        command_name: ir.command_info.command_name.clone(),
+                        type_container: ir.command_info.type_container.clone(),
+                        response_config: ir.command_info.data_connector.response_config.clone(),
                     },
                     remote_join_type: RemoteJoinType::ToCommand,
                 };
