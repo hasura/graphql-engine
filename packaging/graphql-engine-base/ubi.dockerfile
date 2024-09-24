@@ -1,7 +1,7 @@
-# DATE VERSION: 2024-08-16
+# DATE VERSION: 2024-09-22
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 
-FROM registry.access.redhat.com/ubi9-minimal:9.4-1194 as pg_dump_source
+FROM registry.access.redhat.com/ubi9-minimal:9.4-1227.1725849298 as pg_dump_source
 
 ARG TARGETPLATFORM
 
@@ -13,7 +13,7 @@ RUN set -ex; \
     fi; \
     microdnf install -y postgresql16-server
 
-FROM registry.access.redhat.com/ubi9-minimal:9.4-949.1714662671
+FROM registry.access.redhat.com/ubi9-minimal:9.4-1227.1725849298
 
 ARG TARGETPLATFORM
 
