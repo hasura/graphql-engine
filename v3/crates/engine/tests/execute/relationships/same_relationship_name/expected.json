@@ -1,34 +1,36 @@
-{
-  "data": {
-    "AuthorByID": {
-      "Articles": [
-        {
-          "Author": {
-            "first_name": "Peter"
+[
+  {
+    "data": {
+      "AuthorByID": {
+        "Articles": [
+          {
+            "Author": {
+              "first_name": "Peter"
+            },
+            "article_id": 1
           },
-          "article_id": 1
-        },
-        {
-          "Author": {
-            "first_name": "Peter"
+          {
+            "Author": {
+              "first_name": "Peter"
+            },
+            "article_id": 4
+          }
+        ],
+        "NewspaperArticles": [
+          {
+            "Author": {
+              "first_name": "Peter"
+            },
+            "article_id": 1
           },
-          "article_id": 4
-        }
-      ],
-      "NewspaperArticles": [
-        {
-          "Author": {
-            "first_name": "Peter"
-          },
-          "article_id": 1
-        },
-        {
-          "Author": {
-            "first_name": "Peter"
-          },
-          "article_id": 4
-        }
-      ]
+          {
+            "Author": {
+              "first_name": "Peter"
+            },
+            "article_id": 4
+          }
+        ]
+      }
     }
   }
-}
+]

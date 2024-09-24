@@ -1,8 +1,10 @@
-{
-  "data": null,
-  "errors": [
-    {
-      "message": "validation failed: no such field on type Article: Author"
-    }
-  ]
-}
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: no such field on type Article: Author"
+      }
+    ]
+  }
+]

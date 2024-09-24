@@ -53,95 +53,6 @@ pub(crate) fn resolve_session(
     Ok(session)
 }
 
-// This function is deprecated in favour of test_execution_expectation
-// TODO: Remove this function after all tests are moved to use test_execution_expectation
-#[allow(dead_code)]
-pub fn test_execution_expectation_legacy(
-    test_path_string: &str,
-    common_metadata_paths: &[&str],
-) -> anyhow::Result<()> {
-    tokio_test::block_on(async {
-        // Setup test context
-        let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
-        let mut test_ctx = setup(&root_test_dir);
-        let test_path = root_test_dir.join(test_path_string);
-
-        let request_path = test_path.join("request.gql");
-        let response_path = test_path_string.to_string() + "/expected.json";
-        let metadata_path = test_path.join("metadata.json");
-
-        let metadata_json_value = merge_with_common_metadata(
-            &metadata_path,
-            common_metadata_paths
-                .iter()
-                .map(|path| root_test_dir.join(path)),
-        )?;
-
-        let metadata =
-            open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new())?;
-
-        // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
-        assert_eq!(
-            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata)?)?,
-            metadata
-        );
-
-        let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
-        let schema = GDS::build_schema(&gds)?;
-
-        // Ensure schema is serialized successfully.
-        serde_json::to_string(&schema)?;
-
-        let query = read_to_string(&request_path)?;
-
-        let request_headers = reqwest::header::HeaderMap::new();
-        let session = {
-            let session_vars_path = &test_path.join("session_variables.json");
-            let session_variables: HashMap<SessionVariable, SessionVariableValue> =
-                json::from_str(read_to_string(session_vars_path)?.as_ref())?;
-            resolve_session(session_variables)
-        }?;
-
-        let raw_request = RawRequest {
-            operation_name: None,
-            query,
-            variables: None,
-        };
-
-        // Execute the test
-
-        let (_, response) = execute_query(
-            execute::ExposeInternalErrors::Expose,
-            &test_ctx.http_context,
-            &schema,
-            &session,
-            &request_headers,
-            raw_request,
-            None,
-        )
-        .await;
-
-        let mut expected = test_ctx.mint.new_goldenfile_with_differ(
-            response_path,
-            Box::new(|file1, file2| {
-                let json1: serde_json::Value =
-                    serde_json::from_reader(File::open(file1).unwrap()).unwrap();
-                let json2: serde_json::Value =
-                    serde_json::from_reader(File::open(file2).unwrap()).unwrap();
-                if json1 != json2 {
-                    text_diff(file1, file2);
-                }
-            }),
-        )?;
-        write!(
-            expected,
-            "{}",
-            serde_json::to_string_pretty(&response.inner())?
-        )?;
-        Ok(())
-    })
-}
-
 #[allow(dead_code)]
 pub(crate) fn test_introspection_expectation(
     test_path_string: &str,
@@ -202,11 +113,6 @@ pub(crate) fn test_introspection_expectation(
             .into_iter()
             .map(resolve_session)
             .collect::<Result<_, _>>()?;
-
-        assert!(
-            sessions.len() > 1,
-            "Found less than 2 roles in test scenario"
-        );
 
         let raw_request = RawRequest {
             operation_name: None,
@@ -357,11 +263,6 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 .into_iter()
                 .map(resolve_session)
                 .collect::<Result<_, _>>()?;
-
-            assert!(
-                sessions.len() > 1,
-                "Found less than 2 roles in test scenario"
-            );
 
             // expected response headers are a `Vec<String>`; one set for each
             // session/role.

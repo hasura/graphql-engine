@@ -382,7 +382,7 @@ fn test_relationships_permissions_target_model_type_field_not_selectable() -> an
     let test_path_string =
         "execute/relationships/permissions/target_model_type_field_not_selectable";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 // TODO: This should ideally be a schema test
@@ -390,7 +390,7 @@ fn test_relationships_permissions_target_model_type_field_not_selectable() -> an
 fn test_relationships_permissions_target_model_not_selectable() -> anyhow::Result<()> {
     let test_path_string = "execute/relationships/permissions/target_model_not_selectable";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 // What is being tested? - We are testing if unique names are being generated
@@ -410,11 +410,11 @@ fn test_relationships_permissions_target_model_not_selectable() -> anyhow::Resul
 fn test_relationships_with_same_name() -> anyhow::Result<()> {
     let test_path_string = "execute/relationships/same_relationship_name";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
 fn test_relationship_with_no_relationship_capability() -> anyhow::Result<()> {
     let test_path_string: &str = "execute/relationships/no_relationship_capability";
-    common::test_execution_expectation_legacy(test_path_string, &[])
+    common::test_execution_expectation(test_path_string, &[])
 }

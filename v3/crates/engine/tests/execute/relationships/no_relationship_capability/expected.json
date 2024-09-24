@@ -1,10 +1,12 @@
-{
-  "data": {
-    "ArticleByID": {
-      "title": "The Next 700 Programming Languages",
-      "Author": {
-        "first_name": "Peter"
+[
+  {
+    "data": {
+      "ArticleByID": {
+        "title": "The Next 700 Programming Languages",
+        "Author": {
+          "first_name": "Peter"
+        }
       }
     }
   }
-}
+]
