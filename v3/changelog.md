@@ -8,6 +8,9 @@
 
 ### Changed
 
+OpenTelemetry service name set to `v3-engine` to avoid confusion with
+`graphql-engine`.
+
 ## [v2024.09.23]
 
 ### Fixed

@@ -133,7 +133,7 @@ async fn main() {
 
     tracing_util::initialize_tracing(
         server_options.otlp_endpoint.as_deref(),
-        "graphql-engine",
+        "ddn-engine",
         Some(VERSION),
         tracing_util::PropagateBaggage::Disable,
         export_traces_stdout,
