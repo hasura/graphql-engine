@@ -1,12 +1,29 @@
-use crate::State;
 use execute::plan::field::Field;
 use indexmap::IndexMap;
-use metadata_resolve::{ModelWithPermissions, Qualified, TypeMapping};
+use metadata_resolve::{Metadata, ModelWithPermissions, Qualified, TypeMapping};
 use open_dds::query::{
     ModelSelection, ObjectFieldSelection, ObjectFieldTarget, ObjectSubSelection, Query,
+    QueryRequest,
 };
 use open_dds::types::CustomTypeName;
 use std::collections::BTreeMap;
+
+// this is the thing we do
+pub fn plan_query_request<'req, 'metadata>(
+    query_request: &'req QueryRequest,
+    metadata: &'metadata Metadata,
+) -> Result<(execute::UnresolvedQueryExecutionPlan<'req>, QueryContext), PlanError>
+where
+    'metadata: 'req,
+{
+    let QueryRequest::V1(query_request_v1) = query_request;
+
+    // to limit scope, let's assume there's one item and explode otherwise
+    let (_alias, query) = query_request_v1.queries.first().unwrap();
+
+    // return plan for a single query (again, wrong, but let's unblock ourselves for now)
+    query_to_plan(query, metadata)
+}
 
 #[derive(Debug, derive_more::Display)]
 pub enum PlanError {
@@ -18,15 +35,15 @@ pub struct QueryContext {
     pub type_name: Qualified<CustomTypeName>,
 }
 
-pub fn query_to_plan<'req, 'state>(
+fn query_to_plan<'req, 'metadata>(
     query: &'req Query,
-    state: &'state State,
+    metadata: &'metadata Metadata,
 ) -> Result<(execute::UnresolvedQueryExecutionPlan<'req>, QueryContext), PlanError>
 where
-    'state: 'req,
+    'metadata: 'req,
 {
     match query {
-        open_dds::query::Query::Model(model_query) => model_query_to_plan(model_query, state),
+        open_dds::query::Query::Model(model_query) => model_query_to_plan(model_query, metadata),
         _ => Err(PlanError::InternalError(
             "Model requests supported only".to_string(),
         )),
@@ -42,11 +59,11 @@ fn get_limit(model_selection: &ModelSelection) -> Result<Option<u32>, PlanError>
         .map_err(|e| PlanError::InternalError(e.to_string()))
 }
 
-fn get_fields<'state>(
+fn get_fields<'metadata>(
     model_selection: &ModelSelection,
-    type_mappings: &'state TypeMapping,
+    type_mappings: &'metadata TypeMapping,
 ) -> Result<
-    Option<IndexMap<graphql_ir::NdcFieldAlias, Field<graphql_ir::Expression<'state>>>>,
+    Option<IndexMap<graphql_ir::NdcFieldAlias, Field<graphql_ir::Expression<'metadata>>>>,
     PlanError,
 > {
     let mut fields = IndexMap::new();
@@ -103,19 +120,19 @@ fn get_fields<'state>(
     Ok(Some(fields))
 }
 
-pub fn model_query_to_plan<'req, 'state>(
+pub fn model_query_to_plan<'req, 'metadata>(
     model_selection: &'req ModelSelection,
-    state: &'state State,
+    metadata: &'metadata Metadata,
 ) -> Result<(execute::UnresolvedQueryExecutionPlan<'req>, QueryContext), PlanError>
 where
-    'state: 'req,
+    'metadata: 'req,
 {
     let qualified_model_name = Qualified::new(
         model_selection.target.subgraph.clone(),
         model_selection.target.model_name.clone(),
     );
 
-    let model = state
+    let model = metadata
         .models
         .get(&qualified_model_name)
         .ok_or_else(|| PlanError::InternalError("Could not find model".to_string()))?;
@@ -127,7 +144,7 @@ where
         .as_ref()
         .ok_or_else(|| PlanError::InternalError("Model source not found".to_string()))?;
 
-    let object_type = state
+    let object_type = metadata
         .object_types
         .get(&model.model.data_type)
         .ok_or_else(|| PlanError::InternalError("Underlying object type not found".to_string()))?;

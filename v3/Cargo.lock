@@ -1796,6 +1796,7 @@ dependencies = [
  "mimalloc",
  "nonempty",
  "open-dds",
+ "plan",
  "pre-execution-plugin",
  "pretty_assertions",
  "reqwest",
@@ -2752,6 +2753,7 @@ dependencies = [
  "metadata-resolve",
  "ndc-models 0.2.0",
  "open-dds",
+ "plan",
  "reqwest",
  "serde_json",
  "tokio",
@@ -3774,6 +3776,18 @@ name = "pkg-config"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
+
+[[package]]
+name = "plan"
+version = "3.0.0"
+dependencies = [
+ "derive_more",
+ "execute",
+ "graphql-ir",
+ "indexmap 2.5.0",
+ "metadata-resolve",
+ "open-dds",
+]
 
 [[package]]
 name = "plotters"

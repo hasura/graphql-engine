@@ -54,6 +54,7 @@ async fn handle_request(
                     Box::pin(jsonapi::handler_internal(
                         &state.http_context,
                         &state.jsonapi_state,
+                        &state.resolved_metadata,
                         method,
                         uri,
                         jsonapi_library::query::Query::from_params(&raw_query.unwrap_or_default()),
@@ -79,7 +80,7 @@ async fn handle_request(
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": "Internal error"})),
             ),
-            jsonapi::RequestError::PlanError(jsonapi::PlanError::InternalError(msg)) => (
+            jsonapi::RequestError::PlanError(plan::PlanError::InternalError(msg)) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": msg })),
             ),

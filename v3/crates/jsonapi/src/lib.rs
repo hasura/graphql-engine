@@ -1,13 +1,10 @@
 mod process_response;
-mod to_plan;
 use axum::{
     http::{Method, Request, Uri},
     middleware::Next,
 };
 use indexmap::IndexMap;
-use metadata_resolve::{
-    ModelExpressionType, ModelWithPermissions, ObjectTypeWithRelationships, Qualified,
-};
+use metadata_resolve::{Metadata, ModelExpressionType, ModelWithPermissions, Qualified};
 use open_dds::{
     identifier,
     identifier::{Identifier, SubgraphName},
@@ -15,15 +12,11 @@ use open_dds::{
     types::CustomTypeName,
 };
 use std::collections::{BTreeMap, HashMap};
-use to_plan::query_to_plan;
-pub use to_plan::PlanError;
 use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError, TraceableHttpResponse};
 
 #[derive(Debug)]
 pub struct State {
     pub routes: HashMap<String, ModelWithPermissions>,
-    pub models: IndexMap<Qualified<ModelName>, ModelWithPermissions>,
-    pub object_types: BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
 }
 
 impl State {
@@ -39,11 +32,7 @@ impl State {
                 )
             })
             .collect::<HashMap<_, _>>();
-        Self {
-            routes,
-            models: metadata.models.clone(),
-            object_types: metadata.object_types.clone(),
-        }
+        Self { routes }
     }
 }
 
@@ -52,7 +41,7 @@ pub enum RequestError {
     NotFound,
     BadRequest(String),
     InternalError(InternalError),
-    PlanError(to_plan::PlanError),
+    PlanError(plan::PlanError),
     ExecuteError(execute::FieldError),
 }
 
@@ -62,9 +51,10 @@ pub enum InternalError {
 }
 
 #[allow(clippy::unused_async)]
-pub async fn handler_internal(
+pub async fn handler_internal<'metadata>(
     http_context: &execute::HttpContext,
     state: &State,
+    metadata: &'metadata Metadata,
     http_method: Method,
     uri: Uri,
     query_string: jsonapi_library::query::Query,
@@ -76,7 +66,7 @@ pub async fn handler_internal(
             // create the query IR
             let query_ir = create_query_ir(model, &http_method, &uri, &query_string)?;
             // execute the query with the query-engine
-            let result = query_engine_execute(http_context, &query_ir, state).await?;
+            let result = query_engine_execute(http_context, &query_ir, metadata).await?;
             // process result to JSON:API compliant response
             Ok(process_response::process_result(result))
         }
@@ -103,26 +93,19 @@ impl TraceableError for RequestError {
 async fn query_engine_execute(
     http_context: &execute::HttpContext,
     query_ir: &open_dds::query::QueryRequest,
-    metadata: &State,
+    metadata: &Metadata,
 ) -> Result<QueryResult, RequestError> {
-    match query_ir {
-        open_dds::query::QueryRequest::V1(open_dds::query::QueryRequestV1 { queries }) => {
-            if let Some((_alias, query)) = queries.iter().next() {
-                let (query_execution_plan, query_context) =
-                    query_to_plan(query, metadata).map_err(RequestError::PlanError)?;
+    let (query_execution_plan, query_context) =
+        plan::plan_query_request(query_ir, metadata).map_err(RequestError::PlanError)?;
 
-                let rowsets = resolve_ndc_query_execution(http_context, query_execution_plan)
-                    .await
-                    .map_err(RequestError::ExecuteError)?;
+    let rowsets = resolve_ndc_query_execution(http_context, query_execution_plan)
+        .await
+        .map_err(RequestError::ExecuteError)?;
 
-                return Ok(QueryResult {
-                    rowsets,
-                    type_name: query_context.type_name,
-                });
-            }
-        }
-    }
-    Err(RequestError::InternalError(InternalError::EmptyQuerySet))
+    Ok(QueryResult {
+        rowsets,
+        type_name: query_context.type_name,
+    })
 }
 
 // run ndc query, do any joins, and process result
@@ -188,7 +171,7 @@ fn create_query_ir(
     }?;
 
     // pagination
-    // spec: <https://jsonapi.org/format/#fetching-pagination>
+    // spec: <https://jsonapi.org/format/#fetching-pagMetadata>
     // FIXME: unwrap
     let limit = query_string
         .page

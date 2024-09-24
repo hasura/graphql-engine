@@ -67,6 +67,7 @@ fn test_get_requests() {
             let result = jsonapi::handler_internal(
                 &http_context,
                 &jsonapi_state,
+                &resolved_metadata,
                 axum::http::method::Method::GET,
                 axum::http::uri::Uri::from_str(&path).unwrap(),
                 jsonapi_query,

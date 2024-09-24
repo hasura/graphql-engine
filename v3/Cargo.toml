@@ -18,6 +18,7 @@ members = [
   "crates/metadata-resolve",
   "crates/metadata-schema-generator",
   "crates/open-dds",
+  "crates/plan",
   "crates/plugins/*",
   "crates/query-usage-analytics",
   "crates/sql",
