@@ -19,6 +19,7 @@ pub mod plugins;
 pub mod query;
 pub mod relationships;
 pub mod session_variables;
+pub mod spanned;
 pub mod test_utils;
 pub mod traits;
 pub mod types;

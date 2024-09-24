@@ -407,7 +407,7 @@ fn make_order_by_expression(
 ) -> Result<Qualified<OrderByExpressionIdentifier>, ModelsError> {
     let identifier = Qualified::new(
         subgraph.clone(),
-        OrderByExpressionIdentifier::FromModel(model_v1.name.clone()),
+        OrderByExpressionIdentifier::FromModel(model_v1.name.value.clone()),
     );
     let ordered_type = Qualified::new(subgraph.clone(), model_v1.object_type.clone());
     let open_dds_orderable_fields = model_v1

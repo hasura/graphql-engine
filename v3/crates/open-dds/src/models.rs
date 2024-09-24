@@ -8,6 +8,7 @@ use crate::{
     data_connector::{CollectionName, DataConnectorName},
     identifier::Identifier,
     order_by_expression::OrderByExpressionName,
+    spanned::Spanned,
     str_newtype,
     traits::{OpenDd, OpenDdDeserializeError},
     types::{CustomTypeName, Deprecated, FieldName, GraphQlFieldName, GraphQlTypeName},
@@ -100,8 +101,8 @@ impl Model {
 
     pub fn name(&self) -> &ModelName {
         match self {
-            Model::V1(v1) => &v1.name,
-            Model::V2(v2) => &v2.name,
+            Model::V1(v1) => &v1.name.value,
+            Model::V2(v2) => &v2.name.value,
         }
     }
 
@@ -169,7 +170,7 @@ impl Model {
 /// A data model is a collection of objects of a particular type. Models can support one or more CRUD operations.
 pub struct ModelV1 {
     /// The name of the data model.
-    pub name: ModelName,
+    pub name: Spanned<ModelName>,
     /// The type of the objects of which this model is a collection.
     pub object_type: CustomTypeName,
     /// Whether this model should be used as the global ID source for all objects of its type.
@@ -201,7 +202,7 @@ pub struct ModelV1 {
 /// ModelV2 implements the changes described in rfcs/open-dd-expression-type-changes.md.
 pub struct ModelV2 {
     /// The name of the data model.
-    pub name: ModelName,
+    pub name: Spanned<ModelName>,
     /// The type of the objects of which this model is a collection.
     pub object_type: CustomTypeName,
     /// Whether this model should be used as the global ID source for all objects of its type.

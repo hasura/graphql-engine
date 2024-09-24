@@ -2657,12 +2657,11 @@
       ],
       "properties": {
         "name": {
+          "$id": "https://hasura.io/jsonschemas/metadata/ModelName",
+          "title": "ModelName",
           "description": "The name of the data model.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/ModelName"
-            }
-          ]
+          "type": "string",
+          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
         },
         "objectType": {
           "description": "The type of the objects of which this model is a collection.",
