@@ -64,12 +64,13 @@ build-data = { workspace = true } # To set short commit-sha at build time
 [dev-dependencies]
 criterion = { workspace = true, features = ["html_reports", "async_tokio"] }
 goldenfile = { workspace = true }
+insta = { workspace = true }
 pretty_assertions = { workspace = true }
 tokio-test = { workspace = true }
 
 [package.metadata.cargo-machete]
 ignored = [
-  "build-data",          # cargo-machete ignores build dependencies
+  "build_data", "build-data"          # cargo-machete ignores build dependencies
 ]
 
 [lints]

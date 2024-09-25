@@ -8,35 +8,55 @@ mod common;
 fn test_model_select_one_simple_select() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_one/simple_select";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+    )
 }
 
 #[test]
 fn test_model_select_one_with_type_permission() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_one/type_permission";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_one_simple_select_introspection() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_one/simple_select/introspection/introspection";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_one_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_one/simple_select/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_one_custom_scalar() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_one/custom_scalar";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Select Many Tests
@@ -44,14 +64,22 @@ fn test_model_select_one_custom_scalar() -> anyhow::Result<()> {
 fn test_model_select_many_simple_select() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/simple_select";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_many_simple_select_introspection() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/simple_select/introspection/introspection";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -59,7 +87,11 @@ fn test_model_select_many_simple_select_introspection_user_1() -> anyhow::Result
     let test_path_string =
         "execute/models/select_many/simple_select/introspection/introspection_user_1";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -71,6 +103,7 @@ fn test_model_select_many_simple_select_introspection_with_graphql_config() -> a
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -78,14 +111,22 @@ fn test_model_select_many_simple_select_introspection_with_graphql_config() -> a
 fn test_model_select_many_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/simple_select/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_many_empty_select() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/empty_select";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -103,6 +144,7 @@ fn test_model_select_many_field_arguments() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -121,6 +163,7 @@ fn test_model_select_many_multiple_field_arguments() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -129,7 +172,11 @@ fn test_model_select_many_multiple_field_arguments() -> anyhow::Result<()> {
 fn test_model_select_many_nested_select() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/nested_select";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Same test as above, but with no type mappings defined in the metadata.
@@ -139,7 +186,11 @@ fn test_model_select_many_nested_select() -> anyhow::Result<()> {
 fn test_model_select_many_nested_select_no_explicit_type_mapping() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/nested_select/no_explicit_type_mapping";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Same test as the nested selection
@@ -150,7 +201,11 @@ fn test_model_select_many_nested_select_with_relationship() -> anyhow::Result<()
         "execute/common_metadata/custom_connector_v02_schema.json",
         "execute/models/select_many/nested_select/metadata.json",
     ];
-    common::test_execution_expectation(test_path_string, &common_metadata_paths)
+    common::test_execution_expectation(
+        test_path_string,
+        &common_metadata_paths,
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // nested selection tests, using Postgres
@@ -158,7 +213,11 @@ fn test_model_select_many_nested_select_with_relationship() -> anyhow::Result<()
 fn test_model_select_many_nested_select_postgres() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/nested_select/postgres";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Order By Tests
@@ -166,28 +225,44 @@ fn test_model_select_many_nested_select_postgres() -> anyhow::Result<()> {
 fn test_model_select_many_order_by() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_many_order_by_with_model_v2() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/with_model_v2";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_many_order_by_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/nested";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_many_order_by_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -198,6 +273,7 @@ fn test_model_select_many_order_by_with_graphql_config() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -212,14 +288,22 @@ fn test_model_select_many_order_by_with_graphql_config() -> anyhow::Result<()> {
 fn test_model_select_many_order_by_multiple_columns() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/multiple_columns";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_many_order_by_multiple_columns_validation_check() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/order_by_validation_check";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Type Permissions
@@ -227,7 +311,11 @@ fn test_model_select_many_order_by_multiple_columns_validation_check() -> anyhow
 fn test_model_select_many_type_permission_order_by() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/type_permission/order_by";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Relationships in order_by expressions
@@ -246,6 +334,7 @@ fn test_model_select_many_order_by_object_relationship_simple() -> anyhow::Resul
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -261,6 +350,7 @@ fn test_model_select_many_order_by_object_relationship_nested() -> anyhow::Resul
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -268,7 +358,11 @@ fn test_model_select_many_order_by_object_relationship_nested() -> anyhow::Resul
 fn test_model_select_many_type_permission_where() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/type_permission/where";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Where Tests
@@ -276,7 +370,11 @@ fn test_model_select_many_type_permission_where() -> anyhow::Result<()> {
 fn test_model_select_many_where() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // the test here is that two Models can both use the same ObjectBooleanExpressionType without
@@ -285,14 +383,22 @@ fn test_model_select_many_where() -> anyhow::Result<()> {
 fn test_model_select_many_shared_boolean_expression() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/shared_boolean_expression";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_many_boolean_expression_type() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/boolean_expression_type";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -303,6 +409,7 @@ fn test_model_select_many_where_nested_select_object() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[shared_metadata, common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -314,6 +421,7 @@ fn test_model_select_many_where_nested_select_array() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[shared_metadata, common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -325,7 +433,11 @@ fn test_model_select_many_where_is_null_object_boolean_expression_type() -> anyh
     let test_path_string =
         "execute/models/select_many/where/is_null/object_boolean_expression_type";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // new boolean expressions
@@ -333,7 +445,11 @@ fn test_model_select_many_where_is_null_object_boolean_expression_type() -> anyh
 fn test_model_select_many_where_is_null_boolean_expression_type() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/is_null/boolean_expression_type";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // end of is_null tests
@@ -342,7 +458,11 @@ fn test_model_select_many_where_is_null_boolean_expression_type() -> anyhow::Res
 fn test_model_select_many_where_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -353,6 +473,7 @@ fn test_model_select_many_where_with_grapqhl_config() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -360,21 +481,33 @@ fn test_model_select_many_where_with_grapqhl_config() -> anyhow::Result<()> {
 fn test_model_select_many_where_multiple_fields() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/multiple_fields";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_many_select_with_args() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/select_with_args";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_model_select_many_select_with_args_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/select_with_args/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -385,6 +518,7 @@ fn test_model_select_many_select_with_args_with_graphql_config() -> anyhow::Resu
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -392,7 +526,11 @@ fn test_model_select_many_select_with_args_with_graphql_config() -> anyhow::Resu
 fn test_model_select_many_where_ndc_operators() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/ndc_operators";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Relationships in boolean expressions
@@ -414,6 +552,7 @@ fn test_model_select_many_where_object_boolean_array_relationship_simple() -> an
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -429,6 +568,7 @@ fn test_model_select_many_where_object_boolean_array_relationship_nested() -> an
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -445,6 +585,7 @@ fn test_model_select_many_where_object_boolean_object_relationship_simple() -> a
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -460,6 +601,7 @@ fn test_model_select_many_where_object_boolean_object_relationship_nested() -> a
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -481,6 +623,7 @@ fn test_model_select_many_where_array_relationship_simple() -> anyhow::Result<()
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -497,6 +640,7 @@ fn test_model_select_many_where_array_relationship_nested() -> anyhow::Result<()
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -514,6 +658,7 @@ fn test_model_select_many_where_object_relationship_simple() -> anyhow::Result<(
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -530,6 +675,7 @@ fn test_model_select_many_where_object_relationship_nested() -> anyhow::Result<(
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -550,6 +696,7 @@ fn test_model_select_many_where_remote_array_relationship_simple() -> anyhow::Re
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -565,6 +712,7 @@ fn test_model_select_many_where_remote_array_relationship_nested() -> anyhow::Re
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -582,6 +730,7 @@ fn test_model_select_many_where_remote_object_relationship_simple() -> anyhow::R
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -597,6 +746,7 @@ fn test_model_select_many_where_remote_object_relationship_nested() -> anyhow::R
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -605,7 +755,11 @@ fn test_model_select_many_where_remote_object_relationship_simple_across_subgrap
 ) -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/remote_relationships/boolean_expression_type/object/simple_across_subgraphs";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Relationships in boolean expressions without 'relation_comparisons' capability
@@ -624,6 +778,7 @@ fn test_model_select_many_where_no_capability_array_relationship_simple() -> any
             common_metadata_path_string,
             test_common_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -639,6 +794,7 @@ fn test_model_select_many_where_no_capability_array_relationship_nested() -> any
             common_metadata_path_string,
             test_common_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -656,6 +812,7 @@ fn test_model_select_many_where_no_capability_object_relationship_simple() -> an
             common_metadata_path_string,
             test_common_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -671,6 +828,7 @@ fn test_model_select_many_where_no_capability_object_relationship_nested() -> an
             common_metadata_path_string,
             test_common_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -678,7 +836,11 @@ fn test_model_select_many_where_no_capability_object_relationship_nested() -> an
 fn test_model_select_many_object_type_input_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/object_type_input_arguments";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_v02_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Limit Tests
@@ -692,6 +854,7 @@ fn test_model_select_many_limit() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -701,7 +864,11 @@ fn test_model_select_many_predicate_is_null() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/predicate/is_null";
     let ndc_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
 
-    common::test_execution_expectation(test_path_string, &[ndc_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[ndc_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // ---------- Offset Tests
@@ -715,6 +882,7 @@ fn test_model_select_many_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -729,6 +897,7 @@ fn test_model_select_many_limit_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -743,6 +912,7 @@ fn test_model_select_many_negative_limit_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -750,7 +920,11 @@ fn test_model_select_many_negative_limit_offset() -> anyhow::Result<()> {
 fn test_relay() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -758,7 +932,11 @@ fn test_relay() -> anyhow::Result<()> {
 fn test_relay_id_in_select() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_id_in_select";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -767,7 +945,11 @@ fn test_relay_id_in_select() -> anyhow::Result<()> {
 fn test_relay_global_id_permission() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_global_id_permission";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -781,6 +963,7 @@ fn test_relay_node_field() -> anyhow::Result<()> {
             common_metadata_path_string,
             common_articles_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -788,14 +971,22 @@ fn test_relay_node_field() -> anyhow::Result<()> {
 fn test_relay_node_type_permissions() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_node_type_permissions";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_relay_node_field_permission() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_node_field_permissions";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -804,7 +995,11 @@ fn test_relay_node_field_permission() -> anyhow::Result<()> {
 fn test_relay_node_interface_permissions() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_node_interface_permission";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -814,7 +1009,11 @@ fn test_relay_node_model_select_permissions_with_role_without_model_select_permi
     let test_path_string =
         "execute/relay/relay_node_model_select_permissions/no_select_permission_exists_for_role";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
@@ -823,14 +1022,22 @@ fn test_relay_node_model_select_permissions() -> anyhow::Result<()> {
     let test_path_string =
         "execute/relay/relay_node_model_select_permissions/successful_model_select_permissions";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 #[test]
 fn test_typename() -> anyhow::Result<()> {
     let test_path_string = "execute/typename";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
 }
 
 // Command Functions
@@ -846,6 +1053,7 @@ fn test_command_functions() -> anyhow::Result<()> {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -860,6 +1068,7 @@ fn test_command_object_type_input_arguments() -> anyhow::Result<()> {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -874,6 +1083,7 @@ fn test_command_custom_scalar_inputs() -> anyhow::Result<()> {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -893,6 +1103,7 @@ fn test_command_functions_scalar_output_type() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -912,6 +1123,7 @@ fn test_command_functions_object_output_type_command_permissions() -> anyhow::Re
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -932,6 +1144,7 @@ fn test_command_functions_object_output_type_output_permissions() -> anyhow::Res
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -951,6 +1164,7 @@ fn test_command_functions_scalar_array_output_type() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -971,6 +1185,7 @@ fn test_command_functions_object_array_output_type_command_permissions() -> anyh
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -992,6 +1207,7 @@ fn test_command_functions_object_array_output_type_output_permissions() -> anyho
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1014,6 +1230,7 @@ fn test_command_functions_multiple_arguments() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1036,6 +1253,7 @@ fn test_command_procedures_scalar_output_type_command_permissions() -> anyhow::R
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1055,6 +1273,7 @@ fn test_command_procedures_object_output_type_command_permissions() -> anyhow::R
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1075,6 +1294,7 @@ fn test_command_procedures_object_output_type_output_permissions() -> anyhow::Re
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1095,6 +1315,7 @@ fn test_command_procedures_scalar_array_output_type() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1115,6 +1336,7 @@ fn test_command_procedures_object_array_output_type_command_permissions() -> any
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1136,6 +1358,7 @@ fn test_command_procedures_object_array_output_type_output_permissions() -> anyh
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1155,6 +1378,7 @@ fn test_command_procedures_input_object_type() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1177,6 +1401,7 @@ fn test_command_procedures_multiple_arguments() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1199,6 +1424,7 @@ fn test_command_argument_presets() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1224,6 +1450,8 @@ fn test_boolean_expression_command_argument_presets_object_boolean_expression_ty
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
+
     )
 }
 
@@ -1244,6 +1472,7 @@ fn test_boolean_expression_command_argument_presets_boolean_expression_type() ->
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1263,6 +1492,7 @@ fn test_boolean_expression_command_argument_from_user() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1283,6 +1513,7 @@ fn test_model_argument_presets_select_many() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1303,6 +1534,7 @@ fn test_model_argument_presets_select_one() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1322,6 +1554,7 @@ fn test_input_type_field_presets_on_command() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1341,6 +1574,7 @@ fn test_input_type_field_presets_on_model_arguments() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1358,6 +1592,7 @@ fn test_model_select_many_relationship_predicate_array_simple() -> anyhow::Resul
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1376,6 +1611,7 @@ fn test_model_select_many_relationship_predicate_array_nested() -> anyhow::Resul
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1394,6 +1630,7 @@ fn test_model_select_many_relationship_predicate_array_nested_multiple_fields() 
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1411,6 +1648,7 @@ fn test_model_select_many_relationship_predicate_object_simple() -> anyhow::Resu
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1428,6 +1666,7 @@ fn test_model_select_many_relationship_predicate_object_nested() -> anyhow::Resu
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1470,6 +1709,7 @@ fn test_model_select_many_relationship_predicate_on_two_fields() -> anyhow::Resu
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1496,6 +1736,7 @@ fn test_model_select_many_relationship_predicate_object_two_relationship_fields(
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1513,6 +1754,7 @@ fn test_model_select_many_remote_relationship_predicate_array_simple() -> anyhow
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1531,6 +1773,7 @@ fn test_model_select_many_remote_relationship_predicate_array_nested() -> anyhow
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1549,6 +1792,7 @@ fn test_model_select_many_remote_relationship_predicate_array_nested_multiple_fi
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1567,6 +1811,7 @@ fn test_model_select_many_remote_relationship_predicate_object_simple() -> anyho
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1585,6 +1830,7 @@ fn test_model_select_many_remote_relationship_predicate_object_nested() -> anyho
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1628,6 +1874,7 @@ fn test_model_select_many_remote_relationship_predicate_on_two_fields() -> anyho
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1654,6 +1901,7 @@ fn test_model_select_many_remote_relationship_predicate_object_two_relationship_
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1675,6 +1923,7 @@ fn test_graphql_descriptions() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1686,6 +1935,7 @@ fn test_apollo_federation_service_sdl() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, common_apollo_metadata],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1697,6 +1947,7 @@ fn test_apollo_federation_entities() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, common_apollo_metadata],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1710,6 +1961,7 @@ fn test_aggregates_root_field_simple_select() -> anyhow::Result<()> {
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1723,6 +1975,7 @@ fn test_aggregates_root_field_filtering() -> anyhow::Result<()> {
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1745,6 +1998,7 @@ fn test_aggregates_root_field_nested_object() -> anyhow::Result<()> {
                 vec!["execute/aggregates/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1758,6 +2012,7 @@ fn test_aggregates_relationship_field_simple_select() -> anyhow::Result<()> {
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1771,6 +2026,7 @@ fn test_aggregates_relationship_field_filtering() -> anyhow::Result<()> {
             "execute/aggregates/common_metadata/pg_types.json",
             "execute/aggregates/common_metadata/supergraph.json",
         ],
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1792,6 +2048,7 @@ fn test_command_mutation_forwarded_headers() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }
 
@@ -1811,5 +2068,6 @@ fn test_command_query_forwarded_headers() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
+        common::TestOpenDDPipeline::Skip,
     )
 }

@@ -26,6 +26,15 @@ extern crate json_value_merge;
 use json_value_merge::Merge;
 use serde_json::Value;
 
+// which OpenDD IR pipeline tests should we include for this test?
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy)]
+pub enum TestOpenDDPipeline {
+    Skip,
+    GenerateOpenDDQuery,
+    GenerateExecutionPlan,
+}
+
 pub struct GoldenTestContext {
     pub(crate) http_context: HttpContext,
     pub(crate) mint: Mint,
@@ -157,11 +166,13 @@ pub(crate) fn test_introspection_expectation(
 pub fn test_execution_expectation(
     test_path_string: &str,
     common_metadata_paths: &[&str],
+    opendd_tests: TestOpenDDPipeline,
 ) -> anyhow::Result<()> {
     test_execution_expectation_for_multiple_ndc_versions(
         test_path_string,
         common_metadata_paths,
         BTreeMap::new(),
+        opendd_tests,
     )
 }
 
@@ -170,6 +181,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
     test_path_string: &str,
     common_metadata_paths: &[&str],
     common_metadata_paths_per_ndc_version: BTreeMap<NdcVersion, Vec<&str>>,
+    opendd_tests: TestOpenDDPipeline,
 ) -> anyhow::Result<()> {
     tokio_test::block_on(async {
         let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
@@ -279,10 +291,20 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 None => {
                     let raw_request = RawRequest {
                         operation_name: None,
-                        query,
+                        query: query.clone(),
                         variables: None,
                     };
                     for session in &sessions {
+                        // attempt to create open ir for this request
+                        open_dd_pipeline_test(
+                            opendd_tests,
+                            &query,
+                            &schema,
+                            session,
+                            raw_request.clone(),
+                        );
+
+                        // do actual test
                         let (_, response) = execute_query(
                             execute::ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
@@ -315,6 +337,15 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             query: query.clone(),
                             variables: Some(variables),
                         };
+                        // attempt to create open ir for this request
+                        open_dd_pipeline_test(
+                            opendd_tests,
+                            &query,
+                            &schema,
+                            session,
+                            raw_request.clone(),
+                        );
+                        // do actual test
                         let (_, response) = execute_query(
                             execute::ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
@@ -373,6 +404,38 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
 
         Ok(())
     })
+}
+
+// generate open_dd_ir for each test and see what happens
+fn open_dd_pipeline_test(
+    opendd_tests: TestOpenDDPipeline,
+    query: &str,
+    schema: &Schema<GDS>,
+    session: &Session,
+    raw_request: lang_graphql::http::RawRequest,
+) {
+    match opendd_tests {
+        TestOpenDDPipeline::Skip => {}
+        TestOpenDDPipeline::GenerateOpenDDQuery => {
+            // parse the raw request into a GQL query
+            let query = graphql_frontend::parse_query(query).unwrap();
+
+            // normalize the parsed GQL query
+            if let Ok(normalized_request) =
+                graphql_frontend::normalize_request(schema, session, query, raw_request)
+            {
+                // we can only generate for queries that would have worked,
+                // `normalize_request` fails when we try and access a field we're not allowed to,
+                // for instance
+                let ir = graphql_frontend::to_opendd_ir(&normalized_request);
+
+                insta::assert_debug_snapshot!("opendd_ir", ir);
+            }
+        }
+        TestOpenDDPipeline::GenerateExecutionPlan => {
+            todo!("GenerateExecutionPlan not implemented yet")
+        }
+    }
 }
 
 fn read_json(path: &Path) -> anyhow::Result<Value> {
