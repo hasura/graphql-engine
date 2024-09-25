@@ -2290,7 +2290,8 @@
               "selectMany": {
                 "queryRootField": "ArticleMany",
                 "subscription": {
-                  "rootField": "ArticleMany"
+                  "rootField": "ArticleMany",
+                  "pollingIntervalMs": 3000
                 }
               },
               "orderByExpressionType": "Article_Order_By"

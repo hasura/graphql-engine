@@ -159,13 +159,15 @@ async fn execute_request_internal(
                     let selection_set = ndc_subscription.selection_set.clone();
                     let process_response_as = ndc_subscription.process_response_as;
                     let is_nullable = process_response_as.is_nullable();
+                    let polling_interval_duration =
+                        tokio::time::Duration::from_millis(ndc_subscription.polling_interval_ms);
 
                     // Initialize a response hash to track changes in the response.
                     let mut response_hash = ResponseHash::new();
 
-                    // Poll every 2 seconds to fetch updated data.
+                    // A loop to periodically wait for the polling interval, then fetch data from NDC.
                     loop {
-                        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                        tokio::time::sleep(polling_interval_duration).await;
                         match execute::fetch_from_data_connector(
                             http_context,
                             &query_request,
