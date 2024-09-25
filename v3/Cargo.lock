@@ -520,6 +520,7 @@ checksum = "3b829e4e32b91e643de6eafe82b1d90675f5874230191a4ffbc1b336dec4d6bf"
 dependencies = [
  "async-trait",
  "axum-core",
+ "base64 0.21.7",
  "bitflags 1.3.2",
  "bytes",
  "futures-util",
@@ -537,8 +538,10 @@ dependencies = [
  "serde_json",
  "serde_path_to_error",
  "serde_urlencoded",
+ "sha1",
  "sync_wrapper",
  "tokio",
+ "tokio-tungstenite",
  "tower",
  "tower-layer",
  "tower-service",
@@ -1271,6 +1274,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "data-encoding"
+version = "2.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
+
+[[package]]
 name = "datafusion"
 version = "41.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1784,6 +1793,7 @@ dependencies = [
  "goldenfile",
  "graphql-frontend",
  "graphql-schema",
+ "graphql-ws",
  "hasura-authn",
  "hasura-authn-core",
  "indexmap 2.5.0",
@@ -1891,7 +1901,6 @@ dependencies = [
  "tokio",
  "tracing-util",
  "transitive",
- "url",
 ]
 
 [[package]]
@@ -2223,6 +2232,29 @@ dependencies = [
  "serde_json",
  "strum_macros",
  "thiserror",
+]
+
+[[package]]
+name = "graphql-ws"
+version = "3.0.0"
+dependencies = [
+ "axum",
+ "blake2",
+ "execute",
+ "futures-util",
+ "graphql-frontend",
+ "graphql-schema",
+ "hasura-authn",
+ "hasura-authn-core",
+ "indexmap 2.5.0",
+ "lang-graphql",
+ "nonempty",
+ "serde",
+ "serde_json",
+ "smol_str",
+ "thiserror",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -2742,14 +2774,10 @@ dependencies = [
  "axum",
  "derive_more",
  "execute",
- "graphql-ir",
- "graphql-schema",
- "hasura-authn-core",
  "indexmap 2.5.0",
  "insta",
  "jsonapi 0.7.0",
  "jsonpath",
- "lang-graphql",
  "metadata-resolve",
  "ndc-models 0.2.0",
  "open-dds",
@@ -4444,6 +4472,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha1"
+version = "0.10.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "digest 0.10.7",
+]
+
+[[package]]
 name = "sha2"
 version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4970,6 +5009,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-tungstenite"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "212d5dcb2a1ce06d81107c3d0ffa3121fe974b73f068c8282cb1c32328113b6c"
+dependencies = [
+ "futures-util",
+ "log",
+ "tokio",
+ "tungstenite",
+]
+
+[[package]]
 name = "tokio-util"
 version = "0.7.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5161,6 +5212,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
+name = "tungstenite"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e3dac10fd62eaf6617d3a904ae222845979aec67c615d1c842b4002c7666fb9"
+dependencies = [
+ "byteorder",
+ "bytes",
+ "data-encoding",
+ "http",
+ "httparse",
+ "log",
+ "rand",
+ "sha1",
+ "thiserror",
+ "url",
+ "utf-8",
+]
+
+[[package]]
 name = "twox-hash"
 version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5275,6 +5345,12 @@ name = "urlencoding"
 version = "2.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
+
+[[package]]
+name = "utf-8"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
 
 [[package]]
 name = "utf8parse"

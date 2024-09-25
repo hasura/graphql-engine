@@ -7,7 +7,7 @@ pub struct HttpContext {
     pub ndc_response_size_limit: Option<usize>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, serde::Serialize, Debug)]
 pub struct ProjectId(pub String);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

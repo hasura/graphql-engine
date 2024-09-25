@@ -25,6 +25,7 @@ axum-ext = { path = "../utils/axum-ext" }
 execute = { path = "../execute" }
 graphql-frontend = { path = "../frontends/graphql" }
 graphql-schema = { path = "../graphql/schema" }
+graphql-ws = { path = "../graphql-ws" }
 hasura-authn = { path = "../auth/hasura-authn" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 jsonapi = { path = "../jsonapi" }
@@ -67,7 +68,7 @@ tokio-test = { workspace = true }
 
 [package.metadata.cargo-machete]
 ignored = [
-  "build_data",          # cargo-machete ignores build dependencies
+  "build-data",          # cargo-machete ignores build dependencies
 ]
 
 [lints]

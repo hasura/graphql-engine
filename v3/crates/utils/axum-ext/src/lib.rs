@@ -1,3 +1,4 @@
+use std::future::Future;
 // Connects a signal handler for the unix SIGTERM signal. (This is the standard signal that unix
 // systems send when pressing ctrl+c or running `kill`. It is distinct from the "force kill" signal
 // which is SIGKILL.) This function produces a future that resolves when a SIGTERM is received. We
@@ -38,4 +39,16 @@ pub async fn shutdown_signal() {
     tokio::select! {
         _ = sigint => (),
     }
+}
+
+pub async fn shutdown_signal_with_handler<F, Fut>(shutdown_handler: F)
+where
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = ()>,
+{
+    // Wait for a shutdown signal
+    shutdown_signal().await;
+
+    // Invoke the shutdown handler
+    shutdown_handler().await;
 }

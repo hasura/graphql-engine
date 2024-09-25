@@ -4276,7 +4276,10 @@
                 }
               ],
               "selectMany": {
-                "queryRootField": "Track"
+                "queryRootField": "Track",
+                "subscription": {
+                  "rootField": "Track"
+                }
               },
               "orderByExpressionType": "TrackOrderBy"
             },

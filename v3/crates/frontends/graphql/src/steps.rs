@@ -8,7 +8,7 @@ use lang_graphql::ast::common as ast;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
 /// Parses a raw GraphQL request into a GQL query AST
-pub(crate) fn parse_query(
+pub fn parse_query(
     query: &str,
 ) -> Result<
     gql::ast::executable::ExecutableDocument,
@@ -31,7 +31,7 @@ pub(crate) fn parse_query(
 }
 
 /// Normalize the parsed GQL query
-pub(crate) fn normalize_request<'s>(
+pub fn normalize_request<'s>(
     schema: &'s gql::schema::Schema<GDS>,
     session: &Session,
     query: gql::ast::executable::ExecutableDocument,
@@ -73,7 +73,7 @@ pub(crate) fn normalize_request<'s>(
 }
 
 /// Generate IR for the request
-pub(crate) fn build_ir<'n, 's>(
+pub fn build_ir<'n, 's>(
     schema: &'s gql::schema::Schema<GDS>,
     session: &Session,
     request_headers: &reqwest::header::HeaderMap,
@@ -90,7 +90,7 @@ pub(crate) fn build_ir<'n, 's>(
 }
 
 /// Build a plan to execute the request
-pub(crate) fn build_request_plan<'n, 's, 'ir>(
+pub fn build_request_plan<'n, 's, 'ir>(
     ir: &'ir graphql_ir::IR<'n, 's>,
 ) -> Result<execute::RequestPlan<'n, 's, 'ir>, execute::PlanError> {
     let tracer = tracing_util::global_tracer();

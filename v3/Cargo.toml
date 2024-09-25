@@ -13,6 +13,7 @@ members = [
   "crates/execute",
   "crates/frontends/*",
   "crates/graphql/*",
+  "crates/graphql-ws",
   "crates/jsonapi",
   "crates/lang-graphql",
   "crates/metadata-resolve",
@@ -74,6 +75,7 @@ async-trait = "0.1"
 axum = "0.6"
 base64 = "0.22"
 bincode = "1"
+blake2 = "0.10.6"
 bson = "2"
 build-data = "0.2"
 bytes = "1"
@@ -101,6 +103,7 @@ jsonapi_library = { package = "jsonapi", git = "https://github.com/hasura/jsonap
 jsonptr = "0.4"
 jsonwebkey = "0.3"
 jsonwebtoken = "8"
+lazy_static = "1.5.0"
 lexical-core = "0.8"
 mimalloc = "0.1"
 mockito = { version = "~1.4", default-features = false } # v1.5+ depends on http v1
@@ -143,3 +146,4 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 transitive = "0.5"
 url = "2"
+uuid = "1"

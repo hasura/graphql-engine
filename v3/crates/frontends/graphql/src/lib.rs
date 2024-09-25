@@ -5,6 +5,7 @@ mod types;
 
 pub use explain::execute_explain;
 pub use explain::types::{redact_ndc_explain, ExplainResponse};
+pub use steps::{build_ir, build_request_plan, normalize_request, parse_query};
 
 pub use query::{execute_query, execute_query_internal};
 pub use steps::generate_ir;

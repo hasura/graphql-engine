@@ -34,7 +34,6 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
 transitive = { workspace = true }
-url = { workspace = true }
 
 [dev-dependencies]
 mockito = { workspace = true }

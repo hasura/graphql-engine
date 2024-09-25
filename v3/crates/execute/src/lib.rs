@@ -18,6 +18,7 @@ pub use plan::{
     execute_mutation_plan, execute_query_plan, generate_request_plan, ExecuteQueryResult,
     RequestPlan,
 };
+pub use process_response::process_response;
 pub use query_usage::analyze_query_usage;
 pub use remote_joins::types::{JoinLocations, JoinNode, RemoteJoin, RemoteJoinType};
 pub use types::{ExposeInternalErrors, HttpContext, ProjectId};

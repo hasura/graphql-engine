@@ -120,6 +120,7 @@ pub struct EngineState {
     auth_config: AuthConfig,
     sql_context: Arc<sql::catalog::Catalog>,
     pre_parse_plugins: Vec<LifecyclePluginHookPreParse>,
+    graphql_websocket_server: graphql_ws::WebSocketServer,
 }
 
 #[tokio::main]
@@ -189,6 +190,17 @@ struct EngineRouter {
 
 impl EngineRouter {
     fn new(state: Arc<EngineState>) -> Self {
+        let graphql_ws_route = Router::new()
+            .route("/graphql", get(handle_websocket_request))
+            .layer(axum::middleware::from_fn(
+                graphql_request_tracing_middleware,
+            ))
+            // *PLEASE DO NOT ADD ANY MIDDLEWARE
+            // BEFORE THE `graphql_request_tracing_middleware`*
+            // Refer to it for more details.
+            .layer(TraceLayer::new_for_http())
+            .with_state(state.clone());
+
         let graphql_route = Router::new()
             .route("/graphql", post(handle_request))
             .layer(axum::middleware::from_fn_with_state(
@@ -236,6 +248,8 @@ impl EngineRouter {
             .route("/", get(graphiql))
             // The '/graphql' route
             .merge(graphql_route)
+            // The '/graphql' route for websocket
+            .merge(graphql_ws_route)
             // The '/v1/explain' route
             .merge(explain_route)
             // The '/health' route
@@ -383,7 +397,12 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     // run it with hyper on `addr`
     axum::Server::bind(&address)
         .serve(engine_router.into_make_service())
-        .with_graceful_shutdown(axum_ext::shutdown_signal())
+        .with_graceful_shutdown(axum_ext::shutdown_signal_with_handler(|| async {
+            state
+                .graphql_websocket_server
+                .shutdown("Shutting server down")
+                .await;
+        }))
         .await
         .unwrap();
 
@@ -733,6 +752,25 @@ fn build_state(
         auth_config,
         sql_context: sql_context.into(),
         pre_parse_plugins,
+        graphql_websocket_server: graphql_ws::WebSocketServer::new(),
     });
     Ok(state)
+}
+
+async fn handle_websocket_request(
+    headers: axum::http::header::HeaderMap,
+    State(engine_state): State<Arc<EngineState>>,
+    ws: axum::extract::ws::WebSocketUpgrade,
+) -> impl IntoResponse {
+    let context = graphql_ws::Context {
+        http_context: engine_state.http_context.clone(),
+        project_id: None, // project_id is not needed for OSS v3-engine.
+        expose_internal_errors: engine_state.expose_internal_errors,
+        schema: engine_state.graphql_state.clone(),
+        auth_config: engine_state.auth_config.clone(),
+    };
+
+    engine_state
+        .graphql_websocket_server
+        .handle_graphql_websocket(ws, &headers, context)
 }
