@@ -1670,6 +1670,22 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 ),
             }: ModelWithPermissions {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                0,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -2824,6 +2840,22 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                 ),
             }: ModelWithPermissions {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                1,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "default",

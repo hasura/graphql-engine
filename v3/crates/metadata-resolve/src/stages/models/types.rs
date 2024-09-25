@@ -50,6 +50,7 @@ pub struct ModelsOutput {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Model {
+    pub path: jsonpath::JSONPath,
     pub name: Qualified<ModelName>,
     pub data_type: Qualified<CustomTypeName>,
     pub type_fields: IndexMap<FieldName, object_types::FieldDefinition>,

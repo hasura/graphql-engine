@@ -37,6 +37,7 @@ pub fn resolve(
     let mut issues = vec![];
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: aggregate_expression,
     } in &metadata_accessor.aggregate_expressions

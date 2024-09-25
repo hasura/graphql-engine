@@ -28,6 +28,7 @@ pub enum ModelsError {
         "the source data connector {data_connector:} for model {model_name:} has not been defined"
     )]
     UnknownModelDataConnector {
+        path: jsonpath::JSONPath,
         model_name: Qualified<ModelName>,
         data_connector: Qualified<DataConnectorName>,
     },

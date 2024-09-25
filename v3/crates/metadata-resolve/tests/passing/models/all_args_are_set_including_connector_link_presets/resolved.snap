@@ -140,6 +140,22 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                 ),
             }: ModelWithPermissions {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                1,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "default",

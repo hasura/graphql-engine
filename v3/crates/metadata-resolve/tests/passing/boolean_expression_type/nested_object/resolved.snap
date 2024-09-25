@@ -800,6 +800,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 ),
             }: ModelWithPermissions {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Index(
+                                10,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "__unknown_namespace",

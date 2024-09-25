@@ -17,6 +17,7 @@ pub fn resolve<'s>(
     > = BTreeMap::new();
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: relationship,
     } in &metadata_accessor.relationships

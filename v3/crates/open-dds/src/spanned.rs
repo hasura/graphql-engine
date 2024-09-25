@@ -72,15 +72,8 @@ mod tests {
         for (subgraph_index, subgraph) in metadata_v2.subgraphs.iter().enumerate() {
             for (object_index, object) in subgraph.objects.iter().enumerate() {
                 if let open_dds::OpenDdSubgraphObject::Model(model) = object {
-                    let path = match model {
-                        open_dds::models::Model::V1(model) => model.name.path.to_string(),
-                        open_dds::models::Model::V2(model) => model.name.path.to_string(),
-                    };
-
-                    let expected = format!(
-                        "$.subgraphs[{subgraph_index}].objects[{object_index}].definition.name"
-                    );
-                    assert_eq!(path, expected);
+                    let expected = format!("$.subgraphs[{subgraph_index}].objects[{object_index}]");
+                    assert_eq!(model.path.to_string(), expected);
                 }
             }
         }

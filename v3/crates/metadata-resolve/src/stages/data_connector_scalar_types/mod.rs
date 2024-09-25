@@ -35,6 +35,7 @@ pub fn resolve<'a>(
     let mut data_connector_scalars = convert_data_connectors_contexts(data_connectors);
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: scalar_type_representation,
     } in &metadata_accessor.data_connector_scalar_representations

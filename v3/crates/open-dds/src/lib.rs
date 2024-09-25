@@ -1,5 +1,6 @@
 extern crate self as open_dds;
 
+use open_dds::spanned::Spanned;
 use schemars::{schema::Schema::Object as SchemaObjectVariant, JsonSchema};
 use serde::{Deserialize, Serialize};
 
@@ -108,7 +109,7 @@ pub enum OpenDdSubgraphObject {
     AggregateExpression(aggregates::AggregateExpression),
 
     // Models
-    Model(models::Model),
+    Model(Spanned<models::Model>),
 
     // Commands
     Command(commands::Command),

@@ -118,6 +118,22 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
                 ),
             }: ModelWithPermissions {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                1,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "default",

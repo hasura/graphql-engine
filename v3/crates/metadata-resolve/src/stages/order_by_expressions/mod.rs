@@ -39,6 +39,7 @@ pub fn resolve(
             .collect();
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: order_by_expression,
     } in &metadata_accessor.order_by_expressions

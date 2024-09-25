@@ -26,6 +26,7 @@ pub fn resolve(
     let mut issues = vec![];
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: scalar_type,
     } in &metadata_accessor.scalar_types

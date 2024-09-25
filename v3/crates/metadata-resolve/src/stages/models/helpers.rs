@@ -10,6 +10,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 
+use jsonpath::JSONPath as Path;
 use std::collections::BTreeMap;
 
 pub fn get_ndc_column_for_comparison<F: Fn() -> String>(
@@ -50,6 +51,7 @@ pub fn get_ndc_column_for_comparison<F: Fn() -> String>(
     let scalars = &data_connector_scalars
         .get(&model_source.data_connector.name)
         .ok_or(ModelsError::UnknownModelDataConnector {
+            path: Path::new(),
             model_name: model_name.clone(),
             data_connector: model_source.data_connector.name.clone(),
         })?;

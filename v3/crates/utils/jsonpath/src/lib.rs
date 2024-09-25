@@ -1,12 +1,14 @@
+use serde::{Deserialize, Serialize};
+
 /// Represents a single element in a JSON path.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum JSONPathElement {
     Key(String),
     Index(usize),
 }
 
 /// Represents a JSON path.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct JSONPath(pub Vec<JSONPathElement>);
 
 impl Default for JSONPath {

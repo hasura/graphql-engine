@@ -3,6 +3,7 @@ mod types;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use indexmap::IndexMap;
+use jsonpath::JSONPath as Path;
 
 use lang_graphql::ast::common::{self as ast};
 use open_dds::aggregates::AggregateExpressionName;
@@ -71,6 +72,7 @@ pub fn resolve(
         );
     }
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: relationship,
     } in &metadata_accessor.relationships
@@ -386,6 +388,7 @@ fn get_relationship_capabilities(
             .ok_or_else(|| match target_name {
                 RelationshipTargetName::Model(model_name) => {
                     Error::from(models::ModelsError::UnknownModelDataConnector {
+                        path: Path::new(),
                         model_name: model_name.clone(),
                         data_connector: data_connector.name.clone(),
                     })

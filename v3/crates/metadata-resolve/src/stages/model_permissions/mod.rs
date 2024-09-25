@@ -56,6 +56,7 @@ pub fn resolve(
     // hence Model permissions should be resolved after the relationships of a
     // model is resolved.
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: permissions,
     } in &metadata_accessor.model_permissions

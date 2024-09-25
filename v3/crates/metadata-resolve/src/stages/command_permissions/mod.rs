@@ -53,6 +53,7 @@ pub fn resolve(
             .collect();
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: command_permissions,
     } in &metadata_accessor.command_permissions

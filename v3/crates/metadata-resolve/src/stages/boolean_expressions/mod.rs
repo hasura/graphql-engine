@@ -37,6 +37,7 @@ pub fn resolve(
     // first we collect all the boolean_expression_types
     // so we have a full set to refer to when resolving them
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: boolean_expression_type,
     } in &metadata_accessor.boolean_expression_types

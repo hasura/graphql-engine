@@ -91,6 +91,7 @@ fn resolve_model_predicate_with_model(
 
     let data_connector_core_info = data_connectors.0.get(data_connector_name).ok_or_else(|| {
         models::ModelsError::UnknownModelDataConnector {
+            path: model.path.clone(),
             model_name: model.name.clone(),
             data_connector: data_connector_name.clone(),
         }

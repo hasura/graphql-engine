@@ -33,6 +33,7 @@ pub fn resolve(
 
     // resolve type permissions
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: output_type_permission,
     } in &metadata_accessor.type_permissions

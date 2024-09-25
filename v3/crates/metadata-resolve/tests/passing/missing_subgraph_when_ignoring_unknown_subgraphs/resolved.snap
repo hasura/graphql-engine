@@ -356,6 +356,22 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                 ),
             }: ModelWithPermissions {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                4,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "article_namespace",

@@ -35,6 +35,7 @@ pub fn resolve(
     let mut issues = vec![];
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: object_boolean_expression_type,
     } in &metadata_accessor.object_boolean_expression_types

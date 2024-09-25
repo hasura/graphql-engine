@@ -38,6 +38,7 @@ pub(crate) fn resolve(
     let mut apollo_federation_entity_enabled_types = BTreeMap::new();
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: object_type_definition,
     } in &metadata_accessor.object_types

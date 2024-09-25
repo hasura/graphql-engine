@@ -84,12 +84,14 @@ pub fn resolve(
             .collect();
 
     for open_dds::accessor::QualifiedObject {
+        path,
         subgraph,
         object: model,
     } in &metadata_accessor.models
     {
         let qualified_model_name = Qualified::new(subgraph.clone(), model.name().clone());
         let mut resolved_model = resolve_model(
+            path.clone(),
             subgraph,
             model,
             object_types,
@@ -172,6 +174,7 @@ pub fn resolve(
 }
 
 fn resolve_model(
+    path: jsonpath::JSONPath,
     subgraph: &SubgraphName,
     model: &open_dds::models::Model,
     object_types: &type_permissions::ObjectTypesWithPermissions,
@@ -379,6 +382,7 @@ fn resolve_model(
     }?;
 
     Ok(Model {
+        path,
         name: qualified_model_name,
         data_type: qualified_object_type_name,
         order_by_expression,
@@ -407,7 +411,7 @@ fn make_order_by_expression(
 ) -> Result<Qualified<OrderByExpressionIdentifier>, ModelsError> {
     let identifier = Qualified::new(
         subgraph.clone(),
-        OrderByExpressionIdentifier::FromModel(model_v1.name.value.clone()),
+        OrderByExpressionIdentifier::FromModel(model_v1.name.clone()),
     );
     let ordered_type = Qualified::new(subgraph.clone(), model_v1.object_type.clone());
     let open_dds_orderable_fields = model_v1

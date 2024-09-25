@@ -35,6 +35,7 @@ pub fn resolve(
     let mut commands: IndexMap<Qualified<CommandName>, Command> = IndexMap::new();
     let mut issues = vec![];
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: command,
     } in &metadata_accessor.commands
