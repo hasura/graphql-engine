@@ -8,16 +8,16 @@ use crate::{
     GDS,
 };
 use lang_graphql::schema as gql_schema;
+use metadata_resolve::Qualified;
 use open_dds::models::ModelName;
 use std::collections::{BTreeMap, HashMap};
-
-use metadata_resolve::Qualified;
 
 /// Creates the `args` input object within which the model
 /// arguments fields will live.
 pub fn get_model_arguments_input_field(
     builder: &mut gql_schema::Builder<GDS>,
     model: &metadata_resolve::ModelWithPermissions,
+    include_empty_default: bool,
 ) -> Result<gql_schema::InputField<GDS>, crate::Error> {
     model
         .graphql_api
@@ -34,6 +34,14 @@ pub fn get_model_arguments_input_field(
                 type_name: arguments_input_config.type_name.clone(),
             });
 
+            // if there are no possible arguments, provide a default of `{}`
+            // so that `args` can be omitted if the user chooses
+            let default_value = if include_empty_default {
+                Some(lang_graphql::ast::value::ConstValue::Object(vec![]))
+            } else {
+                None
+            };
+
             gql_schema::InputField {
                 name: arguments_input_config.field_name.clone(),
                 description: None,
@@ -43,7 +51,7 @@ pub fn get_model_arguments_input_field(
                 field_type: ast::TypeContainer::named_non_null(
                     arguments_input_config.type_name.clone(),
                 ),
-                default_value: None,
+                default_value,
                 deprecation_status: gql_schema::DeprecationStatus::NotDeprecated,
             }
         })
@@ -138,8 +146,26 @@ pub fn add_model_arguments_field(
     parent_field_name: &ast::Name,
     parent_type: &ast::TypeName,
 ) -> Result<(), crate::Error> {
+    // which arguments are actually available for the user to provide?
+    let user_arguments: Vec<_> = model
+        .model
+        .arguments
+        .keys()
+        .filter(|argument_name| {
+            for permission in model.select_permissions.values() {
+                // if there is a preset for this argument, it will not be included in the schema
+                if permission.argument_presets.contains_key(*argument_name) {
+                    return false;
+                }
+            }
+            true
+        })
+        .collect();
+
     if !model.model.arguments.is_empty() {
-        let model_arguments_input = get_model_arguments_input_field(builder, model)?;
+        let include_empty_default = user_arguments.is_empty();
+        let model_arguments_input =
+            get_model_arguments_input_field(builder, model, include_empty_default)?;
 
         let name = model_arguments_input.name.clone();
 

@@ -8,7 +8,34 @@
 
 ### Changed
 
-- OpenTelemetry service name set to `v3-engine` to avoid confusion with
+- Making `args` non-compulsory for models where all arguments have presets.
+
+Previously, if a model had arguments specified that were all provided by
+presets, then we would require them to pass an empty `args: {}` argument:
+
+```graphql
+query MyQuery
+  ActorsByMovieMany(args: {}) {
+    actor_id
+    movie_id
+    name
+  }
+}
+```
+
+This change loosens the restriction, so now the following query is valid too:
+
+```graphql
+query MyQuery
+  ActorsByMovieMany {
+    actor_id
+    movie_id
+    name
+  }
+}
+```
+
+- OpenTelemetry service name set to `ddn-engine` to avoid confusion with
   `graphql-engine`.
 
 ## [v2024.09.23]
