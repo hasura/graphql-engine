@@ -327,8 +327,8 @@ const Modal = props => {
               ) : null}
             </>
           ) : null}
-          <LabelValue label="Client name" value={role || 'N/A'} />
-          <LabelValue label="Role" value={client_name || 'N/A'} />
+          <LabelValue label="Client name" value={client_name || 'N/A'} />
+          <LabelValue label="Role" value={role || 'N/A'} />
           <LabelValue
             label="Request size"
             value={
