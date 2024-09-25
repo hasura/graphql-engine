@@ -65,7 +65,7 @@ impl Connections {
 /// Represents an internal WebSocket connection.
 /// Designed for efficient cloning, as all contained fields are inexpensive to clone.
 #[derive(Clone)]
-pub(crate) struct Connection {
+pub struct Connection {
     // Unique WebSocket connection ID
     pub(crate) id: WebSocketId,
     // Manages the WebSocket protocol state
@@ -93,7 +93,7 @@ pub struct ActiveConnection {
 impl Connection {
     /// Creates a new WebSocket connection with the given context and message sender channel.
     /// To actually create a WebSocket connection, use the `Connections::new_connection` method.
-    fn new(context: Context, channel: Sender<Message>) -> Self {
+    pub fn new(context: Context, channel: Sender<Message>) -> Self {
         Self {
             id: WebSocketId::new(), // Generate a new WebSocket connection ID
             protocol_init_state: Arc::new(RwLock::new(
@@ -122,6 +122,7 @@ impl Connection {
     }
 
     /// Stops the poller associated with the given operation ID, if it exists.
+    /// Exposed to outside of crate for test purposes
     pub(crate) async fn stop_poller(&self, key: &protocol::OperationId) {
         let mut map = self.pollers.write().await;
         if let Some(poller) = map.remove(key) {

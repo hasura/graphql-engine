@@ -74,7 +74,7 @@ fn start_poller(
 }
 
 /// Executes the GraphQL request, handling queries, mutations, and subscriptions.
-async fn execute_request(
+pub async fn execute_request(
     operation_id: OperationId,
     expose_internal_errors: ExposeInternalErrors,
     session: Session,
@@ -307,12 +307,13 @@ async fn send_single_result_operation(
     response: lang_graphql::http::Response,
     connection: &ws::Connection,
 ) {
-    if let Some(errors) = response.errors {
+    // If there is some data in the response, send the ok response and a complete message.
+    if response.data.is_some() {
+        send_graphql_ok(None, operation_id.clone(), response, connection).await;
+        send_complete(operation_id, connection).await;
+    } else if let Some(errors) = response.errors {
         // No need to send a complete message after sending errors.
         // Ref: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#complete
         send_graphql_errors(operation_id, errors, connection).await;
-    } else {
-        send_graphql_ok(None, operation_id.clone(), response, connection).await;
-        send_complete(operation_id, connection).await;
     }
 }

@@ -1796,6 +1796,7 @@ dependencies = [
  "graphql-ws",
  "hasura-authn",
  "hasura-authn-core",
+ "hasura-authn-noauth",
  "indexmap 2.5.0",
  "json_value_merge",
  "jsonapi 0.7.0",
