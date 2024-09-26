@@ -39,7 +39,7 @@ import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.Server.Logging (ModelInfo (..), ModelInfoLog (..))
-import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), liveQuerySubscriptionLabel, recordSubcriptionMetric)
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), liveQuerySubscriptionLabel, recordSubscriptionMetric)
 import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState (..))
 import Refined (unrefine)
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
@@ -121,7 +121,7 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
       (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query (over (each . _2) C._csVariables cohorts) resolvedConnectionTemplate
 
       let dbExecTimeMetric = submDBExecTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
-      recordSubcriptionMetric
+      recordSubscriptionMetric
         granularPrometheusMetricsState
         True
         operationNamesMap
@@ -215,7 +215,7 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
   when (modelInfoLogStatus' == ModelInfoLogOn) $ do
     for_ (modelInfoList) $ \(ModelInfoPart modelName modelType modelSourceName modelSourceType modelQueryType) -> do
       L.unLogger logger $ ModelInfoLog L.LevelInfo $ ModelInfo modelName (toTxt modelType) (toTxt <$> modelSourceName) (toTxt <$> modelSourceType) (toTxt modelQueryType) False
-  recordSubcriptionMetric
+  recordSubscriptionMetric
     granularPrometheusMetricsState
     True
     operationNamesMap
