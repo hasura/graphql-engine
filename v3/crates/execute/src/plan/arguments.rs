@@ -49,7 +49,7 @@ impl<'s> UnresolvedArgument<'s> {
 
     pub async fn resolve(
         self,
-        resolve_context: &ResolveFilterExpressionContext,
+        resolve_context: &ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedArgument, error::FieldError> {
         match self {
             Argument::Literal { value } => Ok(Argument::Literal { value }),
@@ -102,7 +102,7 @@ impl<'s> UnresolvedMutationArgument<'s> {
 
     pub async fn resolve(
         self,
-        resolve_context: &ResolveFilterExpressionContext,
+        resolve_context: &ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedMutationArgument, error::FieldError> {
         match self {
             MutationArgument::Literal { value } => Ok(MutationArgument::Literal { value }),
@@ -148,7 +148,7 @@ pub fn plan_mutation_arguments<'s>(
 }
 
 pub(crate) async fn resolve_arguments<'s>(
-    resolve_context: &ResolveFilterExpressionContext,
+    resolve_context: &ResolveFilterExpressionContext<'_>,
     arguments: BTreeMap<DataConnectorArgumentName, Argument<graphql_ir::Expression<'s>>>,
 ) -> Result<
     BTreeMap<DataConnectorArgumentName, Argument<filter::ResolvedFilterExpression>>,
@@ -165,7 +165,7 @@ pub(crate) async fn resolve_arguments<'s>(
 }
 
 pub(crate) async fn resolve_mutation_arguments<'s>(
-    resolve_context: &ResolveFilterExpressionContext,
+    resolve_context: &ResolveFilterExpressionContext<'_>,
     arguments: BTreeMap<DataConnectorArgumentName, MutationArgument<graphql_ir::Expression<'s>>>,
 ) -> Result<
     BTreeMap<DataConnectorArgumentName, MutationArgument<filter::ResolvedFilterExpression>>,

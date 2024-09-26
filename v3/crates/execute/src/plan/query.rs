@@ -36,7 +36,7 @@ pub struct QueryExecutionPlan<'s, TFilterExpression> {
 impl<'s> UnresolvedQueryExecutionPlan<'s> {
     pub async fn resolve(
         self,
-        resolve_context: &ResolveFilterExpressionContext,
+        resolve_context: &ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedQueryExecutionPlan<'s>, error::FieldError> {
         let QueryExecutionPlan {
             query_node,
@@ -82,7 +82,7 @@ impl<'s> UnresolvedQueryNode<'s> {
     #[async_recursion]
     pub async fn resolve(
         self,
-        resolve_context: &'s ResolveFilterExpressionContext,
+        resolve_context: &'s ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedQueryNode, error::FieldError>
     where
         's: 'async_recursion,

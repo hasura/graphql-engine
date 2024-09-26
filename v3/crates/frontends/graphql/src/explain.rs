@@ -152,7 +152,7 @@ pub(crate) async fn explain_query_plan(
     let mut parallel_root_steps = vec![];
     // Allow resolving in-engine relationship predicates
     let resolve_context =
-        ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context.clone());
+        ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
     // Here, we are assuming that all root fields are executed in parallel.
     for (alias, node) in query_plan {
         match node {
@@ -314,9 +314,8 @@ pub(crate) async fn explain_mutation_plan(
             )
             .await?;
 
-            let resolve_context = ResolveFilterExpressionContext::new_allow_in_engine_resolution(
-                http_context.clone(),
-            );
+            let resolve_context =
+                ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
             let resolved_execution_plan = ndc_mutation_execution
                 .execution_node
                 .resolve(&resolve_context)
@@ -361,7 +360,7 @@ pub(crate) async fn explain_mutation_plan(
 async fn get_execution_steps<'s>(
     expose_internal_errors: execute::ExposeInternalErrors,
     http_context: &HttpContext,
-    resolve_context: &ResolveFilterExpressionContext,
+    resolve_context: &ResolveFilterExpressionContext<'_>,
     alias: gql::ast::common::Alias,
     process_response_as: &ProcessResponseAs,
     join_locations: JoinLocations<'s>,

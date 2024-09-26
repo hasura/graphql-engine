@@ -938,7 +938,7 @@ pub async fn execute_ndc_query<'s, 'ir>(
     project_id: Option<&ProjectId>,
 ) -> Result<Vec<ndc_models::RowSet>, FieldError> {
     let resolve_context =
-        ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context.clone());
+        ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
     let resolved_execution_plan = query_execution_plan.resolve(&resolve_context).await?;
 
     let data_connector = resolved_execution_plan.data_connector;
@@ -999,7 +999,7 @@ async fn resolve_ndc_mutation_execution(
     } = ndc_mutation_execution;
 
     let resolve_context =
-        ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context.clone());
+        ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
     let resolved_execution_plan = execution_node.resolve(&resolve_context).await?;
 
     let mutation_request = ndc_request::make_ndc_mutation_request(resolved_execution_plan)?;

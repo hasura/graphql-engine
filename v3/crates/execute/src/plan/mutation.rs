@@ -32,7 +32,7 @@ pub struct MutationExecutionPlan<'s, TFilterExpression> {
 impl<'s> UnresolvedMutationExecutionPlan<'s> {
     pub async fn resolve(
         self,
-        resolve_context: &'s ResolveFilterExpressionContext,
+        resolve_context: &'s ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedMutationExecutionPlan<'s>, error::FieldError> {
         let MutationExecutionPlan {
             procedure_name,

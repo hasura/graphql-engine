@@ -149,7 +149,7 @@ pub(crate) async fn execute_join_locations(
 
         let execution_node = join_node.target_ndc_execution.clone();
         let resolve_context =
-            ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context.clone());
+            ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
         let resolved_execution_plan = execution_node.resolve(&resolve_context).await?;
         let ndc_query = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)?;
 

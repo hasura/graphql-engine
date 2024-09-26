@@ -284,19 +284,19 @@ impl ResolvedFilterExpression {
 }
 
 /// Context required to resolve the filter expressions
-pub enum ResolveFilterExpressionContext {
+pub enum ResolveFilterExpressionContext<'req> {
     /// Allow only expressions that can be pushed down to NDC.
     /// Reject relationships that require resolution in engine such as remote relationship comparison
     /// and local relationships without NDC 'relation_comparisoins' capability.
     OnlyNdcPushdown,
     /// Allow predicate resolution in engine for relationships.
     /// Requires the HTTP context to fetch the relationship data.
-    AllowInEngineResolution { http_context: HttpContext },
+    AllowInEngineResolution { http_context: &'req HttpContext },
 }
 
-impl ResolveFilterExpressionContext {
+impl<'req> ResolveFilterExpressionContext<'req> {
     /// Create a new context to allow predicate resolution in engine
-    pub fn new_allow_in_engine_resolution(http_context: HttpContext) -> Self {
+    pub fn new_allow_in_engine_resolution(http_context: &'req HttpContext) -> Self {
         ResolveFilterExpressionContext::AllowInEngineResolution { http_context }
     }
 

@@ -38,7 +38,7 @@ impl<'s> UnresolvedField<'s> {
     /// Resolve field plan into NDC field
     pub async fn resolve(
         self,
-        resolve_context: &'s ResolveFilterExpressionContext,
+        resolve_context: &'s ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedField, error::FieldError> {
         match self {
             Field::Column {
@@ -112,7 +112,7 @@ pub struct NestedObject<TFilterExpression> {
 impl<'s> UnresolvedNestedObject<'s> {
     pub async fn resolve(
         self,
-        resolve_context: &'s ResolveFilterExpressionContext,
+        resolve_context: &'s ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedNestedObject, error::FieldError> {
         let mut fields = IndexMap::new();
         for (name, field) in self.fields {
@@ -133,7 +133,7 @@ pub struct NestedArray<TFilterExpression> {
 impl<'s> UnresolvedNestedArray<'s> {
     pub async fn resolve(
         self,
-        resolve_context: &'s ResolveFilterExpressionContext,
+        resolve_context: &'s ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedNestedArray, error::FieldError> {
         let fields = self.fields.resolve(resolve_context).await?;
         Ok(NestedArray {

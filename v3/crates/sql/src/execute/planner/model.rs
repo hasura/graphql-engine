@@ -216,7 +216,7 @@ pub(crate) async fn model_target_to_ndc_query(
             // execution plan. We shouldn't be running this in the planning phase
             let resolve_context =
                 execute::plan::ResolveFilterExpressionContext::new_allow_in_engine_resolution(
-                    http_context.clone(),
+                    http_context,
                 );
             let filter = execute::plan::resolve_expression(filter_plan, &resolve_context)
                 .await

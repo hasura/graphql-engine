@@ -153,9 +153,7 @@ async fn explain_query_predicate<'s>(
 
             let resolved_query_node = remote_query_node
                 .resolve(
-                    &ResolveFilterExpressionContext::new_allow_in_engine_resolution(
-                        http_context.clone(),
-                    ),
+                    &ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context),
                 )
                 .await
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
