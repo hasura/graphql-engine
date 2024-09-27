@@ -7,9 +7,9 @@ use indexmap::IndexMap;
 use std::{collections::BTreeMap, sync::Arc};
 
 use execute::plan::ResolvedField;
-use graphql_ir::NdcFieldAlias;
 use hasura_authn_core::Session;
 use open_dds::query::{CommandSelection, ObjectSubSelection};
+use plan_types::NdcFieldAlias;
 
 mod function;
 mod procedure;

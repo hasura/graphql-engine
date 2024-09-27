@@ -12,10 +12,10 @@ execute = { path = "../execute" }
 graphql-ir = { path = "../graphql/ir" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
+plan-types = { path = "../plan-types" }
 
 derive_more = { workspace = true }
 indexmap = { workspace = true, features = ["serde"] }
-
 
 [lints]
 workspace = true

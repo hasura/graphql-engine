@@ -19,7 +19,6 @@ use std::sync::Arc;
 use super::arguments;
 use super::selection_set;
 use super::selection_set::FieldSelection;
-use super::selection_set::NdcFieldAlias;
 use super::selection_set::NestedSelection;
 use super::selection_set::ResultSelectionSet;
 use crate::error;
@@ -29,6 +28,7 @@ use graphql_schema::CommandSourceDetail;
 use graphql_schema::TypeKind;
 use graphql_schema::GDS;
 use metadata_resolve::{Qualified, QualifiedTypeReference};
+use plan_types::NdcFieldAlias;
 
 /// IR for the 'command' operations
 #[derive(Serialize, Debug)]

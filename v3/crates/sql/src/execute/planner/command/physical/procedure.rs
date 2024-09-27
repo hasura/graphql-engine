@@ -23,11 +23,12 @@ use execute::{
     },
     HttpContext,
 };
-use graphql_ir::{NdcFieldAlias, NdcRelationshipName};
+use graphql_ir::NdcRelationshipName;
 use open_dds::{
     commands::ProcedureName, data_connector::DataConnectorColumnName,
     types::DataConnectorArgumentName,
 };
+use plan_types::NdcFieldAlias;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 use crate::execute::planner::common::PhysicalPlanOptions;

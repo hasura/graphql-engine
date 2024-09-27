@@ -5,8 +5,8 @@ use execute::plan;
 use execute::plan::field::{UnresolvedField, UnresolvedNestedField};
 use execute::plan::{ResolveFilterExpressionContext, UnresolvedQueryNode};
 use execute::HttpContext;
-use graphql_ir::NdcFieldAlias;
 use indexmap::IndexMap;
+use plan_types::NdcFieldAlias;
 use std::collections::BTreeMap;
 
 #[async_recursion]

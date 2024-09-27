@@ -15,7 +15,7 @@ use serde::Serialize;
 
 use crate::error;
 
-use super::selection_set::NdcFieldAlias;
+use plan_types::NdcFieldAlias;
 
 /// IR that represents the selected fields of an output type.
 #[derive(Debug, Serialize, Default, PartialEq, Clone)]

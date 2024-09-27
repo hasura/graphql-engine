@@ -1,8 +1,9 @@
 use crate::error;
 use async_recursion::async_recursion;
-use graphql_ir::{NdcFieldAlias, NdcRelationshipName};
+use graphql_ir::NdcRelationshipName;
 use indexmap::IndexMap;
 use open_dds::{data_connector::DataConnectorColumnName, types::DataConnectorArgumentName};
+use plan_types::NdcFieldAlias;
 use std::collections::BTreeMap;
 
 use super::arguments;

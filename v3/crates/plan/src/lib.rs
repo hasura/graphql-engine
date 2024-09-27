@@ -6,6 +6,7 @@ use open_dds::query::{
     QueryRequest,
 };
 use open_dds::types::CustomTypeName;
+use plan_types::NdcFieldAlias;
 use std::collections::BTreeMap;
 
 // this is the thing we do
@@ -62,10 +63,7 @@ fn get_limit(model_selection: &ModelSelection) -> Result<Option<u32>, PlanError>
 fn get_fields<'metadata>(
     model_selection: &ModelSelection,
     type_mappings: &'metadata TypeMapping,
-) -> Result<
-    Option<IndexMap<graphql_ir::NdcFieldAlias, Field<graphql_ir::Expression<'metadata>>>>,
-    PlanError,
-> {
+) -> Result<Option<IndexMap<NdcFieldAlias, Field<graphql_ir::Expression<'metadata>>>>, PlanError> {
     let mut fields = IndexMap::new();
 
     for (alias, field) in &model_selection.selection {
@@ -91,7 +89,7 @@ fn get_fields<'metadata>(
                     field_name
                 };
 
-                let ndc_field_alias = graphql_ir::NdcFieldAlias::from(alias.as_str());
+                let ndc_field_alias = NdcFieldAlias::from(alias.as_str());
                 let data_connector_column_name = match type_mappings {
                     TypeMapping::Object { field_mappings, .. } => field_mappings
                         .get(open_dd_field_name)

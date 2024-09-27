@@ -10,13 +10,13 @@ use crate::remote_joins::types::{
     JoinLocations, JoinNode, LocationKind, RemoteJoinType, TargetField,
 };
 use crate::remote_joins::types::{Location, RemoteJoin};
-use graphql_ir::NdcFieldAlias;
 use graphql_ir::NdcRelationshipName;
 use graphql_ir::{FieldSelection, NestedSelection, ResultSelectionSet};
 use indexmap::IndexMap;
 use metadata_resolve::data_connectors::NdcVersion;
 use metadata_resolve::FieldMapping;
 use open_dds::data_connector::DataConnectorColumnName;
+use plan_types::NdcFieldAlias;
 use std::collections::{BTreeMap, HashMap};
 
 pub(crate) fn plan_nested_selection<'s>(

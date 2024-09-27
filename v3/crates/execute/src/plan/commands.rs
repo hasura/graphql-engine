@@ -13,10 +13,10 @@ use super::selection_set;
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use crate::remote_joins::types::JoinLocations;
 use graphql_ir::{
-    CommandInfo, FunctionBasedCommand, NdcFieldAlias, NdcRelationshipName, ProcedureBasedCommand,
-    VariableName,
+    CommandInfo, FunctionBasedCommand, NdcRelationshipName, ProcedureBasedCommand, VariableName,
 };
 use open_dds::commands::ProcedureName;
+use plan_types::NdcFieldAlias;
 
 pub(crate) fn plan_query_node<'s>(
     ir: &CommandInfo<'s>,

@@ -20,6 +20,7 @@ members = [
   "crates/metadata-schema-generator",
   "crates/open-dds",
   "crates/plan",
+  "crates/plan-types",
   "crates/plugins/*",
   "crates/query-usage-analytics",
   "crates/sql",

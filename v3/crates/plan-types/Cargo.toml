@@ -1,0 +1,16 @@
+[package]
+name = "plan-types"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+derive_more = { workspace = true }
+serde = { workspace = true }
+smol_str = { workspace = true }
+
+[lints]
+workspace = true

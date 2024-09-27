@@ -1885,6 +1885,7 @@ dependencies = [
  "ndc-models 0.2.0",
  "nonempty",
  "open-dds",
+ "plan-types",
  "pretty_assertions",
  "query-usage-analytics",
  "reqwest",
@@ -2167,6 +2168,7 @@ dependencies = [
  "ndc-models 0.2.0",
  "nonempty",
  "open-dds",
+ "plan-types",
  "reqwest",
  "serde",
  "serde_json",
@@ -2189,6 +2191,7 @@ dependencies = [
  "ndc-models 0.2.0",
  "nonempty",
  "open-dds",
+ "plan-types",
  "reqwest",
  "schemars",
  "serde",
@@ -3806,6 +3809,16 @@ dependencies = [
  "indexmap 2.5.0",
  "metadata-resolve",
  "open-dds",
+ "plan-types",
+]
+
+[[package]]
+name = "plan-types"
+version = "3.0.0"
+dependencies = [
+ "derive_more",
+ "serde",
+ "smol_str",
 ]
 
 [[package]]
@@ -4671,6 +4684,7 @@ dependencies = [
  "metadata-resolve",
  "ndc-models 0.2.0",
  "open-dds",
+ "plan-types",
  "reqwest",
  "serde",
  "serde_json",

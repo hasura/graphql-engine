@@ -46,8 +46,9 @@ use execute::{
     },
     HttpContext,
 };
-use graphql_ir::{AggregateFieldSelection, NdcFieldAlias, NdcRelationshipName, ResolvedOrderBy};
+use graphql_ir::{AggregateFieldSelection, NdcRelationshipName, ResolvedOrderBy};
 use open_dds::data_connector::CollectionName;
+use plan_types::NdcFieldAlias;
 
 use crate::catalog::model::filter;
 

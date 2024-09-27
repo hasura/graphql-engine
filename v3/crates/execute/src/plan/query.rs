@@ -1,11 +1,9 @@
 use crate::error;
-use graphql_ir::{
-    AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, VariableName,
-};
-
 use async_recursion::async_recursion;
+use graphql_ir::{AggregateSelectionSet, NdcRelationshipName, OrderByElement, VariableName};
 use indexmap::IndexMap;
 use open_dds::{data_connector::CollectionName, types::DataConnectorArgumentName};
+use plan_types::NdcFieldAlias;
 use std::collections::BTreeMap;
 
 use super::arguments;

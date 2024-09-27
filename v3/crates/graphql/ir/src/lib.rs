@@ -48,7 +48,7 @@ pub use root_field::{
     ApolloFederationRootFields, MutationRootField, QueryRootField, SubscriptionRootField,
 };
 pub use selection_set::{
-    generate_selection_set_ir, FieldSelection, NdcFieldAlias, NdcRelationshipName, NestedSelection,
+    generate_selection_set_ir, FieldSelection, NdcRelationshipName, NestedSelection,
     ResultSelectionSet,
 };
 pub use subscription_root::generate_ir as generate_subscription_ir;
