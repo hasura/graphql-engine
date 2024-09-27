@@ -1,3 +1,5 @@
+use lang_graphql::ast::common as ast;
+use std::collections::BTreeSet;
 use std::sync::Arc;
 
 mod command;
@@ -25,6 +27,7 @@ pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &type_permissions::ObjectTypesWithPermissions,
+    graphql_types: &mut BTreeSet<ast::TypeName>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -44,6 +47,7 @@ pub fn resolve(
             command,
             subgraph,
             object_types,
+            graphql_types,
             scalar_types,
             object_boolean_expression_types,
             boolean_expression_types,

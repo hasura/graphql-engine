@@ -1,10 +1,11 @@
 use crate::helpers::argument::get_argument_kind;
-use crate::helpers::types::{get_type_representation, mk_name};
+use crate::helpers::types::{get_type_representation, mk_name, store_new_graphql_type};
 use crate::stages::{
     boolean_expressions, object_boolean_expressions, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 use indexmap::IndexMap;
+use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
 
 use super::types::{Command, CommandGraphQlApi};
@@ -13,12 +14,13 @@ use open_dds::commands::CommandV1;
 use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 
 use super::error::CommandsError;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub fn resolve_command(
     command: &CommandV1,
     subgraph: &SubgraphName,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    graphql_types: &mut BTreeSet<ast::TypeName>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -75,14 +77,17 @@ pub fn resolve_command(
     }
 
     let graphql_api = match &command.graphql {
-        None => Ok(None),
-        Some(graphql_definition) => mk_name(graphql_definition.root_field_name.as_ref()).map(|f| {
-            Some(CommandGraphQlApi {
+        Some(graphql_definition) => {
+            let root_field_name = mk_name(graphql_definition.root_field_name.as_ref())?;
+            store_new_graphql_type(graphql_types, Some(&ast::TypeName(root_field_name.clone())))?;
+
+            Ok(Some(CommandGraphQlApi {
                 root_field_kind: graphql_definition.root_field_kind.clone(),
-                root_field_name: f,
+                root_field_name,
                 deprecated: graphql_definition.deprecated.clone(),
-            })
-        }),
+            }))
+        }
+        None => Ok::<Option<CommandGraphQlApi>, CommandsError>(None),
     }?;
 
     Ok(Command {

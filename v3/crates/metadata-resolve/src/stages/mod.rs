@@ -164,7 +164,7 @@ pub fn resolve(
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
         order_by_expressions,
-        graphql_types,
+        mut graphql_types,
         issues,
     } = models::resolve(
         &metadata_accessor,
@@ -187,6 +187,7 @@ pub fn resolve(
         &metadata_accessor,
         &data_connectors,
         &object_types_with_permissions,
+        &mut graphql_types,
         &scalar_types,
         &object_boolean_expression_types,
         &boolean_expression_types,

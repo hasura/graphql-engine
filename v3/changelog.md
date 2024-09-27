@@ -38,6 +38,10 @@ query MyQuery
 - OpenTelemetry service name set to `ddn-engine` to avoid confusion with
   `graphql-engine`.
 
+- Builds can no longer contain two commands with the same root field name.
+  Previously, one of the two commands would be chosen arbitrarily as the exposed
+  root field. Now, this raises a build-time error.
+
 ## [v2024.09.23]
 
 ### Fixed
