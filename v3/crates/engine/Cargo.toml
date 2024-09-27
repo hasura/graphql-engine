@@ -57,9 +57,8 @@ tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-threa
 tower = { workspace = true }
 tower-http = { workspace = true, features = ["trace", "cors", "fs"] }
 
-# Dependencies to build and run build.rs file
 [build-dependencies]
-build-data = { workspace = true } # To set short commit-sha at build time
+build-data = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true, features = ["html_reports", "async_tokio"] }
