@@ -11,7 +11,7 @@ use crate::websocket::types as ws;
 pub static GRAPHQL_WS_PROTOCOL: &str = "graphql-transport-ws";
 
 /// Timeout for the connection initialization process.
-pub static CONNECTION_INIT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+pub static CONNECTION_INIT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);
 
 /// Handles incoming client messages and dispatches them to appropriate handlers.
 pub async fn handle_client_message(connection: ws::Connection, message: ClientMessage) {
