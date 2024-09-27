@@ -9,6 +9,7 @@ use crate::types::subgraph::{ArgumentInfo, Qualified};
 use indexmap::IndexMap;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::CommandName;
+use std::sync::Arc;
 
 use open_dds::{models::ModelName, types::CustomTypeName};
 
@@ -75,7 +76,7 @@ pub fn resolve(
 // expressions used
 pub fn validate_arguments_with_source(
     arguments: &IndexMap<ArgumentName, ArgumentInfo>,
-    data_connector_link: Option<&data_connectors::DataConnectorLink>,
+    data_connector_link: Option<&Arc<data_connectors::DataConnectorLink>>,
     source_type_mapping: Option<&BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>>,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,

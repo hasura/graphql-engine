@@ -40,7 +40,7 @@ pub struct CommandInfo<'s> {
     pub field_name: ast::Name,
 
     /// The data connector backing this model.
-    pub data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 
     /// Arguments for the NDC table
     pub arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
@@ -140,7 +140,7 @@ pub fn generate_command_info<'n, 's>(
     Ok(CommandInfo {
         command_name: Arc::new(command_name.clone()),
         field_name: field_call.name.clone(),
-        data_connector: &command_source.data_connector,
+        data_connector: command_source.data_connector.clone(),
         arguments: command_arguments,
         selection,
         type_container: field.type_container.clone(),

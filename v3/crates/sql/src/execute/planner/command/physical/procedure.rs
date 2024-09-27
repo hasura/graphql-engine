@@ -218,7 +218,7 @@ impl ExecutionPlan for NDCProcedurePushDown {
                 .collect(),
             procedure_fields: self.fields.clone(),
             collection_relationships: self.collection_relationships.clone(),
-            data_connector: &self.data_connector,
+            data_connector: self.data_connector.clone(),
         };
         let query_request = plan::ndc_request::make_ndc_mutation_request(execution_plan)
             .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;

@@ -164,7 +164,7 @@ async fn explain_query_predicate<'s>(
                 arguments: BTreeMap::new(),
                 collection_relationships: collection_relationships.clone(),
                 variables: None,
-                data_connector: &target_model_source.data_connector,
+                data_connector: target_model_source.data_connector.clone(),
             };
 
             let ndc_query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)

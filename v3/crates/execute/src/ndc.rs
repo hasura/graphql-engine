@@ -4,6 +4,7 @@ pub mod types;
 pub use types::*;
 
 use std::borrow::Cow;
+use std::sync::Arc;
 
 use axum::http::HeaderMap;
 
@@ -110,7 +111,7 @@ pub fn append_project_id_to_headers<'a>(
 pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     http_context: &HttpContext,
     query: &NdcMutationRequest,
-    data_connector: &metadata_resolve::DataConnectorLink,
+    data_connector: &Arc<metadata_resolve::DataConnectorLink>,
     execution_span_attribute: String,
     field_span_attribute: String,
     project_id: Option<&ProjectId>,

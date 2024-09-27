@@ -51,7 +51,7 @@ pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir
 /// Otherwise, we can just send them one-by-one (though still sequentially).
 pub struct MutationPlan<'n, 's> {
     pub nodes: IndexMap<
-        metadata_resolve::DataConnectorLink,
+        Arc<metadata_resolve::DataConnectorLink>,
         IndexMap<ast::Alias, NDCMutationExecution<'n, 's>>,
     >,
     pub type_names: IndexMap<ast::Alias, ast::TypeName>,
@@ -135,7 +135,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 pub struct NDCMutationExecution<'n, 's> {
     pub execution_node: mutation::UnresolvedMutationExecutionPlan<'s>,
     pub join_locations: JoinLocations<'s>,
-    pub data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs,
@@ -230,7 +230,7 @@ fn plan_mutation<'n, 's>(
     Ok(NDCMutationExecution {
         execution_node: ndc_ir,
         join_locations,
-        data_connector: ir.command_info.data_connector,
+        data_connector: ir.command_info.data_connector.clone(),
         selection_set,
         execution_span_attribute: "execute_command".into(),
         field_span_attribute: ir.command_info.field_name.to_string(),
@@ -860,7 +860,7 @@ fn resolve_schema_field<NSGet: NamespacedGetter<GDS>>(
 /// Contains required information to execute a NDC query for a subscription in a polling loop.
 pub struct NDCSubscriptionQuery<'s, 'ir> {
     pub query_request: ndc::NdcQueryRequest,
-    pub data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
     pub process_response_as: ProcessResponseAs,
     pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
     pub polling_interval_ms: u64,
@@ -882,7 +882,7 @@ pub async fn resolve_ndc_subscription_execution<'s, 'ir>(
     // Only allow local relationships and fields that can be pushed down to NDC.
     let resolve_context = ResolveFilterExpressionContext::new_only_allow_ndc_pushdown_expressions();
     let resolved_execution_plan = query_execution_plan.resolve(&resolve_context).await?;
-    let data_connector = resolved_execution_plan.data_connector;
+    let data_connector = resolved_execution_plan.data_connector.clone();
     let query_request = ndc_request::make_ndc_query_request(resolved_execution_plan)?;
     Ok(NDCSubscriptionQuery {
         query_request,
@@ -941,13 +941,13 @@ pub async fn execute_ndc_query<'s, 'ir>(
         ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
     let resolved_execution_plan = query_execution_plan.resolve(&resolve_context).await?;
 
-    let data_connector = resolved_execution_plan.data_connector;
+    let data_connector = resolved_execution_plan.data_connector.clone();
     let query_request = ndc_request::make_ndc_query_request(resolved_execution_plan)?;
 
     let response = ndc::execute_ndc_query(
         http_context,
         &query_request,
-        data_connector,
+        &data_connector,
         execution_span_attribute,
         field_span_attribute.to_owned(),
         project_id,
@@ -1007,7 +1007,7 @@ async fn resolve_ndc_mutation_execution(
     let response = ndc::execute_ndc_mutation(
         http_context,
         &mutation_request,
-        data_connector,
+        &data_connector,
         execution_span_attribute,
         field_span_attribute,
         project_id,

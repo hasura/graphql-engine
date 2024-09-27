@@ -57,7 +57,7 @@ pub(crate) fn plan_query_execution<'s>(
         arguments: arguments::plan_arguments(&ir.arguments, &mut collection_relationships)?,
         collection_relationships,
         variables: None,
-        data_connector: ir.data_connector,
+        data_connector: ir.data_connector.clone(),
     };
     Ok((execution_node, join_locations))
 }

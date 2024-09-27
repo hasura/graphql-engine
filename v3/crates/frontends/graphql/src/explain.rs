@@ -182,7 +182,7 @@ pub(crate) async fn explain_query_plan(
                     .await
                     .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
-                let data_connector = resolved_execution_plan.data_connector;
+                let data_connector = resolved_execution_plan.data_connector.clone();
                 let ndc_request =
                     plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
                         .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
@@ -195,7 +195,7 @@ pub(crate) async fn explain_query_plan(
                     &process_response_as,
                     execution_tree.remote_join_executions,
                     types::NDCRequest::Query(ndc_request),
-                    data_connector,
+                    &data_connector,
                 )
                 .await?;
                 parallel_root_steps.push(Box::new(types::Step::Sequence(prepend_vec_to_nonempty(
@@ -228,7 +228,7 @@ pub(crate) async fn explain_query_plan(
                         .await
                         .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
-                    let data_connector = resolved_execution_plan.data_connector;
+                    let data_connector = resolved_execution_plan.data_connector.clone();
                     let ndc_request =
                         plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
                             .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
@@ -241,7 +241,7 @@ pub(crate) async fn explain_query_plan(
                         &process_response_as,
                         execution_tree.remote_join_executions,
                         types::NDCRequest::Query(ndc_request),
-                        data_connector,
+                        &data_connector,
                     )
                     .await?;
                     parallel_steps.push(Box::new(types::Step::Sequence(prepend_vec_to_nonempty(
@@ -334,7 +334,7 @@ pub(crate) async fn explain_mutation_plan(
                 &ndc_mutation_execution.process_response_as,
                 ndc_mutation_execution.join_locations,
                 types::NDCRequest::Mutation(mutation_request),
-                ndc_mutation_execution.data_connector,
+                &ndc_mutation_execution.data_connector,
             )
             .await?;
             let field_steps = prepend_vec_to_nonempty(
@@ -439,7 +439,7 @@ async fn get_join_steps(
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             resolved_execution_plan.variables = Some(vec![]);
-            let target_data_connector = resolved_execution_plan.data_connector;
+            let target_data_connector = resolved_execution_plan.data_connector.clone();
             let query_request = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
@@ -449,7 +449,7 @@ async fn get_join_steps(
                 expose_internal_errors,
                 http_context,
                 &ndc_request,
-                target_data_connector,
+                &target_data_connector,
             )
             .await;
             sequence_steps.push(Box::new(types::Step::ForEach(

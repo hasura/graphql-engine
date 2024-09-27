@@ -163,7 +163,7 @@ pub(crate) async fn execute_join_locations(
                     Box::pin(execute_ndc_query(
                         http_context,
                         &ndc_query,
-                        join_node.target_data_connector,
+                        &join_node.target_data_connector,
                         execution_span_attribute,
                         remote_alias.clone(),
                         project_id,

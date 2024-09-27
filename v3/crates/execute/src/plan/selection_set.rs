@@ -183,7 +183,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                     model_selection::plan_query_execution(ir)?;
                 let rj_info = RemoteJoin {
                     target_ndc_execution: query_execution,
-                    target_data_connector: ir.data_connector,
+                    target_data_connector: ir.data_connector.clone(),
                     join_mapping,
                     process_response_as: ProcessResponseAs::Array { is_nullable: true },
                     remote_join_type: RemoteJoinType::ToModel,
@@ -221,7 +221,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                 let (ndc_ir, sub_join_locations) = commands::plan_query_execution(ir)?;
                 let rj_info = RemoteJoin {
                     target_ndc_execution: ndc_ir,
-                    target_data_connector: ir.command_info.data_connector,
+                    target_data_connector: ir.command_info.data_connector.clone(),
                     join_mapping,
                     process_response_as: ProcessResponseAs::CommandResponse {
                         command_name: ir.command_info.command_name.clone(),

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::types::{Model, ModelSource, ModelsIssue};
 use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::identifier::SubgraphName;
@@ -135,7 +137,8 @@ pub(crate) fn resolve_model_source(
         data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
             data_connector_context,
-        )?,
+        )
+        .map(Arc::new)?,
         collection: model_source.collection.clone(),
         collection_type: source_collection_type,
         type_mappings,

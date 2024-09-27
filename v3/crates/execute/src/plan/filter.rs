@@ -414,7 +414,7 @@ where
                                 arguments: BTreeMap::new(),
                                 collection_relationships,
                                 variables: None,
-                                data_connector: &target_model_source.data_connector,
+                                data_connector: target_model_source.data_connector.clone(),
                             };
 
                             let ndc_query_request =

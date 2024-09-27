@@ -15,7 +15,7 @@ use crate::error::{FieldError, FieldInternalError};
 use graphql_ir::VariableName;
 
 pub fn make_query_request(
-    query_execution_plan: query::ResolvedQueryExecutionPlan<'_>,
+    query_execution_plan: query::ResolvedQueryExecutionPlan,
 ) -> Result<ndc_models_v02::QueryRequest, FieldError> {
     let query_request = ndc_models_v02::QueryRequest {
         collection: ndc_models_v02::CollectionName::from(query_execution_plan.collection.as_str()),

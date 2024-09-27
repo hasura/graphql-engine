@@ -24,7 +24,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ModelSource {
-    pub data_connector: data_connectors::DataConnectorLink,
+    pub data_connector: Arc<data_connectors::DataConnectorLink>,
     pub collection: CollectionName,
     pub collection_type: DataConnectorObjectType,
     #[serde(

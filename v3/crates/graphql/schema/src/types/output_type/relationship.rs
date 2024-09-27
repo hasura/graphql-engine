@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use open_dds::{
     commands::{CommandName, FunctionName},
@@ -56,7 +57,7 @@ pub struct OrderByRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub source_data_connector: metadata_resolve::DataConnectorLink,
+    pub source_data_connector: Arc<metadata_resolve::DataConnectorLink>,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"

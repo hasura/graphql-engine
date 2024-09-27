@@ -197,7 +197,7 @@ pub fn build_execution_plan(
         DataConnectorCommand::Function(function_name) => {
             let ndc_pushdown = NDCFunctionPushDown::new(
                 http_context.clone(),
-                Arc::new(command_source.data_connector.clone()),
+                command_source.data_connector.clone(),
                 function_name.clone(),
                 ndc_arguments,
                 ndc_fields,
@@ -210,7 +210,7 @@ pub fn build_execution_plan(
         DataConnectorCommand::Procedure(procedure_name) => {
             let ndc_pushdown = NDCProcedurePushDown::new(
                 http_context.clone(),
-                Arc::new(command_source.data_connector.clone()),
+                command_source.data_connector.clone(),
                 procedure_name.clone(),
                 ndc_arguments,
                 ndc_fields,

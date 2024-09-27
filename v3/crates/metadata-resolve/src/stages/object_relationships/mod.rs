@@ -1,3 +1,4 @@
+use std::sync::Arc;
 mod types;
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
@@ -371,7 +372,7 @@ fn resolve_relationship_mappings_command(
 fn get_relationship_capabilities(
     type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,
-    source_data_connector: Option<&data_connectors::DataConnectorLink>,
+    source_data_connector: Option<&Arc<data_connectors::DataConnectorLink>>,
     target_name: &RelationshipTargetName,
     data_connectors: &data_connectors::DataConnectors,
     models: &IndexMap<Qualified<ModelName>, models::Model>,

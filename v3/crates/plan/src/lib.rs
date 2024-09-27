@@ -8,6 +8,7 @@ use open_dds::query::{
 use open_dds::types::CustomTypeName;
 use plan_types::NdcFieldAlias;
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 // this is the thing we do
 pub fn plan_query_request<'req, 'metadata>(
@@ -196,9 +197,9 @@ where
 
 fn lookup_data_connector(
     model: &ModelWithPermissions,
-) -> Result<&metadata_resolve::DataConnectorLink, PlanError> {
+) -> Result<Arc<metadata_resolve::DataConnectorLink>, PlanError> {
     match &model.model.source {
-        Some(source) => Ok(&source.data_connector),
+        Some(source) => Ok(source.data_connector.clone()),
         None => Err(PlanError::InternalError(
             "Data connector not found".to_string(),
         )),

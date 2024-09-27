@@ -2,6 +2,7 @@ use crate::error;
 use graphql_ir::NdcRelationshipName;
 use open_dds::{commands::ProcedureName, types::DataConnectorArgumentName};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use super::arguments;
 use super::field;
@@ -9,13 +10,12 @@ use super::filter;
 use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 
-pub type UnresolvedMutationExecutionPlan<'s> =
-    MutationExecutionPlan<'s, graphql_ir::Expression<'s>>;
+pub type UnresolvedMutationExecutionPlan<'s> = MutationExecutionPlan<graphql_ir::Expression<'s>>;
 pub type ResolvedMutationExecutionPlan<'s> =
-    MutationExecutionPlan<'s, filter::ResolvedFilterExpression>;
+    MutationExecutionPlan<filter::ResolvedFilterExpression>;
 
 #[derive(Debug)]
-pub struct MutationExecutionPlan<'s, TFilterExpression> {
+pub struct MutationExecutionPlan<TFilterExpression> {
     /// The name of a procedure
     pub procedure_name: ProcedureName,
     /// Any named procedure arguments
@@ -26,7 +26,7 @@ pub struct MutationExecutionPlan<'s, TFilterExpression> {
     /// Any relationships between collections involved in the query request
     pub collection_relationships: BTreeMap<NdcRelationshipName, relationships::Relationship>,
     /// The data connector used to fetch the data
-    pub data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 }
 
 impl<'s> UnresolvedMutationExecutionPlan<'s> {

@@ -2,6 +2,7 @@
 //!
 use indexmap::IndexMap;
 use std::collections::{BTreeMap, HashMap};
+use std::sync::Arc;
 
 use json_ext::ValueExt;
 use open_dds::arguments::ArgumentName;
@@ -110,7 +111,7 @@ pub struct Location<'s> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RemoteJoin<'s> {
     /// target data connector to execute query on
-    pub target_data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub target_data_connector: Arc<metadata_resolve::DataConnectorLink>,
     /// NDC node to execute on a data connector
     pub target_ndc_execution: plan::query::UnresolvedQueryExecutionPlan<'s>,
     /// Mapping of the fields in source to fields in target.

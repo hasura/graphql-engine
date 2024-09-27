@@ -76,7 +76,7 @@ pub(crate) fn plan_query_execution<'s>(
         arguments: arguments.clone(),
         collection_relationships,
         variables: None,
-        data_connector: ir.command_info.data_connector,
+        data_connector: ir.command_info.data_connector.clone(),
     };
     Ok((query_request, jl))
 }
@@ -114,7 +114,7 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
         )?,
         procedure_fields: ndc_nested_field,
         collection_relationships,
-        data_connector: ir.command_info.data_connector,
+        data_connector: ir.command_info.data_connector.clone(),
     };
     Ok((mutation_request, jl))
 }

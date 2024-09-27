@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::error;
 use async_recursion::async_recursion;
 use graphql_ir::{AggregateSelectionSet, NdcRelationshipName, OrderByElement, VariableName};
@@ -12,11 +14,11 @@ use super::filter;
 use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 
-pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, graphql_ir::Expression<'s>>;
-pub type ResolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, filter::ResolvedFilterExpression>;
+pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<graphql_ir::Expression<'s>>;
+pub type ResolvedQueryExecutionPlan = QueryExecutionPlan<filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct QueryExecutionPlan<'s, TFilterExpression> {
+pub struct QueryExecutionPlan<TFilterExpression> {
     pub query_node: QueryNode<TFilterExpression>,
     /// The name of a collection
     pub collection: CollectionName,
@@ -28,14 +30,14 @@ pub struct QueryExecutionPlan<'s, TFilterExpression> {
     /// should be subtituted in turn, and a fresh set of rows returned.
     pub variables: Option<Vec<BTreeMap<VariableName, serde_json::Value>>>,
     /// The data connector used to fetch the data
-    pub data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 }
 
 impl<'s> UnresolvedQueryExecutionPlan<'s> {
     pub async fn resolve(
         self,
         resolve_context: &ResolveFilterExpressionContext<'_>,
-    ) -> Result<ResolvedQueryExecutionPlan<'s>, error::FieldError> {
+    ) -> Result<ResolvedQueryExecutionPlan, error::FieldError> {
         let QueryExecutionPlan {
             query_node,
             collection,

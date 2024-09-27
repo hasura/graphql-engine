@@ -33,7 +33,7 @@ pub struct CommandGraphQlApi {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct CommandSource {
-    pub data_connector: data_connectors::DataConnectorLink,
+    pub data_connector: Arc<data_connectors::DataConnectorLink>,
     pub source: DataConnectorCommand,
     // Is the output type of this command in OpenDD and NDC same. This can be
     // different in the case when `CommandsResponseConfig` is set

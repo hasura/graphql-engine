@@ -227,7 +227,7 @@ impl ExecutionPlan for NDCFunctionPushDown {
                 .collect(),
             collection_relationships: self.collection_relationships.clone(),
             variables: None,
-            data_connector: &self.data_connector,
+            data_connector: self.data_connector.clone(),
         };
         let query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)
             .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;

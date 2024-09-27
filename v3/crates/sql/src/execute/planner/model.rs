@@ -294,7 +294,7 @@ pub(crate) async fn model_target_to_ndc_query(
         arguments: ndc_arguments,
         collection_name: model_source.collection.clone(),
         collection_relationships: relationships,
-        data_connector: Arc::new(model_source.data_connector.clone()),
+        data_connector: model_source.data_connector.clone(),
         filter,
         limit,
         offset,
@@ -1002,7 +1002,7 @@ impl ExecutionPlan for NDCAggregatePushdown {
                 .collect(),
             collection_relationships: self.query.collection_relationships.clone(),
             variables: None,
-            data_connector: &self.query.data_connector,
+            data_connector: self.query.data_connector.clone(),
         };
         let query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)
             .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;
@@ -1154,7 +1154,7 @@ impl ExecutionPlan for NDCQueryPushDown {
                 .collect(),
             collection_relationships: self.query.collection_relationships.clone(),
             variables: None,
-            data_connector: &self.query.data_connector,
+            data_connector: self.query.data_connector.clone(),
         };
         let query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)
             .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;

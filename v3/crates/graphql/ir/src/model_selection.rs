@@ -1,5 +1,4 @@
 //! IR for the 'model_selection' type - selecting fields from a model
-
 use graphql_schema::{
     Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation,
 };
@@ -14,6 +13,7 @@ use open_dds::{
 };
 use serde::Serialize;
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use super::{
     aggregates, arguments, filter,
@@ -29,7 +29,7 @@ use metadata_resolve::Qualified;
 #[derive(Debug, Serialize)]
 pub struct ModelSelection<'s> {
     // The data connector backing this model.
-    pub data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 
     // Source collection in the data connector for this model
     pub collection: &'s CollectionName,
@@ -110,7 +110,7 @@ pub fn model_selection_ir<'s>(
     )?;
 
     Ok(ModelSelection {
-        data_connector: &model_source.data_connector,
+        data_connector: model_source.data_connector.clone(),
         collection: &model_source.collection,
         arguments,
         filter_clause,
@@ -410,7 +410,7 @@ fn model_aggregate_selection_ir<'s>(
     )?;
 
     Ok(ModelSelection {
-        data_connector: &model_source.data_connector,
+        data_connector: model_source.data_connector.clone(),
         collection: &model_source.collection,
         arguments,
         filter_clause,
