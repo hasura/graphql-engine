@@ -55,6 +55,7 @@ start-docker-run-deps:
 docker-refresh:
     docker compose -f ci.docker-compose.yaml pull postgres_connector
     docker compose -f ci.docker-compose.yaml build custom_connector
+alias refresh-docker := docker-refresh
 
 # stop all the docker deps
 stop-docker:
