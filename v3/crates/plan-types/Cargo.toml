@@ -8,6 +8,7 @@ license.workspace = true
 bench = false
 
 [dependencies]
+
 derive_more = { workspace = true }
 serde = { workspace = true }
 smol_str = { workspace = true }

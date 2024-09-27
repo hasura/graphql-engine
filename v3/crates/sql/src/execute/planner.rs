@@ -1,8 +1,6 @@
 pub(crate) mod command;
 pub(crate) mod common;
-pub(crate) mod filter;
 pub(crate) mod model;
-pub(crate) mod order_by;
 pub(crate) mod scalar;
 
 use command::build_execution_plan;

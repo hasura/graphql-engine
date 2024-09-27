@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 execute = { path = "../execute" }
+hasura-authn-core = { path = "../auth/hasura-authn-core" }
 jsonpath = { path = "../utils/jsonpath" }
 metadata-resolve = { path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }

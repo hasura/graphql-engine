@@ -1,7 +1,10 @@
 //! Tests that run JSONAPI to see if it works
 
+use hasura_authn_core::{Identity, Role};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Arc;
 
 #[test]
 fn test_get_requests() {
@@ -65,7 +68,8 @@ fn test_get_requests() {
             };
 
             let result = jsonapi::handler_internal(
-                &http_context,
+                Arc::new(http_context.clone()),
+                Arc::new(create_default_session()),
                 &jsonapi_state,
                 &resolved_metadata,
                 axum::http::method::Method::GET,
@@ -77,6 +81,17 @@ fn test_get_requests() {
             insta::assert_debug_snapshot!("result", result);
         });
     });
+}
+
+// we will need to allow tests to define their own session options at some point
+// the way that the GraphQL tests defined in `crates/engine/tests/execution.rs` do
+fn create_default_session() -> hasura_authn_core::Session {
+    //return an arbitrary identity with role emulation enabled
+    let authorization = Identity::admin(Role::new("admin"));
+    let role = Role::new("admin");
+    let role_authorization = authorization.get_role_authorization(Some(&role)).unwrap();
+
+    role_authorization.build_session(HashMap::new())
 }
 
 fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration {

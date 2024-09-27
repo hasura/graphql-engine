@@ -1,18 +1,18 @@
-use datafusion::error::{DataFusionError, Result};
+use super::types::PlanError;
 use execute::plan::ResolvedFilterExpression;
 use metadata_resolve::{Qualified, TypeMapping};
 use open_dds::{query::BooleanExpression, types::CustomTypeName};
 use std::collections::BTreeMap;
 
-use super::common::{to_resolved_column, ResolvedColumn};
+use super::column::{to_resolved_column, ResolvedColumn};
 
-pub(crate) fn to_resolved_filter_expr(
+pub fn to_resolved_filter_expr(
     metadata: &metadata_resolve::Metadata,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
     expr: &BooleanExpression,
-) -> Result<ResolvedFilterExpression> {
+) -> Result<ResolvedFilterExpression, PlanError> {
     match expr {
         BooleanExpression::And(exprs) => Ok(ResolvedFilterExpression::mk_and(
             exprs
@@ -26,7 +26,7 @@ pub(crate) fn to_resolved_filter_expr(
                         expr,
                     )
                 })
-                .collect::<Result<Vec<_>>>()?,
+                .collect::<Result<Vec<_>, PlanError>>()?,
         )),
         BooleanExpression::Or(exprs) => Ok(ResolvedFilterExpression::mk_or(
             exprs
@@ -40,7 +40,7 @@ pub(crate) fn to_resolved_filter_expr(
                         expr,
                     )
                 })
-                .collect::<Result<Vec<_>>>()?,
+                .collect::<Result<Vec<_>, PlanError>>()?,
         )),
         BooleanExpression::Not(expr) => Ok(ResolvedFilterExpression::mk_not(
             to_resolved_filter_expr(metadata, type_mappings, type_name, model_object_type, expr)?,
@@ -76,13 +76,13 @@ pub(crate) fn to_resolved_filter_expr(
                 open_dds::query::Value::Literal(value) => Ok(graphql_ir::ComparisonValue::Scalar {
                     value: value.clone(),
                 }),
-                open_dds::query::Value::BooleanExpression(b) => Err(DataFusionError::Internal(
-                    format!("boolean expressions in comparison values are not supported: {b:?}"),
-                )),
+                open_dds::query::Value::BooleanExpression(b) => Err(PlanError::Internal(format!(
+                    "boolean expressions in comparison values are not supported: {b:?}"
+                ))),
             }?;
 
             let comparison_operators = field_mapping.comparison_operators.ok_or_else(|| {
-                DataFusionError::Internal(format!(
+                PlanError::Internal(format!(
                     "no comparisons operators found for type: {type_name:?}"
                 ))
             })?;
@@ -93,7 +93,7 @@ pub(crate) fn to_resolved_filter_expr(
                         .equality_operators
                         .first()
                         .ok_or_else(|| {
-                            DataFusionError::Internal(format!(
+                            PlanError::Internal(format!(
                                 "no equality operator(s) found for type: {type_name:?}"
                             ))
                         })?
@@ -132,7 +132,7 @@ pub(crate) fn to_resolved_filter_expr(
                                     .is_some_and(|other| op.as_str() == other)
                         })
                         .ok_or_else(|| {
-                            DataFusionError::Internal(format!(
+                            PlanError::Internal(format!(
                                 "no operator found matching name {other} for type: {type_name:?}"
                             ))
                         })?
@@ -153,7 +153,7 @@ pub(crate) fn to_resolved_filter_expr(
                 }
             }
         }
-        _ => Err(DataFusionError::Internal(format!(
+        _ => Err(PlanError::Internal(format!(
             "unsupported boolean expression: {expr:?}"
         ))),
     }

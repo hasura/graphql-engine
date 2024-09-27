@@ -1,3 +1,6 @@
+use std::sync::Arc;
+
+use hasura_authn_core::Session;
 mod process_response;
 use axum::{
     http::{Method, Request, Uri},
@@ -52,7 +55,8 @@ pub enum InternalError {
 
 #[allow(clippy::unused_async)]
 pub async fn handler_internal<'metadata>(
-    http_context: &execute::HttpContext,
+    http_context: Arc<execute::HttpContext>,
+    session: Arc<Session>,
     state: &State,
     metadata: &'metadata Metadata,
     http_method: Method,
@@ -65,8 +69,9 @@ pub async fn handler_internal<'metadata>(
         Some(model) => {
             // create the query IR
             let query_ir = create_query_ir(model, &http_method, &uri, &query_string)?;
+            dbg!(&query_ir);
             // execute the query with the query-engine
-            let result = query_engine_execute(http_context, &query_ir, metadata).await?;
+            let result = query_engine_execute(&query_ir, metadata, &session, &http_context).await?;
             // process result to JSON:API compliant response
             Ok(process_response::process_result(result))
         }
@@ -91,12 +96,15 @@ impl TraceableError for RequestError {
 }
 
 async fn query_engine_execute(
-    http_context: &execute::HttpContext,
     query_ir: &open_dds::query::QueryRequest,
     metadata: &Metadata,
+    session: &Arc<Session>,
+    http_context: &Arc<execute::HttpContext>,
 ) -> Result<QueryResult, RequestError> {
     let (query_execution_plan, query_context) =
-        plan::plan_query_request(query_ir, metadata).map_err(RequestError::PlanError)?;
+        plan::plan_query_request(query_ir, metadata, session, http_context)
+            .await
+            .map_err(RequestError::PlanError)?;
 
     let rowsets = resolve_ndc_query_execution(http_context, query_execution_plan)
         .await
@@ -109,18 +117,24 @@ async fn query_engine_execute(
 }
 
 // run ndc query, do any joins, and process result
-async fn resolve_ndc_query_execution<'s, 'ir>(
+async fn resolve_ndc_query_execution<'ir>(
     http_context: &execute::HttpContext,
-    query_execution_plan: execute::UnresolvedQueryExecutionPlan<'s>,
+    query_execution_plan: execute::ResolvedQueryExecutionPlan,
 ) -> Result<Vec<ndc_models::RowSet>, execute::FieldError> {
-    execute::plan::execute_ndc_query(
+    let data_connector = query_execution_plan.data_connector.clone();
+    let query_request = execute::plan::ndc_request::make_ndc_query_request(query_execution_plan)?;
+
+    let response = execute::ndc::execute_ndc_query(
         http_context,
-        query_execution_plan,
+        &query_request,
+        &data_connector,
         "jsonapi",
-        "jsonapi",
-        None,
+        "jsonapi".to_owned(),
+        None, // TODO: plumb in project id
     )
-    .await
+    .await?;
+
+    Ok(response.as_latest_rowsets())
 }
 
 fn create_query_ir(

@@ -1,1 +1,1 @@
-include=author&fields[articles]=title,body&fields[people]=name&page[number]=3&page[size]=1
+fields[Authors]=author_id,first_name,last_name&page[number]=3&page[size]=1

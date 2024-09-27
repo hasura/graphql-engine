@@ -1,18 +1,18 @@
 use std::collections::BTreeMap;
 
-use datafusion::error::{DataFusionError, Result};
 use metadata_resolve::{Qualified, TypeMapping};
 use open_dds::{query::OrderByElement, types::CustomTypeName};
 
-use super::common::{to_resolved_column, ResolvedColumn};
+use super::column::{to_resolved_column, ResolvedColumn};
+use super::types::PlanError;
 
-pub(crate) fn to_resolved_order_by_element(
+pub fn to_resolved_order_by_element(
     metadata: &metadata_resolve::Metadata,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
     element: &OrderByElement,
-) -> Result<graphql_ir::OrderByElement> {
+) -> Result<graphql_ir::OrderByElement, PlanError> {
     match &element.operand {
         open_dds::query::Operand::Field(operand) => {
             let ResolvedColumn {
@@ -49,7 +49,7 @@ pub(crate) fn to_resolved_order_by_element(
                 target,
             })
         }
-        _ => Err(DataFusionError::Internal(format!(
+        _ => Err(PlanError::Internal(format!(
             "unsupported operand in sort: {:?}",
             element.operand
         ))),

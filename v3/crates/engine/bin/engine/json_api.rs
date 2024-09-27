@@ -41,7 +41,7 @@ async fn handle_request(
     uri: Uri,
     axum::extract::RawQuery(raw_query): axum::extract::RawQuery,
     axum::extract::State(state): axum::extract::State<Arc<EngineState>>,
-    Extension(_session): Extension<Session>,
+    Extension(session): Extension<Session>,
 ) -> impl IntoResponse {
     let tracer = tracing_util::global_tracer();
     let response = tracer
@@ -50,16 +50,15 @@ async fn handle_request(
             "Handle request",
             SpanVisibility::User,
             || {
-                {
-                    Box::pin(jsonapi::handler_internal(
-                        &state.http_context,
-                        &state.jsonapi_state,
-                        &state.resolved_metadata,
-                        method,
-                        uri,
-                        jsonapi_library::query::Query::from_params(&raw_query.unwrap_or_default()),
-                    ))
-                }
+                Box::pin(jsonapi::handler_internal(
+                    Arc::new(state.http_context.clone()),
+                    Arc::new(session),
+                    &state.jsonapi_state,
+                    &state.resolved_metadata,
+                    method,
+                    uri,
+                    jsonapi_library::query::Query::from_params(&raw_query.unwrap_or_default()),
+                ))
             },
         )
         .await;
@@ -80,9 +79,15 @@ async fn handle_request(
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": "Internal error"})),
             ),
-            jsonapi::RequestError::PlanError(plan::PlanError::InternalError(msg)) => (
+            jsonapi::RequestError::PlanError(plan::PlanError::Internal(msg)) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": msg })),
+            ),
+            jsonapi::RequestError::PlanError(plan::PlanError::Permission(_msg)) => (
+                axum::http::StatusCode::FORBIDDEN,
+                Json(serde_json::json!({"error": "Access forbidden" })), // need to decide how much
+                                                                         // we tell the user, for
+                                                                         // now default to nothing
             ),
             jsonapi::RequestError::ExecuteError(field_error) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,

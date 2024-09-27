@@ -13,9 +13,11 @@ use plan_types::NdcFieldAlias;
 
 mod function;
 mod procedure;
+use crate::execute::planner::common::from_plan_error;
 pub(crate) use function::CommandOutput;
 pub(crate) use function::NDCFunctionPushDown;
 use open_dds::commands::DataConnectorCommand;
+use plan::ndc_nested_field_selection_for;
 pub(crate) use procedure::NDCProcedurePushDown;
 
 pub fn build_execution_plan(
@@ -124,11 +126,9 @@ pub fn build_execution_plan(
             })?
             .field_type;
 
-        let fields = crate::execute::planner::model::ndc_nested_field_selection_for(
-            metadata,
-            field_type,
-            &command_source.type_mappings,
-        )?;
+        let fields =
+            ndc_nested_field_selection_for(metadata, field_type, &command_source.type_mappings)
+                .map_err(from_plan_error)?;
 
         let ndc_field = ResolvedField::Column {
             column: field_mapping.column.clone(),
