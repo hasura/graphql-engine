@@ -1800,7 +1800,8 @@ dependencies = [
  "nonempty",
  "open-dds",
  "plan",
- "pre-execution-plugin",
+ "pre-parse-plugin",
+ "pre-response-plugin",
  "pretty_assertions",
  "reqwest",
  "serde",
@@ -3882,7 +3883,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pre-execution-plugin"
+name = "pre-parse-plugin"
 version = "3.0.0"
 dependencies = [
  "axum",
@@ -3894,6 +3895,24 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
+ "tracing-util",
+]
+
+[[package]]
+name = "pre-response-plugin"
+version = "3.0.0"
+dependencies = [
+ "axum",
+ "futures-util",
+ "hasura-authn-core",
+ "lang-graphql",
+ "nonempty",
+ "open-dds",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
  "tracing-util",
 ]
 

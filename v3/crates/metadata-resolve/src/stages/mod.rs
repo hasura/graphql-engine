@@ -271,7 +271,7 @@ pub fn resolve(
         &commands_with_permissions,
     );
 
-    let pre_parse_plugins = plugins::resolve(&metadata_accessor);
+    let plugin_configs = plugins::resolve(&metadata_accessor);
 
     let all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_issues)?;
 
@@ -287,7 +287,7 @@ pub fn resolve(
             aggregate_expressions,
             graphql_config: graphql_config.global,
             roles,
-            pre_parse_plugins,
+            plugin_configs,
         },
         all_warnings,
     ))

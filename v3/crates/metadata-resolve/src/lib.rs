@@ -35,6 +35,7 @@ pub use stages::model_permissions::{
     SelectPermission, UnaryComparisonOperator,
 };
 pub use stages::models::{Model, ModelSource, ModelsError};
+pub use stages::plugins::LifecyclePluginConfigs;
 pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;
 pub use stages::{
     command_permissions::CommandWithPermissions,

@@ -19,8 +19,9 @@ use axum::{
 };
 use base64::engine::Engine;
 use clap::Parser;
-use open_dds::plugins::LifecyclePluginHookPreParse;
-use pre_execution_plugin::execute::pre_execution_plugins_handler;
+use metadata_resolve::LifecyclePluginConfigs;
+use pre_parse_plugin::execute::pre_parse_plugins_handler;
+use pre_response_plugin::execute::pre_response_plugins_handler;
 use reqwest::header::CONTENT_TYPE;
 use serde::Serialize;
 use tower_http::cors::CorsLayer;
@@ -119,7 +120,7 @@ pub struct EngineState {
     jsonapi_state: jsonapi::State,
     auth_config: AuthConfig,
     sql_context: Arc<sql::catalog::Catalog>,
-    pre_parse_plugins: Vec<LifecyclePluginHookPreParse>,
+    plugin_configs: LifecyclePluginConfigs,
     graphql_websocket_server: graphql_ws::WebSocketServer,
 }
 
@@ -205,7 +206,7 @@ impl EngineRouter {
             .route("/graphql", post(handle_request))
             .layer(axum::middleware::from_fn_with_state(
                 state.clone(),
-                pre_execution_plugins_middleware,
+                plugins_middleware,
             ))
             .layer(axum::middleware::from_fn(
                 hasura_authn_core::resolve_session,
@@ -617,35 +618,75 @@ async fn handle_explain_request(
     response
 }
 
-async fn pre_execution_plugins_middleware<'a>(
+async fn plugins_middleware(
     State(engine_state): State<Arc<EngineState>>,
     Extension(session): Extension<Session>,
     headers_map: HeaderMap,
     request: Request<axum::body::Body>,
     next: Next<axum::body::Body>,
-) -> axum::response::Result<axum::response::Response> {
-    // Check if the pre_execution_plugins_config is empty
-    match nonempty::NonEmpty::from_slice(&engine_state.pre_parse_plugins) {
-        None => {
-            // If empty, do nothing and pass the request to the next middleware
-            Ok(next.run(request).await)
-        }
-        Some(pre_parse_plugins) => {
-            let (request, response) = pre_execution_plugins_handler(
-                &pre_parse_plugins,
-                &engine_state.http_context.client,
-                session,
-                request,
-                headers_map,
-            )
-            .await?;
+) -> axum::response::Result<axum::response::Response<axum::body::Body>> {
+    let (parts, body) = request.into_parts();
+    let bytes = body
+        .collect()
+        .await
+        .map_err(|err| {
+            (reqwest::StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response()
+        })?
+        .to_bytes();
+    let raw_request = bytes.clone();
 
-            match response {
-                Some(response) => Ok(response),
-                None => Ok(next.run(request).await),
+    // Check if the pre_parse_plugins_config is empty
+    let response =
+        match nonempty::NonEmpty::from_slice(&engine_state.plugin_configs.pre_parse_plugins) {
+            None => {
+                // If empty, do nothing and pass the request to the next middleware
+                let recreated_request = Request::from_parts(parts, axum::body::Body::from(bytes));
+                Ok::<_, axum::response::ErrorResponse>(next.run(recreated_request).await)
             }
-        }
+            Some(pre_parse_plugins) => {
+                let response = pre_parse_plugins_handler(
+                    &pre_parse_plugins,
+                    &engine_state.http_context.client,
+                    session.clone(),
+                    &bytes,
+                    headers_map.clone(),
+                )
+                .await?;
+
+                if let Some(response) = response {
+                    Ok(response)
+                } else {
+                    let recreated_request =
+                        Request::from_parts(parts, axum::body::Body::from(bytes));
+                    Ok(next.run(recreated_request).await)
+                }
+            }
+        }?;
+
+    let (parts, body) = response.into_parts();
+    let response_bytes = body
+        .collect()
+        .await
+        .map_err(|err| {
+            (reqwest::StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response()
+        })?
+        .to_bytes();
+
+    if let Some(pre_response_plugins) =
+        nonempty::NonEmpty::from_slice(&engine_state.plugin_configs.pre_response_plugins)
+    {
+        pre_response_plugins_handler(
+            &pre_response_plugins,
+            &engine_state.http_context.client,
+            session,
+            &raw_request,
+            &response_bytes,
+            headers_map,
+        )?;
     }
+    let recreated_response =
+        axum::response::Response::from_parts(parts, axum::body::Body::from(response_bytes));
+    Ok(recreated_response)
 }
 
 /// Handle a SQL request and execute it.
@@ -731,7 +772,7 @@ fn build_state(
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
-    let pre_parse_plugins = resolved_metadata.pre_parse_plugins.clone();
+    let plugin_configs = resolved_metadata.plugin_configs.clone();
     let sql_context = if enable_sql_interface {
         sql::catalog::Catalog::from_metadata(resolved_metadata.clone())
     } else {
@@ -751,7 +792,7 @@ fn build_state(
         resolved_metadata,
         auth_config,
         sql_context: sql_context.into(),
-        pre_parse_plugins,
+        plugin_configs,
         graphql_websocket_server: graphql_ws::WebSocketServer::new(),
     });
     Ok(state)

@@ -2014,9 +2014,124 @@
       "type": "object",
       "additionalProperties": false
     },
-    "LifecyclePluginHookConfig": {
-      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePluginHookConfig",
-      "title": "LifecyclePluginHookConfig",
+    "LifecyclePluginHookHeadersConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePluginHookHeadersConfig",
+      "title": "LifecyclePluginHookHeadersConfig",
+      "description": "Configuration for a lifecycle plugin hook headers.",
+      "type": "object",
+      "properties": {
+        "additional": {
+          "description": "Additional headers to be sent with the request.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HttpHeaders"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forward": {
+          "description": "Headers to be forwarded from the incoming request.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecyclePluginHookV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePluginHookV1",
+      "title": "LifecyclePluginHookV1",
+      "description": "Definition of a lifecycle plugin hook - version 1.",
+      "oneOf": [
+        {
+          "title": "LifecyclePreParsePluginHook",
+          "description": "Definition of a lifecycle plugin hook for the pre-parse stage.",
+          "type": "object",
+          "required": [
+            "config",
+            "name",
+            "pre",
+            "url"
+          ],
+          "properties": {
+            "pre": {
+              "type": "string",
+              "enum": [
+                "parse"
+              ]
+            },
+            "name": {
+              "description": "The name of the lifecycle plugin hook.",
+              "type": "string"
+            },
+            "url": {
+              "description": "The URL to access the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/EnvironmentValue"
+                }
+              ]
+            },
+            "config": {
+              "description": "Configuration for the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/LifecyclePreParsePluginHookConfig"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "LifecyclePreResponsePluginHook",
+          "description": "Definition of a lifecycle plugin hook for the pre-response stage.",
+          "type": "object",
+          "required": [
+            "config",
+            "name",
+            "pre",
+            "url"
+          ],
+          "properties": {
+            "pre": {
+              "type": "string",
+              "enum": [
+                "response"
+              ]
+            },
+            "name": {
+              "description": "The name of the lifecycle plugin hook.",
+              "type": "string"
+            },
+            "url": {
+              "description": "The URL to access the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/EnvironmentValue"
+                }
+              ]
+            },
+            "config": {
+              "description": "Configuration for the lifecycle plugin hook.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/LifecyclePreResponsePluginHookConfig"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "LifecyclePreParsePluginHookConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreParsePluginHookConfig",
+      "title": "LifecyclePreParsePluginHookConfig",
       "description": "Configuration for a lifecycle plugin hook.",
       "type": "object",
       "required": [
@@ -2027,16 +2142,16 @@
           "description": "Configuration for the request to the lifecycle plugin hook.",
           "allOf": [
             {
-              "$ref": "#/definitions/LifecyclePluginHookConfigRequest"
+              "$ref": "#/definitions/LifecyclePreParsePluginHookConfigRequest"
             }
           ]
         }
       },
       "additionalProperties": false
     },
-    "LifecyclePluginHookConfigRequest": {
-      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePluginHookConfigRequest",
-      "title": "LifecyclePluginHookConfigRequest",
+    "LifecyclePreParsePluginHookConfigRequest": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreParsePluginHookConfigRequest",
+      "title": "LifecyclePreParsePluginHookConfigRequest",
       "description": "Configuration for a lifecycle plugin hook request.",
       "type": "object",
       "required": [
@@ -2076,80 +2191,78 @@
       },
       "additionalProperties": false
     },
-    "LifecyclePluginHookHeadersConfig": {
-      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePluginHookHeadersConfig",
-      "title": "LifecyclePluginHookHeadersConfig",
-      "description": "Configuration for a lifecycle plugin hook headers.",
+    "LifecyclePreResponsePluginHookConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreResponsePluginHookConfig",
+      "title": "LifecyclePreResponsePluginHookConfig",
+      "description": "Configuration for a lifecycle plugin hook.",
       "type": "object",
+      "required": [
+        "request"
+      ],
       "properties": {
-        "additional": {
-          "description": "Additional headers to be sent with the request.",
+        "request": {
+          "description": "Configuration for the request to the lifecycle plugin hook.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LifecyclePreResponsePluginHookConfigRequest"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecyclePreResponsePluginHookConfigRequest": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePreResponsePluginHookConfigRequest",
+      "title": "LifecyclePreResponsePluginHookConfigRequest",
+      "description": "Configuration for a lifecycle plugin hook request.",
+      "type": "object",
+      "required": [
+        "rawRequest"
+      ],
+      "properties": {
+        "headers": {
+          "description": "Configuration for the headers.",
           "anyOf": [
             {
-              "$ref": "#/definitions/HttpHeaders"
+              "$ref": "#/definitions/LifecyclePluginHookHeadersConfig"
             },
             {
               "type": "null"
             }
           ]
         },
-        "forward": {
-          "description": "Headers to be forwarded from the incoming request.",
-          "default": [],
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "session": {
+          "description": "Configuration for the session (includes roles and session variables).",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rawRequest": {
+          "description": "Configuration for the raw request.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RawRequestConfig"
+            }
+          ]
+        },
+        "rawResponse": {
+          "description": "Configuration for the response.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LeafConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
-    },
-    "LifecyclePluginHookV1": {
-      "$id": "https://hasura.io/jsonschemas/metadata/LifecyclePluginHookV1",
-      "title": "LifecyclePluginHookV1",
-      "description": "Definition of a lifecycle plugin hook - version 1.",
-      "oneOf": [
-        {
-          "title": "LifecyclePluginHookPreParse",
-          "description": "Definition of a lifecycle plugin hook for the pre-parse stage.",
-          "type": "object",
-          "required": [
-            "config",
-            "name",
-            "pre",
-            "url"
-          ],
-          "properties": {
-            "pre": {
-              "type": "string",
-              "enum": [
-                "parse"
-              ]
-            },
-            "name": {
-              "description": "The name of the lifecycle plugin hook.",
-              "type": "string"
-            },
-            "url": {
-              "description": "The URL to access the lifecycle plugin hook.",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/EnvironmentValue"
-                }
-              ]
-            },
-            "config": {
-              "description": "Configuration for the lifecycle plugin hook.",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/LifecyclePluginHookConfig"
-                }
-              ]
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
     },
     "LimitInputGraphqlConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/LimitInputGraphqlConfig",

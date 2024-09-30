@@ -1,15 +1,14 @@
-use std::{collections::HashMap, fmt::Display, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
 
 use axum::{
-    body::HttpBody,
-    http::{HeaderMap, HeaderName, Request, StatusCode},
+    http::{HeaderMap, HeaderName, StatusCode},
     response::IntoResponse,
 };
 use serde::Serialize;
 
 use hasura_authn_core::Session;
 use lang_graphql::{ast::common as ast, http::RawRequest};
-use open_dds::plugins::LifecyclePluginHookPreParse;
+use open_dds::plugins::LifecyclePreParsePluginHook;
 use tracing_util::{
     set_attribute_on_active_span, ErrorVisibility, SpanVisibility, Traceable, TraceableError,
 };
@@ -24,8 +23,8 @@ pub enum Error {
     ReqwestError(reqwest::Error),
     #[error("Unexpected status code: {0}")]
     UnexpectedStatusCode(u16),
-    #[error("plugin response parse error: {0}")]
-    PluginResponseParseError(serde_json::error::Error),
+    #[error("Error parsing the request: {0}")]
+    PluginRequestParseError(serde_json::error::Error),
 }
 
 impl TraceableError for Error {
@@ -106,7 +105,7 @@ pub struct PreExecutePluginRequestBody {
 
 fn build_request(
     http_client: &reqwest::Client,
-    config: &LifecyclePluginHookPreParse,
+    config: &LifecyclePreParsePluginHook,
     client_headers: &HeaderMap,
     session: &Session,
     raw_request: &RawRequest,
@@ -163,7 +162,7 @@ fn build_request(
 
 pub async fn execute_plugin(
     http_client: &reqwest::Client,
-    config: &LifecyclePluginHookPreParse,
+    config: &LifecyclePreParsePluginHook,
     client_headers: &HeaderMap,
     session: &Session,
     raw_request: &RawRequest,
@@ -211,33 +210,21 @@ pub async fn execute_plugin(
     }
 }
 
-pub async fn pre_execution_plugins_handler<'a, B>(
-    pre_execution_plugins_config: &nonempty::NonEmpty<LifecyclePluginHookPreParse>,
+pub async fn pre_parse_plugins_handler(
+    pre_parse_plugins_config: &nonempty::NonEmpty<LifecyclePreParsePluginHook>,
     http_client: &reqwest::Client,
     session: Session,
-    request: Request<B>,
+    raw_request_bytes: &axum::body::Bytes,
     headers_map: HeaderMap,
-) -> axum::response::Result<(Request<axum::body::Body>, Option<axum::response::Response>)>
-where
-    B: HttpBody,
-    B::Error: Display,
-{
-    let (parts, body) = request.into_parts();
-    let bytes = body
-        .collect()
-        .await
-        .map_err(|err| {
-            (reqwest::StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response()
-        })?
-        .to_bytes();
+) -> axum::response::Result<Option<axum::response::Response>> {
     let tracer = tracing_util::global_tracer();
     let mut response = None;
-    let raw_request =
-        serde_json::from_slice::<RawRequest>(&bytes).map_err(Error::PluginResponseParseError)?;
-    for pre_plugin_config in pre_execution_plugins_config {
+    let raw_request = serde_json::from_slice::<RawRequest>(raw_request_bytes)
+        .map_err(Error::PluginRequestParseError)?;
+    for pre_plugin_config in pre_parse_plugins_config {
         let plugin_response = tracer
             .in_span_async(
-                "pre_execution_plugin_middleware",
+                "pre_parse_plugin_middleware",
                 "Pre-execution Plugin middleware",
                 SpanVisibility::User,
                 || {
@@ -292,10 +279,7 @@ where
                 let user_error_response =
                     lang_graphql::http::Response::error_message_with_status_and_details(
                         reqwest::StatusCode::BAD_REQUEST,
-                        format!(
-                            "User error in pre-execution plugin {0}",
-                            pre_plugin_config.name
-                        ),
+                        format!("User error in pre-parse plugin {0}", pre_plugin_config.name),
                         error_value,
                     )
                     .into_response();
@@ -307,7 +291,7 @@ where
                     lang_graphql::http::Response::error_message_with_status(
                         reqwest::StatusCode::INTERNAL_SERVER_ERROR,
                         format!(
-                            "Internal error in pre-execution plugin {0}",
+                            "Internal error in pre-parse plugin {0}",
                             pre_plugin_config.name
                         ),
                     )
@@ -317,8 +301,5 @@ where
             }
         };
     }
-    Ok((
-        Request::from_parts(parts, axum::body::Body::from(bytes)),
-        response,
-    ))
+    Ok(response)
 }

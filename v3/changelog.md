@@ -4,6 +4,46 @@
 
 ### Added
 
+#### Pre-response Plugin
+
+Engine now supports calling a HTTP webhook in the pre-response execution step.
+This can be used to add some post execution functionalities to the DDN, such as
+sending the response to a logging service, sending notifications for specific
+requests like mutations, etc.
+
+The following is an example of the OpenDD metadata for the pre-response plugin:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+  name: logging
+  url:
+    value: http://localhost:5001/log
+  pre: response
+  config:
+    request:
+      headers:
+        additional:
+          hasura-m-auth:
+            value: "your-strong-m-auth-key"
+      session: {}
+      rawRequest:
+        query: {}
+        variables: {}
+      rawResponse: {}
+```
+
+Similar to the pre-parse plugin, the pre-response plugin's request can be
+customized using the `LifecyclePluginHook` metadata object. Currently we support
+the following customizations:
+
+- adding/removing session information
+- adding new headers
+- forwarding specific headers
+- adding/removing graphql query and variables
+- adding/removing response
+
 ### Fixed
 
 ### Changed

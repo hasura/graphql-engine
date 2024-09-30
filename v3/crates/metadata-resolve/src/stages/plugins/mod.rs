@@ -1,16 +1,26 @@
-use open_dds::plugins::LifecyclePluginHookPreParse;
 use open_dds::plugins::LifecyclePluginHookV1;
+use open_dds::plugins::{LifecyclePreParsePluginHook, LifecyclePreResponsePluginHook};
+use serde::{Deserialize, Serialize};
 
-pub fn resolve(
-    metadata_accessor: &open_dds::accessor::MetadataAccessor,
-) -> Vec<LifecyclePluginHookPreParse> {
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct LifecyclePluginConfigs {
+    pub pre_parse_plugins: Vec<LifecyclePreParsePluginHook>,
+    pub pre_response_plugins: Vec<LifecyclePreResponsePluginHook>,
+}
+
+pub fn resolve(metadata_accessor: &open_dds::accessor::MetadataAccessor) -> LifecyclePluginConfigs {
     let mut pre_parse_plugins = Vec::new();
+    let mut pre_response_plugins = Vec::new();
 
     for plugin in &metadata_accessor.plugins {
         match &plugin.object {
             LifecyclePluginHookV1::Parse(plugin) => pre_parse_plugins.push(plugin.clone()),
+            LifecyclePluginHookV1::Response(plugin) => pre_response_plugins.push(plugin.clone()),
         }
     }
 
-    pre_parse_plugins
+    LifecyclePluginConfigs {
+        pre_parse_plugins,
+        pre_response_plugins,
+    }
 }
