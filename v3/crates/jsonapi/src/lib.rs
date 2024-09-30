@@ -12,7 +12,7 @@ use open_dds::{
     identifier,
     identifier::{Identifier, SubgraphName},
     models::ModelName,
-    types::CustomTypeName,
+    types::{CustomTypeName, FieldName},
 };
 use std::collections::{BTreeMap, HashMap};
 use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError, TraceableHttpResponse};
@@ -69,7 +69,6 @@ pub async fn handler_internal<'metadata>(
         Some(model) => {
             // create the query IR
             let query_ir = create_query_ir(model, &http_method, &uri, &query_string)?;
-            dbg!(&query_ir);
             // execute the query with the query-engine
             let result = query_engine_execute(&query_ir, metadata, &session, &http_context).await?;
             // process result to JSON:API compliant response
@@ -137,6 +136,40 @@ async fn resolve_ndc_query_execution<'ir>(
     Ok(response.as_latest_rowsets())
 }
 
+// given the sparse fields for this request, should be include a given field in the query?
+// this does not consider subgraphs at the moment - we match on `ModelName` not
+// `Qualified<ModelName>`.
+// This means that the below field is ambiguous where `Authors` model is defined in multiple
+// subgraphs
+// fields[Authors]=author_id,first_name
+//
+// two possible solutions:
+// 1. make users qualify the name inline
+//
+// fields[subgraph.Authors]=author_id,first_name&fields[other.Authors]=author_id,last_name
+//
+// 2. much like we make users explicitly give GraphQL names to things, we
+// make them give JSONAPI models an unambiguous name in metadata, and the user provides that:
+//
+// fields[subgraphAuthors]=author_id,firstName&fields[otherAuthors]=author_id,last_name
+fn include_field(
+    query_string: &jsonapi_library::query::Query,
+    field_name: &FieldName,
+    model_name: &ModelName,
+) -> bool {
+    if let Some(fields) = &query_string.fields {
+        if let Some(model_fields) = fields.get(model_name.as_str()) {
+            for model_field in model_fields {
+                if model_field == field_name.as_str() {
+                    return true;
+                }
+            }
+        }
+    }
+    // if no sparse fields provided for our model, for now, default to including nothing
+    false
+}
+
 fn create_query_ir(
     model: &ModelWithPermissions,
     _http_method: &Method,
@@ -152,21 +185,22 @@ fn create_query_ir(
     } = parse_url(uri)?;
 
     // create the selection fields; include all fields of the model output type
-    // TODO: parse 'sparse fieldsets' to include specific fields only
     let mut selection = IndexMap::new();
     for (field_name, _field_def) in &model.model.type_fields {
-        let field_name_ident = Identifier::new(field_name.as_str()).unwrap();
-        let field_name = open_dds::types::FieldName::new(field_name_ident.clone());
-        let field_alias = open_dds::query::Alias::new(field_name_ident);
-        let sub_sel =
-            open_dds::query::ObjectSubSelection::Field(open_dds::query::ObjectFieldSelection {
-                target: open_dds::query::ObjectFieldTarget {
-                    arguments: IndexMap::new(),
-                    field_name,
-                },
-                selection: None,
-            });
-        selection.insert(field_alias, sub_sel);
+        if include_field(query_string, field_name, &model.model.name.name) {
+            let field_name_ident = Identifier::new(field_name.as_str()).unwrap();
+            let field_name = open_dds::types::FieldName::new(field_name_ident.clone());
+            let field_alias = open_dds::query::Alias::new(field_name_ident);
+            let sub_sel =
+                open_dds::query::ObjectSubSelection::Field(open_dds::query::ObjectFieldSelection {
+                    target: open_dds::query::ObjectFieldTarget {
+                        arguments: IndexMap::new(),
+                        field_name,
+                    },
+                    selection: None,
+                });
+            selection.insert(field_alias, sub_sel);
+        }
     }
 
     // create filters
