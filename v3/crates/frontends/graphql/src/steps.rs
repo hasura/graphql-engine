@@ -152,3 +152,27 @@ pub fn analyze_query_usage<'s>(
         },
     )
 }
+
+// run ndc query, do any joins, and process result
+// we only use this in engine tests at the moment, and it will be removed as soon
+// as we're able to use the new pipeline with the existing execution / process response
+// for now, it allows us a cheap way to test our GraphQL -> OpenDD IR -> execute pipeline
+pub async fn resolve_ndc_query_execution<'ir>(
+    http_context: &execute::HttpContext,
+    query_execution_plan: execute::ResolvedQueryExecutionPlan,
+) -> Result<Vec<ndc_models::RowSet>, execute::FieldError> {
+    let data_connector = query_execution_plan.data_connector.clone();
+    let query_request = execute::plan::ndc_request::make_ndc_query_request(query_execution_plan)?;
+
+    let response = execute::ndc::execute_ndc_query(
+        http_context,
+        &query_request,
+        &data_connector,
+        "graphql",
+        "graphql".to_owned(),
+        None, // TODO: plumb in project id
+    )
+    .await?;
+
+    Ok(response.as_latest_rowsets())
+}

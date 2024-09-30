@@ -2638,6 +2638,7 @@ dependencies = [
  "globset",
  "lazy_static",
  "linked-hash-map",
+ "serde",
  "similar",
  "walkdir",
 ]

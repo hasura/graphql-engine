@@ -64,7 +64,7 @@ build-data = { workspace = true }
 [dev-dependencies]
 criterion = { workspace = true, features = ["html_reports", "async_tokio"] }
 goldenfile = { workspace = true }
-insta = { workspace = true }
+insta = { workspace = true, features = ["json"] }
 pretty_assertions = { workspace = true }
 tokio-test = { workspace = true }
 

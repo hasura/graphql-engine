@@ -22,7 +22,7 @@ fn test_model_select_one_with_type_permission() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::GenerateOpenDDQuery,
     )
 }
 
@@ -67,7 +67,7 @@ fn test_model_select_many_simple_select() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::TestNDCResponses,
     )
 }
 

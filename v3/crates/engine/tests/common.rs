@@ -1,5 +1,8 @@
 use anyhow::anyhow;
+use execute::{HttpContext, ProjectId};
 use goldenfile::{differs::text_diff, Mint};
+use graphql_frontend::execute_query;
+use graphql_schema::GDS;
 use hasura_authn_core::{Identity, Role, Session, SessionError, SessionVariableValue};
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
@@ -18,22 +21,9 @@ use std::{
     path::PathBuf,
 };
 
-use execute::{HttpContext, ProjectId};
-use graphql_frontend::execute_query;
-use graphql_schema::GDS;
-
 extern crate json_value_merge;
 use json_value_merge::Merge;
 use serde_json::Value;
-
-// which OpenDD IR pipeline tests should we include for this test?
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy)]
-pub enum TestOpenDDPipeline {
-    Skip,
-    GenerateOpenDDQuery,
-    GenerateExecutionPlan,
-}
 
 pub struct GoldenTestContext {
     pub(crate) http_context: HttpContext,
@@ -297,12 +287,16 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                     for session in &sessions {
                         // attempt to create open ir for this request
                         open_dd_pipeline_test(
+                            test_path_string,
                             opendd_tests,
                             &query,
                             &schema,
+                            &gds.metadata,
                             session,
                             raw_request.clone(),
-                        );
+                            &test_ctx.http_context.clone().into(),
+                        )
+                        .await;
 
                         // do actual test
                         let (_, response) = execute_query(
@@ -339,12 +333,16 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                         };
                         // attempt to create open ir for this request
                         open_dd_pipeline_test(
+                            test_path_string,
                             opendd_tests,
                             &query,
                             &schema,
+                            &gds.metadata,
                             session,
                             raw_request.clone(),
-                        );
+                            &Arc::new(test_ctx.http_context.clone()),
+                        )
+                        .await;
                         // do actual test
                         let (_, response) = execute_query(
                             execute::ExposeInternalErrors::Expose,
@@ -404,38 +402,6 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
 
         Ok(())
     })
-}
-
-// generate open_dd_ir for each test and see what happens
-fn open_dd_pipeline_test(
-    opendd_tests: TestOpenDDPipeline,
-    query: &str,
-    schema: &Schema<GDS>,
-    session: &Session,
-    raw_request: lang_graphql::http::RawRequest,
-) {
-    match opendd_tests {
-        TestOpenDDPipeline::Skip => {}
-        TestOpenDDPipeline::GenerateOpenDDQuery => {
-            // parse the raw request into a GQL query
-            let query = graphql_frontend::parse_query(query).unwrap();
-
-            // normalize the parsed GQL query
-            if let Ok(normalized_request) =
-                graphql_frontend::normalize_request(schema, session, query, raw_request)
-            {
-                // we can only generate for queries that would have worked,
-                // `normalize_request` fails when we try and access a field we're not allowed to,
-                // for instance
-                let ir = graphql_frontend::to_opendd_ir(&normalized_request);
-
-                insta::assert_debug_snapshot!("opendd_ir", ir);
-            }
-        }
-        TestOpenDDPipeline::GenerateExecutionPlan => {
-            todo!("GenerateExecutionPlan not implemented yet")
-        }
-    }
 }
 
 fn read_json(path: &Path) -> anyhow::Result<Value> {
@@ -771,4 +737,89 @@ async fn run_query_graphql_ws(
         };
     }
     response
+}
+
+// which OpenDD IR pipeline tests should we include for this test?
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy)]
+pub enum TestOpenDDPipeline {
+    Skip,
+    GenerateOpenDDQuery,
+    TestNDCResponses,
+    GenerateExecutionPlan,
+}
+
+// generate open_dd_ir for each test and see what happens
+// eventually these tests will be deleted once the OpenDD pipeline becomes the main one
+pub async fn open_dd_pipeline_test(
+    test_path_string: &str,
+    opendd_tests: TestOpenDDPipeline,
+    query: &str,
+    schema: &Schema<GDS>,
+    metadata: &metadata_resolve::Metadata,
+    session: &Session,
+    raw_request: lang_graphql::http::RawRequest,
+    http_context: &Arc<HttpContext>,
+) {
+    match opendd_tests {
+        TestOpenDDPipeline::Skip => {}
+        TestOpenDDPipeline::GenerateOpenDDQuery => {
+            // parse the raw request into a GQL query
+            let query = graphql_frontend::parse_query(query).unwrap();
+
+            // normalize the parsed GQL query
+            if let Ok(normalized_request) =
+                graphql_frontend::normalize_request(schema, session, query, raw_request)
+            {
+                // we can only generate for queries that would have worked,
+                // `normalize_request` fails when we try and access a field we're not allowed to,
+                // for instance
+                let ir = graphql_frontend::to_opendd_ir(&normalized_request);
+
+                insta::assert_debug_snapshot!(format!("ir_{test_path_string}"), ir);
+            }
+        }
+        TestOpenDDPipeline::TestNDCResponses => {
+            // test the partial NDC pipeline so we can sanity check the planning steps
+
+            // parse the raw request into a GQL query
+            let query = graphql_frontend::parse_query(query).unwrap();
+
+            // normalize the parsed GQL query
+            if let Ok(normalized_request) =
+                graphql_frontend::normalize_request(schema, session, query, raw_request)
+            {
+                // we can only generate for queries that would have worked,
+                // `normalize_request` fails when we try and access a field we're not allowed to,
+                // for instance
+                let query_ir = graphql_frontend::to_opendd_ir(&normalized_request);
+
+                // check IR is what we expect
+                insta::assert_debug_snapshot!(format!("ir_{test_path_string}"), query_ir);
+
+                // create a query execution plan for a single node with the new pipeline
+                let (query_execution_plan, _) = plan::plan_query_request(
+                    &query_ir,
+                    metadata,
+                    &Arc::new(session.clone()),
+                    http_context,
+                )
+                .await
+                .unwrap();
+
+                // run the pipeline using functions from GraphQL frontend
+                let rowsets = graphql_frontend::resolve_ndc_query_execution(
+                    http_context,
+                    query_execution_plan,
+                )
+                .await
+                .unwrap();
+
+                insta::assert_json_snapshot!(format!("rowsets_{test_path_string}"), rowsets);
+            }
+        }
+        TestOpenDDPipeline::GenerateExecutionPlan => {
+            todo!("GenerateExecutionPlan not implemented yet")
+        }
+    }
 }
