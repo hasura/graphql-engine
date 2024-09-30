@@ -36,6 +36,32 @@ impl KeyValueResponse for IndexMap<ndc_models::FieldName, ndc_models::RowFieldVa
         self.swap_remove(key).map(|row_field| row_field.0)
     }
 }
+// --------------------------------------------------
+// These three bits are workarounds for the performance issue documented in ENG-1073
+//
+// Assumes the input is an object. Used for our performance workaround, bypassing RowSet, which
+// hopefully we can revert
+impl KeyValueResponse for serde_json::Value {
+    fn remove(&mut self, key: &str) -> Option<serde_json::Value> {
+        self.as_object_mut()?.swap_remove(key)
+    }
+}
+// More efficient `to_value`, for our performance workaround.
+fn alias_map_to_value(index_map: IndexMap<ast::Alias, json::Value>) -> json::Value {
+    let mut json_object = json::Map::with_capacity(index_map.len());
+    for (alias, value) in index_map {
+        let key: String = alias.0.get().to_string();
+        json_object.insert(key, value);
+    }
+    json::Value::Object(json_object)
+}
+// More efficient `to_value`, for our performance workaround.
+fn vec_alias_map_to_value(index_maps: Vec<IndexMap<ast::Alias, json::Value>>) -> json::Value {
+    let json_array: Vec<json::Value> = index_maps.into_iter().map(alias_map_to_value).collect();
+
+    json::Value::Array(json_array)
+}
+// --------------------------------------------------
 
 // With the response headers forwarding feature, we also need to extract the
 // response headers from NDC result. So that engine's server layer can use that
@@ -141,34 +167,34 @@ where
                                 }
                             }
                             OutputAnnotation::RelationshipToModel { .. } => {
-                                let field_json_value_result = row
+                                let mut field_json_value_result = row
                                     .remove(field.alias.0.as_str())
                                     .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
                                         summary: format!("missing field: {}", field.alias.clone()),
                                     })?;
-                                match serde_json::from_value(field_json_value_result) {
-                                    Err(err) => Err(error::NDCUnexpectedError::BadNDCResponse {
-                                        summary: format!("Unable to parse RowSet: {err}"),
-                                    })?,
-                                    Ok(rows_set) => {
-                                        // Depending upon the field's type (list or object),
-                                        // process the selection set accordingly.
-                                        if field.type_container.is_list() {
-                                            process_selection_set_as_list(
-                                                rows_set,
-                                                &field.selection_set,
-                                                response_config,
-                                            )
-                                            .and_then(|v| Ok(json::to_value(v)?))
-                                        } else {
-                                            process_selection_set_as_object(
-                                                rows_set,
-                                                &field.selection_set,
-                                                response_config,
-                                            )
-                                            .and_then(|v| Ok(json::to_value(v)?))
-                                        }
-                                    }
+
+                                let rows_set_rows = field_json_value_result
+                                    .get_mut("rows")
+                                    .and_then(|j| j.as_array_mut())
+                                    .map(std::mem::take);
+                                // Depending upon the field's type (list or object),
+                                // process the selection set accordingly.
+                                if field.type_container.is_list() {
+                                    process_selection_set_as_list(
+                                        rows_set_rows,
+                                        &field.selection_set,
+                                        response_config,
+                                    )
+                                    // NOTE: I assume a Null returned here is internal error, but
+                                    // this behavior is preserved for now:
+                                    .map(|v| v.map_or(json::Value::Null, vec_alias_map_to_value))
+                                } else {
+                                    process_selection_set_as_object(
+                                        rows_set_rows,
+                                        &field.selection_set,
+                                        response_config,
+                                    )
+                                    .map(|v| v.map_or(json::Value::Null, alias_map_to_value))
                                 }
                             }
                             OutputAnnotation::RelationshipToModelAggregate { .. } => {
@@ -235,13 +261,15 @@ where
     )
 }
 
-pub fn process_selection_set_as_list(
-    row_set: ndc_models::RowSet,
+fn process_selection_set_as_list<T>(
+    rows: Option<Vec<T>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<Option<Vec<IndexMap<ast::Alias, json::Value>>>, error::FieldError> {
-    let processed_response = row_set
-        .rows
+) -> Result<Option<Vec<IndexMap<ast::Alias, json::Value>>>, error::FieldError>
+where
+    T: KeyValueResponse,
+{
+    let processed_response = rows
         .map(|rows| {
             rows.into_iter()
                 .map(|row| process_single_query_response_row(row, selection_set, response_config))
@@ -251,13 +279,15 @@ pub fn process_selection_set_as_list(
     Ok(processed_response)
 }
 
-pub fn process_selection_set_as_object(
-    row_set: ndc_models::RowSet,
+fn process_selection_set_as_object<T>(
+    rows: Option<Vec<T>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     response_config: &Option<Arc<data_connectors::CommandsResponseConfig>>,
-) -> Result<Option<IndexMap<ast::Alias, json::Value>>, error::FieldError> {
-    let processed_response = row_set
-        .rows
+) -> Result<Option<IndexMap<ast::Alias, json::Value>>, error::FieldError>
+where
+    T: KeyValueResponse,
+{
+    let processed_response = rows
         .and_then(|rows| rows.into_iter().next())
         .map(|row| process_single_query_response_row(row, selection_set, response_config))
         .transpose()?;
@@ -514,7 +544,7 @@ pub fn process_response(
             let row_set = get_single_rowset(rows_sets)?;
             match process_response_as {
                 ProcessResponseAs::Array { .. } => {
-                    let result = process_selection_set_as_list(row_set, selection_set, &None)?;
+                    let result = process_selection_set_as_list(row_set.rows, selection_set, &None)?;
                     let response = json::to_value(result).map_err(error::FieldError::from)?;
                     Ok(ProcessedResponse {
                         response,
@@ -522,7 +552,8 @@ pub fn process_response(
                     })
                 }
                 ProcessResponseAs::Object { .. } => {
-                    let result = process_selection_set_as_object(row_set, selection_set, &None)?;
+                    let result =
+                        process_selection_set_as_object(row_set.rows, selection_set, &None)?;
                     let response = json::to_value(result).map_err(error::FieldError::from)?;
                     Ok(ProcessedResponse {
                         response,

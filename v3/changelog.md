@@ -46,6 +46,8 @@ the following customizations:
 
 ### Fixed
 
+- Fix poor performance of `process_response` for large and deeply-nested results
+
 ### Changed
 
 - Making `args` non-compulsory for models where all arguments have presets.
