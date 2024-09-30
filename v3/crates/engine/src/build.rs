@@ -3,7 +3,7 @@ use std::sync::Arc;
 #[derive(Debug, thiserror::Error)]
 pub enum BuildError {
     #[error("invalid metadata: {0}")]
-    InvalidMetadata(#[from] metadata_resolve::Error),
+    InvalidMetadata(#[from] metadata_resolve::ErrorWithContext),
     #[error("unable to build schema: {0}")]
     UnableToBuildSchema(#[from] graphql_schema::Error),
 }

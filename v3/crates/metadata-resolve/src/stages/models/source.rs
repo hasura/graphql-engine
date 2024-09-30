@@ -53,7 +53,6 @@ pub(crate) fn resolve_model_source(
         .0
         .get(&qualified_data_connector_name)
         .ok_or_else(|| ModelsError::UnknownModelDataConnector {
-            path: model.path.clone(),
             model_name: model.name.clone(),
             data_connector: qualified_data_connector_name.clone(),
         })?;

@@ -137,7 +137,8 @@ fn add_aggregatable_fields(
             })?;
 
         let field_graphql_name = mk_name(aggregatable_field_info.field_name.as_str())
-            .map_err(metadata_resolve::Error::from)?;
+            .map_err(metadata_resolve::Error::from)
+            .map_err(metadata_resolve::ErrorWithContext::from)?;
 
         let field = gql_schema::Field::<GDS>::new(
             field_graphql_name.clone(),
@@ -272,7 +273,8 @@ fn add_aggregation_functions(
 ) -> Result<(), Error> {
     for aggregatable_function_info in &aggregate_expression.operand.aggregation_functions {
         let field_graphql_name = mk_name(aggregatable_function_info.name.as_str())
-            .map_err(metadata_resolve::Error::from)?;
+            .map_err(metadata_resolve::Error::from)
+            .map_err(metadata_resolve::ErrorWithContext::from)?;
 
         let field = gql_schema::Field::<GDS>::new(
             field_graphql_name.clone(),

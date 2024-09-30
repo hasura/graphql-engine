@@ -23,6 +23,27 @@ use crate::helpers::{
     ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
 };
 
+// Eventually, we'll just delete the `Raw` variant and this will become a regular struct when all
+// errors have all the relevant path information.
+#[derive(Debug, thiserror::Error)]
+pub enum ErrorWithContext {
+    Raw(#[from] Error),
+    Contextualised {
+        error: Error,
+        path: jsonpath::JSONPath,
+    },
+}
+
+impl Display for ErrorWithContext {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ErrorWithContext::Contextualised { error, .. } | ErrorWithContext::Raw(error) => {
+                error.fmt(f)
+            }
+        }
+    }
+}
+
 // TODO: This enum really needs structuring
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

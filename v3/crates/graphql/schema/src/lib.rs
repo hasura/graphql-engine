@@ -281,7 +281,7 @@ pub enum Error {
     #[error("metadata is not consistent: {error}")]
     ResolveError {
         #[from]
-        error: metadata_resolve::Error,
+        error: metadata_resolve::ErrorWithContext,
     },
     #[error("internal error while building schema: {error}")]
     InternalBuildError {

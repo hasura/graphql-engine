@@ -164,8 +164,9 @@ pub fn build_model_order_by_input_schema(
         })?;
 
     for (field_name, orderable_field) in &order_by_expression.orderable_fields {
-        let graphql_field_name =
-            mk_name(field_name.as_str()).map_err(metadata_resolve::Error::from)?;
+        let graphql_field_name = mk_name(field_name.as_str())
+            .map_err(metadata_resolve::Error::from)
+            .map_err(metadata_resolve::ErrorWithContext::from)?;
 
         // Get internal field definition
         let field_definition = object_type_representation
@@ -311,7 +312,9 @@ fn build_all_relationships(
                 let target_model_source = metadata_resolve::ModelTargetSource::from_model_source(
                     target_source,
                     relationship,
-                )?;
+                )
+                .map_err(metadata_resolve::Error::from)
+                .map_err(metadata_resolve::ErrorWithContext::from)?;
 
                 // order_by expression with relationships is currently only supported for local relationships
                 if let metadata_resolve::RelationshipExecutionCategory::Local =
@@ -390,7 +393,9 @@ fn build_orderable_relationships(
     orderable_relationships: &BTreeMap<RelationshipName, OrderableRelationship>,
 ) -> Result<(), Error> {
     for (rel_name, orderable_relationship) in orderable_relationships {
-        let field_name = mk_name(rel_name.as_str()).map_err(metadata_resolve::Error::from)?;
+        let field_name = mk_name(rel_name.as_str())
+            .map_err(metadata_resolve::Error::from)
+            .map_err(metadata_resolve::ErrorWithContext::from)?;
 
         // lookup the relationship used in the underlying object type
         let relationship = object_type_representation
@@ -426,7 +431,9 @@ fn build_orderable_relationships(
                 let target_model_source = metadata_resolve::ModelTargetSource::from_model_source(
                     target_source,
                     relationship,
-                )?;
+                )
+                .map_err(metadata_resolve::Error::from)
+                .map_err(metadata_resolve::ErrorWithContext::from)?;
 
                 // order_by expression with relationships is currently only supported for local relationships
                 if let metadata_resolve::RelationshipExecutionCategory::Local =

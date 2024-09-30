@@ -152,8 +152,9 @@ fn build_comparable_fields_schema(
 
     // scalar column fields
     for (field_name, comparison_expression) in scalar_fields {
-        let field_graphql_name =
-            mk_name(field_name.as_str()).map_err(metadata_resolve::Error::from)?;
+        let field_graphql_name = mk_name(field_name.as_str())
+            .map_err(metadata_resolve::Error::from)
+            .map_err(metadata_resolve::ErrorWithContext::from)?;
 
         let registered_type_name =
             get_scalar_comparison_input_type(builder, comparison_expression)?;
@@ -213,8 +214,9 @@ fn build_comparable_fields_schema(
 
     // object column fields
     for (field_name, object_comparison_expression) in object_fields {
-        let field_graphql_name =
-            mk_name(field_name.as_str()).map_err(metadata_resolve::Error::from)?;
+        let field_graphql_name = mk_name(field_name.as_str())
+            .map_err(metadata_resolve::Error::from)
+            .map_err(metadata_resolve::ErrorWithContext::from)?;
 
         let registered_type_name =
             builder.register_type(TypeId::InputObjectBooleanExpressionType {
@@ -297,8 +299,9 @@ fn build_new_comparable_relationships_schema(
     let mut input_fields = BTreeMap::new();
 
     for (relationship_name, comparable_relationship) in relationship_fields {
-        let field_name =
-            mk_name(relationship_name.as_str()).map_err(metadata_resolve::Error::from)?;
+        let field_name = mk_name(relationship_name.as_str())
+            .map_err(metadata_resolve::Error::from)
+            .map_err(metadata_resolve::ErrorWithContext::from)?;
 
         // lookup the relationship used in the underlying object type
         let relationship = object_type_representation
@@ -523,7 +526,8 @@ fn build_model_relationship_schema(
     // Build relationship field in filter expression only when
     // the target_model is backed by a source
     let target_model_source =
-        metadata_resolve::ModelTargetSource::from_model_source(target_source, relationship)?;
+        metadata_resolve::ModelTargetSource::from_model_source(target_source, relationship)
+            .map_err(metadata_resolve::ErrorWithContext::from)?;
 
     let annotation = FilterRelationshipAnnotation {
         source_type: relationship.source.clone(),
@@ -681,7 +685,9 @@ fn get_scalar_comparison_input_type(
     let graphql_type_name = comparison_expression.type_name.clone();
     let mut operators = Vec::new();
     for (op_name, input_type) in &comparison_expression.operators {
-        let op_name = mk_name(op_name.as_str()).map_err(metadata_resolve::Error::from)?;
+        let op_name = mk_name(op_name.as_str())
+            .map_err(metadata_resolve::Error::from)
+            .map_err(metadata_resolve::ErrorWithContext::from)?;
 
         operators.push((op_name, input_type.clone()));
     }

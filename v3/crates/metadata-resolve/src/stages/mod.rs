@@ -27,13 +27,13 @@ use open_dds::flags;
 pub use types::Metadata;
 
 use crate::types::configuration::Configuration;
-use crate::types::error::{Error, SeparatedBy, ShouldBeAnError};
+use crate::types::error::{Error, ErrorWithContext, SeparatedBy, ShouldBeAnError};
 
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
 pub fn resolve(
     metadata: open_dds::Metadata,
     configuration: &Configuration,
-) -> Result<(Metadata, Vec<Warning>), Error> {
+) -> Result<(Metadata, Vec<Warning>), ErrorWithContext> {
     // all issues raised throughout metadata-resolve. These will be turned into `warnings` or
     // `errors` at the end of this function, depending on OpenDDS flags.
     let mut all_issues = vec![];
@@ -44,13 +44,14 @@ pub fn resolve(
     // The graphql config represents the shape of the Hasura features in the graphql schema,
     // and which features should be enabled or disabled. We check this structure is valid.
     let graphql_config =
-        graphql_config::resolve(&metadata_accessor.graphql_config, metadata_accessor.flags)?;
+        graphql_config::resolve(&metadata_accessor.graphql_config, metadata_accessor.flags)
+            .map_err(Error::from)?;
 
     // Fetch and check schema information for all our data connectors
     let data_connectors::DataConnectorsOutput {
         data_connectors,
         issues,
-    } = data_connectors::resolve(&metadata_accessor, configuration)?;
+    } = data_connectors::resolve(&metadata_accessor, configuration).map_err(Error::from)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -60,14 +61,14 @@ pub fn resolve(
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
         object_types,
-    } = object_types::resolve(&metadata_accessor, &data_connectors)?;
+    } = object_types::resolve(&metadata_accessor, &data_connectors).map_err(Error::from)?;
 
     // Validate custom defined scalar types
     let scalar_types::ScalarTypesOutput {
         scalar_types,
         graphql_types,
         issues,
-    } = scalar_types::resolve(&metadata_accessor, graphql_types)?;
+    } = scalar_types::resolve(&metadata_accessor, graphql_types).map_err(Error::from)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -81,7 +82,8 @@ pub fn resolve(
         &data_connectors,
         &object_types,
         &scalar_types,
-    )?;
+    )
+    .map_err(Error::from)?;
 
     // Validate `DataConnectorScalarType` metadata. This will soon be deprecated and subsumed by
     // `BooleanExpressionType`
@@ -93,14 +95,15 @@ pub fn resolve(
         &data_connectors,
         &scalar_types,
         graphql_types,
-    )?;
+    )
+    .map_err(Error::from)?;
 
     // Fetch and validate permissions, and attach them to the relevant object types
     let object_types_with_permissions =
-        type_permissions::resolve(&metadata_accessor, object_types)?;
+        type_permissions::resolve(&metadata_accessor, object_types).map_err(Error::from)?;
 
     // collect raw relationships information
-    let relationships = relationships::resolve(&metadata_accessor)?;
+    let relationships = relationships::resolve(&metadata_accessor).map_err(Error::from)?;
 
     // Resolve fancy new boolean expression types
     let boolean_expressions::BooleanExpressionsOutput {
@@ -113,7 +116,8 @@ pub fn resolve(
         &graphql_config,
         &object_types_with_permissions,
         &relationships,
-    )?;
+    )
+    .map_err(Error::from)?;
 
     let order_by_expressions::OrderByExpressionsOutput {
         order_by_expressions,
@@ -137,7 +141,8 @@ pub fn resolve(
         &scalar_types,
         graphql_types,
         &graphql_config,
-    )?;
+    )
+    .map_err(Error::from)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -154,7 +159,8 @@ pub fn resolve(
         &object_types_with_permissions,
         graphql_types,
         &graphql_config,
-    )?;
+    )
+    .map_err(Error::from)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -179,7 +185,8 @@ pub fn resolve(
         &aggregate_expressions,
         order_by_expressions,
         graphql_types,
-    )?;
+    )
+    .map_err(Error::from)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
@@ -191,13 +198,14 @@ pub fn resolve(
         &scalar_types,
         &object_boolean_expression_types,
         &boolean_expression_types,
-    )?;
+    )
+    .map_err(Error::from)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 
-    apollo::resolve(apollo_federation_entity_enabled_types)?;
+    apollo::resolve(apollo_federation_entity_enabled_types).map_err(Error::from)?;
 
-    relay::resolve(global_id_enabled_types)?;
+    relay::resolve(global_id_enabled_types).map_err(Error::from)?;
 
     let object_types_with_relationships = object_relationships::resolve(
         &metadata_accessor,

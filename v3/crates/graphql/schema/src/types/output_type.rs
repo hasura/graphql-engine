@@ -201,8 +201,9 @@ fn object_type_fields(
         .fields
         .iter()
         .map(|(field_name, field_definition)| -> Result<_, Error> {
-            let graphql_field_name =
-                mk_name(field_name.as_str()).map_err(metadata_resolve::Error::from)?;
+            let graphql_field_name = mk_name(field_name.as_str())
+                .map_err(metadata_resolve::Error::from)
+                .map_err(metadata_resolve::ErrorWithContext::from)?;
 
             let field_arguments = field_definition
                 .field_arguments
@@ -458,7 +459,8 @@ fn model_relationship_field(
                     source_type: relationship.source.clone(),
                     relationship_name: relationship.relationship_name.clone(),
                     model_name: model_relationship_target.model_name.clone(),
-                    target_source: metadata_resolve::ModelTargetSource::new(model, relationship)?,
+                    target_source: metadata_resolve::ModelTargetSource::new(model, relationship)
+                        .map_err(metadata_resolve::ErrorWithContext::from)?,
                     target_type: model_relationship_target.target_typename.clone(),
                     relationship_type: model_relationship_target.relationship_type.clone(),
                     mappings: model_relationship_target.mappings.clone(),
@@ -535,7 +537,8 @@ fn model_aggregate_relationship_field(
                     source_type: relationship.source.clone(),
                     relationship_name: relationship.relationship_name.clone(),
                     model_name: model_aggregate_relationship_target.model_name.clone(),
-                    target_source: metadata_resolve::ModelTargetSource::new(model, relationship)?,
+                    target_source: metadata_resolve::ModelTargetSource::new(model, relationship)
+                        .map_err(metadata_resolve::ErrorWithContext::from)?,
                     target_type: model_aggregate_relationship_target.target_typename.clone(),
                     mappings: model_aggregate_relationship_target.mappings.clone(),
                     deprecated: relationship.deprecated.clone(),
