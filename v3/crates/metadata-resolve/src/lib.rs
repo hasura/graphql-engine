@@ -76,4 +76,5 @@ pub use types::subgraph::{
     deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
     serialize_non_string_key_btreemap, serialize_qualified_btreemap, ArgumentInfo, ArgumentKind,
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
+    UnTaggedQualifiedTypeName,
 };

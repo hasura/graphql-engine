@@ -133,7 +133,17 @@
                             "subgraph": "default",
                             "name": "PlaylistTrack"
                           },
-                          "relationship_type": "Array"
+                          "opendd_type": {
+                            "subgraph": "default",
+                            "name": "PlaylistTrack"
+                          },
+                          "relationship_type": "Array",
+                          "mapping": [
+                            {
+                              "source_field": "TrackId",
+                              "target_field": "TrackId"
+                            }
+                          ]
                         }
                       },
                       "deprecated": false,
@@ -157,7 +167,17 @@
                         "subgraph": "default",
                         "name": "Track"
                       },
-                      "relationship_type": "Array"
+                      "opendd_type": {
+                        "subgraph": "default",
+                        "name": "Track"
+                      },
+                      "relationship_type": "Array",
+                      "mapping": [
+                        {
+                          "source_field": "AlbumId",
+                          "target_field": "AlbumId"
+                        }
+                      ]
                     }
                   },
                   "deprecated": false,
@@ -410,7 +430,17 @@
                             "subgraph": "default",
                             "name": "Employee"
                           },
-                          "relationship_type": "Array"
+                          "opendd_type": {
+                            "subgraph": "default",
+                            "name": "Employee"
+                          },
+                          "relationship_type": "Array",
+                          "mapping": [
+                            {
+                              "source_field": "EmployeeId",
+                              "target_field": "ReportsTo"
+                            }
+                          ]
                         }
                       },
                       "deprecated": false,
@@ -434,7 +464,17 @@
                         "subgraph": "default",
                         "name": "Employee"
                       },
-                      "relationship_type": "Object"
+                      "opendd_type": {
+                        "subgraph": "default",
+                        "name": "Employee"
+                      },
+                      "relationship_type": "Object",
+                      "mapping": [
+                        {
+                          "source_field": "SupportRepId",
+                          "target_field": "EmployeeId"
+                        }
+                      ]
                     }
                   },
                   "deprecated": false,

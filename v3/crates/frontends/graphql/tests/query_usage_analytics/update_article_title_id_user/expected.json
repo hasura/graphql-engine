@@ -52,7 +52,17 @@
                         "subgraph": "default",
                         "name": "Articles"
                       },
-                      "relationship_type": "Object"
+                      "opendd_type": {
+                        "subgraph": "default",
+                        "name": "article"
+                      },
+                      "relationship_type": "Object",
+                      "mapping": [
+                        {
+                          "source_field": "article_id",
+                          "target_field": "article_id"
+                        }
+                      ]
                     }
                   },
                   "deprecated": false,
@@ -95,7 +105,17 @@
                               "subgraph": "default",
                               "name": "Authors"
                             },
-                            "relationship_type": "Object"
+                            "opendd_type": {
+                              "subgraph": "default",
+                              "name": "author"
+                            },
+                            "relationship_type": "Object",
+                            "mapping": [
+                              {
+                                "source_field": "author_id",
+                                "target_field": "author_id"
+                              }
+                            ]
                           }
                         },
                         "predicate_usage": {

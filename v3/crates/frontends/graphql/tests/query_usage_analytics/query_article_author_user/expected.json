@@ -150,7 +150,17 @@
                           "subgraph": "default",
                           "name": "Authors"
                         },
-                        "relationship_type": "Object"
+                        "opendd_type": {
+                          "subgraph": "default",
+                          "name": "author"
+                        },
+                        "relationship_type": "Object",
+                        "mapping": [
+                          {
+                            "source_field": "author_id",
+                            "target_field": "author_id"
+                          }
+                        ]
                       }
                     },
                     "predicate_usage": {

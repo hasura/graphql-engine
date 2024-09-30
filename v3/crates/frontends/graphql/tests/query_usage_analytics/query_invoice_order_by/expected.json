@@ -61,7 +61,17 @@
                             "subgraph": "default",
                             "name": "Customer"
                           },
-                          "relationship_type": "Object"
+                          "opendd_type": {
+                            "subgraph": "default",
+                            "name": "Customer"
+                          },
+                          "relationship_type": "Object",
+                          "mapping": [
+                            {
+                              "source_field": "CustomerId",
+                              "target_field": "CustomerId"
+                            }
+                          ]
                         }
                       },
                       "deprecated": false,
@@ -157,7 +167,17 @@
                         "subgraph": "default",
                         "name": "InvoiceLine"
                       },
-                      "relationship_type": "Array"
+                      "opendd_type": {
+                        "subgraph": "default",
+                        "name": "InvoiceLine"
+                      },
+                      "relationship_type": "Array",
+                      "mapping": [
+                        {
+                          "source_field": "InvoiceId",
+                          "target_field": "InvoiceId"
+                        }
+                      ]
                     }
                   },
                   "deprecated": false,

@@ -57,7 +57,17 @@
                         "subgraph": "default",
                         "name": "Articles"
                       },
-                      "relationship_type": "Object"
+                      "opendd_type": {
+                        "subgraph": "default",
+                        "name": "article"
+                      },
+                      "relationship_type": "Object",
+                      "mapping": [
+                        {
+                          "source_field": "article_id",
+                          "target_field": "article_id"
+                        }
+                      ]
                     }
                   },
                   "deprecated": false,

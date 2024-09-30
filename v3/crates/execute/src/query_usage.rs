@@ -165,6 +165,8 @@ fn analyze_input_annotation(annotation: &graphql_schema::InputAnnotation) -> Vec
                     target: RelationshipTarget::Model {
                         model_name: relationship_annotation.target_model_name.clone(),
                         relationship_type: relationship_annotation.relationship_type.clone(),
+                        opendd_type: relationship_annotation.target_type.clone(),
+                        mapping: get_relationship_model_mappings(&relationship_annotation.mappings),
                     },
                     deprecated: is_deprecated,
                     deprecated_reason: reason,
@@ -220,6 +222,8 @@ fn analyze_model_input_annotation(
                 target: RelationshipTarget::Model {
                     model_name: relationship_orderby.target_model_name.clone(),
                     relationship_type: relationship_orderby.relationship_type.clone(),
+                    opendd_type: relationship_orderby.target_type.clone(),
+                    mapping: get_relationship_model_mappings(&relationship_orderby.mappings),
                 },
                 deprecated: is_deprecated,
                 deprecated_reason: reason,
@@ -288,6 +292,8 @@ fn analyze_output_annotation(annotation: &graphql_schema::OutputAnnotation) -> V
                 target: RelationshipTarget::Model {
                     model_name: relationship.model_name.clone(),
                     relationship_type: relationship.relationship_type.clone(),
+                    opendd_type: relationship.target_type.clone(),
+                    mapping: get_relationship_model_mappings(&relationship.mappings),
                 },
                 deprecated: is_deprecated,
                 deprecated_reason: reason,
@@ -303,6 +309,11 @@ fn analyze_output_annotation(annotation: &graphql_schema::OutputAnnotation) -> V
                 source: relationship.source_type.clone(),
                 target: RelationshipTarget::Command {
                     command_name: relationship.command_name.clone(),
+                    opendd_type: relationship
+                        .target_type
+                        .get_underlying_type_name()
+                        .to_untagged(),
+                    mapping: get_relationship_command_mappings(&relationship.mappings),
                 },
                 deprecated: is_deprecated,
                 deprecated_reason: reason,
@@ -319,6 +330,8 @@ fn analyze_output_annotation(annotation: &graphql_schema::OutputAnnotation) -> V
                 target: RelationshipTarget::Model {
                     model_name: relationship.model_name.clone(),
                     relationship_type: RelationshipType::Array,
+                    opendd_type: relationship.target_type.clone(),
+                    mapping: get_relationship_model_mappings(&relationship.mappings),
                 },
                 deprecated: is_deprecated,
                 deprecated_reason: reason,
@@ -469,6 +482,8 @@ fn analyze_model_predicate_internal(
                 target: RelationshipTarget::Model {
                     model_name: relationship_info.target_model_name.clone(),
                     relationship_type: relationship_info.relationship_type.clone(),
+                    opendd_type: relationship_info.target_type.clone(),
+                    mapping: get_relationship_model_mappings(&relationship_info.mappings),
                 },
                 predicate_usage: Box::new(analyze_model_predicate(predicate)),
             });
@@ -498,4 +513,30 @@ fn get_deprecated_details(deprecated: &Option<Deprecated>) -> DeprecatedDetails 
         is_deprecated,
         reason,
     }
+}
+
+fn get_relationship_model_mappings(
+    mappings: &Vec<metadata_resolve::RelationshipModelMapping>,
+) -> Vec<query_usage_analytics::RelationshipModelMapping> {
+    let mut result = Vec::new();
+    for mapping in mappings {
+        result.push(query_usage_analytics::RelationshipModelMapping {
+            source_field: mapping.source_field.field_name.clone(),
+            target_field: mapping.target_field.field_name.clone(),
+        });
+    }
+    result
+}
+
+fn get_relationship_command_mappings(
+    mappings: &Vec<metadata_resolve::RelationshipCommandMapping>,
+) -> Vec<query_usage_analytics::RelationshipCommandMapping> {
+    let mut result = Vec::new();
+    for mapping in mappings {
+        result.push(query_usage_analytics::RelationshipCommandMapping {
+            source_field: mapping.source_field.field_name.clone(),
+            target_argument: mapping.argument_name.clone(),
+        });
+    }
+    result
 }
