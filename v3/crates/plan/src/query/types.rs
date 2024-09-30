@@ -1,12 +1,16 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use execute::plan::{Relationship, ResolvedFilterExpression};
+use execute::plan::{Relationship, ResolvedField, ResolvedFilterExpression, ResolvedNestedField};
 use metadata_resolve::Qualified;
 use open_dds::{
+    commands::{FunctionName, ProcedureName},
     data_connector::CollectionName,
     types::{CustomTypeName, DataConnectorArgumentName},
 };
+use plan_types::NdcFieldAlias;
+
+use indexmap::IndexMap;
 
 // these types aren't really GraphQL specific and should move some where more general
 use graphql_ir::{NdcRelationshipName, ResolvedOrderBy};
@@ -25,6 +29,24 @@ pub struct NDCQuery {
     pub order_by: ResolvedOrderBy<'static>,
     pub limit: Option<u32>,
     pub offset: Option<u32>,
+    pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
+}
+
+#[derive(Debug, Clone)]
+pub struct NDCFunction {
+    pub function_name: FunctionName,
+    pub fields: IndexMap<NdcFieldAlias, ResolvedField>,
+    pub arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
+    pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
+}
+
+#[derive(Debug, Clone)]
+pub struct NDCProcedure {
+    pub procedure_name: ProcedureName,
+    pub arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
+    pub fields: Option<ResolvedNestedField>,
     pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 }

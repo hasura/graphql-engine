@@ -19,18 +19,17 @@ use std::{any::Any, collections::BTreeMap, sync::Arc};
 use execute::{
     ndc::{NdcQueryResponse, FUNCTION_IR_VALUE_COLUMN_NAME},
     plan::{
-        self,
         field::{NestedArray, NestedField},
-        Argument, Relationship, ResolvedField, ResolvedQueryExecutionPlan, ResolvedQueryNode,
+        Argument, ResolvedField, ResolvedQueryExecutionPlan, ResolvedQueryNode,
     },
     HttpContext,
 };
-use graphql_ir::NdcRelationshipName;
 use open_dds::{
     commands::FunctionName,
     data_connector::{CollectionName, DataConnectorColumnName},
     types::{CustomTypeName, DataConnectorArgumentName},
 };
+use plan::NDCFunction;
 use plan_types::NdcFieldAlias;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
@@ -66,16 +65,12 @@ pub(crate) enum CommandOutput {
 #[derive(Debug, Clone)]
 pub(crate) struct NDCFunctionPushDown {
     http_context: Arc<execute::HttpContext>,
-    function_name: FunctionName,
-    arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
-    fields: IndexMap<NdcFieldAlias, ResolvedField>,
-    collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
+    function: NDCFunction,
     // used to post process a command's output
     output: CommandOutput,
     //  The key from which the response has to be extracted if the command output is not the
     //  same as the ndc type. This happens with response config in a data connector link
     extract_response_from: Option<DataConnectorColumnName>,
-    data_connector: Arc<metadata_resolve::DataConnectorLink>,
     // the schema of the node's output
     projected_schema: SchemaRef,
     // some datafusion detail
@@ -89,11 +84,11 @@ fn wrap_ndc_fields(
 ) -> IndexMap<NdcFieldAlias, ResolvedField> {
     let value_field = match command_output {
         CommandOutput::Object(_) => {
-            NestedField::Object(plan::field::NestedObject { fields: ndc_fields })
+            NestedField::Object(execute::plan::field::NestedObject { fields: ndc_fields })
         }
         CommandOutput::ListOfObjects(_) => {
             let nested_fields =
-                NestedField::Object(plan::field::NestedObject { fields: ndc_fields });
+                NestedField::Object(execute::plan::field::NestedObject { fields: ndc_fields });
             NestedField::Array(NestedArray {
                 fields: Box::new(nested_fields),
             })
@@ -124,15 +119,18 @@ impl NDCFunctionPushDown {
         extract_response_from: Option<DataConnectorColumnName>,
     ) -> NDCFunctionPushDown {
         let metrics = ExecutionPlanMetricsSet::new();
-        Self {
-            http_context,
+        let function = NDCFunction {
             function_name,
             arguments,
+            data_connector,
             fields: wrap_ndc_fields(&output, ndc_fields),
             collection_relationships: BTreeMap::new(),
+        };
+        Self {
+            http_context,
+            function,
             output,
             extract_response_from,
-            data_connector,
             projected_schema: schema.inner().clone(),
             cache: Self::compute_properties(schema.inner().clone()),
             metrics,
@@ -201,7 +199,8 @@ impl ExecutionPlan for NDCFunctionPushDown {
         let query_execution_plan = ResolvedQueryExecutionPlan {
             query_node: ResolvedQueryNode {
                 fields: Some(
-                    self.fields
+                    self.function
+                        .fields
                         .iter()
                         .map(|(field_name, field)| (field_name.clone(), field.clone()))
                         .collect(),
@@ -212,8 +211,9 @@ impl ExecutionPlan for NDCFunctionPushDown {
                 order_by: None,
                 predicate: None,
             },
-            collection: CollectionName::from(self.function_name.as_str()),
+            collection: CollectionName::from(self.function.function_name.as_str()),
             arguments: self
+                .function
                 .arguments
                 .iter()
                 .map(|(argument, value)| {
@@ -225,18 +225,20 @@ impl ExecutionPlan for NDCFunctionPushDown {
                     )
                 })
                 .collect(),
-            collection_relationships: self.collection_relationships.clone(),
+            collection_relationships: self.function.collection_relationships.clone(),
             variables: None,
-            data_connector: self.data_connector.clone(),
+            data_connector: self.function.data_connector.clone(),
         };
-        let query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)
-            .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;
+        let query_request = execute::plan::ndc_request::make_ndc_query_request(
+            query_execution_plan,
+        )
+        .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;
 
         let fut = fetch_from_data_connector(
             self.projected_schema.clone(),
             self.http_context.clone(),
             query_request,
-            self.data_connector.clone(),
+            self.function.data_connector.clone(),
             self.output.clone(),
             self.extract_response_from.clone(),
             baseline_metrics,

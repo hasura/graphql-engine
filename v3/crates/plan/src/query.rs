@@ -1,7 +1,7 @@
 pub mod field_selection;
 pub mod model_target;
 mod types;
-pub use types::{NDCQuery, QueryContext};
+pub use types::{NDCFunction, NDCProcedure, NDCQuery, QueryContext};
 
 use crate::column::to_resolved_column;
 use crate::types::PlanError;
