@@ -26,20 +26,15 @@ use crate::helpers::{
 // Eventually, we'll just delete the `Raw` variant and this will become a regular struct when all
 // errors have all the relevant path information.
 #[derive(Debug, thiserror::Error)]
-pub enum ErrorWithContext {
-    Raw(#[from] Error),
-    Contextualised {
-        error: Error,
-        path: jsonpath::JSONPath,
-    },
+pub enum WithContext<T> {
+    Raw(#[from] T),
+    Contextualised { error: T, path: jsonpath::JSONPath },
 }
 
-impl Display for ErrorWithContext {
+impl<T: Display> Display for WithContext<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ErrorWithContext::Contextualised { error, .. } | ErrorWithContext::Raw(error) => {
-                error.fmt(f)
-            }
+            WithContext::Contextualised { error, .. } | WithContext::Raw(error) => error.fmt(f),
         }
     }
 }

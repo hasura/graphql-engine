@@ -27,13 +27,13 @@ use open_dds::flags;
 pub use types::Metadata;
 
 use crate::types::configuration::Configuration;
-use crate::types::error::{Error, ErrorWithContext, SeparatedBy, ShouldBeAnError};
+use crate::types::error::{Error, SeparatedBy, ShouldBeAnError, WithContext};
 
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
 pub fn resolve(
     metadata: open_dds::Metadata,
     configuration: &Configuration,
-) -> Result<(Metadata, Vec<Warning>), ErrorWithContext> {
+) -> Result<(Metadata, Vec<Warning>), WithContext<Error>> {
     // all issues raised throughout metadata-resolve. These will be turned into `warnings` or
     // `errors` at the end of this function, depending on OpenDDS flags.
     let mut all_issues = vec![];

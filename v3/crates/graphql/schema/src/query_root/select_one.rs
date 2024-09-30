@@ -90,7 +90,7 @@ pub(crate) fn generate_select_one_arguments(
     for (field_name, field) in unique_identifier {
         let graphql_field_name = mk_name(field_name.as_str())
             .map_err(metadata_resolve::Error::from)
-            .map_err(metadata_resolve::ErrorWithContext::from)?;
+            .map_err(metadata_resolve::WithContext::from)?;
 
         let argument = gql_schema::InputField::new(
             graphql_field_name,

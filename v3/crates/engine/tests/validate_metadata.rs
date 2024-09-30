@@ -230,7 +230,7 @@ fn test_disallow_object_mapped_to_scalar() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: metadata_resolve::ErrorWithContext::Raw(ResolveError::ModelsError(
+                error: metadata_resolve::WithContext::Raw(ResolveError::ModelsError(
                     metadata_resolve::ModelsError::ModelTypeMappingCollectionError { .. }
                 ))
             })
@@ -252,7 +252,7 @@ fn test_disallow_filter_expression_without_source() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: metadata_resolve::ErrorWithContext::Raw(
+                error: metadata_resolve::WithContext::Raw(
                     ResolveError::CannotUseFilterExpressionsWithoutSource { .. }
                 )
             })
@@ -272,11 +272,9 @@ fn test_disallow_filter_expression_with_object_type_mismatch() -> anyhow::Result
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: metadata_resolve::ErrorWithContext::Raw(
-                    ResolveError::BooleanExpressionError(
-                        BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
-                    )
-                )
+                error: metadata_resolve::WithContext::Raw(ResolveError::BooleanExpressionError(
+                    BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
+                ))
             })
         ),
         "actual: {gds:?}"
@@ -295,7 +293,7 @@ fn test_disallow_boolean_expression_without_mapping() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: metadata_resolve::ErrorWithContext::Raw(
+                error: metadata_resolve::WithContext::Raw(
                            ResolveError::BooleanExpressionError (BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression { .. }))
             })
         ),

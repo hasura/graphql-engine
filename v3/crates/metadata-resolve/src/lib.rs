@@ -71,7 +71,7 @@ pub use stages::scalar_types::ScalarTypeRepresentation;
 pub use stages::type_permissions::{FieldPresetInfo, TypeInputPermission};
 pub use stages::{resolve, Metadata};
 pub use types::configuration;
-pub use types::error::{Error, ErrorWithContext};
+pub use types::error::{Error, WithContext};
 pub use types::permission::{ValueExpression, ValueExpressionOrPredicate};
 pub use types::subgraph::{
     deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
