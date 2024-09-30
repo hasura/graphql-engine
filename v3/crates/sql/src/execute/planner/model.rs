@@ -6,7 +6,7 @@ use datafusion::{
     arrow::{
         array::RecordBatch, datatypes::SchemaRef, error::ArrowError, json::reader as arrow_json,
     },
-    common::{internal_err, DFSchemaRef},
+    common::DFSchemaRef,
     error::{DataFusionError, Result},
     logical_expr::{Expr, LogicalPlan, UserDefinedLogicalNodeCore},
     physical_expr::EquivalenceProperties,
@@ -36,17 +36,13 @@ use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 use super::common::from_plan_error;
 use crate::catalog::model::filter;
-use execute::{
-    ndc::NdcQueryResponse,
-    plan::{Argument, ResolvedField, ResolvedQueryExecutionPlan, ResolvedQueryNode},
-    HttpContext,
-};
+use execute::{ndc::NdcQueryResponse, plan::ResolvedField, HttpContext};
 use graphql_ir::AggregateFieldSelection;
 use plan_types::NdcFieldAlias;
 
 use plan::{
-    from_model_selection, model_target_to_ndc_query, ndc_query_to_query_execution_plan,
-    to_resolved_column, NDCQuery,
+    from_model_aggregate_selection, from_model_selection, ndc_query_to_query_execution_plan,
+    NDCQuery,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -84,72 +80,12 @@ impl ModelAggregate {
         http_context: &Arc<execute::HttpContext>,
         metadata: &metadata_resolve::Metadata,
     ) -> Result<NDCAggregatePushdown> {
-        let model_target = &self.model_target;
-        let qualified_model_name = metadata_resolve::Qualified::new(
-            model_target.subgraph.clone(),
-            model_target.model_name.clone(),
-        );
-
-        let model = metadata.models.get(&qualified_model_name).ok_or_else(|| {
-            DataFusionError::Internal(format!(
-                "model {qualified_model_name} not found in metadata"
-            ))
-        })?;
-
-        let model_source = model.model.source.as_ref().ok_or_else(|| {
-            DataFusionError::Internal(format!("model {qualified_model_name} has no source"))
-        })?;
-
-        let model_object_type = metadata
-            .object_types
-            .get(&model.model.data_type)
-            .ok_or_else(|| {
-                DataFusionError::Internal(format!(
-                    "object type {} not found in metadata",
-                    model.model.data_type
-                ))
-            })?;
-
-        let mut fields = IndexMap::new();
-
-        for (field_alias, aggregate) in &self.selection {
-            let column_path = match aggregate.operand.as_ref() {
-                None => Ok(vec![]),
-                Some(Operand::Field(operand)) => {
-                    let column = to_resolved_column(
-                        metadata,
-                        &model_source.type_mappings,
-                        &model.model.data_type,
-                        model_object_type,
-                        operand,
-                    )
-                    .map_err(from_plan_error)?;
-                    Ok([vec![column.column_name], column.field_path].concat())
-                }
-                Some(_) => internal_err!("unsupported aggregate operand"),
-            }?;
-
-            let ndc_aggregate = match aggregate.function {
-                AggregationFunction::Count {} => Ok(AggregateFieldSelection::Count { column_path }),
-                AggregationFunction::CountDistinct {} => {
-                    Ok(AggregateFieldSelection::CountDistinct { column_path })
-                }
-                AggregationFunction::Custom { .. } => {
-                    internal_err!("custom aggregate functions are not supported")
-                }
-            }?;
-
-            fields.insert(NdcFieldAlias::from(field_alias.as_str()), ndc_aggregate);
-        }
-
-        let query = model_target_to_ndc_query(
+        let (_, query, fields) = from_model_aggregate_selection(
             &self.model_target,
+            &self.selection,
+            metadata,
             session,
             http_context,
-            metadata,
-            model,
-            model_source,
-            model_object_type,
         )
         .await
         .map_err(from_plan_error)?;
@@ -657,35 +593,9 @@ impl ExecutionPlan for NDCAggregatePushdown {
 
         let baseline_metrics = BaselineMetrics::new(&self.metrics, partition);
 
-        let query_execution_plan = ResolvedQueryExecutionPlan {
-            query_node: ResolvedQueryNode {
-                fields: None,
-                aggregates: Some(graphql_ir::AggregateSelectionSet {
-                    fields: self.fields.clone(),
-                }),
-                limit: self.query.limit,
-                offset: self.query.offset,
-                order_by: Some(self.query.order_by.order_by_elements.clone()),
-                predicate: self.query.filter.clone(),
-            },
-            collection: self.query.collection_name.clone(),
-            arguments: self
-                .query
-                .arguments
-                .iter()
-                .map(|(argument, value)| {
-                    (
-                        argument.clone(),
-                        Argument::Literal {
-                            value: value.clone(),
-                        },
-                    )
-                })
-                .collect(),
-            collection_relationships: self.query.collection_relationships.clone(),
-            variables: None,
-            data_connector: self.query.data_connector.clone(),
-        };
+        let query_execution_plan =
+            ndc_query_to_query_execution_plan(&self.query, &IndexMap::new(), &self.fields);
+
         let query_request = execute::plan::ndc_request::make_ndc_query_request(
             query_execution_plan,
         )
@@ -796,7 +706,8 @@ impl ExecutionPlan for NDCQueryPushDown {
 
         let baseline_metrics = BaselineMetrics::new(&self.metrics, partition);
 
-        let query_execution_plan = ndc_query_to_query_execution_plan(&self.query, &self.fields);
+        let query_execution_plan =
+            ndc_query_to_query_execution_plan(&self.query, &self.fields, &IndexMap::new());
 
         let query_request = execute::plan::ndc_request::make_ndc_query_request(
             query_execution_plan,
