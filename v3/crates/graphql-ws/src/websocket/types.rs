@@ -21,13 +21,19 @@ pub struct Context {
 }
 
 /// Represents a WebSocket connection ID.
-#[derive(Clone, Serialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Serialize, PartialEq, Eq, Hash, derive_more::Display)]
 pub struct WebSocketId(SmolStr);
 
 impl WebSocketId {
     /// Creates a new WebSocket connection ID.
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self(SmolStr::new(uuid::Uuid::new_v4().to_string()))
+    }
+}
+
+impl Default for WebSocketId {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -42,10 +48,11 @@ impl Connections {
 
     pub(crate) async fn new_connection(
         &self,
+        id: WebSocketId,
         context: Context,
         channel: Sender<Message>,
     ) -> Connection {
-        let new_connection = Connection::new(context, channel);
+        let new_connection = Connection::new(id, context, channel);
         let mut map = self.0.write().await;
         map.insert(new_connection.id.clone(), new_connection.clone());
         new_connection
@@ -93,14 +100,14 @@ pub struct ActiveConnection {
 impl Connection {
     /// Creates a new WebSocket connection with the given context and message sender channel.
     /// To actually create a WebSocket connection, use the `Connections::new_connection` method.
-    pub fn new(context: Context, channel: Sender<Message>) -> Self {
+    pub fn new(id: WebSocketId, context: Context, channel: Sender<Message>) -> Self {
         Self {
-            id: WebSocketId::new(), // Generate a new WebSocket connection ID
+            id,
             protocol_init_state: Arc::new(RwLock::new(
                 protocol::ConnectionInitState::NotInitialized,
             )), // Initial protocol state
             context: Arc::new(context), // Shared connection context
-            send_channel: channel,  // Channel for sending messages over the WebSocket
+            send_channel: channel,      // Channel for sending messages over the WebSocket
             pollers: Arc::new(RwLock::new(HashMap::new())), // A map of active pollers
         }
     }
@@ -116,7 +123,7 @@ impl Connection {
 
     /// Sends a message over the WebSocket.
     /// If the receiver has dropped the channel, the message will not be sent.
-    pub(crate) async fn send(&self, message: Message) {
+    pub async fn send(&self, message: Message) {
         // TODO: Handle the error case when the receiver channel is dropped
         let _ = self.send_channel.send(message).await;
     }

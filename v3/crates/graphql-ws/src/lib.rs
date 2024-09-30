@@ -9,5 +9,8 @@ pub use websocket::{
 };
 
 // For tests
-pub use protocol::{subscribe::execute_request, types::ServerMessage};
+pub use protocol::{
+    subscribe::{execute_request_internal, send_request_error},
+    types::ServerMessage,
+};
 pub use websocket::types::{Connection, Message};

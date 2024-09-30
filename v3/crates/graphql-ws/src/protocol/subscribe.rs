@@ -10,6 +10,20 @@ use super::types::{ConnectionInitState, OperationId, ServerMessage};
 use crate::poller;
 use crate::websocket::types as ws;
 
+#[derive(thiserror::Error, Debug)]
+enum Error {
+    #[error("graphql-ws protocol is not initialized")]
+    NotInitialized,
+    #[error("poller with operation_id {} already exists", operation_id.0)]
+    PollerAlreadyExists { operation_id: OperationId },
+}
+
+impl tracing_util::TraceableError for Error {
+    fn visibility(&self) -> tracing_util::ErrorVisibility {
+        tracing_util::ErrorVisibility::User
+    }
+}
+
 /// Handles the subscription message from the client.
 /// It either starts a new poller or sends a close message if the poller with given operation_id already exists.
 pub async fn handle_subscribe(
@@ -17,32 +31,61 @@ pub async fn handle_subscribe(
     operation_id: OperationId,
     payload: lang_graphql::http::RawRequest,
 ) {
-    match *connection.protocol_init_state.read().await {
-        // If the connection is not initialized, send an unauthorized message.
-        ConnectionInitState::NotInitialized => {
-            connection.send(ws::Message::unauthorized()).await;
-        }
-        // If the connection is initialized, handle the subscription request.
-        ConnectionInitState::Initialized {
-            ref session,
-            ref headers,
-        } => {
-            // If the poller for this operation already exists, send a close message.
-            if connection.poller_exists(&operation_id).await {
+    let tracer = tracing_util::global_tracer();
+    let result = tracer
+        .in_span_async(
+            "handle_subscribe",
+            "Handling subscribe protocol message",
+            tracing_util::SpanVisibility::User,
+            || {
+                Box::pin(async {
+                    // Set operation_id attribute
+                    tracing_util::set_attribute_on_active_span(
+                        tracing_util::AttributeVisibility::Default,
+                        "graphql.operation.id",
+                        operation_id.0.clone(),
+                    );
+                    match *connection.protocol_init_state.read().await {
+                        ConnectionInitState::NotInitialized => Err(Error::NotInitialized),
+                        ConnectionInitState::Initialized {
+                            ref session,
+                            ref headers,
+                        } => {
+                            if connection.poller_exists(&operation_id).await {
+                                Err(Error::PollerAlreadyExists { operation_id })
+                            } else {
+                                // Start a new poller for the operation and insert it into the connection.
+                                let poller = tracing_util::get_active_span(|span| {
+                                    start_poller(
+                                        operation_id.clone(),
+                                        connection.context.clone(),
+                                        session.clone(),
+                                        headers.clone(),
+                                        connection.clone(),
+                                        payload,
+                                        span.span_context().clone(),
+                                    )
+                                });
+                                connection.insert_poller(operation_id, poller).await;
+                                Ok(())
+                            }
+                        }
+                    }
+                })
+            },
+        )
+        .await;
+    if let Err(err) = result {
+        match err {
+            Error::NotInitialized => {
+                // If the connection is not initialized, send an unauthorized message.
+                connection.send(ws::Message::unauthorized()).await;
+            }
+            Error::PollerAlreadyExists { operation_id } => {
+                // If the poller for this operation already exists, send a close message.
                 connection
                     .send(ws::Message::subscriber_already_exists(&operation_id))
                     .await;
-            } else {
-                // Start a new poller for the operation and insert it into the connection.
-                let poller = start_poller(
-                    operation_id.clone(),
-                    connection.context.clone(),
-                    session.clone(),
-                    headers.clone(),
-                    connection.clone(),
-                    payload,
-                );
-                connection.insert_poller(operation_id, poller).await;
             }
         }
     }
@@ -56,6 +99,7 @@ fn start_poller(
     headers: http::HeaderMap,
     connection: ws::Connection,
     raw_request: lang_graphql::http::RawRequest,
+    parent_span_context: tracing_util::SpanContext,
 ) -> poller::Poller {
     poller::Poller::new(|| {
         Box::pin(async move {
@@ -67,6 +111,7 @@ fn start_poller(
                 headers,
                 &connection,
                 raw_request,
+                parent_span_context,
             )
             .await;
         })
@@ -74,38 +119,73 @@ fn start_poller(
 }
 
 /// Executes the GraphQL request, handling queries, mutations, and subscriptions.
-pub async fn execute_request(
+async fn execute_request(
     operation_id: OperationId,
     expose_internal_errors: ExposeInternalErrors,
     session: Session,
     headers: http::HeaderMap,
     connection: &ws::Connection,
     raw_request: lang_graphql::http::RawRequest,
+    parent_span_context: tracing_util::SpanContext,
 ) {
+    let tracer = tracing_util::global_tracer();
     // Execute the GraphQL request and handle any errors.
-    match execute_request_internal(
-        operation_id.clone(),
-        session,
-        headers,
-        connection,
-        raw_request,
-    )
-    .await
-    {
+    let result = tracer
+        .in_span_async_with_link(
+            "websocket_execute_request",
+            "Executing a GraphQL request over WebSocket",
+            tracing_util::SpanVisibility::User,
+            parent_span_context,
+            || {
+                // Set websocket_id and operation_id as attributes
+                tracing_util::set_attribute_on_active_span(
+                    tracing_util::AttributeVisibility::Default,
+                    "websocket.id",
+                    connection.id.to_string(),
+                );
+                tracing_util::set_attribute_on_active_span(
+                    tracing_util::AttributeVisibility::Default,
+                    "graphql.operation.id",
+                    operation_id.0.clone(),
+                );
+                Box::pin(async {
+                    execute_request_internal(
+                        operation_id.clone(),
+                        session,
+                        headers,
+                        connection,
+                        raw_request,
+                    )
+                    .await
+                })
+            },
+        )
+        .await;
+    match result {
         Ok(()) => {}
         Err(e) => {
             // If an error occurs, send an error message.
-            let gql_error = e.to_graphql_error(expose_internal_errors);
-            let message = ServerMessage::Error {
-                id: operation_id,
-                payload: NonEmpty::new(gql_error),
-            };
-            connection.send(ws::Message::Protocol(message)).await;
+            send_request_error(e, expose_internal_errors, operation_id, connection).await;
         }
     }
 }
 
-async fn execute_request_internal(
+pub async fn send_request_error(
+    error: execute::RequestError,
+    expose_internal_errors: ExposeInternalErrors,
+    operation_id: OperationId,
+    connection: &ws::Connection,
+) {
+    let gql_error = error.to_graphql_error(expose_internal_errors);
+    let message = ServerMessage::Error {
+        id: operation_id,
+        payload: NonEmpty::new(gql_error),
+    };
+    connection.send(ws::Message::Protocol(message)).await;
+}
+
+// Exported for testing purpose
+pub async fn execute_request_internal(
     operation_id: OperationId,
     session: Session,
     headers: http::HeaderMap,

@@ -43,6 +43,19 @@ pub enum ClientMessage {
     Pong,
 }
 
+impl ClientMessage {
+    /// Returns message type
+    pub fn message_type(&self) -> &'static str {
+        match self {
+            Self::ConnectionInit { .. } => "connection_init",
+            Self::Subscribe { .. } => "subscribe",
+            Self::Complete { .. } => "complete",
+            Self::Ping => "ping",
+            Self::Pong => "pong",
+        }
+    }
+}
+
 /// The payload of the `connection_init` message.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InitPayload {

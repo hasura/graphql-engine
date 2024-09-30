@@ -4,9 +4,9 @@ use std::pin::Pin;
 use http::HeaderMap;
 use opentelemetry::global::{self, BoxedTracer};
 use opentelemetry::trace::{
-    get_active_span, FutureExt, SpanRef, TraceContextExt, Tracer as OtelTracer,
+    get_active_span, FutureExt, Span, SpanContext, SpanRef, TraceContextExt, Tracer as OtelTracer,
 };
-use opentelemetry::Key;
+use opentelemetry::{Context, Key};
 use opentelemetry_http::HeaderExtractor;
 
 use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
@@ -142,6 +142,45 @@ impl Tracer {
             set_span_attributes(&cx.span(), visibility, &result);
             result
         })
+    }
+
+    pub async fn in_span_async_with_link<'a, R, F>(
+        &'a self,
+        name: &'static str,
+        display_name: impl Into<AttributeValue>,
+        visibility: SpanVisibility,
+        span_context: SpanContext,
+        f: F,
+    ) -> R
+    where
+        // Note: This uses a Boxed polymorphic future as the return type of `f` instead of using a generic type for the Future
+        // because when using generics for this, it takes an extremely long time to build the engine binary.
+        F: FnOnce() -> Pin<Box<dyn Future<Output = R> + 'a + Send>>,
+        R: Traceable,
+    {
+        // We cannot use in_span() API here to start a new span because it only provides a `SpanRef` and not a `Span`
+        // through `get_active_span()` function. The `SpanRef` does not have an API to add a link to it.
+        // So we start a new span manually and add the link. This is a workaround until the add_link() API is added to the `SpanRef`.
+        // SpanRef: <https://docs.rs/opentelemetry/0.23.0/opentelemetry/trace/struct.SpanRef.html>
+        // add_link(): <https://docs.rs/opentelemetry/0.23.0/opentelemetry/trace/trait.Span.html#tymethod.add_link>
+        let mut span = self.tracer.start(name);
+        span.add_link(span_context, Vec::new());
+        let cx = Context::current_with_span(span);
+        async {
+            let result = f().await;
+            get_active_span(|span_ref| {
+                set_attribute_on_span(
+                    &span_ref,
+                    AttributeVisibility::Default,
+                    "display.name",
+                    display_name,
+                );
+                set_span_attributes(&span_ref, visibility, &result);
+            });
+            result
+        }
+        .with_context(cx)
+        .await
     }
 
     /// Runs the given closure `f` asynchronously in a new span with the given `name`, and sets a visibility attribute

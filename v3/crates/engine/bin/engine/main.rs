@@ -813,5 +813,5 @@ async fn handle_websocket_request(
 
     engine_state
         .graphql_websocket_server
-        .handle_graphql_websocket(ws, &headers, context)
+        .upgrade_and_handle_websocket(ws, &headers, context)
 }

@@ -693,17 +693,32 @@ async fn run_query_graphql_ws(
     };
     let (channel_sender, mut channel_receiver) =
         tokio::sync::mpsc::channel::<graphql_ws::Message>(10);
-    let dummy_conn = graphql_ws::Connection::new(context, channel_sender);
+    let websocket_id = graphql_ws::WebSocketId::new();
+    let dummy_conn = graphql_ws::Connection::new(websocket_id, context, channel_sender);
     let operation_id = graphql_ws::OperationId("some-operation-id".to_string());
-    graphql_ws::execute_request(
+    // Using the internal function. The actual 'execute_request' function from
+    // graphl_ws crate needs a parent span context for linking purposes.
+    // Traces are not considered in tests
+    let result = graphql_ws::execute_request_internal(
         operation_id.clone(),
-        expose_internal_errors,
         session.clone(),
         request_headers.clone(),
         &dummy_conn,
         request,
     )
     .await;
+    match result {
+        Ok(()) => {}
+        Err(e) => {
+            graphql_ws::send_request_error(
+                e,
+                expose_internal_errors,
+                operation_id.clone(),
+                &dummy_conn,
+            )
+            .await;
+        }
+    }
 
     // Assert response
     let message = channel_receiver.recv().await.expect("Expected a message");

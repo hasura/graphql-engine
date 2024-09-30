@@ -10,56 +10,89 @@ use crate::websocket::types as ws;
 /// Handles the connection initialization message from the client.
 /// This function authenticates, authorizes, and initializes the WebSocket connection.
 pub async fn handle_connection_init(connection: ws::Connection, payload: Option<InitPayload>) {
-    let context = &connection.context;
-    let mut state = connection.protocol_init_state.write().await;
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "handle_connection_init",
+            "Handling connection_init protocol message",
+            tracing_util::SpanVisibility::User,
+            || {
+                Box::pin(async move {
+                    let context = &connection.context;
+                    let mut state = connection.protocol_init_state.write().await;
 
-    match *state {
-        // If the connection is not yet initialized, proceed with initialization
-        ConnectionInitState::NotInitialized => {
-            match initialize(payload, &context.http_context, &context.auth_config).await {
-                Ok((session, headers)) => {
-                    // Update state to Initialized and send a connection acknowledgment
-                    *state = ConnectionInitState::Initialized { session, headers };
-                    connection
-                        .send(ws::Message::Protocol(ServerMessage::ConnectionAck))
-                        .await;
-                }
-                Err(_e) => {
-                    // Initialization failed, send a forbidden message
-                    // TODO: Handle error here
-                    connection.send(ws::Message::forbidden()).await;
-                }
-            }
-        }
-        // If already initialized, send an error for too many initialization requests
-        ConnectionInitState::Initialized { .. } => {
-            connection.send(ws::Message::too_many_init_requests()).await;
-        }
-    }
+                    match initialize(&state, &context.http_context, &context.auth_config, payload)
+                        .await
+                    {
+                        Ok((session, headers)) => {
+                            // Update state to Initialized and send a connection acknowledgment
+                            *state = ConnectionInitState::Initialized { session, headers };
+                            connection
+                                .send(ws::Message::Protocol(ServerMessage::ConnectionAck))
+                                .await;
+                        }
+                        Err(ConnectionInitError::AlreadyInitialized) => {
+                            // If already initialized, send an error for too many initialization requests
+                            connection.send(ws::Message::too_many_init_requests()).await;
+                        }
+                        Err(_e) => {
+                            // Initialization failed, send a forbidden message
+                            connection.send(ws::Message::forbidden()).await;
+                        }
+                    }
+                    tracing_util::Successful::new(())
+                })
+            },
+        )
+        .await
+        .into_inner();
 }
 
 /// Performs the initialization process by validating the payload, authenticating, and authorizing.
 /// It returns a session and the headers if the initialization is successful.
 async fn initialize(
-    payload: Option<InitPayload>,
+    init_state: &ConnectionInitState,
     http_context: &HttpContext,
     auth_config: &AuthConfig,
+    payload: Option<InitPayload>,
 ) -> Result<(Session, http::HeaderMap), ConnectionInitError> {
-    // Parse the headers from the payload
-    let headers = match payload {
-        Some(payload) => parse_headers(payload.headers)?,
-        None => http::HeaderMap::new(),
-    };
-    // Authenticate the client based on headers and context
-    let identity = authenticate(&headers, &http_context.client, auth_config).await?;
-    // Authorize the authenticated identity
-    let session = authorize_identity(&identity, &headers)?;
-    Ok((session, headers))
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "initialize",
+            "Intialiizing graphql-ws protocol",
+            tracing_util::SpanVisibility::User,
+            || {
+                Box::pin(async {
+                    match init_state {
+                        ConnectionInitState::NotInitialized => {
+                            // Parse the headers from the payload
+                            let headers = match payload {
+                                Some(payload) => parse_headers(payload.headers)?,
+                                None => http::HeaderMap::new(),
+                            };
+                            // Authenticate the client based on headers and context
+                            let identity =
+                                authenticate(&headers, &http_context.client, auth_config).await?;
+                            // Authorize the authenticated identity
+                            let session = authorize_identity(&identity, &headers)?;
+                            Ok((session, headers))
+                        }
+                        ConnectionInitState::Initialized { .. } => {
+                            Err(ConnectionInitError::AlreadyInitialized)
+                        }
+                    }
+                })
+            },
+        )
+        .await
 }
 
 /// Error types that may occur during connection initialization.
 #[derive(Debug, thiserror::Error)]
 pub enum ConnectionInitError {
+    #[error("Connection already initialized")]
+    AlreadyInitialized,
     #[error("Invalid header name: {0}")]
     InvalidHeaderName(#[from] http::header::InvalidHeaderName),
     #[error("Invalid header value: {0}")]
@@ -68,6 +101,12 @@ pub enum ConnectionInitError {
     Authn(#[from] AuthError),
     #[error("SessionError: {0}")]
     Session(#[from] SessionError),
+}
+
+impl tracing_util::TraceableError for ConnectionInitError {
+    fn visibility(&self) -> tracing_util::ErrorVisibility {
+        tracing_util::ErrorVisibility::User
+    }
 }
 
 /// Parses headers from a given map of strings into an `http::HeaderMap`.
