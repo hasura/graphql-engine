@@ -144,7 +144,10 @@ impl Tracer {
         })
     }
 
-    pub async fn in_span_async_with_link<'a, R, F>(
+    /// Runs the tive closure `f` asynchronously by opening a span in a new trace with the given `name`, and sets a visibility attribute
+    /// on the span based on `visibility` and sets the span's error attributes based on the result of the closure.
+    /// The span is linked to the given `span_context`.
+    pub async fn new_trace_async_with_link<'a, R, F>(
         &'a self,
         name: &'static str,
         display_name: impl Into<AttributeValue>,
@@ -158,14 +161,9 @@ impl Tracer {
         F: FnOnce() -> Pin<Box<dyn Future<Output = R> + 'a + Send>>,
         R: Traceable,
     {
-        // We cannot use in_span() API here to start a new span because it only provides a `SpanRef` and not a `Span`
-        // through `get_active_span()` function. The `SpanRef` does not have an API to add a link to it.
-        // So we start a new span manually and add the link. This is a workaround until the add_link() API is added to the `SpanRef`.
-        // SpanRef: <https://docs.rs/opentelemetry/0.23.0/opentelemetry/trace/struct.SpanRef.html>
-        // add_link(): <https://docs.rs/opentelemetry/0.23.0/opentelemetry/trace/trait.Span.html#tymethod.add_link>
-        let mut span = self.tracer.start(name);
+        // Create a new span with the given name and link it to the given span context.
+        let mut span = self.tracer.start_with_context(name, &Context::new());
         span.add_link(span_context, Vec::new());
-        let cx = Context::current_with_span(span);
         async {
             let result = f().await;
             get_active_span(|span_ref| {
@@ -179,7 +177,7 @@ impl Tracer {
             });
             result
         }
-        .with_context(cx)
+        .with_context(Context::current_with_span(span)) // Run the above async block within the new span
         .await
     }
 

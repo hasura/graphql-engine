@@ -34,7 +34,7 @@ pub(crate) async fn verify_connection_init(
 ) -> Result<(), ConnectionTimeOutError> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async_with_link(
+        .new_trace_async_with_link(
             "websocket_verify_connection_init",
             "Verifying graphql-ws protocol connection_init within timeout",
             tracing_util::SpanVisibility::User,
@@ -87,7 +87,7 @@ pub(crate) async fn process_incoming_message(
     while let Some(message) = websocket_receiver.next().await {
         let tracer = tracing_util::global_tracer();
         let break_loop = tracer
-            .in_span_async_with_link(
+            .new_trace_async_with_link(
                 "websocket_process_incoming_message",
                 "Processing incoming WebSocket message",
                 tracing_util::SpanVisibility::User,
@@ -220,7 +220,7 @@ pub(crate) async fn manage_outgoing_messages(
     while let Some(message) = channel_receiver.recv().await {
         let tracer = tracing_util::global_tracer();
         let result: Result<BreakLoop, ManageOutgoingMessageError> = tracer
-            .in_span_async_with_link(
+            .new_trace_async_with_link(
                 "websocket_manage_outgoing_message",
                 "Manage outgoing WebSocket message",
                 tracing_util::SpanVisibility::User,

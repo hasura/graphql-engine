@@ -126,7 +126,7 @@ async fn start_websocket_session(
 ) {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async_with_link(
+        .new_trace_async_with_link(
             "start_websocket_session",
             "Start a WebSocket Session",
             tracing_util::SpanVisibility::User,
