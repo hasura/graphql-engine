@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2024.10.01]
+
+### Added
+
 #### Metadata build error paths
 
 Paths are being added to errors raised during the build process to allow users
@@ -621,7 +629,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.09.23...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.10.01...HEAD
+[v2024.10.01]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.01
 [v2024.09.23]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.23
 [v2024.09.16]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.16
 [v2024.09.05]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.05
