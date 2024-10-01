@@ -32,6 +32,25 @@ pub enum WithContext<T> {
     Contextualised { error: T, path: jsonpath::JSONPath },
 }
 
+impl<T> WithContext<T> {
+    pub fn path(&self) -> Option<jsonpath::JSONPath> {
+        match self {
+            WithContext::Contextualised { path, .. } => Some(path.clone()),
+            WithContext::Raw(_) => None,
+        }
+    }
+
+    pub fn coerce<S: From<T>>(self) -> WithContext<S> {
+        match self {
+            WithContext::Raw(err) => WithContext::Raw(S::from(err)),
+            WithContext::Contextualised { error, path } => WithContext::Contextualised {
+                error: S::from(error),
+                path,
+            },
+        }
+    }
+}
+
 impl<T: Display> Display for WithContext<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

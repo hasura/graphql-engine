@@ -65,7 +65,7 @@ pub fn resolve(
     >,
     mut order_by_expressions: OrderByExpressions,
     mut graphql_types: BTreeSet<ast::TypeName>,
-) -> Result<ModelsOutput, ModelsError> {
+) -> Result<ModelsOutput, crate::types::error::WithContext<ModelsError>> {
     // resolve models
     // TODO: validate types
     let mut models = IndexMap::new();
@@ -110,13 +110,13 @@ pub fn resolve(
             ) {
                 None => {}
                 Some(duplicate_model_name) => {
-                    return Err(ModelsError::from(
+                    Err(ModelsError::from(
                         relay::RelayError::DuplicateModelGlobalIdSource {
-                            model_1: resolved_model.name,
+                            model_1: resolved_model.name.clone(),
                             model_2: duplicate_model_name,
-                            object_type: resolved_model.data_type,
+                            object_type: resolved_model.data_type.clone(),
                         },
-                    ))
+                    ))?;
                 }
             }
         }
@@ -158,9 +158,9 @@ pub fn resolve(
             .insert(qualified_model_name.clone(), resolved_model)
             .is_some()
         {
-            return Err(ModelsError::DuplicateModelDefinition {
+            Err(ModelsError::DuplicateModelDefinition {
                 name: qualified_model_name,
-            });
+            })?;
         }
     }
     Ok(ModelsOutput {
@@ -191,7 +191,7 @@ fn resolve_model(
     >,
     order_by_expressions: &mut OrderByExpressions,
     graphql_types: &mut BTreeSet<ast::TypeName>,
-) -> Result<Model, ModelsError> {
+) -> Result<Model, crate::types::error::WithContext<ModelsError>> {
     let qualified_object_type_name = Qualified::new(subgraph.clone(), model.object_type().clone());
     let qualified_model_name = Qualified::new(subgraph.clone(), model.name().clone());
     let object_type_representation = source::get_model_object_type_representation(
@@ -208,19 +208,19 @@ fn resolve_model(
             .global_id_fields
             .is_empty()
         {
-            return Err(ModelsError::from(
+            Err(ModelsError::from(
                 relay::RelayError::NoGlobalFieldsPresentInGlobalIdSource {
-                    type_name: qualified_object_type_name,
+                    type_name: qualified_object_type_name.clone(),
                     model_name: model.name().clone(),
                 },
-            ));
+            ))?;
         }
         if !model.arguments().is_empty() {
-            return Err(ModelsError::from(
+            Err(ModelsError::from(
                 relay::RelayError::ModelWithArgumentsAsGlobalIdSource {
-                    model_name: qualified_model_name,
+                    model_name: qualified_model_name.clone(),
                 },
-            ));
+            ))?;
         }
         // model has `global_id_source`; insert into the BTreeMap of `global_id_enabled_types`
         match global_id_enabled_types.get_mut(&qualified_object_type_name) {
@@ -255,11 +255,11 @@ fn resolve_model(
             .is_some()
         {
             if !model.arguments().is_empty() {
-                return Err(ModelsError::from(
+                Err(ModelsError::from(
                     apollo::ApolloError::ModelWithArgumentsAsApolloFederationEntitySource {
-                        model_name: qualified_model_name,
+                        model_name: qualified_model_name.clone(),
                     },
-                ));
+                ))?;
             }
             // model has `apollo_federation_entity_source`; insert into the BTreeMap of
             // `apollo_federation_entity_enabled_types`
@@ -267,12 +267,12 @@ fn resolve_model(
                 None => {
                     // the model's graphql configuration has `apollo_federation.entitySource` but the object type
                     // of the model doesn't have any apollo federation keys
-                    return Err(ModelsError::from(
+                    Err(ModelsError::from(
                         apollo::ApolloError::NoKeysFieldsPresentInEntitySource {
-                            type_name: qualified_object_type_name,
+                            type_name: qualified_object_type_name.clone(),
                             model_name: model.name().clone(),
                         },
-                    ));
+                    ))?;
                 }
                 Some(type_name) => {
                     match type_name {
@@ -281,11 +281,11 @@ fn resolve_model(
                         }
                         // Multiple models are marked as apollo federation entity source
                         Some(_) => {
-                            return Err(ModelsError::from(
+                            Err(ModelsError::from(
                                 apollo::ApolloError::MultipleEntitySourcesForType {
-                                    type_name: qualified_object_type_name,
+                                    type_name: qualified_object_type_name.clone(),
                                 },
-                            ));
+                            ))?;
                         }
                     }
                 }
@@ -317,10 +317,10 @@ fn resolve_model(
             )
             .is_some()
         {
-            return Err(ModelsError::DuplicateModelArgumentDefinition {
-                model_name: qualified_model_name,
+            Err(ModelsError::DuplicateModelArgumentDefinition {
+                model_name: qualified_model_name.clone(),
                 argument_name: argument.name.clone(),
-            });
+            })?;
         }
     }
 

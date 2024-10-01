@@ -191,7 +191,7 @@ pub fn resolve(
         order_by_expressions,
         graphql_types,
     )
-    .map_err(Error::from)?;
+    .map_err(WithContext::coerce)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
 

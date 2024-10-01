@@ -2731,12 +2731,11 @@
       ],
       "properties": {
         "dataConnectorName": {
+          "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorName",
+          "title": "DataConnectorName",
           "description": "The name of the data connector backing this model.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/DataConnectorName"
-            }
-          ]
+          "type": "string",
+          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
         },
         "collection": {
           "description": "The collection in the data connector that backs this model.",

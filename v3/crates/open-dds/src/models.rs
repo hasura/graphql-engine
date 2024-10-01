@@ -11,6 +11,7 @@ use crate::{
     str_newtype,
     traits::{OpenDd, OpenDdDeserializeError},
     types::{CustomTypeName, Deprecated, FieldName, GraphQlFieldName, GraphQlTypeName},
+    Spanned,
 };
 
 str_newtype!(ModelName over Identifier | doc "The name of data model.");
@@ -231,7 +232,7 @@ pub struct ModelV2 {
 /// Description of how a model maps to a particular data connector
 pub struct ModelSource {
     /// The name of the data connector backing this model.
-    pub data_connector_name: DataConnectorName,
+    pub data_connector_name: Spanned<DataConnectorName>,
 
     /// The collection in the data connector that backs this model.
     pub collection: CollectionName,
