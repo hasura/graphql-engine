@@ -145,6 +145,25 @@ You can query your remote server by making requests to the Hasura GraphQL endpoi
 - Types with the _exact same name and structure_ will be merged. But types with the _same name but different structure_
   will result in type conflicts.
 
+:::tip Resolving naming conflicts
+
+If you encounter an error message like this:
+
+```plaintext
+Found conflicting definitions for GraphQL type ‘collections_order_by’
+```
+
+It means the Hasura GraphQL Engine has identified two identical top-level definitions for a type in your GraphQL schema.
+As two identical types cannot exist, you can prefix one with a namespace, thus giving it a unique name and resolving the
+conflict.
+
+If you're using the API, you can add your Remote Schema with a namespace using
+[this template](/api-reference/metadata-api/remote-schemas.mdx#metadata-add-remote-schema), taking special note of the
+`root_fields_namespace` and `prefix` keys. Or, if you're using the Console, from the `Remote Schemas` tab, after filling
+in your schema's details, click `GraphQL Customizations` and add your customization values here.
+
+:::
+
 ### Schema refreshing
 
 A remote server's GraphQL schema is cached and refreshed only when user explicitly reloads the Remote Schema.
