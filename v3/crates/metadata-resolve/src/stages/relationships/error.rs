@@ -16,4 +16,10 @@ pub enum RelationshipError {
         object_type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
+
+    #[error("Source type {object_type_name} referenced in the definition of relationship {relationship_name} is not defined ")]
+    RelationshipDefinedOnUnknownType {
+        relationship_name: RelationshipName,
+        object_type_name: Qualified<CustomTypeName>,
+    },
 }

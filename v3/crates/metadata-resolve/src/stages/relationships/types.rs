@@ -1,14 +1,13 @@
 use super::RelationshipError;
 use crate::types::subgraph::Qualified;
-use open_dds::identifier::SubgraphName;
-use open_dds::relationships::{RelationshipName, RelationshipTarget, RelationshipV1};
+use open_dds::relationships::{RelationshipName, RelationshipV1};
 use open_dds::types::CustomTypeName;
 use std::collections::BTreeMap;
 
 // multiple relationships can share the same `RelationshipName` because they refer to different objects
-// so we key them by name AND source object type
+// so we key them by source object type AND name
 pub struct Relationships<'s>(
-    pub BTreeMap<RelationshipName, BTreeMap<Qualified<CustomTypeName>, Relationship<'s>>>,
+    pub BTreeMap<Qualified<CustomTypeName>, BTreeMap<RelationshipName, Relationship<'s>>>,
 );
 
 impl<'s> Relationships<'s> {
@@ -18,25 +17,29 @@ impl<'s> Relationships<'s> {
         relationship_name: &RelationshipName,
     ) -> Result<&Relationship<'s>, RelationshipError> {
         self.0
-            .get(relationship_name)
-            .and_then(|relationships| relationships.get(object_type_name))
+            .get(object_type_name)
+            .and_then(|relationships| relationships.get(relationship_name))
             .ok_or_else(|| RelationshipError::RelationshipNotFound {
                 relationship_name: relationship_name.clone(),
                 object_type_name: object_type_name.clone(),
             })
     }
+
+    pub fn get_relationships_for_type(
+        &self,
+        object_type_name: &Qualified<CustomTypeName>,
+    ) -> &BTreeMap<RelationshipName, Relationship<'s>> {
+        self.0.get(object_type_name).unwrap_or(&EMPTY_MAP)
+    }
 }
 
-// a wrapper for the underlying metadata so we can write nice accessors
-// we don't want any logic here, that should be saved for the proper `object_relationships`
-// resolving stage
-pub struct Relationship<'s>(pub &'s RelationshipV1);
+static EMPTY_MAP: BTreeMap<RelationshipName, Relationship<'static>> = BTreeMap::new();
 
-impl<'s> Relationship<'s> {
-    pub fn get_target_subgraph(&self) -> Option<SubgraphName> {
-        match &self.0.target {
-            RelationshipTarget::Model(model_target) => model_target.subgraph(),
-            RelationshipTarget::Command(command_target) => command_target.subgraph(),
-        }
-    }
+pub enum Relationship<'s> {
+    /// Relationship that targets something in a known subgraph
+    Relationship(&'s RelationshipV1),
+    /// Relationship that targets something in an unknown subgraph.
+    /// This is only used if we're allowing unknown subgraphs, and it is
+    /// expected that this relationship is ignored and dropped
+    RelationshipToUnknownSubgraph,
 }

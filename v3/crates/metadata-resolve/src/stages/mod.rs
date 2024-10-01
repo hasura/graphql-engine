@@ -103,7 +103,12 @@ pub fn resolve(
         type_permissions::resolve(&metadata_accessor, object_types).map_err(Error::from)?;
 
     // collect raw relationships information
-    let relationships = relationships::resolve(&metadata_accessor).map_err(Error::from)?;
+    let relationships = relationships::resolve(
+        configuration,
+        &metadata_accessor,
+        &object_types_with_permissions,
+    )
+    .map_err(Error::from)?;
 
     // Resolve fancy new boolean expression types
     let boolean_expressions::BooleanExpressionsOutput {
@@ -208,11 +213,10 @@ pub fn resolve(
     relay::resolve(global_id_enabled_types).map_err(Error::from)?;
 
     let object_types_with_relationships = object_relationships::resolve(
-        &metadata_accessor,
-        configuration,
+        object_types_with_permissions,
+        &relationships,
         &data_connectors,
         &data_connector_scalars,
-        &object_types_with_permissions,
         &models,
         &commands,
         &aggregate_expressions,

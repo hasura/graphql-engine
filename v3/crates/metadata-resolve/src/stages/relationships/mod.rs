@@ -1,19 +1,26 @@
 mod error;
 mod types;
-use crate::types::subgraph::Qualified;
+use super::type_permissions;
+use crate::{configuration::Configuration, helpers, types::subgraph::Qualified};
 pub use error::RelationshipError;
-use open_dds::{relationships::RelationshipName, types::CustomTypeName};
-use std::collections::BTreeMap;
+use open_dds::{
+    identifier::SubgraphName,
+    relationships::{RelationshipName, RelationshipV1},
+    types::CustomTypeName,
+};
+use std::collections::{BTreeMap, HashSet};
 pub use types::{Relationship, Relationships};
 
 // This stage only collects relationships and collects them by subgraph,
 //  the `object_relationships` stage resolves them meaningfully in the context of their objects
 pub fn resolve<'s>(
+    configuration: &Configuration,
     metadata_accessor: &'s open_dds::accessor::MetadataAccessor,
+    object_types_with_permissions: &type_permissions::ObjectTypesWithPermissions,
 ) -> Result<Relationships<'s>, RelationshipError> {
     let mut relationships: BTreeMap<
-        RelationshipName,
-        BTreeMap<Qualified<CustomTypeName>, Relationship<'s>>,
+        Qualified<CustomTypeName>,
+        BTreeMap<RelationshipName, Relationship<'s>>,
     > = BTreeMap::new();
 
     for open_dds::accessor::QualifiedObject {
@@ -25,12 +32,21 @@ pub fn resolve<'s>(
         let qualified_type_name =
             Qualified::new(subgraph.clone(), relationship.source_type.clone());
 
-        // build up map of maps
-        if let Some(existing_relationship) = relationships.get_mut(&relationship.name) {
-            let result = existing_relationship
-                .insert(qualified_type_name.clone(), Relationship(relationship));
+        if !object_types_with_permissions.contains_key(&qualified_type_name) {
+            return Err(RelationshipError::RelationshipDefinedOnUnknownType {
+                relationship_name: relationship.name.clone(),
+                object_type_name: qualified_type_name,
+            });
+        }
 
-            // explode if we find duplicates for a type
+        // build up map of maps
+        if let Some(existing_relationship) = relationships.get_mut(&qualified_type_name) {
+            let result = existing_relationship.insert(
+                relationship.name.clone(),
+                mk_relationship(configuration, &metadata_accessor.subgraphs, relationship),
+            );
+
+            // explode if we find duplicates for a name
             if result.is_some() {
                 return Err(RelationshipError::DuplicateRelationshipForType {
                     relationship_name: relationship.name.clone(),
@@ -39,10 +55,38 @@ pub fn resolve<'s>(
             }
         } else {
             let mut inner_map = BTreeMap::new();
-            inner_map.insert(qualified_type_name, Relationship(relationship));
-            relationships.insert(relationship.name.clone(), inner_map);
+            inner_map.insert(
+                relationship.name.clone(),
+                mk_relationship(configuration, &metadata_accessor.subgraphs, relationship),
+            );
+            relationships.insert(qualified_type_name, inner_map);
         };
     }
 
     Ok(Relationships(relationships))
+}
+
+fn mk_relationship<'s>(
+    configuration: &Configuration,
+    known_subgraphs: &HashSet<SubgraphName>,
+    relationship: &'s RelationshipV1,
+) -> Relationship<'s> {
+    // If we have allowed the usage of unknown subgraphs...
+    if configuration.allow_unknown_subgraphs {
+        let subgraph = helpers::relationship::get_target_subgraph(relationship);
+
+        // ...and the subgraph is unknown
+        if subgraph.is_some_and(|subgraph| !known_subgraphs.contains(&subgraph)) {
+            // Record the relationship but as one to an unknown subgraph
+            Relationship::RelationshipToUnknownSubgraph
+        } else {
+            Relationship::Relationship(relationship)
+        }
+    }
+    // If we don't allow the usage of unknown subgraphs, we assume all used subgraphs
+    // exist and therefore there are no "unknown subgraphs". When we actually resolve
+    // the relationship if the target is to a missing subgraph, we will get an error then
+    else {
+        Relationship::Relationship(relationship)
+    }
 }

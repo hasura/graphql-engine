@@ -121,46 +121,53 @@ fn resolve_comparable_relationships(
     let mut resolved_comparable_relationships = BTreeMap::new();
 
     for comparable_relationship in comparable_relationships {
-        // if the relationship has provided an optional boolean_expression_type, let's
-        // check it makes sense
-        let target_boolean_expression_type: Result<
-            Option<Qualified<CustomTypeName>>,
-            BooleanExpressionError,
-        > = match &comparable_relationship.boolean_expression_type {
-            Some(target_boolean_expression_type_name) => {
-                // we need to look up the target subgraph in the relationship
-                let relationship = relationships.get(
-                    underlying_object_type_name,
-                    &comparable_relationship.relationship_name,
-                )?;
+        let relationship = relationships.get(
+            underlying_object_type_name,
+            &comparable_relationship.relationship_name,
+        )?;
 
-                // create target boolean expression name
-                let target_boolean_expression_type = Qualified::new(
-                    relationship
-                        .get_target_subgraph()
-                        .unwrap_or(subgraph.clone()),
-                    target_boolean_expression_type_name.clone(),
+        match relationship {
+            relationships::Relationship::Relationship(relationship) => {
+                // if the relationship has provided an optional boolean_expression_type, let's
+                // check it makes sense
+                let target_boolean_expression_type = comparable_relationship
+                    .boolean_expression_type
+                    .as_ref()
+                    .map(
+                        |target_boolean_expression_type_name| -> Result<_, BooleanExpressionError> {
+                            // create target boolean expression name
+                            let target_boolean_expression_type = Qualified::new(
+                                crate::helpers::relationship::get_target_subgraph(relationship)
+                                    .unwrap_or(subgraph.clone()),
+                                target_boolean_expression_type_name.clone(),
+                            );
+
+                            // ...and ensure it exists
+                            let _raw_boolean_expression_type =
+                                helpers::lookup_raw_boolean_expression(
+                                    boolean_expression_type_name,
+                                    &target_boolean_expression_type,
+                                    raw_boolean_expression_types,
+                                )?;
+
+                            Ok(target_boolean_expression_type)
+                        },
+                    )
+                    .transpose()?;
+
+                resolved_comparable_relationships.insert(
+                    FieldName::new(comparable_relationship.relationship_name.inner().clone()),
+                    BooleanExpressionComparableRelationship {
+                        relationship_name: comparable_relationship.relationship_name.clone(),
+                        boolean_expression_type: target_boolean_expression_type,
+                    },
                 );
-
-                // ...and ensure it exists
-                let _raw_boolean_expression_type = helpers::lookup_raw_boolean_expression(
-                    boolean_expression_type_name,
-                    &target_boolean_expression_type,
-                    raw_boolean_expression_types,
-                )?;
-
-                Ok(Some(target_boolean_expression_type))
             }
-            None => Ok(None),
-        };
 
-        resolved_comparable_relationships.insert(
-            FieldName::new(comparable_relationship.relationship_name.inner().clone()),
-            BooleanExpressionComparableRelationship {
-                relationship_name: comparable_relationship.relationship_name.clone(),
-                boolean_expression_type: target_boolean_expression_type?,
-            },
-        );
+            // If the relationship is to an unknown subgraph, skip it because we're in
+            // allow unknown subgraphs mode
+            relationships::Relationship::RelationshipToUnknownSubgraph => {}
+        };
     }
 
     Ok(resolved_comparable_relationships)

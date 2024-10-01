@@ -1,24 +1,22 @@
 use std::sync::Arc;
 mod types;
 
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 use indexmap::IndexMap;
 
 use lang_graphql::ast::common::{self as ast};
 use open_dds::aggregates::AggregateExpressionName;
-use open_dds::identifier::SubgraphName;
 use open_dds::relationships::{FieldAccess, RelationshipName, RelationshipType, RelationshipV1};
 use open_dds::{
     commands::CommandName, data_connector::DataConnectorName, models::ModelName,
     types::CustomTypeName,
 };
 
-use crate::configuration::Configuration;
 use crate::helpers::types::mk_name;
 use crate::stages::{
     aggregates, commands, data_connector_scalar_types, data_connectors, graphql_config, models,
-    object_types, type_permissions,
+    object_types, relationships, type_permissions,
 };
 use crate::types::error::{Error, RelationshipError};
 use crate::types::subgraph::Qualified;
@@ -33,14 +31,13 @@ pub use types::{
 /// resolve relationships
 /// returns updated `types` value
 pub fn resolve(
-    metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    configuration: &Configuration,
+    object_types_with_permissions: type_permissions::ObjectTypesWithPermissions,
+    relationships: &relationships::Relationships,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     >,
-    object_types_with_permissions: &type_permissions::ObjectTypesWithPermissions,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     aggregate_expressions: &BTreeMap<
@@ -49,74 +46,81 @@ pub fn resolve(
     >,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>, Error> {
-    let mut object_types_with_relationships = BTreeMap::new();
-    for (
-        object_type_name,
-        type_permissions::ObjectTypeWithPermissions {
-            type_output_permissions,
-            type_input_permissions,
-            object_type,
-            type_mappings,
-        },
-    ) in object_types_with_permissions.iter()
-    {
-        object_types_with_relationships.insert(
-            object_type_name.clone(),
-            ObjectTypeWithRelationships {
-                object_type: object_type.clone(),
-                type_output_permissions: type_output_permissions.clone(),
-                type_input_permissions: type_input_permissions.clone(),
-                relationship_fields: IndexMap::new(),
-                type_mappings: type_mappings.clone(),
-            },
-        );
-    }
-    for open_dds::accessor::QualifiedObject {
-        path: _,
-        subgraph,
-        object: relationship,
-    } in &metadata_accessor.relationships
-    {
-        let qualified_relationship_source_type_name =
-            Qualified::new(subgraph.clone(), relationship.source_type.clone());
-        let object_representation = object_types_with_relationships
-            .get_mut(&qualified_relationship_source_type_name)
-            .ok_or_else(|| Error::RelationshipDefinedOnUnknownType {
-                relationship_name: relationship.name.clone(),
-                type_name: qualified_relationship_source_type_name.clone(),
-            })?;
+    // For each object type, get all its relationships and resolve them into the fields
+    // we add to the object type that represent the relationship navigation
+    let mut object_type_relationship_fields = object_types_with_permissions
+        .iter()
+        .map(|(object_type_name, object_type_with_permissions)| {
+            let object_type_relationships =
+                relationships.get_relationships_for_type(object_type_name);
 
-        let resolved_relationships = resolve_relationships(
-            configuration,
-            relationship,
-            subgraph,
-            &metadata_accessor.subgraphs,
-            models,
-            commands,
-            data_connectors,
-            data_connector_scalars,
-            aggregate_expressions,
-            object_types_with_permissions,
-            graphql_config,
-            &object_representation.object_type,
-        )?;
+            let mut relationship_fields = IndexMap::new();
+            for (relationship_name, relationship) in object_type_relationships {
+                let resolved_relationships_fields = match relationship {
+                    relationships::Relationship::Relationship(relationship) => {
+                        resolve_relationship_fields(
+                            relationship,
+                            object_type_name,
+                            models,
+                            commands,
+                            data_connectors,
+                            data_connector_scalars,
+                            aggregate_expressions,
+                            &object_types_with_permissions,
+                            graphql_config,
+                            &object_type_with_permissions.object_type,
+                        )?
+                    }
+                    // If the relationship is to an unknown subgraph, we ignore it since we're
+                    // running in allow unknown subgraphs mode
+                    relationships::Relationship::RelationshipToUnknownSubgraph => vec![],
+                };
 
-        for resolved_relationship in resolved_relationships {
-            if object_representation
-                .relationship_fields
-                .insert(
-                    resolved_relationship.field_name.clone(),
-                    resolved_relationship,
-                )
-                .is_some()
-            {
-                return Err(Error::DuplicateRelationshipInSourceType {
-                    type_name: qualified_relationship_source_type_name,
-                    relationship_name: relationship.name.clone(),
-                });
+                for resolved_relationship_field in resolved_relationships_fields {
+                    let field_name = resolved_relationship_field.field_name.clone();
+                    if relationship_fields
+                        .insert(
+                            resolved_relationship_field.field_name.clone(),
+                            resolved_relationship_field,
+                        )
+                        .is_some()
+                    {
+                        return Err(Error::DuplicateRelationshipFieldInSourceType {
+                            field_name,
+                            type_name: object_type_name.clone(),
+                            relationship_name: relationship_name.clone(),
+                        });
+                    }
+                }
             }
-        }
-    }
+
+            Ok((object_type_name.clone(), relationship_fields))
+        })
+        .collect::<Result<BTreeMap<_, _>, _>>()?;
+
+    // Create the ObjectTypeWithRelationships by consuming the ObjectTypeWithPermissions and adding
+    // the newly resolved relationship fields
+    let object_types_with_relationships = object_types_with_permissions
+        .0
+        .into_iter()
+        .map(|(object_type_name, object_type_with_permissions)| {
+            // Take ownership of the relationship fields out of the map and leave behind an empty value in its place
+            let relationship_fields = object_type_relationship_fields
+                .get_mut(&object_type_name)
+                .map(std::mem::take)
+                .unwrap_or_default();
+
+            let object_type_with_relationships = ObjectTypeWithRelationships {
+                object_type: object_type_with_permissions.object_type,
+                type_output_permissions: object_type_with_permissions.type_output_permissions,
+                type_input_permissions: object_type_with_permissions.type_input_permissions,
+                relationship_fields,
+                type_mappings: object_type_with_permissions.type_mappings,
+            };
+
+            (object_type_name, object_type_with_relationships)
+        })
+        .collect::<BTreeMap<_, _>>();
 
     Ok(object_types_with_relationships)
 }
@@ -537,7 +541,6 @@ fn resolve_aggregate_relationship_field(
 
 fn resolve_model_relationship_fields(
     target_model: &open_dds::relationships::ModelRelationshipTarget,
-    subgraph: &open_dds::identifier::SubgraphName,
     models: &IndexMap<Qualified<ModelName>, crate::Model>,
     data_connectors: &data_connectors::DataConnectors,
     source_type_name: &Qualified<CustomTypeName>,
@@ -555,7 +558,9 @@ fn resolve_model_relationship_fields(
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<Vec<RelationshipField>, Error> {
     let qualified_target_model_name = Qualified::new(
-        target_model.subgraph().unwrap_or(subgraph.clone()),
+        target_model
+            .subgraph()
+            .unwrap_or(source_type_name.subgraph.clone()),
         target_model.name.clone(),
     );
     let resolved_target_model = models.get(&qualified_target_model_name).ok_or_else(|| {
@@ -630,7 +635,6 @@ pub fn make_relationship_field_name(
 
 fn resolve_command_relationship_field(
     target_command: &open_dds::relationships::CommandRelationshipTarget,
-    subgraph: &open_dds::identifier::SubgraphName,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connectors::DataConnectors,
     source_type_name: &Qualified<CustomTypeName>,
@@ -638,7 +642,9 @@ fn resolve_command_relationship_field(
     source_type: &object_types::ObjectTypeRepresentation,
 ) -> Result<RelationshipField, Error> {
     let qualified_target_command_name = Qualified::new(
-        target_command.subgraph().unwrap_or(subgraph.clone()),
+        target_command
+            .subgraph()
+            .unwrap_or(source_type_name.subgraph.clone()),
         target_command.name.clone(),
     );
     let resolved_target_command =
@@ -687,11 +693,9 @@ fn resolve_command_relationship_field(
     })
 }
 
-fn resolve_relationships(
-    configuration: &Configuration,
+fn resolve_relationship_fields(
     relationship: &RelationshipV1,
-    subgraph: &open_dds::identifier::SubgraphName,
-    known_subgraphs: &HashSet<open_dds::identifier::SubgraphName>,
+    source_type_name: &Qualified<CustomTypeName>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connectors::DataConnectors,
@@ -707,22 +711,13 @@ fn resolve_relationships(
     graphql_config: &graphql_config::GraphqlConfig,
     source_type: &object_types::ObjectTypeRepresentation,
 ) -> Result<Vec<RelationshipField>, Error> {
-    let source_type_name = Qualified::new(subgraph.clone(), relationship.source_type.clone());
     match &relationship.target {
         open_dds::relationships::RelationshipTarget::Model(target_model) => {
-            if should_skip(
-                configuration,
-                known_subgraphs,
-                target_model.subgraph().as_ref(),
-            ) {
-                return Ok(vec![]);
-            }
             resolve_model_relationship_fields(
                 target_model,
-                subgraph,
                 models,
                 data_connectors,
-                &source_type_name,
+                source_type_name,
                 relationship,
                 source_type,
                 data_connector_scalars,
@@ -732,38 +727,15 @@ fn resolve_relationships(
             )
         }
         open_dds::relationships::RelationshipTarget::Command(target_command) => {
-            if should_skip(
-                configuration,
-                known_subgraphs,
-                target_command.subgraph().as_ref(),
-            ) {
-                return Ok(vec![]);
-            }
             let command_relationship_field = resolve_command_relationship_field(
                 target_command,
-                subgraph,
                 commands,
                 data_connectors,
-                &source_type_name,
+                source_type_name,
                 relationship,
                 source_type,
             )?;
             Ok(vec![command_relationship_field])
         }
     }
-}
-
-// If we have been asked to allow unknown subgraphs, and the target subgraph is unknown, return an
-// empty set of relationships.
-//
-// Currently, only relationships know about other subgraphs. If this changes, we will need to add
-// the same functionality to that stage of metadata resolution, and perhaps think about creating an
-// abstraction for that purpose.
-fn should_skip(
-    configuration: &Configuration,
-    known_subgraphs: &HashSet<open_dds::identifier::SubgraphName>,
-    target_subgraph: Option<&SubgraphName>,
-) -> bool {
-    configuration.allow_unknown_subgraphs
-        && target_subgraph.is_some_and(|subgraph| !known_subgraphs.contains(subgraph))
 }

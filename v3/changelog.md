@@ -47,6 +47,9 @@ the following customizations:
 ### Fixed
 
 - Fix poor performance of `process_response` for large and deeply-nested results
+- Fixed issue in partial supergraph builds where a `BooleanExpressionType` that
+  referenced a relationship that targeted an unknown subgraph would incorrectly
+  produce an error rather than ignoring the relationship
 
 ### Changed
 

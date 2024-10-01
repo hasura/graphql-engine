@@ -6,6 +6,7 @@ use crate::stages::{
     type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
+use lang_graphql::ast::common as ast;
 use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::flags;
 use open_dds::order_by_expression::OrderByExpressionName;
@@ -198,9 +199,10 @@ pub enum Error {
     #[error("{0}")]
     DeserializationError(#[from] serde_json::Error),
     #[error(
-        "duplicate relationship {relationship_name:} associated with source type {type_name:}"
+        "duplicate relationship field {field_name} from {relationship_name} associated with source type {type_name}"
     )]
-    DuplicateRelationshipInSourceType {
+    DuplicateRelationshipFieldInSourceType {
+        field_name: ast::Name,
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
@@ -220,11 +222,6 @@ pub enum Error {
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
         command_name: Qualified<CommandName>,
-    },
-    #[error("Source type {type_name:} referenced in the definition of relationship(s) {relationship_name:} is not defined ")]
-    RelationshipDefinedOnUnknownType {
-        relationship_name: RelationshipName,
-        type_name: Qualified<CustomTypeName>,
     },
     #[error("{reason:}")]
     NotSupported { reason: String },
