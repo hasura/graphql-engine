@@ -8,7 +8,7 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
 
-use super::types::{Command, CommandGraphQlApi};
+use super::types::{Command, CommandGraphQlApi, CommandsIssue};
 use open_dds::commands::CommandV1;
 
 use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
@@ -27,8 +27,10 @@ pub fn resolve_command(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    issues: &mut Vec<CommandsIssue>,
 ) -> Result<Command, CommandsError> {
     let mut arguments = IndexMap::new();
+
     let qualified_command_name = Qualified::new(subgraph.clone(), command.name.clone());
     let command_description = command.description.clone();
     // duplicate command arguments should not be allowed
@@ -78,14 +80,30 @@ pub fn resolve_command(
 
     let graphql_api = match &command.graphql {
         Some(graphql_definition) => {
+            // previously we were missing validation on whether the root field name for this
+            // command has already been used. Therefore that means adding it is a breaking change,
+            // therefore if the name is already in use we
+            // a) dont include a GraphQL field for this command, essentially dropping the field
+            // b) raise a warning, that we can raise to an error using CompatibilityConfig
+            // making it an error for new projects but not old ones
             let root_field_name = mk_name(graphql_definition.root_field_name.as_ref())?;
-            store_new_graphql_type(graphql_types, Some(&ast::TypeName(root_field_name.clone())))?;
-
-            Ok(Some(CommandGraphQlApi {
-                root_field_kind: graphql_definition.root_field_kind.clone(),
-                root_field_name,
-                deprecated: graphql_definition.deprecated.clone(),
-            }))
+            if let Ok(()) =
+                store_new_graphql_type(graphql_types, Some(&ast::TypeName(root_field_name.clone())))
+            {
+                Ok(Some(CommandGraphQlApi {
+                    root_field_kind: graphql_definition.root_field_kind.clone(),
+                    root_field_name,
+                    deprecated: graphql_definition.deprecated.clone(),
+                }))
+            } else {
+                // raise a warning
+                issues.push(CommandsIssue::GraphQlNameAlreadyInUse {
+                    command_name: qualified_command_name.clone(),
+                    graphql_name: root_field_name,
+                });
+                // don't include the field in GraphQL schema
+                Ok(None)
+            }
         }
         None => Ok::<Option<CommandGraphQlApi>, CommandsError>(None),
     }?;

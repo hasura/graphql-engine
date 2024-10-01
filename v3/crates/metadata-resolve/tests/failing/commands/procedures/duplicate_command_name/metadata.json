@@ -1,5 +1,8 @@
 {
   "version": "v2",
+  "flags": {
+    "require_unique_command_graphql_names": true
+  },
   "subgraphs": [
     {
       "name": "default",

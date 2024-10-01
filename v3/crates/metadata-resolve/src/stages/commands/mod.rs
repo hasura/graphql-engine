@@ -51,6 +51,7 @@ pub fn resolve(
             scalar_types,
             object_boolean_expression_types,
             boolean_expression_types,
+            &mut issues,
         )?;
         if let Some(command_source) = &command.source {
             let (command_source, command_source_issues) = source::resolve_command_source(

@@ -35,6 +35,7 @@ impl ShouldBeAnError for Warning {
             Warning::DataConnectorIssue(issue) => issue.should_be_an_error(flags),
             Warning::BooleanExpressionIssue(issue) => issue.should_be_an_error(flags),
             Warning::ScalarTypesIssue(issue) => issue.should_be_an_error(flags),
+            Warning::CommandIssue(issue) => issue.should_be_an_error(flags),
             _ => false,
         }
     }

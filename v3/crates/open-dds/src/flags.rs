@@ -26,6 +26,9 @@ pub struct Flags {
 
     #[opendd(default, rename = "propagate_boolean_expression_deprecation_status")]
     pub propagate_boolean_expression_deprecation_status: bool,
+
+    #[opendd(default, rename = "require_unique_command_graphql_names")]
+    pub require_unique_command_graphql_names: bool,
 }
 
 impl Flags {
@@ -38,6 +41,7 @@ impl Flags {
             require_nested_array_filtering_capability: false,
             disallow_scalar_type_names_conflicting_with_inbuilt_types: false,
             propagate_boolean_expression_deprecation_status: false,
+            require_unique_command_graphql_names: false,
         }
     }
 
