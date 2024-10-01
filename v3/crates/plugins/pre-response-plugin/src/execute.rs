@@ -129,7 +129,7 @@ pub async fn execute_plugin(
         .in_span_async(
             "request_to_webhook",
             "Send request to webhook",
-            SpanVisibility::Internal,
+            SpanVisibility::User,
             || {
                 Box::pin(async {
                     let http_request_builder = build_request(
