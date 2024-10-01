@@ -59,7 +59,10 @@ pub(crate) fn resolve_model_source(
                 model_name: model.name.clone(),
                 data_connector: qualified_data_connector_name.clone(),
             },
-            path: model_source.data_connector_name.path.clone(),
+            context: error_context::Context(vec![error_context::Step {
+                message: "Data connector name given here".to_string(),
+                path: model_source.data_connector_name.path.clone(),
+            }]),
         })?;
 
     let source_collection = data_connector_context

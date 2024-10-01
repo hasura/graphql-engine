@@ -29,13 +29,16 @@ use crate::helpers::{
 #[derive(Debug, thiserror::Error)]
 pub enum WithContext<T> {
     Raw(#[from] T),
-    Contextualised { error: T, path: jsonpath::JSONPath },
+    Contextualised {
+        error: T,
+        context: error_context::Context,
+    },
 }
 
 impl<T> WithContext<T> {
-    pub fn path(&self) -> Option<jsonpath::JSONPath> {
+    pub fn context(&self) -> Option<error_context::Context> {
         match self {
-            WithContext::Contextualised { path, .. } => Some(path.clone()),
+            WithContext::Contextualised { context, .. } => Some(context.clone()),
             WithContext::Raw(_) => None,
         }
     }
@@ -43,9 +46,9 @@ impl<T> WithContext<T> {
     pub fn coerce<S: From<T>>(self) -> WithContext<S> {
         match self {
             WithContext::Raw(err) => WithContext::Raw(S::from(err)),
-            WithContext::Contextualised { error, path } => WithContext::Contextualised {
+            WithContext::Contextualised { error, context } => WithContext::Contextualised {
                 error: S::from(error),
-                path,
+                context,
             },
         }
     }

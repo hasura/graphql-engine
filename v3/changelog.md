@@ -12,14 +12,14 @@
 
 ### Added
 
-#### Metadata build error paths
+#### Metadata build error contexts
 
-Paths are being added to errors raised during the build process to allow users
-to locate the source of the issue more quickly. These paths will be surfaced in
-the Build Server API responses. The first example and test bed for developing
-the scaffolding is the error raised when a model refers to a nonexistent data
-connector. This error will now also contain the path to the offending data
-connector name.
+Contexts are being added to errors raised during the build process to allow
+users to locate the source of the issue more quickly. These contexts will be
+surfaced in the Build Server API responses. The first example and test bed for
+developing the scaffolding is the error raised when a model refers to a
+nonexistent data connector. This error will now also contain the path to the
+offending data connector name.
 
 #### Pre-response Plugin
 

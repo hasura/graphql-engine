@@ -1865,6 +1865,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "error-context"
+version = "3.0.0"
+dependencies = [
+ "jsonpath",
+ "serde",
+]
+
+[[package]]
 name = "execute"
 version = "3.0.0"
 dependencies = [
@@ -3048,6 +3056,7 @@ name = "metadata-resolve"
 version = "3.0.0"
 dependencies = [
  "derive_more",
+ "error-context",
  "hasura-authn-core",
  "indexmap 2.5.0",
  "insta",
