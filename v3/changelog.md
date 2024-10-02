@@ -6,6 +6,10 @@
 
 ### Fixed
 
+- Fix local `docker-compose.yaml` file so that running `docker compose up`
+  builds the engine and serves it along with a sample schema using
+  `ndc-postgres` and a `postgres` database.
+
 ### Changed
 
 ## [v2024.10.02]

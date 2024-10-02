@@ -28,51 +28,6 @@ To start the reference agent only, you can do:
 docker compose up reference_agent
 ```
 
-## Run v3-engine (with reference agent)
-
-### Building locally using `cargo`
-
-Hasura v3-engine is written in Rust, hence `cargo` is required to build and run
-the v3-engine locally.
-
-To start the v3-engine locally, we need a `metadata.json` file and an auth
-config file.
-
-Following are steps to run v3-engine with a reference agent (read only, in
-memory, relational database with sample tables), and an sample metadata file,
-exposing a fixed GraphQL schema. This can be used to understand the build setup
-and the new V3 concepts.
-
-```sh
-RUST_LOG=DEBUG cargo run --release --bin engine -- \
-  --metadata-path crates/open-dds/examples/reference.json \
- --authn-config-path static/auth/auth_config.json
-```
-
-A dev webhook implementation is provided in `crates/auth/dev-auth-webhook`, that
-exposes the `POST /validate-request` which accepts converts the headers present
-in the incoming request to a object containing session variables, note that only
-headers that start with `x-hasura-` will be returned in the response.
-
-The dev webhook can be run using the following command:
-
-```sh
-docker compose up auth_hook
-```
-
-and point the host name `auth_hook` to localhost in your `/etc/hosts` file.
-
-Open <http://localhost:3000> for GraphiQL.
-
-Use `--port` option to start v3-engine on a different port.
-
-```sh
-RUST_LOG=DEBUG cargo run --release --bin engine -- \
-     --port 8000 --metadata-path crates/open-dds/examples/reference.json
-```
-
-Now, open <http://localhost:8000> for GraphiQL.
-
 ## Run v3-engine (with Postgres)
 
 ### Building with Docker
@@ -81,10 +36,10 @@ You can also start v3-engine, along with a Postgres data connector and Jaeger
 for tracing using Docker:
 
 ```sh
-METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=static/auth/auth_config.json docker compose up
+docker compose up
 ```
 
-Open <http://localhost:3001> for GraphiQL, or <http://localhost:4002> to view
+Open <http://localhost:3000> for GraphiQL, or <http://localhost:4002> to view
 traces in Jaeger.
 
 Note: you'll need to add `{"x-hasura-role": "admin"}` to the Headers section to
@@ -106,91 +61,6 @@ easily), and model your GraphQL API. You can then download the authored
 metadata.json and use the following steps to run GraphQL API on your local
 Hasura V3 engine.
 
-### Steps to run metadata with V3 engine locally
-
-1.  Download metadata from DDN project, using Hasura V3 CLI
-
-    ```sh
-    hasura3 build create --dry-run > ddn-metadata.json
-    ```
-
-2.  Following steps are to generate Postgres metadata object and run the
-    Postgres Connector. These steps refer to the
-    [NDC Postgres](https://github.com/hasura/ndc-postgres) repository:
-
-    1.  Start the Postgres connector in configuration mode (Config server). A
-        config server provides additional endpoints for database instrospection
-        and provide the schema of the database. Output of the config server will
-        form the Postgres Metadata object.
-    2.  Run the following command in the
-        [ndc-postgres](https://github.com/hasura/ndc-postgres) repository:
-
-        ```bash
-        just run-config
-        ```
-
-    3.  Generate the postgres configuration using the `new-configuration.sh`
-        script by running the following command (in another terminal) in the
-        [ndc-postgres](https://github.com/hasura/ndc-postgres) repository:
-
-        ```bash
-        ./scripts/new-configuration.sh localhost:9100 '<postgres database url>' > pg-config.json
-        ```
-
-    4.  Now shutdown the postgres config server and start the Postgres Connector
-        using the `pg-config.json` generated in the above step, by running the
-        following command:
-
-        Please specify different `PORT` for different data connectors:
-
-        ```bash
-        PORT=8100 \
-        RUST_LOG=INFO \
-            cargo run --bin ndc-postgres --release -- serve --configuration pg-config.json > /tmp/ndc-postgres.log
-        ```
-
-    5.  Fetch the schema for the data connector object by running the following
-        command:
-
-        ```bash
-        curl -X GET http://localhost:8100/schema | jq . > pg-schema.json
-        ```
-
-    6.  Finally, generate the `DataConnector` object:
-
-        ```bash
-        jq --null-input --arg name 'default' --arg port '8100' --slurpfile schema pg-schema.json '{"kind":"DataConnector","version":"v2","definition":{"name":"\($name)","url":{"singleUrl":{"value":"http://localhost:\($port)"}},"schema":$schema[0]}}' > pg-metadata.json
-        ```
-
-3.  Now you have the NDC Postgres connector running, and have obtained the
-    Postgres metadata (`pg-metadata.json`) which is required for the V3 engine.
-
-4.  In `ddn-metadata.json` (from step 1.), replace the `HasuraHubDataConnector`
-    objects with `DataConnector` objects generated inside the `pg-metadata.json`
-    file.
-
-5.  Remove the object for `kind: AuthConfig` from `ddn-metadata.json`, move it
-    to a separate file `auth_config.json`, and remove the `kind` field from it.
-
-6.  Remove the object for `kind: CompatibilityConfig` from `ddn-metadata.json`.
-    If desired, a `flags` field can be added to the OSS metadata to enable the
-    flags corresponding to that compatibility date in the DDN metadata.
-
-7.  Finally, start the v3-engine using the modified metadata using the following
-    command (using the modified `ddn-metadata.json` and `auth_config.json` from
-    Step 5):
-
-    ```bash
-    RUST_LOG=DEBUG cargo run --release --bin engine -- \
-     --metadata-path ddn-metadata.json auth_config.json
-    ```
-
-    You should have the v3-engine up and running at http://localhost:3000
-
-**Note**: We understand that these steps are not very straightforward, and we
-intend to continuously improve the developer experience of running OSS V3
-Engine.
-
 ## Running tests
 
 To run the test suite, you need to docker login to `ghcr.io` first:
@@ -204,32 +74,10 @@ PAT needs to have the `read:packages` scope and `Hasura SSO` configured. See
 [this](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic)
 for more details.
 
-Next run the postgres NDC locally using `docker compose up postgres_connector`
-and point the host name `postgres_connector` to localhost in your `/etc/hosts`
-file.
+Running `just watch` will start the Docker dependencies, build the engine, and
+run all the tests.
 
-Next run the custom NDC locally using `docker compose up custom_connector` and
-point the host name `custom_connector` to localhost in your `/etc/hosts` file OR
-you can run `cargo run --bin agent` and then do `cargo test`.
-
-### Testing/Development with the chinook database
-
-The `crates/engine/tests/chinook` contains static files required to run
-v3-engine run with the chinook database as a data connector.
-
-To get this running, you can run the following command:
-
-```bash
-METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=static/auth/auth_config.json docker compose up postgres_connector engine
-```
-
-### Running tests with a single command
-
-Alternatively, the tests can be run in the same Docker image as CI:
-
-```sh
-just test
-```
+Alternatively, run the tests once with `just test`
 
 ### Updating goldenfiles
 
@@ -237,17 +85,13 @@ There are some tests where we compare the output of the test against an expected
 golden file. If you make some changes which expectedly change the goldenfile,
 you can regenerate them like this:
 
-Locally
-
 ```sh
-  UPDATE_GOLDENFILES=1 cargo test
+just update-golden-files
 ```
 
-Docker:
-
-```sh
-  just update-golden-files
-```
+Some other tests use `insta`, and these can be reviewed with
+`cargo insta review`. If the `cargo insta` command cannot be found, install it
+with `cargo install cargo-insta`.
 
 ## Run benchmarks
 
