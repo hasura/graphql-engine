@@ -28,7 +28,7 @@ pub use stages::boolean_expressions::{
     IncludeLogicalOperators, ObjectComparisonExpressionInfo, ObjectComparisonKind,
     ResolvedObjectBooleanExpressionType,
 };
-pub use stages::data_connectors::DataConnectorLink;
+pub use stages::data_connectors::{ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset};
 pub use stages::graphql_config::GlobalGraphqlConfig;
 pub use stages::model_permissions::{
     ArgumentPresets, FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,

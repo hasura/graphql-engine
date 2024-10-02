@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 pub use types::{
     ArgumentPreset, ArgumentPresetValue, CommandsResponseConfig, DataConnectorCapabilities,
     DataConnectorContext, DataConnectorLink, DataConnectorSchema, DataConnectors,
-    DataConnectorsOutput, NdcVersion,
+    DataConnectorsOutput, HttpHeadersPreset, NdcVersion,
 };
 
 /// Resolve data connectors.

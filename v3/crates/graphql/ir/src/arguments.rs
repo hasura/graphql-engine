@@ -12,7 +12,6 @@ use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
 use metadata_resolve::data_connectors::ArgumentPresetValue;
-use metadata_resolve::http::SerializableHeaderMap;
 use metadata_resolve::{
     ArgumentKind, DataConnectorLink, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference, TypeMapping,
@@ -22,6 +21,7 @@ use open_dds::{
     data_connector::DataConnectorColumnName,
     types::{CustomTypeName, DataConnectorArgumentName, InbuiltType},
 };
+use reqwest::header::HeaderMap;
 use serde::Serialize;
 
 use super::error::InternalDeveloperError;
@@ -90,7 +90,7 @@ pub(crate) fn process_argument_presets<'s, 'a>(
     argument_presets: Option<&'a ArgumentPresets>,
     data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     session_variables: &SessionVariables,
-    request_headers: &reqwest::header::HeaderMap,
+    request_headers: &HeaderMap,
     mut arguments: BTreeMap<DataConnectorArgumentName, Argument<'s>>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<BTreeMap<DataConnectorArgumentName, Argument<'s>>, error::Error>
@@ -177,18 +177,27 @@ where
 pub fn process_connector_link_presets(
     data_connector_link_argument_presets: &BTreeMap<DataConnectorArgumentName, ArgumentPresetValue>,
     session_variables: &SessionVariables,
-    request_headers: &reqwest::header::HeaderMap,
+    request_headers: &HeaderMap,
 ) -> Result<BTreeMap<DataConnectorArgumentName, serde_json::Value>, error::Error> {
     let mut arguments = BTreeMap::new();
     // preset arguments from `DataConnectorLink` argument presets
     for (dc_argument_preset_name, dc_argument_preset_value) in data_connector_link_argument_presets
     {
-        let mut headers_argument = reqwest::header::HeaderMap::new();
+        let mut headers_argument = serde_json::Map::new();
 
         // add headers from the request to be forwarded
         for header_name in &dc_argument_preset_value.http_headers.forward {
             if let Some(header_value) = request_headers.get(&header_name.0) {
-                headers_argument.insert(header_name.0.clone(), header_value.clone());
+                // we turn the header value into a string, which fails if it contains non-visible
+                // ASCII characters: https://docs.rs/reqwest/latest/reqwest/header/struct.HeaderValue.html#method.to_str
+                let string_value = header_value
+                    .to_str()
+                    .map_err(|_| InternalDeveloperError::IllegalCharactersInHeaderValue)?;
+
+                // we make no attempt to parse it and pass it along as a JSON string
+                let json_value = serde_json::Value::String(string_value.into());
+
+                headers_argument.insert(header_name.0.to_string(), json_value);
             }
         }
 
@@ -208,17 +217,12 @@ pub fn process_connector_link_presets(
                 &string_type,
                 session_variables,
             )?;
-            let header_value =
-                reqwest::header::HeaderValue::from_str(serde_json::to_string(&value)?.as_str())
-                    .map_err(|_e| {
-                        InternalDeveloperError::UnableToConvertValueExpressionToHeaderValue
-                    })?;
-            headers_argument.insert(header_name.0.clone(), header_value);
+            headers_argument.insert(header_name.0.to_string(), value);
         }
 
         arguments.insert(
             dc_argument_preset_name.clone(),
-            serde_json::to_value(SerializableHeaderMap(headers_argument))?,
+            serde_json::Value::Object(headers_argument),
         );
     }
     Ok(arguments)
@@ -360,5 +364,138 @@ pub(crate) fn map_argument_value_to_ndc_type(
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use hasura_authn_core::{
+        Role, RoleAuthorization, Session, SessionVariable, SessionVariableList,
+        SessionVariableValue,
+    };
+    use indexmap::IndexMap;
+    use metadata_resolve::http::SerializableHeaderName;
+    use metadata_resolve::{ArgumentPresetValue, HttpHeadersPreset, ValueExpression};
+    use reqwest::header::{HeaderMap, HeaderValue};
+    use std::collections::{BTreeMap, HashMap};
+    use std::str::FromStr;
+
+    fn make_test_session(
+        client_session_variables: HashMap<SessionVariable, SessionVariableValue>,
+    ) -> Session {
+        let authenticated_session_variables = HashMap::new();
+
+        let role_authorization = RoleAuthorization {
+            role: Role::new("test-role"),
+            session_variables: authenticated_session_variables,
+            allowed_session_variables_from_request: SessionVariableList::All,
+        };
+
+        role_authorization.build_session(client_session_variables)
+    }
+
+    #[test]
+    fn test_empty_process_connector_link_presets() {
+        let data_connector_link_argument_presets = BTreeMap::new();
+        let session_variables = make_test_session(HashMap::new()).variables;
+        let request_headers = HeaderMap::new();
+
+        let expected = BTreeMap::new();
+
+        assert_eq!(
+            super::process_connector_link_presets(
+                &data_connector_link_argument_presets,
+                &session_variables,
+                &request_headers
+            )
+            .unwrap(),
+            expected
+        );
+    }
+
+    #[test]
+    fn headers_are_parsed_and_passed() {
+        // is the header `name: Mr Horse` passed through properly?
+
+        // what headers should we pass through and how?
+        let mut data_connector_link_argument_presets = BTreeMap::new();
+        let http_headers = HttpHeadersPreset {
+            forward: vec![SerializableHeaderName::new("name".into()).unwrap()],
+            additional: IndexMap::default(),
+        };
+        data_connector_link_argument_presets
+            .insert("headers".into(), ArgumentPresetValue { http_headers });
+
+        // what session variables do we have? (none)
+        let session_variables = make_test_session(HashMap::new()).variables;
+
+        // what are our input headers?
+        let mut request_headers = HeaderMap::new();
+        request_headers.insert("name", HeaderValue::from_static("Mr Horse"));
+
+        // create expected response
+        let mut expected = BTreeMap::new();
+        let mut expected_object = serde_json::Map::new();
+        expected_object.insert("name".into(), serde_json::Value::String("Mr Horse".into()));
+
+        expected.insert("headers".into(), serde_json::Value::Object(expected_object));
+
+        assert_eq!(
+            super::process_connector_link_presets(
+                &data_connector_link_argument_presets,
+                &session_variables,
+                &request_headers
+            )
+            .unwrap(),
+            expected
+        );
+    }
+
+    #[test]
+    fn test_string_session_variable_is_passed_through() {
+        // is the session variable `x-name: Mr Horse` passed through properly?
+
+        // what should we pass through and how?
+        let mut data_connector_link_argument_presets = BTreeMap::new();
+        let mut additional = IndexMap::new();
+        additional.insert(
+            SerializableHeaderName::new("name".into()).unwrap(),
+            ValueExpression::SessionVariable(SessionVariable::from_str("x-name").unwrap()),
+        );
+        let http_headers = HttpHeadersPreset {
+            forward: vec![],
+            additional,
+        };
+        data_connector_link_argument_presets
+            .insert("headers".into(), ArgumentPresetValue { http_headers });
+
+        // what session variables do we have?
+        let mut client_session_variables = HashMap::new();
+        client_session_variables.insert(
+            SessionVariable::from_str("x-name").unwrap(),
+            SessionVariableValue::new("Mr Horse"),
+        );
+
+        let session_variables = make_test_session(client_session_variables).variables;
+
+        // what are our input headers?
+        let mut request_headers = HeaderMap::new();
+        request_headers.insert("name", HeaderValue::from_static("Mr Horse"));
+
+        // create expected response
+        let mut expected = BTreeMap::new();
+        let mut expected_object = serde_json::Map::new();
+        expected_object.insert("name".into(), serde_json::Value::String("Mr Horse".into()));
+        expected.insert("headers".into(), serde_json::Value::Object(expected_object));
+
+        assert_eq!(
+            super::process_connector_link_presets(
+                &data_connector_link_argument_presets,
+                &session_variables,
+                &request_headers
+            )
+            .unwrap(),
+            expected
+        );
     }
 }

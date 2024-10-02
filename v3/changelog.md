@@ -6,6 +6,8 @@
 
 ### Fixed
 
+- Fixed double string escaping when forwarding headers to a data connector
+
 ### Changed
 
 ## [v2024.10.01]

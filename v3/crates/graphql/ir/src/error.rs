@@ -162,8 +162,8 @@ pub enum InternalDeveloperError {
         argument_name: ArgumentName,
     },
 
-    #[error("The value expression could not be converted to header value. Error: ")]
-    UnableToConvertValueExpressionToHeaderValue,
+    #[error("Could not convert the provided header value to string as it contains non-visible ASCII characters")]
+    IllegalCharactersInHeaderValue,
 
     #[error("The aggregation function {aggregation_function} operating over the {aggregate_operand_type} type is missing a data connector mapping for {data_connector_name}")]
     DataConnectorAggregationFunctionNotFound {
