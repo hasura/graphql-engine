@@ -12,5 +12,9 @@ pub use websocket::{
 pub use protocol::{
     subscribe::{execute_request_internal, send_request_error},
     types::ServerMessage,
+    GRAPHQL_WS_PROTOCOL,
 };
-pub use websocket::types::{Connection, Message};
+pub use websocket::{
+    types::{Connection, Connections, Message},
+    SEC_WEBSOCKET_PROTOCOL,
+};

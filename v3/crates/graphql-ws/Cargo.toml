@@ -26,5 +26,12 @@ thiserror = { workspace = true }
 tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
 uuid = { workspace = true, features = ["v4"] }
 
+[dev-dependencies]
+metadata-resolve = { path = "../metadata-resolve" }
+open-dds = { path = "../open-dds" }
+
+reqwest = { workspace = true, features = ["json", "multipart"] }
+tokio-tungstenite = { workspace = true }
+
 [lints]
 workspace = true

@@ -10,12 +10,12 @@ use futures_util::StreamExt;
 
 use crate::protocol;
 
-static SEC_WEBSOCKET_PROTOCOL: &str = "Sec-WebSocket-Protocol";
+pub static SEC_WEBSOCKET_PROTOCOL: &str = "Sec-WebSocket-Protocol";
 static WEBSOCKET_CHANNEL_SIZE: usize = 50;
 
 /// GraphQL WebSocket server implementation.
 pub struct WebSocketServer {
-    connections: types::Connections,
+    pub connections: types::Connections,
 }
 
 impl WebSocketServer {
@@ -194,9 +194,11 @@ async fn start_websocket_session(
                         Ok(Err(tasks::ConnectionTimeOutError)) => {
                             // Connection not initialized within the specified time, send close message
                             connection.send(types::Message::conn_init_timeout()).await;
-                            // Abort all tasks
+                            // Abort incoming task
                             incoming_task.abort();
-                            outgoing_task.abort();
+                            // A close message is handled by the outgoing task and it makes the task exit.
+                            // So we need to wait for the task to complete
+                            let _ = outgoing_task.await;
                         }
                         Err(_e) => {
                             // Handle internal server error

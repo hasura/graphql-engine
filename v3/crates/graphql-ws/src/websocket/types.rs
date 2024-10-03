@@ -12,6 +12,7 @@ use crate::poller;
 use crate::protocol::types as protocol;
 
 /// Context required to handle a WebSocket connection
+#[derive(Clone)]
 pub struct Context {
     pub http_context: HttpContext,
     pub expose_internal_errors: ExposeInternalErrors,
@@ -39,10 +40,10 @@ impl Default for WebSocketId {
 
 /// A mutable and free clone-able collection of WebSocket connections.
 #[derive(Clone)]
-pub(crate) struct Connections(pub(crate) Arc<RwLock<HashMap<WebSocketId, Connection>>>);
+pub struct Connections(pub Arc<RwLock<HashMap<WebSocketId, Connection>>>);
 
 impl Connections {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self(Arc::new(RwLock::new(HashMap::new())))
     }
 
@@ -69,20 +70,26 @@ impl Connections {
     }
 }
 
+impl Default for Connections {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Represents an internal WebSocket connection.
 /// Designed for efficient cloning, as all contained fields are inexpensive to clone.
 #[derive(Clone)]
 pub struct Connection {
     // Unique WebSocket connection ID
-    pub(crate) id: WebSocketId,
+    pub id: WebSocketId,
     // Manages the WebSocket protocol state
-    pub(crate) protocol_init_state: Arc<RwLock<protocol::ConnectionInitState>>,
+    pub protocol_init_state: Arc<RwLock<protocol::ConnectionInitState>>,
     // Shared connection context
-    pub(crate) context: Arc<Context>,
+    pub context: Arc<Context>,
     // Channel for sending messages over the WebSocket
-    pub(crate) send_channel: Sender<Message>,
+    pub send_channel: Sender<Message>,
     // Active pollers associated with operations. A web socket connection can have multiple active subscriptions.
-    pub(crate) pollers: Arc<RwLock<HashMap<protocol::OperationId, poller::Poller>>>,
+    pub pollers: Arc<RwLock<HashMap<protocol::OperationId, poller::Poller>>>,
 }
 
 /// A representation of an active WebSocket connection.

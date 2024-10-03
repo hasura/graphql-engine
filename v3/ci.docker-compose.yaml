@@ -44,5 +44,14 @@ services:
     environment:
       RUST_LOG: info
 
+  # Required to test graphql-ws; subscriptions with custom session variables
+  auth_hook:
+    build:
+      dockerfile: dev-auth-webhook.Dockerfile
+    environment:
+      RUST_LOG: debug
+    ports:
+      - "3050:3050"
+
 volumes:
   postgres:
