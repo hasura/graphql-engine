@@ -36,7 +36,7 @@ pub(crate) fn create_json_api_router(state: Arc<EngineState>) -> axum::Router {
 }
 
 async fn handle_request(
-    _headers: HeaderMap,
+    request_headers: HeaderMap,
     method: Method,
     uri: Uri,
     axum::extract::RawQuery(raw_query): axum::extract::RawQuery,
@@ -51,6 +51,7 @@ async fn handle_request(
             SpanVisibility::User,
             || {
                 Box::pin(jsonapi::handler_internal(
+                    Arc::new(request_headers),
                     Arc::new(state.http_context.clone()),
                     Arc::new(session),
                     &state.jsonapi_state,
@@ -82,6 +83,10 @@ async fn handle_request(
             jsonapi::RequestError::PlanError(plan::PlanError::Internal(msg)) => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({"error": msg })),
+            ),
+            jsonapi::RequestError::PlanError(plan::PlanError::External(_err)) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "Internal error" })),
             ),
             jsonapi::RequestError::PlanError(plan::PlanError::Permission(_msg)) => (
                 axum::http::StatusCode::FORBIDDEN,

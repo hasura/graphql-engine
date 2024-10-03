@@ -3,7 +3,7 @@ use std::sync::Arc;
 use hasura_authn_core::Session;
 mod process_response;
 use axum::{
-    http::{Method, Request, Uri},
+    http::{HeaderMap, Method, Request, Uri},
     middleware::Next,
 };
 use axum_core::body::Body;
@@ -56,6 +56,7 @@ pub enum InternalError {
 
 #[allow(clippy::unused_async)]
 pub async fn handler_internal<'metadata>(
+    request_headers: Arc<HeaderMap>,
     http_context: Arc<execute::HttpContext>,
     session: Arc<Session>,
     state: &State,
@@ -71,7 +72,15 @@ pub async fn handler_internal<'metadata>(
             // create the query IR
             let query_ir = create_query_ir(model, &http_method, &uri, &query_string)?;
             // execute the query with the query-engine
-            let result = query_engine_execute(&query_ir, metadata, &session, &http_context).await?;
+            let result = query_engine_execute(
+                &query_ir,
+                metadata,
+                &session,
+                &http_context,
+                &request_headers,
+            )
+            .await?;
+
             // process result to JSON:API compliant response
             Ok(process_response::process_result(result))
         }
@@ -100,20 +109,27 @@ async fn query_engine_execute(
     metadata: &Metadata,
     session: &Arc<Session>,
     http_context: &Arc<execute::HttpContext>,
+    request_headers: &HeaderMap,
 ) -> Result<QueryResult, RequestError> {
     let (query_execution_plan, query_context) =
-        plan::plan_query_request(query_ir, metadata, session, http_context)
+        plan::plan_query_request(query_ir, metadata, session, http_context, request_headers)
             .await
             .map_err(RequestError::PlanError)?;
+    match query_execution_plan {
+        plan::SingleNodeExecutionPlan::Query(plan) => {
+            let rowsets = resolve_ndc_query_execution(http_context, plan)
+                .await
+                .map_err(RequestError::ExecuteError)?;
 
-    let rowsets = resolve_ndc_query_execution(http_context, query_execution_plan)
-        .await
-        .map_err(RequestError::ExecuteError)?;
-
-    Ok(QueryResult {
-        rowsets,
-        type_name: query_context.type_name,
-    })
+            Ok(QueryResult {
+                rowsets,
+                type_name: query_context.type_name,
+            })
+        }
+        plan::SingleNodeExecutionPlan::Mutation(_) => {
+            todo!("Executing mutations not implemented in JSONAPI yet")
+        }
+    }
 }
 
 // run ndc query, do any joins, and process result

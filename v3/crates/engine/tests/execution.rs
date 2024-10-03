@@ -1053,7 +1053,7 @@ fn test_command_functions() -> anyhow::Result<()> {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::GenerateOpenDDQuery,
     )
 }
 

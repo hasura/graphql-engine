@@ -295,6 +295,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             session,
                             raw_request.clone(),
                             &test_ctx.http_context.clone().into(),
+                            &request_headers,
                         )
                         .await;
 
@@ -341,6 +342,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             session,
                             raw_request.clone(),
                             &Arc::new(test_ctx.http_context.clone()),
+                            &request_headers,
                         )
                         .await;
                         // do actual test
@@ -775,6 +777,7 @@ pub async fn open_dd_pipeline_test(
     session: &Session,
     raw_request: lang_graphql::http::RawRequest,
     http_context: &Arc<HttpContext>,
+    request_headers: &reqwest::header::HeaderMap,
 ) {
     match opendd_tests {
         TestOpenDDPipeline::Skip => {}
@@ -818,19 +821,28 @@ pub async fn open_dd_pipeline_test(
                     metadata,
                     &Arc::new(session.clone()),
                     http_context,
+                    request_headers,
                 )
                 .await
                 .unwrap();
 
-                // run the pipeline using functions from GraphQL frontend
-                let rowsets = graphql_frontend::resolve_ndc_query_execution(
-                    http_context,
-                    query_execution_plan,
-                )
-                .await
-                .unwrap();
+                match query_execution_plan {
+                    plan::SingleNodeExecutionPlan::Mutation(_) => {
+                        todo!("Executing mutations in OpenDD IR pipeline tests not implemented yet")
+                    }
+                    plan::SingleNodeExecutionPlan::Query(plan) => {
+                        // run the pipeline using functions from GraphQL frontend
+                        let rowsets =
+                            graphql_frontend::resolve_ndc_query_execution(http_context, plan)
+                                .await
+                                .unwrap();
 
-                insta::assert_json_snapshot!(format!("rowsets_{test_path_string}"), rowsets);
+                        insta::assert_json_snapshot!(
+                            format!("rowsets_{test_path_string}"),
+                            rowsets
+                        );
+                    }
+                }
             }
         }
         TestOpenDDPipeline::GenerateExecutionPlan => {

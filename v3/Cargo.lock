@@ -3943,6 +3943,7 @@ dependencies = [
  "metadata-resolve",
  "open-dds",
  "plan-types",
+ "reqwest",
  "serde_json",
 ]
 

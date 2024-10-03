@@ -11,23 +11,11 @@ use datafusion::{
     },
 };
 use futures::TryFutureExt;
-use indexmap::IndexMap;
-use std::{any::Any, collections::BTreeMap, sync::Arc};
+use std::{any::Any, sync::Arc};
 
-use execute::{
-    ndc::NdcMutationResponse,
-    plan::{
-        field::{NestedArray, NestedField, ResolvedNestedField},
-        MutationArgument, ResolvedField, ResolvedMutationExecutionPlan,
-    },
-    HttpContext,
-};
-use open_dds::{
-    commands::ProcedureName, data_connector::DataConnectorColumnName,
-    types::DataConnectorArgumentName,
-};
+use execute::{ndc::NdcMutationResponse, HttpContext};
+use open_dds::data_connector::DataConnectorColumnName;
 use plan::NDCProcedure;
-use plan_types::NdcFieldAlias;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
 use crate::execute::planner::common::PhysicalPlanOptions;
@@ -79,45 +67,16 @@ pub(crate) struct NDCProcedurePushDown {
     metrics: ExecutionPlanMetricsSet,
 }
 
-fn wrap_ndc_fields(
-    command_output: &CommandOutput,
-    ndc_fields: IndexMap<NdcFieldAlias, ResolvedField>,
-) -> ResolvedNestedField {
-    match command_output {
-        CommandOutput::Object(_) => {
-            NestedField::Object(execute::plan::field::NestedObject { fields: ndc_fields })
-        }
-        CommandOutput::ListOfObjects(_) => {
-            let nested_fields =
-                NestedField::Object(execute::plan::field::NestedObject { fields: ndc_fields });
-            NestedField::Array(NestedArray {
-                fields: Box::new(nested_fields),
-            })
-        }
-    }
-}
-
 impl NDCProcedurePushDown {
     pub fn new(
+        procedure: NDCProcedure,
         http_context: Arc<execute::HttpContext>,
-        data_connector: Arc<metadata_resolve::DataConnectorLink>,
-        procedure_name: ProcedureName,
-        arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
-        ndc_fields: IndexMap<NdcFieldAlias, ResolvedField>,
         // schema of the output of the command selection
         schema: &DFSchemaRef,
         output: CommandOutput,
         extract_response_from: Option<DataConnectorColumnName>,
     ) -> NDCProcedurePushDown {
         let metrics = ExecutionPlanMetricsSet::new();
-
-        let procedure = NDCProcedure {
-            procedure_name,
-            arguments,
-            fields: Some(wrap_ndc_fields(&output, ndc_fields)),
-            collection_relationships: BTreeMap::new(),
-            data_connector,
-        };
 
         Self {
             http_context,
@@ -202,25 +161,8 @@ impl ExecutionPlan for NDCProcedurePushDown {
 
         let baseline_metrics = BaselineMetrics::new(&self.metrics, partition);
 
-        let execution_plan = ResolvedMutationExecutionPlan {
-            procedure_name: self.procedure.procedure_name.clone(),
-            procedure_arguments: self
-                .procedure
-                .arguments
-                .iter()
-                .map(|(argument, value)| {
-                    (
-                        argument.clone(),
-                        MutationArgument::Literal {
-                            value: value.clone(),
-                        },
-                    )
-                })
-                .collect(),
-            procedure_fields: self.procedure.fields.clone(),
-            collection_relationships: self.procedure.collection_relationships.clone(),
-            data_connector: self.procedure.data_connector.clone(),
-        };
+        let execution_plan = plan::execute_plan_from_procedure(&self.procedure);
+
         let query_request = execute::plan::ndc_request::make_ndc_mutation_request(execution_plan)
             .map_err(|e| {
             DataFusionError::Internal(format!("error creating ndc request: {e}"))

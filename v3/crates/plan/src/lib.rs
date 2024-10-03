@@ -8,8 +8,9 @@ pub use column::ResolvedColumn;
 pub use filter::to_resolved_filter_expr;
 pub use order_by::to_resolved_order_by_element;
 pub use query::{
-    field_selection::ndc_nested_field_selection_for, from_model_aggregate_selection,
-    from_model_selection, ndc_query_to_query_execution_plan, plan_query_request, NDCFunction,
-    NDCProcedure, NDCQuery,
+    execute_plan_from_function, execute_plan_from_procedure, from_command,
+    from_model_aggregate_selection, from_model_selection, ndc_query_to_query_execution_plan,
+    plan_query_request, CommandPlan, FromCommand, NDCFunction, NDCProcedure, NDCQuery,
+    SingleNodeExecutionPlan,
 };
 pub use types::PlanError;

@@ -17,5 +17,6 @@ pub fn from_plan_error(plan: PlanError) -> DataFusionError {
     match plan {
         PlanError::Internal(msg) => DataFusionError::Internal(msg),
         PlanError::Permission(msg) => DataFusionError::Plan(msg),
+        PlanError::External(error) => DataFusionError::External(error),
     }
 }

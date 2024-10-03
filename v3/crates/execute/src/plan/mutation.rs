@@ -11,8 +11,7 @@ use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 
 pub type UnresolvedMutationExecutionPlan<'s> = MutationExecutionPlan<graphql_ir::Expression<'s>>;
-pub type ResolvedMutationExecutionPlan<'s> =
-    MutationExecutionPlan<filter::ResolvedFilterExpression>;
+pub type ResolvedMutationExecutionPlan = MutationExecutionPlan<filter::ResolvedFilterExpression>;
 
 #[derive(Debug)]
 pub struct MutationExecutionPlan<TFilterExpression> {
@@ -33,7 +32,7 @@ impl<'s> UnresolvedMutationExecutionPlan<'s> {
     pub async fn resolve(
         self,
         resolve_context: &'s ResolveFilterExpressionContext<'_>,
-    ) -> Result<ResolvedMutationExecutionPlan<'s>, error::FieldError> {
+    ) -> Result<ResolvedMutationExecutionPlan, error::FieldError> {
         let MutationExecutionPlan {
             procedure_name,
             procedure_arguments,

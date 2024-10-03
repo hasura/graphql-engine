@@ -2,8 +2,8 @@ use graphql_schema::GDS;
 use lang_graphql::ast::common::{self as ast};
 use lang_graphql::normalized_ast::Operation;
 use open_dds::query::{
-    Alias, ModelSelection, ModelTarget, ObjectFieldSelection, ObjectFieldTarget,
-    ObjectSubSelection, Query, QueryRequest, QueryRequestV1, Value,
+    Alias, CommandSelection, CommandTarget, ModelSelection, ModelTarget, ObjectFieldSelection,
+    ObjectFieldTarget, ObjectSubSelection, Query, QueryRequest, QueryRequestV1, Value,
 };
 use open_dds::{arguments::ArgumentName, identifier::Identifier};
 
@@ -51,6 +51,30 @@ pub fn to_opendd_ir(operation: &Operation<GDS>) -> QueryRequest {
 
                     queries.insert(opendd_alias, query);
                 }
+                graphql_schema::Annotation::Output(
+                    graphql_schema::OutputAnnotation::RootField(
+                        graphql_schema::RootFieldAnnotation::FunctionCommand { name, .. },
+                    ),
+                ) => {
+                    let opendd_alias =
+                        Alias::new(Identifier::new(field_call.name.as_str()).unwrap());
+
+                    let selection = to_model_selection(&query.selection_set.fields);
+
+                    let arguments = to_model_arguments(&field_call.arguments);
+
+                    let query = Query::Command(CommandSelection {
+                        selection: Some(selection),
+                        target: CommandTarget {
+                            arguments,
+                            command_name: name.name.clone(),
+                            subgraph: name.subgraph.clone(),
+                        },
+                    });
+
+                    queries.insert(opendd_alias, query);
+                }
+
                 _ => todo!("not implemented yet"),
             }
         }

@@ -1,6 +1,7 @@
 //! Tests that run JSONAPI to see if it works
 
 use hasura_authn_core::{Identity, Role};
+use reqwest::header::HeaderMap;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -31,6 +32,7 @@ fn test_get_succeeding_requests() {
             };
 
             let result = jsonapi::handler_internal(
+                Arc::new(HeaderMap::default()),
                 Arc::new(http_context.clone()),
                 Arc::new(create_default_session()),
                 &jsonapi_state,
@@ -74,6 +76,7 @@ fn test_get_failing_requests() {
             };
 
             let result = jsonapi::handler_internal(
+                Arc::new(HeaderMap::default()),
                 Arc::new(http_context.clone()),
                 Arc::new(create_default_session()),
                 &jsonapi_state,
