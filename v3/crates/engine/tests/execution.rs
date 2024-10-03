@@ -882,7 +882,7 @@ fn test_model_select_many_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::TestNDCResponses,
     )
 }
 
@@ -897,7 +897,7 @@ fn test_model_select_many_limit_offset() -> anyhow::Result<()> {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-        common::TestOpenDDPipeline::Skip,
+        common::TestOpenDDPipeline::TestNDCResponses,
     )
 }
 
