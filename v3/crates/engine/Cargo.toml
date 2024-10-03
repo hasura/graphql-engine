@@ -42,9 +42,11 @@ tracing-util = { path = "../utils/tracing-util" }
 
 anyhow = { workspace = true }
 axum = { workspace = true }
+axum-core = { workspace = true }
 base64 = { workspace = true }
 clap = { workspace = true, features = ["derive", "env"] }
 futures-util = {workspace = true}
+http-body-util = { workspace = true }
 indexmap = {workspace = true}
 json_value_merge = { workspace = true }
 jsonapi_library = { workspace =  true }

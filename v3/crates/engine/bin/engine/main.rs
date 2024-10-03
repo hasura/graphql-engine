@@ -9,7 +9,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use axum::{
-    body::HttpBody,
     extract::{DefaultBodyLimit, State},
     http::{HeaderMap, Request},
     middleware::Next,
@@ -17,8 +16,10 @@ use axum::{
     routing::{get, post},
     Extension, Json, Router,
 };
+use axum_core::body::Body;
 use base64::engine::Engine;
 use clap::Parser;
+use http_body_util::BodyExt;
 use metadata_resolve::LifecyclePluginConfigs;
 use pre_parse_plugin::execute::pre_parse_plugins_handler;
 use pre_response_plugin::execute::pre_response_plugins_handler;
@@ -396,9 +397,10 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     );
 
     // run it with hyper on `addr`
-    axum::Server::bind(&address)
-        .serve(engine_router.into_make_service())
-        .with_graceful_shutdown(axum_ext::shutdown_signal_with_handler(|| async {
+    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+
+    axum::serve(listener, engine_router.into_make_service())
+        .with_graceful_shutdown(axum_ext::shutdown_signal_with_handler(|| async move {
             state
                 .graphql_websocket_server
                 .shutdown("Shutting server down")
@@ -419,9 +421,9 @@ async fn handle_health() -> reqwest::StatusCode {
 /// This middleware must be active for the entire duration
 /// of the request i.e. this middleware should be the
 /// entry point and the exit point of the GraphQL request.
-async fn graphql_request_tracing_middleware<B: Send>(
-    request: Request<B>,
-    next: Next<B>,
+async fn graphql_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
 ) -> axum::response::Response {
     use tracing_util::*;
     let tracer = global_tracer();
@@ -455,9 +457,9 @@ async fn graphql_request_tracing_middleware<B: Send>(
 /// This middleware must be active for the entire duration
 /// of the request i.e. this middleware should be the
 /// entry point and the exit point of the GraphQL request.
-async fn explain_request_tracing_middleware<B: Send>(
-    request: Request<B>,
-    next: Next<B>,
+async fn explain_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
 ) -> axum::response::Response {
     let tracer = tracing_util::global_tracer();
     let path = "/v1/explain";
@@ -482,9 +484,9 @@ async fn explain_request_tracing_middleware<B: Send>(
 /// This middleware must be active for the entire duration
 /// of the request i.e. this middleware should be the
 /// entry point and the exit point of the SQL request.
-async fn sql_request_tracing_middleware<B: Send>(
-    request: Request<B>,
-    next: Next<B>,
+async fn sql_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
 ) -> axum::response::Response {
     let tracer = tracing_util::global_tracer();
     let path = "/v1/sql";
@@ -509,16 +511,12 @@ async fn sql_request_tracing_middleware<B: Send>(
 /// authentication configuration present in the `auth_config` of `EngineState`. The
 /// result of the authentication is `hasura-authn-core::Identity`, which is then
 /// made available to the GraphQL request handler.
-pub async fn authentication_middleware<'a, B>(
+pub async fn authentication_middleware<'a>(
     State(engine_state): State<Arc<EngineState>>,
     headers_map: HeaderMap,
-    mut request: Request<B>,
-    next: Next<B>,
-) -> axum::response::Result<axum::response::Response>
-where
-    B: HttpBody,
-    B::Error: Display,
-{
+    mut request: Request<Body>,
+    next: Next,
+) -> axum::response::Result<axum::response::Response> {
     let tracer = tracing_util::global_tracer();
 
     let resolved_identity = tracer
@@ -623,8 +621,8 @@ async fn plugins_middleware(
     Extension(session): Extension<Session>,
     headers_map: HeaderMap,
     request: Request<axum::body::Body>,
-    next: Next<axum::body::Body>,
-) -> axum::response::Result<axum::response::Response<axum::body::Body>> {
+    next: Next,
+) -> axum::response::Result<axum::response::Response<Body>> {
     let (parts, body) = request.into_parts();
     let bytes = body
         .collect()

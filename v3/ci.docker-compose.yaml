@@ -10,6 +10,8 @@ services:
       - 8080:8080
     environment:
       CONNECTION_URI: "postgresql://postgres:password@postgres"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
+      OTEL_SERVICE_NAME: "ndc-postgres"
       RUST_LOG: info
     volumes:
       - type: bind

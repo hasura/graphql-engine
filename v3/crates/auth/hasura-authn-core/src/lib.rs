@@ -5,6 +5,7 @@ use axum::{
     http::StatusCode,
     http::{HeaderMap, Request},
 };
+use axum_core::body::Body;
 use lang_graphql::http::Response;
 use schemars::JsonSchema;
 use std::{
@@ -162,10 +163,10 @@ impl IntoResponse for SessionError {
 
 // Using the x-hasura-* headers of the request and the identity set by the authn system,
 // this layer resolves a 'session' which is then used by the execution engine
-pub async fn resolve_session<'a, B>(
+pub async fn resolve_session<'a>(
     Extension(identity): Extension<Identity>,
-    mut request: Request<B>,
-    next: Next<B>,
+    mut request: Request<Body>,
+    next: Next,
 ) -> axum::response::Result<axum::response::Response> {
     let session = authorize_identity(&identity, request.headers())?;
     request.extensions_mut().insert(session);

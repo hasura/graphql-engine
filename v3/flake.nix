@@ -166,6 +166,7 @@
 
               # Rust
               pkgs.bacon
+              pkgs.cargo-audit
               pkgs.cargo-edit
               pkgs.cargo-expand
               pkgs.cargo-flamegraph

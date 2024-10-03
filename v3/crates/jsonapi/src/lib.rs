@@ -6,6 +6,7 @@ use axum::{
     http::{Method, Request, Uri},
     middleware::Next,
 };
+use axum_core::body::Body;
 use indexmap::IndexMap;
 use metadata_resolve::{Metadata, ModelExpressionType, ModelWithPermissions, Qualified};
 use open_dds::{
@@ -393,9 +394,9 @@ struct QueryResult {
 /// Middleware to start tracing of the `/v1/jsonapi` request. This middleware
 /// must be active for the entire duration of the request i.e. this middleware
 /// should be the entry point and the exit point of the JSON:API request.
-pub async fn rest_request_tracing_middleware<B: Send>(
-    request: Request<B>,
-    next: Next<B>,
+pub async fn rest_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
 ) -> axum::response::Response {
     let tracer = tracing_util::global_tracer();
     let path = "/v1/jsonapi";

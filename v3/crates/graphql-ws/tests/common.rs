@@ -3,7 +3,7 @@ use execute::HttpContext;
 use futures_util::{SinkExt, StreamExt};
 use graphql_ws::Context;
 use graphql_ws::GRAPHQL_WS_PROTOCOL;
-use std::{net::TcpListener, path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 use tokio::{net::TcpStream, task::JoinHandle};
 use tokio_tungstenite::{
     connect_async,
@@ -46,7 +46,7 @@ pub(crate) async fn ws_handler(
 #[allow(dead_code)]
 pub(crate) async fn start_websocket_server() -> TestServer {
     // Create a TCP listener
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
 
     // Auth Config
@@ -99,9 +99,7 @@ pub(crate) async fn start_websocket_server() -> TestServer {
             .route("/ws", get(ws_handler))
             .with_state(Arc::new(state));
 
-        axum::Server::from_tcp(listener)
-            .unwrap()
-            .serve(app.into_make_service())
+        axum::serve(listener, app.into_make_service())
             .await
             .unwrap();
     });

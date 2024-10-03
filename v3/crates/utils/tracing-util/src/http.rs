@@ -5,11 +5,11 @@
 //! # Example:
 //! ```
 //! use tracing_util::{SpanVisibility, TraceableHttpResponse};
-//! use axum::{http::Request, middleware::Next};
+//! use axum::{body::Body, http::Request, middleware::Next};
 //!
-//! async fn graphql_request_tracing_middleware<B: Send>(
-//!     request: Request<B>,
-//!     next: Next<B>,
+//! async fn graphql_request_tracing_middleware(
+//!     request: Request<Body>,
+//!     next: Next,
 //! ) -> axum::response::Result<axum::response::Response> {
 //!     let tracer = tracing_util::global_tracer();
 //!     let path = "/graphql";

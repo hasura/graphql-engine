@@ -14,6 +14,7 @@ plan = { path = "../plan" }
 tracing-util = { path = "../utils/tracing-util" }
 
 axum = { workspace = true }
+axum-core = { workspace = true }
 derive_more = { workspace = true }
 indexmap = { workspace = true }
 jsonapi_library = { workspace = true }
