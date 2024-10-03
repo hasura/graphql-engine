@@ -164,45 +164,99 @@ pub fn pre_response_plugins_handler(
         .map_err(Error::PluginRequestParseError)?;
     let raw_response = serde_json::from_slice::<serde_json::Value>(raw_response_bytes)
         .map_err(Error::EngineResponseParseError)?;
-    let http_client = http_client.clone();
-    let headers_map = headers_map;
-    let pre_response_plugins_config = pre_response_plugins_config.clone();
-    let tracer = tracing_util::global_tracer();
-    tokio::spawn(async move {
-        let mut tasks = Vec::with_capacity(pre_response_plugins_config.capacity());
-        for pre_plugin_config in &pre_response_plugins_config {
-            let task = async {
-                (tracer
-                    .in_span_async_with_parent_context(
-                        "pre_response_plugin_execute",
-                        "Pre-response Plugin execute",
-                        SpanVisibility::User,
-                        &headers_map,
-                        || {
-                            Box::pin(async {
-                                set_attribute_on_active_span(
-                                    tracing_util::AttributeVisibility::Default,
-                                    "plugin.name",
-                                    pre_plugin_config.name.clone(),
-                                );
-
-                                execute_plugin(
-                                    &http_client,
-                                    pre_plugin_config,
-                                    &headers_map,
-                                    &session,
-                                    &raw_request,
-                                    &raw_response,
-                                )
-                                .await
-                            })
-                        },
-                    )
-                    .await,)
-            };
-            tasks.push(task);
-        }
-        let _plugin_responses = futures_util::future::join_all(tasks).await;
-    });
+    // Execute the pre-response plugins in a separate task
+    execute_pre_response_plugins_in_task(
+        pre_response_plugins_config.clone(),
+        http_client.clone(),
+        session,
+        raw_request,
+        raw_response,
+        headers_map,
+    );
     Ok(())
+}
+
+/// Execute the pre-response plugins in a separate task
+pub fn execute_pre_response_plugins_in_task(
+    pre_response_plugins_config: nonempty::NonEmpty<LifecyclePreResponsePluginHook>,
+    http_client: reqwest::Client,
+    session: Session,
+    raw_request: RawRequest,
+    raw_response: serde_json::Value,
+    headers_map: HeaderMap,
+) {
+    let tracer = tracing_util::global_tracer();
+    // Spawn a new task to execute the pre-response plugins
+    tokio::spawn(async move {
+        // Execute all pre-response plugins
+        tracer
+            .in_span_async_with_parent_context(
+                "execute_all_pre_response_plugins",
+                "Execute all Pre-response Plugins",
+                SpanVisibility::User,
+                &headers_map,
+                || {
+                    Box::pin(async {
+                        execute_all_plugins(
+                            &pre_response_plugins_config,
+                            &http_client,
+                            &session,
+                            &raw_request,
+                            &raw_response,
+                            &headers_map,
+                        )
+                        .await;
+                        tracing_util::Successful::new(())
+                    })
+                },
+            )
+            .await;
+    });
+}
+
+/// Execute all pre-response plugins
+async fn execute_all_plugins(
+    pre_response_plugins_config: &nonempty::NonEmpty<LifecyclePreResponsePluginHook>,
+    http_client: &reqwest::Client,
+    session: &Session,
+    raw_request: &RawRequest,
+    raw_response: &serde_json::Value,
+    headers_map: &HeaderMap,
+) {
+    let tracer = tracing_util::global_tracer();
+    let mut async_executions = Vec::with_capacity(pre_response_plugins_config.capacity());
+    // Execute each pre-response plugin asynchronously without await.
+    for pre_plugin_config in pre_response_plugins_config {
+        let async_execution = async {
+            (tracer
+                .in_span_async(
+                    "pre_response_plugin_execute",
+                    "Pre-response Plugin execute",
+                    SpanVisibility::User,
+                    || {
+                        Box::pin(async {
+                            set_attribute_on_active_span(
+                                tracing_util::AttributeVisibility::Default,
+                                "plugin.name",
+                                pre_plugin_config.name.clone(),
+                            );
+                            execute_plugin(
+                                http_client,
+                                pre_plugin_config,
+                                headers_map,
+                                session,
+                                raw_request,
+                                raw_response,
+                            )
+                            .await
+                        })
+                    },
+                )
+                .await,)
+        };
+        // Collect the async execution future
+        async_executions.push(async_execution);
+    }
+    // Wait for all the async executions to complete
+    let _plugin_responses = futures_util::future::join_all(async_executions).await;
 }
