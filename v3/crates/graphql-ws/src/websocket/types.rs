@@ -1,6 +1,7 @@
 use axum::extract::ws;
 use execute::{ExposeInternalErrors, HttpContext, ProjectId};
 use hasura_authn::AuthConfig;
+use metadata_resolve::LifecyclePluginConfigs;
 use serde::Serialize;
 use smol_str::SmolStr;
 use std::borrow::Cow;
@@ -19,6 +20,7 @@ pub struct Context {
     pub project_id: Option<ProjectId>,
     pub schema: lang_graphql::schema::Schema<graphql_schema::GDS>,
     pub auth_config: AuthConfig,
+    pub plugin_configs: LifecyclePluginConfigs,
 }
 
 /// Represents a WebSocket connection ID.

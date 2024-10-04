@@ -80,7 +80,7 @@ async fn explain_query_internal(
 
                     // normalize the parsed GQL query
                     let normalized_request =
-                        steps::normalize_request(schema, session, query, raw_request)?;
+                        steps::normalize_request(schema, session, query, &raw_request)?;
 
                     // generate IR
                     let ir =

@@ -2269,6 +2269,8 @@ dependencies = [
  "metadata-resolve",
  "nonempty",
  "open-dds",
+ "pre-parse-plugin",
+ "pre-response-plugin",
  "reqwest",
  "serde",
  "serde_json",

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::types::{GraphQlParseError, GraphQlValidationError};
 
 use gql::normalized_ast::Operation;
@@ -35,7 +37,7 @@ pub fn normalize_request<'s>(
     schema: &'s gql::schema::Schema<GDS>,
     session: &Session,
     query: gql::ast::executable::ExecutableDocument,
-    raw_request: gql::http::RawRequest,
+    raw_request: &gql::http::RawRequest,
 ) -> Result<Operation<'s, GDS>, gql::validation::Error> {
     let tracer = tracing_util::global_tracer();
     let normalized_request = tracer
@@ -54,9 +56,12 @@ pub fn normalize_request<'s>(
                 }
 
                 let request = gql::http::Request {
-                    operation_name: raw_request.operation_name,
+                    operation_name: raw_request.operation_name.clone(),
                     query,
-                    variables: raw_request.variables.unwrap_or_default(),
+                    variables: raw_request
+                        .variables
+                        .as_ref()
+                        .map_or_else(HashMap::default, Clone::clone),
                 };
                 gql::validation::normalize_request(
                     &GDSRoleNamespaceGetter {

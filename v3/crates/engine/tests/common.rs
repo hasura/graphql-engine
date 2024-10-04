@@ -6,7 +6,7 @@ use graphql_schema::GDS;
 use hasura_authn_core::{Identity, Role, Session, SessionError, SessionVariableValue};
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
-use metadata_resolve::data_connectors::NdcVersion;
+use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
 use open_dds::session_variables::{SessionVariable, SESSION_VARIABLE_ROLE};
 use serde_json as json;
 use sql::execute::SqlRequest;
@@ -692,6 +692,10 @@ async fn run_query_graphql_ws(
         project_id: project_id.cloned(),
         schema: schema.clone(),
         auth_config: dummy_auth_config,
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: Vec::new(),
+            pre_response_plugins: Vec::new(),
+        },
     };
     let (channel_sender, mut channel_receiver) =
         tokio::sync::mpsc::channel::<graphql_ws::Message>(10);
@@ -787,7 +791,7 @@ pub async fn open_dd_pipeline_test(
 
             // normalize the parsed GQL query
             if let Ok(normalized_request) =
-                graphql_frontend::normalize_request(schema, session, query, raw_request)
+                graphql_frontend::normalize_request(schema, session, query, &raw_request)
             {
                 // we can only generate for queries that would have worked,
                 // `normalize_request` fails when we try and access a field we're not allowed to,
@@ -805,7 +809,7 @@ pub async fn open_dd_pipeline_test(
 
             // normalize the parsed GQL query
             if let Ok(normalized_request) =
-                graphql_frontend::normalize_request(schema, session, query, raw_request)
+                graphql_frontend::normalize_request(schema, session, query, &raw_request)
             {
                 // we can only generate for queries that would have worked,
                 // `normalize_request` fails when we try and access a field we're not allowed to,

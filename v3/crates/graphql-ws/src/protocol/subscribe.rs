@@ -4,6 +4,8 @@ use execute::{self, plan, ExposeInternalErrors};
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use nonempty::NonEmpty;
+use pre_parse_plugin::execute as pre_parse_plugin;
+use pre_response_plugin::execute as pre_response_plugin;
 use std::sync::Arc;
 
 use super::types::{ConnectionInitState, OperationId, ServerMessage};
@@ -16,6 +18,8 @@ enum Error {
     NotInitialized,
     #[error("poller with operation_id {} already exists", operation_id.0)]
     PollerAlreadyExists { operation_id: OperationId },
+    #[error("error in pre-parse plugin: {0}")]
+    PreParsePlugin(#[from] pre_parse_plugin::Error),
 }
 
 impl tracing_util::TraceableError for Error {
@@ -52,21 +56,68 @@ pub async fn handle_subscribe(
                             ref headers,
                         } => {
                             if connection.poller_exists(&operation_id).await {
-                                Err(Error::PollerAlreadyExists { operation_id })
+                                Err(Error::PollerAlreadyExists {
+                                    operation_id: operation_id.clone(),
+                                })
                             } else {
-                                // Start a new poller for the operation and insert it into the connection.
-                                let poller = tracing_util::get_active_span(|span| {
-                                    start_poller(
-                                        operation_id.clone(),
-                                        connection.context.clone(),
-                                        session.clone(),
-                                        headers.clone(),
-                                        connection.clone(),
-                                        payload,
-                                        span.span_context().clone(),
-                                    )
-                                });
-                                connection.insert_poller(operation_id, poller).await;
+                                // Execute pre-parse plugins
+                                let plugin_response = match NonEmpty::from_slice(
+                                    &connection.context.plugin_configs.pre_parse_plugins,
+                                ) {
+                                    Some(pre_parse_plugins) => {
+                                        pre_parse_plugin::execute_pre_parse_plugins(
+                                            &pre_parse_plugins,
+                                            &connection.context.http_context.client,
+                                            session,
+                                            headers,
+                                            &payload,
+                                        )
+                                        .await
+                                    }
+                                    None => {
+                                        Ok(pre_parse_plugin::PreExecutePluginResponse::Continue)
+                                    }
+                                }?;
+                                match plugin_response {
+                                    pre_parse_plugin::PreExecutePluginResponse::Continue => {
+                                        // Start a new poller for the operation and insert it into the connection.
+                                        let poller = tracing_util::get_active_span(|span| {
+                                            start_poller(
+                                                operation_id.clone(),
+                                                connection.context.clone(),
+                                                session.clone(),
+                                                headers.clone(),
+                                                connection.clone(),
+                                                payload,
+                                                span.span_context().clone(),
+                                            )
+                                        });
+                                        connection
+                                            .insert_poller(operation_id.clone(), poller)
+                                            .await;
+                                    }
+                                    pre_parse_plugin::PreExecutePluginResponse::Return(bytes) => {
+                                        // Send the plugin response to the client
+                                        connection
+                                            .send(ws::Message::Raw(
+                                                axum::extract::ws::Message::Binary(bytes),
+                                            ))
+                                            .await;
+                                    }
+                                    pre_parse_plugin::PreExecutePluginResponse::ReturnError {
+                                        plugin_name,
+                                        error,
+                                    } => {
+                                        // Send the plugin error response to the client
+                                        let graphql_error = error.into_graphql_error(&plugin_name);
+                                        connection
+                                            .send(ws::Message::Protocol(ServerMessage::Error {
+                                                id: operation_id.clone(),
+                                                payload: NonEmpty::new(graphql_error),
+                                            }))
+                                            .await;
+                                    }
+                                }
                                 Ok(())
                             }
                         }
@@ -85,6 +136,15 @@ pub async fn handle_subscribe(
                 // If the poller for this operation already exists, send a close message.
                 connection
                     .send(ws::Message::subscriber_already_exists(&operation_id))
+                    .await;
+            }
+            Error::PreParsePlugin(e) => {
+                // If the pre-parse plugin fails, send an error message.
+                connection
+                    .send(ws::Message::Protocol(ServerMessage::Error {
+                        id: operation_id,
+                        payload: NonEmpty::new(e.into_graphql_error()),
+                    }))
                     .await;
             }
         }
@@ -201,7 +261,7 @@ pub async fn execute_request_internal(
     let query = graphql_frontend::parse_query(&raw_request.query)?;
     // Normalize the parsed GraphQL query.
     let normalized_request =
-        graphql_frontend::normalize_request(schema, &session, query, raw_request)?;
+        graphql_frontend::normalize_request(schema, &session, query, &raw_request)?;
     // Generate Intermediate Representation (IR) from the query.
     let ir = graphql_frontend::build_ir(schema, &session, &headers, &normalized_request)?;
     // Build a request plan based on the IR.
@@ -212,17 +272,31 @@ pub async fn execute_request_internal(
         plan::RequestPlan::MutationPlan(mutation_plan) => {
             let execute_query_result =
                 plan::execute_mutation_plan(http_context, mutation_plan, project_id).await;
-            let response =
-                GraphQLResponse::from_result(execute_query_result, expose_internal_errors);
-            send_single_result_operation(operation_id, response, connection).await;
+            send_single_result_operation_response(
+                operation_id,
+                &raw_request,
+                session,
+                headers,
+                execute_query_result,
+                expose_internal_errors,
+                connection,
+            )
+            .await;
         }
         // Handle queries.
         plan::RequestPlan::QueryPlan(query_plan) => {
             let execute_query_result =
                 plan::execute_query_plan(http_context, query_plan, project_id).await;
-            let response =
-                GraphQLResponse::from_result(execute_query_result, expose_internal_errors);
-            send_single_result_operation(operation_id, response, connection).await;
+            send_single_result_operation_response(
+                operation_id,
+                &raw_request,
+                session,
+                headers,
+                execute_query_result,
+                expose_internal_errors,
+                connection,
+            )
+            .await;
         }
         // Handle subscriptions by starting a polling loop to repeatedly fetch data.
         plan::RequestPlan::SubscriptionPlan(alias, plan) => {
@@ -245,7 +319,7 @@ pub async fn execute_request_internal(
 
                     // A loop to periodically wait for the polling interval, then fetch data from NDC.
                     loop {
-                        let result: Result<GraphQLResponse, execute::FieldError> = tracer
+                        let result: Result<_, execute::FieldError> = tracer
                             .new_trace_async_with_link(
                                 "websocket_poll_subscription",
                                 "Polling a subscription query",
@@ -289,31 +363,37 @@ pub async fn execute_request_internal(
                                         // Generate a single root field query response
                                         let query_result =
                                             execute::ExecuteQueryResult { root_fields };
-                                        // Build GraphQL response and return
-                                        Ok(GraphQLResponse::from_result(
-                                            query_result,
-                                            expose_internal_errors,
-                                        ))
+
+                                        let graphql_response =
+                                            graphql_frontend::GraphQLResponse::from_result(
+                                                query_result,
+                                                expose_internal_errors,
+                                            )
+                                            .inner();
+                                        // Send the response
+                                        let stop_subscription =
+                                            send_subscription_operation_response(
+                                                &mut response_hash,
+                                                operation_id.clone(),
+                                                &raw_request,
+                                                &session,
+                                                &headers,
+                                                graphql_response,
+                                                connection,
+                                            )
+                                            .await;
+                                        Ok(stop_subscription)
                                     })
                                 },
                             )
                             .await;
 
                         match result {
-                            Ok(GraphQLResponse::Ok(response)) => {
-                                // Send the Ok response
-                                send_graphql_ok(
-                                    Some(&mut response_hash),
-                                    operation_id.clone(),
-                                    response,
-                                    connection,
-                                )
-                                .await;
-                            }
-                            Ok(GraphQLResponse::Error(errors)) => {
-                                // Send the errors and stop polling
-                                send_graphql_errors(operation_id.clone(), errors, connection).await;
-                                break;
+                            Ok(stop_subscription) => {
+                                // Stop the subscription, if only errors sent in the current response
+                                if stop_subscription {
+                                    break;
+                                }
                             }
                             Err(err) => {
                                 // Send the exception as a GraphQL error and stop polling
@@ -368,20 +448,16 @@ impl ResponseHash {
 
 /// Sends a GraphQL response with no errors.
 async fn send_graphql_ok(
-    response_hash: Option<&mut ResponseHash>,
     operation_id: OperationId,
     response: lang_graphql::http::Response,
     connection: &ws::Connection,
 ) {
-    // Send response only when it is different from previous response
-    if !response_hash.map_or(false, |hash| hash.matches(&response)) {
-        connection
-            .send(ws::Message::Protocol(ServerMessage::Next {
-                id: operation_id,
-                payload: response,
-            }))
-            .await;
-    }
+    connection
+        .send(ws::Message::Protocol(ServerMessage::Next {
+            id: operation_id,
+            payload: response,
+        }))
+        .await;
 }
 
 /// Sends GraphQL errors to the client.
@@ -414,14 +490,7 @@ enum GraphQLResponse {
 }
 
 impl GraphQLResponse {
-    fn from_result(
-        result: execute::ExecuteQueryResult,
-        expose_internal_errors: ExposeInternalErrors,
-    ) -> Self {
-        // Convert the result to a GraphQL response.
-        let response =
-            graphql_frontend::GraphQLResponse::from_result(result, expose_internal_errors).inner();
-
+    fn new(response: lang_graphql::http::Response) -> Self {
         // If any error exist
         if let Some(errors) = response.errors {
             // If some data present
@@ -445,15 +514,23 @@ impl GraphQLResponse {
 
 /// Sends a single result (query or mutation) along with a completion message.
 /// If there are errors, they are sent before the complete message.
-async fn send_single_result_operation(
+async fn send_single_result_operation_response(
     operation_id: OperationId,
-    response: GraphQLResponse,
+    raw_request: &lang_graphql::http::RawRequest,
+    session: Session,
+    headers: http::HeaderMap,
+    result: execute::ExecuteQueryResult,
+    expose_internal_errors: ExposeInternalErrors,
     connection: &ws::Connection,
 ) {
+    let graphql_response =
+        graphql_frontend::GraphQLResponse::from_result(result, expose_internal_errors).inner();
+    // Execute pre-response plugins
+    run_pre_response_plugins(raw_request, session, headers, &graphql_response, connection);
     // Send the ok response and a complete message.
-    match response {
+    match GraphQLResponse::new(graphql_response) {
         GraphQLResponse::Ok(response) => {
-            send_graphql_ok(None, operation_id.clone(), response, connection).await;
+            send_graphql_ok(operation_id.clone(), response, connection).await;
             send_complete(operation_id, connection).await;
         }
         GraphQLResponse::Error(errors) => {
@@ -461,5 +538,95 @@ async fn send_single_result_operation(
             // Ref: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#complete
             send_graphql_errors(operation_id, errors, connection).await;
         }
+    }
+}
+
+/// Sends a subscription operation response.
+async fn send_subscription_operation_response(
+    response_hash: &mut ResponseHash,
+    operation_id: OperationId,
+    raw_request: &lang_graphql::http::RawRequest,
+    session: &Session,
+    headers: &http::HeaderMap,
+    response: lang_graphql::http::Response,
+    connection: &ws::Connection,
+) -> bool {
+    let mut stop_subscription = false;
+    if !response_hash.matches(&response) {
+        // Execute pre-response plugins before sending the response
+        run_pre_response_plugins(
+            raw_request,
+            session.clone(),
+            headers.clone(),
+            &response,
+            connection,
+        );
+        match GraphQLResponse::new(response) {
+            // Send the ok response
+            GraphQLResponse::Ok(ok_response) => {
+                send_graphql_ok(operation_id, ok_response, connection).await;
+            }
+            GraphQLResponse::Error(errors) => {
+                // Send the errors and stop subscription
+                send_graphql_errors(operation_id, errors, connection).await;
+                stop_subscription = true;
+            }
+        }
+    }
+    stop_subscription
+}
+
+#[derive(thiserror::Error, Debug)]
+#[error("error in executing pre-response plugins, unable to encode response: {0}")]
+struct ExecutePreResponsePluginsError(#[from] serde_json::Error);
+
+impl tracing_util::TraceableError for ExecutePreResponsePluginsError {
+    fn visibility(&self) -> tracing_util::ErrorVisibility {
+        tracing_util::ErrorVisibility::User
+    }
+}
+
+fn run_pre_response_plugins(
+    raw_request: &lang_graphql::http::RawRequest,
+    session: Session,
+    headers: http::HeaderMap,
+    response: &lang_graphql::http::Response,
+    connection: &ws::Connection,
+) {
+    // Execute pre-response plugins only if there are any
+    if let Some(pre_response_plugins) = NonEmpty::from_vec(
+        connection
+            .context
+            .plugin_configs
+            .pre_response_plugins
+            .clone(),
+    ) {
+        let tracer = tracing_util::global_tracer();
+        // Errors will be traced in the following span.
+        let _result: Result<(), ExecutePreResponsePluginsError> = tracer.in_span(
+            "run_pre_response_plugins",
+            "Running pre-response plugins",
+            tracing_util::SpanVisibility::User,
+            || {
+                let response_json = serde_json::to_value(response)?;
+                tracing_util::get_active_span(|span| {
+                    // Open new trace for executing pre-response plugin with linking current span
+                    let plugin_execution_tracing_strategy =
+                        pre_response_plugin::ExecutePluginsTracing::NewTraceWithLink {
+                            span_context: span.span_context().clone(),
+                        };
+                    pre_response_plugin::execute_pre_response_plugins_in_task(
+                        pre_response_plugins,
+                        connection.context.http_context.client.clone(),
+                        session,
+                        raw_request.clone(),
+                        response_json,
+                        headers,
+                        plugin_execution_tracing_strategy,
+                    );
+                });
+                Ok(())
+            },
+        );
     }
 }

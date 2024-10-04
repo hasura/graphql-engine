@@ -27,6 +27,16 @@ pub enum Error {
     PluginRequestParseError(serde_json::error::Error),
 }
 
+impl Error {
+    pub fn into_graphql_error(self) -> lang_graphql::http::GraphQLError {
+        lang_graphql::http::GraphQLError {
+            message: self.to_string(),
+            path: None,
+            extensions: None,
+        }
+    }
+}
+
 impl TraceableError for Error {
     fn visibility(&self) -> ErrorVisibility {
         ErrorVisibility::Internal
@@ -35,9 +45,9 @@ impl TraceableError for Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
-        lang_graphql::http::Response::error_message_with_status(
+        lang_graphql::http::Response::error_with_status(
             StatusCode::INTERNAL_SERVER_ERROR,
-            self.to_string(),
+            self.into_graphql_error(),
         )
         .into_response()
     }
@@ -47,6 +57,29 @@ impl IntoResponse for Error {
 pub enum ErrorResponse {
     UserError(serde_json::Value),
     InternalError(Option<serde_json::Value>),
+}
+
+impl ErrorResponse {
+    pub fn into_graphql_error(self, plugin_name: &str) -> lang_graphql::http::GraphQLError {
+        match self {
+            Self::UserError(error) => lang_graphql::http::GraphQLError {
+                message: format!("User error in pre-parse plugin: {plugin_name}"),
+                path: None,
+                extensions: Some(lang_graphql::http::Extensions { details: error }),
+            },
+            Self::InternalError(_error) => lang_graphql::http::GraphQLError {
+                message: format!("Internal error in pre-parse plugin: {plugin_name}"),
+                path: None,
+                extensions: None,
+            },
+        }
+    }
+    pub fn to_status_code(&self) -> StatusCode {
+        match self {
+            Self::UserError(_) => StatusCode::BAD_REQUEST,
+            Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
 }
 
 impl std::fmt::Display for ErrorResponse {
@@ -67,7 +100,10 @@ impl Traceable for PreExecutePluginResponse {
     fn get_error(&self) -> Option<ErrorResponse> {
         match self {
             PreExecutePluginResponse::Continue | PreExecutePluginResponse::Return(_) => None,
-            PreExecutePluginResponse::ReturnError(err) => Some(err.clone()),
+            PreExecutePluginResponse::ReturnError {
+                plugin_name: _,
+                error,
+            } => Some(error.clone()),
         }
     }
 }
@@ -85,7 +121,10 @@ impl TraceableError for ErrorResponse {
 pub enum PreExecutePluginResponse {
     Return(Vec<u8>),
     Continue,
-    ReturnError(ErrorResponse),
+    ReturnError {
+        plugin_name: String,
+        error: ErrorResponse,
+    },
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -195,16 +234,18 @@ pub async fn execute_plugin(
         StatusCode::INTERNAL_SERVER_ERROR => {
             let body = response.json().await.map_err(Error::ReqwestError)?;
 
-            Ok(PreExecutePluginResponse::ReturnError(
-                ErrorResponse::InternalError(Some(body)),
-            ))
+            Ok(PreExecutePluginResponse::ReturnError {
+                plugin_name: config.name.clone(),
+                error: ErrorResponse::InternalError(Some(body)),
+            })
         }
         StatusCode::BAD_REQUEST => {
             let response_json: serde_json::Value =
                 response.json().await.map_err(Error::ReqwestError)?;
-            Ok(PreExecutePluginResponse::ReturnError(
-                ErrorResponse::UserError(response_json),
-            ))
+            Ok(PreExecutePluginResponse::ReturnError {
+                plugin_name: config.name.clone(),
+                error: ErrorResponse::UserError(response_json),
+            })
         }
         _ => Err(Error::UnexpectedStatusCode(response.status().as_u16())),
     }
@@ -221,30 +262,78 @@ pub async fn pre_parse_plugins_handler(
     let mut response = None;
     let raw_request = serde_json::from_slice::<RawRequest>(raw_request_bytes)
         .map_err(Error::PluginRequestParseError)?;
-    for pre_plugin_config in pre_parse_plugins_config {
+    let result = tracer
+        .in_span_async(
+            "pre_parse_plugin_middleware",
+            "Pre-execution Plugin middleware",
+            SpanVisibility::User,
+            || {
+                Box::pin(async {
+                    execute_pre_parse_plugins(
+                        pre_parse_plugins_config,
+                        http_client,
+                        &session,
+                        &headers_map,
+                        &raw_request,
+                    )
+                    .await
+                })
+            },
+        )
+        .await?;
+
+    match result {
+        PreExecutePluginResponse::Return(value) => {
+            response = Some(value.into_response());
+        }
+        PreExecutePluginResponse::Continue => {}
+        PreExecutePluginResponse::ReturnError { plugin_name, error } => {
+            let status_code = error.to_status_code();
+            let graphql_error = error.into_graphql_error(&plugin_name);
+            let error_response =
+                lang_graphql::http::Response::error_with_status(status_code, graphql_error)
+                    .into_response();
+            response = Some(error_response);
+        }
+    };
+    Ok(response)
+}
+
+/// Execute all the pre-parse plugins in sequence.
+/// If any plugin returns an error, the execution stops and the error is returned.
+pub async fn execute_pre_parse_plugins(
+    pre_parse_plugins_config: &nonempty::NonEmpty<LifecyclePreParsePluginHook>,
+    http_client: &reqwest::Client,
+    session: &Session,
+    headers_map: &HeaderMap,
+    raw_request: &RawRequest,
+) -> Result<PreExecutePluginResponse, Error> {
+    let tracer = tracing_util::global_tracer();
+    for plugin_config in pre_parse_plugins_config {
         let plugin_response = tracer
             .in_span_async(
-                "pre_parse_plugin_middleware",
-                "Pre-execution Plugin middleware",
+                "execute_pre_parse_plugin",
+                "Execute a Pre-parse Plugin",
                 SpanVisibility::User,
                 || {
                     Box::pin(async {
                         set_attribute_on_active_span(
                             tracing_util::AttributeVisibility::Default,
                             "plugin.name",
-                            pre_plugin_config.name.clone(),
+                            plugin_config.name.clone(),
                         );
                         let plugin_response = execute_plugin(
                             http_client,
-                            pre_plugin_config,
-                            &headers_map,
-                            &session,
-                            &raw_request,
+                            plugin_config,
+                            headers_map,
+                            session,
+                            raw_request,
                         )
                         .await;
-                        if let Ok(PreExecutePluginResponse::ReturnError(
-                            ErrorResponse::InternalError(error_value),
-                        )) = &plugin_response
+                        if let Ok(PreExecutePluginResponse::ReturnError {
+                            plugin_name: _,
+                            error: ErrorResponse::InternalError(error_value),
+                        }) = &plugin_response
                         {
                             let error_value =
                                 error_value.as_ref().unwrap_or(&serde_json::Value::Null);
@@ -254,9 +343,10 @@ pub async fn pre_parse_plugins_handler(
                                 error_value.to_string(),
                             );
                         };
-                        if let Ok(PreExecutePluginResponse::ReturnError(
-                            ErrorResponse::UserError(error_value),
-                        )) = &plugin_response
+                        if let Ok(PreExecutePluginResponse::ReturnError {
+                            plugin_name: _,
+                            error: ErrorResponse::UserError(error_value),
+                        }) = &plugin_response
                         {
                             set_attribute_on_active_span(
                                 tracing_util::AttributeVisibility::Default,
@@ -268,38 +358,16 @@ pub async fn pre_parse_plugins_handler(
                     })
                 },
             )
-            .await?;
+            .await?; // Short Circuit; stop executing remaining plugins if current one errors.
         match plugin_response {
-            PreExecutePluginResponse::Return(value) => {
-                response = Some(value.into_response());
-                break;
-            }
             PreExecutePluginResponse::Continue => (),
-            PreExecutePluginResponse::ReturnError(ErrorResponse::UserError(error_value)) => {
-                let user_error_response =
-                    lang_graphql::http::Response::error_message_with_status_and_details(
-                        reqwest::StatusCode::BAD_REQUEST,
-                        format!("User error in pre-parse plugin {0}", pre_plugin_config.name),
-                        error_value,
-                    )
-                    .into_response();
-                response = Some(user_error_response);
-                break;
-            }
-            PreExecutePluginResponse::ReturnError(ErrorResponse::InternalError(_error_value)) => {
-                let internal_error_response =
-                    lang_graphql::http::Response::error_message_with_status(
-                        reqwest::StatusCode::INTERNAL_SERVER_ERROR,
-                        format!(
-                            "Internal error in pre-parse plugin {0}",
-                            pre_plugin_config.name
-                        ),
-                    )
-                    .into_response();
-                response = Some(internal_error_response);
-                break;
-            }
-        };
+            // Stop executing the next plugin if current plugin returns an error or a response
+            response @ (PreExecutePluginResponse::Return(_)
+            | PreExecutePluginResponse::ReturnError {
+                plugin_name: _,
+                error: _,
+            }) => return Ok(response),
+        }
     }
-    Ok(response)
+    Ok(PreExecutePluginResponse::Continue)
 }

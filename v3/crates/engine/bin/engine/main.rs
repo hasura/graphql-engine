@@ -807,6 +807,7 @@ async fn handle_websocket_request(
         expose_internal_errors: engine_state.expose_internal_errors,
         schema: engine_state.graphql_state.clone(),
         auth_config: engine_state.auth_config.clone(),
+        plugin_configs: engine_state.plugin_configs.clone(),
     };
 
     engine_state

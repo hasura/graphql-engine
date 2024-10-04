@@ -172,8 +172,30 @@ pub fn pre_response_plugins_handler(
         raw_request,
         raw_response,
         headers_map,
+        ExecutePluginsTracing::ParentContext, // Use parent context for pre-response plugin tracing
     );
     Ok(())
+}
+
+/// Tracing strategy for executing the plugins, accommodating different GraphQL transport methods
+pub enum ExecutePluginsTracing {
+    /// Execute plugins in a span with parent context derived from client headers
+    ///
+    /// Used for GraphQL over HTTP, where plugin spans are stitched to the HTTP trace
+    /// using a parent context derived from the client headers. This allows for
+    /// a continuous trace from the client request through the plugin execution.
+    ParentContext,
+
+    /// Execute plugins in a new trace with a link to the parent span
+    ///
+    /// Used for GraphQL over websockets, where plugin spans are wrapped in new traces
+    /// with a link to the parent span. This strategy helps maintain trace continuity
+    /// in long-lived websocket connections while allowing for independent tracing
+    /// of individual operations.
+    NewTraceWithLink {
+        /// The context of the parent span to which this new trace will be linked
+        span_context: tracing_util::SpanContext,
+    },
 }
 
 /// Execute the pre-response plugins in a separate task
@@ -184,33 +206,66 @@ pub fn execute_pre_response_plugins_in_task(
     raw_request: RawRequest,
     raw_response: serde_json::Value,
     headers_map: HeaderMap,
+    tracing_strategy: ExecutePluginsTracing,
 ) {
     let tracer = tracing_util::global_tracer();
     // Spawn a new task to execute the pre-response plugins
     tokio::spawn(async move {
         // Execute all pre-response plugins
-        tracer
-            .in_span_async_with_parent_context(
-                "execute_all_pre_response_plugins",
-                "Execute all Pre-response Plugins",
-                SpanVisibility::User,
-                &headers_map,
-                || {
-                    Box::pin(async {
-                        execute_all_plugins(
-                            &pre_response_plugins_config,
-                            &http_client,
-                            &session,
-                            &raw_request,
-                            &raw_response,
-                            &headers_map,
-                        )
-                        .await;
-                        tracing_util::Successful::new(())
-                    })
-                },
-            )
-            .await;
+        let span_name = "execute_all_pre_response_plugins";
+        let span_display_name = "Execute all Pre-response Plugins".to_string();
+        let span_visibility = SpanVisibility::User;
+        // See comments on `ExecutePluginsTracing` for more details on the tracing strategy.
+        match tracing_strategy {
+            ExecutePluginsTracing::ParentContext => {
+                tracer
+                    .in_span_async_with_parent_context(
+                        span_name,
+                        span_display_name,
+                        span_visibility,
+                        &headers_map,
+                        || {
+                            Box::pin(async {
+                                execute_all_plugins(
+                                    &pre_response_plugins_config,
+                                    &http_client,
+                                    &session,
+                                    &raw_request,
+                                    &raw_response,
+                                    &headers_map,
+                                )
+                                .await;
+                                tracing_util::Successful::new(())
+                            })
+                        },
+                    )
+                    .await;
+            }
+            ExecutePluginsTracing::NewTraceWithLink { span_context } => {
+                tracer
+                    .new_trace_async_with_link(
+                        span_name,
+                        span_display_name,
+                        span_visibility,
+                        span_context,
+                        || {
+                            Box::pin(async {
+                                execute_all_plugins(
+                                    &pre_response_plugins_config,
+                                    &http_client,
+                                    &session,
+                                    &raw_request,
+                                    &raw_response,
+                                    &headers_map,
+                                )
+                                .await;
+                                tracing_util::Successful::new(())
+                            })
+                        },
+                    )
+                    .await;
+            }
+        }
     });
 }
 

@@ -80,12 +80,17 @@ pub(crate) async fn start_websocket_server() -> TestServer {
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
+    let plugin_configs = metadata_resolve::LifecyclePluginConfigs {
+        pre_parse_plugins: Vec::new(),
+        pre_response_plugins: Vec::new(),
+    };
     let context = Context {
         http_context,
         expose_internal_errors: execute::ExposeInternalErrors::Expose,
         project_id: None,
         schema,
         auth_config,
+        plugin_configs,
     };
 
     let connections = graphql_ws::Connections::new();
