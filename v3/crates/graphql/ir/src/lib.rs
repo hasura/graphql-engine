@@ -35,8 +35,7 @@ pub use order_by::{OrderByElement, OrderByTarget, ResolvedOrderBy};
 pub use permissions::process_model_predicate;
 pub use query_root::generate_ir as generate_query_ir;
 pub use relationship::{
-    build_remote_command_relationship, build_remote_relationship, get_field_mapping_of_field_name,
-    LocalCommandRelationshipInfo,
+    build_remote_command_relationship, build_remote_relationship, LocalCommandRelationshipInfo,
 };
 pub use root_field::{
     ApolloFederationRootFields, MutationRootField, QueryRootField, SubscriptionRootField,

@@ -408,12 +408,16 @@ pub fn build_remote_relationship<'s>(
         target_ndc_column,
     } in target_mappings
     {
-        let source_column = get_field_mapping_of_field_name(
+        let source_column = metadata_resolve::get_field_mapping_of_field_name(
             source_type_mappings,
             source_type,
             relationship_name,
             &source_field_path.field_name,
-        )?;
+        )
+        .map_err(|err| {
+            error::Error::from(error::InternalDeveloperError::RelationshipFieldMappingError(err))
+        })?;
+
         let target_column = target_ndc_column.as_ref().ok_or_else(|| {
             error::InternalEngineError::InternalGeneric {
                 description: format!(
@@ -472,12 +476,15 @@ pub fn build_remote_command_relationship<'n, 's>(
         argument_name: target_argument_name,
     } in &annotation.mappings
     {
-        let source_column = get_field_mapping_of_field_name(
+        let source_column = metadata_resolve::get_field_mapping_of_field_name(
             type_mappings,
             &annotation.source_type,
             &annotation.relationship_name,
             &source_field_path.field_name,
-        )?;
+        )
+        .map_err(|err| {
+            error::Error::from(error::InternalDeveloperError::RelationshipFieldMappingError(err))
+        })?;
 
         let source_field = (source_field_path.field_name.clone(), source_column);
         join_mapping.push((source_field, target_argument_name.clone()));
@@ -522,30 +529,4 @@ pub fn build_remote_command_relationship<'n, 's>(
         ir: remote_relationships_ir,
         relationship_info: rel_info,
     })
-}
-
-pub fn get_field_mapping_of_field_name(
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    type_name: &Qualified<CustomTypeName>,
-    relationship_name: &RelationshipName,
-    field_name: &FieldName,
-) -> Result<metadata_resolve::FieldMapping, error::Error> {
-    let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
-        error::InternalDeveloperError::TypeMappingNotFoundForRelationship {
-            type_name: type_name.clone(),
-            relationship_name: relationship_name.clone(),
-        }
-    })?;
-    match type_mapping {
-        metadata_resolve::TypeMapping::Object { field_mappings, .. } => Ok(field_mappings
-            .get(field_name)
-            .ok_or_else(
-                || error::InternalDeveloperError::FieldMappingNotFoundForRelationship {
-                    type_name: type_name.clone(),
-                    relationship_name: relationship_name.clone(),
-                    field_name: field_name.clone(),
-                },
-            )?
-            .clone()),
-    }
 }

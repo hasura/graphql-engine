@@ -143,11 +143,8 @@ pub enum InternalDeveloperError {
         field_name: FieldName,
     },
 
-    #[error("Type mapping not found for the type name {type_name:} while executing the relationship {relationship_name:}")]
-    TypeMappingNotFoundForRelationship {
-        type_name: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
-    },
+    #[error("{0}")]
+    RelationshipFieldMappingError(#[from] metadata_resolve::RelationshipFieldMappingError),
 
     #[error("Field mapping not found for the field {field_name:} of type {type_name:} while executing the relationship {relationship_name:}")]
     FieldMappingNotFoundForRelationship {

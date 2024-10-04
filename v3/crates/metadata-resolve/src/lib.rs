@@ -14,6 +14,7 @@ mod types;
 
 pub use helpers::http;
 pub use helpers::ndc_validation::NDCValidationError;
+pub use helpers::type_mappings::{get_field_mapping_of_field_name, RelationshipFieldMappingError};
 pub use helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
     NdcColumnForComparison, TypeRepresentation,
@@ -35,15 +36,6 @@ pub use stages::model_permissions::{
     SelectPermission, UnaryComparisonOperator,
 };
 pub use stages::models::{Model, ModelSource, ModelsError};
-pub use stages::plugins::LifecyclePluginConfigs;
-pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;
-pub use stages::{
-    command_permissions::CommandWithPermissions,
-    commands::{Command, CommandSource},
-    data_connectors,
-};
-pub use types::warning::Warning;
-
 pub use stages::models_graphql::{
     ModelExpressionType, ModelOrderByExpression, SelectAggregateGraphQlDefinition,
     SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, SubscriptionGraphQlDefinition,
@@ -67,8 +59,15 @@ pub use stages::order_by_expressions::{
     OrderByExpressions, OrderableField, OrderableObjectField, OrderableRelationship,
     OrderableRelationships, OrderableScalarField,
 };
+pub use stages::plugins::LifecyclePluginConfigs;
+pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;
 pub use stages::scalar_types::ScalarTypeRepresentation;
 pub use stages::type_permissions::{FieldPresetInfo, TypeInputPermission};
+pub use stages::{
+    command_permissions::CommandWithPermissions,
+    commands::{Command, CommandSource},
+    data_connectors,
+};
 pub use stages::{resolve, Metadata};
 pub use types::configuration;
 pub use types::error::{Error, WithContext};
@@ -79,3 +78,4 @@ pub use types::subgraph::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
     UnTaggedQualifiedTypeName,
 };
+pub use types::warning::Warning;
