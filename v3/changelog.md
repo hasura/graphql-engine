@@ -12,6 +12,9 @@
 
 ### Changed
 
+- metadata-build-service POST endpoints now accept zstd (preferred) or gzip
+  -encoded request bodies
+
 ## [v2024.10.02]
 
 ### Added
