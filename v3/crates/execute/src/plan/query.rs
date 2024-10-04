@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use crate::error;
 use async_recursion::async_recursion;
-use graphql_ir::{AggregateSelectionSet, NdcRelationshipName, OrderByElement, VariableName};
+use graphql_ir::{AggregateSelectionSet, OrderByElement};
 use indexmap::IndexMap;
 use open_dds::{data_connector::CollectionName, types::DataConnectorArgumentName};
-use plan_types::NdcFieldAlias;
+use plan_types::{NdcFieldAlias, NdcRelationshipName, VariableName};
 use std::collections::BTreeMap;
 
 use super::arguments;
@@ -14,7 +14,7 @@ use super::filter;
 use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 
-pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<graphql_ir::Expression<'s>>;
+pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<plan_types::Expression<'s>>;
 pub type ResolvedQueryExecutionPlan = QueryExecutionPlan<filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -58,7 +58,7 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
     }
 }
 
-pub type UnresolvedQueryNode<'s> = QueryNode<graphql_ir::Expression<'s>>;
+pub type UnresolvedQueryNode<'s> = QueryNode<plan_types::Expression<'s>>;
 pub type ResolvedQueryNode = QueryNode<filter::ResolvedFilterExpression>;
 
 /// Query plan for fetching data

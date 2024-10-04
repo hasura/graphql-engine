@@ -6,9 +6,9 @@ use open_dds::types::DataConnectorArgumentName;
 use std::collections::BTreeMap;
 
 use crate::plan::error;
+use graphql_ir::LocalCommandRelationshipInfo;
 use graphql_ir::ModelSelection;
-use graphql_ir::NdcRelationshipName;
-use graphql_ir::{LocalCommandRelationshipInfo, LocalModelRelationshipInfo};
+use plan_types::{LocalModelRelationshipInfo, NdcRelationshipName};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Relationship {

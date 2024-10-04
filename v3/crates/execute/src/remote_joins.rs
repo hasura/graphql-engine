@@ -140,7 +140,7 @@ pub(crate) async fn execute_join_locations(
             continue;
         }
         // patch the target/RHS IR with variable values
-        let foreach_variables: Vec<BTreeMap<graphql_ir::VariableName, json::Value>> = arguments
+        let foreach_variables: Vec<BTreeMap<plan_types::VariableName, json::Value>> = arguments
             .iter()
             .map(|bmap| bmap.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect())
             .collect();

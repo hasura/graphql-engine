@@ -10,7 +10,7 @@ use super::relationships;
 use super::selection_set;
 use crate::remote_joins::types::JoinLocations;
 use graphql_ir::ModelSelection;
-use graphql_ir::NdcRelationshipName;
+use plan_types::NdcRelationshipName;
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings
 // #[async_recursion]

@@ -21,9 +21,10 @@ use super::{
     permissions, selection_set,
 };
 use crate::error;
-use crate::model_tracking::{count_model, UsagesCounts};
+use crate::model_tracking::count_model;
 use graphql_schema::GDS;
 use metadata_resolve::Qualified;
+use plan_types::{Expression, UsagesCounts};
 
 /// IR fragment for any 'select' operation on a model
 #[derive(Debug, Serialize)]
@@ -65,7 +66,7 @@ struct FilterInputArguments<'s> {
     limit: Option<u32>,
     offset: Option<u32>,
     order_by: Option<ResolvedOrderBy<'s>>,
-    filter_clause: Option<filter::expression::Expression<'s>>,
+    filter_clause: Option<Expression<'s>>,
 }
 
 /// Generates the IR fragment for selecting from a model.
@@ -128,7 +129,7 @@ fn build_permissions_filter<'s>(
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
-) -> Result<Option<filter::expression::Expression<'s>>, error::Error> {
+) -> Result<Option<Expression<'s>>, error::Error> {
     match permissions_predicate {
         metadata_resolve::FilterPermission::AllowAll => Ok(None),
         metadata_resolve::FilterPermission::Filter(predicate) => {

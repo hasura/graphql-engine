@@ -3,26 +3,22 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common::Alias;
 use lang_graphql::normalized_ast;
 use open_dds::data_connector::DataConnectorColumnName;
-use open_dds::relationships::RelationshipName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, FieldName};
 use plan_types::NdcFieldAlias;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use smol_str::SmolStr;
+use serde::Serialize;
 use std::collections::BTreeMap;
 
 use super::arguments;
 use super::commands::FunctionBasedCommand;
 use super::model_selection::ModelSelection;
 use super::relationship::{
-    self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo, RemoteCommandRelationshipInfo,
-    RemoteModelRelationshipInfo,
+    self, LocalCommandRelationshipInfo, RemoteCommandRelationshipInfo, RemoteModelRelationshipInfo,
 };
 use crate::error;
 use crate::global_id;
-use crate::model_tracking::UsagesCounts;
 use graphql_schema::TypeKind;
 use graphql_schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
+use plan_types::{LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts};
 
 #[derive(Debug, Serialize)]
 pub enum NestedSelection<'s> {
@@ -58,47 +54,6 @@ pub enum FieldSelection<'s> {
         ir: FunctionBasedCommand<'s>,
         relationship_info: RemoteCommandRelationshipInfo<'s>,
     },
-}
-
-/// The unique relationship name that is passed to NDC
-// Relationship names needs to be unique across the IR. This is so that, the
-// NDC can use these names to figure out what joins to use.
-// A single "source type" can have only one relationship with a given name,
-// hence the relationship name in the IR is a tuple between the source type
-// and the relationship name.
-// Relationship name = (source_type, relationship_name)
-#[derive(
-    Serialize,
-    Deserialize,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Hash,
-    derive_more::Display,
-    JsonSchema,
-    PartialOrd,
-    Ord,
-)]
-pub struct NdcRelationshipName(pub SmolStr);
-
-impl NdcRelationshipName {
-    pub fn new(
-        source_type: &metadata_resolve::Qualified<CustomTypeName>,
-        relationship_name: &RelationshipName,
-    ) -> Result<Self, error::Error> {
-        let name = format!(
-            "{}___{}__{}",
-            source_type.subgraph,
-            source_type.name,
-            relationship_name.as_str()
-        );
-        Ok(NdcRelationshipName(SmolStr::new(name)))
-    }
-
-    pub fn as_str(&self) -> &str {
-        self.0.as_str()
-    }
 }
 
 /// IR that represents the selected fields of an output type.

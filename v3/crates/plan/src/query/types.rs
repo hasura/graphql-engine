@@ -8,12 +8,12 @@ use open_dds::{
     data_connector::CollectionName,
     types::{CustomTypeName, DataConnectorArgumentName},
 };
-use plan_types::NdcFieldAlias;
+use plan_types::{NdcFieldAlias, NdcRelationshipName};
 
 use indexmap::IndexMap;
 
 // these types aren't really GraphQL specific and should move some where more general
-use graphql_ir::{NdcRelationshipName, ResolvedOrderBy};
+use graphql_ir::ResolvedOrderBy;
 
 // additional query context which is helpful when processing the response afterwards
 pub struct QueryContext {

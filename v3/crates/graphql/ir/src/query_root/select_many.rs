@@ -15,13 +15,14 @@ use crate::arguments;
 use crate::error;
 use crate::filter;
 use crate::model_selection;
-use crate::model_tracking::{count_model, UsagesCounts};
+use crate::model_tracking::count_model;
 use crate::order_by::build_ndc_order_by;
 use crate::permissions;
 use graphql_schema::GDS;
 use graphql_schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 use metadata_resolve;
 use metadata_resolve::Qualified;
+use plan_types::UsagesCounts;
 
 /// IR for the 'select_many' operation on a model
 #[derive(Debug, Serialize)]

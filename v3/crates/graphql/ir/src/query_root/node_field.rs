@@ -10,14 +10,15 @@ use serde::Serialize;
 
 use crate::error;
 use crate::filter;
-use crate::filter::expression as filter_expression;
 use crate::model_selection;
-use crate::model_tracking::UsagesCounts;
 use graphql_schema::GDS;
 use graphql_schema::{GlobalID, NamespaceAnnotation, NodeFieldTypeNameMapping};
 use json_ext::HashMapWithJsonKey;
 use metadata_resolve;
 use metadata_resolve::Qualified;
+use plan_types::{
+    ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
+};
 
 /// IR for the 'select_one' operation on a model
 #[derive(Serialize, Debug)]
@@ -126,16 +127,14 @@ pub(crate) fn relay_node_ir<'n, 's>(
                                 global_id.typename, field_name
                             ),
                         })?;
-                    Ok(filter_expression::Expression::LocalField(
-                        filter_expression::LocalFieldComparison::BinaryComparison {
-                            column: filter_expression::ComparisonTarget::Column {
+                    Ok(Expression::LocalField(
+                        LocalFieldComparison::BinaryComparison {
+                            column: ComparisonTarget::Column {
                                 name: field_mapping.column.clone(),
                                 field_path: vec![],
                             },
                             operator: field_mapping.equal_operator.clone(),
-                            value: filter_expression::ComparisonValue::Scalar {
-                                value: val.clone(),
-                            },
+                            value: ComparisonValue::Scalar { value: val.clone() },
                         },
                     ))
                 })
@@ -149,9 +148,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
 
             let query_filter = filter::QueryFilter {
                 where_clause: None,
-                additional_filter: Some(filter_expression::Expression::mk_and(
-                    filter_clause_expressions,
-                )),
+                additional_filter: Some(Expression::mk_and(filter_clause_expressions)),
             };
 
             let model_selection = model_selection::model_selection_ir(

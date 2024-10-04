@@ -15,41 +15,34 @@ mod order_by;
 mod permissions;
 mod query_root;
 mod relationship;
-mod remote_joins;
 mod root_field;
 mod selection_set;
 mod subscription_root;
 
 pub use error::{Error, InternalDeveloperError, InternalEngineError};
-pub use remote_joins::VariableName;
 
 pub use aggregates::{
     mk_alias_from_graphql_field_path, AggregateFieldSelection, AggregateSelectionSet,
 };
 pub use arguments::{process_connector_link_presets, Argument};
 pub use commands::{CommandInfo, FunctionBasedCommand, ProcedureBasedCommand};
-pub use filter::expression::{
-    ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,
-    SourceNdcColumn,
-};
 pub use filter::FilterExpression;
 pub use global_id::{global_id_col_format, GLOBAL_ID_VERSION};
 pub use model_selection::ModelSelection;
-pub use model_tracking::{get_all_usage_counts_in_query, UsagesCounts};
+pub use model_tracking::get_all_usage_counts_in_query;
 pub use mutation_root::generate_ir as generate_mutation_ir;
 pub use order_by::{OrderByElement, OrderByTarget, ResolvedOrderBy};
 pub use permissions::process_model_predicate;
 pub use query_root::generate_ir as generate_query_ir;
 pub use relationship::{
     build_remote_command_relationship, build_remote_relationship, get_field_mapping_of_field_name,
-    LocalCommandRelationshipInfo, LocalModelRelationshipInfo,
+    LocalCommandRelationshipInfo,
 };
 pub use root_field::{
     ApolloFederationRootFields, MutationRootField, QueryRootField, SubscriptionRootField,
 };
 pub use selection_set::{
-    generate_selection_set_ir, FieldSelection, NdcRelationshipName, NestedSelection,
-    ResultSelectionSet,
+    generate_selection_set_ir, FieldSelection, NestedSelection, ResultSelectionSet,
 };
 pub use subscription_root::generate_ir as generate_subscription_ir;
 

@@ -8,9 +8,13 @@ license.workspace = true
 bench = false
 
 [dependencies]
+open-dds = { path = "../open-dds" }
+metadata-resolve = { path = "../metadata-resolve" }
 
 derive_more = { workspace = true }
+schemars = { workspace = true } 
 serde = { workspace = true }
+serde_json = { workspace = true }
 smol_str = { workspace = true }
 
 [lints]

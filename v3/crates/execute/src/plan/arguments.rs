@@ -6,9 +6,10 @@ use super::filter;
 use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 use crate::error;
-use graphql_ir::{NdcRelationshipName, VariableName};
+use plan_types::NdcRelationshipName;
+use plan_types::VariableName;
 
-pub type UnresolvedArgument<'s> = Argument<graphql_ir::Expression<'s>>;
+pub type UnresolvedArgument<'s> = Argument<plan_types::Expression<'s>>;
 pub type ResolvedArgument = Argument<filter::ResolvedFilterExpression>;
 
 /// Argument plan to express various kinds of arguments
@@ -65,7 +66,7 @@ impl<'s> UnresolvedArgument<'s> {
     }
 }
 
-pub type UnresolvedMutationArgument<'s> = MutationArgument<graphql_ir::Expression<'s>>;
+pub type UnresolvedMutationArgument<'s> = MutationArgument<plan_types::Expression<'s>>;
 pub type ResolvedMutationArgument = MutationArgument<filter::ResolvedFilterExpression>;
 
 /// Argument plan to express various kinds of arguments
@@ -149,7 +150,7 @@ pub fn plan_mutation_arguments<'s>(
 
 pub(crate) async fn resolve_arguments<'s>(
     resolve_context: &ResolveFilterExpressionContext<'_>,
-    arguments: BTreeMap<DataConnectorArgumentName, Argument<graphql_ir::Expression<'s>>>,
+    arguments: BTreeMap<DataConnectorArgumentName, Argument<plan_types::Expression<'s>>>,
 ) -> Result<
     BTreeMap<DataConnectorArgumentName, Argument<filter::ResolvedFilterExpression>>,
     error::FieldError,
@@ -166,7 +167,7 @@ pub(crate) async fn resolve_arguments<'s>(
 
 pub(crate) async fn resolve_mutation_arguments<'s>(
     resolve_context: &ResolveFilterExpressionContext<'_>,
-    arguments: BTreeMap<DataConnectorArgumentName, MutationArgument<graphql_ir::Expression<'s>>>,
+    arguments: BTreeMap<DataConnectorArgumentName, MutationArgument<plan_types::Expression<'s>>>,
 ) -> Result<
     BTreeMap<DataConnectorArgumentName, MutationArgument<filter::ResolvedFilterExpression>>,
     error::FieldError,

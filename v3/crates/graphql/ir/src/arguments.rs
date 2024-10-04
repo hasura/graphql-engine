@@ -2,8 +2,6 @@ use std::collections::BTreeMap;
 
 use crate::error;
 use crate::filter;
-use crate::filter::expression as filter_expression;
-use crate::model_tracking::UsagesCounts;
 use graphql_schema::GDS;
 use graphql_schema::{
     Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
@@ -21,6 +19,7 @@ use open_dds::{
     data_connector::DataConnectorColumnName,
     types::{CustomTypeName, DataConnectorArgumentName, InbuiltType},
 };
+use plan_types::{Expression, UsagesCounts};
 use reqwest::header::HeaderMap;
 use serde::Serialize;
 
@@ -30,9 +29,11 @@ use super::permissions;
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub enum Argument<'s> {
     /// The argument is provided as a literal value
-    Literal { value: serde_json::Value },
+    Literal {
+        value: serde_json::Value,
+    },
     BooleanExpression {
-        predicate: filter_expression::Expression<'s>,
+        predicate: Expression<'s>,
     },
 }
 

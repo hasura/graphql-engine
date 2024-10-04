@@ -11,7 +11,7 @@ use super::super::mutation;
 use super::super::query;
 use super::super::relationships;
 use crate::error::{FieldError, FieldInternalError};
-use graphql_ir::VariableName;
+use plan_types::VariableName;
 
 pub fn make_query_request(
     query_execution_plan: query::ResolvedQueryExecutionPlan,
@@ -232,7 +232,7 @@ fn make_expression(
             })
         }
         filter::ResolvedFilterExpression::LocalFieldComparison(
-            graphql_ir::LocalFieldComparison::BinaryComparison {
+            plan_types::LocalFieldComparison::BinaryComparison {
                 column,
                 operator,
                 value,
@@ -263,7 +263,7 @@ fn make_expression(
             })
         }
         filter::ResolvedFilterExpression::LocalFieldComparison(
-            graphql_ir::LocalFieldComparison::UnaryComparison { column, operator },
+            plan_types::LocalFieldComparison::UnaryComparison { column, operator },
         ) => Ok(ndc_models_v01::Expression::UnaryComparisonOperator {
             column: make_comparison_target(column),
             operator: match operator {
@@ -289,10 +289,10 @@ fn make_expression(
 }
 
 fn make_comparison_target(
-    comparison_target: graphql_ir::ComparisonTarget,
+    comparison_target: plan_types::ComparisonTarget,
 ) -> ndc_models_v01::ComparisonTarget {
     match comparison_target {
-        graphql_ir::ComparisonTarget::Column { name, field_path } => {
+        plan_types::ComparisonTarget::Column { name, field_path } => {
             ndc_models_v01::ComparisonTarget::Column {
                 name: ndc_models_v01::FieldName::new(name.into_inner()),
                 field_path: if field_path.is_empty() {
@@ -312,13 +312,13 @@ fn make_comparison_target(
 }
 
 fn make_comparison_value(
-    comparison_value: graphql_ir::ComparisonValue,
+    comparison_value: plan_types::ComparisonValue,
 ) -> ndc_models_v01::ComparisonValue {
     match comparison_value {
-        graphql_ir::ComparisonValue::Scalar { value } => {
+        plan_types::ComparisonValue::Scalar { value } => {
             ndc_models_v01::ComparisonValue::Scalar { value }
         }
-        graphql_ir::ComparisonValue::Variable { name } => {
+        plan_types::ComparisonValue::Variable { name } => {
             ndc_models_v01::ComparisonValue::Variable {
                 name: ndc_models_v01::VariableName::from(name.0.as_str()),
             }
@@ -396,7 +396,7 @@ fn make_nested_array(
 
 fn make_collection_relationships(
     collection_relationships: BTreeMap<
-        graphql_ir::NdcRelationshipName,
+        plan_types::NdcRelationshipName,
         relationships::Relationship,
     >,
 ) -> BTreeMap<ndc_models_v01::RelationshipName, ndc_models_v01::Relationship> {

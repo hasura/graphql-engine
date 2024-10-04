@@ -8,7 +8,7 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use open_dds::{commands::CommandName, models, types::CustomTypeName};
 
-use crate::model_tracking::UsagesCounts;
+use plan_types::UsagesCounts;
 use std::collections::HashMap;
 
 use super::commands;

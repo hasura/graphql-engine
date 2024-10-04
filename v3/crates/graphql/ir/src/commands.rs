@@ -22,13 +22,14 @@ use super::selection_set::FieldSelection;
 use super::selection_set::NestedSelection;
 use super::selection_set::ResultSelectionSet;
 use crate::error;
-use crate::model_tracking::{count_command, UsagesCounts};
+use crate::model_tracking::count_command;
 use crate::permissions;
 use graphql_schema::CommandSourceDetail;
 use graphql_schema::TypeKind;
 use graphql_schema::GDS;
 use metadata_resolve::{Qualified, QualifiedTypeReference};
 use plan_types::NdcFieldAlias;
+use plan_types::UsagesCounts;
 
 /// IR for the 'command' operations
 #[derive(Serialize, Debug)]

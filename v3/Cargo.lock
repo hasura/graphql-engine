@@ -2205,7 +2205,6 @@ name = "graphql-ir"
 version = "3.0.0"
 dependencies = [
  "base64 0.22.1",
- "derive_more",
  "graphql-schema",
  "hasura-authn-core",
  "indexmap 2.5.0",
@@ -2217,10 +2216,8 @@ dependencies = [
  "open-dds",
  "plan-types",
  "reqwest",
- "schemars",
  "serde",
  "serde_json",
- "smol_str",
  "thiserror",
  "tracing-util",
  "transitive",
@@ -3952,7 +3949,11 @@ name = "plan-types"
 version = "3.0.0"
 dependencies = [
  "derive_more",
+ "metadata-resolve",
+ "open-dds",
+ "schemars",
  "serde",
+ "serde_json",
  "smol_str",
 ]
 

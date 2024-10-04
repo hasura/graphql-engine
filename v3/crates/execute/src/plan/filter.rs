@@ -9,9 +9,9 @@ use super::ndc_request;
 use super::query;
 use super::relationships::{self, process_model_relationship_definition};
 use crate::{error, ndc, HttpContext};
-use graphql_ir::NdcRelationshipName;
 use open_dds::data_connector::DataConnectorColumnName;
 use plan_types::NdcFieldAlias;
+use plan_types::NdcRelationshipName;
 
 /// Plan the filter expression IR.
 /// This function will take the filter expression IR and convert it into a planned filter expression
@@ -24,7 +24,7 @@ pub(crate) fn plan_filter_expression<'s>(
         relationship_join_filter,
     }: &graphql_ir::FilterExpression<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<Option<graphql_ir::Expression<'s>>, plan_error::Error> {
+) -> Result<Option<plan_types::Expression<'s>>, plan_error::Error> {
     let mut expressions = Vec::new();
 
     if let Some(filter) = permission_filter {
@@ -44,16 +44,16 @@ pub(crate) fn plan_filter_expression<'s>(
         expressions.push(planned_expression);
     }
 
-    Ok(graphql_ir::Expression::mk_and(expressions).remove_always_true_expression())
+    Ok(plan_types::Expression::mk_and(expressions).remove_always_true_expression())
 }
 
 /// Plan the expression IR type.
 pub fn plan_expression<'s, 'a>(
-    expression: &'a graphql_ir::Expression<'s>,
+    expression: &'a plan_types::Expression<'s>,
     relationships: &'a mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<graphql_ir::Expression<'s>, plan_error::Error> {
+) -> Result<plan_types::Expression<'s>, plan_error::Error> {
     match expression {
-        graphql_ir::Expression::And {
+        plan_types::Expression::And {
             expressions: and_expressions,
         } => {
             let mut results = Vec::new();
@@ -61,9 +61,9 @@ pub fn plan_expression<'s, 'a>(
                 let result = plan_expression(and_expression, relationships)?;
                 results.push(result);
             }
-            Ok(graphql_ir::Expression::mk_and(results))
+            Ok(plan_types::Expression::mk_and(results))
         }
-        graphql_ir::Expression::Or {
+        plan_types::Expression::Or {
             expressions: or_expressions,
         } => {
             let mut results = Vec::new();
@@ -71,30 +71,30 @@ pub fn plan_expression<'s, 'a>(
                 let result = plan_expression(or_expression, relationships)?;
                 results.push(result);
             }
-            Ok(graphql_ir::Expression::mk_or(results))
+            Ok(plan_types::Expression::mk_or(results))
         }
-        graphql_ir::Expression::Not {
+        plan_types::Expression::Not {
             expression: not_expression,
         } => {
             let result = plan_expression(not_expression, relationships)?;
-            Ok(graphql_ir::Expression::mk_not(result))
+            Ok(plan_types::Expression::mk_not(result))
         }
-        graphql_ir::Expression::LocalField(local_field_comparison) => Ok(
-            graphql_ir::Expression::LocalField(local_field_comparison.clone()),
+        plan_types::Expression::LocalField(local_field_comparison) => Ok(
+            plan_types::Expression::LocalField(local_field_comparison.clone()),
         ),
-        graphql_ir::Expression::LocalNestedArray {
+        plan_types::Expression::LocalNestedArray {
             predicate,
             field_path,
             column,
         } => {
             let resolved_predicate = plan_expression(predicate, relationships)?;
-            Ok(graphql_ir::Expression::LocalNestedArray {
+            Ok(plan_types::Expression::LocalNestedArray {
                 column: column.clone(),
                 field_path: field_path.clone(),
                 predicate: Box::new(resolved_predicate),
             })
         }
-        graphql_ir::Expression::RelationshipNdcPushdown {
+        plan_types::Expression::RelationshipNdcPushdown {
             relationship,
             predicate,
             info,
@@ -105,13 +105,13 @@ pub fn plan_expression<'s, 'a>(
                 process_model_relationship_definition(info)?,
             );
 
-            Ok(graphql_ir::Expression::RelationshipNdcPushdown {
+            Ok(plan_types::Expression::RelationshipNdcPushdown {
                 relationship: relationship.clone(),
                 predicate: Box::new(relationship_filter),
                 info: info.clone(),
             })
         }
-        graphql_ir::Expression::RelationshipEngineResolved {
+        plan_types::Expression::RelationshipEngineResolved {
             relationship,
             target_model_name,
             target_model_source,
@@ -119,7 +119,7 @@ pub fn plan_expression<'s, 'a>(
             predicate,
         } => {
             // This needs to be resolved in engine itself, further planning is deferred until it is resolved
-            Ok(graphql_ir::Expression::RelationshipEngineResolved {
+            Ok(plan_types::Expression::RelationshipEngineResolved {
                 relationship: relationship.clone(),
                 target_model_name,
                 target_model_source: target_model_source.clone(),
@@ -132,8 +132,8 @@ pub fn plan_expression<'s, 'a>(
 
 /// Generate comparison expression plan for remote relationshp predicate.
 pub fn plan_remote_predicate<'s, 'a>(
-    ndc_column_mapping: &'a [graphql_ir::RelationshipColumnMapping],
-    predicate: &'a graphql_ir::Expression<'s>,
+    ndc_column_mapping: &'a [plan_types::RelationshipColumnMapping],
+    predicate: &'a plan_types::Expression<'s>,
 ) -> Result<
     (
         query::UnresolvedQueryNode<'s>,
@@ -159,8 +159,8 @@ pub fn plan_remote_predicate<'s, 'a>(
 /// Generate the NDC query fields with the mapped NDC columns in a remote relationship.
 /// These field values are fetched from the remote data connector.
 fn build_ndc_query_fields<'s>(
-    ndc_column_mapping: &[graphql_ir::RelationshipColumnMapping],
-) -> IndexMap<NdcFieldAlias, field::Field<graphql_ir::Expression<'s>>> {
+    ndc_column_mapping: &[plan_types::RelationshipColumnMapping],
+) -> IndexMap<NdcFieldAlias, field::Field<plan_types::Expression<'s>>> {
     let mut fields = IndexMap::new();
     for mapping in ndc_column_mapping {
         let field = field::Field::Column {
@@ -188,7 +188,7 @@ pub enum ResolvedFilterExpression {
     Not {
         expression: Box<ResolvedFilterExpression>,
     },
-    LocalFieldComparison(graphql_ir::LocalFieldComparison),
+    LocalFieldComparison(plan_types::LocalFieldComparison),
     LocalNestedArray {
         column: DataConnectorColumnName,
         field_path: Vec<DataConnectorColumnName>,
@@ -310,14 +310,14 @@ impl<'req> ResolveFilterExpressionContext<'req> {
 /// Resolve the filter expression plan and generate NDC expression.
 #[async_recursion]
 pub async fn resolve_expression<'s>(
-    expression: graphql_ir::Expression<'s>,
+    expression: plan_types::Expression<'s>,
     resolve_context: &ResolveFilterExpressionContext,
 ) -> Result<ResolvedFilterExpression, error::FieldError>
 where
     's: 'async_recursion,
 {
     match expression {
-        graphql_ir::Expression::And { expressions } => {
+        plan_types::Expression::And { expressions } => {
             let mut resolved_expressions: Vec<ResolvedFilterExpression> = Vec::new();
             for subexpression in expressions {
                 let resolved_expression =
@@ -328,7 +328,7 @@ where
                 expressions: resolved_expressions,
             })
         }
-        graphql_ir::Expression::Or { expressions } => {
+        plan_types::Expression::Or { expressions } => {
             let mut resolved_expressions = Vec::new();
             for subexpression in expressions {
                 let resolve_expression = resolve_expression(subexpression, resolve_context).await?;
@@ -338,7 +338,7 @@ where
                 expressions: resolved_expressions,
             })
         }
-        graphql_ir::Expression::Not {
+        plan_types::Expression::Not {
             expression: subexpression,
         } => {
             let resolved_expression = resolve_expression(*subexpression, resolve_context).await?;
@@ -346,10 +346,10 @@ where
                 expression: Box::new(resolved_expression),
             })
         }
-        graphql_ir::Expression::LocalField(local_field_comparison) => Ok(
+        plan_types::Expression::LocalField(local_field_comparison) => Ok(
             ResolvedFilterExpression::LocalFieldComparison(local_field_comparison),
         ),
-        graphql_ir::Expression::RelationshipNdcPushdown {
+        plan_types::Expression::RelationshipNdcPushdown {
             relationship,
             predicate,
             info: _,
@@ -360,7 +360,7 @@ where
                 predicate: Box::new(resolved_expression),
             })
         }
-        graphql_ir::Expression::LocalNestedArray {
+        plan_types::Expression::LocalNestedArray {
             column,
             field_path,
             predicate,
@@ -372,7 +372,7 @@ where
                 predicate: Box::new(resolved_expression),
             })
         }
-        graphql_ir::Expression::RelationshipEngineResolved {
+        plan_types::Expression::RelationshipEngineResolved {
             relationship,
             target_model_name: _,
             target_model_source,
@@ -483,7 +483,7 @@ impl DistinctComparisons {
 /// WHERE (a, b) IN ((a_value_1, b_value_1), (a_value_2, b_value_2))
 fn build_source_column_comparisons(
     mut rows: Vec<IndexMap<ndc_models::FieldName, ndc_models::RowFieldValue>>,
-    ndc_column_mapping: &[graphql_ir::RelationshipColumnMapping],
+    ndc_column_mapping: &[plan_types::RelationshipColumnMapping],
 ) -> Result<ResolvedFilterExpression, error::FieldError> {
     let mut expressions = DistinctComparisons::new();
     for row in &mut rows {
@@ -500,20 +500,20 @@ fn build_source_column_comparisons(
                 }
             )?;
 
-            let graphql_ir::SourceNdcColumn {
+            let plan_types::SourceNdcColumn {
                 column: source_column,
                 field_path,
                 eq_operator,
             } = &column_mapping.source_ndc_column;
             // Generate LHS (source) column comparison with target column value
             column_comparisons.push(ResolvedFilterExpression::LocalFieldComparison(
-                graphql_ir::LocalFieldComparison::BinaryComparison {
-                    column: graphql_ir::ComparisonTarget::Column {
+                plan_types::LocalFieldComparison::BinaryComparison {
+                    column: plan_types::ComparisonTarget::Column {
                         name: source_column.clone(),
                         field_path: field_path.clone(),
                     },
                     operator: eq_operator.clone(),
-                    value: graphql_ir::ComparisonValue::Scalar {
+                    value: plan_types::ComparisonValue::Scalar {
                         value: target_value.0,
                     },
                 },

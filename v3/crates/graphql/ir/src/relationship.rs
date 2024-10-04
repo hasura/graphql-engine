@@ -13,38 +13,24 @@ use serde::Serialize;
 use super::{
     commands::generate_function_based_command,
     filter,
-    filter::expression as filter_expression,
     model_selection::{self, model_selection_ir},
     order_by::build_ndc_order_by,
     permissions,
-    selection_set::{FieldSelection, NdcRelationshipName},
+    selection_set::FieldSelection,
 };
 
+use crate::model_tracking::count_model;
 use crate::{error, model_tracking::count_command};
-use crate::{
-    model_tracking::{count_model, UsagesCounts},
-    remote_joins::VariableName,
-};
 use graphql_schema::{
     Annotation, BooleanExpressionAnnotation, CommandRelationshipAnnotation, CommandTargetSource,
     InputAnnotation, ModelAggregateRelationshipAnnotation, ModelInputAnnotation,
     ModelRelationshipAnnotation, GDS,
 };
 use metadata_resolve::{self, serialize_qualified_btreemap, Qualified, RelationshipModelMapping};
-
-#[derive(Debug, Serialize, Clone, PartialEq)]
-pub struct LocalModelRelationshipInfo<'s> {
-    pub relationship_name: &'s RelationshipName,
-    pub relationship_type: &'s RelationshipType,
-    pub source_type: &'s Qualified<CustomTypeName>,
-    pub source_data_connector: &'s metadata_resolve::DataConnectorLink,
-    #[serde(serialize_with = "serialize_qualified_btreemap")]
-    pub source_type_mappings:
-        &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    pub target_source: &'s metadata_resolve::ModelTargetSource,
-    pub target_type: &'s Qualified<CustomTypeName>,
-    pub mappings: &'s Vec<metadata_resolve::RelationshipModelMapping>,
-}
+use plan_types::{
+    ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison,
+    LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts, VariableName,
+};
 
 #[derive(Debug, Serialize)]
 pub struct LocalCommandRelationshipInfo<'s> {
@@ -186,17 +172,19 @@ pub fn generate_model_relationship_ir<'s>(
         &target_source.model.data_connector,
         &target_source.capabilities,
     ) {
-        metadata_resolve::RelationshipExecutionCategory::Local => build_local_model_relationship(
-            selection_ir,
-            &relationship_annotation.relationship_name,
-            &relationship_annotation.relationship_type,
-            &relationship_annotation.source_type,
-            source_data_connector,
-            source_type_mappings,
-            &relationship_annotation.target_type,
-            target_source,
-            &relationship_annotation.mappings,
-        ),
+        metadata_resolve::RelationshipExecutionCategory::Local => {
+            Ok(build_local_model_relationship(
+                selection_ir,
+                &relationship_annotation.relationship_name,
+                &relationship_annotation.relationship_type,
+                &relationship_annotation.source_type,
+                source_data_connector,
+                source_type_mappings,
+                &relationship_annotation.target_type,
+                target_source,
+                &relationship_annotation.mappings,
+            ))
+        }
         metadata_resolve::RelationshipExecutionCategory::RemoteForEach => {
             build_remote_relationship(
                 selection_ir,
@@ -250,17 +238,19 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
         &target_source.model.data_connector,
         &target_source.capabilities,
     ) {
-        metadata_resolve::RelationshipExecutionCategory::Local => build_local_model_relationship(
-            selection_ir,
-            &relationship_annotation.relationship_name,
-            &RelationshipType::Array,
-            &relationship_annotation.source_type,
-            source_data_connector,
-            source_type_mappings,
-            &relationship_annotation.target_type,
-            target_source,
-            &relationship_annotation.mappings,
-        ),
+        metadata_resolve::RelationshipExecutionCategory::Local => {
+            Ok(build_local_model_relationship(
+                selection_ir,
+                &relationship_annotation.relationship_name,
+                &RelationshipType::Array,
+                &relationship_annotation.source_type,
+                source_data_connector,
+                source_type_mappings,
+                &relationship_annotation.target_type,
+                target_source,
+                &relationship_annotation.mappings,
+            ))
+        }
         metadata_resolve::RelationshipExecutionCategory::RemoteForEach => {
             build_remote_relationship(
                 selection_ir,
@@ -340,7 +330,7 @@ pub fn build_local_model_relationship<'s>(
     target_type: &'s Qualified<CustomTypeName>,
     target_source: &'s metadata_resolve::ModelTargetSource,
     target_mappings: &'s Vec<RelationshipModelMapping>,
-) -> Result<FieldSelection<'s>, error::Error> {
+) -> FieldSelection<'s> {
     let rel_info = LocalModelRelationshipInfo {
         relationship_name,
         relationship_type,
@@ -352,11 +342,11 @@ pub fn build_local_model_relationship<'s>(
         mappings: target_mappings,
     };
 
-    Ok(FieldSelection::ModelRelationshipLocal {
+    FieldSelection::ModelRelationshipLocal {
         query: relationships_ir,
-        name: NdcRelationshipName::new(source_type, relationship_name)?,
+        name: NdcRelationshipName::new(source_type, relationship_name),
         relationship_info: rel_info,
-    })
+    }
 }
 
 pub fn build_local_command_relationship<'s>(
@@ -399,7 +389,7 @@ pub fn build_local_command_relationship<'s>(
 
     Ok(FieldSelection::CommandRelationshipLocal {
         ir: relationships_ir,
-        name: NdcRelationshipName::new(&annotation.source_type, &annotation.relationship_name)?,
+        name: NdcRelationshipName::new(&annotation.source_type, &annotation.relationship_name),
         relationship_info: rel_info,
     })
 }
@@ -442,25 +432,22 @@ pub fn build_remote_relationship<'s>(
     // Generate the join condition expressions for the remote relationship
     for (_source, (_field_name, target_column)) in &join_mapping {
         let target_value_variable = format!("${}", &target_column.column);
-        let comparison_exp = filter_expression::LocalFieldComparison::BinaryComparison {
-            column: filter_expression::ComparisonTarget::Column {
+        let comparison_exp = LocalFieldComparison::BinaryComparison {
+            column: ComparisonTarget::Column {
                 name: target_column.column.clone(),
                 field_path: vec![],
             },
             operator: target_column.equal_operator.clone(),
-            value: filter_expression::ComparisonValue::Variable {
+            value: ComparisonValue::Variable {
                 name: VariableName(target_value_variable),
             },
         };
-        relationship_join_filter_expressions
-            .push(filter_expression::Expression::LocalField(comparison_exp));
+        relationship_join_filter_expressions.push(Expression::LocalField(comparison_exp));
     }
 
     remote_relationships_ir
         .filter_clause
-        .relationship_join_filter = Some(filter_expression::Expression::mk_and(
-        relationship_join_filter_expressions,
-    ));
+        .relationship_join_filter = Some(Expression::mk_and(relationship_join_filter_expressions));
 
     let rel_info = RemoteModelRelationshipInfo { join_mapping };
     Ok(FieldSelection::ModelRelationshipRemote {

@@ -107,32 +107,32 @@ pub(crate) async fn explain_query_predicate_nested_field<'s, 'a>(
 async fn explain_query_predicate<'s>(
     expose_internal_errors: &execute::ExposeInternalErrors,
     http_context: &HttpContext,
-    predicate: &graphql_ir::Expression<'s>,
+    predicate: &plan_types::Expression<'s>,
     steps: &mut Vec<types::Step>,
 ) -> Result<(), execute::RequestError> {
     match predicate {
-        graphql_ir::Expression::And { expressions } => {
+        plan_types::Expression::And { expressions } => {
             for expression in expressions {
                 explain_query_predicate(expose_internal_errors, http_context, expression, steps)
                     .await?;
             }
             Ok(())
         }
-        graphql_ir::Expression::Or { expressions } => {
+        plan_types::Expression::Or { expressions } => {
             for expression in expressions {
                 explain_query_predicate(expose_internal_errors, http_context, expression, steps)
                     .await?;
             }
             Ok(())
         }
-        graphql_ir::Expression::Not { expression } => {
+        plan_types::Expression::Not { expression } => {
             explain_query_predicate(expose_internal_errors, http_context, expression, steps).await
         }
-        graphql_ir::Expression::LocalField { .. }
-        | graphql_ir::Expression::RelationshipNdcPushdown { .. }
-        | graphql_ir::Expression::LocalNestedArray { .. } => Ok(()),
+        plan_types::Expression::LocalField { .. }
+        | plan_types::Expression::RelationshipNdcPushdown { .. }
+        | plan_types::Expression::LocalNestedArray { .. } => Ok(()),
 
-        graphql_ir::Expression::RelationshipEngineResolved {
+        plan_types::Expression::RelationshipEngineResolved {
             relationship: _,
             target_model_name,
             target_model_source,

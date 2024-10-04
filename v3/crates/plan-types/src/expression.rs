@@ -5,9 +5,7 @@ use open_dds::relationships::RelationshipName;
 use serde::Serialize;
 use std::sync::Arc;
 
-use crate::relationship::LocalModelRelationshipInfo;
-use crate::remote_joins::VariableName;
-use crate::selection_set::NdcRelationshipName;
+use crate::{LocalModelRelationshipInfo, NdcRelationshipName, VariableName};
 
 /// Represent a boolean expression that can be used to filter data
 #[derive(Debug, Serialize, Clone, PartialEq)]

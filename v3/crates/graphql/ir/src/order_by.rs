@@ -1,14 +1,12 @@
 use std::collections::BTreeMap;
 
-use crate::model_tracking::{count_model, UsagesCounts};
+use crate::model_tracking::count_model;
 use graphql_schema::OrderByRelationshipAnnotation;
 use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField};
 use open_dds::data_connector::DataConnectorColumnName;
+use plan_types::{LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts};
 use serde::Serialize;
-
-use super::relationship::LocalModelRelationshipInfo;
-use super::selection_set::NdcRelationshipName;
 
 use crate::error;
 use graphql_schema::GDS;
@@ -184,7 +182,7 @@ pub fn build_ndc_order_by_element<'s>(
                 },
             ),
         )) => {
-            let ndc_relationship_name = NdcRelationshipName::new(source_type, relationship_name)?;
+            let ndc_relationship_name = NdcRelationshipName::new(source_type, relationship_name);
 
             relationships.insert(
                 ndc_relationship_name.clone(),

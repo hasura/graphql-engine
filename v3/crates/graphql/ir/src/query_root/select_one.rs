@@ -5,9 +5,8 @@
 use crate::arguments;
 use crate::error;
 use crate::filter;
-use crate::filter::expression as filter_expression;
 use crate::model_selection;
-use crate::model_tracking::{count_model, UsagesCounts};
+use crate::model_tracking::count_model;
 use crate::permissions;
 /// Generates the IR for a 'select_one' operation
 // TODO: Remove once TypeMapping has more than one variant
@@ -16,6 +15,9 @@ use lang_graphql::{ast::common as ast, normalized_ast};
 use metadata_resolve;
 use metadata_resolve::Qualified;
 use open_dds;
+use plan_types::{
+    ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
+};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -61,19 +63,17 @@ pub fn select_one_generate_ir<'n, 's>(
                 ModelInputAnnotation::ModelUniqueIdentifierArgument { ndc_column } => {
                     let ndc_column = ndc_column.as_ref().ok_or_else(|| error::InternalEngineError::InternalGeneric {
                         description: format!("Missing NDC column mapping for unique identifier argument {} on field {}", argument.name, field_call.name)})?;
-                    let filter_expression =
-                        filter_expression::LocalFieldComparison::BinaryComparison {
-                            column: filter_expression::ComparisonTarget::Column {
-                                name: ndc_column.column.clone(),
-                                field_path: vec![],
-                            },
-                            operator: ndc_column.equal_operator.clone(),
-                            value: filter_expression::ComparisonValue::Scalar {
-                                value: argument.value.as_json(),
-                            },
-                        };
-                    filter_expressions
-                        .push(filter_expression::Expression::LocalField(filter_expression));
+                    let filter_expression = LocalFieldComparison::BinaryComparison {
+                        column: ComparisonTarget::Column {
+                            name: ndc_column.column.clone(),
+                            field_path: vec![],
+                        },
+                        operator: ndc_column.equal_operator.clone(),
+                        value: ComparisonValue::Scalar {
+                            value: argument.value.as_json(),
+                        },
+                    };
+                    filter_expressions.push(Expression::LocalField(filter_expression));
                 }
                 _ => Err(error::InternalEngineError::UnexpectedAnnotation {
                     annotation: annotation.clone(),
@@ -117,7 +117,7 @@ pub fn select_one_generate_ir<'n, 's>(
 
     let query_filter = filter::QueryFilter {
         where_clause: None,
-        additional_filter: Some(filter_expression::Expression::mk_and(filter_expressions)),
+        additional_filter: Some(Expression::mk_and(filter_expressions)),
     };
 
     let model_selection = model_selection::model_selection_ir(

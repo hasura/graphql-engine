@@ -32,8 +32,8 @@ pub async fn model_target_to_ndc_query(
         ))
     })?;
 
-    let mut usage_counts = graphql_ir::UsagesCounts::default();
-    let mut relationships: BTreeMap<graphql_ir::NdcRelationshipName, execute::plan::Relationship> =
+    let mut usage_counts = plan_types::UsagesCounts::default();
+    let mut relationships: BTreeMap<plan_types::NdcRelationshipName, execute::plan::Relationship> =
         BTreeMap::new();
 
     let permission_filter = match &model_select_permission.filter {

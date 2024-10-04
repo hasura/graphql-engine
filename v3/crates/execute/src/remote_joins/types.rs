@@ -154,4 +154,4 @@ pub enum RemoteJoinType {
 
 /// An 'Argument' is a map of variable name to it's value.
 /// For example, `{"first_name": "John", "last_name": "Doe"}`
-pub type Argument = BTreeMap<graphql_ir::VariableName, ValueExt>;
+pub type Argument = BTreeMap<plan_types::VariableName, ValueExt>;

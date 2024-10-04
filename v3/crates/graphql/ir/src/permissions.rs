@@ -8,12 +8,14 @@ use open_dds::{
 };
 
 use crate::error;
-use crate::filter::expression as filter_expression;
-use crate::model_tracking::{count_model, UsagesCounts};
+use crate::model_tracking::count_model;
 use graphql_schema::GDS;
 use metadata_resolve::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference, TypeMapping,
     UnaryComparisonOperator,
+};
+use plan_types::{
+    ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, UsagesCounts,
 };
 
 use super::arguments::Argument;
@@ -80,7 +82,7 @@ pub fn process_model_predicate<'s>(
     model_predicate: &'s metadata_resolve::ModelPredicate,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
-) -> Result<filter_expression::Expression<'s>, error::Error> {
+) -> Result<Expression<'s>, error::Error> {
     match model_predicate {
         metadata_resolve::ModelPredicate::UnaryFieldComparison {
             ndc_column,
@@ -110,7 +112,7 @@ pub fn process_model_predicate<'s>(
                 session_variables,
                 usage_counts,
             )?;
-            Ok(filter_expression::Expression::Not {
+            Ok(Expression::Not {
                 expression: Box::new(expr),
             })
         }
@@ -127,7 +129,7 @@ pub fn process_model_predicate<'s>(
                     )
                 })
                 .collect::<Result<Vec<_>, error::Error>>()?;
-            Ok(filter_expression::Expression::And { expressions: exprs })
+            Ok(Expression::And { expressions: exprs })
         }
         metadata_resolve::ModelPredicate::Or(predicates) => {
             let exprs = predicates
@@ -142,7 +144,7 @@ pub fn process_model_predicate<'s>(
                     )
                 })
                 .collect::<Result<Vec<_>, error::Error>>()?;
-            Ok(filter_expression::Expression::Or { expressions: exprs })
+            Ok(Expression::Or { expressions: exprs })
         }
         metadata_resolve::ModelPredicate::Relationship {
             relationship_info,
@@ -183,17 +185,17 @@ fn make_permission_binary_boolean_expression<'s>(
     operator: &DataConnectorOperatorName,
     value_expression: &'s metadata_resolve::ValueExpression,
     session_variables: &SessionVariables,
-) -> Result<filter_expression::Expression<'s>, error::Error> {
+) -> Result<Expression<'s>, error::Error> {
     let ndc_expression_value =
         make_argument_from_value_expression(value_expression, argument_type, session_variables)?;
-    Ok(filter_expression::Expression::LocalField(
-        filter_expression::LocalFieldComparison::BinaryComparison {
-            column: filter_expression::ComparisonTarget::Column {
+    Ok(Expression::LocalField(
+        LocalFieldComparison::BinaryComparison {
+            column: ComparisonTarget::Column {
                 name: ndc_column.clone(),
                 field_path: vec![],
             },
             operator: operator.clone(),
-            value: filter_expression::ComparisonValue::Scalar {
+            value: ComparisonValue::Scalar {
                 value: ndc_expression_value,
             },
         },
@@ -203,16 +205,14 @@ fn make_permission_binary_boolean_expression<'s>(
 fn make_permission_unary_boolean_expression<'s>(
     ndc_column: &DataConnectorColumnName,
     operator: UnaryComparisonOperator,
-) -> filter_expression::Expression<'s> {
-    filter_expression::Expression::LocalField(
-        filter_expression::LocalFieldComparison::UnaryComparison {
-            column: filter_expression::ComparisonTarget::Column {
-                name: ndc_column.clone(),
-                field_path: vec![],
-            },
-            operator,
+) -> Expression<'s> {
+    Expression::LocalField(LocalFieldComparison::UnaryComparison {
+        column: ComparisonTarget::Column {
+            name: ndc_column.clone(),
+            field_path: vec![],
         },
-    )
+        operator,
+    })
 }
 
 pub(crate) fn make_argument_from_value_expression(

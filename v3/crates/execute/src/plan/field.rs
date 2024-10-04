@@ -1,9 +1,9 @@
 use crate::error;
 use async_recursion::async_recursion;
-use graphql_ir::NdcRelationshipName;
 use indexmap::IndexMap;
 use open_dds::{data_connector::DataConnectorColumnName, types::DataConnectorArgumentName};
 use plan_types::NdcFieldAlias;
+use plan_types::NdcRelationshipName;
 use std::collections::BTreeMap;
 
 use super::arguments;
@@ -11,7 +11,7 @@ use super::filter;
 use super::filter::ResolveFilterExpressionContext;
 use super::query;
 
-pub type UnresolvedField<'s> = Field<graphql_ir::Expression<'s>>;
+pub type UnresolvedField<'s> = Field<plan_types::Expression<'s>>;
 pub type ResolvedField = Field<filter::ResolvedFilterExpression>;
 
 /// Field plan
@@ -73,7 +73,7 @@ impl<'s> UnresolvedField<'s> {
     }
 }
 
-pub type UnresolvedNestedField<'s> = NestedField<graphql_ir::Expression<'s>>;
+pub type UnresolvedNestedField<'s> = NestedField<plan_types::Expression<'s>>;
 pub type ResolvedNestedField = NestedField<filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -102,7 +102,7 @@ impl<'s> UnresolvedNestedField<'s> {
     }
 }
 
-pub type UnresolvedNestedObject<'s> = NestedObject<graphql_ir::Expression<'s>>;
+pub type UnresolvedNestedObject<'s> = NestedObject<plan_types::Expression<'s>>;
 pub type ResolvedNestedObject = NestedObject<filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -123,7 +123,7 @@ impl<'s> UnresolvedNestedObject<'s> {
     }
 }
 
-pub type UnresolvedNestedArray<'s> = NestedArray<graphql_ir::Expression<'s>>;
+pub type UnresolvedNestedArray<'s> = NestedArray<plan_types::Expression<'s>>;
 pub type ResolvedNestedArray = NestedArray<filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
