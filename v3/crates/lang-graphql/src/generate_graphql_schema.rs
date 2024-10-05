@@ -4,6 +4,8 @@ for each namespace from the schema.
  */
 use std::collections::HashMap;
 use std::sync::OnceLock;
+use tracing_util::SpanVisibility;
+use tracing_util::{ErrorVisibility, TraceableError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -20,6 +22,11 @@ pub enum Error {
     #[error("unable to serialize to json: {0}")]
     SerializeJson(#[from] serde_json::Error),
 }
+impl TraceableError for Error {
+    fn visibility(&self) -> ErrorVisibility {
+        ErrorVisibility::User
+    }
+}
 
 /// Generate GraphQL schema for a given namespace
 pub fn build_namespace_schema<
@@ -29,29 +36,40 @@ pub fn build_namespace_schema<
     namespaced_getter: &NSGet,
     schema: &crate::schema::Schema<S>,
 ) -> Result<serde_json::Value, Error> {
-    let nr =
-        crate::validation::normalize_request(namespaced_getter, schema, introspection_request())
+    let tracer = tracing_util::global_tracer();
+    tracer.in_span(
+        "build_namespace_schema",
+        "Generate GraphQL schema for a given namespace",
+        SpanVisibility::Internal,
+        || {
+            let nr = crate::validation::normalize_request(
+                namespaced_getter,
+                schema,
+                introspection_request(),
+            )
             .map_err(|e| Error::NormalizeIntrospectionQuery(e.to_string()))?;
-    let mut result = HashMap::new();
-    for (_alias, field) in &nr.selection_set.fields {
-        let field_call = field.field_call().map_err(|_| Error::FieldCallNotFound)?;
-        match field_call.name.as_str() {
-            "__schema" => {
-                result.insert(
-                    &field_call.name,
-                    serde_json::to_value(crate::introspection::schema_type(
-                        schema,
-                        namespaced_getter,
-                        &field.selection_set,
-                    )?)?,
-                );
+            let mut result = HashMap::new();
+            for (_alias, field) in &nr.selection_set.fields {
+                let field_call = field.field_call().map_err(|_| Error::FieldCallNotFound)?;
+                match field_call.name.as_str() {
+                    "__schema" => {
+                        result.insert(
+                            &field_call.name,
+                            serde_json::to_value(crate::introspection::schema_type(
+                                schema,
+                                namespaced_getter,
+                                &field.selection_set,
+                            )?)?,
+                        );
+                    }
+                    name => Err(Error::OnlySchemaFieldExpected {
+                        name: name.to_string(),
+                    })?,
+                }
             }
-            name => Err(Error::OnlySchemaFieldExpected {
-                name: name.to_string(),
-            })?,
-        }
-    }
-    Ok(serde_json::to_value(result)?)
+            Ok(serde_json::to_value(result)?)
+        },
+    )
 }
 
 fn introspection_request() -> &'static crate::http::Request {
