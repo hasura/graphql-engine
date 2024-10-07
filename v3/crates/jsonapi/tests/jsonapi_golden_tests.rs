@@ -171,8 +171,5 @@ fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Conf
         enable_jsonapi: true,
     };
 
-    metadata_resolve::configuration::Configuration {
-        allow_unknown_subgraphs: false,
-        unstable_features,
-    }
+    metadata_resolve::configuration::Configuration { unstable_features }
 }

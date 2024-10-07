@@ -1,7 +1,7 @@
 mod error;
 mod types;
 use super::type_permissions;
-use crate::{configuration::Configuration, helpers, types::subgraph::Qualified};
+use crate::{helpers, types::subgraph::Qualified};
 pub use error::RelationshipError;
 use open_dds::{
     identifier::SubgraphName,
@@ -14,7 +14,6 @@ pub use types::{Relationship, Relationships};
 // This stage only collects relationships and collects them by subgraph,
 //  the `object_relationships` stage resolves them meaningfully in the context of their objects
 pub fn resolve<'s>(
-    configuration: &Configuration,
     metadata_accessor: &'s open_dds::accessor::MetadataAccessor,
     object_types_with_permissions: &type_permissions::ObjectTypesWithPermissions,
 ) -> Result<Relationships<'s>, RelationshipError> {
@@ -43,7 +42,11 @@ pub fn resolve<'s>(
         if let Some(existing_relationship) = relationships.get_mut(&qualified_type_name) {
             let result = existing_relationship.insert(
                 relationship.name.clone(),
-                mk_relationship(configuration, &metadata_accessor.subgraphs, relationship),
+                mk_relationship(
+                    &metadata_accessor.flags,
+                    &metadata_accessor.subgraphs,
+                    relationship,
+                ),
             );
 
             // explode if we find duplicates for a name
@@ -57,7 +60,11 @@ pub fn resolve<'s>(
             let mut inner_map = BTreeMap::new();
             inner_map.insert(
                 relationship.name.clone(),
-                mk_relationship(configuration, &metadata_accessor.subgraphs, relationship),
+                mk_relationship(
+                    &metadata_accessor.flags,
+                    &metadata_accessor.subgraphs,
+                    relationship,
+                ),
             );
             relationships.insert(qualified_type_name, inner_map);
         };
@@ -67,12 +74,12 @@ pub fn resolve<'s>(
 }
 
 fn mk_relationship<'s>(
-    configuration: &Configuration,
+    flags: &open_dds::flags::Flags,
     known_subgraphs: &HashSet<SubgraphName>,
     relationship: &'s RelationshipV1,
 ) -> Relationship<'s> {
     // If we have allowed the usage of unknown subgraphs...
-    if configuration.allow_unknown_subgraphs {
+    if flags.allow_partial_supergraph {
         let subgraph = helpers::relationship::get_target_subgraph(relationship);
 
         // ...and the subgraph is unknown

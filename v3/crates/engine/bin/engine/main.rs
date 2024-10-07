@@ -89,10 +89,6 @@ struct ServerOptions {
         value_delimiter = ','
     )]
     cors_allow_origin: Vec<String>,
-    /// Allow unknown subgraphs, pruning relationships that refer to them.
-    /// Useful when working with part of a supergraph.
-    #[arg(long, env = "PARTIAL_SUPERGRAPH")]
-    partial_supergraph: bool,
     /// List of internal unstable features to enable, separated by commas
     #[arg(
         long = "unstable-feature",
@@ -342,7 +338,6 @@ impl EngineRouter {
 #[allow(clippy::print_stdout)]
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let metadata_resolve_configuration = metadata_resolve::configuration::Configuration {
-        allow_unknown_subgraphs: server.partial_supergraph,
         unstable_features: resolve_unstable_features(&server.unstable_features),
     };
 

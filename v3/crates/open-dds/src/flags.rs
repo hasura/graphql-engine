@@ -29,6 +29,9 @@ pub struct Flags {
 
     #[opendd(default, rename = "require_unique_command_graphql_names")]
     pub require_unique_command_graphql_names: bool,
+
+    #[opendd(default, rename = "allow_partial_supergraph")]
+    pub allow_partial_supergraph: bool,
 }
 
 impl Flags {
@@ -42,6 +45,7 @@ impl Flags {
             disallow_scalar_type_names_conflicting_with_inbuilt_types: false,
             propagate_boolean_expression_deprecation_status: false,
             require_unique_command_graphql_names: false,
+            allow_partial_supergraph: false,
         }
     }
 

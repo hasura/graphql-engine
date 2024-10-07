@@ -10,10 +10,19 @@
   builds the engine and serves it along with a sample schema using
   `ndc-postgres` and a `postgres` database.
 
+- Subgraph builds that have relationships to other external subgraphs can now be
+  run locally and no longer fail with missing subgraph errors. Subgraph builds
+  are marked with a new OpenDD flag and when these builds are run by the engine
+  relationships to unknown subgraphs are automatically pruned.
+
 ### Changed
 
 - metadata-build-service POST endpoints now accept zstd (preferred) or gzip
   -encoded request bodies
+
+- The `--partial-supergraph` command-line argument and `PARTIAL_SUPERGRAPH`
+  environment variable have been removed. Builds now contain an OpenDD flag that
+  indicates if they are subgraph builds and should be run as such.
 
 ## [v2024.10.02]
 

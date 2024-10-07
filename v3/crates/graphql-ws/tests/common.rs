@@ -60,7 +60,6 @@ pub(crate) async fn start_websocket_server() -> TestServer {
     let raw_metadata = std::fs::read_to_string(metadata_path).unwrap();
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata).unwrap();
     let metadata_resolve_configuration = metadata_resolve::configuration::Configuration {
-        allow_unknown_subgraphs: false,
         unstable_features: metadata_resolve::configuration::UnstableFeatures {
             enable_subscriptions: true,
             ..Default::default()

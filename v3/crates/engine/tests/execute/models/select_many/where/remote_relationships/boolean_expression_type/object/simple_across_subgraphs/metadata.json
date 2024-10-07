@@ -52,8 +52,8 @@
           }
         },
         {
-          "version": "v1",
           "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "name": "Track",
             "fields": [
@@ -310,8 +310,8 @@
           }
         },
         {
-          "version": "v1",
           "kind": "Model",
+          "version": "v1",
           "definition": {
             "name": "Tracks",
             "objectType": "Track",

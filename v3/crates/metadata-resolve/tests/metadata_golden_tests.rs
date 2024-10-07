@@ -91,14 +91,8 @@ fn read_test_configuration(
     if configuration_path.exists() {
         let reader = fs::File::open(configuration_path)?;
         let configuration = serde_json::from_reader(reader)?;
-        Ok(configuration::Configuration {
-            unstable_features,
-            ..configuration
-        })
+        Ok(configuration)
     } else {
-        Ok(configuration::Configuration {
-            allow_unknown_subgraphs: false,
-            unstable_features,
-        })
+        Ok(configuration::Configuration { unstable_features })
     }
 }

@@ -3201,6 +3201,10 @@
         "require_unique_command_graphql_names": {
           "default": false,
           "type": "boolean"
+        },
+        "allow_partial_supergraph": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -3240,7 +3244,8 @@
                 "require_nested_array_filtering_capability": false,
                 "disallow_scalar_type_names_conflicting_with_inbuilt_types": false,
                 "propagate_boolean_expression_deprecation_status": false,
-                "require_unique_command_graphql_names": false
+                "require_unique_command_graphql_names": false,
+                "allow_partial_supergraph": false
               },
               "allOf": [
                 {
@@ -3291,7 +3296,8 @@
                 "require_nested_array_filtering_capability": false,
                 "disallow_scalar_type_names_conflicting_with_inbuilt_types": false,
                 "propagate_boolean_expression_deprecation_status": false,
-                "require_unique_command_graphql_names": false
+                "require_unique_command_graphql_names": false,
+                "allow_partial_supergraph": false
               },
               "allOf": [
                 {
@@ -3332,7 +3338,8 @@
                 "require_nested_array_filtering_capability": false,
                 "disallow_scalar_type_names_conflicting_with_inbuilt_types": false,
                 "propagate_boolean_expression_deprecation_status": false,
-                "require_unique_command_graphql_names": false
+                "require_unique_command_graphql_names": false,
+                "allow_partial_supergraph": false
               },
               "allOf": [
                 {

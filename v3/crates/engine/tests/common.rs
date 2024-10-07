@@ -452,7 +452,6 @@ pub fn test_execute_explain(
                 enable_subscriptions: false,
                 enable_jsonapi: false,
             },
-            ..Default::default()
         };
         let gds = GDS::new(
             open_dds::traits::OpenDd::deserialize(metadata, jsonpath::JSONPath::new())?,
@@ -508,7 +507,6 @@ pub fn test_execute_explain(
 pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration
 {
     metadata_resolve::configuration::Configuration {
-        allow_unknown_subgraphs: false,
         unstable_features: metadata_resolve::configuration::UnstableFeatures {
             enable_order_by_expressions: false,
             enable_ndc_v02_support: true,

@@ -103,12 +103,8 @@ pub fn resolve(
         type_permissions::resolve(&metadata_accessor, object_types).map_err(Error::from)?;
 
     // collect raw relationships information
-    let relationships = relationships::resolve(
-        configuration,
-        &metadata_accessor,
-        &object_types_with_permissions,
-    )
-    .map_err(Error::from)?;
+    let relationships = relationships::resolve(&metadata_accessor, &object_types_with_permissions)
+        .map_err(Error::from)?;
 
     // Resolve fancy new boolean expression types
     let boolean_expressions::BooleanExpressionsOutput {
