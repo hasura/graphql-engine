@@ -69,10 +69,16 @@ pub(crate) fn resolve_model_source(
         .schema
         .collections
         .get(model_source.collection.as_str())
-        .ok_or_else(|| ModelsError::UnknownModelCollection {
-            model_name: model.name.clone(),
-            data_connector: qualified_data_connector_name.clone(),
-            collection: model_source.collection.clone(),
+        .ok_or_else(|| crate::WithContext::Contextualised {
+            error: ModelsError::UnknownModelCollection {
+                model_name: model.name.clone(),
+                data_connector: qualified_data_connector_name.clone(),
+                collection: model_source.collection.value.clone(),
+            },
+            context: error_context::Context(vec![error_context::Step {
+                message: "Collection name given here".to_string(),
+                path: model_source.collection.path.clone(),
+            }]),
         })?;
     let source_collection_type =
         DataConnectorObjectType::from(source_collection.collection_type.as_str());
@@ -103,7 +109,7 @@ pub(crate) fn resolve_model_source(
     .map_err(|err| ModelsError::ModelCollectionArgumentMappingError {
         data_connector_name: qualified_data_connector_name.clone(),
         model_name: model.name.clone(),
-        collection_name: model_source.collection.clone(),
+        collection_name: model_source.collection.value.clone(),
         error: err,
     })?;
 
@@ -112,7 +118,7 @@ pub(crate) fn resolve_model_source(
         .map(|issue| ModelsIssue::FunctionArgumentMappingIssue {
             data_connector_name: qualified_data_connector_name.clone(),
             model_name: model.name.clone(),
-            collection_name: model_source.collection.clone(),
+            collection_name: model_source.collection.value.clone(),
             issue,
         })
         .collect();
@@ -147,7 +153,7 @@ pub(crate) fn resolve_model_source(
         )
         .map(Arc::new)
         .map_err(ModelsError::from)?,
-        collection: model_source.collection.clone(),
+        collection: model_source.collection.value.clone(),
         collection_type: source_collection_type,
         type_mappings,
         argument_mappings,

@@ -4,6 +4,9 @@
 
 ### Added
 
+- Added contexts to more MBS errors: when a model refers to a collection that
+  doesn't exist, the path to the offending reference will be reported.
+
 ### Fixed
 
 - Fix local `docker-compose.yaml` file so that running `docker compose up`

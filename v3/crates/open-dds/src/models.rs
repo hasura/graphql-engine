@@ -235,7 +235,7 @@ pub struct ModelSource {
     pub data_connector_name: Spanned<DataConnectorName>,
 
     /// The collection in the data connector that backs this model.
-    pub collection: CollectionName,
+    pub collection: Spanned<CollectionName>,
 
     /// Mapping from model argument names to data connector collection argument names.
     #[opendd(default)]
