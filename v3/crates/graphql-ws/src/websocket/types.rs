@@ -13,14 +13,14 @@ use crate::poller;
 use crate::protocol::types as protocol;
 
 /// Context required to handle a WebSocket connection
-#[derive(Clone)]
+#[derive(Clone)] // Cheap to clone as heavy fields are wrapped in `Arc`
 pub struct Context {
     pub http_context: HttpContext,
     pub expose_internal_errors: ExposeInternalErrors,
     pub project_id: Option<ProjectId>,
-    pub schema: lang_graphql::schema::Schema<graphql_schema::GDS>,
-    pub auth_config: AuthConfig,
-    pub plugin_configs: LifecyclePluginConfigs,
+    pub schema: Arc<lang_graphql::schema::Schema<graphql_schema::GDS>>,
+    pub auth_config: Arc<AuthConfig>,
+    pub plugin_configs: Arc<LifecyclePluginConfigs>,
 }
 
 /// Represents a WebSocket connection ID.
@@ -87,7 +87,7 @@ pub struct Connection {
     // Manages the WebSocket protocol state
     pub protocol_init_state: Arc<RwLock<protocol::ConnectionInitState>>,
     // Shared connection context
-    pub context: Arc<Context>,
+    pub context: Context,
     // Channel for sending messages over the WebSocket
     pub send_channel: Sender<Message>,
     // Active pollers associated with operations. A web socket connection can have multiple active subscriptions.
@@ -115,8 +115,8 @@ impl Connection {
             protocol_init_state: Arc::new(RwLock::new(
                 protocol::ConnectionInitState::NotInitialized,
             )), // Initial protocol state
-            context: Arc::new(context), // Shared connection context
-            send_channel: channel,      // Channel for sending messages over the WebSocket
+            context,                                        // Shared connection context
+            send_channel: channel, // Channel for sending messages over the WebSocket
             pollers: Arc::new(RwLock::new(HashMap::new())), // A map of active pollers
         }
     }

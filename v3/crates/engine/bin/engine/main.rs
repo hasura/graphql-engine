@@ -109,16 +109,17 @@ struct ServerOptions {
     export_traces_stdout: bool,
 }
 
+#[derive(Clone)] // Cheap to clone as heavy fields are wrapped in `Arc`
 pub struct EngineState {
     expose_internal_errors: execute::ExposeInternalErrors,
     http_context: HttpContext,
-    graphql_state: gql::schema::Schema<GDS>,
+    graphql_state: Arc<gql::schema::Schema<GDS>>,
     resolved_metadata: Arc<metadata_resolve::Metadata>,
-    jsonapi_state: jsonapi::State,
-    auth_config: AuthConfig,
+    jsonapi_state: Arc<jsonapi::State>,
+    auth_config: Arc<AuthConfig>,
     sql_context: Arc<sql::catalog::Catalog>,
-    plugin_configs: LifecyclePluginConfigs,
-    graphql_websocket_server: graphql_ws::WebSocketServer,
+    plugin_configs: Arc<LifecyclePluginConfigs>,
+    graphql_websocket_server: Arc<graphql_ws::WebSocketServer>,
 }
 
 #[tokio::main]
@@ -187,7 +188,7 @@ struct EngineRouter {
 }
 
 impl EngineRouter {
-    fn new(state: Arc<EngineState>) -> Self {
+    fn new(state: EngineState) -> Self {
         let graphql_ws_route = Router::new()
             .route("/graphql", get(handle_websocket_request))
             .layer(axum::middleware::from_fn(
@@ -284,7 +285,7 @@ impl EngineRouter {
         Ok(())
     }
 
-    fn add_sql_route(&mut self, state: Arc<EngineState>) {
+    fn add_sql_route(&mut self, state: EngineState) {
         let sql_routes = Router::new()
             .route("/v1/sql", post(handle_sql_request))
             .layer(axum::middleware::from_fn(
@@ -303,7 +304,7 @@ impl EngineRouter {
         self.sql_routes = Some(sql_routes);
     }
 
-    fn add_jsonapi_route(&mut self, state: Arc<EngineState>) {
+    fn add_jsonapi_route(&mut self, state: EngineState) {
         let jsonapi_routes = create_json_api_router(state);
         self.jsonapi_routes = Some(jsonapi_routes);
     }
@@ -507,7 +508,7 @@ async fn sql_request_tracing_middleware(
 /// result of the authentication is `hasura-authn-core::Identity`, which is then
 /// made available to the GraphQL request handler.
 pub async fn authentication_middleware<'a>(
-    State(engine_state): State<Arc<EngineState>>,
+    State(engine_state): State<EngineState>,
     headers_map: HeaderMap,
     mut request: Request<Body>,
     next: Next,
@@ -539,7 +540,7 @@ async fn graphiql() -> Html<&'static str> {
 
 async fn handle_request(
     headers: axum::http::header::HeaderMap,
-    State(state): State<Arc<EngineState>>,
+    State(state): State<EngineState>,
     Extension(session): Extension<Session>,
     Json(request): Json<gql::http::RawRequest>,
 ) -> gql::http::Response {
@@ -580,7 +581,7 @@ async fn handle_request(
 
 async fn handle_explain_request(
     headers: axum::http::header::HeaderMap,
-    State(state): State<Arc<EngineState>>,
+    State(state): State<EngineState>,
     Extension(session): Extension<Session>,
     Json(request): Json<gql::http::RawRequest>,
 ) -> graphql_frontend::ExplainResponse {
@@ -612,7 +613,7 @@ async fn handle_explain_request(
 }
 
 async fn plugins_middleware(
-    State(engine_state): State<Arc<EngineState>>,
+    State(engine_state): State<EngineState>,
     Extension(session): Extension<Session>,
     headers_map: HeaderMap,
     request: Request<axum::body::Body>,
@@ -685,7 +686,7 @@ async fn plugins_middleware(
 /// Handle a SQL request and execute it.
 async fn handle_sql_request(
     headers: axum::http::header::HeaderMap,
-    State(state): State<Arc<EngineState>>,
+    State(state): State<EngineState>,
     Extension(session): Extension<Session>,
     Json(request): Json<sql::execute::SqlRequest>,
 ) -> axum::response::Response {
@@ -745,7 +746,7 @@ fn build_state(
     metadata_path: &PathBuf,
     enable_sql_interface: bool,
     metadata_resolve_configuration: &metadata_resolve::configuration::Configuration,
-) -> Result<Arc<EngineState>, anyhow::Error> {
+) -> Result<EngineState, anyhow::Error> {
     // Auth Config
     let raw_auth_config = std::fs::read_to_string(authn_config_path)?;
     let (auth_config, auth_warnings) =
@@ -777,32 +778,33 @@ fn build_state(
     }
     .build_schema()?;
 
-    let state = Arc::new(EngineState {
+    let state = EngineState {
         expose_internal_errors,
         http_context,
-        graphql_state: schema,
-        jsonapi_state: jsonapi::State::new(&resolved_metadata),
+        graphql_state: Arc::new(schema),
+        jsonapi_state: Arc::new(jsonapi::State::new(&resolved_metadata)),
         resolved_metadata,
-        auth_config,
+        auth_config: Arc::new(auth_config),
         sql_context: sql_context.into(),
-        plugin_configs,
-        graphql_websocket_server: graphql_ws::WebSocketServer::new(),
-    });
+        plugin_configs: Arc::new(plugin_configs),
+        graphql_websocket_server: Arc::new(graphql_ws::WebSocketServer::new()),
+    };
     Ok(state)
 }
 
 async fn handle_websocket_request(
     headers: axum::http::header::HeaderMap,
-    State(engine_state): State<Arc<EngineState>>,
+    State(engine_state): State<EngineState>,
     ws: axum::extract::ws::WebSocketUpgrade,
 ) -> impl IntoResponse {
+    // Create the context for the websocket server
     let context = graphql_ws::Context {
-        http_context: engine_state.http_context.clone(),
+        http_context: engine_state.http_context,
         project_id: None, // project_id is not needed for OSS v3-engine.
         expose_internal_errors: engine_state.expose_internal_errors,
-        schema: engine_state.graphql_state.clone(),
-        auth_config: engine_state.auth_config.clone(),
-        plugin_configs: engine_state.plugin_configs.clone(),
+        schema: engine_state.graphql_state,
+        auth_config: engine_state.auth_config,
+        plugin_configs: engine_state.plugin_configs,
     };
 
     engine_state

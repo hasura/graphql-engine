@@ -11,7 +11,7 @@ use tracing_util::{set_status_on_current_span, SpanVisibility};
 
 use crate::{authentication_middleware, EngineState};
 
-pub(crate) fn create_json_api_router(state: Arc<EngineState>) -> axum::Router {
+pub(crate) fn create_json_api_router(state: EngineState) -> axum::Router {
     let router = Router::new()
         // TODO: update method GET; for now we are only supporting queries. And
         // in JSON:API spec, all queries have the GET method. Not even HEAD is
@@ -40,7 +40,7 @@ async fn handle_request(
     method: Method,
     uri: Uri,
     axum::extract::RawQuery(raw_query): axum::extract::RawQuery,
-    axum::extract::State(state): axum::extract::State<Arc<EngineState>>,
+    axum::extract::State(state): axum::extract::State<EngineState>,
     Extension(session): Extension<Session>,
 ) -> impl IntoResponse {
     let tracer = tracing_util::global_tracer();

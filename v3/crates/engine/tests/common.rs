@@ -688,12 +688,12 @@ async fn run_query_graphql_ws(
         http_context: http_context.clone(),
         expose_internal_errors,
         project_id: project_id.cloned(),
-        schema: schema.clone(),
-        auth_config: dummy_auth_config,
-        plugin_configs: LifecyclePluginConfigs {
+        schema: Arc::new(schema.clone()),
+        auth_config: Arc::new(dummy_auth_config),
+        plugin_configs: Arc::new(LifecyclePluginConfigs {
             pre_parse_plugins: Vec::new(),
             pre_response_plugins: Vec::new(),
-        },
+        }),
     };
     let (channel_sender, mut channel_receiver) =
         tokio::sync::mpsc::channel::<graphql_ws::Message>(10);

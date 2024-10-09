@@ -6,7 +6,6 @@ use indexmap::IndexMap;
 use nonempty::NonEmpty;
 use pre_parse_plugin::execute as pre_parse_plugin;
 use pre_response_plugin::execute as pre_response_plugin;
-use std::sync::Arc;
 
 use super::types::{ConnectionInitState, OperationId, ServerMessage};
 use crate::poller;
@@ -84,7 +83,6 @@ pub async fn handle_subscribe(
                                         let poller = tracing_util::get_active_span(|span| {
                                             start_poller(
                                                 operation_id.clone(),
-                                                connection.context.clone(),
                                                 session.clone(),
                                                 headers.clone(),
                                                 connection.clone(),
@@ -154,7 +152,6 @@ pub async fn handle_subscribe(
 /// Starts a new poller to handle GraphQL operations (queries, mutations, subscriptions).
 fn start_poller(
     operation_id: OperationId,
-    context: Arc<ws::Context>,
     session: Session,
     headers: http::HeaderMap,
     connection: ws::Connection,
@@ -166,7 +163,6 @@ fn start_poller(
             // Executes the GraphQL request and handles any errors.
             execute_request(
                 operation_id.clone(),
-                context.expose_internal_errors,
                 session,
                 headers,
                 &connection,
@@ -181,7 +177,6 @@ fn start_poller(
 /// Executes the GraphQL request, handling queries, mutations, and subscriptions.
 async fn execute_request(
     operation_id: OperationId,
-    expose_internal_errors: ExposeInternalErrors,
     session: Session,
     headers: http::HeaderMap,
     connection: &ws::Connection,
@@ -225,7 +220,13 @@ async fn execute_request(
         Ok(()) => {}
         Err(e) => {
             // If an error occurs, send an error message.
-            send_request_error(e, expose_internal_errors, operation_id, connection).await;
+            send_request_error(
+                e,
+                connection.context.expose_internal_errors,
+                operation_id,
+                connection,
+            )
+            .await;
         }
     }
 }

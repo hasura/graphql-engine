@@ -87,9 +87,9 @@ pub(crate) async fn start_websocket_server() -> TestServer {
         http_context,
         expose_internal_errors: execute::ExposeInternalErrors::Expose,
         project_id: None,
-        schema,
-        auth_config,
-        plugin_configs,
+        schema: Arc::new(schema),
+        auth_config: Arc::new(auth_config),
+        plugin_configs: Arc::new(plugin_configs),
     };
 
     let connections = graphql_ws::Connections::new();
