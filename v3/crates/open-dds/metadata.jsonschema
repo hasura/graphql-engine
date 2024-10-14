@@ -468,10 +468,20 @@
       ],
       "properties": {
         "fieldName": {
-          "$ref": "#/definitions/FieldName"
+          "description": "The name of the field that can be compared.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldName"
+            }
+          ]
         },
         "booleanExpressionType": {
-          "$ref": "#/definitions/CustomTypeName"
+          "description": "The boolean expression type that can be used for comparison against the type of the field.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            }
+          ]
         }
       },
       "additionalProperties": false

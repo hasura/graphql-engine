@@ -3545,6 +3545,8 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
         order_by_expressions: OrderByExpressions {
             objects: {

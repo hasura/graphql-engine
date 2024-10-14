@@ -1,0 +1,515 @@
+{
+  "version": "v3",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Album_aggregate_bool_exp",
+            "operand": {
+              "objectAggregate": {
+                "type": "Album",
+                "aggregateExpression": "Album_agg_exp",
+                "comparableFields": [
+                  {
+                    "fieldName": "title",
+                    "aggregateBooleanExpressionType": "String_aggregate_bool_exp"
+                  }
+                ],
+                "comparableRelationships": [
+                  {
+                    "relationshipName": "artist",
+                    "aggregateBooleanExpressionType": "Artist_aggregate_bool_exp"
+                  }
+                ]
+              }
+            },
+            "isNull": {
+              "enable": false
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Album_aggregate_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Artist_aggregate_bool_exp",
+            "operand": {
+              "objectAggregate": {
+                "type": "Artist",
+                "aggregateExpression": "Artist_agg_exp",
+                "comparableFields": [
+                  {
+                    "fieldName": "name",
+                    "aggregateBooleanExpressionType": "String_aggregate_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "isNull": {
+              "enable": false
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Artist_aggregate_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "String_aggregate_bool_exp",
+            "operand": {
+              "scalarAggregate": {
+                "type": "String",
+                "aggregateExpression": "String_agg_exp",
+                "comparableAggregationFunctions": [
+                  {
+                    "name": "_min",
+                    "booleanExpressionType": "String_bool_exp"
+                  }
+                ],
+                "comparableCount": {
+                  "booleanExpressionType": "Int_bool_exp"
+                },
+                "comparableCountDistinct": {
+                  "booleanExpressionType": "Int_bool_exp"
+                }
+              }
+            },
+            "isNull": {
+              "enable": false
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "String_aggregate_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "AggregateExpression",
+          "version": "v1",
+          "definition": {
+            "name": "Album_agg_exp",
+            "operand": {
+              "object": {
+                "aggregatedType": "Album",
+                "aggregatableFields": [
+                  {
+                    "fieldName": "album_id",
+                    "aggregateExpression": "Int_agg_exp"
+                  },
+                  {
+                    "fieldName": "artist_id",
+                    "aggregateExpression": "Int_agg_exp"
+                  },
+                  {
+                    "fieldName": "title",
+                    "aggregateExpression": "String_agg_exp"
+                  }
+                ]
+              }
+            },
+            "count": {
+              "enable": true
+            },
+            "countDistinct": {
+              "enable": false
+            }
+          }
+        },
+        {
+          "kind": "AggregateExpression",
+          "version": "v1",
+          "definition": {
+            "name": "Artist_agg_exp",
+            "operand": {
+              "object": {
+                "aggregatedType": "Artist",
+                "aggregatableFields": [
+                  {
+                    "fieldName": "artist_id",
+                    "aggregateExpression": "Int_agg_exp"
+                  },
+                  {
+                    "fieldName": "name",
+                    "aggregateExpression": "String_agg_exp"
+                  }
+                ]
+              }
+            },
+            "count": {
+              "enable": true
+            },
+            "countDistinct": {
+              "enable": false
+            }
+          }
+        },
+        {
+          "kind": "AggregateExpression",
+          "version": "v1",
+          "definition": {
+            "name": "String_agg_exp",
+            "operand": {
+              "scalar": {
+                "aggregatedType": "String",
+                "aggregationFunctions": [
+                  {
+                    "name": "_min",
+                    "returnType": "String",
+                    "description": "The lexicographically least string"
+                  }
+                ],
+                "dataConnectorAggregationFunctionMapping": []
+              }
+            },
+            "count": {
+              "enable": true
+            },
+            "countDistinct": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "AggregateExpression",
+          "version": "v1",
+          "definition": {
+            "name": "Int_agg_exp",
+            "operand": {
+              "scalar": {
+                "aggregatedType": "Int",
+                "aggregationFunctions": [
+                  {
+                    "name": "_min",
+                    "returnType": "String",
+                    "description": "The lexicographically least string"
+                  }
+                ],
+                "dataConnectorAggregationFunctionMapping": []
+              }
+            },
+            "count": {
+              "enable": true
+            },
+            "countDistinct": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "String_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [],
+                "dataConnectorOperatorMapping": []
+              }
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "String_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [],
+                "dataConnectorOperatorMapping": []
+              }
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Album",
+            "fields": [
+              {
+                "name": "album_id",
+                "type": "Int",
+                "description": "The ID of the album"
+              },
+              {
+                "name": "artist_id",
+                "type": "Int",
+                "description": "The ID of the album's artist"
+              },
+              {
+                "name": "title",
+                "type": "String",
+                "description": "The title of the album"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Artist",
+            "fields": [
+              {
+                "name": "artist_id",
+                "type": "Int",
+                "description": "The ID of the artist"
+              },
+              {
+                "name": "name",
+                "type": "String",
+                "description": "The name of the artist"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "dataconnector",
+                "dataConnectorObjectType": "Artist",
+                "fieldMapping": {
+                  "artist_id": {
+                    "column": {
+                      "name": "artist_id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Artists",
+            "objectType": "Artist",
+            "source": {
+              "dataConnectorName": "dataconnector",
+              "collection": "Artists"
+            },
+            "orderableFields": [
+              {
+                "fieldName": "artist_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "GraphqlConfig",
+          "version": "v1",
+          "definition": {
+            "query": {
+              "rootOperationTypeName": "Query",
+              "argumentsInput": {
+                "fieldName": "args"
+              },
+              "limitInput": {
+                "fieldName": "limit"
+              },
+              "offsetInput": {
+                "fieldName": "offset"
+              },
+              "filterInput": {
+                "fieldName": "where",
+                "operatorNames": {
+                  "and": "_and",
+                  "or": "_or",
+                  "not": "_not",
+                  "isNull": "_is_null"
+                }
+              },
+              "orderByInput": {
+                "fieldName": "order_by",
+                "enumDirectionValues": {
+                  "asc": "Asc",
+                  "desc": "Desc"
+                },
+                "enumTypeNames": [
+                  {
+                    "directions": ["Asc", "Desc"],
+                    "typeName": "OrderBy"
+                  }
+                ]
+              },
+              "aggregate": {
+                "filterInputFieldName": "filter_input",
+                "countFieldName": "_count",
+                "countDistinctFieldName": "_count_distinct"
+              }
+            },
+            "mutation": {
+              "rootOperationTypeName": "Mutation"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "dataconnector",
+            "url": {
+              "singleUrl": {
+                "value": "http://localhost:666"
+              }
+            },
+            "schema": {
+              "version": "v0.1",
+              "capabilities": {
+                "version": "0.1.6",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "nested_fields": {}
+                  },
+                  "mutation": {},
+                  "relationships": {}
+                }
+              },
+              "schema": {
+                "collections": [
+                  {
+                    "name": "Artists",
+                    "type": "Artist",
+                    "arguments": {},
+                    "foreign_keys": {},
+                    "uniqueness_constraints": {}
+                  }
+                ],
+                "object_types": {
+                  "Artist": {
+                    "fields": {
+                      "artist_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "functions": [],
+                "procedures": [],
+                "scalar_types": {
+                  "Int": {
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "aggregate_functions": {
+                      "_min": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "_max": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "representation": {
+                      "type": "int32"
+                    }
+                  },
+                  "String": {
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "aggregate_functions": {
+                      "_min": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "_max": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "representation": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "require_graphql_config": true,
+    "require_valid_ndc_v01_version": true,
+    "bypass_relation_comparisons_ndc_capability": true,
+    "require_nested_array_filtering_capability": true,
+    "disallow_scalar_type_names_conflicting_with_inbuilt_types": true,
+    "propagate_boolean_expression_deprecation_status": true
+  }
+}

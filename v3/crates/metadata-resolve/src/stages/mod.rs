@@ -1,3 +1,4 @@
+pub mod aggregate_boolean_expressions;
 pub mod aggregates;
 pub mod apollo;
 mod arguments;
@@ -106,29 +107,6 @@ pub fn resolve(
     let relationships = relationships::resolve(&metadata_accessor, &object_types_with_permissions)
         .map_err(Error::from)?;
 
-    // Resolve fancy new boolean expression types
-    let boolean_expressions::BooleanExpressionsOutput {
-        boolean_expression_types,
-        graphql_types,
-    } = boolean_expressions::resolve(
-        &metadata_accessor,
-        &boolean_expression_scalar_types,
-        graphql_types,
-        &graphql_config,
-        &object_types_with_permissions,
-        &relationships,
-    )
-    .map_err(Error::from)?;
-
-    let order_by_expressions::OrderByExpressionsOutput {
-        order_by_expressions,
-        graphql_types,
-    } = order_by_expressions::resolve(
-        &metadata_accessor,
-        &object_types_with_permissions,
-        graphql_types,
-    )?;
-
     // Check aggregate expressions
     let aggregates::AggregateExpressionsOutput {
         aggregate_expressions,
@@ -146,6 +124,51 @@ pub fn resolve(
     .map_err(Error::from)?;
 
     all_issues.extend(issues.into_iter().map(Warning::from));
+
+    let aggregate_boolean_expressions::AggregateBooleanExpressionsOutput {
+        scalar_aggregates,
+        object_aggregates,
+        issues,
+        graphql_types,
+    } = aggregate_boolean_expressions::resolve(
+        &configuration.unstable_features,
+        &metadata_accessor,
+        &boolean_expression_scalar_types,
+        &aggregate_expressions,
+        &relationships,
+        &object_types_with_permissions,
+        &scalar_types,
+        &graphql_config,
+        graphql_types,
+    )
+    .map_err(Error::from)?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
+
+    // Resolve fancy new boolean expression types
+    let boolean_expressions::BooleanExpressionsOutput {
+        boolean_expression_types,
+        graphql_types,
+    } = boolean_expressions::resolve(
+        &metadata_accessor,
+        boolean_expression_scalar_types,
+        object_aggregates,
+        scalar_aggregates,
+        graphql_types,
+        &graphql_config,
+        &object_types_with_permissions,
+        &relationships,
+    )
+    .map_err(Error::from)?;
+
+    let order_by_expressions::OrderByExpressionsOutput {
+        order_by_expressions,
+        graphql_types,
+    } = order_by_expressions::resolve(
+        &metadata_accessor,
+        &object_types_with_permissions,
+        graphql_types,
+    )?;
 
     // Validate `ObjectBooleanExpressionType` metadata. This will soon be deprecated and subsumed
     // by `BooleanExpressionType`.

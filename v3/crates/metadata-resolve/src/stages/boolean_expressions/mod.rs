@@ -21,11 +21,21 @@ pub use types::{
     ResolvedObjectBooleanExpressionType,
 };
 
+use super::aggregate_boolean_expressions;
+
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    boolean_expression_scalar_types: &BTreeMap<
+    boolean_expression_scalar_types: BTreeMap<
         Qualified<CustomTypeName>,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
+    >,
+    boolean_expression_object_aggregate_types: BTreeMap<
+        Qualified<CustomTypeName>,
+        aggregate_boolean_expressions::ObjectAggregateBooleanExpression,
+    >,
+    boolean_expression_scalar_aggregate_types: BTreeMap<
+        Qualified<CustomTypeName>,
+        aggregate_boolean_expressions::ScalarAggregateBooleanExpression,
     >,
     mut graphql_types: BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -63,7 +73,7 @@ pub fn resolve(
                 subgraph,
                 &boolean_expression_type.graphql,
                 object_types,
-                boolean_expression_scalar_types,
+                &boolean_expression_scalar_types,
                 &raw_boolean_expression_types,
                 relationships,
                 graphql_config,
@@ -80,7 +90,9 @@ pub fn resolve(
     Ok(BooleanExpressionsOutput {
         boolean_expression_types: BooleanExpressionTypes {
             objects: boolean_expression_object_types,
-            scalars: boolean_expression_scalar_types.clone(),
+            scalars: boolean_expression_scalar_types,
+            object_aggregates: boolean_expression_object_aggregate_types,
+            scalar_aggregates: boolean_expression_scalar_aggregate_types,
         },
         // TODO: make sure we are adding new types to graphql_types
         graphql_types,

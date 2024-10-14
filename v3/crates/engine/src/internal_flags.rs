@@ -21,6 +21,7 @@ pub enum UnstableFeature {
     EnableNdcV02Support,
     EnableSubscriptions,
     EnableJsonApi,
+    EnableAggregationPredicates,
 }
 
 pub fn resolve_unstable_features(
@@ -41,6 +42,9 @@ pub fn resolve_unstable_features(
             }
             UnstableFeature::EnableJsonApi => {
                 features.enable_jsonapi = true;
+            }
+            UnstableFeature::EnableAggregationPredicates => {
+                features.enable_aggregation_predicates = true;
             }
         }
     }

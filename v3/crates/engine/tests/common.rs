@@ -451,6 +451,7 @@ pub fn test_execute_explain(
                 enable_ndc_v02_support: true,
                 enable_subscriptions: false,
                 enable_jsonapi: false,
+                ..Default::default()
             },
         };
         let gds = GDS::new(
@@ -512,6 +513,7 @@ pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configu
             enable_ndc_v02_support: true,
             enable_subscriptions: true,
             enable_jsonapi: false,
+            ..Default::default()
         },
     }
 }

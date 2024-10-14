@@ -15,8 +15,9 @@ use open_dds::identifier::SubgraphName;
 use open_dds::{
     boolean_expression::{
         BooleanExpressionComparableField, BooleanExpressionLogicalOperators,
-        BooleanExpressionObjectOperand, BooleanExpressionOperand, BooleanExpressionScalarOperand,
-        BooleanExpressionTypeGraphQlConfiguration,
+        BooleanExpressionObjectAggregateOperand, BooleanExpressionObjectOperand,
+        BooleanExpressionOperand, BooleanExpressionScalarAggregateOperand,
+        BooleanExpressionScalarOperand, BooleanExpressionTypeGraphQlConfiguration,
     },
     types::{CustomTypeName, FieldName, TypeName},
 };
@@ -224,16 +225,20 @@ fn resolve_comparable_fields(
         let (field_kind, boolean_expression_underlying_type) = match &raw_boolean_expression_type
             .operand
         {
-            BooleanExpressionOperand::Object(BooleanExpressionObjectOperand { r#type, .. }) => {
+            BooleanExpressionOperand::Object(BooleanExpressionObjectOperand { r#type, .. })
+            | BooleanExpressionOperand::ObjectAggregate(
+                BooleanExpressionObjectAggregateOperand { r#type, .. },
+            ) => {
                 let field_kind = match field.field_type.underlying_type {
                     QualifiedBaseType::List(_) => ComparableFieldKind::Array,
                     QualifiedBaseType::Named(_) => ComparableFieldKind::Object,
                 };
                 (field_kind, TypeName::Custom(r#type.clone()))
             }
-            BooleanExpressionOperand::Scalar(BooleanExpressionScalarOperand { r#type, .. }) => {
-                (ComparableFieldKind::Scalar, r#type.clone())
-            }
+            BooleanExpressionOperand::Scalar(BooleanExpressionScalarOperand { r#type, .. })
+            | BooleanExpressionOperand::ScalarAggregate(
+                BooleanExpressionScalarAggregateOperand { r#type, .. },
+            ) => (ComparableFieldKind::Scalar, r#type.clone()),
         };
 
         let qualified_boolean_expression_type =

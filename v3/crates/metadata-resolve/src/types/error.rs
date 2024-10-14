@@ -1,9 +1,9 @@
 use crate::helpers::typecheck::TypecheckError;
 use crate::stages::{
-    aggregates::AggregateExpressionError, apollo, boolean_expressions, commands,
-    data_connector_scalar_types, data_connectors, graphql_config, models, object_types,
-    order_by_expressions, relationships, relay, scalar_boolean_expressions, scalar_types,
-    type_permissions,
+    aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo,
+    boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
+    models, object_types, order_by_expressions, relationships, relay, scalar_boolean_expressions,
+    scalar_types, type_permissions,
 };
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
@@ -300,6 +300,10 @@ pub enum Error {
     #[error("{0}")]
     ScalarBooleanExpressionTypeError(
         #[from] scalar_boolean_expressions::ScalarBooleanExpressionTypeError,
+    ),
+    #[error("{0}")]
+    AggregateBooleanExpressionError(
+        #[from] aggregate_boolean_expressions::NamedAggregateBooleanExpressionError,
     ),
     #[error("{type_predicate_error:}")]
     TypePredicateError {

@@ -1,5 +1,4 @@
-use core::hash::Hash;
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common as ast;
 use open_dds::aggregates::{AggregateExpressionName, AggregationFunctionName};
@@ -7,6 +6,7 @@ use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::identifier::SubgraphName;
 use open_dds::types::{CustomTypeName, TypeName};
 
+use crate::helpers::check_for_duplicates;
 use crate::helpers::types::{store_new_graphql_type, unwrap_qualified_type_name};
 use crate::stages::{
     data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap, graphql_config, scalar_types,
@@ -601,27 +601,6 @@ fn get_underlying_aggregatable_type(
             QualifiedBaseType::List(_) => None,
         },
     }
-}
-
-/// Takes something that can be turned into an Iterator and then uses the `select_key` function
-/// to extract a key value for each item in the iterable. It then detects if any these keys are
-/// duplicated. If so, the first duplicate value is returned as the `Err` value.
-fn check_for_duplicates<'a, TItem, TIter, TKey, FSelectKey>(
-    items: TIter,
-    select_key: FSelectKey,
-) -> Result<(), &'a TItem>
-where
-    TIter: IntoIterator<Item = &'a TItem>,
-    TKey: Eq + Hash,
-    FSelectKey: Fn(&TItem) -> &TKey,
-{
-    let mut used_items = HashSet::<&TKey>::new();
-    for item in items {
-        if !used_items.insert(select_key(item)) {
-            return Err(item);
-        }
-    }
-    Ok(())
 }
 
 fn resolve_aggregate_expression_graphql_config(

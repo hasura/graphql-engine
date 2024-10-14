@@ -1350,7 +1350,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                             ),
                         ),
                     },
-                    representation: Inbuilt(
+                    operand_type: Inbuilt(
                         Int,
                     ),
                     comparison_operators: {
@@ -1420,7 +1420,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                             ),
                         ),
                     },
-                    representation: Inbuilt(
+                    operand_type: Inbuilt(
                         String,
                     ),
                     comparison_operators: {
@@ -1471,6 +1471,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                     include_is_null: Yes,
                 },
             },
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
         order_by_expressions: OrderByExpressions {
             objects: {

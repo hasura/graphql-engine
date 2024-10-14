@@ -169,6 +169,7 @@ fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Conf
         enable_ndc_v02_support: false,
         enable_subscriptions: true,
         enable_jsonapi: true,
+        enable_aggregation_predicates: false,
     };
 
     metadata_resolve::configuration::Configuration { unstable_features }

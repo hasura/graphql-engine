@@ -1,4 +1,4 @@
-use crate::stages::scalar_boolean_expressions;
+use crate::stages::{aggregate_boolean_expressions, scalar_boolean_expressions};
 use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
@@ -35,6 +35,14 @@ pub struct BooleanExpressionTypes {
     pub scalars: BTreeMap<
         Qualified<CustomTypeName>,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
+    >,
+    pub object_aggregates: BTreeMap<
+        Qualified<CustomTypeName>,
+        aggregate_boolean_expressions::ObjectAggregateBooleanExpression,
+    >,
+    pub scalar_aggregates: BTreeMap<
+        Qualified<CustomTypeName>,
+        aggregate_boolean_expressions::ScalarAggregateBooleanExpression,
     >,
 }
 
