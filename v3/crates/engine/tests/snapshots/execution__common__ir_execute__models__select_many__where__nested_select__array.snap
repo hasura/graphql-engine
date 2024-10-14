@@ -7,7 +7,7 @@ V1(
         queries: {
             Alias(
                 Identifier(
-                    "ActorsByMovieMany",
+                    "InstitutionMany",
                 ),
             ): Model(
                 ModelSelection {
@@ -17,16 +17,24 @@ V1(
                         ),
                         model_name: ModelName(
                             Identifier(
-                                "ActorsByMovie",
+                                "institutions",
                             ),
                         ),
                         arguments: {
                             ArgumentName(
                                 Identifier(
-                                    "args",
+                                    "where",
                                 ),
                             ): Literal(
-                                Object {},
+                                Object {
+                                    "staff": Object {
+                                        "pets": Object {
+                                            "name": Object {
+                                                "_eq": String("Dog"),
+                                            },
+                                        },
+                                    },
+                                },
                             ),
                         },
                         filter: None,
@@ -37,14 +45,14 @@ V1(
                     selection: {
                         Alias(
                             Identifier(
-                                "actor_id",
+                                "id",
                             ),
                         ): Field(
                             ObjectFieldSelection {
                                 target: ObjectFieldTarget {
                                     field_name: FieldName(
                                         Identifier(
-                                            "actor_id",
+                                            "id",
                                         ),
                                     ),
                                     arguments: {},
@@ -54,31 +62,14 @@ V1(
                         ),
                         Alias(
                             Identifier(
-                                "movie_id",
+                                "location",
                             ),
                         ): Field(
                             ObjectFieldSelection {
                                 target: ObjectFieldTarget {
                                     field_name: FieldName(
                                         Identifier(
-                                            "movie_id",
-                                        ),
-                                    ),
-                                    arguments: {},
-                                },
-                                selection: None,
-                            },
-                        ),
-                        Alias(
-                            Identifier(
-                                "name",
-                            ),
-                        ): Field(
-                            ObjectFieldSelection {
-                                target: ObjectFieldTarget {
-                                    field_name: FieldName(
-                                        Identifier(
-                                            "name",
+                                            "location",
                                         ),
                                     ),
                                     arguments: {},

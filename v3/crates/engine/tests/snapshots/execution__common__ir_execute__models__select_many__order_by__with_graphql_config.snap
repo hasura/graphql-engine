@@ -7,7 +7,7 @@ V1(
         queries: {
             Alias(
                 Identifier(
-                    "ActorsByMovieMany",
+                    "AuthorMany",
                 ),
             ): Model(
                 ModelSelection {
@@ -17,16 +17,34 @@ V1(
                         ),
                         model_name: ModelName(
                             Identifier(
-                                "ActorsByMovie",
+                                "Authors",
                             ),
                         ),
                         arguments: {
                             ArgumentName(
                                 Identifier(
-                                    "args",
+                                    "limit_custom",
                                 ),
                             ): Literal(
-                                Object {},
+                                Number(1),
+                            ),
+                            ArgumentName(
+                                Identifier(
+                                    "offset_custom",
+                                ),
+                            ): Literal(
+                                Number(1),
+                            ),
+                            ArgumentName(
+                                Identifier(
+                                    "order_by_custom",
+                                ),
+                            ): Literal(
+                                Array [
+                                    Object {
+                                        "first_name": String("Desc_custom"),
+                                    },
+                                ],
                             ),
                         },
                         filter: None,
@@ -37,14 +55,14 @@ V1(
                     selection: {
                         Alias(
                             Identifier(
-                                "actor_id",
+                                "author_id",
                             ),
                         ): Field(
                             ObjectFieldSelection {
                                 target: ObjectFieldTarget {
                                     field_name: FieldName(
                                         Identifier(
-                                            "actor_id",
+                                            "author_id",
                                         ),
                                     ),
                                     arguments: {},
@@ -54,14 +72,14 @@ V1(
                         ),
                         Alias(
                             Identifier(
-                                "movie_id",
+                                "first_name",
                             ),
                         ): Field(
                             ObjectFieldSelection {
                                 target: ObjectFieldTarget {
                                     field_name: FieldName(
                                         Identifier(
-                                            "movie_id",
+                                            "first_name",
                                         ),
                                     ),
                                     arguments: {},
@@ -69,16 +87,62 @@ V1(
                                 selection: None,
                             },
                         ),
+                    },
+                },
+            ),
+            Alias(
+                Identifier(
+                    "ArticlesByAuthorMany",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "ArticlesByAuthor",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "args_custom",
+                                ),
+                            ): Literal(
+                                Object {
+                                    "author_id": Number(2),
+                                },
+                            ),
+                            ArgumentName(
+                                Identifier(
+                                    "order_by_custom",
+                                ),
+                            ): Literal(
+                                Array [
+                                    Object {
+                                        "article_id": String("Desc_custom"),
+                                    },
+                                ],
+                            ),
+                        },
+                        filter: None,
+                        order_by: [],
+                        limit: None,
+                        offset: None,
+                    },
+                    selection: {
                         Alias(
                             Identifier(
-                                "name",
+                                "article_id",
                             ),
                         ): Field(
                             ObjectFieldSelection {
                                 target: ObjectFieldTarget {
                                     field_name: FieldName(
                                         Identifier(
-                                            "name",
+                                            "article_id",
                                         ),
                                     ),
                                     arguments: {},

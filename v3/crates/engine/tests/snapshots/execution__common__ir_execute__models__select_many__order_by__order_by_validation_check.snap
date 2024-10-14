@@ -7,7 +7,7 @@ V1(
         queries: {
             Alias(
                 Identifier(
-                    "ActorsByMovieMany",
+                    "Track",
                 ),
             ): Model(
                 ModelSelection {
@@ -17,16 +17,21 @@ V1(
                         ),
                         model_name: ModelName(
                             Identifier(
-                                "ActorsByMovie",
+                                "Tracks",
                             ),
                         ),
                         arguments: {
                             ArgumentName(
                                 Identifier(
-                                    "args",
+                                    "order_by",
                                 ),
                             ): Literal(
-                                Object {},
+                                Array [
+                                    Object {
+                                        "AlbumId": String("Asc"),
+                                        "TrackId": String("Desc"),
+                                    },
+                                ],
                             ),
                         },
                         filter: None,
@@ -37,14 +42,14 @@ V1(
                     selection: {
                         Alias(
                             Identifier(
-                                "actor_id",
+                                "Name",
                             ),
                         ): Field(
                             ObjectFieldSelection {
                                 target: ObjectFieldTarget {
                                     field_name: FieldName(
                                         Identifier(
-                                            "actor_id",
+                                            "Name",
                                         ),
                                     ),
                                     arguments: {},
@@ -54,14 +59,14 @@ V1(
                         ),
                         Alias(
                             Identifier(
-                                "movie_id",
+                                "TrackId",
                             ),
                         ): Field(
                             ObjectFieldSelection {
                                 target: ObjectFieldTarget {
                                     field_name: FieldName(
                                         Identifier(
-                                            "movie_id",
+                                            "TrackId",
                                         ),
                                     ),
                                     arguments: {},
@@ -71,14 +76,14 @@ V1(
                         ),
                         Alias(
                             Identifier(
-                                "name",
+                                "AlbumId",
                             ),
                         ): Field(
                             ObjectFieldSelection {
                                 target: ObjectFieldTarget {
                                     field_name: FieldName(
                                         Identifier(
-                                            "name",
+                                            "AlbumId",
                                         ),
                                     ),
                                     arguments: {},
