@@ -1,0 +1,12 @@
+query MyQuery {
+  AuthorMany(order_by: { author_id: Asc }) {
+    author_id
+    Articles_aggregate {
+      title {
+        _min
+        _max
+      }
+      _count
+    }
+  }
+}

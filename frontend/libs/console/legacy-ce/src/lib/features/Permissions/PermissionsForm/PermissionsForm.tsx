@@ -4,7 +4,7 @@ import { Button } from '../../../new-components/Button';
 import { IndicatorCard } from '../../../new-components/IndicatorCard';
 import {
   MetadataSelector,
-  useMetadata,
+  useMetadata as useLegacyMetadata,
   useRoles,
   useSupportedQueryTypes,
 } from '../../MetadataAPI';
@@ -41,6 +41,7 @@ import {
   inputValidationEnabledSchema,
 } from '../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
 import { z } from 'zod';
+import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
 
 export interface ComponentProps {
   dataSourceName: string;
@@ -70,7 +71,7 @@ const Component = (props: ComponentProps) => {
 
   useScrollIntoView(permissionSectionRef, [roleName], { behavior: 'smooth' });
 
-  const { data: metadataTables } = useMetadata(
+  const { data: metadataTables } = useLegacyMetadata(
     MetadataSelector.getTables(dataSourceName)
   );
   const tables = metadataTables?.map(t => t.table) ?? [];
@@ -197,6 +198,7 @@ const Component = (props: ComponentProps) => {
             roleName={roleName}
             queryType={queryType}
             columns={formData?.columns}
+            computedFields={formData?.computed_fields}
             table={table}
             dataSourceName={dataSourceName}
           />
@@ -281,6 +283,11 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
   const { columns: tableColumns, isLoading: isLoadingTables } =
     useListAllTableColumns(dataSourceName, table);
 
+  const metadataTableResult = useMetadata(
+    MetadataSelectors.findTable(dataSourceName, table)
+  );
+  const computedFields = metadataTableResult.data?.computed_fields ?? [];
+
   const { data: metadataSource } = useMetadataSource(dataSourceName);
 
   const { data, isError, isLoading } = useFormData({
@@ -328,6 +335,7 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     metadata: data?.metadata,
     table,
     tableColumns,
+    tableComputedFields: computedFields,
     defaultQueryRoot: data.defaultQueryRoot,
     metadataSource,
     supportedOperators: data.supportedOperators,
@@ -357,6 +365,7 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     table,
     metadata: data.metadata,
     tableColumns,
+    computedFields,
     trackedTables: metadataSource.tables,
     metadataSource,
     validateInput: {

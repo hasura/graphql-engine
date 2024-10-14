@@ -1,0 +1,22 @@
+Err(
+    Positioned {
+        item: TokenError {
+            expected_tokens: [
+                Keyword(
+                    On,
+                ),
+            ],
+            found: Token(
+                Name(
+                    Name(
+                        "User",
+                    ),
+                ),
+            ),
+        },
+        position: SourcePosition {
+            line: 1,
+            col: 23,
+        },
+    },
+)

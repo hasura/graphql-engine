@@ -1,0 +1,19 @@
+[
+  {
+    "name_filter": {
+      "first_name": "Morgan",
+      "surname": "Freeman"
+    },
+    "institution_input": {
+      "location": {
+        "city": "Gothenburg"
+      }
+    }
+  },
+  {
+    "name_filter": {
+      "first_name": "Kate"
+    },
+    "institution_input": {}
+  }
+]

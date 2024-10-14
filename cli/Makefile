@@ -28,7 +28,7 @@ build: export CGO_ENABLED=0
 build: copy-cli-ext
 build:
 ifndef HAS_GOX
-	cd ~ && go get github.com/mitchellh/gox && cd -
+	go install github.com/mitchellh/gox@latest
 endif
 	gox -ldflags '-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION) -X github.com/hasura/graphql-engine/cli/v2/plugins.IndexBranchRef=$(PLUGINS_BRANCH) -s -w -extldflags "-static"' \
 	-osarch="linux/amd64 darwin/amd64 windows/amd64 linux/arm64 darwin/arm64" \
@@ -89,7 +89,7 @@ integration_tests_config_v2: copy-cli-ext
 test-e2e:
 	echo "--- :: run e2e tests"
 ifndef HAS_GINKGO
-	cd ~ && go get github.com/onsi/ginkgo/ginkgo && cd -
+	go install github.com/onsi/ginkgo/ginkgo@latest
 endif
 	cd commands && ginkgo -p -v -failFast $(ARGS)
 

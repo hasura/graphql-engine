@@ -24,7 +24,6 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Concurrent.Extended (sleep)
-import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.ByteString.Char8 qualified as S8
 import Data.String (fromString)

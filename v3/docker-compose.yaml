@@ -1,0 +1,114 @@
+# this Docker Compose file loads `v3-engine` along with an `ndc-postgres`
+# connector and a sample `postgres` database
+# run it with `docker compose up`, then access Graphiql at localhost:3000
+# or view traces in Jaeger at localhost:4002
+
+services:
+  engine:
+    build:
+      dockerfile: Dockerfile
+    environment:
+      - METADATA_PATH=app/docker_schema.json
+      - AUTHN_CONFIG_PATH=app/auth_config.json
+      - OTLP_ENDPOINT=http://jaeger:4317
+    ports:
+      - 3000:3000
+    depends_on:
+      jaeger:
+        condition: service_started
+      auth_hook:
+        condition: service_started
+    volumes:
+      - ./static/auth/auth_config.json:/app/auth_config.json
+      - ./static/docker_schema.json:/app/docker_schema.json
+      - ./crates/open-dds/examples/reference.json:/app/crates/open-dds/examples/reference.json
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    platform: linux/amd64
+    restart: always
+    command:
+      - -F # turn fsync off for speed
+      - -N 1000 # increase max connections from 100 so we can run more HGEs
+    ports:
+      - 64001:5432
+    environment:
+      POSTGRES_PASSWORD: "password"
+    volumes:
+      - type: volume
+        source: postgres
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./crates/engine/tests/db_definition.sql
+        target: /docker-entrypoint-initdb.d/01-db_definition.sql
+        read_only: true
+      - type: bind
+        source: ./crates/engine/tests/chinook-postgres.sql
+        target: /docker-entrypoint-initdb.d/02-chinook.sql
+        read_only: true
+      - type: bind
+        source: ./crates/engine/tests/finish.sql
+        target: /docker-entrypoint-initdb.d/03-finish.sql
+        read_only: true
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - psql -U "$${POSTGRES_USER:-postgres}" finished < /dev/null
+      start_period: 2s
+      interval: 2s
+      timeout: 1s
+      retries: 5
+
+  auth_hook:
+    build:
+      dockerfile: dev-auth-webhook.Dockerfile
+    environment:
+      OTLP_ENDPOINT: "http://jaeger:4317"
+      RUST_LOG: debug
+    ports:
+      - "3050:3050"
+    depends_on:
+      jaeger:
+        condition: service_started
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    restart: always
+    ports:
+      - 5775:5775/udp
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 5778:5778
+      - 4002:16686
+      - 14250:14250
+      - 14268:14268
+      - 14269:14269
+      - 4317:4317 # OTLP gRPC
+      - 4318:4318 # OTLP HTTP
+      - 9411:9411
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+      COLLECTOR_ZIPKIN_HOST_PORT: "9411"
+
+  postgres_connector:
+    image: ghcr.io/hasura/ndc-postgres:latest
+    ports:
+      - 8080:8080
+    environment:
+      CONNECTION_URI: "postgresql://postgres:password@postgres"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
+      OTEL_SERVICE_NAME: "ndc-postgres"
+      RUST_LOG: info
+    volumes:
+      - type: bind
+        source: ./crates/engine/tests/ndc-postgres-configuration
+        target: /etc/connector
+        read_only: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+
+volumes:
+  postgres:

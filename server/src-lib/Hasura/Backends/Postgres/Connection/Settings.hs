@@ -459,10 +459,8 @@ supportedConnectionTemplateVersions = [1]
 instance FromJSON ConnectionTemplate where
   parseJSON = withObject "ConnectionTemplate" $ \o -> do
     version <- o .:? "version" .!= 1
-    when (version `notElem` supportedConnectionTemplateVersions)
-      $ fail
-      $ "Supported versions are "
-      <> show supportedConnectionTemplateVersions
+    unless (version `elem` supportedConnectionTemplateVersions)
+      $ fail ("Supported versions are " <> show supportedConnectionTemplateVersions)
     ConnectionTemplate version
       <$> o
       .: "template"

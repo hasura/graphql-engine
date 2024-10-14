@@ -1,0 +1,9 @@
+[
+  {
+    "x-hasura-role": "admin"
+  },
+  {
+    "x-hasura-role": "user",
+    "x-hasura-album-title": "Balls to the Wall"
+  }
+]

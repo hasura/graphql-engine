@@ -1,0 +1,99 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Albums",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "relationship": {
+                      "name": "TracksRemote",
+                      "predicate": {
+                        "fieldComparison": {
+                          "field": "TrackId",
+                          "operator": "_eq",
+                          "value": {
+                            "sessionVariable": "x-hasura-user-id"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Tracks",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "relationship": {
+                      "name": "Album",
+                      "predicate": {
+                        "fieldComparison": {
+                          "field": "Title",
+                          "operator": "_eq",
+                          "value": {
+                            "sessionVariable": "x-hasura-album-title"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Artist",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

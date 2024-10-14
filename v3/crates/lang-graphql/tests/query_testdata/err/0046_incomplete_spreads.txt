@@ -1,0 +1,18 @@
+Err(
+    Positioned {
+        item: TokenError {
+            expected_tokens: [
+                Name,
+            ],
+            found: Token(
+                Punctuation(
+                    BraceR,
+                ),
+            ),
+        },
+        position: SourcePosition {
+            line: 1,
+            col: 15,
+        },
+    },
+)

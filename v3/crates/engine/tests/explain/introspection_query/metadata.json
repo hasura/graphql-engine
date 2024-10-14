@@ -1,0 +1,12 @@
+{
+  "version": "v2",
+  "supergraph": {
+    "objects": []
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": []
+    }
+  ]
+}

@@ -121,6 +121,7 @@ tests = do
                     }
                   ]
                 ) {
+                  affected_rows
                   returning {
                     id
                     title
@@ -134,6 +135,7 @@ tests = do
           [interpolateYaml|
             data:
               insert_#{schemaName}_article:
+                affected_rows: 2
                 returning:
                   - id: 1
                     title: "Article 1"
@@ -156,6 +158,7 @@ tests = do
                 insert_#{schemaName}_article(
                   objects: []
                 ) {
+                  affected_rows
                   returning {
                     id
                     title
@@ -169,6 +172,7 @@ tests = do
           [interpolateYaml|
             data:
               insert_#{schemaName}_article:
+                affected_rows: 0
                 returning: []
           |]
 

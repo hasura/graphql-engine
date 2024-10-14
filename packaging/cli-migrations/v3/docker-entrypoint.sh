@@ -69,7 +69,7 @@ fi
 
 # apply metadata if the directory exist
 if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
-    rm -rf "TEMP_PROJECT_DIR"
+    rm -rf "$TEMP_PROJECT_DIR"
     log "migrations-apply" "applying metadata from $HASURA_GRAPHQL_METADATA_DIR"
     mkdir -p "$TEMP_PROJECT_DIR"
     cp -a "$HASURA_GRAPHQL_METADATA_DIR/." "$TEMP_PROJECT_DIR/metadata/"

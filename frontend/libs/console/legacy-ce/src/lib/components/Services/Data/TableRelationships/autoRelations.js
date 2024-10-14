@@ -69,7 +69,7 @@ const isExistingArrRel = (currentArrRels, relCols, relTable) => {
       currRCol = Object.values(arrRelDef.manual_configuration.column_mapping);
     }
 
-    if (currTable.name === relTable && sameRelCols(currRCol, relCols)) {
+    if (currTable?.name === relTable && sameRelCols(currRCol, relCols)) {
       _isExistingArrRel = true;
       break;
     }

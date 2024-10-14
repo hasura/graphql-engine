@@ -148,21 +148,21 @@ tests = do
               'Inconsistent object: The source "#{source}" does not support inherited roles
               where the columns allowed are different in the column select permissions in the
               parent roles. This occurs for the column select permissions defined for the table
-              "#{schemaName}.employee" for the inherited role "employee", which combines the roles "employee_public_info",
-              "employee_private_info"'
+              "#{schemaName}.employee" for the inherited role "employee", which combines the roles "employee_private_info",
+              "employee_public_info"'
             internal:
             - definition:
                 role_name: employee
                 role_set:
-                - employee_public_info
                 - employee_private_info
+                - employee_public_info
               name: inherited_role inherited role employee
               reason:
                 'Inconsistent object: The source "#{source}" does not support inherited roles
                 where the columns allowed are different in the column select permissions in the
                 parent roles. This occurs for the column select permissions defined for the table
-                "#{schemaName}.employee" for the inherited role "employee", which combines the roles "employee_public_info",
-                "employee_private_info"'
+                "#{schemaName}.employee" for the inherited role "employee", which combines the roles "employee_private_info",
+                "employee_public_info"'
               type: inherited_role
             path: $.args
           |]

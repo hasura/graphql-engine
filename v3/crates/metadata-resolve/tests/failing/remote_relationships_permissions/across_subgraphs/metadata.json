@@ -1,0 +1,3335 @@
+{
+  "subgraphs": [
+    {
+      "name": "remote",
+      "objects": [
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "Artist_Where_Exp_Remote"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "artist_bool_exp_remote",
+            "operand": {
+              "object": {
+                "comparableFields": [
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "ArtistId"
+                  },
+                  {
+                    "booleanExpressionType": "string_bool_exp",
+                    "fieldName": "Name"
+                  }
+                ],
+                "comparableRelationships": [],
+                "type": "Artist"
+              }
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "Genre_Where_Exp_Remote"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "genre_bool_exp",
+            "operand": {
+              "object": {
+                "comparableFields": [
+                  {
+                    "booleanExpressionType": "string_bool_exp",
+                    "fieldName": "Name"
+                  },
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "GenreId"
+                  }
+                ],
+                "comparableRelationships": [],
+                "type": "Genre"
+              }
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "Track_Where_Exp_Remote"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "track_bool_exp",
+            "operand": {
+              "object": {
+                "comparableFields": [
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "AlbumId"
+                  },
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "TrackId"
+                  },
+                  {
+                    "booleanExpressionType": "string_bool_exp",
+                    "fieldName": "Name"
+                  },
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "GenreId"
+                  }
+                ],
+                "comparableRelationships": [],
+                "type": "Track"
+              }
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "Album_Where_Exp_Remote"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "album_bool_exp",
+            "operand": {
+              "object": {
+                "comparableFields": [
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "AlbumId"
+                  },
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "ArtistId"
+                  },
+                  {
+                    "booleanExpressionType": "string_bool_exp",
+                    "fieldName": "Title"
+                  }
+                ],
+                "comparableRelationships": [],
+                "type": "Album"
+              }
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "remote_db",
+            "schema": {
+              "capabilities": {
+                "capabilities": {
+                  "mutation": {},
+                  "query": {
+                    "aggregates": {},
+                    "explain": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {}
+                    },
+                    "variables": {}
+                  },
+                  "relationships": {
+                    "order_by_aggregate": {},
+                    "relation_comparisons": {}
+                  }
+                },
+                "version": "0.1.3"
+              },
+              "schema": {
+                "collections": [
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of articles",
+                    "foreign_keys": {},
+                    "name": "article",
+                    "type": "article",
+                    "uniqueness_constraints": {
+                      "ArticleByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of authors",
+                    "foreign_keys": {},
+                    "name": "author",
+                    "type": "author",
+                    "uniqueness_constraints": {
+                      "AuthorByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {
+                      "author_id": {
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "deletable": false,
+                    "description": "Articles parameterized by author",
+                    "foreign_keys": {},
+                    "name": "articles_by_author",
+                    "type": "article",
+                    "uniqueness_constraints": {}
+                  },
+                  {
+                    "arguments": {
+                      "array_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "array_nullable_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "non_nullable_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_array_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_array_nullable_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "deletable": false,
+                    "description": "Testing nullable and array types (input and output)",
+                    "foreign_keys": {},
+                    "name": "test_nullable_and_array_types",
+                    "type": "test_nullable_and_array",
+                    "uniqueness_constraints": {}
+                  },
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of artists",
+                    "foreign_keys": {},
+                    "name": "Artist",
+                    "type": "Artist",
+                    "uniqueness_constraints": {
+                      "ArtistById": {
+                        "unique_columns": ["ArtistId"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of albums",
+                    "foreign_keys": {},
+                    "name": "Album",
+                    "type": "Album",
+                    "uniqueness_constraints": {
+                      "AlbumById": {
+                        "unique_columns": ["AlbumId"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of tracks",
+                    "foreign_keys": {},
+                    "name": "Track",
+                    "type": "Track",
+                    "uniqueness_constraints": {
+                      "TrackById": {
+                        "unique_columns": ["TrackId"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {
+                      "id": {
+                        "description": "The ceiling id",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "deletable": false,
+                    "description": "A collection of artists below a certain id",
+                    "foreign_keys": {},
+                    "name": "artist_below_id",
+                    "type": "Artist",
+                    "uniqueness_constraints": {}
+                  },
+                  {
+                    "arguments": {},
+                    "foreign_keys": {},
+                    "name": "Genre",
+                    "type": "Genre",
+                    "uniqueness_constraints": {
+                      "PK_Genre": {
+                        "unique_columns": ["GenreId"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of institutions",
+                    "foreign_keys": {},
+                    "name": "institution",
+                    "type": "institution",
+                    "uniqueness_constraints": {
+                      "InstitutionByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  }
+                ],
+                "functions": [
+                  {
+                    "arguments": {},
+                    "description": "Get the ID of the most recent article",
+                    "name": "latest_article_id",
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "name": "Int",
+                        "type": "named"
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {},
+                    "description": "Get the most recent article",
+                    "name": "latest_article",
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "name": "article",
+                        "type": "named"
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the article to fetch",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "description": "Insert or update an article",
+                    "name": "get_article_by_id",
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "name": "article",
+                        "type": "named"
+                      }
+                    }
+                  }
+                ],
+                "object_types": {
+                  "Album": {
+                    "description": "An album",
+                    "fields": {
+                      "AlbumId": {
+                        "arguments": {},
+                        "description": "The album's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "ArtistId": {
+                        "arguments": {},
+                        "description": "The album's artist ID",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "Title": {
+                        "arguments": {},
+                        "description": "The album's title",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "Artist": {
+                    "description": "An artist",
+                    "fields": {
+                      "ArtistId": {
+                        "arguments": {},
+                        "description": "The artist's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "Name": {
+                        "arguments": {},
+                        "description": "The artist's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "Genre": {
+                    "description": "A Genre",
+                    "fields": {
+                      "GenreId": {
+                        "arguments": {},
+                        "description": "The genre's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "Name": {
+                        "arguments": {},
+                        "description": "The genre's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "Track": {
+                    "description": "A track",
+                    "fields": {
+                      "AlbumId": {
+                        "arguments": {},
+                        "description": "The track's album ID",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "GenreId": {
+                        "arguments": {},
+                        "description": "The track's genre ID",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "Name": {
+                        "arguments": {},
+                        "description": "The track's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "TrackId": {
+                        "arguments": {},
+                        "description": "The track's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "article": {
+                    "description": "An article",
+                    "fields": {
+                      "author_id": {
+                        "arguments": {},
+                        "description": "The article's author ID",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "id": {
+                        "arguments": {},
+                        "description": "The article's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "title": {
+                        "arguments": {},
+                        "description": "The article's title",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "artist_below_id": {
+                    "description": "An artist",
+                    "fields": {
+                      "ArtistId": {
+                        "arguments": {
+                          "id": {
+                            "description": "The cyling id",
+                            "type": {
+                              "name": "Int",
+                              "type": "named"
+                            }
+                          }
+                        },
+                        "description": "The artist's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "Name": {
+                        "arguments": {},
+                        "description": "The artist's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "author": {
+                    "description": "An author",
+                    "fields": {
+                      "first_name": {
+                        "arguments": {},
+                        "description": "The author's first name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "id": {
+                        "arguments": {},
+                        "description": "The author's primary key",
+                        "type": {
+                          "name": "int4",
+                          "type": "named"
+                        }
+                      },
+                      "last_name": {
+                        "arguments": {},
+                        "description": "The author's last name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "country": {
+                    "description": "A country",
+                    "fields": {
+                      "continent": {
+                        "arguments": {},
+                        "description": "The country's continent",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "name": {
+                        "arguments": {},
+                        "description": "The country's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "institution": {
+                    "description": "An instituion",
+                    "fields": {
+                      "departments": {
+                        "arguments": {},
+                        "description": "The institution's departments",
+                        "type": {
+                          "element_type": {
+                            "name": "json",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "id": {
+                        "arguments": {},
+                        "description": "The institutions's primary key",
+                        "type": {
+                          "name": "int4",
+                          "type": "named"
+                        }
+                      },
+                      "location": {
+                        "arguments": {},
+                        "description": "The institution's location",
+                        "type": {
+                          "name": "location",
+                          "type": "named"
+                        }
+                      },
+                      "name": {
+                        "arguments": {},
+                        "description": "The institutions's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "staff": {
+                        "arguments": {},
+                        "description": "The institution's staff",
+                        "type": {
+                          "element_type": {
+                            "name": "staff",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        }
+                      }
+                    }
+                  },
+                  "location": {
+                    "description": "A location",
+                    "fields": {
+                      "campuses": {
+                        "arguments": {},
+                        "description": "The campuses at this location",
+                        "type": {
+                          "element_type": {
+                            "name": "String",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "city": {
+                        "arguments": {},
+                        "description": "The location's city",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "country": {
+                        "arguments": {},
+                        "description": "The location's country",
+                        "type": {
+                          "name": "country",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "staff": {
+                    "description": "A staff member",
+                    "fields": {
+                      "favourite_artist_id": {
+                        "arguments": {},
+                        "description": "The staff member's favourite artist",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "first_name": {
+                        "arguments": {},
+                        "description": "The staff member's first name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "last_name": {
+                        "arguments": {},
+                        "description": "The staff member's last name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "specialities": {
+                        "arguments": {},
+                        "description": "The staff member's specialties",
+                        "type": {
+                          "element_type": {
+                            "name": "String",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        }
+                      }
+                    }
+                  },
+                  "test_nullable_and_array": {
+                    "description": "Testing nullable and array types",
+                    "fields": {
+                      "array_field": {
+                        "arguments": {},
+                        "description": "Non-nullable array types [String!]!",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "array_nullable_field": {
+                        "arguments": {},
+                        "description": "Array nullable types [String]!",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "non_nullable_field": {
+                        "arguments": {},
+                        "description": "Non-nullable types",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_array_field": {
+                        "arguments": {},
+                        "description": "Nullable array types [String!]",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_array_nullable_field": {
+                        "arguments": {},
+                        "description": "Nullable array nullable types [String]",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_field": {
+                        "arguments": {},
+                        "description": "Nullable types",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  }
+                },
+                "procedures": [
+                  {
+                    "arguments": {
+                      "article": {
+                        "description": "The article to insert or update",
+                        "type": {
+                          "name": "article",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "description": "Insert or update an article",
+                    "name": "upsert_article",
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "name": "article",
+                        "type": "named"
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the article to update",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "title": {
+                        "description": "the new title of the article",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "description": "Update an article title given the ID and new title",
+                    "name": "update_article_title_by_id",
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "name": "article",
+                        "type": "named"
+                      }
+                    }
+                  }
+                ],
+                "scalar_types": {
+                  "Int": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "Int",
+                            "type": "named"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "Int",
+                            "type": "named"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "name": "Int",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "name": "Int",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "name": "Int",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "name": "Int",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "name": "Int",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "String": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_ilike": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_iregex": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_like": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_nilike": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_niregex": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_nlike": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_nregex": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_nsimilar": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_regex": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_similar": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "int4": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "int4",
+                            "type": "named"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "int4",
+                            "type": "named"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "name": "int4",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "name": "int4",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "name": "int4",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "name": "int4",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "name": "int4",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "int8": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "int8",
+                            "type": "named"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "int8",
+                            "type": "named"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "name": "int8",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "name": "int8",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "name": "int8",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "name": "int8",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "name": "int8",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  }
+                }
+              },
+              "version": "v0.1"
+            },
+            "url": {
+              "singleUrl": {
+                "value": "http://localhost:8080"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "remote_db",
+                "dataConnectorObjectType": "Artist",
+                "fieldMapping": {
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ],
+            "fields": [
+              {
+                "name": "ArtistId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              }
+            ],
+            "graphql": {
+              "typeName": "ArtistRemote"
+            },
+            "name": "Artist"
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "remote_db",
+                "dataConnectorObjectType": "Album",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Title": {
+                    "column": {
+                      "name": "Title"
+                    }
+                  }
+                }
+              }
+            ],
+            "fields": [
+              {
+                "name": "AlbumId",
+                "type": "Int"
+              },
+              {
+                "name": "Title",
+                "type": "String"
+              },
+              {
+                "name": "ArtistId",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "AlbumRemote"
+            },
+            "name": "Album"
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "remote_db",
+                "dataConnectorObjectType": "Track",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "GenreId": {
+                    "column": {
+                      "name": "GenreId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  },
+                  "TrackId": {
+                    "column": {
+                      "name": "TrackId"
+                    }
+                  }
+                }
+              }
+            ],
+            "fields": [
+              {
+                "name": "TrackId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              },
+              {
+                "name": "AlbumId",
+                "type": "Int"
+              },
+              {
+                "name": "GenreId",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "TrackRemote"
+            },
+            "name": "Track"
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "remote_db",
+                "dataConnectorObjectType": "Genre",
+                "fieldMapping": {
+                  "GenreId": {
+                    "column": {
+                      "name": "GenreId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ],
+            "fields": [
+              {
+                "name": "GenreId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              }
+            ],
+            "graphql": {
+              "typeName": "GenreRemote"
+            },
+            "name": "Genre"
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "Int_Comparison_Exp_Remote"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "int_bool_exp",
+            "operand": {
+              "scalar": {
+                "comparisonOperators": [
+                  {
+                    "argumentType": "Int!",
+                    "name": "_eq"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "remote_db",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {}
+                  }
+                ],
+                "type": "Int"
+              }
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "String_Comparison_Exp_Remote"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "string_bool_exp",
+            "operand": {
+              "scalar": {
+                "comparisonOperators": [
+                  {
+                    "argumentType": "String!",
+                    "name": "_eq"
+                  },
+                  {
+                    "argumentType": "String!",
+                    "name": "_ilike"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "remote_db",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {}
+                  }
+                ],
+                "type": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "filterExpressionType": "artist_bool_exp_remote",
+            "graphql": {
+              "orderByExpressionType": "Artist_Order_By_Remote",
+              "selectMany": {
+                "queryRootField": "ArtistRemote"
+              },
+              "selectUniques": []
+            },
+            "name": "ArtistRemote",
+            "objectType": "Artist",
+            "orderableFields": [
+              {
+                "fieldName": "ArtistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "source": {
+              "collection": "Artist",
+              "dataConnectorName": "remote_db"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "filterExpressionType": "album_bool_exp",
+            "graphql": {
+              "orderByExpressionType": "Album_Order_By_Remote",
+              "selectMany": {
+                "queryRootField": "AlbumRemote"
+              },
+              "selectUniques": []
+            },
+            "name": "AlbumsRemote",
+            "objectType": "Album",
+            "orderableFields": [
+              {
+                "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "ArtistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "source": {
+              "collection": "Album",
+              "dataConnectorName": "remote_db"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "filterExpressionType": "track_bool_exp",
+            "graphql": {
+              "orderByExpressionType": "Track_Order_By_Remote",
+              "selectMany": {
+                "queryRootField": "TrackRemote"
+              },
+              "selectUniques": []
+            },
+            "name": "TracksRemote",
+            "objectType": "Track",
+            "orderableFields": [
+              {
+                "fieldName": "TrackId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "GenreId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "source": {
+              "collection": "Track",
+              "dataConnectorName": "remote_db"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "filterExpressionType": "genre_bool_exp",
+            "graphql": {
+              "orderByExpressionType": "Genre_Order_By_Remote",
+              "selectMany": {
+                "queryRootField": "GenreRemote"
+              },
+              "selectUniques": []
+            },
+            "name": "GenresRemote",
+            "objectType": "Genre",
+            "orderableFields": [
+              {
+                "fieldName": "GenreId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "source": {
+              "collection": "Genre",
+              "dataConnectorName": "remote_db"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "db",
+            "schema": {
+              "capabilities": {
+                "capabilities": {
+                  "mutation": {},
+                  "query": {
+                    "aggregates": {},
+                    "explain": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {}
+                    }
+                  },
+                  "relationships": {
+                    "order_by_aggregate": {},
+                    "relation_comparisons": {}
+                  }
+                },
+                "version": "0.1.3"
+              },
+              "schema": {
+                "collections": [
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of articles",
+                    "foreign_keys": {},
+                    "name": "article",
+                    "type": "article",
+                    "uniqueness_constraints": {
+                      "ArticleByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of authors",
+                    "foreign_keys": {},
+                    "name": "author",
+                    "type": "author",
+                    "uniqueness_constraints": {
+                      "AuthorByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {
+                      "author_id": {
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "deletable": false,
+                    "description": "Articles parameterized by author",
+                    "foreign_keys": {},
+                    "name": "articles_by_author",
+                    "type": "article",
+                    "uniqueness_constraints": {}
+                  },
+                  {
+                    "arguments": {
+                      "array_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "array_nullable_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "non_nullable_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_array_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_array_nullable_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_field": {
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "deletable": false,
+                    "description": "Testing nullable and array types (input and output)",
+                    "foreign_keys": {},
+                    "name": "test_nullable_and_array_types",
+                    "type": "test_nullable_and_array",
+                    "uniqueness_constraints": {}
+                  },
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of artists",
+                    "foreign_keys": {},
+                    "name": "Artist",
+                    "type": "Artist",
+                    "uniqueness_constraints": {
+                      "ArtistById": {
+                        "unique_columns": ["ArtistId"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of albums",
+                    "foreign_keys": {},
+                    "name": "Album",
+                    "type": "Album",
+                    "uniqueness_constraints": {
+                      "AlbumById": {
+                        "unique_columns": ["AlbumId"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of tracks",
+                    "foreign_keys": {},
+                    "name": "Track",
+                    "type": "Track",
+                    "uniqueness_constraints": {
+                      "TrackById": {
+                        "unique_columns": ["TrackId"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {
+                      "id": {
+                        "description": "The ceiling id",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "deletable": false,
+                    "description": "A collection of artists below a certain id",
+                    "foreign_keys": {},
+                    "name": "artist_below_id",
+                    "type": "Artist",
+                    "uniqueness_constraints": {}
+                  },
+                  {
+                    "arguments": {},
+                    "foreign_keys": {},
+                    "name": "Genre",
+                    "type": "Genre",
+                    "uniqueness_constraints": {
+                      "PK_Genre": {
+                        "unique_columns": ["GenreId"]
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {},
+                    "deletable": false,
+                    "description": "A collection of institutions",
+                    "foreign_keys": {},
+                    "name": "institution",
+                    "type": "institution",
+                    "uniqueness_constraints": {
+                      "InstitutionByID": {
+                        "unique_columns": ["id"]
+                      }
+                    }
+                  }
+                ],
+                "functions": [
+                  {
+                    "arguments": {},
+                    "description": "Get the ID of the most recent article",
+                    "name": "latest_article_id",
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "name": "Int",
+                        "type": "named"
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {},
+                    "description": "Get the most recent article",
+                    "name": "latest_article",
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "name": "article",
+                        "type": "named"
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the article to fetch",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "description": "Insert or update an article",
+                    "name": "get_article_by_id",
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "name": "article",
+                        "type": "named"
+                      }
+                    }
+                  }
+                ],
+                "object_types": {
+                  "Album": {
+                    "description": "An album",
+                    "fields": {
+                      "AlbumId": {
+                        "arguments": {},
+                        "description": "The album's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "ArtistId": {
+                        "arguments": {},
+                        "description": "The album's artist ID",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "Title": {
+                        "arguments": {},
+                        "description": "The album's title",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "Artist": {
+                    "description": "An artist",
+                    "fields": {
+                      "ArtistId": {
+                        "arguments": {},
+                        "description": "The artist's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "Name": {
+                        "arguments": {},
+                        "description": "The artist's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "Genre": {
+                    "description": "A Genre",
+                    "fields": {
+                      "GenreId": {
+                        "arguments": {},
+                        "description": "The genre's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "Name": {
+                        "arguments": {},
+                        "description": "The genre's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "Track": {
+                    "description": "A track",
+                    "fields": {
+                      "AlbumId": {
+                        "arguments": {},
+                        "description": "The track's album ID",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "GenreId": {
+                        "arguments": {},
+                        "description": "The track's genre ID",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "Name": {
+                        "arguments": {},
+                        "description": "The track's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "TrackId": {
+                        "arguments": {},
+                        "description": "The track's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "article": {
+                    "description": "An article",
+                    "fields": {
+                      "author_id": {
+                        "arguments": {},
+                        "description": "The article's author ID",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "id": {
+                        "arguments": {},
+                        "description": "The article's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "title": {
+                        "arguments": {},
+                        "description": "The article's title",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "artist_below_id": {
+                    "description": "An artist",
+                    "fields": {
+                      "ArtistId": {
+                        "arguments": {
+                          "id": {
+                            "description": "The cyling id",
+                            "type": {
+                              "name": "Int",
+                              "type": "named"
+                            }
+                          }
+                        },
+                        "description": "The artist's primary key",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "Name": {
+                        "arguments": {},
+                        "description": "The artist's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "author": {
+                    "description": "An author",
+                    "fields": {
+                      "first_name": {
+                        "arguments": {},
+                        "description": "The author's first name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "id": {
+                        "arguments": {},
+                        "description": "The author's primary key",
+                        "type": {
+                          "name": "int4",
+                          "type": "named"
+                        }
+                      },
+                      "last_name": {
+                        "arguments": {},
+                        "description": "The author's last name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "country": {
+                    "description": "A country",
+                    "fields": {
+                      "continent": {
+                        "arguments": {},
+                        "description": "The country's continent",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "name": {
+                        "arguments": {},
+                        "description": "The country's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "institution": {
+                    "description": "An instituion",
+                    "fields": {
+                      "departments": {
+                        "arguments": {},
+                        "description": "The institution's departments",
+                        "type": {
+                          "element_type": {
+                            "name": "json",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "id": {
+                        "arguments": {},
+                        "description": "The institutions's primary key",
+                        "type": {
+                          "name": "int4",
+                          "type": "named"
+                        }
+                      },
+                      "location": {
+                        "arguments": {},
+                        "description": "The institution's location",
+                        "type": {
+                          "name": "location",
+                          "type": "named"
+                        }
+                      },
+                      "name": {
+                        "arguments": {},
+                        "description": "The institutions's name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "staff": {
+                        "arguments": {},
+                        "description": "The institution's staff",
+                        "type": {
+                          "element_type": {
+                            "name": "staff",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        }
+                      }
+                    }
+                  },
+                  "location": {
+                    "description": "A location",
+                    "fields": {
+                      "campuses": {
+                        "arguments": {},
+                        "description": "The campuses at this location",
+                        "type": {
+                          "element_type": {
+                            "name": "String",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "city": {
+                        "arguments": {},
+                        "description": "The location's city",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "country": {
+                        "arguments": {},
+                        "description": "The location's country",
+                        "type": {
+                          "name": "country",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  },
+                  "staff": {
+                    "description": "A staff member",
+                    "fields": {
+                      "favourite_artist_id": {
+                        "arguments": {},
+                        "description": "The staff member's favourite artist",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "first_name": {
+                        "arguments": {},
+                        "description": "The staff member's first name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "last_name": {
+                        "arguments": {},
+                        "description": "The staff member's last name",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "specialities": {
+                        "arguments": {},
+                        "description": "The staff member's specialties",
+                        "type": {
+                          "element_type": {
+                            "name": "String",
+                            "type": "named"
+                          },
+                          "type": "array"
+                        }
+                      }
+                    }
+                  },
+                  "test_nullable_and_array": {
+                    "description": "Testing nullable and array types",
+                    "fields": {
+                      "array_field": {
+                        "arguments": {},
+                        "description": "Non-nullable array types [String!]!",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "array_nullable_field": {
+                        "arguments": {},
+                        "description": "Array nullable types [String]!",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "non_nullable_field": {
+                        "arguments": {},
+                        "description": "Non-nullable types",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_array_field": {
+                        "arguments": {},
+                        "description": "Nullable array types [String!]",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_array_nullable_field": {
+                        "arguments": {},
+                        "description": "Nullable array nullable types [String]",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      },
+                      "nullable_field": {
+                        "arguments": {},
+                        "description": "Nullable types",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    }
+                  }
+                },
+                "procedures": [
+                  {
+                    "arguments": {
+                      "article": {
+                        "description": "The article to insert or update",
+                        "type": {
+                          "name": "article",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "description": "Insert or update an article",
+                    "name": "upsert_article",
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "name": "article",
+                        "type": "named"
+                      }
+                    }
+                  },
+                  {
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the article to update",
+                        "type": {
+                          "name": "Int",
+                          "type": "named"
+                        }
+                      },
+                      "title": {
+                        "description": "the new title of the article",
+                        "type": {
+                          "name": "String",
+                          "type": "named"
+                        }
+                      }
+                    },
+                    "description": "Update an article title given the ID and new title",
+                    "name": "update_article_title_by_id",
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "name": "article",
+                        "type": "named"
+                      }
+                    }
+                  }
+                ],
+                "scalar_types": {
+                  "Int": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "Int",
+                            "type": "named"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "Int",
+                            "type": "named"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_gt": {
+                        "argument_type": {
+                          "name": "Int",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "name": "Int",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "name": "Int",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "name": "Int",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "name": "Int",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "String": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_ilike": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_iregex": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_like": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_nilike": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_niregex": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_nlike": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_nregex": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_nsimilar": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_regex": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_similar": {
+                        "argument_type": {
+                          "name": "String",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "int4": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "int4",
+                            "type": "named"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "int4",
+                            "type": "named"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "name": "int4",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "name": "int4",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "name": "int4",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "name": "int4",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "name": "int4",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "int8": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "int8",
+                            "type": "named"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "name": "int8",
+                            "type": "named"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "name": "int8",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "name": "int8",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "name": "int8",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "name": "int8",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "name": "int8",
+                          "type": "named"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  }
+                }
+              },
+              "version": "v0.1"
+            },
+            "url": {
+              "singleUrl": {
+                "value": "http://localhost:8080"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Artist",
+                "fieldMapping": {
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ],
+            "fields": [
+              {
+                "name": "ArtistId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              }
+            ],
+            "graphql": {
+              "typeName": "Artist"
+            },
+            "name": "Artist"
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Album",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Title": {
+                    "column": {
+                      "name": "Title"
+                    }
+                  }
+                }
+              }
+            ],
+            "fields": [
+              {
+                "name": "AlbumId",
+                "type": "Int"
+              },
+              {
+                "name": "Title",
+                "type": "String"
+              },
+              {
+                "name": "ArtistId",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "Album"
+            },
+            "name": "Album"
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "Artist_Where_Exp"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "artist_bool_exp",
+            "operand": {
+              "object": {
+                "comparableFields": [
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "ArtistId"
+                  },
+                  {
+                    "booleanExpressionType": "string_bool_exp",
+                    "fieldName": "Name"
+                  }
+                ],
+                "comparableRelationships": [],
+                "type": "Artist"
+              }
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "Album_Where_Exp"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "album_bool_exp",
+            "operand": {
+              "object": {
+                "comparableFields": [
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "AlbumId"
+                  },
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "ArtistId"
+                  },
+                  {
+                    "booleanExpressionType": "string_bool_exp",
+                    "fieldName": "Title"
+                  }
+                ],
+                "comparableRelationships": [],
+                "type": "Album"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Track",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "GenreId": {
+                    "column": {
+                      "name": "GenreId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  },
+                  "TrackId": {
+                    "column": {
+                      "name": "TrackId"
+                    }
+                  }
+                }
+              }
+            ],
+            "fields": [
+              {
+                "name": "TrackId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              },
+              {
+                "name": "AlbumId",
+                "type": "Int"
+              },
+              {
+                "name": "GenreId",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "Track"
+            },
+            "name": "Track"
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "Track_Where_Exp"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "track_bool_exp",
+            "operand": {
+              "object": {
+                "comparableFields": [
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "AlbumId"
+                  },
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "TrackId"
+                  },
+                  {
+                    "booleanExpressionType": "string_bool_exp",
+                    "fieldName": "Name"
+                  },
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "GenreId"
+                  }
+                ],
+                "comparableRelationships": [],
+                "type": "Track"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Genre",
+                "fieldMapping": {
+                  "GenreId": {
+                    "column": {
+                      "name": "GenreId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ],
+            "fields": [
+              {
+                "name": "GenreId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              }
+            ],
+            "graphql": {
+              "typeName": "Genre"
+            },
+            "name": "Genre"
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "Genre_Where_Exp"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "genre_bool_exp",
+            "operand": {
+              "object": {
+                "comparableFields": [
+                  {
+                    "booleanExpressionType": "string_bool_exp",
+                    "fieldName": "Name"
+                  },
+                  {
+                    "booleanExpressionType": "int_bool_exp",
+                    "fieldName": "GenreId"
+                  }
+                ],
+                "comparableRelationships": [],
+                "type": "Genre"
+              }
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "Int_Comparison_Exp"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "int_bool_exp",
+            "operand": {
+              "scalar": {
+                "comparisonOperators": [
+                  {
+                    "argumentType": "Int!",
+                    "name": "_eq"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {}
+                  }
+                ],
+                "type": "Int"
+              }
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "String_Comparison_Exp"
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "name": "string_bool_exp",
+            "operand": {
+              "scalar": {
+                "comparisonOperators": [
+                  {
+                    "argumentType": "String!",
+                    "name": "_eq"
+                  },
+                  {
+                    "argumentType": "String!",
+                    "name": "_ilike"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {}
+                  }
+                ],
+                "type": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "graphql": {
+              "typeName": "CustomString"
+            },
+            "name": "CustomString"
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "filterExpressionType": "artist_bool_exp",
+            "graphql": {
+              "orderByExpressionType": "Artist_Order_By",
+              "selectMany": {
+                "queryRootField": "Artist"
+              },
+              "selectUniques": []
+            },
+            "name": "Artist",
+            "objectType": "Artist",
+            "orderableFields": [
+              {
+                "fieldName": "ArtistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "source": {
+              "collection": "Artist",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "filterExpressionType": "album_bool_exp",
+            "graphql": {
+              "orderByExpressionType": "Album_Order_By",
+              "selectMany": {
+                "queryRootField": "Album"
+              },
+              "selectUniques": []
+            },
+            "name": "Albums",
+            "objectType": "Album",
+            "orderableFields": [
+              {
+                "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "ArtistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "source": {
+              "collection": "Album",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "filterExpressionType": "track_bool_exp",
+            "graphql": {
+              "orderByExpressionType": "Track_Order_By",
+              "selectMany": {
+                "queryRootField": "Track"
+              },
+              "selectUniques": []
+            },
+            "name": "Tracks",
+            "objectType": "Track",
+            "orderableFields": [
+              {
+                "fieldName": "TrackId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "GenreId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "source": {
+              "collection": "Track",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "filterExpressionType": "genre_bool_exp",
+            "graphql": {
+              "orderByExpressionType": "Genre_Order_By",
+              "selectMany": {
+                "queryRootField": "Genre"
+              },
+              "selectUniques": []
+            },
+            "name": "Genres",
+            "objectType": "Genre",
+            "orderableFields": [
+              {
+                "fieldName": "GenreId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "source": {
+              "collection": "Genre",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "permissions": [
+              {
+                "output": {
+                  "allowedFields": ["ArtistId", "Name"]
+                },
+                "role": "admin"
+              },
+              {
+                "output": {
+                  "allowedFields": ["ArtistId", "Name"]
+                },
+                "role": "user"
+              }
+            ],
+            "typeName": "Artist"
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "permissions": [
+              {
+                "output": {
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
+                },
+                "role": "admin"
+              },
+              {
+                "output": {
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
+                },
+                "role": "user"
+              }
+            ],
+            "typeName": "Album"
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "permissions": [
+              {
+                "output": {
+                  "allowedFields": ["TrackId", "Name", "AlbumId", "GenreId"]
+                },
+                "role": "admin"
+              },
+              {
+                "output": {
+                  "allowedFields": ["TrackId", "Name", "AlbumId", "GenreId"]
+                },
+                "role": "user"
+              }
+            ],
+            "typeName": "Track"
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "permissions": [
+              {
+                "output": {
+                  "allowedFields": ["GenreId", "Name"]
+                },
+                "role": "admin"
+              },
+              {
+                "output": {
+                  "allowedFields": ["GenreId", "Name"]
+                },
+                "role": "user"
+              }
+            ],
+            "typeName": "Genre"
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "TracksRemote",
+            "sourceType": "Album",
+            "target": {
+              "model": {
+                "name": "TracksRemote",
+                "subgraph": "remote",
+                "relationshipType": "Array"
+              }
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "permissions": [
+              {
+                "output": {
+                  "allowedFields": ["ArtistId", "Name"]
+                },
+                "role": "admin"
+              },
+              {
+                "output": {
+                  "allowedFields": ["ArtistId", "Name"]
+                },
+                "role": "user"
+              }
+            ],
+            "typeName": "Artist"
+          }
+        }
+      ]
+    },
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Albums",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "relationship": {
+                      "name": "TracksRemote",
+                      "predicate": {
+                        "fieldComparison": {
+                          "field": "TrackId",
+                          "operator": "_eq",
+                          "value": {
+                            "sessionVariable": "x-hasura-user-id"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Tracks",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Artist",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "v2"
+}

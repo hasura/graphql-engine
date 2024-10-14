@@ -1,0 +1,280 @@
+Ok(
+    ExecutableDocument {
+        items: [
+            Spanning {
+                item: Operation(
+                    OperationDefinition {
+                        ty: Query,
+                        name: Some(
+                            Spanning {
+                                item: Name(
+                                    "myQuery",
+                                ),
+                                start: SourcePosition {
+                                    line: 1,
+                                    col: 7,
+                                },
+                                end: SourcePosition {
+                                    line: 1,
+                                    col: 13,
+                                },
+                            },
+                        ),
+                        variable_definitions: None,
+                        directives: [],
+                        selection_set: Spanning {
+                            item: SelectionSet {
+                                items: [
+                                    Spanning {
+                                        item: Field(
+                                            Field {
+                                                alias: Some(
+                                                    Spanning {
+                                                        item: Alias(
+                                                            Name(
+                                                                "animal",
+                                                            ),
+                                                        ),
+                                                        start: SourcePosition {
+                                                            line: 2,
+                                                            col: 5,
+                                                        },
+                                                        end: SourcePosition {
+                                                            line: 2,
+                                                            col: 10,
+                                                        },
+                                                    },
+                                                ),
+                                                name: Spanning {
+                                                    item: Name(
+                                                        "cat",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 2,
+                                                        col: 13,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 2,
+                                                        col: 15,
+                                                    },
+                                                },
+                                                arguments: None,
+                                                directives: [],
+                                                selection_set: None,
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 2,
+                                            col: 13,
+                                        },
+                                        end: SourcePosition {
+                                            line: 2,
+                                            col: 15,
+                                        },
+                                    },
+                                    Spanning {
+                                        item: Field(
+                                            Field {
+                                                alias: None,
+                                                name: Spanning {
+                                                    item: Name(
+                                                        "dog",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 3,
+                                                        col: 5,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 3,
+                                                        col: 7,
+                                                    },
+                                                },
+                                                arguments: None,
+                                                directives: [],
+                                                selection_set: Some(
+                                                    Spanning {
+                                                        item: SelectionSet {
+                                                            items: [
+                                                                Spanning {
+                                                                    item: Field(
+                                                                        Field {
+                                                                            alias: None,
+                                                                            name: Spanning {
+                                                                                item: Name(
+                                                                                    "panda",
+                                                                                ),
+                                                                                start: SourcePosition {
+                                                                                    line: 4,
+                                                                                    col: 9,
+                                                                                },
+                                                                                end: SourcePosition {
+                                                                                    line: 4,
+                                                                                    col: 13,
+                                                                                },
+                                                                            },
+                                                                            arguments: None,
+                                                                            directives: [],
+                                                                            selection_set: Some(
+                                                                                Spanning {
+                                                                                    item: SelectionSet {
+                                                                                        items: [
+                                                                                            Spanning {
+                                                                                                item: Field(
+                                                                                                    Field {
+                                                                                                        alias: None,
+                                                                                                        name: Spanning {
+                                                                                                            item: Name(
+                                                                                                                "anotherCat",
+                                                                                                            ),
+                                                                                                            start: SourcePosition {
+                                                                                                                line: 5,
+                                                                                                                col: 13,
+                                                                                                            },
+                                                                                                            end: SourcePosition {
+                                                                                                                line: 5,
+                                                                                                                col: 22,
+                                                                                                            },
+                                                                                                        },
+                                                                                                        arguments: None,
+                                                                                                        directives: [
+                                                                                                            Spanning {
+                                                                                                                item: Directive {
+                                                                                                                    name: Spanning {
+                                                                                                                        item: Name(
+                                                                                                                            "deprecated",
+                                                                                                                        ),
+                                                                                                                        start: SourcePosition {
+                                                                                                                            line: 5,
+                                                                                                                            col: 25,
+                                                                                                                        },
+                                                                                                                        end: SourcePosition {
+                                                                                                                            line: 5,
+                                                                                                                            col: 34,
+                                                                                                                        },
+                                                                                                                    },
+                                                                                                                    arguments: None,
+                                                                                                                },
+                                                                                                                start: SourcePosition {
+                                                                                                                    line: 5,
+                                                                                                                    col: 24,
+                                                                                                                },
+                                                                                                                end: SourcePosition {
+                                                                                                                    line: 5,
+                                                                                                                    col: 34,
+                                                                                                                },
+                                                                                                            },
+                                                                                                        ],
+                                                                                                        selection_set: None,
+                                                                                                    },
+                                                                                                ),
+                                                                                                start: SourcePosition {
+                                                                                                    line: 5,
+                                                                                                    col: 13,
+                                                                                                },
+                                                                                                end: SourcePosition {
+                                                                                                    line: 5,
+                                                                                                    col: 22,
+                                                                                                },
+                                                                                            },
+                                                                                        ],
+                                                                                    },
+                                                                                    start: SourcePosition {
+                                                                                        line: 4,
+                                                                                        col: 15,
+                                                                                    },
+                                                                                    end: SourcePosition {
+                                                                                        line: 6,
+                                                                                        col: 9,
+                                                                                    },
+                                                                                },
+                                                                            ),
+                                                                        },
+                                                                    ),
+                                                                    start: SourcePosition {
+                                                                        line: 4,
+                                                                        col: 9,
+                                                                    },
+                                                                    end: SourcePosition {
+                                                                        line: 4,
+                                                                        col: 13,
+                                                                    },
+                                                                },
+                                                            ],
+                                                        },
+                                                        start: SourcePosition {
+                                                            line: 3,
+                                                            col: 9,
+                                                        },
+                                                        end: SourcePosition {
+                                                            line: 7,
+                                                            col: 5,
+                                                        },
+                                                    },
+                                                ),
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 3,
+                                            col: 5,
+                                        },
+                                        end: SourcePosition {
+                                            line: 3,
+                                            col: 7,
+                                        },
+                                    },
+                                    Spanning {
+                                        item: Field(
+                                            Field {
+                                                alias: None,
+                                                name: Spanning {
+                                                    item: Name(
+                                                        "lion",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 8,
+                                                        col: 5,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 8,
+                                                        col: 8,
+                                                    },
+                                                },
+                                                arguments: None,
+                                                directives: [],
+                                                selection_set: None,
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 8,
+                                            col: 5,
+                                        },
+                                        end: SourcePosition {
+                                            line: 8,
+                                            col: 8,
+                                        },
+                                    },
+                                ],
+                            },
+                            start: SourcePosition {
+                                line: 1,
+                                col: 15,
+                            },
+                            end: SourcePosition {
+                                line: 9,
+                                col: 1,
+                            },
+                        },
+                    },
+                ),
+                start: SourcePosition {
+                    line: 1,
+                    col: 1,
+                },
+                end: SourcePosition {
+                    line: 9,
+                    col: 1,
+                },
+            },
+        ],
+    },
+)

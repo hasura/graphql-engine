@@ -1,0 +1,22 @@
+query {
+  AuthorManyWithLimit0Offset0: AuthorMany(limit: 0, offset: 0) {
+    author_id
+    first_name
+  }
+  AuthorManyWithLimit1Offset0: AuthorMany(limit: 1, offset: 0) {
+    author_id
+    first_name
+  }
+  AuthorManyWithLimit1Offset1: AuthorMany(limit: 1, offset: 1) {
+    author_id
+    first_name
+  }
+  AuthorManyWithLimit2Offset1: AuthorMany(limit: 2, offset: 1) {
+    author_id
+    first_name
+  }
+  AuthorManyWithLimit2Offset2: AuthorMany(limit: 2, offset: 2) {
+    author_id
+    first_name
+  }
+}

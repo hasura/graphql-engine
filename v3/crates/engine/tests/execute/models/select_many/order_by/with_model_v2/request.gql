@@ -1,0 +1,16 @@
+query MyQuery {
+  AuthorMany(order_by: [{ first_name: Asc }]) {
+    author_id
+    first_name
+  }
+  ArticlesByAuthorMany(
+    args: { author_id: 2 }
+    order_by: [{ article_id: Desc }]
+  ) {
+    article_id
+  }
+  a1: AuthorMany(order_by: [{ first_name: Desc }], offset: 1, limit: 1) {
+    author_id
+    first_name
+  }
+}

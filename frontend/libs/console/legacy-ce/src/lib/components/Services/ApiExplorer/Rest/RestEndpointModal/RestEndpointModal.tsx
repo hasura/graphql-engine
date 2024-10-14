@@ -10,6 +10,7 @@ import { CardedTable } from '../../../../../new-components/CardedTable';
 import { Badge, BadgeColor } from '../../../../../new-components/Badge';
 import { Link, browserHistory } from 'react-router';
 import { FaExclamation, FaExternalLinkAlt } from 'react-icons/fa';
+import { Table } from '../../../../../features/hasura-metadata-types';
 
 const ENDPOINTS: {
   value: EndpointType;
@@ -25,12 +26,17 @@ const ENDPOINTS: {
 export interface RestEndpointModalProps {
   onClose: () => void;
   tableName: string;
+  dataSourceName: string;
+  table: Table;
 }
 
 export const RestEndpointModal = (props: RestEndpointModalProps) => {
-  const { onClose, tableName } = props;
+  const { onClose, tableName, dataSourceName } = props;
   const { createRestEndpoints, endpointDefinitions, isLoading } =
-    useCreateRestEndpoints();
+    useCreateRestEndpoints({
+      dataSourceName: props.dataSourceName,
+      table: props.table,
+    });
 
   const tableEndpointDefinitions = endpointDefinitions?.[tableName] ?? {};
 
@@ -62,7 +68,7 @@ export const RestEndpointModal = (props: RestEndpointModalProps) => {
           onClose={onClose}
           disabled={selectedMethods.length === 0}
           onSubmit={() => {
-            createRestEndpoints(tableName, selectedMethods, {
+            createRestEndpoints(dataSourceName, tableName, selectedMethods, {
               onSuccess: () => {
                 hasuraToast({
                   type: 'success',

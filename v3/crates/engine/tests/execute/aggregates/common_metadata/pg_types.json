@@ -1,0 +1,367 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Invoice",
+            "fields": [
+              {
+                "name": "BillingAddress",
+                "type": "String",
+                "description": "The billing street address"
+              },
+              {
+                "name": "BillingCity",
+                "type": "String",
+                "description": "The billing address city"
+              },
+              {
+                "name": "BillingCountry",
+                "type": "String",
+                "description": "The billing address country"
+              },
+              {
+                "name": "BillingPostalCode",
+                "type": "String",
+                "description": "The billing address postal code"
+              },
+              {
+                "name": "BillingState",
+                "type": "String",
+                "description": "The billing address state"
+              },
+              {
+                "name": "CustomerId",
+                "type": "Int",
+                "description": "The ID of the Customer"
+              },
+              {
+                "name": "InvoiceDate",
+                "type": "Timestamp",
+                "description": "The date of the invoice"
+              },
+              {
+                "name": "InvoiceId",
+                "type": "Int",
+                "description": "The ID of the Invoice"
+              },
+              {
+                "name": "Total",
+                "type": "Numeric",
+                "description": "The total value of the Invoice"
+              }
+            ],
+            "description": "An invoice where a customer purchases things",
+            "graphql": {
+              "typeName": "Invoice"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Invoice",
+                "fieldMapping": {
+                  "BillingAddress": {
+                    "column": {
+                      "name": "BillingAddress"
+                    }
+                  },
+                  "BillingCity": {
+                    "column": {
+                      "name": "BillingCity"
+                    }
+                  },
+                  "BillingCountry": {
+                    "column": {
+                      "name": "BillingCountry"
+                    }
+                  },
+                  "BillingPostalCode": {
+                    "column": {
+                      "name": "BillingPostalCode"
+                    }
+                  },
+                  "BillingState": {
+                    "column": {
+                      "name": "BillingState"
+                    }
+                  },
+                  "CustomerId": {
+                    "column": {
+                      "name": "CustomerId"
+                    }
+                  },
+                  "InvoiceDate": {
+                    "column": {
+                      "name": "InvoiceDate"
+                    }
+                  },
+                  "InvoiceId": {
+                    "column": {
+                      "name": "InvoiceId"
+                    }
+                  },
+                  "Total": {
+                    "column": {
+                      "name": "Total"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Customer",
+            "fields": [
+              {
+                "name": "Address",
+                "type": "String"
+              },
+              {
+                "name": "City",
+                "type": "String"
+              },
+              {
+                "name": "Company",
+                "type": "String"
+              },
+              {
+                "name": "Country",
+                "type": "String"
+              },
+              {
+                "name": "CustomerId",
+                "type": "Int!",
+                "description": "The identifier of customer"
+              },
+              {
+                "name": "Email",
+                "type": "String!"
+              },
+              {
+                "name": "Fax",
+                "type": "String"
+              },
+              {
+                "name": "FirstName",
+                "type": "String!",
+                "description": "The first name of a customer"
+              },
+              {
+                "name": "LastName",
+                "type": "String!",
+                "description": "The last name of a customer"
+              },
+              {
+                "name": "Phone",
+                "type": "String"
+              },
+              {
+                "name": "PostalCode",
+                "type": "String"
+              },
+              {
+                "name": "State",
+                "type": "String"
+              },
+              {
+                "name": "SupportRepId",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "Customer"
+            },
+            "description": "The record of all customers",
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Customer",
+                "fieldMapping": {
+                  "Address": {
+                    "column": {
+                      "name": "Address"
+                    }
+                  },
+                  "City": {
+                    "column": {
+                      "name": "City"
+                    }
+                  },
+                  "Company": {
+                    "column": {
+                      "name": "Company"
+                    }
+                  },
+                  "Country": {
+                    "column": {
+                      "name": "Country"
+                    }
+                  },
+                  "CustomerId": {
+                    "column": {
+                      "name": "CustomerId"
+                    }
+                  },
+                  "Email": {
+                    "column": {
+                      "name": "Email"
+                    }
+                  },
+                  "Fax": {
+                    "column": {
+                      "name": "Fax"
+                    }
+                  },
+                  "FirstName": {
+                    "column": {
+                      "name": "FirstName"
+                    }
+                  },
+                  "LastName": {
+                    "column": {
+                      "name": "LastName"
+                    }
+                  },
+                  "Phone": {
+                    "column": {
+                      "name": "Phone"
+                    }
+                  },
+                  "PostalCode": {
+                    "column": {
+                      "name": "PostalCode"
+                    }
+                  },
+                  "State": {
+                    "column": {
+                      "name": "State"
+                    }
+                  },
+                  "SupportRepId": {
+                    "column": {
+                      "name": "SupportRepId"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Timestamp",
+            "description": "Timestamp type",
+            "graphql": {
+              "typeName": "Timestamp"
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Numeric",
+            "description": "Numeric type",
+            "graphql": {
+              "typeName": "Numeric"
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Int64",
+            "description": "Int64 type",
+            "graphql": {
+              "typeName": "Int64"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "timestamp",
+            "representation": "Timestamp",
+            "graphql": {
+              "comparisonExpressionTypeName": "db_timestamp_comparisonexp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "numeric",
+            "representation": "Numeric",
+            "graphql": {
+              "comparisonExpressionTypeName": "db_numeric_comparisonexp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "varchar",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "db_varchar_comparisonexp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "int4",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "db_int4_comparisonexp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "int8",
+            "representation": "Int64",
+            "graphql": {
+              "comparisonExpressionTypeName": "db_int8_comparisonexp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "text",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "db_text_comparisonexp"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -18,6 +18,7 @@ module Hasura.Backends.Postgres.SQL.DML
     FunctionDefinitionListItem (..),
     FunctionArgs (FunctionArgs),
     FunctionExp (FunctionExp),
+    UnqualifiedFunctionExp (UnqualifiedFunctionExp),
     GroupByExp (GroupByExp),
     HavingExp (HavingExp),
     JoinCond (..),
@@ -754,6 +755,22 @@ instance ToSQL FunctionExp where
   toSQL (FunctionExp qf args alsM) =
     toSQL qf <> toSQL args <~> toSQL alsM
 
+-- | A built-in function call.
+data UnqualifiedFunctionExp = UnqualifiedFunctionExp
+  { ufeName :: FunctionName,
+    ufeArgs :: FunctionArgs,
+    ufeAlias :: Maybe FunctionAlias
+  }
+  deriving (Show, Eq, Generic, Data)
+
+instance NFData UnqualifiedFunctionExp
+
+instance Hashable UnqualifiedFunctionExp
+
+instance ToSQL UnqualifiedFunctionExp where
+  toSQL (UnqualifiedFunctionExp uf args alsM) =
+    toSQL uf <> toSQL args <~> toSQL alsM
+
 -- | See @from_item@ in <https://www.postgresql.org/docs/current/sql-select.html>
 data FromItem
   = -- | A simple table
@@ -762,6 +779,8 @@ data FromItem
     FIIdentifier TableIdentifier
   | -- | A function call (that should return a relation (@SETOF@) and not a scalar)
     FIFunc FunctionExp
+  | -- | An unqualified function call (hopefully a built-in)
+    FIUnqualifiedFunc UnqualifiedFunctionExp
   | -- | @unnest@ converts (an) array(s) to a relation.
     --
     --   We have:
@@ -796,6 +815,7 @@ instance ToSQL FromItem where
   toSQL (FIIdentifier iden) =
     toSQL iden
   toSQL (FIFunc funcExp) = toSQL funcExp
+  toSQL (FIUnqualifiedFunc funcExp) = toSQL funcExp
   -- unnest(expressions) alias(columns)
   toSQL (FIUnnest args tableAlias cols) =
     "UNNEST"

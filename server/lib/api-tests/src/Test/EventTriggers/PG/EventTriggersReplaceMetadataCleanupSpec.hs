@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wno-x-partial #-}
 
 -- | Test that when a source is removed via `replace_metadata` API, the cleanup
 --   is done properly.

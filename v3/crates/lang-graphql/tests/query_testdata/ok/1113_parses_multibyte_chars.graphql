@@ -1,0 +1,2 @@
+# This comment has a \u0A0A multi-byte character.
+{ field(arg: "Has a \u0A0A multi-byte character.") }

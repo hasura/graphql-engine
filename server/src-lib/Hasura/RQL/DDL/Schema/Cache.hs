@@ -2,6 +2,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE UndecidableInstances #-}
+-- ghc 9.6 seems to be doing something screwy with...
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 -- | Top-level functions concerned specifically with operations on the schema cache, such as
 -- rebuilding it from the catalog and incorporating schema changes. See the module documentation for
@@ -39,6 +41,8 @@ import Data.Sequence qualified as Seq
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.Text.Extended
+import Hasura.Authentication.Role
+import Hasura.Authentication.User (UserInfoM)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Backend
@@ -59,6 +63,7 @@ import Hasura.Metadata.Class
 import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo (..))
 import Hasura.NativeQuery.Lenses (nqmReturns)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..), getNativeQueryName)
+import Hasura.NativeQuery.Validation (DisableNativeQueryValidation)
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DDL.Action
@@ -92,7 +97,6 @@ import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -109,7 +113,6 @@ import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
 import Hasura.Services
-import Hasura.Session
 import Hasura.StoredProcedure.Cache (StoredProcedureCache, StoredProcedureInfo (..))
 import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata (..))
 import Hasura.Table.API
@@ -160,14 +163,15 @@ action/function.
 buildRebuildableSchemaCache ::
   Logger Hasura ->
   Env.Environment ->
+  DisableNativeQueryValidation ->
   MetadataWithResourceVersion ->
   CacheDynamicConfig ->
   Maybe SchemaRegistryContext ->
   CacheBuild RebuildableSchemaCache
-buildRebuildableSchemaCache logger env metadataWithVersion dynamicConfig mSchemaRegistryContext = do
+buildRebuildableSchemaCache logger env disableNativeQueryValidation metadataWithVersion dynamicConfig mSchemaRegistryContext = do
   result <-
     flip runReaderT CatalogSync
-      $ Inc.build (buildSchemaCacheRule logger env mSchemaRegistryContext) (metadataWithVersion, dynamicConfig, initialInvalidationKeys, Nothing)
+      $ Inc.build (buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryContext) (metadataWithVersion, dynamicConfig, initialInvalidationKeys, Nothing)
 
   pure $ RebuildableSchemaCache (fst $ Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
@@ -444,10 +448,11 @@ buildSchemaCacheRule ::
   ) =>
   Logger Hasura ->
   Env.Environment ->
+  DisableNativeQueryValidation ->
   Maybe SchemaRegistryContext ->
   (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection)
     `arr` (SchemaCache, (SourcesIntrospectionStatus, SchemaRegistryAction))
-buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResourceVersion metadataNoDefaults interimMetadataResourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
+buildSchemaCacheRule logger env disableNativeQueryValidation mSchemaRegistryContext = proc (MetadataWithResourceVersion metadataNoDefaults interimMetadataResourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
   let metadataDefaults = _cdcMetadataDefaults dynamicConfig
       metadata@Metadata {..} = overrideMetadataDefaults metadataNoDefaults metadataDefaults
@@ -610,7 +615,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       let backendInvalidationKeys =
             Inc.selectMaybeD #unBackendInvalidationKeysWrapper
               $ BackendMap.lookupD @b backendInvalidationMap
-      backendInfo <- resolveBackendInfo @b logger -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
+      backendInfo <- resolveBackendInfo @b logger env -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
       returnA -< BackendMap.singleton (BackendInfoWrapper @b backendInfo)
 
     resolveBackendCache ::
@@ -1046,7 +1051,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                           _lmiDescription = _nqmDescription,
                           _lmiPermissions = logicalModelPermissions
                         }
-                nqmCode <- validateNativeQuery @b env sourceName (_smConfiguration sourceMetadata) sourceConfig logicalModel preValidationNativeQuery
+                nqmCode <- validateNativeQuery @b disableNativeQueryValidation sourceConfig logicalModel preValidationNativeQuery
 
                 case maybeDependency of
                   Just dependency ->
@@ -1401,7 +1406,14 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       _otiBatchSpanProcessorInfo <-
         withRecordAndDefaultM OtelSubobjectBatchSpanProcessor _ocBatchSpanProcessor defaultOtelBatchSpanProcessorInfo
           $ parseOtelBatchSpanProcessorConfig _ocBatchSpanProcessor
-      case _ocStatus of
+
+      otelStatus <-
+        fmap (fromMaybe OtelDisabled)
+          $ withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectAll) (toJSON _ocStatus))
+          $ liftEither
+          $ mapLeft (err400 BadRequest . T.pack) (mkOtelStatusFromEnv _ocStatus env)
+
+      case otelStatus of
         OtelDisabled ->
           pure
             $
@@ -1591,7 +1603,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                         then do
                           recreateTriggerIfNeeded
                             -<
-                              ( dynamicConfig,
+                              ( (_cdcSQLGenCtx dynamicConfig),
                                 table,
                                 tableColumns,
                                 triggerName,
@@ -1627,7 +1639,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           -- computation will not be done again.
           Inc.cache
             proc
-              ( dynamicConfig,
+              ( sqlGenCtx,
                 tableName,
                 tableColumns,
                 triggerName,
@@ -1641,7 +1653,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 -< do
                   liftEitherM
                     $ createTableEventTrigger @b
-                      (_cdcSQLGenCtx dynamicConfig)
+                      sqlGenCtx
                       sourceConfig
                       tableName
                       tableColumns
@@ -1697,7 +1709,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           withRecordInconsistencyM (mkActionMetadataObject action) $ modifyErr addActionContext do
             (resolvedDef, outObject) <- resolveAction env resolvedCustomTypes def scalarsMap
             let forwardClientHeaders = _adForwardClientHeaders resolvedDef
-            return $ ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders comment
+            let ignoredClientHeaders = _adIgnoredClientHeaders resolvedDef
+            return $ ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders ignoredClientHeaders comment
 
 buildRemoteSchemaRemoteRelationship ::
   (MonadWriter (Seq CollectItem) m) =>

@@ -37,8 +37,12 @@ import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.List.Extended qualified as LE
 import Data.Sequence qualified as DS
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.Headers (commonClientHeadersIgnored)
+import Hasura.Authentication.Session (mkClientHeadersForward)
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
@@ -75,8 +79,7 @@ import Hasura.RQL.Types.Headers (HeaderConf)
 import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.Server.Utils
-import Hasura.Session
+import Hasura.Server.Types (HeaderPrecedence (..))
 import Hasura.Tracing (b3TraceContextPropagator)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -402,8 +405,9 @@ validateUpdateMutation ::
   [HTTP.Header] ->
   IR.AnnotatedUpdateG ('Postgres pgKind) Void (IR.UnpreparedValue ('Postgres pgKind)) ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  HeaderPrecedence ->
   m ()
-validateUpdateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders updateOperation maybeSelSetArgs = do
+validateUpdateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders updateOperation maybeSelSetArgs headerPrecedence = do
   inputData <-
     case maybeSelSetArgs of
       Just arguments -> do
@@ -429,7 +433,7 @@ validateUpdateMutation env manager logger userInfo resolvedWebHook confHeaders t
               Nothing -> return $ J.Null
               Just val -> (return $ J.object ["input" J..= graphQLToJSON val])
       Nothing -> return J.Null
-  validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData
+  validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData headerPrecedence
 
 validateDeleteMutation ::
   forall m pgKind.
@@ -445,8 +449,9 @@ validateDeleteMutation ::
   [HTTP.Header] ->
   IR.AnnDelG ('Postgres pgKind) Void (IR.UnpreparedValue ('Postgres pgKind)) ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  HeaderPrecedence ->
   m ()
-validateDeleteMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders deleteOperation maybeSelSetArgs = do
+validateDeleteMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders deleteOperation maybeSelSetArgs headerPrecedence = do
   inputData <-
     case maybeSelSetArgs of
       Just arguments -> do
@@ -473,7 +478,7 @@ validateDeleteMutation env manager logger userInfo resolvedWebHook confHeaders t
             return (J.object ["input" J..= [deleteInputValByPk]])
           else return (J.object ["input" J..= [deleteInputVal]])
       Nothing -> return J.Null
-  validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData
+  validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData headerPrecedence
 
 validateMutation ::
   forall m.
@@ -491,8 +496,9 @@ validateMutation ::
   Bool ->
   [HTTP.Header] ->
   J.Value ->
+  HeaderPrecedence ->
   m ()
-validateMutation env manager logger userInfo (ResolvedWebhook urlText) confHeaders timeout forwardClientHeaders reqHeaders inputData = do
+validateMutation env manager logger userInfo (ResolvedWebhook urlText) confHeaders timeout forwardClientHeaders reqHeaders inputData headerPrecedence = do
   let requestBody =
         J.object
           [ "version" J..= validateInputPayloadVersion,
@@ -501,10 +507,13 @@ validateMutation env manager logger userInfo (ResolvedWebhook urlText) confHeade
             "data" J..= inputData
           ]
   resolvedConfHeaders <- makeHeadersFromConf env confHeaders
-  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
-      -- Using HashMap to avoid duplicate headers between configuration headers
-      -- and client headers where configuration headers are preferred
-      hdrs = (HashMap.toList . HashMap.fromList) (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
+  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward commonClientHeadersIgnored reqHeaders else mempty
+      hdrs = case headerPrecedence of
+        -- preserves old behaviour (default)
+        -- avoids duplicates and forwards client headers with higher precedence than configuration headers
+        ClientHeadersFirst -> LE.uniquesOn fst (clientHeaders <> defaultHeaders <> resolvedConfHeaders)
+        -- avoids duplicates and forwards configuration headers with higher precedence than client headers
+        ConfiguredHeadersFirst -> LE.uniquesOn fst (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
   initRequest <- liftIO $ HTTP.mkRequestThrow urlText
   let request =
         initRequest

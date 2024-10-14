@@ -1,0 +1,14 @@
+query MyQuery {
+  ArticleMany {
+    id
+    Author {
+      id
+      author_id
+      first_name
+    }
+  }
+  ArticleByID(article_id: 1) {
+    id
+    title
+  }
+}

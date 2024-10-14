@@ -1,0 +1,20 @@
+query MyQuery {
+  AuthorMany(order_by_custom: [{ first_name: Asc_custom }]) {
+    author_id
+    first_name
+  }
+  ArticlesByAuthorMany(
+    args_custom: { author_id: 2 }
+    order_by_custom: [{ article_id: Desc_custom }]
+  ) {
+    article_id
+  }
+  a1: AuthorMany(
+    order_by_custom: [{ first_name: Desc_custom }]
+    offset_custom: 1
+    limit_custom: 1
+  ) {
+    author_id
+    first_name
+  }
+}

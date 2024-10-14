@@ -182,7 +182,7 @@ generally shouldn't be enabled at the same time.
 | --------------------- | -------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | max_connections       | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                                                                                                                                |
 | total_max_connections | false    | `Integer` | Maximum number of total connections to be maintained across any number of Hasura Cloud instances (default: 1000). Takes precedence over `max_connections` in Cloud projects. _(Only available in Hasura Cloud)_                                                   |
-| idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                                                                                                                       |
+| idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (180 seconds for self-hosted & 30 seconds for Cloud).                                                                                                                                                                                                  |
 | retries               | false    | `Integer` | Number of retries to perform when failing to acquire connection (default: 1). Note that this configuration does not affect user/statement errors on PG.                                                                                                           |
 | pool_timeout          | false    | `Integer` | Maximum time to wait while acquiring a Postgres connection from the pool, in seconds (default: forever)                                                                                                                                                           |
 | connection_lifetime   | false    | `Integer` | Time from connection creation after which the connection should be destroyed and a new one created. A value of 0 indicates we should never destroy an active connection. If 0 is passed, memory from large query results may not be reclaimed. (default: 600 sec) |
@@ -207,7 +207,7 @@ This schema indicates that the source uses a connection pool (the default):
 | --------------------- | -------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | max_connections       | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                                                    |
 | total_max_connections | false    | `Integer` | Maximum number of total connections across any number of Hasura Cloud instances (default: 50). Takes precedence over `max_connections` in Cloud projects. _(Only available in Cloud)_ |
-| idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                                           |
+| idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 5)                                                                                                                           |
 
 This schema indicates that the source does not use a connection pool:
 
@@ -499,7 +499,7 @@ Supported in `v2.0.0-alpha.3` and above.
 | --------------- | -------- | ------------------------------------------------------ | --------------------------------------------------------- |
 | remote_table    | true     | [TableName](#tablename)                                | The table to which the relationship has to be established |
 | column_mapping  | true     | Object ([PGColumn](#pgcolumn) : [PGColumn](#pgcolumn)) | Mapping of columns from current table to remote table     |
-| insertion_order | false    | [InsertOrder](#insertorder)                            | insertion order: before or after parent (default: before) |
+| insertion_order | false    | [InsertOrder](#insertorder)                            | insertion order: before or after parent (default: "before_parent") |
 
 ## InsertOrder {#insertorder}
 
@@ -1260,6 +1260,7 @@ A string literal that conform to [GraphQL spec](https://spec.graphql.org/June201
 | kind                   | false    | \[ `synchronous` \| `asynchronous` \]                                       | The kind of the mutation action (default: `synchronous`). If the type of the action is `query` then the `kind` field should be omitted. |
 | headers                | false    | \[[HeaderFromValue](#headerfromvalue) \| [HeaderFromEnv](#headerfromenv) \] | List of defined headers to be sent to the handler                                                                                       |
 | forward_client_headers | false    | boolean                                                                     | If set to `true` the client headers are forwarded to the webhook handler (default: `false`)                                             |
+| ignored_client_headers | false    | Array of text | A set of client headers to ignore when forwarding headers to the webhook handler (default: `["Content-Length", "Content-MD5", "User-Agent", "Host", "Origin", "Referer", "Accept", "Accept-Encoding", "Accept-Language", "Accept-Datetime", "Cache-Control", "Connection", "DNT", "Content-Type"]`) |
 | handler                | true     | [WebhookURL](#webhookurl)                                                   | The action's webhook URL                                                                                                                |
 | type                   | false    | \[ `mutation` \| `query` \]                                                 | The type of the action (default: `mutation`)                                                                                            |
 | timeout                | false    | Integer                                                                     | Number of seconds to wait for response before timing out. Default: 30                                                                   |

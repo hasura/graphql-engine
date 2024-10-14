@@ -6,6 +6,7 @@ import {
   Query,
   RestEndpoint,
   Source,
+  Table as GenericTableType,
 } from '../../hasura-metadata-types';
 import {
   Operation,
@@ -16,8 +17,9 @@ import {
   generateViewEndpoint,
 } from './utils';
 import { formatSdl } from 'format-graphql';
-import { useMetadata } from '../../hasura-metadata-api';
+import { areTablesEqual, useMetadata } from '../../hasura-metadata-api';
 import camelCase from 'lodash/camelCase';
+import { PostgresTable } from '../../DataSource';
 
 const toPascalCase = (str: string) => {
   return str
@@ -64,7 +66,8 @@ export type Generator = {
     root: string,
     table: string,
     operation: Operation,
-    microfiber: any
+    microfiber: any,
+    customTableName?: string
   ) => EndpointDefinition;
 };
 
@@ -220,7 +223,13 @@ const generators: Record<EndpointType, Generator> = {
   },
 };
 
-export const useRestEndpointDefinitions = () => {
+export const useRestEndpointDefinitions = ({
+  dataSourceName,
+  table,
+}: {
+  dataSourceName: string;
+  table: GenericTableType;
+}) => {
   const {
     data: introspectionSchema,
     isLoading,
@@ -240,60 +249,71 @@ export const useRestEndpointDefinitions = () => {
     if (introspectionSchema) {
       const response: EndpointDefinitions = {};
       const microfiber = new Microfiber(introspectionSchema);
+      const source = (metadata?.sources ?? []).find(
+        s => s.name === dataSourceName
+      );
 
-      for (const source of metadata?.sources || []) {
-        const root = source?.customization?.root_fields?.namespace ?? '';
-        const operations = getOperations(root, microfiber);
+      if (!source) return;
 
-        const sourcePrefix = source.customization?.root_fields?.prefix || '';
+      const root = source?.customization?.root_fields?.namespace ?? '';
+      const operations = getOperations(root, microfiber);
 
-        const sourceSuffix = source.customization?.root_fields?.suffix || '';
-        for (const table of source.tables as Table[]) {
-          for (const [type, generator] of Object.entries(generators)) {
-            let baseOperationName = generator.operationName(source, table);
-            if (
-              sourcePrefix &&
-              source.customization?.naming_convention === 'graphql-default'
-            ) {
-              baseOperationName =
-                baseOperationName[0].toUpperCase() + baseOperationName.slice(1);
-            }
-            const operationName = `${sourcePrefix}${baseOperationName}${sourceSuffix}`;
+      const sourcePrefix = source.customization?.root_fields?.prefix || '';
 
-            const operation = operations.find(
-              operation => operation.name === operationName
-            );
+      const sourceSuffix = source.customization?.root_fields?.suffix || '';
 
-            if (!operation) {
-              continue;
-            }
+      const metadataTable = source.tables.find(t =>
+        areTablesEqual(table, t.table)
+      );
 
-            const tableName = table?.table?.name;
+      if (!metadataTable) return;
 
-            const definition = generators[type as EndpointType].generator(
-              root,
-              tableName,
-              operation,
-              microfiber
-            );
-
-            if (definition.query.query) {
-              definition.query.query = formatSdl(definition.query.query);
-            }
-
-            response[tableName] = {
-              ...(response[tableName] || {}),
-              [type]: {
-                ...definition,
-                exists: existingRestEndpoints.some(
-                  endpoint =>
-                    endpoint.definition.query.query_name ===
-                    definition.query.name
-                ),
-              },
-            };
-          }
+      for (const [type, generator] of Object.entries(generators)) {
+        let baseOperationName = generator.operationName(
+          source,
+          metadataTable as any
+        );
+        if (
+          sourcePrefix &&
+          source.customization?.naming_convention === 'graphql-default'
+        ) {
+          baseOperationName =
+            baseOperationName[0].toUpperCase() + baseOperationName.slice(1);
         }
+        const operationName = `${sourcePrefix}${baseOperationName}${sourceSuffix}`;
+
+        const operation = operations.find(
+          operation => operation.name === operationName
+        );
+
+        if (!operation) {
+          continue;
+        }
+        const customTableName = metadataTable.configuration?.custom_name;
+        const tableName = (metadataTable.table as PostgresTable).name;
+
+        const definition = generators[type as EndpointType].generator(
+          root,
+          tableName,
+          operation,
+          microfiber,
+          customTableName
+        );
+
+        if (definition.query.query) {
+          definition.query.query = formatSdl(definition.query.query);
+        }
+
+        response[tableName] = {
+          ...(response[tableName] || {}),
+          [type]: {
+            ...definition,
+            exists: existingRestEndpoints.some(
+              endpoint =>
+                endpoint.definition.query.query_name === definition.query.name
+            ),
+          },
+        };
       }
 
       setData(response);

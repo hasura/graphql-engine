@@ -11,6 +11,7 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder qualified as LT
 import Data.Vector qualified as V
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.BigQuery.Execute qualified as DataLoader
 import Hasura.Backends.BigQuery.FromIr qualified as BigQuery
 import Hasura.Backends.BigQuery.Plan
@@ -38,7 +39,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Session
+import Hasura.Server.Types (HeaderPrecedence, TraceQueryStatus)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client as HTTP
 import Network.HTTP.Types qualified as HTTP
@@ -50,7 +51,7 @@ instance BackendExecute 'BigQuery where
 
   mkDBQueryPlan = bqDBQueryPlan
   mkDBMutationPlan = bqDBMutationPlan
-  mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ =
+  mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ _ =
     throw500 "Cannot currently perform subscriptions on BigQuery sources."
   mkDBStreamingSubscriptionPlan _ _ _ _ _ _ =
     throw500 "Cannot currently perform subscriptions on BigQuery sources."
@@ -77,8 +78,9 @@ bqDBQueryPlan ::
   QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  TraceQueryStatus ->
   m (DBStepInfo 'BigQuery, [ModelInfoPart])
-bqDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
+bqDBQueryPlan userInfo sourceName sourceConfig qrf _ _ _ = do
   -- TODO (naveen): Append query tags to the query
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   let action = OnBaseMonad do
@@ -145,8 +147,10 @@ bqDBMutationPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  HeaderPrecedence ->
+  TraceQueryStatus ->
   m (DBStepInfo 'BigQuery, [ModelInfoPart])
-bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs =
+bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs _ _traceQueryStatus =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 -- explain
@@ -228,9 +232,10 @@ bqDBRemoteRelationshipPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Options.StringifyNumbers ->
+  TraceQueryStatus ->
   m (DBStepInfo 'BigQuery, [ModelInfoPart])
-bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
-  (dbStepInfo, modelInfo) <- flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection reqHeaders operationName
+bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers traceQueryStatus = do
+  (dbStepInfo, modelInfo) <- flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection reqHeaders operationName traceQueryStatus
   pure (dbStepInfo, modelInfo)
   where
     coerceToColumn = BigQuery.ColumnName . getFieldNameTxt

@@ -1,0 +1,9 @@
+{
+  "Query": {
+    "__typename": {
+      "TypeName": {
+        "type_name": "Query"
+      }
+    }
+  }
+}

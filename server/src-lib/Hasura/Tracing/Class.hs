@@ -41,6 +41,7 @@ class (MonadTraceContext m) => MonadTrace m where
   newSpanWith ::
     SpanId ->
     Text ->
+    SpanKind ->
     m a ->
     m a
 
@@ -49,22 +50,22 @@ class (MonadTraceContext m) => MonadTrace m where
 
 instance (MonadTrace m) => MonadTrace (ReaderT r m) where
   newTraceWith c p n = mapReaderT (newTraceWith c p n)
-  newSpanWith i n = mapReaderT (newSpanWith i n)
+  newSpanWith i n kind = mapReaderT (newSpanWith i n kind)
   attachMetadata = lift . attachMetadata
 
 instance (MonadTrace m) => MonadTrace (StateT e m) where
   newTraceWith c p n = mapStateT (newTraceWith c p n)
-  newSpanWith i n = mapStateT (newSpanWith i n)
+  newSpanWith i n k = mapStateT (newSpanWith i n k)
   attachMetadata = lift . attachMetadata
 
 instance (MonadTrace m) => MonadTrace (ExceptT e m) where
   newTraceWith c p n = mapExceptT (newTraceWith c p n)
-  newSpanWith i n = mapExceptT (newSpanWith i n)
+  newSpanWith i n k = mapExceptT (newSpanWith i n k)
   attachMetadata = lift . attachMetadata
 
 instance (MonadTrace m) => MonadTrace (MaybeT m) where
   newTraceWith c p n = mapMaybeT (newTraceWith c p n)
-  newSpanWith i n = mapMaybeT (newSpanWith i n)
+  newSpanWith i n k = mapMaybeT (newSpanWith i n k)
   attachMetadata = lift . attachMetadata
 
 -- | Access to the current tracing context, factored out of 'MonadTrace' so we
@@ -110,7 +111,7 @@ newTrace policy name body = do
   newTraceWith context policy name body
 
 -- | Create a new span with a randomly-generated id.
-newSpan :: (MonadIO m, MonadTrace m) => Text -> m a -> m a
-newSpan name body = do
+newSpan :: (MonadIO m, MonadTrace m) => Text -> SpanKind -> m a -> m a
+newSpan name kind body = do
   spanId <- randomSpanId
-  newSpanWith spanId name body
+  newSpanWith spanId name kind body

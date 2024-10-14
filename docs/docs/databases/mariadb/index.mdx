@@ -28,10 +28,18 @@ To get started with MariaDB:
 - In Hasura Cloud, check out our [Getting Started with MariaDB in Hasura Cloud](/databases/mariadb/cloud.mdx) guide
 - In a Docker environment, check out our [Getting Started with Docker](/databases/mariadb/docker.mdx) guide
 
+:::info Using Kubernetes?
+
+We have Helm charts available for deploying Hasura on Kubernetes. Check out
+[more information here](/deployment/deployment-guides/kubernetes-helm.mdx) and see the
+[`enterprise-stack` here](https://github.com/hasura/helm-charts/tree/main/charts/hasura-enterprise-stack).
+
+:::
+
 :::tip Supported versions:
 
 1.  Hasura GraphQL Engine `v2.24.0` onwards
-2.  Hasura supports most databases with standard implementations of **MariaDB 10.5 and higher** including: Amazon RDS,
+2.  Hasura supports most databases with standard implementations of **MariaDB 10.6 and higher** including: Amazon RDS,
     Amazon Aurora, Digital Ocean and SkySQL.
 
 :::
@@ -216,8 +224,8 @@ in the `API` tab and interact with it using the GraphiQL interface.
 
 :::info Console support
 
-We recommend using your preferred MariaDB client instead. The Hasura Console is designed to be a tool for managing
-your GraphQL API, and not a full-fledged database management tool.
+We recommend using your preferred MariaDB client instead. The Hasura Console is designed to be a tool for managing your
+GraphQL API, and not a full-fledged database management tool.
 
 :::
 

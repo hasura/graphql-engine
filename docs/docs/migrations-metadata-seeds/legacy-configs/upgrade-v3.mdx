@@ -142,7 +142,7 @@ Currently the CLI looks for `!include` directives in `tables` and
 There are some changes to `migrations` and `seeds` project directories
 in `config v3`. Projects will have child directories corresponding to
 Migrations for each connected database. Look at the following example,
-the `` `migrations `` directory has a sub directory `default` which
+the `migrations` directory has a sub directory `default` which
 corresponds to the connected database.
 
 ```bash
@@ -205,7 +205,7 @@ process.
 1.  `Config V3` is expected to be used with Hasura GraphQL Engine
     versions `v2.0.0-alpha.1` and above.
 2.  During the update process CLI uses the server as the source of
-    truth, so make sure your server is upto date.
+    truth, so make sure your server is up to date.
 3.  The update process replaces project Metadata with Metadata on the
     server.
 
@@ -241,9 +241,7 @@ hasura scripts update-project-v3
 Your project directory and `config.yaml` should be updated to v3.
 
 The update script will ask for the name of database the current
-Migrations and seeds correspond to. If you are starting Hasura with a
-`HASURA_GRAPHQL_DATABASE_URL` then the name of the database should be
-`default`.
+Migrations and seeds correspond to.
 
 ## Continue using config v2
 

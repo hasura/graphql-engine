@@ -5,6 +5,7 @@ import { rootTableContext } from './RootTableProvider';
 import { areTablesEqual } from '../../../../../hasura-metadata-api';
 import { fieldsToColumns } from './utils/nestedObjects';
 import { rowPermissionsContext } from './RowPermissionsProvider';
+import { ComputedField } from '../../../../../../metadata/types';
 
 export const tableContext = createContext<TableContext>({
   table: {},
@@ -13,6 +14,8 @@ export const tableContext = createContext<TableContext>({
   setComparator: () => {},
   columns: [],
   setColumns: () => {},
+  computedFields: [],
+  setComputedFields: () => {},
   relationships: [],
   setRelationships: () => {},
 });
@@ -29,6 +32,7 @@ export const TableProvider = ({
   const [table, setTableName] = useState<Table>(defaultTable || {});
   const [comparator, setComparator] = useState<string | undefined>();
   const [columns, setColumns] = useState<Columns>([]);
+  const [computedFields, setComputedFields] = useState<ComputedField[]>([]);
   const [relationships, setRelationships] = useState<Relationships>([]);
   const { tables, rootTable } = useContext(rootTableContext);
   const { loadRelationships } = useContext(rowPermissionsContext);
@@ -50,6 +54,7 @@ export const TableProvider = ({
     const foundTable = tables.find(t => areTablesEqual(t.table, table));
     if (foundTable) {
       setColumns(foundTable.columns);
+      setComputedFields(foundTable.computedFields);
       if (foundTable?.dataSource?.name !== rootTable?.dataSource?.name) return;
       setRelationships(
         foundTable.relationships.filter(rel => {
@@ -82,6 +87,8 @@ export const TableProvider = ({
     setRelationships,
     objectPath,
     loadRelationships,
+    computedFields,
+    setComputedFields,
   ]);
 
   return (
@@ -89,6 +96,8 @@ export const TableProvider = ({
       value={{
         columns,
         setColumns,
+        computedFields,
+        setComputedFields,
         table,
         setTable: setTableName,
         relationships,

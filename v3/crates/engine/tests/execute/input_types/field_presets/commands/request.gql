@@ -1,0 +1,28 @@
+query InputObjectWithPresets(
+  $name_filter: NameQuery!
+  $institution_input: InstitutionInput!
+) {
+  # use a query with one field preset at top-level
+  getActorsByName(name_filter: $name_filter) {
+    actor_id
+    movie_id
+    name
+  }
+
+  # use a query with all fields preset of a nested field
+  getInstitutionsByInstitutionInput(institution_input: $institution_input) {
+    name
+    id
+    departments
+    location {
+      campuses
+      city
+      country
+    }
+    staff {
+      first_name
+      last_name
+      specialities
+    }
+  }
+}

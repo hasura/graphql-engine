@@ -64,6 +64,7 @@ import Data.CaseInsensitive qualified as CI
 import Data.Functor.Barbie qualified as B
 import Data.Text.Encoding qualified as TE
 import Data.Validation qualified as V
+import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Webhook.Transform.Body (Body (..), BodyTransformFn)
 import Hasura.RQL.DDL.Webhook.Transform.Body qualified as Body
@@ -76,7 +77,6 @@ import Hasura.RQL.DDL.Webhook.Transform.Response
 import Hasura.RQL.DDL.Webhook.Transform.Url
 import Hasura.RQL.Types.Webhook.Transform (MetadataResponseTransform (..), RequestContext, RequestData, RequestFields (..), RequestTransform (..), RequestTransformFns)
 import Hasura.RQL.Types.Webhook.Transform.WithOptional (WithOptional (..), withOptional)
-import Hasura.Session (SessionVariables)
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 -------------------------------------------------------------------------------

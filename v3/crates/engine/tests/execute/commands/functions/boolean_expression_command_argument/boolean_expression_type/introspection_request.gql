@@ -1,0 +1,45 @@
+query {
+  __schema {
+    queryType {
+      name
+      fields {
+        name
+        args {
+          name
+          defaultValue
+          type {
+            kind
+            name
+            ofType {
+              kind
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+  type_name_query: __type(name: "Actor_bool_exp") {
+    name
+    kind
+    inputFields {
+      name
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+            ofType {
+              kind
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+}

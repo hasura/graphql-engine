@@ -11,6 +11,7 @@ where
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Text.Encoding qualified as TE
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
@@ -29,8 +30,7 @@ import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.AnyBackend (mkAnyBackend)
-import Hasura.Session
-import Hasura.Tracing (MonadTrace)
+import Hasura.Tracing (MonadTrace, SpanKind (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -54,7 +54,7 @@ instance BackendExecute 'DataConnector where
   type MultiplexedQuery 'DataConnector = Void
   type ExecutionMonad 'DataConnector = AgentClientT
 
-  mkDBQueryPlan UserInfo {..} sourceName sourceConfig ir _headers _gName = do
+  mkDBQueryPlan UserInfo {..} sourceName sourceConfig ir _headers _gName _traceQueryStatus = do
     queryPlan@Plan {..} <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkQueryPlan ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     modelNames <- irToModelInfoGen sourceName ModelSourceTypeDataConnector ir
@@ -84,7 +84,7 @@ instance BackendExecute 'DataConnector where
             dbsiResolvedConnectionTemplate = ()
           }
 
-  mkDBMutationPlan _env _manager _logger UserInfo {..} _stringifyNum sourceName sourceConfig mutationDB _headers _gName _maybeSelSetArgs = do
+  mkDBMutationPlan _env _manager _logger UserInfo {..} _stringifyNum sourceName sourceConfig mutationDB _headers _gName _maybeSelSetArgs _ _traceQueryStatus = do
     (mutationPlan@Plan {..}, modelNames) <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkMutationPlan sourceName ModelSourceTypeDataConnector mutationDB
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     let modelInfo = getModelInfoPartfromModelNames modelNames (ModelOperationType G.OperationTypeMutation)
@@ -99,13 +99,13 @@ instance BackendExecute 'DataConnector where
         modelInfo
       )
 
-  mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ =
+  mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ _ =
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
 
   mkDBStreamingSubscriptionPlan _ _ _ _ _ _ =
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
 
-  mkDBRemoteRelationshipPlan UserInfo {..} sourceName sourceConfig joinIds joinIdsSchema argumentIdFieldName (resultFieldName, ir) _ _ _ = do
+  mkDBRemoteRelationshipPlan UserInfo {..} sourceName sourceConfig joinIds joinIdsSchema argumentIdFieldName (resultFieldName, ir) _ _ _ _ = do
     (remoteRelationshipPlan@Plan {..}, modelInfo) <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkRemoteRelationshipPlan sourceName sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
@@ -125,7 +125,7 @@ instance BackendExecute 'DataConnector where
 buildQueryAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> Plan API.QueryRequest API.QueryResponse -> AgentClientT m EncJSON
 buildQueryAction sourceName SourceConfig {..} Plan {..} = do
   queryResponse <- Client.query sourceName _scConfig _pRequest
-  reshapedResponse <- Tracing.newSpan "QueryResponse reshaping" $ _pResponseReshaper queryResponse
+  reshapedResponse <- Tracing.newSpan "QueryResponse reshaping" SKInternal $ _pResponseReshaper queryResponse
   pure $ encJFromJEncoding reshapedResponse
 
 -- Delegates the generation to the Agent's /explain endpoint if it has that capability,
@@ -150,5 +150,5 @@ toExplainPlan fieldName queryRequest =
 buildMutationAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> Plan API.MutationRequest API.MutationResponse -> AgentClientT m EncJSON
 buildMutationAction sourceName SourceConfig {..} Plan {..} = do
   mutationResponse <- Client.mutation sourceName _scConfig _pRequest
-  reshapedResponse <- Tracing.newSpan "MutationResponse reshaping" $ _pResponseReshaper mutationResponse
+  reshapedResponse <- Tracing.newSpan "MutationResponse reshaping" SKInternal $ _pResponseReshaper mutationResponse
   pure $ encJFromJEncoding reshapedResponse

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-x-partial #-}
+
 module Hasura.GraphQL.Parser.DirectivesSpec (spec) where
 
 import Control.Monad.Identity (Identity (..))

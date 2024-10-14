@@ -1,0 +1,277 @@
+[
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "MoviesByActorNameById",
+              "args": [
+                {
+                  "name": "actor_name_filter",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "NameQuery"
+                    }
+                  }
+                },
+                {
+                  "name": "movie_id",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "Int"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "MoviesByActorNameMany",
+              "args": [
+                {
+                  "name": "args",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "MoviesByActorNameArgs"
+                    }
+                  }
+                },
+                {
+                  "name": "limit",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                {
+                  "name": "offset",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type_name_query": {
+        "name": "NameQuery",
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "first_name",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          },
+          {
+            "name": "surname",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "MoviesByActorNameById",
+              "args": [
+                {
+                  "name": "actor_name_filter",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "NameQuery"
+                    }
+                  }
+                },
+                {
+                  "name": "movie_id",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "Int"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "MoviesByActorNameMany",
+              "args": [
+                {
+                  "name": "args",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "MoviesByActorNameArgs"
+                    }
+                  }
+                },
+                {
+                  "name": "limit",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                {
+                  "name": "offset",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type_name_query": {
+        "name": "NameQuery",
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "first_name",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "MoviesByActorNameById",
+              "args": [
+                {
+                  "name": "actor_name_filter",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "NameQuery"
+                    }
+                  }
+                },
+                {
+                  "name": "movie_id",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "Int"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "MoviesByActorNameMany",
+              "args": [
+                {
+                  "name": "args",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "MoviesByActorNameArgs"
+                    }
+                  }
+                },
+                {
+                  "name": "limit",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                {
+                  "name": "offset",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type_name_query": {
+        "name": "NameQuery",
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "_no_fields_accessible",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  }
+]

@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
+{-# OPTIONS_GHC -Wno-x-partial #-}
 
 module Test.Hasura.StreamingSubscriptionSuite (buildStreamingSubscriptionSuite) where
 
@@ -17,6 +18,7 @@ import Data.Text.IO qualified as T
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.Role (RoleName, mkRoleName)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Subscription (MultiplexedQuery (MultiplexedQuery))
 import Hasura.Backends.Postgres.Instances.Transport ()
@@ -38,7 +40,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..))
-import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
 import Hasura.Server.Metrics (createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
@@ -68,9 +69,10 @@ buildStreamingSubscriptionSuite = do
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
   pgPool <- PG.initPGPool pgConnInfo J.Null PG.defaultConnParams print
+  connInfoWithFinalizer <- liftIO $ mkConnInfoWithFinalizer pgConnInfo (pure ())
 
   let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
-      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty ConnTemplate_NotApplicable
+      dbSourceConfig = PGSourceConfig pgContext connInfoWithFinalizer Nothing (pure ()) defaultPostgresExtensionsSchema mempty ConnTemplate_NotApplicable
 
   pure
     $ describe "Streaming subscriptions polling tests"

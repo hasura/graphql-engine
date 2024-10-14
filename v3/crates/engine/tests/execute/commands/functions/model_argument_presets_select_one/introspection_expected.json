@@ -1,0 +1,59 @@
+[
+  {
+    "data": {
+      "__type": {
+        "name": "Query",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "ActorsByMovieByID",
+            "args": [
+              {
+                "name": "actor_id"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "__type": {
+        "name": "Query",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "ActorsByMovieByID",
+            "args": [
+              {
+                "name": "actor_id"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "__type": {
+        "name": "Query",
+        "kind": "OBJECT",
+        "fields": [
+          {
+            "name": "ActorsByMovieByID",
+            "args": [
+              {
+                "name": "actor_id"
+              },
+              {
+                "name": "movie_id"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

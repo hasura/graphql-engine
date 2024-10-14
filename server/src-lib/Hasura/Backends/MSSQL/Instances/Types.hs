@@ -132,6 +132,17 @@ instance HasSourceConfiguration 'MSSQL where
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   sourceConfigNumReadReplicas = MSSQL._mscReadReplicas
-  sourceConfigConnectonTemplateEnabled = const False -- not supported
+  sourceConfigConnectonTemplate = const Nothing -- not supported
   sourceSupportsColumnRedaction = const True
   sourceConfigBackendSourceKind _sourceConfig = MSSQLKind
+
+-- NOTE: these moved here from Backends.MSSQL.Types.Instances to avoid Backend
+-- constraint requiring UndecidableInstances
+
+deriving instance (Show n) => Show (MSSQL.CountType n)
+
+deriving instance Functor MSSQL.CountType
+
+deriving instance Foldable MSSQL.CountType
+
+deriving instance Traversable MSSQL.CountType

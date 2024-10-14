@@ -14,6 +14,8 @@ import { useRemoveOperationsFromQueryCollection } from '../../hooks';
 import { QueryCollectionsOperationsHeader } from './QueryCollectionOperationsHeader';
 import { QueryCollectionOperationsEmptyState } from './QueryCollectionOperationsEmptyState';
 import { QueryCollectionOperationEdit } from '../QueryCollectionOperationDialog/QueryCollectionOperationEdit';
+import { useMetadata } from '../../../MetadataAPI';
+import ToolTip from '../../../../components/Common/Tooltip/Tooltip';
 
 const Check: React.FC<React.ComponentProps<'input'>> = props => (
   <input
@@ -31,6 +33,7 @@ export const QueryCollectionsOperations: React.FC<
   QueryCollectionsOperationsProps
 > = props => {
   const { collectionName } = props;
+  const { data: metadata } = useMetadata();
 
   const {
     data: operations,
@@ -90,17 +93,34 @@ export const QueryCollectionsOperations: React.FC<
     operation.query.toLowerCase().startsWith('mutation') ? 'Mutation' : 'Query',
 
     <div className="flex justify-end">
-      <Button
-        className="mr-1.5"
-        size="sm"
-        onClick={() => setEditingOperation(operation)}
-      >
-        Edit
-      </Button>
+      {metadata?.metadata?.rest_endpoints?.some(
+        e =>
+          e.name === operation.name &&
+          e.definition.query.collection_name === collectionName
+      ) ? (
+        <ToolTip message="This operation has a restified endpoint. You can edit it from restified endpoint list">
+          <Button
+            className="mr-1.5"
+            size="sm"
+            onClick={() => setEditingOperation(operation)}
+            disabled
+          >
+            Edit
+          </Button>
+        </ToolTip>
+      ) : (
+        <Button
+          className="mr-1.5"
+          size="sm"
+          onClick={() => setEditingOperation(operation)}
+        >
+          Edit
+        </Button>
+      )}
 
       <Button
         onClick={() => {
-          const confirmMessage = `This will permanently delete the operation "${operation.name}"`;
+          const confirmMessage = `This will permanently delete the operation "${operation.name}" from the collection and related restified endpoint if exists.`;
           const isOk = getConfirmation(confirmMessage, true, operation.name);
           if (isOk) {
             removeOperationsFromQueryCollection(collectionName, [operation], {

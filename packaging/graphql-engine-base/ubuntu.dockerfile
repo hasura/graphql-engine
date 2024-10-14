@@ -1,7 +1,7 @@
-# DATE VERSION: 2023-10-21
+# DATE VERSION: 2024-09-17
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 
-FROM ubuntu:jammy-20231004
+FROM ubuntu:jammy-20240911.1
 
 ### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
 
@@ -40,7 +40,7 @@ RUN set -ex; \
     curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -; \
     echo 'deb http://apt.postgresql.org/pub/repos/apt jammy-pgdg main' > /etc/apt/sources.list.d/pgdg.list; \
     apt-get -y update; \
-    apt-get install -y postgresql-client-15; \
+    apt-get install -y postgresql-client-16; \
     # delete all pg tools except pg_dump to keep the image minimal
     find /usr/bin -name 'pg*' -not -path '/usr/bin/pg_dump' -delete
 

@@ -7,6 +7,7 @@ where
 import Control.Monad.Trans.Control
 import Hasura.Prelude
 import Hasura.Tracing.Context
+import Hasura.Tracing.TraceId (SpanKind)
 
 newtype Reporter = Reporter
   { runReporter ::
@@ -16,6 +17,8 @@ newtype Reporter = Reporter
       TraceContext ->
       -- \| Human readable name of this span.
       Text ->
+      -- \| Kind of the current span.
+      SpanKind ->
       -- \| IO action that retrieves the metadata associated with the
       -- current span.
       IO TraceMetadata ->
@@ -25,4 +28,4 @@ newtype Reporter = Reporter
   }
 
 noReporter :: Reporter
-noReporter = Reporter \_ _ _ -> id
+noReporter = Reporter \_ _ _ _ -> id

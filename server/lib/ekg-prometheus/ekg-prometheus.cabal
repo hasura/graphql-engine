@@ -74,7 +74,7 @@ benchmark counter
     base,
     ekg-prometheus,
     ekg-prometheus-benchmark,
-    criterion ^>= 1.5.9.0
+    criterion
   hs-source-dirs: benchmark-exe
   ghc-options: -O2 -threaded
 
@@ -86,6 +86,7 @@ test-suite ekg-prometheus-tests
   other-modules:
     Counter
     Export
+    Histogram
     State
     Store
     Validation

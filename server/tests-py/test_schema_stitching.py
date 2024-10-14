@@ -173,9 +173,12 @@ class TestRemoteSchemaBasic:
     def test_add_schema_conflicts(self, hge_ctx, gql_server):
         """add 2 remote schemas with same node or types"""
         q = mk_add_remote_q('simple 2', f'{gql_server.url}/hello-graphql')
-        # FYI: resp = ordereddict([('code', 'invalid-configuration'), ('error', "Inconsistent object: Duplicate remote field 'hello', Incons...on', "Inconsistent object: Duplicate remote field 'delayedHello'"), ('type', 'remote_schema')])]), ('path', '$.args')]) 
+        # FYI: resp = ordereddict([('error', 'cannot continue due to new inconsistent metadata'), ('path', '$.args'), ('code', 'unexpected'), ('internal', [ordereddict([('definition', ordereddict([('comment', 'testing simple 1'), ('definition', ordereddict([('forward_client_headers', False), ('url', 'http://localhost:5000/hello-graphql')])), ('name', 'simple 1'), ('permissions', []), ('remote_relationships', [])])), ('name', 'remote_schema simple 1'), ('reason', "Inconsistent object: Duplicate remote field 'delayedHello'"), ('type', 'remote_schema')]), ordereddict([('definition', ordereddict([('comment', 'testing simple 1'), ('definition', ordereddict([('forward_client_headers', False), ('url', 'http://localhost:5000/hello-graphql')])), ('name', 'simple 1'), ('permissions', []), ('remote_relationships', [])])), ('name', 'remote_schema simple 1'), ('reason', "Inconsistent object: Duplicate remote field 'hello'"), ('type', 'remote_schema')])])])
         resp = hge_ctx.v1q(q, expected_status_code = 400)
-        assert resp['code'] == 'invalid-configuration', resp
+        # NOTE: the exact structure of the error here, seems unstable/related to hashmap ordering
+        #       see e.g. GHC upgrade in 5261126777cb478
+        assert resp['code'] == 'unexpected', resp
+        assert resp['error'] == 'cannot continue due to new inconsistent metadata', resp
 
     def test_remove_schema_error(self, hge_ctx):
         """remove remote schema which is not added"""

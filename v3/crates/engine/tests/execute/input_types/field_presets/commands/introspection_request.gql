@@ -1,0 +1,67 @@
+query {
+  __schema {
+    queryType {
+      name
+      fields {
+        name
+        args {
+          name
+          defaultValue
+          type {
+            kind
+            name
+            ofType {
+              kind
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+  type_institution: __type(name: "InstitutionInput") {
+    name
+    kind
+    inputFields {
+      name
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+        }
+      }
+    }
+  }
+  type_location: __type(name: "LocationInput") {
+    name
+    kind
+    inputFields {
+      name
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+        }
+      }
+    }
+  }
+  type_staff_member: __type(name: "StaffMemberInput") {
+    name
+    kind
+    inputFields {
+      name
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+        }
+      }
+    }
+  }
+}

@@ -32,7 +32,7 @@ let
   };
 
   unixODBC = pkgs.unixODBC.overrideAttrs (oldAttrs: {
-    configureFlags = [ "--disable-gui" "--sysconfdir=${odbcConfiguration}" ];
+    configureFlags = (if oldAttrs ? configureFlags then oldAttrs.configureFlags else [ ]) ++ [ "--disable-gui" "--sysconfdir=${odbcConfiguration}" ];
   });
 
   # Ensure that GHC and HLS have access to all the dynamic libraries we have kicking around.
@@ -48,8 +48,8 @@ let
           for bin in ${original}/bin/*; do
             if [[ -x "$bin" ]]; then
               makeWrapper "$bin" "$out/bin/$(basename "$bin")" \
-                --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
-                --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+                --set LD_LIBRARY_PATH ${dynamicLibraryPath} \
+                --set DYLD_LIBRARY_PATH ${dynamicLibraryPath}
             fi
           done
         '';
@@ -65,11 +65,11 @@ let
         installPhase = ''
           mkdir -p "$out/bin"
           makeWrapper ${original}/bin/haskell-language-server "$out/bin/haskell-language-server" \
-            --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
-            --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+            --set LD_LIBRARY_PATH ${dynamicLibraryPath} \
+            --set DYLD_LIBRARY_PATH ${dynamicLibraryPath}
           makeWrapper ${original}/bin/haskell-language-server-wrapper "$out/bin/haskell-language-server-wrapper" \
-            --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
-            --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+            --set LD_LIBRARY_PATH ${dynamicLibraryPath} \
+            --set DYLD_LIBRARY_PATH ${dynamicLibraryPath}
         '';
       };
 
@@ -78,17 +78,12 @@ let
     pkgs.jq
   ];
 
-  consoleInputs = [
-    pkgs.google-cloud-sdk
-    pkgs."nodejs-${versions.nodejsVersion}_x"
-    pkgs."nodejs-${versions.nodejsVersion}_x".pkgs.typescript-language-server
-  ];
-
   docsInputs = [
     pkgs.yarn
   ];
 
   integrationTestInputs = [
+    pkgs.nodejs
     pkgs.python3
     pkgs.pyright # Python type checker
   ];
@@ -96,19 +91,20 @@ let
   # The version of GHC in `ghcName` is set in nix/overlays/ghc.nix.
   haskellInputs = [
     pkgs.cabal2nix
+    pkgs.ghciwatch
 
     ghc
     hls
 
     pkgs.haskell.packages.${pkgs.ghcName}.alex
-    # pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
+    pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.cabal-install)
     (pkgs.haskell.lib.dontCheck (pkgs.haskell.packages.${pkgs.ghcName}.ghcid))
     pkgs.haskell.packages.${pkgs.ghcName}.happy
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hlint)
     pkgs.haskell.packages.${pkgs.ghcName}.hoogle
     pkgs.haskell.packages.${pkgs.ghcName}.hspec-discover
-    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu_0_7_1_0)
+    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu)
   ];
 
   devInputs = [
@@ -146,6 +142,8 @@ let
     pkgs.stdenv.cc.cc.lib
   ];
 
+  dynamicLibraryPath = pkgs.lib.strings.makeLibraryPath dynamicLibraries;
+
   includeLibraries = [
     pkgs.libkrb5.dev
     pkgs.ncurses.dev
@@ -160,6 +158,10 @@ let
     ++ includeLibraries
     ++ integrationTestInputs;
 in
-pkgs.mkShell {
-  buildInputs = baseInputs ++ consoleInputs ++ docsInputs ++ serverDeps ++ devInputs ++ ciInputs;
-}
+pkgs.mkShell ({
+  buildInputs = baseInputs ++ docsInputs ++ serverDeps ++ devInputs ++ ciInputs;
+} // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
+  shellHook = ''
+    export DYLD_LIBRARY_PATH='${dynamicLibraryPath}'
+  '';
+})

@@ -36,7 +36,7 @@ have multiple subscriptions running at the same time they must be in separate qu
 
 ### Live queries
 
-A live query subscription will return the latest result of the query being made and not necessarily all the individual
+A live query subscription will return the **latest result** of the query being made and not necessarily all the individual
 events leading up to the result. By default, updates are delivered to clients every **1 sec**.
 
 See more details [here](/subscriptions/postgres/livequery/index.mdx).
@@ -97,6 +97,12 @@ subscriptions. Let's see how they can be used and how they differ from each othe
    Following the example of the live query, if we have 100 messages corresponding to the group and only 5 messages with
    `created_at` greater than the current value of the cursor maintained by the cursor, then we will get only the 5
    messages.
+
+The experimental feature flag
+[`remove_empty_subscription_responses`](/deployment/graphql-engine-flags/reference.mdx#experimental-features)
+can be used to reduce network overhead for projects making heavy use of
+streaming subscriptions where responses are often empty by only returning
+non-empty result sets.
 
 ## Communication protocol
 

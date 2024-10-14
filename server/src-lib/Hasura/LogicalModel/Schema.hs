@@ -20,6 +20,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Set qualified as S
 import Data.Text.Extended
 import Data.Text.NonEmpty (mkNonEmptyText)
+import Hasura.Authentication.Role (RoleName)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Internal.Parser qualified as IP
 import Hasura.GraphQL.Schema.Backend
@@ -67,7 +68,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (RelName (..))
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local (Nullable (..))
-import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.Table.Cache (SelPermInfo (..))
@@ -250,13 +250,22 @@ defaultLogicalModelSelectionSet logicalModel = runMaybeT do
       -- We entirely ignore Relay for now.
       implementsInterfaces = mempty
 
-  lift $ P.memoizeOn 'defaultLogicalModelSelectionSet fieldName do
-    -- we filter out parsers that return 'Nothing' as those we are no permitted to see.
-    parsers <- catMaybes <$> traverse (\(column, lmField, redactionExp) -> parseLogicalModelField mempty column lmField redactionExp) allowedColumns
+  -- we filter out parsers that return 'Nothing' as those we are no permitted to see.
+  parsers <-
+    catMaybes
+      <$> traverse
+        ( \(column, lmField, redactionExp) ->
+            lift (parseLogicalModelField mempty column lmField redactionExp)
+        )
+        allowedColumns
 
-    pure
-      $ P.selectionSetObject fieldName description parsers implementsInterfaces
-      <&> parsedSelectionsToFields IR.AFExpression
+  -- if we have no fields, we can't create a parser
+  if null parsers
+    then hoistMaybe Nothing
+    else lift $ P.memoizeOn 'defaultLogicalModelSelectionSet fieldName do
+      pure
+        $ P.selectionSetObject fieldName description parsers implementsInterfaces
+        <&> parsedSelectionsToFields IR.AFExpression
 
 logicalModelSelectionList ::
   (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) =>

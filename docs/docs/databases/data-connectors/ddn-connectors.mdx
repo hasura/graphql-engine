@@ -1,0 +1,137 @@
+---
+description: Information about using Hasura DDN data connectors in a Hasura v2 project.
+sidebar_label: Using DDN Data Connectors
+keywords:
+  - hasura
+  - docs
+  - databases
+  - data connectors
+  - sdk
+  - DDN
+  - v3
+sidebar_position: 4
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# Using Hasura DDN Data Connectors
+
+## Introduction
+
+As a Hasura v2 user, you may be interested in the exciting work in which we're engaging around new connectors for the
+[Hasura Data Delivery Network](https://hasura.io/ddn) (DDN). You can see a list of all available connectors on the
+[Connector Hub](https://hasura.io/connectors).
+
+If you're not ready to migrate your entire Hasura v2 project to Hasura DDN, you can still integrate one of our new
+connectors with your existing project. You can do this by creating a new Hasura DDN project, either self-hosted or on
+Hasura Cloud, and connecting it to your existing v2 project as a [Remote Schema](/remote-schemas/overview.mdx). This
+way, you can seamlessly integrate the auto-generated GraphQL API from your Hasura DDN project into your existing
+project, thereby allowing you to use the new connector.
+
+## Steps
+
+### Step 1. Create a new Hasura DDN instance
+
+Start by [creating a new Hasura DDN project](https://hasura.io/docs/3.0/getting-started/build/prerequisites) locally.
+
+:::info Choose a connector
+
+When creating a new project, you'll be prompted to select which connector you'd like to include in your project. You 
+can see the full list on the [Connector Hub](https://hasura.io/connectors). This connector will connect to your data
+source, introspect it, and generate the required metadata to create a GraphQL API with Hasura DDN.
+
+:::
+
+### Step 2. Deploy your Hasura DDN instance
+
+When you [deploy](https://hasura.io/docs/3.0/getting-started/deployment/create-a-project) a Hasura DDN instance, you're
+actually deploying:
+
+- The supergraph (your API).
+- Each connector you've configured (as separate HTTP services).
+
+Follow [these steps](https://hasura.io/docs/3.0/getting-started/deployment/create-a-project) to deploy your project to
+Hasura DDN.
+
+Once your project is deployed, ensure you've [applied a build](https://hasura.io/docs/3.0/project-configuration/builds)
+and copy your project's GraphQL endpoint from the DDN console.
+
+### Step 3. Add the instance as a Remote Schema
+
+Follow our quickstart for Remote Schemas [here](/remote-schemas/quickstart.mdx). Again, be sure to use your GraphQL
+endpoint from the previous step.
+
+:::info Add a typename prefix
+
+To avoid a naming conflict, you should add a typename prefix to your DDN Remote Schema. You can access this setting
+under `GraphQL Customizations` when adding a Remote Schema in the Console.
+
+:::
+
+### Step 4. Test
+
+Finally, make a query to test your Remote Schema and DDN connector in your v2 project.
+
+For example, let's say we namespaced the Remote Schema as `DDN`; in that case, we should be able to write the following
+query, complete with remote relationships, to return information from our combined schema:
+
+<GraphiQLIDE
+  query={`query ArtistAndTodos{
+  Artists {
+    ArtistId
+    DDN_ToDoByArtistId {
+      id
+      status
+      description
+    }
+  }
+}
+`}
+  response={`{
+"data": {
+    "Artists": [
+      {
+        "ArtistId": 1,
+        "toByArtistId": {
+          "id": 1,
+          "status": "pending",
+          "description": "Plan work"
+        }
+      },
+      {
+        "ArtistId": 3,
+        "toByArtistId": {
+          "id": 3,
+          "status": "pending",
+          "description": "Checkout TS connector"
+        }
+      },
+      {
+        "ArtistId": 4,
+        "toByArtistId": {
+          "id": 4,
+          "status": "pending",
+          "description": ""
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+:::info Observability information
+
+All observability information for this connector, and any queries or mutations associated with it, can be explored using
+the Hasura DDN console. [Click here](https://hasura.io/docs/3.0/observability/overview/) to learn more about metrics,
+traces, and other observability features of Hasura DDN.
+
+:::
+
+## Recap
+
+With the steps above, you can easily integrate any DDN connector into an existing v2 project, using a Hasura DDN
+instance, which is either self-hosted or on Hasura Cloud.
+
+If you're curious about the differences between Hasura v2 and Hasura DDN, check out
+[this guide](https://hasura.io/docs/3.0/basics/v3-for-v2-users) which is designed to help you grok how features you know
+and love have been improved upon in Hasura DDN!

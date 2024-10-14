@@ -1,0 +1,12 @@
+query MyQuery {
+  Artist {
+    Name
+  }
+
+  Album(limit: 10) {
+    AlbumId
+    Artist {
+      Name
+    }
+  }
+}

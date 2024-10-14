@@ -405,14 +405,12 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
 # Returns 'resp' and a bool indicating whether the test passed or not (this
 # will always be True unless we are `--accepting`)
 def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_assertion=False, exp_resp_hdrs={}):
-    print('Reponse Headers: ', resp_hdrs)
-    print(exp_resp_hdrs)
-
     # Prepare actual and expected responses so comparison takes into
     # consideration only the ordering that we care about:
     resp         = collapse_order_not_selset(resp_orig,         query)
     exp_response = collapse_order_not_selset(exp_response_orig, query)
-    matched      = equal_CommentedMap(resp, exp_response) and (exp_resp_hdrs or {}).items() <= resp_hdrs.items()
+    hdrs_matched = (exp_resp_hdrs or {}).items() <= resp_hdrs.items()
+    body_matched = equal_CommentedMap(resp, exp_response)
 
     if PytestConf.config.getoption("--accept"):
         print('skipping assertion since we chose to --accept new output')
@@ -440,8 +438,10 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
                 'diff': (stringify_keys(jsondiff.diff(exp_resp_hdrs, diff_hdrs)))
             }
         yml.dump(test_output, stream=dump_str)
-        if matched:
-            return resp, matched
+        if hdrs_matched and body_matched:
+            return resp, True
+        elif not hdrs_matched:
+            assert False, dump_str.getvalue()
         else:
             def is_err_msg(msg):
                 return any(msg.get(x) for x in ['error','errors'])
@@ -453,13 +453,13 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
                 if is_err_msg(exp) and is_err_msg(out):
                     if not matched_:
                         warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
-                        return resp, matched
+                        return resp, matched_
                 else:
                     if skip_assertion:
                         return resp, matched_
                     else:
                         assert matched_, '\n' + dump_str.getvalue()
-    return resp, matched  # matched always True unless --accept
+    return resp, hdrs_matched and body_matched  # matched always True unless --accept
 
 # This really sucks; newer ruamel made __eq__ ignore ordering:
 #   https://bitbucket.org/ruamel/yaml/issues/326/commentedmap-equality-no-longer-takes-into

@@ -6,14 +6,9 @@ args:
     cascade: false
 - type: drop_action
   args:
-    name: get_user_by_email_1
+    name: get_user_by_email
 - type: drop_action
   args:
-    name: get_user_by_email_2
+    name: get_user_by_email_with_client_header_forwarding
 - type: set_custom_types
   args: {}
-- type: run_sql
-  args:
-    sql: |
-      drop table test_table;
-      drop table user;

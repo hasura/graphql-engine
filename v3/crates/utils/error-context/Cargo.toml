@@ -1,0 +1,15 @@
+[package]
+name = "error-context"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+jsonpath = { path = "../jsonpath" }
+serde = { workspace = true, features = ["derive"] }
+
+[lints]
+workspace = true

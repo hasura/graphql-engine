@@ -59,7 +59,7 @@ exampleSpec =
 
       jsonSample <- encode . sampleToJson <$> sampleAll store
 
-      shouldBe jsonSample "{\"foo\":{\"counter\":[{\"tags\":{\"key1\":\"val1\"},\"value\":{\"type\":\"c\",\"val\":10}},{\"tags\":{\"key1\":\"val2\"},\"value\":{\"type\":\"c\",\"val\":11}}],\"distribution\":[{\"tags\":{},\"value\":{\"count\":1,\"max\":1,\"mean\":1,\"min\":1,\"sum\":1,\"type\":\"d\",\"variance\":0}}]},\"gauge\":[{\"tags\":{},\"value\":{\"type\":\"g\",\"val\":100}}],\"label\":[{\"tags\":{},\"value\":{\"type\":\"l\",\"val\":\"bar\"}}]}"
+      shouldBe jsonSample "{\"foo\":{\"counter\":[{\"tags\":{\"key1\":\"val2\"},\"value\":{\"type\":\"c\",\"val\":11}},{\"tags\":{\"key1\":\"val1\"},\"value\":{\"type\":\"c\",\"val\":10}}],\"distribution\":[{\"tags\":{},\"value\":{\"count\":1,\"max\":1,\"mean\":1,\"min\":1,\"sum\":1,\"type\":\"d\",\"variance\":0}}]},\"gauge\":[{\"tags\":{},\"value\":{\"type\":\"g\",\"val\":100}}],\"label\":[{\"tags\":{},\"value\":{\"type\":\"l\",\"val\":\"bar\"}}]}"
 
 data ExampleMetrics :: Symbol -> MetricType -> Type -> Type where
   ExampleCounter ::

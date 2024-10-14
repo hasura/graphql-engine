@@ -1,0 +1,43 @@
+query MyQuery {
+  Track(where: { Album: { Artist: { ArtistId: { _eq: 2 } } } }) {
+    TrackId
+    Album {
+      Artist {
+        ArtistId
+        Name
+      }
+    }
+  }
+  TrackAnd: Track(
+    where: {
+      _and: [
+        { Album: { Artist: { ArtistId: { _eq: 2 } } } }
+        { TrackId: { _eq: 3 } }
+      ]
+    }
+  ) {
+    TrackId
+    Album {
+      Artist {
+        ArtistId
+        Name
+      }
+    }
+  }
+  TrackOr: Track(
+    where: {
+      _or: [
+        { Album: { Artist: { ArtistId: { _eq: 2 } } } }
+        { TrackId: { _eq: 3 } }
+      ]
+    }
+  ) {
+    TrackId
+    Album {
+      Artist {
+        ArtistId
+        Name
+      }
+    }
+  }
+}

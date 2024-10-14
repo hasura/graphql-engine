@@ -1,0 +1,48 @@
+[
+  {
+    "data": {
+      "AuthorByID": {
+        "author_id": 2,
+        "Articles": [
+          {
+            "title": "Why Functional Programming Matters"
+          },
+          {
+            "title": "The Design And Implementation Of Programming Languages"
+          },
+          {
+            "title": "Generalizing monads to arrows"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "AuthorByID": {
+        "author_id": 2,
+        "Articles": [
+          {
+            "title": "Why Functional Programming Matters"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "AuthorByID": {
+        "author_id": 2,
+        "Articles": []
+      }
+    }
+  },
+  {
+    "data": {
+      "AuthorByID": {
+        "author_id": 2,
+        "Articles": []
+      }
+    }
+  }
+]

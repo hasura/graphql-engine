@@ -1,0 +1,10 @@
+query {
+  AuthorManyNegativeLimit: AuthorMany(limit: -10) {
+    author_id
+    first_name
+  }
+  AuthorManyWithNegativeOffset: AuthorMany(offset: -1) {
+    author_id
+    first_name
+  }
+}

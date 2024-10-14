@@ -1,0 +1,200 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Actor",
+            "fields": [
+              {
+                "name": "actor_id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Actor"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Actor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "Opaque",
+            "graphql": {
+              "typeName": "Opaque"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "NameFilterOpaqueSurname",
+            "fields": [
+              {
+                "name": "first_name",
+                "type": "String"
+              },
+              {
+                "name": "surname",
+                "type": "Opaque"
+              }
+            ],
+            "graphql": {
+              "inputTypeName": "NameFilterOpaqueSurname"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "name_query",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "surname": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_actors_by_name_opaque_surname",
+            "arguments": [
+              {
+                "name": "name_filter",
+                "type": "NameFilterOpaqueSurname!"
+              }
+            ],
+            "outputType": "[Actor!]!",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "get_actors_by_name"
+              },
+              "argumentMapping": {
+                "name_filter": "name"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getActorsByNameOpaqueSurname",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_actors_by_name_opaque_surname",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_actors_by_opaque_name",
+            "arguments": [
+              {
+                "name": "name_filter",
+                "type": "Opaque!"
+              }
+            ],
+            "outputType": "[Actor!]!",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "get_actors_by_name"
+              },
+              "argumentMapping": {
+                "name_filter": "name"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getActorsByOpaqueName",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_actors_by_opaque_name",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

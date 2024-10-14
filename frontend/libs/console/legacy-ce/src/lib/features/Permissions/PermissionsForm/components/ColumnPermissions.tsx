@@ -18,6 +18,7 @@ import {
   SubscriptionRootPermissionType,
   QueryRootPermissionType,
 } from './RootFieldPermissions/types';
+import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
 
 const getAccessText = (queryType: string) => {
   if (queryType === 'insert') {
@@ -35,6 +36,7 @@ export interface ColumnPermissionsSectionProps {
   queryType: QueryType;
   roleName: string;
   columns?: string[];
+  computedFields?: string[];
   table: unknown;
   dataSourceName: string;
 }
@@ -85,19 +87,30 @@ const checkIfConfirmationIsNeeded = (
   );
 };
 
-// @todo
-// this hasn't been fully implemented, it still needs computed columns adding
 export const ColumnPermissionsSection: React.FC<
   ColumnPermissionsSectionProps
-> = ({ roleName, queryType, columns, table, dataSourceName }) => {
+> = ({
+  roleName,
+  queryType,
+  columns,
+  table,
+  computedFields,
+  dataSourceName,
+}) => {
   const { setValue, watch } = useFormContext();
   const [showConfirmation, setShowConfirmationModal] = useState<string | null>(
     null
   );
   watch();
 
-  const [selectedColumns, queryRootFields, subscriptionRootFields] = watch([
+  const [
+    selectedColumns,
+    selectedComputedFields,
+    queryRootFields,
+    subscriptionRootFields,
+  ] = watch([
     'columns',
+    'computed_fields',
     'query_root_fields',
     'subscription_root_fields',
   ]);
@@ -112,12 +125,25 @@ export const ColumnPermissionsSection: React.FC<
     table
   );
 
+  const metadataTableResult = useMetadata(
+    MetadataSelectors.findTable(dataSourceName, table)
+  );
+  const tableComputedFields = metadataTableResult.data?.computed_fields?.map(
+    ({ name }) => name
+  );
+
   const onClick = () => {
     columns?.forEach(column => {
       const toggleAllOn = status !== 'All columns';
       // if status is not all columns: toggle all on
       // otherwise toggle all off
       setValue(`columns.${column}`, toggleAllOn);
+    });
+    computedFields?.forEach(field => {
+      const toggleAllOn = status !== 'All columns';
+      // if status is not all columns: toggle all on
+      // otherwise toggle all off
+      setValue(`computed_fields.${field}`, toggleAllOn);
     });
   };
 
@@ -206,6 +232,26 @@ export const ColumnPermissionsSection: React.FC<
                   <i>{fieldName}</i>
                 </label>
               ))}
+              {queryType === 'select' &&
+                tableComputedFields?.map(fieldName => (
+                  <label key={fieldName} className="flex gap-2 items-center">
+                    <input
+                      type="checkbox"
+                      title={disabled ? 'Set a row permission first' : ''}
+                      disabled={disabled}
+                      style={{ marginTop: '0px !important' }}
+                      className="rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
+                      checked={selectedComputedFields[fieldName]}
+                      onChange={() => {
+                        setValue(
+                          `computed_fields.${fieldName}`,
+                          !selectedComputedFields[fieldName]
+                        );
+                      }}
+                    />
+                    <i>{fieldName}</i>
+                  </label>
+                ))}
               <Button
                 type="button"
                 size="sm"

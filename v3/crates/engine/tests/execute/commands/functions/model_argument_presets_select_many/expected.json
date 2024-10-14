@@ -1,0 +1,70 @@
+[
+  {
+    "data": {
+      "ActorsByMovieMany": [
+        {
+          "actor_id": 4,
+          "movie_id": 3,
+          "name": "Al Pacino"
+        },
+        {
+          "actor_id": 5,
+          "movie_id": 3,
+          "name": "Robert De Niro"
+        }
+      ],
+      "noargs": [
+        {
+          "actor_id": 4,
+          "movie_id": 3,
+          "name": "Al Pacino"
+        },
+        {
+          "actor_id": 5,
+          "movie_id": 3,
+          "name": "Robert De Niro"
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "ActorsByMovieMany": [
+        {
+          "actor_id": 6,
+          "movie_id": 4,
+          "name": "Morgan Freeman"
+        }
+      ],
+      "noargs": [
+        {
+          "actor_id": 6,
+          "movie_id": 4,
+          "name": "Morgan Freeman"
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "ActorsByMovieMany": null,
+      "noargs": null
+    },
+    "errors": [
+      {
+        "message": "internal error: ndc_unexpected: ndc_client error: connector error: connector returned status code 400 Bad Request with message: missing argument movie_id",
+        "path": ["ActorsByMovieMany"],
+        "extensions": {
+          "details": null
+        }
+      },
+      {
+        "message": "internal error: ndc_unexpected: ndc_client error: connector error: connector returned status code 400 Bad Request with message: missing argument movie_id",
+        "path": ["noargs"],
+        "extensions": {
+          "details": null
+        }
+      }
+    ]
+  }
+]

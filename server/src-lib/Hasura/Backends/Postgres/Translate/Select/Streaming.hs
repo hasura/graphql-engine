@@ -13,6 +13,7 @@ module Hasura.Backends.Postgres.Translate.Select.Streaming
 where
 
 import Database.PG.Query (Query)
+import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (withConstructorFn)
@@ -54,7 +55,6 @@ import Hasura.RQL.Types.Common
     JsonAggSelect (JASMultipleRows),
     getFieldNameTxt,
   )
-import Hasura.RQL.Types.Session (UserInfo)
 import Hasura.RQL.Types.Subscription
   ( CursorOrdering (CODescending),
   )
@@ -101,11 +101,13 @@ mkStreamSQLSelect userInfo (AnnSelectStreamG () fields from perm args strfyNum) 
                 ["cursor", G.unName $ ciName cursorColInfo]
          in BoolField $ AVColumn cursorColInfo (_sciRedactionExpression cursorArg) [(orderByOpExp sqlExp)]
       selectArgs =
-        noSelectArgs
+        SelectArgs
           { _saWhere =
               Just $ maybe cursorBoolExp (andAnnBoolExps cursorBoolExp) $ _ssaWhere args,
             _saOrderBy = orderByItems,
-            _saLimit = Just $ _ssaBatchSize args
+            _saLimit = Just $ _ssaBatchSize args,
+            _saOffset = Nothing,
+            _saDistinct = Nothing
           }
       sqlSelect = AnnSelectG fields from perm selectArgs strfyNum Nothing
       permLimitSubQuery = PLSQNotRequired

@@ -1,0 +1,10 @@
+query {
+  article_author_match: ArticlesByAuthorMany(args_custom: { author_id: 2 }) {
+    article_id
+    title
+  }
+  article_author_mismatch: ArticlesByAuthorMany(args_custom: { author_id: 3 }) {
+    article_id
+    title
+  }
+}

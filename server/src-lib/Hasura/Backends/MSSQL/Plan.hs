@@ -30,6 +30,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
+import Hasura.Authentication.Session (SessionVariable, SessionVariables, getSessionVariableValue, getSessionVariablesSet)
 import Hasura.Backends.MSSQL.FromIr
 import Hasura.Backends.MSSQL.FromIr.Query (fromQueryRootField, fromSourceRelationship)
 import Hasura.Backends.MSSQL.Types.Internal
@@ -41,7 +42,6 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.Types
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
@@ -223,9 +223,7 @@ prepareValueSubscription globalVariables =
       pure $ resultVarExp (RootPath `FieldPath` "session")
     UVSessionVar _typ text -> do
       unless (text `Set.member` globalVariables)
-        $ throw400
-          NotFound
-          ("missing session variable: " <>> sessionVariableToText text)
+        $ throw400 NotFound ("missing session variable: " <>> text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
       pure $ resultVarExp (sessionDot $ toTxt text)
     UVParameter (FromGraphQL variableInfo) columnValue -> do

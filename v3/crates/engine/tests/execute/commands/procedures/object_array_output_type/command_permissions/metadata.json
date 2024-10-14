@@ -1,0 +1,77 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandActor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "uppercase_all_actor_names",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user_1",
+                "allowExecution": true
+              },
+              {
+                "role": "user_2",
+                "allowExecution": false
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "uppercase_all_actor_names",
+            "arguments": [],
+            "outputType": "[commandActor]",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "procedure": "uppercase_all_actor_names"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "uppercaseAllActorNames",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

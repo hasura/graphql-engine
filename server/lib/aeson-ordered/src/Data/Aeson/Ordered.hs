@@ -49,7 +49,6 @@ import Data.Functor (($>))
 import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Hashable (Hashable (..))
-import Data.List (foldl')
 import Data.Scientific (Scientific)
 import Data.String (IsString)
 import Data.Text (Text)

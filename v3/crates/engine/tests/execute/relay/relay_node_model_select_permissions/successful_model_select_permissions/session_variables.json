@@ -1,0 +1,9 @@
+[
+  {
+    "x-hasura-role": "user",
+    "x-hasura-user-id": "1"
+  },
+  {
+    "x-hasura-role": "guest"
+  }
+]

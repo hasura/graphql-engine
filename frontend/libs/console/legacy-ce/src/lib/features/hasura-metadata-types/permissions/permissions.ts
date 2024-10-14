@@ -30,6 +30,7 @@ export interface SelectPermission extends BasePermission {
 }
 export interface SelectPermissionDefinition {
   columns?: string[];
+  computed_fields?: string[];
   filter?: Record<string, unknown>;
   allow_aggregations?: boolean;
   query_root_fields?: string[] | null;

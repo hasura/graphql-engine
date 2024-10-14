@@ -1,0 +1,695 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "db",
+            "url": {
+              "singleUrl": {
+                "value": "http://localhost:8102"
+              }
+            },
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "String": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "like": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "update_operators": {}
+                  }
+                },
+                "object_types": {
+                  "article": {
+                    "description": "An article",
+                    "fields": {
+                      "author_id": {
+                        "description": "The article's author ID",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "id": {
+                        "description": "The article's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "title": {
+                        "description": "The article's title",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "author": {
+                    "description": "An author",
+                    "fields": {
+                      "first_name": {
+                        "description": "The author's first name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "id": {
+                        "description": "The author's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "last_name": {
+                        "description": "The author's last name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "article",
+                    "description": "A collection of articles",
+                    "arguments": {},
+                    "type": "article",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "ArticleByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "author",
+                    "description": "A collection of authors",
+                    "arguments": {},
+                    "type": "author",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "AuthorByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "articles_by_author",
+                    "description": "Articles parameterized by author",
+                    "arguments": {
+                      "author_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "type": "article",
+                    "deletable": false,
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  }
+                ],
+                "functions": [
+                  {
+                    "name": "latest_article_id",
+                    "description": "Get the ID of the most recent article",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
+                    }
+                  }
+                ],
+                "procedures": [
+                  {
+                    "name": "upsert_article",
+                    "description": "Insert or update an article",
+                    "arguments": {
+                      "article": {
+                        "description": "The article to insert or update",
+                        "type": {
+                          "type": "named",
+                          "name": "article"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  }
+                ]
+              },
+              "capabilities": {
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {}
+                    }
+                  },
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  },
+                  "mutation": {}
+                },
+                "version": "0.1.3"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "author",
+            "fields": [
+              {
+                "name": "author_id",
+                "type": "Int!"
+              },
+              {
+                "name": "first_name",
+                "type": "String!"
+              },
+              {
+                "name": "last_name",
+                "type": "String!"
+              }
+            ],
+            "globalIdFields": ["author_id"],
+            "graphql": {
+              "typeName": "Author"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "author",
+                "fieldMapping": {
+                  "author_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "article",
+            "fields": [
+              {
+                "name": "article_id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              },
+              {
+                "name": "author_id",
+                "type": "Int!"
+              }
+            ],
+            "globalIdFields": ["article_id"],
+            "graphql": {
+              "typeName": "Article"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "article",
+                "fieldMapping": {
+                  "article_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "author_bool_exp",
+            "objectType": "author",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "author",
+            "comparableFields": [
+              {
+                "fieldName": "author_id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "first_name",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "last_name",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Author_Where_Exp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "article_bool_exp",
+            "objectType": "article",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "article",
+            "comparableFields": [
+              {
+                "fieldName": "article_id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "author_id",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Article_Where_Exp"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Authors",
+            "objectType": "author",
+            "globalIdSource": true,
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "author"
+            },
+            "filterExpressionType": "author_bool_exp",
+            "orderableFields": [
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "first_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "last_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "AuthorByID",
+                  "uniqueIdentifier": ["author_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "AuthorMany"
+              },
+              "orderByExpressionType": "Author_Order_By"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Articles",
+            "objectType": "article",
+            "globalIdSource": true,
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "article"
+            },
+            "filterExpressionType": "article_bool_exp",
+            "orderableFields": [
+              {
+                "fieldName": "article_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArticleByID",
+                  "uniqueIdentifier": ["article_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "ArticleMany"
+              },
+              "orderByExpressionType": "Article_Order_By"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "author",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["author_id", "first_name", "last_name"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "article",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["article_id", "title", "author_id"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["article_id", "title"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Articles",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "author_id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "title",
+                      "operator": "like",
+                      "value": {
+                        "sessionVariable": "x-hasura-title-search"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "author",
+            "name": "Articles",
+            "target": {
+              "model": {
+                "name": "Articles",
+                "relationshipType": "Array"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "article",
+            "name": "Author",
+            "target": {
+              "model": {
+                "name": "Authors",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "Int_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_latest_article_id",
+            "arguments": [],
+            "outputType": "Int",
+            "source": {
+              "dataConnectorName": "db",
+              "dataConnectorCommand": {
+                "function": "latest_article_id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getLatestArticleId",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Authors",
+            "permissions": [
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "author_id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

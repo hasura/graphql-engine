@@ -1,0 +1,50 @@
+query MyQuery {
+  happy: getMovieById(movie_id: 1) {
+    AnalyticsFromMovie {
+      MovieFromCommand {
+        AnalyticsFromMovie {
+          MovieFromCommand {
+            rating
+            title
+          }
+        }
+      }
+    }
+  }
+  unhappy_1: getMovieById(movie_id: 4) {
+    AnalyticsFromMovie {
+      MovieFromCommand {
+        AnalyticsFromMovie {
+          MovieFromCommand {
+            rating
+            title
+          }
+        }
+      }
+    }
+  }
+  unhappy_2: getMovieById(movie_id: 10) {
+    AnalyticsFromMovie {
+      MovieFromCommand {
+        AnalyticsFromMovie {
+          MovieFromCommand {
+            rating
+            title
+          }
+        }
+      }
+    }
+  }
+  array: getAllMovies {
+    AnalyticsFromMovie {
+      MovieFromCommand {
+        AnalyticsFromMovie {
+          MovieFromCommand {
+            rating
+            title
+          }
+        }
+      }
+    }
+  }
+}

@@ -69,7 +69,7 @@ genPostSchemaCapabilities = pure PostSchemaCapabilities {}
 
 genColumnNullability :: (MonadGen m) => m ColumnNullability
 genColumnNullability =
-  Gen.element [NullableAndNonNullableColumns, OnlyNullableColumns]
+  Gen.element ([NullableAndNonNullableColumns, OnlyNullableColumns] :: [ColumnNullability])
 
 genQueryCapabilities :: (MonadGen m) => m QueryCapabilities
 genQueryCapabilities = QueryCapabilities <$> Gen.maybe genForeachCapabilities <*> Gen.maybe genRedactionCapabilities

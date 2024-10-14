@@ -24,8 +24,7 @@ on-premise or in the cloud.
 :::info Connecting vector databases to Hasura
 
 To connect a vector database to Hasura, you'll need to take advantage of
-[Hasura Data Connectors](/databases/data-connectors/index.mdx). You can deploy any custom data connector agent to Hasura
-Cloud using our CLI plugin. For more information, refer to the [docs](/hasura-cli/connector-plugin/index.mdx).
+[Hasura Data Connectors](/databases/data-connectors/index.mdx).
 
 If you're curious what other connectors are available, check out our [NDC Hub](https://github.com/hasura/ndc-hub).
 
@@ -33,28 +32,8 @@ If you're curious what other connectors are available, check out our [NDC Hub](h
 
 ## Step 1: Deploy a data connector agent
 
-We'll use the Hasura CLI to deploy a custom data connector agent to Hasura Cloud. Below, we're using the `create`
-command and naming our connector `weaviate-connector:v1`. We're also passing in the GitHub repo URL for the connector
-agent using the `--github-repo-url` flag:
-
-```bash
-hasura connector create weaviate-connector:v1 --github-repo-url https://github.com/hasura/weaviate_gdc/tree/main
-```
-
-We can check on the progress of the deployment using the `status` command:
-
-```bash
-hasura connector status weaviate-connector:v1
-```
-
-Once the `DONE` status is returned, we can grab the URL for our data connector agent using the `list` command:
-
-```bash
-hasura connector list
-```
-
-This will return a list of all the custom data connector agents you own. **The second value returned is the URL which
-we'll use in the next step; copy it to your clipboard.**
+As these connectors are HTTP services built with Docker, you can deploy your data connector to your service of choice.
+Once you've deployed it, use the URL to access it in the next step.
 
 ## Step 2: Add the data connector agent to your Hasura Cloud project
 
@@ -103,7 +82,7 @@ At this point, we'll need to configure a few parameters:
 | Database Name | The name of your Weaviate database.                     |
 | `apiKey`      | The API key for your Weaviate database.                 |
 | `host`        | The URL of your Weaviate database.                      |
-| `openAPIKey`  | The OpenAI key for use with your Weaviate database.     |
+| `openAIKey`   | The OpenAI key for use with your Weaviate database.     |
 | `scheme`      | The URL scheme for your Weaviate database (http/https). |
 
 :::info Where can I find these parameters?

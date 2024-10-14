@@ -25,6 +25,13 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 ## Introduction
 
+:::caution Deprecation
+
+Hasura Cloud observability integrations are deprecated in favour of using
+[OpenTelemetry exporter](/observability/opentelemetry/index.mdx) to get advanced traces, metrics and logs.
+
+:::
+
 To be able to effectively monitor, diagnose and troubleshoot your application stack in production, Hasura Cloud will
 export metrics, logs and traces to observability tools / APM vendors.
 
@@ -37,12 +44,12 @@ choice:
 - [New Relic](newrelic.mdx)
 - [Azure monitor](azure-monitor.mdx)
 - [Prometheus](prometheus.mdx)
-- [OpenTelemetry](/observability/opentelemetry.mdx)
+- [OpenTelemetry](/observability/opentelemetry/index.mdx)
 
 :::tip More metrics on OpenTelemetry exporter
 
-Try the new [OpenTelemetry exporter](/observability/opentelemetry.mdx) to get advanced metrics and traces to connect
-with the tool of your choice. This integration will export the metrics as detailed
+Try the new [OpenTelemetry exporter](/observability/opentelemetry/index.mdx) to get advanced metrics and traces to
+connect with the tool of your choice. This integration will export the metrics as detailed
 [here](/observability/cloud/prometheus.mdx#metrics-details).
 
 :::
@@ -50,7 +57,7 @@ with the tool of your choice. This integration will export the metrics as detail
 ## Log types
 
 Hasura Cloud combines various
-[Hasura GraphQL Engine server log types](https://hasura.io/docs/latest/deployment/logging/) into a single log called the
+[Hasura GraphQL Engine server log types](/deployment/logging.mdx) into a single log called the
 **operation log**. This operation log is exported via integrations to your observability tool of choice.
 
 Various Hasura GraphQL Engine server logs are combined to generate an operation log:

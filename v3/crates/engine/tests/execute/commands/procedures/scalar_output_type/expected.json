@@ -1,0 +1,20 @@
+[
+  {
+    "data": {
+      "noopProcedure": "Noop Procedure"
+    }
+  },
+  {
+    "data": {
+      "noopProcedure": "Noop Procedure"
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: no such field on type Mutation: noopProcedure"
+      }
+    ]
+  }
+]

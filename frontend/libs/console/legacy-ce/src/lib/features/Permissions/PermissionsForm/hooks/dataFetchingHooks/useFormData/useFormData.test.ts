@@ -22,6 +22,7 @@ const formDataMockResult = {
     'Series_title_4',
     'Series_title_5',
   ],
+  computed_fields: [],
 };
 
 test('returns correctly formatted formData', () => {
@@ -79,6 +80,7 @@ const defaultValuesMockResult: ReturnType<typeof createDefaultValues> = {
   },
   query_root_fields: null,
   subscription_root_fields: null,
+  computed_fields: {},
 };
 
 test('use default values returns values correctly', () => {

@@ -1,0 +1,4 @@
+query myQuery($var: input $varOther: otherInput) @deprecated @unused {
+    animal
+    treat
+}

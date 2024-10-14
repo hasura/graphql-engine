@@ -1,0 +1,133 @@
+query MyQuery {
+  __schema {
+    queryType {
+      name
+      fields {
+        name
+        description
+        args {
+          name
+          description
+          defaultValue
+          type {
+            kind
+            name
+            ofType {
+              kind
+              name
+              ofType {
+                kind
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  Institution_filter_input_type: __type(name: "Institution_filter_input") {
+    name
+    description
+    kind
+    inputFields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+  Institution_aggregate_exp_type: __type(name: "Institution_aggregate_exp") {
+    name
+    description
+    kind
+    fields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+  Location_aggregate_exp_type: __type(name: "Location_aggregate_exp") {
+    name
+    description
+    kind
+    fields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+  String_aggregate_exp_type: __type(name: "String_aggregate_exp") {
+    name
+    description
+    kind
+    fields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+  Int_aggregate_exp_type: __type(name: "Int_aggregate_exp") {
+    name
+    description
+    kind
+    fields {
+      name
+      description
+      type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "RowType",
+            "fields": [
+              {
+                "name": "test",
+                "type": "String!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "myconnector",
+                "dataConnectorObjectType": "row_type",
+                "fieldMapping": {
+                  "test": {
+                    "column": {
+                      "name": "test"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "MyOrderByExpression",
+            "operand": {
+              "object": {
+                "orderedType": "RowType",
+                "orderableFields": [
+                  {
+                    "fieldName": "test",
+                    "orderByExpression": "Foo"
+                  }
+                ],
+                "orderableRelationships": []
+              }
+            },
+            "graphql": {
+              "expressionTypeName": "mycollection_order_by"
+            },
+            "description": "Order by expression for mycollection RowType"
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v2",
+          "definition": {
+            "name": "mymodel",
+            "objectType": "RowType",
+            "arguments": [],
+            "source": {
+              "dataConnectorName": "myconnector",
+              "collection": "mycollection",
+              "argumentMapping": {}
+            },
+            "orderByExpression": "MyOrderByExpression",
+            "graphql": {
+              "selectMany": {
+                "queryRootField": "mycollection"
+              },
+              "selectUniques": []
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "myconnector",
+            "url": {
+              "readWriteUrls": {
+                "read": {
+                  "value": "http://local-dev.hasura.me:8080"
+                },
+                "write": {
+                  "value": "http://local-dev.hasura.me:8080"
+                }
+              }
+            },
+            "argumentPresets": [],
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "representation": {
+                      "type": "int32"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  },
+                  "String": {
+                    "representation": {
+                      "type": "string"
+                    },
+                    "aggregate_functions": {},
+                    "comparison_operators": {}
+                  }
+                },
+                "object_types": {
+                  "row_type": {
+                    "fields": {
+                      "test": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "mycollection",
+                    "arguments": {},
+                    "type": "row_type",
+                    "foreign_keys": {},
+                    "uniqueness_constraints": {}
+                  }
+                ],
+                "functions": [],
+                "procedures": []
+              },
+              "capabilities": {
+                "version": "0.1.0",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {}
+                  },
+                  "mutation": {
+                    "transactional": {},
+                    "explain": {}
+                  },
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "myconnector_String_comparisonexp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "myconnector",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "myconnector_Int_comparisonexp"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

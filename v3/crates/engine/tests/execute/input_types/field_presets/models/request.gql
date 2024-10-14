@@ -1,0 +1,15 @@
+query MyQuery($actor_name_filter: NameQuery!, $movie_id: Int!) {
+  MoviesByActorNameMany(args: { actor_name_filter: $actor_name_filter }) {
+    movie_id
+    title
+    rating
+  }
+  MoviesByActorNameById(
+    actor_name_filter: $actor_name_filter
+    movie_id: $movie_id
+  ) {
+    movie_id
+    title
+    rating
+  }
+}

@@ -60,6 +60,7 @@ def hge_server(
             hge_bin,
             '--metadata-database-url', metadata_schema_url,
             'serve',
+            '--enable-telemetry=false',
             '--server-port', str(hge_port),
             '--stringify-numeric-types',
             *hge_key_args,

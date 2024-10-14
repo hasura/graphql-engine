@@ -1,4 +1,7 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
+-- ghc 9.6 seems to be doing something screwy with...
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Hasura.RQL.Types.SchemaCache
   ( SchemaCache (..),
@@ -122,6 +125,8 @@ import Data.Text.Extended ((<<>))
 import Data.Text.Extended qualified as T
 import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.Role (RoleName)
+import Hasura.Authentication.User (UserInfoM)
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Function.Cache
@@ -150,10 +155,8 @@ import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryInfo)
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Session (UserInfoM)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Webhook.Transform
 import Hasura.RemoteSchema.Metadata

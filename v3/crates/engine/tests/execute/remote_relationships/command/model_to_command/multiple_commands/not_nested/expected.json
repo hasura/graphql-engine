@@ -1,0 +1,62 @@
+[
+  {
+    "data": {
+      "Analytics": [
+        {
+          "ActorFromCommand": {
+            "name": "Leonardo DiCaprio"
+          },
+          "MovieFromCommand": {
+            "title": "Titanic",
+            "rating": 4
+          },
+          "analytics_id": 1,
+          "movie_id": 1,
+          "total_votes": 578
+        },
+        {
+          "ActorFromCommand": {
+            "name": "Kate Winslet"
+          },
+          "MovieFromCommand": {
+            "title": "Slumdog Millionaire",
+            "rating": 5
+          },
+          "analytics_id": 2,
+          "movie_id": 2,
+          "total_votes": 432
+        },
+        {
+          "ActorFromCommand": {
+            "name": "Irfan Khan"
+          },
+          "MovieFromCommand": {
+            "title": "Godfather",
+            "rating": 4
+          },
+          "analytics_id": 3,
+          "movie_id": 3,
+          "total_votes": 849
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Analytics": [
+        {
+          "ActorFromCommand": {
+            "name": "Leonardo DiCaprio"
+          },
+          "MovieFromCommand": {
+            "title": "Titanic",
+            "rating": 4
+          },
+          "analytics_id": 1,
+          "movie_id": 1,
+          "total_votes": 578
+        }
+      ]
+    }
+  }
+]

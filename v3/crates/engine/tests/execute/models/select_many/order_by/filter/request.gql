@@ -1,0 +1,10 @@
+query {
+  AuthorMany(order_by: [{ first_name: Asc }]) {
+    author_id
+    first_name
+  }
+  a1: AuthorMany(order_by: [{ first_name: Asc }], limit: 1, offset: 1) {
+    author_id
+    first_name
+  }
+}

@@ -153,7 +153,7 @@ runRequestAcceptStatus' acceptStatus request = do
 
   let phaseNamePrefix = maybe "" (<> "-") _acsPhaseName
   let filenamePrefix = printf "%s%02d" (Text.unpack phaseNamePrefix) _acsRequestCounter
-  let clientRequest = addHeaderRedaction _accSensitiveOutputHandling $ defaultMakeClientRequest _accBaseUrl request
+  clientRequest <- liftIO $ addHeaderRedaction _accSensitiveOutputHandling <$> defaultMakeClientRequest _accBaseUrl request
 
   testFolder <- getCurrentFolder
   -- HttpClient modifies the request with settings from the Manager before it sends it. To log these modifications

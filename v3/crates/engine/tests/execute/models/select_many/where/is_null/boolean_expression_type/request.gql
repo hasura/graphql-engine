@@ -1,0 +1,6 @@
+query {
+  AuthorMany(where: { _not: { first_name: { _is_null: true } } }) {
+    author_id
+    first_name
+  }
+}

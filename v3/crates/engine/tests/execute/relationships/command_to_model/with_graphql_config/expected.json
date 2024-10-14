@@ -1,0 +1,32 @@
+[
+  {
+    "data": {
+      "getActorById": {
+        "Movies": [
+          {
+            "movie_id": 1,
+            "rating": 4,
+            "title": "Titanic"
+          }
+        ],
+        "actor_id": 1,
+        "name": "Leonardo DiCaprio"
+      }
+    }
+  },
+  {
+    "data": {
+      "getActorById": {
+        "Movies": [
+          {
+            "movie_id": 1,
+            "rating": 4,
+            "title": "Titanic"
+          }
+        ],
+        "actor_id": 1,
+        "name": "Leonardo DiCaprio"
+      }
+    }
+  }
+]

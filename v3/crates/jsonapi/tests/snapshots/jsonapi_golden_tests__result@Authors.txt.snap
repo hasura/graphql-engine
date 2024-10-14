@@ -1,0 +1,16 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/select_model/Authors.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [],
+        ),
+    ),
+    included: None,
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

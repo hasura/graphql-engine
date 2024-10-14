@@ -87,7 +87,7 @@ export const openTelemetrySchema = z
      * OpenTelemetry is disabled if it is empty but this is not true anymore because of the bad UX
      * consequences).
      */
-    status: z.enum(['enabled', 'disabled']),
+    status: z.string(),
 
     /**
      * The individually-enabled telemetry export types

@@ -1,0 +1,201 @@
+{
+  "version": "v2",
+  "supergraph": {
+    "objects": [
+      {
+        "kind": "GraphqlConfig",
+        "version": "v1",
+        "definition": {
+          "query": {
+            "rootOperationTypeName": "Query"
+          },
+          "mutation": {
+            "rootOperationTypeName": "Mutation"
+          }
+        }
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "author",
+            "fields": [
+              {
+                "name": "author_id",
+                "type": "CustomInt!"
+              },
+              {
+                "name": "first_name",
+                "type": "String!"
+              },
+              {
+                "name": "last_name",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Author"
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "CustomInt",
+            "graphql": {
+              "typeName": "CustomInt"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "article",
+            "fields": [
+              {
+                "name": "article_id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              },
+              {
+                "name": "author_id",
+                "type": "CustomInt!"
+              }
+            ],
+            "globalIdFields": ["article_id"],
+            "graphql": {
+              "typeName": "Article"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Authors",
+            "objectType": "author",
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "AuthorByID",
+                  "uniqueIdentifier": ["author_id"]
+                }
+              ]
+            },
+            "orderableFields": [
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "first_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "last_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Articles",
+            "objectType": "article",
+            "globalIdSource": true,
+            "orderableFields": [
+              {
+                "fieldName": "article_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArticleByID",
+                  "uniqueIdentifier": ["article_id"]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "ArticlesByAuthor",
+            "objectType": "article",
+            "arguments": [
+              {
+                "name": "author_id",
+                "type": "Int!"
+              }
+            ],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArticlesByAuthorByID",
+                  "uniqueIdentifier": ["article_id"]
+                }
+              ],
+              "argumentsInputType": "ArticlesByAuthorArgs"
+            },
+            "orderableFields": [
+              {
+                "fieldName": "article_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

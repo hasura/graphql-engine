@@ -1,0 +1,729 @@
+[
+  {
+    "data": {
+      "__schema": {
+        "types": [
+          {
+            "name": "Actor",
+            "description": "Object to identify an actor.",
+            "fields": [
+              {
+                "name": "actor_id",
+                "isDeprecated": true,
+                "deprecationReason": "actor_id is deprecated"
+              },
+              {
+                "name": "movie_id",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "Article",
+            "description": null,
+            "fields": [
+              {
+                "name": "article_id",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "author_id",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "title",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "Author",
+            "description": null,
+            "fields": [
+              {
+                "name": "Articles_relationship",
+                "isDeprecated": true,
+                "deprecationReason": "This relationship is deprecated"
+              },
+              {
+                "name": "author_id",
+                "isDeprecated": true,
+                "deprecationReason": "No longer supported"
+              },
+              {
+                "name": "first_name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "last_name",
+                "isDeprecated": true,
+                "deprecationReason": "last_name is deprecated"
+              }
+            ]
+          },
+          {
+            "name": "AuthorArgs",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "Boolean",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "Float",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "ID",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "Int",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "Mutation",
+            "description": null,
+            "fields": [
+              {
+                "name": "_no_fields_accessible",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "NameFilterOpaqueSurname",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "Opaque",
+            "description": "Opaque scalar type description.",
+            "fields": null
+          },
+          {
+            "name": "Query",
+            "description": null,
+            "fields": [
+              {
+                "name": "AuthorByID",
+                "isDeprecated": true,
+                "deprecationReason": "Selecting an author by ID is deprecated"
+              },
+              {
+                "name": "AuthorMany",
+                "isDeprecated": true,
+                "deprecationReason": "No longer supported"
+              },
+              {
+                "name": "getActorsByNameOpaqueSurname",
+                "isDeprecated": true,
+                "deprecationReason": "This command is deprecated"
+              },
+              {
+                "name": "getActorsByOpaqueName",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "String",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "__Directive",
+            "description": null,
+            "fields": [
+              {
+                "name": "args",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "isRepeatable",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "locations",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__DirectiveLocation",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "__EnumValue",
+            "description": null,
+            "fields": [
+              {
+                "name": "deprecationReason",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "isDeprecated",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__Field",
+            "description": null,
+            "fields": [
+              {
+                "name": "args",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "deprecationReason",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "isDeprecated",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "type",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__InputValue",
+            "description": null,
+            "fields": [
+              {
+                "name": "defaultValue",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "deprecationReason",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "isDeprecated",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "type",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__Schema",
+            "description": null,
+            "fields": [
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "directives",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "mutationType",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "queryType",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "subscriptionType",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "types",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__Type",
+            "description": null,
+            "fields": [
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "enumValues",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "fields",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "inputFields",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "interfaces",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "kind",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "ofType",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "possibleTypes",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "specifiedByURL",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__TypeKind",
+            "description": null,
+            "fields": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "__schema": {
+        "types": [
+          {
+            "name": "Article",
+            "description": null,
+            "fields": [
+              {
+                "name": "article_id",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "author_id",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "title",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "Author",
+            "description": null,
+            "fields": [
+              {
+                "name": "Articles_relationship",
+                "isDeprecated": true,
+                "deprecationReason": "This relationship is deprecated"
+              },
+              {
+                "name": "author_id",
+                "isDeprecated": true,
+                "deprecationReason": "No longer supported"
+              },
+              {
+                "name": "first_name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "last_name",
+                "isDeprecated": true,
+                "deprecationReason": "last_name is deprecated"
+              }
+            ]
+          },
+          {
+            "name": "AuthorArgs",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "Boolean",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "Float",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "ID",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "Int",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "Mutation",
+            "description": null,
+            "fields": [
+              {
+                "name": "_no_fields_accessible",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "Query",
+            "description": null,
+            "fields": [
+              {
+                "name": "AuthorByID",
+                "isDeprecated": true,
+                "deprecationReason": "Selecting an author by ID is deprecated"
+              },
+              {
+                "name": "AuthorMany",
+                "isDeprecated": true,
+                "deprecationReason": "No longer supported"
+              }
+            ]
+          },
+          {
+            "name": "String",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "__Directive",
+            "description": null,
+            "fields": [
+              {
+                "name": "args",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "isRepeatable",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "locations",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__DirectiveLocation",
+            "description": null,
+            "fields": null
+          },
+          {
+            "name": "__EnumValue",
+            "description": null,
+            "fields": [
+              {
+                "name": "deprecationReason",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "isDeprecated",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__Field",
+            "description": null,
+            "fields": [
+              {
+                "name": "args",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "deprecationReason",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "isDeprecated",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "type",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__InputValue",
+            "description": null,
+            "fields": [
+              {
+                "name": "defaultValue",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "deprecationReason",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "isDeprecated",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "type",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__Schema",
+            "description": null,
+            "fields": [
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "directives",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "mutationType",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "queryType",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "subscriptionType",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "types",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__Type",
+            "description": null,
+            "fields": [
+              {
+                "name": "description",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "enumValues",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "fields",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "inputFields",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "interfaces",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "kind",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "name",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "ofType",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "possibleTypes",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "specifiedByURL",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ]
+          },
+          {
+            "name": "__TypeKind",
+            "description": null,
+            "fields": null
+          }
+        ]
+      }
+    }
+  }
+]

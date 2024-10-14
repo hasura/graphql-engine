@@ -454,7 +454,7 @@ response_2 = {
 }
 
 # query_3 is only in collection_2
-query_3 = """
+query_3_pro_only = """
   query {
     author {
       id
@@ -501,7 +501,7 @@ def assert_query_not_allowed(hge_ctx, role, query):
     })
 
 @usefixtures('clean_allowlist', 'per_class_tests_db_state')
-class TestRoleBasedAllowlistQueries:
+class TestRoleBasedAllowlistQueriesCE:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/allowlist_role_based'
@@ -511,11 +511,11 @@ class TestRoleBasedAllowlistQueries:
             assert_query_not_allowed(hge_ctx, role, query_0)
             assert_query_not_allowed(hge_ctx, role, query_1)
             assert_query_not_allowed(hge_ctx, role, query_2)
-            assert_query_not_allowed(hge_ctx, role, query_3)
+            assert_query_not_allowed(hge_ctx, role, query_3_pro_only)
         assert_query_allowed(hge_ctx, "admin", query_0, response_0)
         assert_query_allowed(hge_ctx, "admin", query_1, response_1)
         assert_query_allowed(hge_ctx, "admin", query_2, response_2)
-        assert_query_allowed(hge_ctx, "admin", query_3, response_3)
+        assert_query_allowed(hge_ctx, "admin", query_3_pro_only, response_3)
 
     def test_allowlists(self, hge_ctx):
         add_collection_to_allowlist(hge_ctx, {
@@ -540,9 +540,32 @@ class TestRoleBasedAllowlistQueries:
           assert_query_allowed(hge_ctx, role, query_1, response_1)
           assert_query_allowed(hge_ctx, role, query_2, response_2)
 
-        assert_query_not_allowed(hge_ctx, "guest", query_3)
+        if not hge_ctx.pro_tests:
+            assert_query_not_allowed(hge_ctx, "user", query_3_pro_only)
 
-        if hge_ctx.pro_tests:
-            assert_query_allowed(hge_ctx, "user", query_3, response_3)
-        else:
-            assert_query_not_allowed(hge_ctx, "user", query_3)
+@pytest.mark.admin_secret
+@usefixtures('clean_allowlist', 'pro_tests_fixtures', 'enterprise_edition', 'per_class_tests_db_state')
+class TestRoleBasedAllowlistQueriesPro:
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/allowlist_role_based'
+
+    def test_allowlists(self, hge_ctx):
+        add_collection_to_allowlist(hge_ctx, {
+            "collection": "collection_1",
+            "scope": {
+                "global": True,
+            }
+        })
+        add_collection_to_allowlist(hge_ctx, {
+            "collection": "collection_2",
+            "scope": {
+                "global": False,
+                "roles": [
+                    "user",
+                    "editor"
+                ]
+            }
+        })
+
+        assert_query_allowed(hge_ctx, "user", query_3_pro_only, response_3)

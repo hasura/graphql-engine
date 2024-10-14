@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Hasura.App.State
   ( -- * application state
@@ -27,6 +28,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Environment qualified as E
 import Data.HashSet qualified as Set
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.Role (RoleName)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
 import Hasura.CredentialCache
@@ -43,7 +45,6 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.NamingCase
-import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache (MetadataResourceVersion)
 import Hasura.Server.Auth
@@ -171,7 +172,10 @@ data AppContext = AppContext
     acAsyncActionsFetchInterval :: OptionalInterval,
     acApolloFederationStatus :: ApolloFederationStatus,
     acCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus,
-    acSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags
+    acSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags,
+    acRemoteSchemaResponsePriority :: RemoteSchemaResponsePriority,
+    acHeaderPrecedence :: HeaderPrecedence,
+    acTraceQueryStatus :: TraceQueryStatus
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -292,7 +296,10 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys, checkFeatureFlag) -> 
           acAsyncActionsFetchInterval = soAsyncActionsFetchInterval,
           acApolloFederationStatus = soApolloFederationStatus,
           acCloseWebsocketsOnMetadataChangeStatus = soCloseWebsocketsOnMetadataChangeStatus,
-          acSchemaSampledFeatureFlags = schemaSampledFeatureFlags
+          acSchemaSampledFeatureFlags = schemaSampledFeatureFlags,
+          acRemoteSchemaResponsePriority = soRemoteSchemaResponsePriority,
+          acHeaderPrecedence = soHeaderPrecedence,
+          acTraceQueryStatus = soTraceQueryStatus
         }
   where
     buildEventEngineCtx = Inc.cache proc (httpPoolSize, fetchInterval, fetchBatchSize) -> do
@@ -344,7 +351,15 @@ initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse nullInN
       bigqueryStringNumericInput
         | EFBigQueryStringNumericInput `elem` experimentalFeatures = Options.EnableBigQueryStringNumericInput
         | otherwise = Options.DisableBigQueryStringNumericInput
-   in SQLGenCtx stringifyNum dangerousBooleanCollapse nullInNonNullableVariables remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput
+
+      noNullUnboundVariableDefault
+        | EFNoNullUnboundVariableDefault `elem` experimentalFeatures = Options.RemoveUnboundNullableVariablesFromTheQuery
+        | otherwise = Options.DefaultUnboundNullableVariablesToNull
+
+      removeEmptySubscriptionResponses
+        | EFRemoveEmptySubscriptionResponses `elem` experimentalFeatures = Options.RemoveEmptyResponses
+        | otherwise = Options.PreserveEmptyResponses
+   in SQLGenCtx stringifyNum dangerousBooleanCollapse nullInNonNullableVariables noNullUnboundVariableDefault removeEmptySubscriptionResponses remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput
 
 buildCacheStaticConfig :: AppEnv -> CacheStaticConfig
 buildCacheStaticConfig AppEnv {..} =

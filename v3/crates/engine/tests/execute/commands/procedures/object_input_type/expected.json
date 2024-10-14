@@ -1,0 +1,40 @@
+[
+  {
+    "data": {
+      "addMovieWithGenres": {
+        "movie_id": 111,
+        "title": "MyMovie",
+        "rating": 10,
+        "genres": [
+          {
+            "genre_id": 1,
+            "name": "horror"
+          },
+          {
+            "genre_id": 2,
+            "name": "thriller"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "addMovieWithGenres": {
+        "movie_id": 111,
+        "title": "MyMovie",
+        "rating": 10,
+        "genres": [
+          {
+            "genre_id": 1,
+            "name": "horror"
+          },
+          {
+            "genre_id": 2,
+            "name": "thriller"
+          }
+        ]
+      }
+    }
+  }
+]

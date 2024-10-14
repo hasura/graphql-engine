@@ -148,7 +148,7 @@ createUpdatePermissions testEnvironment server =
               { updatePermissionTable = "user",
                 updatePermissionRole = "user",
                 updatePermissionColumns = ["id", "name", "email", "phone_number"],
-                updatePermissionValidationWebhook = Just $ (T.pack $ serverUrl server) <> "/validateUpdateUser"
+                updatePermissionValidationWebhook = Just $ T.pack (serverUrl server) <> "/validateUpdateUser"
               }
 
         GraphqlEngine.postMetadata_ testEnvironment
@@ -173,7 +173,7 @@ createUpdatePermissions testEnvironment server =
               { updatePermissionTable = "tweet",
                 updatePermissionRole = "user",
                 updatePermissionColumns = ["id", "user_id", "content", "email"],
-                updatePermissionValidationWebhook = Just $ (T.pack $ serverUrl server) <> "/validateUpdateTweet"
+                updatePermissionValidationWebhook = Just $ T.pack (serverUrl server) <> "/validateUpdateTweet"
               },
       Fixture.teardownAction = \_ -> pure ()
     }

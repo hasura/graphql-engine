@@ -36,6 +36,8 @@ directories as per the example below:
 ├─ 📄 graphql_schema_introspection.yaml
 ├─ 📄 inherited_roles.yaml
 ├─ 📄 network.yaml
+├─ 📄 metrics_config.yaml
+├─ 📄 opentelemetry.yaml
 ├─ 📄 query_collections.yaml
 ├─ 📄 remote_schemas.yaml
 ├─ 📄 rest_endpoints.yaml
@@ -415,6 +417,47 @@ tls_allowlist:
     permissions:
       - self-signed
     suffix: core.graphql
+```
+
+### metrics_config.yaml
+
+The `metrics_config.yaml` file contains Metadata related to configuratbility of which GraphQL-related entities are
+observable via metrics for debugging and analytics. All values are boolean. More information can be found
+[here](/api-reference/metadata-api/observability.mdx#logs-and-metrics-configuration).
+
+**Example**: Enabling metrics for query-variable analysis, and disabling metrics for the resposne body
+
+```yaml
+analyze_query_variables: true
+analyze_response_body: false
+```
+
+### opentelemetry.yaml
+
+The `opentelemetry.yaml` file contains Metadata related to configuring your OpenTelemetry receiver. More information can
+be found [here](/observability/opentelemetry/index.mdx).
+
+An example `opentelemetry.yaml` takes this shape:
+
+```yaml
+status: enabled
+data_types:
+  - traces
+exporter_otlp:
+  headers:
+    - name: x-test-header
+      value: testing
+    - name: x-header-from-env
+      value_from_env: TEST_ENV_VAR
+  resource_attributes:
+    - name: stage
+      value: production
+    - name: region
+      value: us-east
+  otlp_traces_endpoint: http://host.docker.internal:4318/v1/traces
+  protocol: http/protobuf
+batch_span_processor:
+  max_export_batch_size: 512
 ```
 
 ### query_collections.yaml

@@ -1,0 +1,464 @@
+Ok(
+    ExecutableDocument {
+        items: [
+            Spanning {
+                item: Operation(
+                    OperationDefinition {
+                        ty: Query,
+                        name: None,
+                        variable_definitions: None,
+                        directives: [],
+                        selection_set: Spanning {
+                            item: SelectionSet {
+                                items: [
+                                    Spanning {
+                                        item: Field(
+                                            Field {
+                                                alias: None,
+                                                name: Spanning {
+                                                    item: Name(
+                                                        "user",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 2,
+                                                        col: 5,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 2,
+                                                        col: 8,
+                                                    },
+                                                },
+                                                arguments: Some(
+                                                    Spanning {
+                                                        item: [
+                                                            Spanning {
+                                                                item: KeyValue {
+                                                                    key: Spanning {
+                                                                        item: Name(
+                                                                            "id",
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 3,
+                                                                            col: 9,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 3,
+                                                                            col: 10,
+                                                                        },
+                                                                    },
+                                                                    value: Spanning {
+                                                                        item: SimpleValue(
+                                                                            Integer(
+                                                                                4,
+                                                                            ),
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 3,
+                                                                            col: 13,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 3,
+                                                                            col: 13,
+                                                                        },
+                                                                    },
+                                                                },
+                                                                start: SourcePosition {
+                                                                    line: 3,
+                                                                    col: 9,
+                                                                },
+                                                                end: SourcePosition {
+                                                                    line: 3,
+                                                                    col: 13,
+                                                                },
+                                                            },
+                                                            Spanning {
+                                                                item: KeyValue {
+                                                                    key: Spanning {
+                                                                        item: Name(
+                                                                            "size",
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 4,
+                                                                            col: 9,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 4,
+                                                                            col: 12,
+                                                                        },
+                                                                    },
+                                                                    value: Spanning {
+                                                                        item: Variable(
+                                                                            Name(
+                                                                                "size",
+                                                                            ),
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 4,
+                                                                            col: 15,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 4,
+                                                                            col: 19,
+                                                                        },
+                                                                    },
+                                                                },
+                                                                start: SourcePosition {
+                                                                    line: 4,
+                                                                    col: 9,
+                                                                },
+                                                                end: SourcePosition {
+                                                                    line: 4,
+                                                                    col: 19,
+                                                                },
+                                                            },
+                                                            Spanning {
+                                                                item: KeyValue {
+                                                                    key: Spanning {
+                                                                        item: Name(
+                                                                            "value",
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 5,
+                                                                            col: 9,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 5,
+                                                                            col: 13,
+                                                                        },
+                                                                    },
+                                                                    value: Spanning {
+                                                                        item: SimpleValue(
+                                                                            String(
+                                                                                "string",
+                                                                            ),
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 5,
+                                                                            col: 16,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 5,
+                                                                            col: 23,
+                                                                        },
+                                                                    },
+                                                                },
+                                                                start: SourcePosition {
+                                                                    line: 5,
+                                                                    col: 9,
+                                                                },
+                                                                end: SourcePosition {
+                                                                    line: 5,
+                                                                    col: 23,
+                                                                },
+                                                            },
+                                                            Spanning {
+                                                                item: KeyValue {
+                                                                    key: Spanning {
+                                                                        item: Name(
+                                                                            "input",
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 6,
+                                                                            col: 9,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 6,
+                                                                            col: 13,
+                                                                        },
+                                                                    },
+                                                                    value: Spanning {
+                                                                        item: List(
+                                                                            [
+                                                                                Spanning {
+                                                                                    item: SimpleValue(
+                                                                                        String(
+                                                                                            "one",
+                                                                                        ),
+                                                                                    ),
+                                                                                    start: SourcePosition {
+                                                                                        line: 6,
+                                                                                        col: 18,
+                                                                                    },
+                                                                                    end: SourcePosition {
+                                                                                        line: 6,
+                                                                                        col: 22,
+                                                                                    },
+                                                                                },
+                                                                                Spanning {
+                                                                                    item: SimpleValue(
+                                                                                        Float(
+                                                                                            1.34,
+                                                                                        ),
+                                                                                    ),
+                                                                                    start: SourcePosition {
+                                                                                        line: 6,
+                                                                                        col: 25,
+                                                                                    },
+                                                                                    end: SourcePosition {
+                                                                                        line: 6,
+                                                                                        col: 28,
+                                                                                    },
+                                                                                },
+                                                                            ],
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 6,
+                                                                            col: 16,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 6,
+                                                                            col: 30,
+                                                                        },
+                                                                    },
+                                                                },
+                                                                start: SourcePosition {
+                                                                    line: 6,
+                                                                    col: 9,
+                                                                },
+                                                                end: SourcePosition {
+                                                                    line: 6,
+                                                                    col: 30,
+                                                                },
+                                                            },
+                                                            Spanning {
+                                                                item: KeyValue {
+                                                                    key: Spanning {
+                                                                        item: Name(
+                                                                            "otherInput",
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 7,
+                                                                            col: 9,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 7,
+                                                                            col: 18,
+                                                                        },
+                                                                    },
+                                                                    value: Spanning {
+                                                                        item: Object(
+                                                                            [
+                                                                                Spanning {
+                                                                                    item: KeyValue {
+                                                                                        key: Spanning {
+                                                                                            item: Name(
+                                                                                                "key",
+                                                                                            ),
+                                                                                            start: SourcePosition {
+                                                                                                line: 7,
+                                                                                                col: 23,
+                                                                                            },
+                                                                                            end: SourcePosition {
+                                                                                                line: 7,
+                                                                                                col: 25,
+                                                                                            },
+                                                                                        },
+                                                                                        value: Spanning {
+                                                                                            item: SimpleValue(
+                                                                                                Boolean(
+                                                                                                    false,
+                                                                                                ),
+                                                                                            ),
+                                                                                            start: SourcePosition {
+                                                                                                line: 7,
+                                                                                                col: 28,
+                                                                                            },
+                                                                                            end: SourcePosition {
+                                                                                                line: 7,
+                                                                                                col: 32,
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                    start: SourcePosition {
+                                                                                        line: 7,
+                                                                                        col: 23,
+                                                                                    },
+                                                                                    end: SourcePosition {
+                                                                                        line: 7,
+                                                                                        col: 32,
+                                                                                    },
+                                                                                },
+                                                                                Spanning {
+                                                                                    item: KeyValue {
+                                                                                        key: Spanning {
+                                                                                            item: Name(
+                                                                                                "output",
+                                                                                            ),
+                                                                                            start: SourcePosition {
+                                                                                                line: 7,
+                                                                                                col: 35,
+                                                                                            },
+                                                                                            end: SourcePosition {
+                                                                                                line: 7,
+                                                                                                col: 40,
+                                                                                            },
+                                                                                        },
+                                                                                        value: Spanning {
+                                                                                            item: SimpleValue(
+                                                                                                Null,
+                                                                                            ),
+                                                                                            start: SourcePosition {
+                                                                                                line: 7,
+                                                                                                col: 43,
+                                                                                            },
+                                                                                            end: SourcePosition {
+                                                                                                line: 7,
+                                                                                                col: 46,
+                                                                                            },
+                                                                                        },
+                                                                                    },
+                                                                                    start: SourcePosition {
+                                                                                        line: 7,
+                                                                                        col: 35,
+                                                                                    },
+                                                                                    end: SourcePosition {
+                                                                                        line: 7,
+                                                                                        col: 46,
+                                                                                    },
+                                                                                },
+                                                                            ],
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 7,
+                                                                            col: 21,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 7,
+                                                                            col: 48,
+                                                                        },
+                                                                    },
+                                                                },
+                                                                start: SourcePosition {
+                                                                    line: 7,
+                                                                    col: 9,
+                                                                },
+                                                                end: SourcePosition {
+                                                                    line: 7,
+                                                                    col: 48,
+                                                                },
+                                                            },
+                                                            Spanning {
+                                                                item: KeyValue {
+                                                                    key: Spanning {
+                                                                        item: Name(
+                                                                            "emptyList",
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 8,
+                                                                            col: 9,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 8,
+                                                                            col: 17,
+                                                                        },
+                                                                    },
+                                                                    value: Spanning {
+                                                                        item: List(
+                                                                            [],
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 8,
+                                                                            col: 20,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 8,
+                                                                            col: 21,
+                                                                        },
+                                                                    },
+                                                                },
+                                                                start: SourcePosition {
+                                                                    line: 8,
+                                                                    col: 9,
+                                                                },
+                                                                end: SourcePosition {
+                                                                    line: 8,
+                                                                    col: 21,
+                                                                },
+                                                            },
+                                                            Spanning {
+                                                                item: KeyValue {
+                                                                    key: Spanning {
+                                                                        item: Name(
+                                                                            "emptyObject",
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 9,
+                                                                            col: 9,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 9,
+                                                                            col: 19,
+                                                                        },
+                                                                    },
+                                                                    value: Spanning {
+                                                                        item: Object(
+                                                                            [],
+                                                                        ),
+                                                                        start: SourcePosition {
+                                                                            line: 9,
+                                                                            col: 22,
+                                                                        },
+                                                                        end: SourcePosition {
+                                                                            line: 9,
+                                                                            col: 23,
+                                                                        },
+                                                                    },
+                                                                },
+                                                                start: SourcePosition {
+                                                                    line: 9,
+                                                                    col: 9,
+                                                                },
+                                                                end: SourcePosition {
+                                                                    line: 9,
+                                                                    col: 23,
+                                                                },
+                                                            },
+                                                        ],
+                                                        start: SourcePosition {
+                                                            line: 2,
+                                                            col: 9,
+                                                        },
+                                                        end: SourcePosition {
+                                                            line: 10,
+                                                            col: 5,
+                                                        },
+                                                    },
+                                                ),
+                                                directives: [],
+                                                selection_set: None,
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 2,
+                                            col: 5,
+                                        },
+                                        end: SourcePosition {
+                                            line: 2,
+                                            col: 8,
+                                        },
+                                    },
+                                ],
+                            },
+                            start: SourcePosition {
+                                line: 1,
+                                col: 1,
+                            },
+                            end: SourcePosition {
+                                line: 11,
+                                col: 1,
+                            },
+                        },
+                    },
+                ),
+                start: SourcePosition {
+                    line: 1,
+                    col: 1,
+                },
+                end: SourcePosition {
+                    line: 11,
+                    col: 1,
+                },
+            },
+        ],
+    },
+)

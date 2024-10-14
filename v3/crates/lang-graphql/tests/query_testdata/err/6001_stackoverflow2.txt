@@ -1,0 +1,11 @@
+Err(
+    Positioned {
+        item: OtherError(
+            "Recursion limit exceeded",
+        ),
+        position: SourcePosition {
+            line: 2,
+            col: 190,
+        },
+    },
+)

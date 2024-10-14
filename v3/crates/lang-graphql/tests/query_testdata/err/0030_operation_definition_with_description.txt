@@ -1,0 +1,32 @@
+Err(
+    Positioned {
+        item: TokenError {
+            expected_tokens: [
+                Keyword(
+                    Query,
+                ),
+                Keyword(
+                    Mutation,
+                ),
+                Keyword(
+                    Subscription,
+                ),
+                Keyword(
+                    Fragment,
+                ),
+                Punctuation(
+                    BraceL,
+                ),
+            ],
+            found: Token(
+                String(
+                    "after this PR this should not be an issue: https://github.com/graphql/graphql-spec/pull/892",
+                ),
+            ),
+        },
+        position: SourcePosition {
+            line: 1,
+            col: 1,
+        },
+    },
+)

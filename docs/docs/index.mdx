@@ -35,16 +35,24 @@ import Testing from '@site/static/icons/features/testing.svg';
   <div className="sub-heading">
     <div className="front-matter">
       <p>
-        The Hasura GraphQL Engine makes your data instantly accessible over a GraphQL API, so you can build and ship
-        modern, performant apps and APIs 10x faster. Hasura connects to your databases, REST and GraphQL endpoints, and
-        third party APIs to provide a unified, connected, real-time, secured GraphQL API for all of your data.
+        The{' '}
+        <Link to="https://github.com/hasura/graphql-engine" target="_blank">
+          <b>open-source Hasura GraphQL Engine</b>
+        </Link>{' '}
+        makes your data instantly accessible over a GraphQL API, so you can build and ship modern, performant apps and
+        APIs 10x faster. Hasura connects to your databases, REST and GraphQL endpoints, and third party APIs to provide
+        a unified, connected, real-time, secured GraphQL API for all of your data. You can deploy Hasura manually using
+        our{' '}
+        <Link to="https://hub.docker.com/r/hasura/graphql-engine-base/tags" target="_blank">
+          Community Edition Docker image
+        </Link>{' '}
+        which includes all the core features of GraphQL Engine.
         <br />
         <br />
         <Link to="https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=hasura-cloud&tech=default" target="_blank">
           <b>Hasura Cloud</b>
         </Link> empowers you to create highly optimized, managed and massively scalable Hasura instances in seconds and includes
-        extra reliability, monitoring, caching, tracing, security and deployment features. You can also deploy Hasura manually
-        using our Community Edition Docker image which includes all the core features of GraphQL Engine.
+        extra reliability, monitoring, caching, tracing, security and deployment features.
         <br />
         <br />
         <VersionedLink to="/enterprise/overview">

@@ -1,0 +1,1 @@
+directive @example(isTreat: Boolean, treatKind: String) on FIELD | MUTATION

@@ -1,0 +1,9 @@
+cats
+# https://github.com/apollographql/apollo-rs/issues/325
+
+interface X {}
+
+cats
+type Query {
+    name: String
+}

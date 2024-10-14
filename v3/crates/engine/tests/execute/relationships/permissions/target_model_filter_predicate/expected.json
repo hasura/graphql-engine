@@ -1,0 +1,21 @@
+[
+  {
+    "data": {
+      "getActorById": {
+        "actor_id": 1,
+        "Movies": {
+          "movie_id": 1,
+          "title": "Titanic"
+        }
+      }
+    }
+  },
+  {
+    "data": {
+      "getActorById": {
+        "actor_id": 1,
+        "Movies": null
+      }
+    }
+  }
+]

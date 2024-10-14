@@ -10,6 +10,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Tagged qualified as Tagged
 import Data.Text.Extended (toTxt, (<>>))
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Base.Error
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Action
@@ -37,10 +38,10 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Schema.Options as Options
 import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Init.Config (ResponseInternalErrorsConfig (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
-import Hasura.Server.Types (MonadGetPolicies, RequestId (..))
+import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, RequestId (..), TraceQueryStatus)
 import Hasura.Services.Network
-import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -49,6 +50,7 @@ import Network.HTTP.Types qualified as HTTP
 parseGraphQLQuery ::
   (MonadError QErr m) =>
   Options.BackwardsCompatibleNullInNonNullableVariables ->
+  Options.NoNullUnboundVariableDefault ->
   GQLContext ->
   [G.VariableDefinition] ->
   Maybe (HashMap G.Name J.Value) ->
@@ -59,8 +61,8 @@ parseGraphQLQuery ::
       [G.Directive Variable],
       G.SelectionSet G.NoFragments Variable
     )
-parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs varValsM directives fields = do
-  (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables varDefs (fromMaybe HashMap.empty varValsM) directives fields
+parseGraphQLQuery nullInNonNullableVariables noNullUnboundVariableDefault gqlContext varDefs varValsM directives fields = do
+  (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables noNullUnboundVariableDefault varDefs (fromMaybe HashMap.empty varValsM) directives fields
   parsedQuery <- liftEither $ gqlQueryParser gqlContext resolvedSelSet
   pure (parsedQuery, resolvedDirectives, resolvedSelSet)
 
@@ -91,6 +93,9 @@ convertQuerySelSet ::
   RequestId ->
   -- | Graphql Operation Name
   Maybe G.Name ->
+  ResponseInternalErrorsConfig ->
+  HeaderPrecedence ->
+  TraceQueryStatus ->
   m (ExecutionPlan, [QueryRootField UnpreparedValue], DirectiveMap, ParameterizedQueryHash, [ModelInfoPart])
 convertQuerySelSet
   env
@@ -98,7 +103,7 @@ convertQuerySelSet
   tracingPropagator
   prometheusMetrics
   gqlContext
-  SQLGenCtx {nullInNonNullableVariables}
+  SQLGenCtx {nullInNonNullableVariables, noNullUnboundVariableDefault}
   userInfo
   reqHeaders
   directives
@@ -107,17 +112,20 @@ convertQuerySelSet
   gqlUnparsed
   introspectionDisabledRoles
   reqId
-  maybeOperationName = do
+  maybeOperationName
+  responseErrorsConfig
+  headerPrecedence
+  traceQueryStatus = do
     -- 1. Parse the GraphQL query into the 'RootFieldMap' and a 'SelectionSet'
     (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
-      Tracing.newSpan "Parse query IR" $ parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
+      Tracing.newSpan "Parse query IR" Tracing.SKInternal $ parseGraphQLQuery nullInNonNullableVariables noNullUnboundVariableDefault gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
 
     -- 2. Parse directives on the query
     dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
 
-        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) do
+        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) Tracing.SKInternal do
           case rootFieldUnpreparedValue of
             RFMulti lst -> do
               allSteps <- traverse (resolveExecutionSteps rootFieldName) lst
@@ -137,7 +145,7 @@ convertQuerySelSet
                       queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
-                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
+                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName traceQueryStatus
                   pure $ (ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins, dbModelInfoList)
             RFRemote (RemoteSchemaName rName) rf -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
@@ -158,11 +166,12 @@ convertQuerySelSet
                         prometheusMetrics
                         s
                         (ActionExecContext reqHeaders (_uiSession userInfo))
-                        (Just (GH._grQuery gqlUnparsed)),
+                        (Just (GH._grQuery gqlUnparsed))
+                        headerPrecedence,
                     _aaeName s,
                     _aaeForwardClientHeaders s
                   )
-                AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
+                AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s responseErrorsConfig, _aaaqName s, _aaaqForwardClientHeaders s)
               let actionsModel = ModelInfoPart (toTxt actionName) ModelTypeAction Nothing Nothing (ModelOperationType G.OperationTypeQuery)
               pure $ (ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins, [actionsModel])
             RFRaw r -> fmap (,[]) $ flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles

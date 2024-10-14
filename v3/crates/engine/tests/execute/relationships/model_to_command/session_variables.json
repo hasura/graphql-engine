@@ -1,0 +1,14 @@
+[
+  {
+    "x-hasura-role": "admin"
+  },
+  {
+    "x-hasura-role": "user"
+  },
+  {
+    "x-hasura-role": "user_without_perm_on_movie_id"
+  },
+  {
+    "x-hasura-role": "user_without_perm_on_command"
+  }
+]

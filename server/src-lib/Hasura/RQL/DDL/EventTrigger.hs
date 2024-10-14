@@ -60,6 +60,7 @@ import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.URL.Template (printTemplate, renderTemplate)
+import Hasura.Authentication.User (UserInfoM (..))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Backend
@@ -81,7 +82,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Session
 import Hasura.Table.Cache
 import Hasura.Table.Metadata (TableMetadata (..), tmEventTriggers)
 import Hasura.Tracing (TraceT)

@@ -13,6 +13,7 @@ import Data.Aeson.Casing qualified as J (snakeCase)
 import Data.Environment qualified as Env
 import Data.Has (Has)
 import Hasura.App.State
+import Hasura.Authentication.User (UserInfoM)
 import Hasura.Backends.Postgres.DDL.RunSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -58,7 +59,6 @@ import Hasura.RemoteSchema.MetadataAPI
 import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Services
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
 data RQLQueryV1
@@ -217,20 +217,21 @@ runQuery appContext sc query = do
     then case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do
         -- set modified metadata in storage
-        newResourceVersion <- liftEitherM $ setMetadata currentResourceVersion updatedMetadata
-
-        (_, modSchemaCache', _, _, _) <-
-          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
-            $ setMetadataResourceVersionInSchemaCache newResourceVersion
-            & runCacheRWT dynamicConfig modSchemaCache
+        newResourceVersion <-
+          liftEitherM
+            $ updateMetadataAndNotifySchemaSync appEnvInstanceId currentResourceVersion updatedMetadata invalidations
 
         -- save sources introspection to stored-introspection DB
         saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
+
+        (_, modSchemaCache', _, _, _) <-
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache" Tracing.SKInternal
+            $ setMetadataResourceVersionInSchemaCache newResourceVersion
+            & runCacheRWT dynamicConfig modSchemaCache
+
         -- run schema registry action
         for_ schemaRegistryAction $ \action -> do
           liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache')) updatedMetadata
-        -- notify schema cache sync
-        liftEitherM $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
 
         pure (result, modSchemaCache')
       MaintenanceModeEnabled () ->

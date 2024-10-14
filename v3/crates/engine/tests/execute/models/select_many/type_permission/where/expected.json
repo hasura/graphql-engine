@@ -1,0 +1,20 @@
+[
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "author_id": 1,
+          "last_name": "Landin"
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: the field last_name on type Author_Filter is not found"
+      }
+    ]
+  }
+]

@@ -1,0 +1,126 @@
+[
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "first_name": "Peter",
+          "author_id": 1,
+          "Articles": [
+            {
+              "title": "The Next 700 Programming Languages",
+              "article_id": 1
+            }
+          ]
+        },
+        {
+          "first_name": "John",
+          "author_id": 2,
+          "Articles": [
+            {
+              "title": "The Design And Implementation Of Programming Languages",
+              "article_id": 3
+            },
+            {
+              "title": "Why Functional Programming Matters",
+              "article_id": 2
+            }
+          ]
+        }
+      ],
+      "AuthorByID": {
+        "Articles": [
+          {
+            "title": "Why Functional Programming Matters",
+            "article_id": 2
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "first_name": "Peter",
+          "author_id": 1,
+          "Articles": []
+        },
+        {
+          "first_name": "John",
+          "author_id": 2,
+          "Articles": []
+        }
+      ],
+      "AuthorByID": {
+        "Articles": [
+          {
+            "title": "Why Functional Programming Matters",
+            "article_id": 2
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "first_name": "Peter",
+          "author_id": 1,
+          "Articles": []
+        },
+        {
+          "first_name": "John",
+          "author_id": 2,
+          "Articles": [
+            {
+              "title": "Why Functional Programming Matters",
+              "article_id": 2
+            }
+          ]
+        }
+      ],
+      "AuthorByID": {
+        "Articles": [
+          {
+            "title": "Why Functional Programming Matters",
+            "article_id": 2
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "first_name": "Peter",
+          "author_id": 1,
+          "Articles": []
+        },
+        {
+          "first_name": "John",
+          "author_id": 2,
+          "Articles": [
+            {
+              "title": "The Design And Implementation Of Programming Languages",
+              "article_id": 3
+            },
+            {
+              "title": "Why Functional Programming Matters",
+              "article_id": 2
+            }
+          ]
+        }
+      ],
+      "AuthorByID": {
+        "Articles": [
+          {
+            "title": "Why Functional Programming Matters",
+            "article_id": 2
+          }
+        ]
+      }
+    }
+  }
+]

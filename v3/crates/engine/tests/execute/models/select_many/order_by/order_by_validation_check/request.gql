@@ -1,0 +1,7 @@
+query MyQuery {
+  Track(order_by: [{ AlbumId: Asc, TrackId: Desc }]) {
+    Name
+    TrackId
+    AlbumId
+  }
+}

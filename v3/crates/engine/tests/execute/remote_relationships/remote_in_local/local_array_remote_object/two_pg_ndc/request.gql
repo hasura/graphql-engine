@@ -1,0 +1,14 @@
+query MyQuery {
+  Artist(limit: 1, order_by: [{ ArtistId: Asc }]) {
+    ArtistId
+    Name
+    Albums(limit: 2, order_by: [{ AlbumId: Asc }]) {
+      AlbumId
+      Title
+      Album2 {
+        AlbumId
+        Title
+      }
+    }
+  }
+}

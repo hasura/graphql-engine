@@ -2325,7 +2325,6 @@ which was not allowing the `cursor-not-allowed` class to take effect
   appearance: none;
 }
 
-:where(.bootstrap-jail) input[type='radio'],
 :where(.bootstrap-jail) input[type='checkbox'] {
   margin: 4px 0 0;
   margin-top: 1px \9;

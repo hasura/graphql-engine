@@ -1,0 +1,6 @@
+query MyQuery {
+  AuthorMany(order_by: [{ first_name: Asc }]) {
+    author_id
+    last_name
+  }
+}

@@ -1,4 +1,7 @@
+import { isCloudConsole } from '../../../../../utils';
+import globals from '../../../../../Globals';
 import { InputField } from '../../../../../new-components/Form';
+// import { isCloudConsole } from '../../../../../utils';
 
 const commonFieldProps: Partial<React.InputHTMLAttributes<HTMLInputElement>> = {
   onWheelCapture: e => e.currentTarget.blur(),
@@ -7,19 +10,30 @@ const commonFieldProps: Partial<React.InputHTMLAttributes<HTMLInputElement>> = {
 export const PoolSettings = ({ name }: { name: string }) => {
   return (
     <>
+      {isCloudConsole(globals) && (
+        <InputField
+          type="number"
+          name={`${name}.totalMaxConnections`}
+          label="Total Max Connections"
+          placeholder="1000"
+          tooltip="Maximum number of total connections to be maintained across any number of Hasura Cloud instances (default: 1000). Takes precedence over max_connections in Cloud projects."
+          fieldProps={commonFieldProps}
+        />
+      )}
+
       <InputField
         type="number"
-        name={`${name}.totalMaxConnections`}
-        label="Total Max Connections"
-        placeholder="1000"
-        tooltip="Maximum number of database connections"
+        name={`${name}.maxConnections`}
+        label="Max Connections"
+        placeholder="50"
+        tooltip="Maximum number of connections to be kept in the pool (default: 50)"
         fieldProps={commonFieldProps}
       />
       <InputField
         type="number"
         name={`${name}.idleTimeout`}
         label="Idle Timeout"
-        placeholder="180"
+        placeholder={isCloudConsole(globals) ? '30' : '180'}
         tooltip="The idle timeout (in seconds) per connection"
         fieldProps={commonFieldProps}
       />

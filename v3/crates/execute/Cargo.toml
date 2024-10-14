@@ -1,0 +1,44 @@
+[package]
+name = "execute"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+graphql-schema = { path = "../graphql/schema" }
+hasura-authn-core = { path = "../auth/hasura-authn-core" }
+graphql-ir = { path = "../graphql/ir" }
+json-ext = { path = "../utils/json-ext" }
+lang-graphql = { path = "../lang-graphql" }
+open-dds = { path = "../open-dds" }
+plan-types = { path = "../plan-types" }
+tracing-util = { path = "../utils/tracing-util" }
+metadata-resolve = {path = "../metadata-resolve" }
+futures-ext = { path = "../utils/futures-ext" }
+query-usage-analytics = { path = "../query-usage-analytics" }
+
+async-recursion = { workspace = true }
+axum = { workspace = true }
+base64 = { workspace = true }
+bytes = { workspace = true }
+futures-util = { workspace = true }
+indexmap = { workspace = true, features = ["serde"] }
+ndc-models = { workspace = true }
+ndc-models-v01 = { workspace = true }
+nonempty = { workspace = true }
+reqwest = { workspace = true, features = ["json", "multipart"] }
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
+transitive = { workspace = true }
+
+[dev-dependencies]
+mockito = { workspace = true }
+pretty_assertions = { workspace = true }
+
+[lints]
+workspace = true

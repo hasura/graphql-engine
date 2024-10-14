@@ -31,21 +31,26 @@ module Hasura.Server.Types
     ExtPersistedQueryRequest (..),
     ExtQueryReqs (..),
     MonadGetPolicies (..),
+    RemoteSchemaResponsePriority (..),
+    HeaderPrecedence (..),
+    TraceQueryStatus (..),
   )
 where
 
 import Control.Lens qualified as Lens
-import Data.Aeson hiding (json)
+import Data.Aeson
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Lens
 import Data.Aeson.TH qualified as J
 import Data.Text (intercalate, unpack)
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.Header (getRequestHeader)
+import Hasura.Authentication.Headers
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Prelude hiding (intercalate)
 import Hasura.RQL.Types.ApiLimit
 import Hasura.Server.Init.FeatureFlag (CheckFeatureFlag (..))
-import Hasura.Server.Utils
+import Hasura.Server.Utils (generateFingerprint)
 import Network.HTTP.Types qualified as HTTP
 
 newtype RequestId = RequestId {unRequestId :: Text}
@@ -103,6 +108,8 @@ data ExperimentalFeature
   | EFHideStreamFields
   | EFGroupByAggregations
   | EFDisablePostgresArrays
+  | EFNoNullUnboundVariableDefault
+  | EFRemoveEmptySubscriptionResponses
   deriving (Bounded, Enum, Eq, Generic, Show)
 
 experimentalFeatureKey :: ExperimentalFeature -> Text
@@ -118,6 +125,8 @@ experimentalFeatureKey = \case
   EFHideStreamFields -> "hide_stream_fields"
   EFGroupByAggregations -> "group_by_aggregations"
   EFDisablePostgresArrays -> "disable_postgres_arrays"
+  EFNoNullUnboundVariableDefault -> "no_null_unbound_variable_default"
+  EFRemoveEmptySubscriptionResponses -> "remove_empty_subscription_responses"
 
 instance Hashable ExperimentalFeature
 
@@ -328,8 +337,8 @@ instance ToJSON ExtQueryReqs where
 instance FromJSON ExtQueryReqs where
   parseJSON arr@Array {} = EqrGQLReq <$> (GH.GQLBatchedReqs <$> parseJSON arr)
   parseJSON json
-    -- The APQ requests, have a special key called as Extensions
-    | isJust (json Lens.^? key "extensions") = EqrAPQReq <$> parseJSON json
+    -- The APQ requests, have a special object in the key `Extentions` called as `persistedQuery`
+    | isJust (json Lens.^? key "extensions" . key "persistedQuery") = EqrAPQReq <$> parseJSON json
     | otherwise = EqrGQLReq <$> (GH.GQLSingleRequest <$> parseJSON json)
 
 class (Monad m) => MonadGetPolicies m where
@@ -360,3 +369,54 @@ instance (MonadGetPolicies m) => MonadGetPolicies (StateT w m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
   runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
+
+-- | The priority of the response to be sent to the client for remote schema fields if there is both errors as well as
+-- data in the remote response.
+-- Read more about how we decode the remote response at `decodeGraphQLResp` in `Hasura.GraphQL.Transport.HTTP`
+--
+-- If there is both errors and data in the remote response, then:
+--
+-- * If the priority is set to `RemoteSchemaResponseData`, then the data is sent to the client.
+-- * If the priority is set to `RemoteSchemaResponseErrors`, then the errors are sent to the client.
+data RemoteSchemaResponsePriority
+  = -- | Data from the remote schema is sent
+    RemoteSchemaResponseData
+  | -- | Errors from the remote schema is sent
+    RemoteSchemaResponseErrors
+  deriving stock (Show)
+
+-- | The precedence of the headers when delivering payload to the webhook for actions.
+-- Default is `ClientHeadersFirst` to preserve the old behaviour where client headers are
+-- given higher precedence than configured metadata headers.
+data HeaderPrecedence
+  = ConfiguredHeadersFirst
+  | ClientHeadersFirst
+  deriving (Eq, Show, Generic)
+
+instance FromJSON HeaderPrecedence where
+  parseJSON =
+    withBool "HeaderPrecedence"
+      $ pure
+      . \case
+        True -> ConfiguredHeadersFirst
+        False -> ClientHeadersFirst
+
+instance ToJSON HeaderPrecedence where
+  toJSON = \case
+    ConfiguredHeadersFirst -> Bool True
+    ClientHeadersFirst -> Bool False
+
+data TraceQueryStatus
+  = TraceQueryEnabled
+  | TraceQueryDisabled
+  deriving (Eq, Show, Generic)
+
+instance FromJSON TraceQueryStatus where
+  parseJSON = withBool "TraceQueryStatus" $ \case
+    False -> pure TraceQueryDisabled
+    True -> pure TraceQueryEnabled
+
+instance ToJSON TraceQueryStatus where
+  toJSON = \case
+    TraceQueryDisabled -> Bool False
+    TraceQueryEnabled -> Bool True

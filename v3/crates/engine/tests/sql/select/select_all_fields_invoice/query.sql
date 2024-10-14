@@ -1,0 +1,4 @@
+SELECT
+    *
+FROM
+    Invoice;

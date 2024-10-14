@@ -24,7 +24,7 @@ import Hasura.Server.Init
     ServeOptions (..),
   )
 import Hasura.Server.Init qualified as Init
-import Hasura.Server.Logging (MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
+import Hasura.Server.Logging (HttpLogQueryOnlyOnError (HttpLogQueryOnlyOnErrorDisabled), MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
 import Hasura.Server.Types
   ( ApolloFederationStatus (ApolloFederationDisabled),
     EventingMode (EventingEnabled),
@@ -89,6 +89,7 @@ serveOptions =
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
+      soHttpLogQueryOnlyOnError = HttpLogQueryOnlyOnErrorDisabled,
       soDefaultNamingConvention = Init._default Init.defaultNamingConventionOption,
       soExtensionsSchema = ExtensionsSchema "public",
       soMetadataDefaults = emptyMetadataDefaults,
@@ -98,7 +99,11 @@ serveOptions =
       soTriggersErrorLogLevelStatus = Init._default Init.triggersErrorLogLevelStatusOption,
       soAsyncActionsFetchBatchSize = Init._default Init.asyncActionsFetchBatchSizeOption,
       soPersistedQueries = Init._default Init.persistedQueriesOption,
-      soPersistedQueriesTtl = Init._default Init.persistedQueriesTtlOption
+      soPersistedQueriesTtl = Init._default Init.persistedQueriesTtlOption,
+      soRemoteSchemaResponsePriority = Init._default Init.remoteSchemaResponsePriorityOption,
+      soHeaderPrecedence = Init._default Init.configuredHeaderPrecedenceOption,
+      soTraceQueryStatus = Init._default Init.traceQueryStatusOption,
+      soDisableNativeQueryValidation = Init._default Init.disableNativeQueryValidationOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

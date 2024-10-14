@@ -1,0 +1,2 @@
+"after this PR this should not be an issue: https://github.com/graphql/graphql-spec/pull/892"
+query empty {}

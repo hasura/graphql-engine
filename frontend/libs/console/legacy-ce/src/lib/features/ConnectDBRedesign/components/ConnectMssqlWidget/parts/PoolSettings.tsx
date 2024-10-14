@@ -12,7 +12,7 @@ export const PoolSettings = ({ name }: { name: string }) => {
       <NumberInputField
         name={`${name}.idleTimeout`}
         label="Idle Timeout"
-        placeholder="180"
+        placeholder="5"
         tooltip="The idle timeout (in seconds) per connection"
       />
     </>

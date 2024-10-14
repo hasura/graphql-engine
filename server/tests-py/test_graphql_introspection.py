@@ -136,7 +136,8 @@ class TestGraphqlIntrospectionWithCustomTableName:
     def dir(cls):
         return "queries/graphql_introspection/custom_table_name"
 
-@pytest.mark.usefixtures('per_class_tests_db_state', 'pro_tests_fixtures')
+@pytest.mark.admin_secret
+@pytest.mark.usefixtures('per_class_tests_db_state', 'pro_tests_fixtures', 'enterprise_edition')
 class TestDisableGraphQLIntrospection:
 
     @classmethod

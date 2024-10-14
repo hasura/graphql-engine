@@ -1,0 +1,86 @@
+query MyQuery {
+  Track(where: { Album: { Artist: { ArtistId: { _eq: 2 } } } }) {
+    TrackId
+    Album {
+      Artist {
+        ArtistId
+        Name
+      }
+    }
+  }
+  TrackRemote: Track(
+    where: { Album: { ArtistRemote: { ArtistId: { _eq: 2 } } } }
+  ) {
+    TrackId
+    Album {
+      ArtistRemote {
+        ArtistId
+        Name
+      }
+    }
+  }
+  TrackAnd: Track(
+    where: {
+      _and: [
+        { Album: { Artist: { ArtistId: { _eq: 2 } } } }
+        { TrackId: { _eq: 3 } }
+      ]
+    }
+  ) {
+    TrackId
+    Album {
+      Artist {
+        ArtistId
+        Name
+      }
+    }
+  }
+  TrackAndRemote: Track(
+    where: {
+      _and: [
+        { AlbumRemote: { ArtistRemote: { ArtistId: { _eq: 2 } } } }
+        { TrackId: { _eq: 3 } }
+      ]
+    }
+  ) {
+    TrackId
+    AlbumRemote {
+      ArtistRemote {
+        ArtistId
+        Name
+      }
+    }
+  }
+  TrackOr: Track(
+    where: {
+      _or: [
+        { Album: { Artist: { ArtistId: { _eq: 2 } } } }
+        { TrackId: { _eq: 3 } }
+      ]
+    }
+  ) {
+    TrackId
+    Album {
+      Artist {
+        ArtistId
+        Name
+      }
+    }
+  }
+  TrackOrRemote: Track(
+    where: {
+      _or: [
+        { AlbumRemote: { Artist: { ArtistId: { _eq: 2 } } } }
+        { TrackId: { _eq: 3 } }
+      ]
+    }
+  ) {
+    TrackId
+    AlbumRemote {
+      Artist {
+        ArtistId
+        Name
+      }
+    }
+  }
+}

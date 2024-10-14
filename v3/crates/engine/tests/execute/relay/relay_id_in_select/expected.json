@@ -1,0 +1,83 @@
+[
+  {
+    "data": {
+      "ArticleMany": [
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjoxfX0=",
+          "Author": {
+            "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6MX19",
+            "author_id": 1,
+            "first_name": "Peter"
+          }
+        },
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjoyfX0=",
+          "Author": {
+            "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6Mn19",
+            "author_id": 2,
+            "first_name": "John"
+          }
+        },
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjozfX0=",
+          "Author": {
+            "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6Mn19",
+            "author_id": 2,
+            "first_name": "John"
+          }
+        },
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjo0fX0=",
+          "Author": {
+            "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6MX19",
+            "author_id": 1,
+            "first_name": "Peter"
+          }
+        },
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjo1fX0=",
+          "Author": {
+            "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6Mn19",
+            "author_id": 2,
+            "first_name": "John"
+          }
+        }
+      ],
+      "ArticleByID": {
+        "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjoxfX0=",
+        "title": "The Next 700 Programming Languages"
+      }
+    }
+  },
+  {
+    "data": {
+      "ArticleMany": [
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjoyfX0=",
+          "Author": {
+            "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6Mn19",
+            "author_id": 2,
+            "first_name": "John"
+          }
+        },
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjozfX0=",
+          "Author": {
+            "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6Mn19",
+            "author_id": 2,
+            "first_name": "John"
+          }
+        },
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkFydGljbGUiLCJpZCI6eyJhcnRpY2xlX2lkIjo1fX0=",
+          "Author": {
+            "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6Mn19",
+            "author_id": 2,
+            "first_name": "John"
+          }
+        }
+      ],
+      "ArticleByID": null
+    }
+  }
+]

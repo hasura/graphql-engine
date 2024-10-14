@@ -49,6 +49,8 @@ import Data.Time.Clock qualified as TC
 import Data.Word (Word16)
 import GHC.AssertNF.CPP
 import Hasura.App.State
+import Hasura.Authentication.Session (SessionVariables)
+import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
@@ -91,7 +93,7 @@ import Hasura.Server.Auth
     resolveUserInfo,
   )
 import Hasura.Server.Cors
-import Hasura.Server.Init.Config (KeepAliveDelay (..))
+import Hasura.Server.Init.Config (KeepAliveDelay (..), ResponseInternalErrorsConfig)
 import Hasura.Server.Limits
   ( HasResourceLimits (..),
     ResourceLimits (..),
@@ -101,11 +103,12 @@ import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus
   ( GraphQLRequestMetrics (..),
     PrometheusMetrics (..),
+    ResponseStatus (..),
+    recordGraphqlOperationMetric,
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState (..), MonadGetPolicies (..), RequestId, getRequestId)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), HeaderPrecedence, ModelInfoLogState (..), MonadGetPolicies (..), RemoteSchemaResponsePriority, RequestId, TraceQueryStatus (TraceQueryEnabled), getRequestId)
 import Hasura.Services.Network
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax (Name (..))
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -115,7 +118,7 @@ import Network.HTTP.Types qualified as HTTP
 import Network.WebSockets qualified as WS
 import Refined (unrefine)
 import StmContainers.Map qualified as STMMap
-import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
+import System.Metrics.Prometheus.CounterVector qualified as Prometheus.CounterVector
 import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
 
 -- | 'ES.SubscriberDetails' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
@@ -445,10 +448,14 @@ onStart ::
   ShouldCaptureQueryVariables ->
   StartMsg ->
   WS.WSActions WSConnData ->
+  ResponseInternalErrorsConfig ->
+  HeaderPrecedence ->
+  TraceQueryStatus ->
   m ()
-onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions = catchAndIgnore $ do
+onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions responseErrorsConfig headerPrecedence traceQueryStatus = catchAndIgnore $ do
   modelInfoLogStatus' <- runGetModelInfoLogStatus
   modelInfoLogStatus <- liftIO modelInfoLogStatus'
+  granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
   timerTot <- startTimer
   op <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
@@ -456,7 +463,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
   -- we process all operations on a websocket connection serially:
   when (isJust op)
     $ withComplete
-    $ sendStartErr
+    $ sendStartErr granularPrometheusMetricsState (snd =<< op)
     $ "an operation already exists with this id: "
     <> unOperationId opId
 
@@ -465,10 +472,10 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
     CSInitialised WsClientState {..} -> return (wscsUserInfo, wscsReqHeaders, wscsIpAddress)
     CSInitError initErr -> do
       let e = "cannot start as connection_init failed with: " <> initErr
-      withComplete $ sendStartErr e
+      withComplete $ sendStartErr granularPrometheusMetricsState (_grOperationName q) e
     CSNotInitialised _ _ -> do
       let e = "start received before the connection is initialised"
-      withComplete $ sendStartErr e
+      withComplete $ sendStartErr granularPrometheusMetricsState (_grOperationName q) e
 
   (requestId, reqHdrs) <- liftIO $ getRequestId origReqHdrs
   sc <- liftIO $ getSchemaCacheWithVersion appStateRef
@@ -482,12 +489,13 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
   env <- liftIO $ acEnvironment <$> getAppContext appStateRef
   sqlGenCtx <- liftIO $ acSQLGenCtx <$> getAppContext appStateRef
   enableAL <- liftIO $ acEnableAllowlist <$> getAppContext appStateRef
+  remoteSchemaResponsePriority <- liftIO $ acRemoteSchemaResponsePriority <$> getAppContext appStateRef
 
-  (reqParsed, queryParts) <- Tracing.newSpan "Parse GraphQL" $ do
+  (reqParsed, queryParts) <- Tracing.newSpan "Parse GraphQL" Tracing.SKInternal $ do
     reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
-    reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId Nothing)
+    reqParsed <- onLeft reqParsedE (withComplete . preExecErr granularPrometheusMetricsState requestId Nothing (_grOperationName q) Nothing)
     queryPartsE <- runExceptT $ getSingleOperation reqParsed
-    queryParts <- onLeft queryPartsE (withComplete . preExecErr requestId Nothing)
+    queryParts <- onLeft queryPartsE (withComplete . preExecErr granularPrometheusMetricsState requestId Nothing (getOpNameFromParsedReq reqParsed) Nothing)
     pure (reqParsed, queryParts)
 
   let gqlOpType = G._todType queryParts
@@ -496,7 +504,12 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig sc
   for_ maybeOperationName $ \nm ->
     -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
-    Tracing.attachMetadata [("graphql.operation.name", unName nm)]
+    Tracing.attachMetadata
+      [ ("graphql.operation.name", unName nm),
+        ("session_variables", lbsToTxt $ J.encode (_uiSession userInfo))
+      ]
+  when (traceQueryStatus == TraceQueryEnabled)
+    $ Tracing.attachMetadata [("graphql.query", _unGQLQueryText (_grQuery q))]
   execPlanE <-
     runExceptT
       $ E.getResolvedExecPlan
@@ -513,8 +526,11 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         queryParts
         maybeOperationName
         requestId
+        responseErrorsConfig
+        headerPrecedence
+        traceQueryStatus
 
-  (parameterizedQueryHash, execPlan, modelInfoList) <- onLeft execPlanE (withComplete . preExecErr requestId (Just gqlOpType))
+  (parameterizedQueryHash, execPlan, modelInfoList) <- onLeft execPlanE (withComplete . preExecErr granularPrometheusMetricsState requestId (Just gqlOpType) opName Nothing)
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts dirMap -> do
@@ -530,7 +546,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         ResponseCached cachedResponseData -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
           let reportedExecutionTime = 0
-          liftIO $ recordGQLQuerySuccess reportedExecutionTime gqlOpType
+          liftIO $ recordGQLQuerySuccess granularPrometheusMetricsState reportedExecutionTime opName parameterizedQueryHash gqlOpType
           modelInfoLogging modelInfoList True modelInfoLogStatus
           sendSuccResp cachedResponseData opName parameterizedQueryHash $ ES.SubscriptionMetadata reportedExecutionTime
         ResponseUncached storeResponseM -> do
@@ -556,17 +572,17 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                               genSql
                               resolvedConnectionTemplate
                       (finalResponse, modelInfo) <-
-                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
+                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator traceQueryStatus
                       pure $ (AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse [], modelInfo)
                     E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-                      runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator
+                      runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator remoteSchemaResponsePriority
                     E.ExecStepAction actionExecPlan _ remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                       (time, (resp, _), modelInfo) <- doQErr $ do
                         (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                         (finalResponse, modelInfo) <-
-                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
+                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator traceQueryStatus
                         pure (time, (finalResponse, hdrs), modelInfo)
                       pure $ (AnnotatedResponsePart time Telem.Empty resp [], modelInfo)
                     E.ExecStepRaw json -> do
@@ -577,7 +593,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                       let (allResponses', allModelInfo) = unzip allResponses
                       pure $ (AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses')) [], concat allModelInfo)
                in getResponse
-          sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType modelInfoList modelInfoLogStatus
+          sendResultFromFragments granularPrometheusMetricsState Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType modelInfoList modelInfoLogStatus
           case (storeResponseM, conclusion) of
             (Just ResponseCacher {..}, Right results) -> do
               let (key, (compositeValue')) = unzip $ InsOrdHashMap.toList results
@@ -603,7 +619,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
               $ doQErr
               $ runPGMutationTransaction requestId q userInfo logger sourceConfig resolvedConnectionTemplate pgMutations
           -- we do not construct result fragments since we have only one result
-          handleResult requestId gqlOpType resp \(telemTimeIO_DT, results) -> do
+          handleResult granularPrometheusMetricsState requestId gqlOpType opName parameterizedQueryHash resp \(telemTimeIO_DT, results) -> do
             let telemQueryType = Telem.Query
                 telemLocality = Telem.Local
                 telemTimeIO = convertDuration telemTimeIO_DT
@@ -613,7 +629,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
               $ ES.SubscriptionMetadata telemTimeIO_DT
             -- Telemetry. NOTE: don't time network IO:
             Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
-            liftIO $ recordGQLQuerySuccess totalTime gqlOpType
+            liftIO $ recordGQLQuerySuccess granularPrometheusMetricsState totalTime opName parameterizedQueryHash gqlOpType
 
         -- we are not in the transaction case; proceeding normally
         Nothing -> do
@@ -640,19 +656,19 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                               genSql
                               resolvedConnectionTemplate
                       (finalResponse, modelInfo) <-
-                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
+                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator traceQueryStatus
                       pure $ (AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse [], modelInfo)
                     E.ExecStepAction actionExecPlan _ remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                       (time, (resp, hdrs), modelInfo) <- doQErr $ do
                         (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                         (finalResponse, modelInfo) <-
-                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
+                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator traceQueryStatus
                         pure (time, (finalResponse, hdrs), modelInfo)
                       pure $ (AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs, modelInfo)
                     E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-                      runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator
+                      runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator remoteSchemaResponsePriority
                     E.ExecStepRaw json -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
                       (,[]) <$> buildRaw json
@@ -661,7 +677,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                       let (allResponses', allModelInfo) = unzip allResponses
                       pure $ (AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses')) [], concat allModelInfo)
                in getResponse
-          sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType modelInfoList modelInfoLogStatus
+          sendResultFromFragments granularPrometheusMetricsState Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType modelInfoList modelInfoLogStatus
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.SubscriptionExecutionPlan (subExec, modifier) -> do
       case subExec of
@@ -713,11 +729,10 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                   asyncActionQueryLive
         E.SEOnSourceDB (E.SSLivequery actionIds liveQueryBuilder) -> do
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
-          actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId (Just gqlOpType))
-          granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
+          actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr granularPrometheusMetricsState requestId (Just gqlOpType) opName (Just parameterizedQueryHash))
           modelInfoLogStatus'' <- runGetModelInfoLogStatus
           opMetadataE <- liftIO $ startLiveQuery opName liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier modelInfoLogStatus''
-          lqId <- onLeft opMetadataE (withComplete . preExecErr requestId (Just gqlOpType))
+          lqId <- onLeft opMetadataE (withComplete . preExecErr granularPrometheusMetricsState requestId (Just gqlOpType) opName (Just parameterizedQueryHash))
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
             Nothing -> do
@@ -742,11 +757,16 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                   onUnexpectedException
                   asyncActionQueryLive
         E.SEOnSourceDB (E.SSStreaming rootFieldName streamQueryBuilder) -> do
-          granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
           modelInfoLogStatus'' <- runGetModelInfoLogStatus
           liftIO $ startStreamingQuery rootFieldName streamQueryBuilder parameterizedQueryHash requestId granularPrometheusMetricsState modifier modelInfoLogStatus''
 
-      liftIO $ Prometheus.Counter.inc (gqlRequestsSubscriptionSuccess gqlMetrics)
+      recordGraphqlOperationMetric
+        granularPrometheusMetricsState
+        (Just G.OperationTypeSubscription)
+        Success
+        opName
+        (Just parameterizedQueryHash)
+        (Prometheus.CounterVector.inc $ gqlRequests gqlMetrics)
       liftIO $ logOpEv ODStarted (Just requestId) (Just parameterizedQueryHash)
   where
     sendDataMsg = WS._wsaGetDataMessageType onMessageActions
@@ -782,18 +802,21 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
 
     handleResult ::
       forall a.
+      IO GranularPrometheusMetricsState ->
       RequestId ->
       G.OperationType ->
+      Maybe OperationName ->
+      ParameterizedQueryHash ->
       Either (Either GQExecError QErr) a ->
       (a -> ExceptT () m ()) ->
       ExceptT () m ()
-    handleResult requestId gqlOpType r f = case r of
-      Left (Left err) -> postExecErr' gqlOpType err
-      Left (Right err) -> postExecErr requestId gqlOpType err
+    handleResult granularPrometheusMetricsState requestId gqlOpType mOpName pqh r f = case r of
+      Left (Left err) -> postExecErr' granularPrometheusMetricsState gqlOpType mOpName pqh err
+      Left (Right err) -> postExecErr granularPrometheusMetricsState requestId gqlOpType mOpName pqh err
       Right results -> f results
 
-    sendResultFromFragments telemQueryType timerTot requestId r opName pqh gqlOpType modelInfoList getModelInfoLogStatus =
-      handleResult requestId gqlOpType r \results -> do
+    sendResultFromFragments granularPrometheusMetricsState telemQueryType timerTot requestId r opName pqh gqlOpType modelInfoList getModelInfoLogStatus =
+      handleResult granularPrometheusMetricsState requestId gqlOpType opName pqh r \results -> do
         let (key, (compositeValue')) = unzip $ InsOrdHashMap.toList results
             (annotatedResp, model) = unzip compositeValue'
             results' = InsOrdHashMap.fromList $ zip key annotatedResp
@@ -809,7 +832,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
         modelInfoLogging (modelInfoList <> modelInfoList') False getModelInfoLogStatus
-        liftIO $ (recordGQLQuerySuccess totalTime gqlOpType)
+        liftIO $ (recordGQLQuerySuccess granularPrometheusMetricsState totalTime opName pqh gqlOpType)
 
     runRemoteGQ ::
       RequestId ->
@@ -822,13 +845,14 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       GQLReqOutgoing ->
       Maybe RJ.RemoteJoins ->
       Tracing.HttpPropagator ->
+      RemoteSchemaResponsePriority ->
       ExceptT (Either GQExecError QErr) (ExceptT () m) (AnnotatedResponsePart, [ModelInfoPart])
-    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
+    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator remoteSchemaResponsePriority = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) Tracing.SKInternal $ do
       env <- liftIO $ acEnvironment <$> getAppContext appStateRef
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr
           $ E.execRemoteGQ env tracesPropagator userInfo reqHdrs (rsDef rsi) gqlReq
-      value <- hoist lift $ extractFieldFromResponse fieldName resultCustomizer resp
+      value <- hoist lift $ extractFieldFromResponse remoteSchemaResponsePriority fieldName resultCustomizer resp
       (finalResponse, modelInfo) <-
         doQErr
           $ RJ.processRemoteJoins
@@ -843,6 +867,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
             remoteJoins
             reqUnparsed
             tracesPropagator
+            traceQueryStatus
       return $ (AnnotatedResponsePart telemTimeIO_DT Telem.Remote finalResponse [], modelInfo)
 
     WSServerEnv
@@ -879,7 +904,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
     getErrFn ERTLegacy = encodeQErr
     getErrFn ERTGraphqlCompliant = encodeGQLErr
 
-    sendStartErr e = do
+    sendStartErr granularPrometheusMetricsState mOpName e = do
       let errFn = getErrFn errRespTy
       sendMsg wsConn
         $ SMErr
@@ -887,7 +912,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         $ errFn False
         $ err400 StartFailed e
       liftIO $ logOpEv (ODProtoErr e) Nothing Nothing
-      liftIO $ reportGQLQueryError Nothing
+      liftIO $ reportGQLQueryError granularPrometheusMetricsState mOpName Nothing Nothing
       liftIO $ closeConnAction wsConn opId (T.unpack e)
 
     sendCompleted reqId paramQueryHash = do
@@ -895,24 +920,27 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       logOpEv ODCompleted reqId paramQueryHash
 
     postExecErr ::
+      IO GranularPrometheusMetricsState ->
       RequestId ->
       G.OperationType ->
+      Maybe OperationName ->
+      ParameterizedQueryHash ->
       QErr ->
       ExceptT () m ()
-    postExecErr reqId gqlOpType qErr = do
+    postExecErr granularPrometheusMetricsState reqId gqlOpType mOpName pqh qErr = do
       let errFn = getErrFn errRespTy False
       liftIO $ logOpEv (ODQueryErr qErr) (Just reqId) Nothing
-      postExecErr' gqlOpType $ GQExecError $ pure $ errFn qErr
+      postExecErr' granularPrometheusMetricsState gqlOpType mOpName pqh $ GQExecError $ pure $ errFn qErr
 
-    postExecErr' :: G.OperationType -> GQExecError -> ExceptT () m ()
-    postExecErr' gqlOpType qErr =
+    postExecErr' :: IO GranularPrometheusMetricsState -> G.OperationType -> Maybe OperationName -> ParameterizedQueryHash -> GQExecError -> ExceptT () m ()
+    postExecErr' granularPrometheusMetricsState gqlOpType mOpName pqh qErr =
       liftIO $ do
-        reportGQLQueryError (Just gqlOpType)
+        reportGQLQueryError granularPrometheusMetricsState mOpName (Just pqh) (Just gqlOpType)
         postExecErrAction wsConn opId qErr
 
     -- why wouldn't pre exec error use graphql response?
-    preExecErr reqId mGqlOpType qErr = do
-      liftIO $ reportGQLQueryError mGqlOpType
+    preExecErr granularPrometheusMetricsState reqId mGqlOpType mOpName pqh qErr = do
+      liftIO $ reportGQLQueryError granularPrometheusMetricsState mOpName pqh mGqlOpType
       liftIO $ sendError reqId qErr
 
     sendError reqId qErr = do
@@ -1043,30 +1071,32 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
     catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m
 
-    reportGQLQueryError :: Maybe G.OperationType -> IO ()
-    reportGQLQueryError = \case
-      Nothing ->
-        liftIO $ Prometheus.Counter.inc (gqlRequestsUnknownFailure gqlMetrics)
-      Just opType -> case opType of
-        G.OperationTypeQuery ->
-          liftIO $ Prometheus.Counter.inc (gqlRequestsQueryFailure gqlMetrics)
-        G.OperationTypeMutation ->
-          liftIO $ Prometheus.Counter.inc (gqlRequestsMutationFailure gqlMetrics)
-        G.OperationTypeSubscription ->
-          liftIO $ Prometheus.Counter.inc (gqlRequestsSubscriptionFailure gqlMetrics)
+    reportGQLQueryError :: IO GranularPrometheusMetricsState -> Maybe OperationName -> Maybe ParameterizedQueryHash -> Maybe G.OperationType -> IO ()
+    reportGQLQueryError granularPrometheusMetricsState mOpName mQHash mOpType =
+      recordGraphqlOperationMetric
+        granularPrometheusMetricsState
+        mOpType
+        Failed
+        mOpName
+        mQHash
+        (Prometheus.CounterVector.inc $ gqlRequests gqlMetrics)
 
     -- Tally and record execution times for successful GraphQL requests.
-    recordGQLQuerySuccess :: DiffTime -> G.OperationType -> IO ()
-    recordGQLQuerySuccess totalTime = \case
-      G.OperationTypeQuery -> liftIO $ do
-        Prometheus.Counter.inc (gqlRequestsQuerySuccess gqlMetrics)
-        Prometheus.Histogram.observe (gqlExecutionTimeSecondsQuery gqlMetrics) (realToFrac totalTime)
-      G.OperationTypeMutation -> liftIO $ do
-        Prometheus.Counter.inc (gqlRequestsMutationSuccess gqlMetrics)
-        Prometheus.Histogram.observe (gqlExecutionTimeSecondsMutation gqlMetrics) (realToFrac totalTime)
-      G.OperationTypeSubscription ->
-        -- We do not collect metrics for subscriptions at the request level.
-        pure ()
+    recordGQLQuerySuccess :: IO GranularPrometheusMetricsState -> DiffTime -> Maybe OperationName -> ParameterizedQueryHash -> G.OperationType -> IO ()
+    recordGQLQuerySuccess granularPrometheusMetricsState totalTime mOpName qHash opType = do
+      recordGraphqlOperationMetric
+        granularPrometheusMetricsState
+        (Just opType)
+        Success
+        mOpName
+        (Just qHash)
+        (Prometheus.CounterVector.inc $ gqlRequests gqlMetrics)
+      case opType of
+        G.OperationTypeQuery -> liftIO $ Prometheus.Histogram.observe (gqlExecutionTimeSecondsQuery gqlMetrics) (realToFrac totalTime)
+        G.OperationTypeMutation -> liftIO $ Prometheus.Histogram.observe (gqlExecutionTimeSecondsMutation gqlMetrics) (realToFrac totalTime)
+        G.OperationTypeSubscription ->
+          -- We do not collect metrics for subscriptions at the request level.
+          pure ()
 
 onMessage ::
   ( MonadIO m,
@@ -1090,8 +1120,11 @@ onMessage ::
   LBS.ByteString ->
   WS.WSActions WSConnData ->
   Maybe (CredentialCache AgentLicenseKey) ->
+  ResponseInternalErrorsConfig ->
+  HeaderPrecedence ->
+  TraceQueryStatus ->
   m ()
-onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agentLicenseKey =
+onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agentLicenseKey responseErrorsConfig headerPrecedence traceQueryStatus = do
   Tracing.newTrace (_wseTraceSamplingPolicy serverEnv) "websocket" do
     case J.eitherDecode msgRaw of
       Left e -> do
@@ -1115,7 +1148,7 @@ onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agen
                 if _mcAnalyzeQueryVariables (scMetricsConfig schemaCache)
                   then CaptureQueryVariables
                   else DoNotCaptureQueryVariables
-          onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables startMsg onMessageActions
+          onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables startMsg onMessageActions responseErrorsConfig headerPrecedence traceQueryStatus
         CMStop stopMsg -> do
           granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
           onStop serverEnv wsConn stopMsg granularPrometheusMetricsState

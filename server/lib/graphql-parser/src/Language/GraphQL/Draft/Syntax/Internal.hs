@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 {-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 
 -- | Internal GraphQL AST functionality.

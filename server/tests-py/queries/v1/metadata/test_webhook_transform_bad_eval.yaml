@@ -14,7 +14,7 @@
           end_line: 0
           start_column: 4
         error_code: Attribute Error
-        message: "'Object' has no attritubte 'world'."
+        message: "'Object' has no attribute 'world'."
   query:
     type: test_webhook_transform
     args:

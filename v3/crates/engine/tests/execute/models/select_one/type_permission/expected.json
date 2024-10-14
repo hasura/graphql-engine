@@ -1,0 +1,19 @@
+[
+  {
+    "data": {
+      "AuthorByID": {
+        "author_id": 1,
+        "first_name": "Peter",
+        "last_name": "Landin"
+      }
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: no such field on type Query: AuthorByID"
+      }
+    ]
+  }
+]

@@ -1,0 +1,80 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Foo",
+            "fields": [
+              {
+                "name": "foo",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Foo"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Foos",
+            "objectType": "Foo",
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "foos"
+              }
+            },
+            "orderableFields": [
+              {
+                "fieldName": "foo",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "Foo",
+            "name": "foo",
+            "target": {
+              "model": {
+                "name": "Foos",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "foo"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "foo"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

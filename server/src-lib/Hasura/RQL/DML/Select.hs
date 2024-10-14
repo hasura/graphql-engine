@@ -9,6 +9,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as DS
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
+import Hasura.Authentication.User (UserInfo, UserInfoM (..))
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -32,7 +33,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
-import Hasura.Session
 import Hasura.Table.Cache
 import Hasura.Tracing qualified as Tracing
 

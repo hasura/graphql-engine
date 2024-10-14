@@ -15,7 +15,7 @@ import { expect } from '@storybook/jest';
 
 const UseCreateRestEndpoints: React.FC = () => {
   const { createRestEndpoints, isLoading, isError, isSuccess, isReady } =
-    useCreateRestEndpoints();
+    useCreateRestEndpoints({ dataSourceName: 'default', table: 'user' });
 
   const { data: metadata } = useMetadata();
 
@@ -23,12 +23,12 @@ const UseCreateRestEndpoints: React.FC = () => {
     <div>
       <Button
         onClick={() =>
-          createRestEndpoints('user', [
-            'VIEW',
-            'VIEW_ALL',
+          createRestEndpoints('default', 'user', [
             'DELETE',
             'CREATE',
             'UPDATE',
+            'READ_ALL',
+            'READ',
           ])
         }
       >

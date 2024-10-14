@@ -1,0 +1,243 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "movie",
+            "fields": [
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              },
+              {
+                "name": "rating",
+                "type": "Int!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Movie"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "movie",
+                "fieldMapping": {
+                  "movie_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "rating": {
+                    "column": {
+                      "name": "rating"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "movie",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "name_query",
+            "fields": [
+              {
+                "name": "first_name",
+                "type": "String"
+              },
+              {
+                "name": "surname",
+                "type": "String"
+              }
+            ],
+            "graphql": {
+              "inputTypeName": "NameQuery"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "name_query",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "surname": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "name_query",
+            "permissions": [
+              {
+                "role": "user_1",
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "surname",
+                      "value": {
+                        "literal": "DiCaprio"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "role": "user_2",
+                "input": {
+                  "fieldPresets": [
+                    {
+                      "field": "first_name",
+                      "value": {
+                        "literal": "Al"
+                      }
+                    },
+                    {
+                      "field": "surname",
+                      "value": {
+                        "literal": "Pacino"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "movies_by_actor_name",
+            "arguments": [
+              {
+                "name": "actor_name_filter",
+                "type": "name_query!"
+              }
+            ],
+            "objectType": "movie",
+            "source": {
+              "dataConnectorName": "custom",
+              "collection": "movies_by_actor_name",
+              "argumentMapping": {
+                "actor_name_filter": "actor_name"
+              }
+            },
+            "orderableFields": [
+              {
+                "fieldName": "movie_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "rating",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "MoviesByActorNameById",
+                  "uniqueIdentifier": ["movie_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "MoviesByActorNameMany"
+              },
+              "argumentsInputType": "MoviesByActorNameArgs"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "movies_by_actor_name",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_1",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_2",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

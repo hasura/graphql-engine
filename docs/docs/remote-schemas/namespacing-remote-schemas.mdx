@@ -1,0 +1,134 @@
+---
+description: Deal with conflicting type names in your GraphQL Schema.
+keywords:
+  - hasura
+  - docs
+  - remote schema
+  - conflict
+  - conflicting
+  - types
+  - namespace
+  - prefix
+  - error
+sidebar_position: 4
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Namespacing Remote Schemas
+
+## Introduction
+
+When integrating multiple schemas into your Hasura project, there may be instances where two schemas define types with
+the same name. This can lead to naming conflicts, preventing your GraphQL schema from working correctly.
+
+To solve this, you can use **namespacing** and **prefixes** to ensure that each type definition has a unique identifier.
+
+## Common Error: Conflicting Definitions
+
+Hasura GraphQL Engine automatically checks for type conflicts in your schema. If two schemas share the same top-level
+type definition, you might encounter an error like this:
+
+```plaintext
+Found conflicting definitions for GraphQL type 'collections_order_by'. The definition at query_root.near.collections.order_by differs from the definitions at [query_root.aptos.nftz.order_by.collection, query_root.aptos.collections_search_aggregate.order_by, query_root.aptos.collections_search.order_by, query_root.aptos.collections_aggregate.order_by, query_root.aptos.collections.order_by, query_root.aptos.actions.collection.edition_launches.order_by.collection, query_root.aptos.actions.collection.attributes.nft.listings.order_by.collection, query_root.aptos.actions.collection.attributes.nft.bids.order_by.collection, query_root.aptos.actions.collection.attributes.order_by.collection, query_root.aptos.actions.order_by.nft.collection, query_root.aptos.actions.order_by.collection]
+```
+
+With the most important part being the first statement:
+
+```plaintext
+Found conflicting definitions for GraphQL type ‘collections_order_by’
+```
+
+This error means that the same type is defined in multiple places, creating a conflict that Hasura cannot resolve
+automatically. In such cases, Hasura offers a mechanism to rename conflicting types using **namespaces** or
+**prefixes**.
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+From the `Remote Schemas` tab, after filling in your schema's details, click `GraphQL Customizations` and add your
+customization values here.
+
+<Thumbnail
+  src="/img/remote-schemas/remote-schema-customize-namespacing-and-prefixes.png"
+  alt="Customize namespacing and prefixing from the Console"
+  width="1100px"
+/>
+
+</TabItem>
+<TabItem value="CLI" label="CLI">
+
+Find the `remote_schemas.yaml` file in your metadata and customize your namespacing and prefixing values.
+
+```yaml
+- name: <remote_schema_name>
+  definition:
+    url: <your_remote_schema_url>
+    timeout_seconds: 60
+    customization:
+      field_names:
+        - mapping: {}
+          parent_type: <your_prefix>_
+          prefix: <your_prefix>_
+        - mapping: {}
+          parent_type: <your_prefix>_
+          prefix: <your_prefix>_
+      root_fields_namespace: <your_namespace_prefix>_
+      type_names:
+        mapping: {}
+        prefix: <your_prefix>_
+        suffix: <your_prefix>_
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+If you're using the API, you can add your Remote Schema with a namespace using
+[this template](/api-reference/metadata-api/remote-schemas.mdx#metadata-add-remote-schema), taking special note of the
+`root_fields_namespace` and `prefix` keys.
+
+```json
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "add_remote_schema",
+  "args": {
+      "name": "your remote schema name",
+      "definition": {
+          "url": "https://remote-server.com/graphql",
+          "headers": [{"name": "X-Server-Request-From", "value": "Hasura"}],
+          "forward_client_headers": false,
+          "timeout_seconds": 60,
+          "customization": {
+             "root_fields_namespace": "your_field_name",
+             "type_names": {
+                 "prefix": "your_type_name_prefix",
+                 "mapping": {
+                     "some_type_name": "some_new_type_name"
+                 }
+             },
+             "field_names": [ {
+                 "parent_type": "your_type_name",
+                 "prefix": "your_field_name_prefix",
+                 "mapping": {
+                     "some_field_name": "some_new_field_name"
+                 }
+             } ]
+          }
+      },
+  }
+}
+```
+
+Apply the Metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+</Tabs>

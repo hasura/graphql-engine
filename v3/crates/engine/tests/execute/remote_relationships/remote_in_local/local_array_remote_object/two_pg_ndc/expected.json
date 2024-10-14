@@ -1,0 +1,58 @@
+[
+  {
+    "data": {
+      "Artist": [
+        {
+          "ArtistId": 1,
+          "Name": "AC/DC",
+          "Albums": [
+            {
+              "AlbumId": 1,
+              "Title": "For Those About To Rock We Salute You",
+              "Album2": {
+                "AlbumId": 1,
+                "Title": "For Those About To Rock We Salute You"
+              }
+            },
+            {
+              "AlbumId": 4,
+              "Title": "Let There Be Rock",
+              "Album2": {
+                "AlbumId": 4,
+                "Title": "Let There Be Rock"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Artist": [
+        {
+          "ArtistId": 1,
+          "Name": "AC/DC",
+          "Albums": [
+            {
+              "AlbumId": 1,
+              "Title": "For Those About To Rock We Salute You",
+              "Album2": {
+                "AlbumId": 1,
+                "Title": "For Those About To Rock We Salute You"
+              }
+            },
+            {
+              "AlbumId": 4,
+              "Title": "Let There Be Rock",
+              "Album2": {
+                "AlbumId": 4,
+                "Title": "Let There Be Rock"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,79 @@
+[package]
+name = "engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+build = "build.rs"
+
+default-run = "engine"
+
+[lib]
+bench = false
+
+[[bin]]
+name = "engine"
+path = "bin/engine/main.rs"
+bench = false
+
+[[bench]]
+name = "execute"
+harness = false
+
+[dependencies]
+axum-ext = { path = "../utils/axum-ext" }
+execute = { path = "../execute" }
+graphql-frontend = { path = "../frontends/graphql" }
+graphql-schema = { path = "../graphql/schema" }
+graphql-ws = { path = "../graphql-ws" }
+hasura-authn = { path = "../auth/hasura-authn" }
+hasura-authn-core = { path = "../auth/hasura-authn-core" }
+hasura-authn-noauth = { path = "../auth/hasura-authn-noauth" }
+jsonapi = { path = "../jsonapi" }
+jsonpath = { path = "../utils/jsonpath" }
+lang-graphql = { path = "../lang-graphql" }
+metadata-resolve = {path = "../metadata-resolve" }
+open-dds = { path = "../open-dds" }
+plan = { path = "../plan" }
+pre-parse-plugin = { path = "../plugins/pre-parse-plugin" }
+pre-response-plugin = { path = "../plugins/pre-response-plugin" }
+sql = { path = "../sql" }
+tracing-util = { path = "../utils/tracing-util" }
+
+anyhow = { workspace = true }
+axum = { workspace = true }
+axum-core = { workspace = true }
+base64 = { workspace = true }
+clap = { workspace = true, features = ["derive", "env"] }
+futures-util = {workspace = true}
+http-body-util = { workspace = true }
+indexmap = {workspace = true}
+json_value_merge = { workspace = true }
+jsonapi_library = { workspace =  true }
+mimalloc = { workspace = true }
+nonempty = { workspace = true }
+reqwest = { workspace = true, features = ["json", "multipart"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
+tower = { workspace = true }
+tower-http = { workspace = true, features = ["trace", "cors", "fs"] }
+
+[build-dependencies]
+build-data = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true, features = ["html_reports", "async_tokio"] }
+goldenfile = { workspace = true }
+insta = { workspace = true, features = ["json"] }
+pretty_assertions = { workspace = true }
+tokio-test = { workspace = true }
+
+[package.metadata.cargo-machete]
+ignored = [
+  "build_data", "build-data"          # cargo-machete ignores build dependencies
+]
+
+[lints]
+workspace = true

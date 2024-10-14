@@ -1,0 +1,15 @@
+[package]
+name = "recursion_limit_macro"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+proc-macro = true
+bench = false
+
+[dependencies]
+quote = { workspace = true }
+syn = { workspace = true, features = ["full"] }
+
+[lints]
+workspace = true

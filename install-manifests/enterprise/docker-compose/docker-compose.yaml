@@ -1,4 +1,3 @@
-version: "3.6"
 services:
   redis:
     image: redis:latest
@@ -15,7 +14,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
-    image: hasura/graphql-engine:v2.35.0
+    image: hasura/graphql-engine:v2.43.0
     ports:
       - "8080:8080"
     restart: always
@@ -47,7 +46,7 @@ services:
       data-connector-agent:
         condition: service_healthy
   data-connector-agent:
-    image: hasura/graphql-data-connector:v2.35.0
+    image: hasura/graphql-data-connector:v2.43.0
     restart: always
     ports:
       - 8081:8081

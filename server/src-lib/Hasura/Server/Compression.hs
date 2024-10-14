@@ -6,6 +6,7 @@ module Hasura.Server.Compression
     contentEncodingHeader,
     compressionTypeToTxt,
     compressFast,
+    compressSmart,
 
     -- * exported for testing
     getAcceptedEncodings,
@@ -17,8 +18,8 @@ import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.Set qualified as Set
 import Data.Text qualified as T
+import Hasura.Authentication.Headers (gzipHeader)
 import Hasura.Prelude
-import Hasura.Server.Utils (gzipHeader)
 import Network.HTTP.Types.Header qualified as NH
 
 -- | Compressed encodings which hasura supports

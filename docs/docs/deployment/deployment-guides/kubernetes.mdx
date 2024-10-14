@@ -37,11 +37,11 @@ Edit `deployment.yaml` and set the right database url:
 
 ```yaml {2}
 env:
-  - name: HASURA_GRAPHQL_DATABASE_URL
+  - name: HASURA_METADATA_DATABASE_URL
     value: postgres://<username>:<password>@hostname:<port>/<dbname>
 ```
 
-Examples of `HASURA_GRAPHQL_DATABASE_URL`:
+Examples of `HASURA_METADATA_DATABASE_URL`:
 
 - `postgres://admin:password@localhost:5432/my-db`
 - `postgres://admin:@localhost:5432/my-db` _(if there is no password)_
@@ -49,7 +49,7 @@ Examples of `HASURA_GRAPHQL_DATABASE_URL`:
 :::info Note
 
 - If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
-  `HASURA_GRAPHQL_DATABASE_URL` env var (e.g. %40 for @).
+  `HASURA_METADATA_DATABASE_URL` env var (e.g. %40 for @).
 
   You can check the [logs](#kubernetes-logs) to see if the database credentials are proper and if Hasura is able to
   connect to the database.
@@ -104,7 +104,7 @@ spec:
      command: ["graphql-engine"]
      args: ["serve", "--enable-console"]
      env:
-     - name: HASURA_GRAPHQL_DATABASE_URL
+     - name: HASURA_METADATA_DATABASE_URL
        value: postgres://<username>:<password>@hostname:<port>/<dbname>
      - name: HASURA_GRAPHQL_ADMIN_SECRET
        value: mysecretkey
