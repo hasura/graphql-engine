@@ -113,149 +113,141 @@ where
 {
     selection_set.as_object_selection_set(
         |type_name, field: &normalized_ast::Field<GDS>, field_call| {
-            if field_call.name.as_str() == "__typename" {
-                Ok(json::Value::String(type_name.to_string()))
-            } else {
-                match field_call.info.generic {
-                    annotation @ Annotation::Output(field_annotation) => {
-                        match field_annotation {
-                            OutputAnnotation::GlobalIDField { global_id_fields } => {
-                                Ok(process_global_id_field(
-                                    &mut row,
-                                    global_id_fields,
-                                    &field.alias,
-                                    type_name,
-                                )?)
-                            }
-                            OutputAnnotation::RelayNodeInterfaceID { typename_mappings } => {
-                                let global_id_fields = typename_mappings.get(type_name).ok_or(
-                                    error::FieldInternalError::GlobalIdTypenameMappingNotFound {
-                                        type_name: type_name.clone(),
-                                    },
-                                )?;
-
-                                Ok(process_global_id_field(
-                                    &mut row,
-                                    global_id_fields,
-                                    &field.alias,
-                                    type_name,
-                                )?)
-                            }
-                            OutputAnnotation::Field { .. } => {
-                                let value =
-                                    row.remove(field.alias.0.as_str()).ok_or_else(|| {
-                                        error::NDCUnexpectedError::BadNDCResponse {
-                                            summary: format!(
-                                                "missing field: {}",
-                                                field.alias.clone()
-                                            ),
-                                        }
-                                    })?;
-
-                                if field.type_container.is_list() {
-                                    process_field_selection_as_list(
-                                        value,
-                                        &field.selection_set,
-                                        response_config,
-                                    )
-                                } else {
-                                    process_field_selection_as_object(
-                                        value,
-                                        &field.selection_set,
-                                        response_config,
-                                    )
-                                }
-                            }
-                            OutputAnnotation::RelationshipToModel { .. } => {
-                                let mut field_json_value_result = row
-                                    .remove(field.alias.0.as_str())
-                                    .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
-                                        summary: format!("missing field: {}", field.alias.clone()),
-                                    })?;
-
-                                let rows_set_rows = field_json_value_result
-                                    .get_mut("rows")
-                                    .and_then(|j| j.as_array_mut())
-                                    .map(std::mem::take);
-                                // Depending upon the field's type (list or object),
-                                // process the selection set accordingly.
-                                if field.type_container.is_list() {
-                                    process_selection_set_as_list(
-                                        rows_set_rows,
-                                        &field.selection_set,
-                                        response_config,
-                                    )
-                                    // NOTE: I assume a Null returned here is internal error, but
-                                    // this behavior is preserved for now:
-                                    .map(|v| v.map_or(json::Value::Null, vec_alias_map_to_value))
-                                } else {
-                                    process_selection_set_as_object(
-                                        rows_set_rows,
-                                        &field.selection_set,
-                                        response_config,
-                                    )
-                                    .map(|v| v.map_or(json::Value::Null, alias_map_to_value))
-                                }
-                            }
-                            OutputAnnotation::RelationshipToModelAggregate { .. } => {
-                                let field_json_value_result = row
-                                    .remove(field.alias.0.as_str())
-                                    .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
-                                        summary: format!("missing field: {}", field.alias.clone()),
-                                    })?;
-                                match serde_json::from_value(field_json_value_result) {
-                                    Err(err) => Err(error::NDCUnexpectedError::BadNDCResponse {
-                                        summary: format!("Unable to parse RowSet: {err}"),
-                                    })?,
-                                    Ok(row_set) => process_aggregate_requested_fields(
-                                        row_set,
-                                        &field.selection_set,
-                                    ),
-                                }
-                            }
-                            OutputAnnotation::RelationshipToCommand(
-                                command_relationship_annotation,
-                            ) => {
-                                let field_json_value_result = row
-                                    .remove(field.alias.0.as_str())
-                                    .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
-                                        summary: format!("missing field: {}", field.alias.clone()),
-                                    })?;
-                                match serde_json::from_value::<ndc_models::RowSet>(
-                                    field_json_value_result,
-                                ) {
-                                    Err(err) => Err(error::NDCUnexpectedError::BadNDCResponse {
-                                        summary: format!("Unable to parse RowSet: {err}"),
-                                    })?,
-                                    Ok(rows_set) => {
-                                        // the output of a command is optional and can be None
-                                        // so we match on the result and return null if the
-                                        // command returned None
-                                        process_command_rows(
-                                            &command_relationship_annotation.command_name,
-                                            rows_set.rows,
-                                            &field.selection_set,
-                                            &field.type_container,
-                                            response_config,
-                                        )
-                                        .map(|v| match v {
-                                            None => json::Value::Null,
-                                            // NOTE: on relationship to a command with commands
-                                            // response config, we ignore response header forwarding
-                                            Some(v) => v.response,
-                                        })
-                                    }
-                                }
-                            }
-                            _ => Err(error::FieldInternalError::UnexpectedAnnotation {
-                                annotation: annotation.clone(),
-                            })?,
+            match field_call.info.generic {
+                annotation @ Annotation::Output(field_annotation) => {
+                    match field_annotation {
+                        OutputAnnotation::GlobalIDField { global_id_fields } => {
+                            Ok(process_global_id_field(
+                                &mut row,
+                                global_id_fields,
+                                &field.alias,
+                                type_name,
+                            )?)
                         }
+                        OutputAnnotation::RelayNodeInterfaceID { typename_mappings } => {
+                            let global_id_fields = typename_mappings.get(type_name).ok_or(
+                                error::FieldInternalError::GlobalIdTypenameMappingNotFound {
+                                    type_name: type_name.clone(),
+                                },
+                            )?;
+
+                            Ok(process_global_id_field(
+                                &mut row,
+                                global_id_fields,
+                                &field.alias,
+                                type_name,
+                            )?)
+                        }
+                        OutputAnnotation::Field { .. } => {
+                            let value = row.remove(field.alias.0.as_str()).ok_or_else(|| {
+                                error::NDCUnexpectedError::BadNDCResponse {
+                                    summary: format!("missing field: {}", field.alias.clone()),
+                                }
+                            })?;
+
+                            if field.type_container.is_list() {
+                                process_field_selection_as_list(
+                                    value,
+                                    &field.selection_set,
+                                    response_config,
+                                )
+                            } else {
+                                process_field_selection_as_object(
+                                    value,
+                                    &field.selection_set,
+                                    response_config,
+                                )
+                            }
+                        }
+                        OutputAnnotation::RelationshipToModel { .. } => {
+                            let mut field_json_value_result = row
+                                .remove(field.alias.0.as_str())
+                                .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                                    summary: format!("missing field: {}", field.alias.clone()),
+                                })?;
+
+                            let rows_set_rows = field_json_value_result
+                                .get_mut("rows")
+                                .and_then(|j| j.as_array_mut())
+                                .map(std::mem::take);
+                            // Depending upon the field's type (list or object),
+                            // process the selection set accordingly.
+                            if field.type_container.is_list() {
+                                process_selection_set_as_list(
+                                    rows_set_rows,
+                                    &field.selection_set,
+                                    response_config,
+                                )
+                                // NOTE: I assume a Null returned here is internal error, but
+                                // this behavior is preserved for now:
+                                .map(|v| v.map_or(json::Value::Null, vec_alias_map_to_value))
+                            } else {
+                                process_selection_set_as_object(
+                                    rows_set_rows,
+                                    &field.selection_set,
+                                    response_config,
+                                )
+                                .map(|v| v.map_or(json::Value::Null, alias_map_to_value))
+                            }
+                        }
+                        OutputAnnotation::RelationshipToModelAggregate { .. } => {
+                            let field_json_value_result = row
+                                .remove(field.alias.0.as_str())
+                                .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                                    summary: format!("missing field: {}", field.alias.clone()),
+                                })?;
+                            match serde_json::from_value(field_json_value_result) {
+                                Err(err) => Err(error::NDCUnexpectedError::BadNDCResponse {
+                                    summary: format!("Unable to parse RowSet: {err}"),
+                                })?,
+                                Ok(row_set) => process_aggregate_requested_fields(
+                                    row_set,
+                                    &field.selection_set,
+                                ),
+                            }
+                        }
+                        OutputAnnotation::RelationshipToCommand(
+                            command_relationship_annotation,
+                        ) => {
+                            let field_json_value_result = row
+                                .remove(field.alias.0.as_str())
+                                .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                                    summary: format!("missing field: {}", field.alias.clone()),
+                                })?;
+                            match serde_json::from_value::<ndc_models::RowSet>(
+                                field_json_value_result,
+                            ) {
+                                Err(err) => Err(error::NDCUnexpectedError::BadNDCResponse {
+                                    summary: format!("Unable to parse RowSet: {err}"),
+                                })?,
+                                Ok(rows_set) => {
+                                    // the output of a command is optional and can be None
+                                    // so we match on the result and return null if the
+                                    // command returned None
+                                    process_command_rows(
+                                        &command_relationship_annotation.command_name,
+                                        rows_set.rows,
+                                        &field.selection_set,
+                                        &field.type_container,
+                                        response_config,
+                                    )
+                                    .map(|v| match v {
+                                        None => json::Value::Null,
+                                        // NOTE: on relationship to a command with commands
+                                        // response config, we ignore response header forwarding
+                                        Some(v) => v.response,
+                                    })
+                                }
+                            }
+                        }
+                        _ => Err(error::FieldInternalError::UnexpectedAnnotation {
+                            annotation: annotation.clone(),
+                        })?,
                     }
-                    annotation => Err(error::FieldInternalError::UnexpectedAnnotation {
-                        annotation: annotation.clone(),
-                    })?,
                 }
+                annotation => Err(error::FieldInternalError::UnexpectedAnnotation {
+                    annotation: annotation.clone(),
+                })?,
             }
         },
     )
@@ -483,17 +475,13 @@ fn reshape_aggregate_fields(
     graphql_field_path: &[&Alias],
     aggregate_output_selection_set: &normalized_ast::SelectionSet<'_, GDS>,
 ) -> Result<json::Value, error::FieldError> {
-    let json_object = aggregate_output_selection_set
-        .fields
-        .values()
-        .map(|field| {
+    let result = aggregate_output_selection_set.as_object_selection_set(
+        |_type_name, field, field_call| {
             let graphql_field_path = graphql_field_path
                 .iter()
                 .chain(std::iter::once(&&field.alias))
                 .copied()
                 .collect::<Vec<&Alias>>();
-
-            let field_call = field.field_call()?;
 
             match field_call.info.generic {
                 Annotation::Output(OutputAnnotation::Aggregate(
@@ -506,7 +494,7 @@ fn reshape_aggregate_fields(
                         .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
                             summary: format!("missing aggregate field: {field_name}"),
                         })?;
-                    Ok((field.alias.to_string(), aggregate_value))
+                    Ok::<_, error::FieldError>(aggregate_value)
                 }
 
                 Annotation::Output(OutputAnnotation::Aggregate(
@@ -517,16 +505,16 @@ fn reshape_aggregate_fields(
                         graphql_field_path.as_slice(),
                         &field.selection_set,
                     )?;
-                    Ok((field.alias.to_string(), json_object))
+                    Ok(json_object)
                 }
                 annotation => Err(error::FieldInternalError::UnexpectedAnnotation {
                     annotation: annotation.clone(),
                 })?,
             }
-        })
-        .collect::<Result<json::Map<String, json::Value>, error::FieldError>>()?;
-
-    Ok(json::Value::Object(json_object))
+        },
+    )?;
+    let response = json::to_value(result).map_err(error::FieldError::from)?;
+    Ok(response)
 }
 
 pub fn process_response(

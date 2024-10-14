@@ -18,6 +18,8 @@
   are marked with a new OpenDD flag and when these builds are run by the engine
   relationships to unknown subgraphs are automatically pruned.
 
+- Aggregate queries now support `__typename` introspection fields.
+
 ### Changed
 
 - metadata-build-service POST endpoints now accept zstd (preferred) or gzip

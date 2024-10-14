@@ -90,9 +90,8 @@ pub fn schema_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter
     namespaced_getter: &NSGet,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
-    selection_set.as_object_selection_set(|type_name, field, field_call| {
+    selection_set.as_object_selection_set(|_type_name, field, field_call| {
         match field_call.name.as_str() {
-            "__typename" => Ok(json::to_value(type_name)?),
             // "description" => Ok(json::to_value(&scalar.description)?),
             "types" => {
                 // we publish only those types that are reachable for the
@@ -169,9 +168,8 @@ fn scalar_type<'s, S: schema::SchemaContext>(
     scalar: &'s schema::Scalar,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
-    selection_set.as_object_selection_set(|type_name, _field, field_call| {
+    selection_set.as_object_selection_set(|_type_name, _field, field_call| {
         match field_call.name.as_str() {
-            "__typename" => Ok(json::to_value(type_name)?),
             "kind" => Ok(json::to_value("SCALAR")?),
             "name" => Ok(json::to_value(&scalar.name)?),
             "description" => Ok(json::to_value(&scalar.description)?),
@@ -186,9 +184,8 @@ fn enum_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     enum_: &'s schema::Enum<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
-    selection_set.as_object_selection_set(|type_name, field, field_call| {
+    selection_set.as_object_selection_set(|_type_name, field, field_call| {
         match field_call.name.as_str() {
-            "__typename" => Ok(json::to_value(type_name)?),
             "kind" => Ok(json::to_value("ENUM")?),
             "name" => Ok(json::to_value(&enum_.name)?),
             "description" => Ok(json::to_value(&enum_.description)?),
@@ -227,9 +224,8 @@ fn object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>
     object: &'s schema::Object<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
-    selection_set.as_object_selection_set(|type_name, field, field_call| {
+    selection_set.as_object_selection_set(|_type_name, field, field_call| {
         match field_call.name.as_str() {
-            "__typename" => Ok(json::to_value(type_name)?),
             "kind" => Ok(json::to_value("OBJECT")?),
             "name" => Ok(json::to_value(&object.name)?),
             "description" => Ok(json::to_value(&object.description)?),
@@ -301,9 +297,8 @@ fn interface_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<
     interface: &'s schema::Interface<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
-    selection_set.as_object_selection_set(|type_name, field, field_call| {
+    selection_set.as_object_selection_set(|_type_name, field, field_call| {
         match field_call.name.as_str() {
-            "__typename" => Ok(json::to_value(type_name)?),
             "kind" => Ok(json::to_value("INTERFACE")?),
             "name" => Ok(json::to_value(&interface.name)?),
             "description" => Ok(json::to_value(&interface.description)?),
@@ -379,9 +374,8 @@ fn union_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     union: &'s schema::Union<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
-    selection_set.as_object_selection_set(|type_name, field, field_call| {
+    selection_set.as_object_selection_set(|_type_name, field, field_call| {
         match field_call.name.as_str() {
-            "__typename" => Ok(json::to_value(type_name)?),
             "kind" => Ok(json::to_value("UNION")?),
             "name" => Ok(json::to_value(&union.name)?),
             "description" => Ok(json::to_value(&union.description)?),
@@ -414,9 +408,8 @@ fn input_object_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGett
     input_object: &'s schema::InputObject<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
-    selection_set.as_object_selection_set(|type_name, field, field_call| {
+    selection_set.as_object_selection_set(|_type_name, field, field_call| {
         match field_call.name.as_str() {
-            "__typename" => Ok(json::to_value(type_name)?),
             "kind" => Ok(json::to_value("INPUT_OBJECT")?),
             "name" => Ok(json::to_value(&input_object.name)?),
             "description" => Ok(json::to_value(&input_object.description)?),
@@ -470,9 +463,8 @@ fn object_field<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>
     object_field: &'s schema::Field<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
-    selection_set.as_object_selection_set(|type_name, field, field_call| {
+    selection_set.as_object_selection_set(|_type_name, field, field_call| {
         match field_call.name.as_str() {
-            "__typename" => Ok(json::to_value(type_name)?),
             "name" => Ok(json::to_value(&object_field.name)?),
             "description" => Ok(json::to_value(&object_field.description)?),
             "args" => {
@@ -521,9 +513,8 @@ fn input_value<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>
     input_value: &'s schema::InputField<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
-    selection_set.as_object_selection_set(|type_name, field, field_call| {
+    selection_set.as_object_selection_set(|_type_name, field, field_call| {
         match field_call.name.as_str() {
-            "__typename" => Ok(json::to_value(type_name)?),
             "name" => Ok(json::to_value(&input_value.name)?),
             "description" => Ok(json::to_value(&input_value.description)?),
             "type" => object_response(type_(
@@ -546,9 +537,8 @@ fn enum_value<'s, S: schema::SchemaContext>(
     enum_value: &'s schema::EnumValue<S>,
     selection_set: &normalized::SelectionSet<'s, S>,
 ) -> Result<IndexMap<ast::Alias, json::Value>> {
-    selection_set.as_object_selection_set(|type_name, _field, field_call| {
+    selection_set.as_object_selection_set(|_type_name, _field, field_call| {
         match field_call.name.as_str() {
-            "__typename" => Ok(json::to_value(type_name)?),
             "name" => Ok(json::to_value(&enum_value.value)?),
             "description" => Ok(json::to_value(&enum_value.description)?),
             "isDeprecated" => Ok(json::to_value(
@@ -570,9 +560,8 @@ fn type_<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
     if type_.nullable {
         base_type(schema, namespaced_getter, &type_.base, selection_set)
     } else {
-        selection_set.as_object_selection_set(|type_name, field, field_call| {
+        selection_set.as_object_selection_set(|_type_name, field, field_call| {
             match field_call.name.as_str() {
-                "__typename" => Ok(json::to_value(type_name)?),
                 "kind" => Ok(json::to_value("NON_NULL")?),
                 "ofType" => object_response(base_type(
                     schema,
@@ -597,15 +586,15 @@ fn base_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
             named_type_lookup_internal(schema, namespaced_getter, n, selection_set)
         }
         ast::BaseType::List(l) => {
-            selection_set.as_object_selection_set(|type_name, field, field_call| {
-                match field_call.name.as_str() {
-                    "__typename" => Ok(json::to_value(type_name)?),
-                    "kind" => Ok(json::to_value("LIST")?),
-                    "ofType" => {
-                        object_response(type_(schema, namespaced_getter, l, &field.selection_set))
-                    }
-                    _ => Ok(json::Value::Null),
+            selection_set.as_object_selection_set(|_type_name, field, field_call| match field_call
+                .name
+                .as_str()
+            {
+                "kind" => Ok(json::to_value("LIST")?),
+                "ofType" => {
+                    object_response(type_(schema, namespaced_getter, l, &field.selection_set))
                 }
+                _ => Ok(json::Value::Null),
             })
         }
     }

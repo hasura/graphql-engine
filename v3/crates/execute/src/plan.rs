@@ -689,42 +689,24 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                         NodeQueryPlan::ApolloFederationSelect(
                             ApolloFederationSelect::ServiceField { sdl, selection_set },
                         ) => {
-                            let service_result = {
-                                let mut object_fields = Vec::new();
-                                for (alias, field) in &selection_set.fields {
-                                    let field_call = match field.field_call() {
-                                        Ok(field_call) => field_call,
-                                        Err(e) => {
-                                            return RootFieldResult::new(true, Err(e.into()))
-                                        }
-                                    };
-                                    match field_call.name.as_str() {
-                                        "sdl" => {
-                                            let extended_sdl = "extend schema\n  @link(url: \"https://specs.apollo.dev/federation/v2.0\", import: [\"@key\", \"@extends\", \"@external\", \"@shareable\"])\n\n".to_string() + &sdl;
-                                            object_fields.push((
-                                                alias.to_string(),
-                                                json::Value::String(extended_sdl),
-                                            ));
-                                        }
-                                        "__typename" => {
-                                            object_fields.push((
-                                                alias.to_string(),
-                                                json::Value::String("_Service".to_string()),
-                                            ));
-                                        }
-                                        field_name => {
-                                            return RootFieldResult::new(
-                                                true,
-                                                Err(FieldError::FieldNotFoundInService {
-                                                    field_name: field_name.to_string(),
-                                                }),
-                                            )
-                                        }
-                                    };
+                            let result = selection_set.as_object_selection_set( |_type_name, _field, field_call| {
+                                match field_call.info.generic {
+                                    graphql_schema::Annotation::Output(graphql_schema::OutputAnnotation::SDL) => {
+                                        let extended_sdl = "extend schema\n  @link(url: \"https://specs.apollo.dev/federation/v2.0\", import: [\"@key\", \"@extends\", \"@external\", \"@shareable\"])\n\n".to_string() + &sdl;
+                                        Ok(json::Value::String(extended_sdl))
+                                    },
+                                    _ => {
+                                        Err(FieldError::FieldNotFoundInService {
+                                            field_name: field_call.name.to_string(),
+                                        })
+                                    }
                                 }
-                                Ok(json::Value::Object(object_fields.into_iter().collect()))
-                            };
-                            RootFieldResult::new(true, service_result)
+
+                            }).and_then(|v| json::to_value(v).map_err(FieldError::from));
+                            match result {
+                                Ok(value) => RootFieldResult::new(true, Ok(value)),
+                                Err(e) => RootFieldResult::new(true, Err(e))
+                            }
                         }
                     }
                 })

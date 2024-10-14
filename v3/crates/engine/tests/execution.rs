@@ -2003,6 +2003,20 @@ fn test_aggregates_root_field_nested_object() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_aggregates_root_field_typename() -> anyhow::Result<()> {
+    let test_path_string = "execute/aggregates/root_field/typename";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            "execute/aggregates/common_metadata/postgres_connector_schema.json",
+            "execute/aggregates/common_metadata/pg_types.json",
+            "execute/aggregates/common_metadata/supergraph.json",
+        ],
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
+#[test]
 fn test_aggregates_relationship_field_simple_select() -> anyhow::Result<()> {
     let test_path_string = "execute/aggregates/relationship_field/simple_select";
     common::test_execution_expectation(

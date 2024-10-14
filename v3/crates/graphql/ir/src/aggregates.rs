@@ -190,6 +190,9 @@ fn add_aggregate_selections<'s>(
                     field_operand_field_mappings,
                 )?;
             }
+            Annotation::Output(OutputAnnotation::RootField(
+                graphql_schema::RootFieldAnnotation::Introspection,
+            )) => {}
             annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
                 annotation: annotation.clone(),
             })?,
