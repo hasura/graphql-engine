@@ -1,19 +1,20 @@
-use crate::{error, HttpContext};
-use ir::NdcRelationshipName;
+use crate::error;
 use open_dds::{commands::ProcedureName, types::DataConnectorArgumentName};
+use plan_types::NdcRelationshipName;
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use super::arguments;
 use super::field;
 use super::filter;
+use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 
-pub type UnresolvedMutationExecutionPlan<'s> = MutationExecutionPlan<'s, ir::Expression<'s>>;
-pub type ResolvedMutationExecutionPlan<'s> =
-    MutationExecutionPlan<'s, filter::ResolvedFilterExpression>;
+pub type UnresolvedMutationExecutionPlan<'s> = MutationExecutionPlan<plan_types::Expression<'s>>;
+pub type ResolvedMutationExecutionPlan = MutationExecutionPlan<filter::ResolvedFilterExpression>;
 
 #[derive(Debug)]
-pub struct MutationExecutionPlan<'s, TFilterExpression> {
+pub struct MutationExecutionPlan<TFilterExpression> {
     /// The name of a procedure
     pub procedure_name: ProcedureName,
     /// Any named procedure arguments
@@ -24,14 +25,14 @@ pub struct MutationExecutionPlan<'s, TFilterExpression> {
     /// Any relationships between collections involved in the query request
     pub collection_relationships: BTreeMap<NdcRelationshipName, relationships::Relationship>,
     /// The data connector used to fetch the data
-    pub data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 }
 
 impl<'s> UnresolvedMutationExecutionPlan<'s> {
     pub async fn resolve(
         self,
-        http_context: &'s HttpContext,
-    ) -> Result<ResolvedMutationExecutionPlan<'s>, error::FieldError> {
+        resolve_context: &'s ResolveFilterExpressionContext<'_>,
+    ) -> Result<ResolvedMutationExecutionPlan, error::FieldError> {
         let MutationExecutionPlan {
             procedure_name,
             procedure_arguments,
@@ -41,12 +42,12 @@ impl<'s> UnresolvedMutationExecutionPlan<'s> {
         } = self;
 
         let resolved_fields = match procedure_fields {
-            Some(fields) => Some(fields.resolve(http_context).await?),
+            Some(fields) => Some(fields.resolve(resolve_context).await?),
             None => None,
         };
 
         let resolved_arguments =
-            arguments::resolve_mutation_arguments(http_context, procedure_arguments).await?;
+            arguments::resolve_mutation_arguments(resolve_context, procedure_arguments).await?;
 
         Ok(MutationExecutionPlan {
             procedure_name,

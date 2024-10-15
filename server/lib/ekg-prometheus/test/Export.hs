@@ -66,7 +66,7 @@ tests =
 
       shouldBe
         prometheusSample
-        "# HELP my_counter Example counter\n# TYPE my_counter counter\nmy_counter{label_name_2=\"label value 1\",label_name_1=\"label value 1\"} 10.0\nmy_counter{label_name_2=\"label value 2\",label_name_1=\"label value 2\"} 11.0\n\n# HELP my_gauge Example gauge\n# TYPE my_gauge gauge\nmy_gauge 100.0\n\n# HELP my_histogram Example histogram\n# TYPE my_histogram histogram\nmy_histogram_bucket{le=\"1.0\",label_name=\"label_value\"} 1\nmy_histogram_bucket{le=\"2.0\",label_name=\"label_value\"} 2\nmy_histogram_bucket{le=\"3.0\",label_name=\"label_value\"} 3\nmy_histogram_bucket{le=\"+Inf\",label_name=\"label_value\"} 4\nmy_histogram_sum{label_name=\"label_value\"} 10.0\nmy_histogram_count{label_name=\"label_value\"} 4\n"
+        "# HELP my_counter Example counter\n# TYPE my_counter counter\nmy_counter{label_name_2=\"label value 1\",label_name_1=\"label value 1\"} 10.0\nmy_counter{label_name_2=\"label value 2\",label_name_1=\"label value 2\"} 11.0\n\n# HELP my_gauge Example gauge\n# TYPE my_gauge gauge\nmy_gauge 100.0\n\n# HELP my_histogram Example histogram\n# TYPE my_histogram histogram\nmy_histogram_bucket{label_name=\"label_value\",le=\"1.0\"} 1\nmy_histogram_bucket{label_name=\"label_value\",le=\"2.0\"} 2\nmy_histogram_bucket{label_name=\"label_value\",le=\"3.0\"} 3\nmy_histogram_bucket{label_name=\"label_value\",le=\"+Inf\"} 4\nmy_histogram_sum{label_name=\"label_value\"} 10.0\nmy_histogram_count{label_name=\"label_value\"} 4\n"
 
 data ExampleMetrics :: Symbol -> Symbol -> MetricType -> Type -> Type where
   ExampleGauge ::

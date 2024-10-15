@@ -59,16 +59,28 @@
       rel="stylesheet"
       href="https://unpkg.com/@graphiql/plugin-explorer/dist/style.css"
     />
+    <!--
+         These are imports for the GraphQL WebSocket client.
+    -->
+    <script src="https://unpkg.com/graphql-ws/umd/graphql-ws.min.js"></script>
   </head>
 
   <body>
     <div id="graphiql">Loading...</div>
     <script>
       const root = ReactDOM.createRoot(document.getElementById("graphiql"));
+      // Create WebSocket client
+      const wsClient = graphqlWs.createClient({
+        url: "/graphql",
+        connectionParams: {
+          headers: { "x-hasura-role": "admin" },
+        },
+      });
       const fetcher = GraphiQL.createFetcher({
         url: "/graphql",
         // default header so that we don't have to add it manually in local dev
         headers: { "x-hasura-role": "admin" },
+        wsClient: wsClient,
       });
       const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
       root.render(

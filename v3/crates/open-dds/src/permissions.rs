@@ -299,6 +299,13 @@ pub struct SelectPermission {
     /// Preset values for arguments for this role
     #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub argument_presets: Vec<ArgumentPreset>,
+    /// Whether to allow subscriptions for this role.
+    #[opendd(
+        hidden = true,
+        default,
+        json_schema(default_exp = "serde_json::json!(false)")
+    )]
+    pub allow_subscriptions: bool,
 }
 
 // We use this instead of an Option, so that we can make the filter field in
@@ -312,14 +319,17 @@ pub enum NullableModelPredicate {
 }
 
 impl traits::OpenDd for NullableModelPredicate {
-    fn deserialize(json: serde_json::Value) -> Result<Self, traits::OpenDdDeserializeError> {
+    fn deserialize(
+        json: serde_json::Value,
+        _path: jsonpath::JSONPath,
+    ) -> Result<Self, traits::OpenDdDeserializeError> {
         if json.is_null() {
             Ok(NullableModelPredicate::Null(()))
         } else {
             Ok(NullableModelPredicate::NotNull(
                 serde_path_to_error::deserialize(json).map_err(|e| {
                     traits::OpenDdDeserializeError {
-                        path: traits::JSONPath::from_serde_path(e.path()),
+                        path: jsonpath::JSONPath::from_serde_path(e.path()),
                         error: e.into_inner(),
                     }
                 })?,

@@ -477,7 +477,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvMetadataVersionRef = metaVersionRef,
           appEnvInstanceId = instanceId,
           appEnvEnableMaintenanceMode = soEnableMaintenanceMode,
-          appEnvLoggingSettings = LoggingSettings soEnabledLogTypes soEnableMetadataQueryLogging,
+          appEnvLoggingSettings = LoggingSettings soEnabledLogTypes soEnableMetadataQueryLogging soHttpLogQueryOnlyOnError,
           appEnvEventingMode = soEventingMode,
           appEnvEnableReadOnlyMode = soReadOnlyMode,
           appEnvServerMetrics = serverMetrics,

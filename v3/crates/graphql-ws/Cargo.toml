@@ -1,0 +1,40 @@
+[package]
+name = "graphql-ws"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+execute = { path = "../execute" }
+graphql-frontend = { path = "../frontends/graphql" }
+graphql-schema = { path = "../graphql/schema" }
+hasura-authn = { path = "../auth/hasura-authn" }
+hasura-authn-core = { path = "../auth/hasura-authn-core" }
+lang-graphql = { path = "../lang-graphql" }
+metadata-resolve = { path = "../metadata-resolve" }
+pre-parse-plugin = { path = "../plugins/pre-parse-plugin" }
+pre-response-plugin = { path = "../plugins/pre-response-plugin" }
+tracing-util = { path = "../utils/tracing-util" }
+
+axum = { workspace = true, features = ["ws"] }
+blake2 = { workspace = true }
+derive_more = { workspace = true }
+futures-util = {workspace = true}
+indexmap = {workspace = true}
+nonempty = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+smol_str = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
+uuid = { workspace = true, features = ["v4"] }
+
+[dev-dependencies]
+metadata-resolve = { path = "../metadata-resolve" }
+open-dds = { path = "../open-dds" }
+
+reqwest = { workspace = true, features = ["json", "multipart"] }
+tokio-tungstenite = { workspace = true }
+
+[lints]
+workspace = true

@@ -16,7 +16,6 @@ module Autodocodec.Extended
     integralWithBoundsCodec,
     integralWithLowerBoundCodec,
     integralWithUpperBoundCodec,
-    integerCodec,
     optionalFieldOrIncludedNull,
     optionalFieldOrIncludedNull',
     optionalFieldOrIncludedNullWith,
@@ -121,7 +120,7 @@ graphQLValueCodec varCodec =
     $ matchChoicesCodec
       [ (isVVariable, dimapCodec G.VVariable fromVVariable varCodec), -- The VVariable case must be first in case its codec overlaps with other cases
         (isVNull, dimapCodec (const G.VNull) (const ()) nullCodec),
-        (isVInt, dimapCodec (G.VInt . toInteger) fromVInt integerCodec), -- It's important to try VInt first because the Scientific codec will match integers
+        (isVInt, dimapCodec (G.VInt . toInteger) fromVInt ourIntegerCodec), -- It's important to try VInt first because the Scientific codec will match integers
         (isVFloat, dimapCodec G.VFloat fromVFloat codec),
         (isVString, dimapCodec G.VString fromVString codec),
         (isVBoolean, dimapCodec G.VBoolean fromVBoolean codec),
@@ -198,8 +197,11 @@ integralWithUpperBoundCodec maxInt =
 
 -- | Codec for integer with a generous bounds check that matches the behavior of
 -- aeson integer deserialization.
-integerCodec :: JSONCodec Integer
-integerCodec = bimapCodec dec enc $ codec @Scientific
+--
+-- TODO: consider using instead the new exported:
+-- https://hackage.haskell.org/package/autodocodec-0.2.3.0/docs/src/Autodocodec.Codec.html#integerCodec
+ourIntegerCodec :: JSONCodec Integer
+ourIntegerCodec = bimapCodec dec enc $ codec @Scientific
   where
     dec scientific =
       if exp10 > 1024

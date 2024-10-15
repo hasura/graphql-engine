@@ -16,7 +16,7 @@ pub struct ObjectBooleanExpressionsOutput {
     pub object_boolean_expression_types:
         BTreeMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
     pub graphql_types: BTreeSet<ast::TypeName>,
-    pub warnings: Vec<ObjectBooleanExpressionWarning>,
+    pub issues: Vec<ObjectBooleanExpressionIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -42,7 +42,7 @@ pub struct ObjectBooleanExpressionGraphqlConfig {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum ObjectBooleanExpressionWarning {
+pub enum ObjectBooleanExpressionIssue {
     #[error("ObjectBooleanExpressionType is deprecated in favour of BooleanExpressionType. Please consider upgrading {name:}.")]
     PleaseUpgradeToBooleanExpression { name: Qualified<CustomTypeName> },
 }

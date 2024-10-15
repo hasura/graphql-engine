@@ -13,20 +13,26 @@
               "scalar": {
                 "type": "String",
                 "comparisonOperators": [
-                  { "name": "_eq", "argumentType": "String!" }
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "String",
+                    "dataConnectorScalarType": "text",
                     "operatorMapping": {}
                   }
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
-
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "String_Comparison_Exp"
             }
@@ -41,22 +47,28 @@
               "scalar": {
                 "type": "Int",
                 "comparisonOperators": [
-                  { "name": "_eq", "argumentType": "Int!" }
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
-                    "dataConnectorScalarType": "Int",
+                    "dataConnectorScalarType": "int4",
                     "operatorMapping": {}
                   }
                 ]
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true }
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            }
           }
         },
-
         {
           "kind": "ObjectType",
           "version": "v1",
@@ -129,8 +141,12 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Author_Filter"
             }

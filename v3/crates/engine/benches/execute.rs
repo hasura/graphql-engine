@@ -1,11 +1,13 @@
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
+use execute::HttpContext;
 use execute::{execute_mutation_plan, execute_query_plan, generate_request_plan};
-use execute::{execute_query_internal, generate_ir, HttpContext};
+use graphql_frontend::{execute_query_internal, generate_ir};
+use graphql_schema::GDS;
 use hasura_authn_core::Identity;
+use indexmap::IndexMap;
 use lang_graphql::http::RawRequest;
 use open_dds::permissions::Role;
-use schema::GDS;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -18,6 +20,10 @@ use serde_json::Value;
 use std::path::Path;
 
 use lang_graphql as gql;
+
+// match allocator used by engine binary
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 pub fn merge_with_common_metadata(
     common_metadata_path: &Path,
@@ -46,8 +52,10 @@ pub fn bench_execute(
     let metadata_path = test_path.join("metadata.json");
     let metadata = merge_with_common_metadata(&metadata_path, &common_metadata_path);
 
-    let gds = GDS::new_with_default_flags(open_dds::traits::OpenDd::deserialize(metadata).unwrap())
-        .unwrap();
+    let gds = GDS::new_with_default_flags(
+        open_dds::traits::OpenDd::deserialize(metadata, jsonpath::JSONPath::new()).unwrap(),
+    )
+    .unwrap();
     let schema = GDS::build_schema(&gds).unwrap();
     let http_context = HttpContext {
         client: reqwest::Client::new(),
@@ -71,8 +79,9 @@ pub fn bench_execute(
     let mut group = c.benchmark_group(benchmark_group);
 
     // these numbers are fairly low, optimising for runtime of benchmark suite
-    group.warm_up_time(Duration::from_millis(500));
-    group.sample_size(20);
+    group.warm_up_time(Duration::from_millis(100));
+    group.sample_size(1000);
+    group.measurement_time(Duration::from_secs(5));
     group.sampling_mode(SamplingMode::Flat);
 
     // Parse request
@@ -105,7 +114,7 @@ pub fn bench_execute(
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
                 gql::validation::normalize_request(
-                    &schema::GDSRoleNamespaceGetter {
+                    &graphql_schema::GDSRoleNamespaceGetter {
                         scope: session.role.clone(),
                     },
                     schema,
@@ -117,7 +126,7 @@ pub fn bench_execute(
     );
 
     let normalized_request = gql::validation::normalize_request(
-        &schema::GDSRoleNamespaceGetter {
+        &graphql_schema::GDSRoleNamespaceGetter {
             scope: session.role.clone(),
         },
         &schema,
@@ -160,6 +169,18 @@ pub fn bench_execute(
                     }
                     execute::RequestPlan::MutationPlan(mutation_plan) => {
                         execute_mutation_plan(&http_context, mutation_plan, None).await
+                    }
+                    execute::RequestPlan::SubscriptionPlan(alias, subscription_plan) => {
+                        // subscriptions are not supported
+                        let result = Err(execute::FieldError::SubscriptionsNotSupported);
+                        let root_field_result = execute::plan::RootFieldResult {
+                            is_nullable: subscription_plan.process_response_as.is_nullable(),
+                            result,
+                            headers: None,
+                        };
+                        execute::plan::ExecuteQueryResult {
+                            root_fields: IndexMap::from([(alias, root_field_result)]),
+                        }
                     }
                 }
             });

@@ -13,6 +13,8 @@ path = "src/main.rs"
 bench = false
 
 [dependencies]
+axum-ext = { path = "../utils/axum-ext" }
+
 anyhow = { workspace = true }
 axum = { workspace = true, features = ["http2"] }
 env_logger = { workspace = true }
@@ -23,7 +25,7 @@ serde_json = { workspace = true, features = ["preserve_order"] }
 serde = { workspace = true }
 sha2 = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
-uuid = { version = "1", features = ["v4"] }
+uuid = { workspace = true, features = ["v4"] }
 
 [lints]
 workspace = true

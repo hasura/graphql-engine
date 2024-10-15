@@ -1,21 +1,26 @@
 use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
-use open_dds::order_by_expression::{OrderByExpressionName, OrderByExpressionOrderableField};
+use open_dds::order_by_expression::{
+    OrderByExpressionName, OrderByExpressionOperand, OrderByExpressionOrderableField,
+};
+use std::sync::Arc;
 pub use types::{Model, ModelRaw, ModelSource, ModelsIssue, ModelsOutput, NDCFieldSourceMapping};
 mod aggregation;
+mod error;
 mod helpers;
 mod source;
 mod types;
+pub use error::ModelsError;
+
 pub use crate::helpers::argument::get_argument_kind;
 use crate::helpers::types::store_new_graphql_type;
-use crate::types::error::Error;
-use crate::{mk_name, OrderByExpression};
+use crate::mk_name;
 pub use aggregation::resolve_aggregate_expression;
 pub use helpers::get_ndc_column_for_comparison;
 
 use crate::stages::{
     aggregates, apollo, boolean_expressions, data_connector_scalar_types, data_connectors,
-    object_boolean_expressions, relay, scalar_types, type_permissions,
+    object_boolean_expressions, order_by_expressions, relay, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 
@@ -30,7 +35,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::order_by_expressions::{
     resolve_orderable_fields, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
-    OrderByExpressions,
+    OrderByExpressions, OrderableRelationships,
 };
 
 /// resolve models and their sources
@@ -60,7 +65,7 @@ pub fn resolve(
     >,
     mut order_by_expressions: OrderByExpressions,
     mut graphql_types: BTreeSet<ast::TypeName>,
-) -> Result<ModelsOutput, Error> {
+) -> Result<ModelsOutput, crate::types::error::WithContext<ModelsError>> {
     // resolve models
     // TODO: validate types
     let mut models = IndexMap::new();
@@ -71,16 +76,22 @@ pub fn resolve(
         metadata_accessor
             .order_by_expressions
             .iter()
-            .map(|o| (o.object.name.clone(), o.object.ordered_type.clone()))
+            .map(|o| match &o.object.operand {
+                OrderByExpressionOperand::Object(object_operand) => {
+                    (o.object.name.clone(), object_operand.ordered_type.clone())
+                }
+            })
             .collect();
 
     for open_dds::accessor::QualifiedObject {
+        path,
         subgraph,
         object: model,
     } in &metadata_accessor.models
     {
         let qualified_model_name = Qualified::new(subgraph.clone(), model.name().clone());
         let mut resolved_model = resolve_model(
+            path.clone(),
             subgraph,
             model,
             object_types,
@@ -99,13 +110,13 @@ pub fn resolve(
             ) {
                 None => {}
                 Some(duplicate_model_name) => {
-                    return Err(Error::from(
+                    Err(ModelsError::from(
                         relay::RelayError::DuplicateModelGlobalIdSource {
-                            model_1: resolved_model.name,
+                            model_1: resolved_model.name.clone(),
                             model_2: duplicate_model_name,
-                            object_type: resolved_model.data_type,
+                            object_type: resolved_model.data_type.clone(),
                         },
-                    ))
+                    ))?;
                 }
             }
         }
@@ -122,7 +133,7 @@ pub fn resolve(
                 object_boolean_expression_types,
                 boolean_expression_types,
             )?;
-            resolved_model.source = Some(resolved_model_source);
+            resolved_model.source = Some(Arc::new(resolved_model_source));
             issues.extend(model_source_issues);
         }
 
@@ -147,9 +158,9 @@ pub fn resolve(
             .insert(qualified_model_name.clone(), resolved_model)
             .is_some()
         {
-            return Err(Error::DuplicateModelDefinition {
+            Err(ModelsError::DuplicateModelDefinition {
                 name: qualified_model_name,
-            });
+            })?;
         }
     }
     Ok(ModelsOutput {
@@ -163,6 +174,7 @@ pub fn resolve(
 }
 
 fn resolve_model(
+    path: jsonpath::JSONPath,
     subgraph: &SubgraphName,
     model: &open_dds::models::Model,
     object_types: &type_permissions::ObjectTypesWithPermissions,
@@ -179,7 +191,7 @@ fn resolve_model(
     >,
     order_by_expressions: &mut OrderByExpressions,
     graphql_types: &mut BTreeSet<ast::TypeName>,
-) -> Result<Model, Error> {
+) -> Result<Model, crate::types::error::WithContext<ModelsError>> {
     let qualified_object_type_name = Qualified::new(subgraph.clone(), model.object_type().clone());
     let qualified_model_name = Qualified::new(subgraph.clone(), model.name().clone());
     let object_type_representation = source::get_model_object_type_representation(
@@ -196,19 +208,19 @@ fn resolve_model(
             .global_id_fields
             .is_empty()
         {
-            return Err(Error::from(
+            Err(ModelsError::from(
                 relay::RelayError::NoGlobalFieldsPresentInGlobalIdSource {
-                    type_name: qualified_object_type_name,
+                    type_name: qualified_object_type_name.clone(),
                     model_name: model.name().clone(),
                 },
-            ));
+            ))?;
         }
         if !model.arguments().is_empty() {
-            return Err(Error::from(
+            Err(ModelsError::from(
                 relay::RelayError::ModelWithArgumentsAsGlobalIdSource {
-                    model_name: qualified_model_name,
+                    model_name: qualified_model_name.clone(),
                 },
-            ));
+            ))?;
         }
         // model has `global_id_source`; insert into the BTreeMap of `global_id_enabled_types`
         match global_id_enabled_types.get_mut(&qualified_object_type_name) {
@@ -243,11 +255,11 @@ fn resolve_model(
             .is_some()
         {
             if !model.arguments().is_empty() {
-                return Err(Error::from(
+                Err(ModelsError::from(
                     apollo::ApolloError::ModelWithArgumentsAsApolloFederationEntitySource {
-                        model_name: qualified_model_name,
+                        model_name: qualified_model_name.clone(),
                     },
-                ));
+                ))?;
             }
             // model has `apollo_federation_entity_source`; insert into the BTreeMap of
             // `apollo_federation_entity_enabled_types`
@@ -255,12 +267,12 @@ fn resolve_model(
                 None => {
                     // the model's graphql configuration has `apollo_federation.entitySource` but the object type
                     // of the model doesn't have any apollo federation keys
-                    return Err(Error::from(
+                    Err(ModelsError::from(
                         apollo::ApolloError::NoKeysFieldsPresentInEntitySource {
-                            type_name: qualified_object_type_name,
+                            type_name: qualified_object_type_name.clone(),
                             model_name: model.name().clone(),
                         },
-                    ));
+                    ))?;
                 }
                 Some(type_name) => {
                     match type_name {
@@ -269,9 +281,11 @@ fn resolve_model(
                         }
                         // Multiple models are marked as apollo federation entity source
                         Some(_) => {
-                            return Err(Error::MultipleEntitySourcesForType {
-                                type_name: qualified_object_type_name,
-                            });
+                            Err(ModelsError::from(
+                                apollo::ApolloError::MultipleEntitySourcesForType {
+                                    type_name: qualified_object_type_name.clone(),
+                                },
+                            ))?;
                         }
                     }
                 }
@@ -303,10 +317,10 @@ fn resolve_model(
             )
             .is_some()
         {
-            return Err(Error::DuplicateModelArgumentDefinition {
-                model_name: qualified_model_name,
+            Err(ModelsError::DuplicateModelArgumentDefinition {
+                model_name: qualified_model_name.clone(),
                 argument_name: argument.name.clone(),
-            });
+            })?;
         }
     }
 
@@ -338,13 +352,14 @@ fn resolve_model(
                         order_by_expression_name.clone(),
                     ),
                 );
-                if let Some(order_by_expression) =
-                    order_by_expressions.0.get(&order_by_expression_identifier)
+                if let Some(order_by_expression) = order_by_expressions
+                    .objects
+                    .get(&order_by_expression_identifier)
                 {
                     if order_by_expression.ordered_type == qualified_object_type_name {
                         Ok(Some(order_by_expression_identifier))
                     } else {
-                        Err(Error::OrderByExpressionTypeMismatch {
+                        Err(ModelsError::OrderByExpressionTypeMismatch {
                             model_name: qualified_model_name.clone(),
                             model_type: qualified_object_type_name.clone(),
                             order_by_expression_name: Qualified::new(
@@ -355,7 +370,7 @@ fn resolve_model(
                         })
                     }
                 } else {
-                    Err(Error::UnknownOrderByExpressionIdentifier {
+                    Err(ModelsError::UnknownOrderByExpressionIdentifier {
                         model_name: qualified_model_name.clone(),
                         order_by_expression_identifier: order_by_expression_identifier.clone(),
                     })
@@ -367,6 +382,7 @@ fn resolve_model(
     }?;
 
     Ok(Model {
+        path,
         name: qualified_model_name,
         data_type: qualified_object_type_name,
         order_by_expression,
@@ -392,7 +408,7 @@ fn make_order_by_expression(
     graphql_types: &mut BTreeSet<ast::TypeName>,
     qualified_model_name: &Qualified<ModelName>,
     order_by_expressions: &mut OrderByExpressions,
-) -> Result<Qualified<OrderByExpressionIdentifier>, Error> {
+) -> Result<Qualified<OrderByExpressionIdentifier>, ModelsError> {
     let identifier = Qualified::new(
         subgraph.clone(),
         OrderByExpressionIdentifier::FromModel(model_v1.name.clone()),
@@ -414,7 +430,7 @@ fn make_order_by_expression(
         order_by_expression_names_and_types,
         &open_dds_orderable_fields,
     )
-    .map_err(|error| Error::ModelV1OrderableFieldsError {
+    .map_err(|error| ModelsError::ModelV1OrderableFieldsError {
         model_name: qualified_model_name.clone(),
         error,
     })?;
@@ -425,25 +441,27 @@ fn make_order_by_expression(
             g.order_by_expression_type.as_ref().map(|type_name| {
                 let expression_type_name = mk_name(type_name.as_str()).map(ast::TypeName)?;
                 store_new_graphql_type(graphql_types, Some(&expression_type_name))?;
-                Ok::<_, Error>(OrderByExpressionGraphqlConfig {
+                Ok::<_, ModelsError>(OrderByExpressionGraphqlConfig {
                     expression_type_name,
                 })
             })
         })
         .transpose()?;
 
-    let order_by_expression = OrderByExpression {
+    let object_order_by_expression = order_by_expressions::ObjectOrderByExpression {
         identifier: identifier.clone(),
         ordered_type,
         orderable_fields,
-        orderable_relationships: vec![],
+        orderable_relationships: OrderableRelationships::ModelV1AllowAll,
         graphql,
         description: Some(format!(
             "OrderByExpression for Model {qualified_model_name}"
         )),
     };
+
     order_by_expressions
-        .0
-        .insert(identifier.clone(), order_by_expression);
+        .objects
+        .insert(identifier.clone(), object_order_by_expression);
+
     Ok(identifier)
 }

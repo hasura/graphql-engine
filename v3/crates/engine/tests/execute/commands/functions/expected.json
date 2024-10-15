@@ -1,10 +1,12 @@
-{
-  "data": {
-    "getLatestActorId": 7,
-    "getLatestActorName": "Robert De Niro",
-    "getActorById": {
-      "movie_id": 1,
-      "name": "Leonardo DiCaprio"
+[
+  {
+    "data": {
+      "getLatestActorId": 7,
+      "getLatestActorName": "Robert De Niro",
+      "getActorById": {
+        "movie_id": 1,
+        "name": "Leonardo DiCaprio"
+      }
     }
   }
-}
+]

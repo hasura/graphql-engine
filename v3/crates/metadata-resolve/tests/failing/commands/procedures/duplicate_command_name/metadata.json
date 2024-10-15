@@ -1,0 +1,39 @@
+{
+  "version": "v2",
+  "flags": {
+    "require_unique_command_graphql_names": true
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "hello",
+            "arguments": [],
+            "outputType": "String",
+            "graphql": {
+              "rootFieldName": "hello",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "not_hello",
+            "arguments": [],
+            "outputType": "String",
+            "graphql": {
+              "rootFieldName": "hello",
+              "rootFieldKind": "Query"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

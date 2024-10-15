@@ -321,6 +321,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoGracefulShutdownTimeout :: Maybe (Refined NonNegative Seconds),
     rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
     rsoEnableMetadataQueryLoggingEnv :: Server.Logging.MetadataQueryLoggingMode,
+    rsoHttpLogQueryOnlyOnError :: Server.Logging.HttpLogQueryOnlyOnError,
     -- | stores global default naming convention
     rsoDefaultNamingConvention :: Maybe NamingCase,
     rsoExtensionsSchema :: Maybe MonadTx.ExtensionsSchema,
@@ -635,6 +636,7 @@ data ServeOptions impl = ServeOptions
     -- | See note '$readOnlyMode'
     soReadOnlyMode :: Server.Types.ReadOnlyMode,
     soEnableMetadataQueryLogging :: Server.Logging.MetadataQueryLoggingMode,
+    soHttpLogQueryOnlyOnError :: Server.Logging.HttpLogQueryOnlyOnError,
     soDefaultNamingConvention :: NamingCase,
     soExtensionsSchema :: MonadTx.ExtensionsSchema,
     soMetadataDefaults :: MetadataDefaults,

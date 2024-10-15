@@ -841,6 +841,14 @@
             "nullable": "nullable",
             "description": null
           },
+          "songs": {
+            "name": "songs",
+            "type": {
+              "compositeType": "institution_songs"
+            },
+            "nullable": "nullable",
+            "description": null
+          },
           "staff": {
             "name": "staff",
             "type": {
@@ -2578,6 +2586,27 @@
         },
         "description": null
       },
+      "institution_songs": {
+        "typeName": "institution_songs",
+        "schemaName": "public",
+        "fields": {
+          "primary_anthem_track_id": {
+            "fieldName": "primary_anthem_track_id",
+            "type": {
+              "scalarType": "int4"
+            },
+            "description": null
+          },
+          "secondary_anthem_track_id": {
+            "fieldName": "secondary_anthem_track_id",
+            "type": {
+              "scalarType": "int4"
+            },
+            "description": null
+          }
+        },
+        "description": null
+      },
       "location": {
         "typeName": "location",
         "schemaName": "public",
@@ -2608,6 +2637,27 @@
         },
         "description": null
       },
+      "pet": {
+        "typeName": "pet",
+        "schemaName": "public",
+        "fields": {
+          "age": {
+            "fieldName": "age",
+            "type": {
+              "scalarType": "int4"
+            },
+            "description": null
+          },
+          "name": {
+            "fieldName": "name",
+            "type": {
+              "scalarType": "text"
+            },
+            "description": null
+          }
+        },
+        "description": null
+      },
       "staff": {
         "typeName": "staff",
         "schemaName": "public",
@@ -2630,6 +2680,15 @@
             "fieldName": "last_name",
             "type": {
               "scalarType": "text"
+            },
+            "description": null
+          },
+          "pets": {
+            "fieldName": "pets",
+            "type": {
+              "arrayType": {
+                "compositeType": "pet"
+              }
             },
             "description": null
           },

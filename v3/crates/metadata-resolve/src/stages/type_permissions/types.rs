@@ -1,6 +1,9 @@
 use std::collections::BTreeMap;
 
-use open_dds::permissions::{Role, TypeOutputPermission, ValueExpression};
+use open_dds::{
+    permissions::{Role, TypeOutputPermission, ValueExpression},
+    types::Deprecated,
+};
 
 use crate::stages::object_types;
 use crate::Qualified;
@@ -41,7 +44,7 @@ pub struct TypeInputPermission {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldPresetInfo {
     pub value: ValueExpression,
-    pub deprecated: bool,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

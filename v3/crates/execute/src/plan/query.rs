@@ -1,21 +1,24 @@
-use crate::{error, HttpContext};
-use ir::{AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, VariableName};
+use std::sync::Arc;
 
+use crate::error;
 use async_recursion::async_recursion;
+use graphql_ir::{AggregateSelectionSet, OrderByElement};
 use indexmap::IndexMap;
 use open_dds::{data_connector::CollectionName, types::DataConnectorArgumentName};
+use plan_types::{NdcFieldAlias, NdcRelationshipName, VariableName};
 use std::collections::BTreeMap;
 
 use super::arguments;
 use super::field;
 use super::filter;
+use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 
-pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, ir::Expression<'s>>;
-pub type ResolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s, filter::ResolvedFilterExpression>;
+pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<plan_types::Expression<'s>>;
+pub type ResolvedQueryExecutionPlan = QueryExecutionPlan<filter::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct QueryExecutionPlan<'s, TFilterExpression> {
+pub struct QueryExecutionPlan<TFilterExpression> {
     pub query_node: QueryNode<TFilterExpression>,
     /// The name of a collection
     pub collection: CollectionName,
@@ -27,14 +30,14 @@ pub struct QueryExecutionPlan<'s, TFilterExpression> {
     /// should be subtituted in turn, and a fresh set of rows returned.
     pub variables: Option<Vec<BTreeMap<VariableName, serde_json::Value>>>,
     /// The data connector used to fetch the data
-    pub data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 }
 
 impl<'s> UnresolvedQueryExecutionPlan<'s> {
     pub async fn resolve(
         self,
-        http_context: &'s HttpContext,
-    ) -> Result<ResolvedQueryExecutionPlan<'s>, error::FieldError> {
+        resolve_context: &ResolveFilterExpressionContext<'_>,
+    ) -> Result<ResolvedQueryExecutionPlan, error::FieldError> {
         let QueryExecutionPlan {
             query_node,
             collection,
@@ -44,9 +47,9 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
             data_connector,
         } = self;
         let query_request = QueryExecutionPlan {
-            query_node: query_node.resolve(http_context).await?,
+            query_node: query_node.resolve(resolve_context).await?,
             collection,
-            arguments: arguments::resolve_arguments(http_context, arguments).await?,
+            arguments: arguments::resolve_arguments(resolve_context, arguments).await?,
             collection_relationships,
             variables,
             data_connector,
@@ -55,7 +58,7 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
     }
 }
 
-pub type UnresolvedQueryNode<'s> = QueryNode<ir::Expression<'s>>;
+pub type UnresolvedQueryNode<'s> = QueryNode<plan_types::Expression<'s>>;
 pub type ResolvedQueryNode = QueryNode<filter::ResolvedFilterExpression>;
 
 /// Query plan for fetching data
@@ -79,7 +82,7 @@ impl<'s> UnresolvedQueryNode<'s> {
     #[async_recursion]
     pub async fn resolve(
         self,
-        http_context: &'s HttpContext,
+        resolve_context: &'s ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedQueryNode, error::FieldError>
     where
         's: 'async_recursion,
@@ -93,14 +96,14 @@ impl<'s> UnresolvedQueryNode<'s> {
             fields,
         } = self;
         let predicate = match predicate {
-            Some(predicate) => Some(filter::resolve_expression(predicate, http_context).await?),
+            Some(predicate) => Some(filter::resolve_expression(predicate, resolve_context).await?),
             None => None,
         };
         let fields = match fields {
             Some(fields) => {
                 let mut ndc_fields_ = IndexMap::new();
                 for (name, field) in fields {
-                    ndc_fields_.insert(name, field.resolve(http_context).await?);
+                    ndc_fields_.insert(name, field.resolve(resolve_context).await?);
                 }
                 Some(ndc_fields_)
             }

@@ -1,5 +1,5 @@
 use crate::helpers::type_mappings::TypeMappingCollectionError;
-use crate::stages::{data_connectors, graphql_config, scalar_boolean_expressions};
+use crate::stages::{data_connectors, graphql_config, relationships, scalar_boolean_expressions};
 use crate::types::subgraph::{Qualified, QualifiedTypeName};
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType},
@@ -76,6 +76,15 @@ pub enum BooleanExpressionError {
         nested_type_name: Qualified<CustomTypeName>,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error(
+        "The nested object field '{field_name}' within '{parent_boolean_expression_type_name}' cannot be used for comparison \
+         because its boolean expression type '{nested_boolean_expression_type_name}' involves a relationship comparison field."
+    )]
+    NestedObjectFieldContainsRelationshipComparison {
+        field_name: FieldName,
+        parent_boolean_expression_type_name: Qualified<CustomTypeName>,
+        nested_boolean_expression_type_name: Qualified<CustomTypeName>,
+    },
     #[error("The field {field_name:} has type {field_type:} but the field's boolean expression type {field_boolean_expression_type_name:} has type {underlying_type:}")]
     FieldTypeMismatch {
         field_name: FieldName,
@@ -103,4 +112,7 @@ pub enum BooleanExpressionError {
         boolean_expression_name: Qualified<CustomTypeName>,
         data_connector_error: data_connectors::NamedDataConnectorError,
     },
+
+    #[error("{0}")]
+    RelationshipError(#[from] relationships::RelationshipError),
 }

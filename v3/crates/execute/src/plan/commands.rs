@@ -11,30 +11,20 @@ use super::query;
 use super::relationships;
 use super::selection_set;
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
-use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
-use ir::{
-    CommandInfo, FunctionBasedCommand, NdcFieldAlias, NdcRelationshipName, ProcedureBasedCommand,
-    VariableName,
-};
+use crate::remote_joins::types::JoinLocations;
+use graphql_ir::{CommandInfo, FunctionBasedCommand, ProcedureBasedCommand};
 use open_dds::commands::ProcedureName;
+use plan_types::{NdcFieldAlias, NdcRelationshipName, VariableName};
 
-pub(crate) fn plan_query_node<'s, 'ir>(
-    ir: &'ir CommandInfo<'s>,
-    join_id_counter: &mut MonotonicCounter,
+pub(crate) fn plan_query_node<'s>(
+    ir: &CommandInfo<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<
-    (
-        query::UnresolvedQueryNode<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
-    ),
-    error::Error,
-> {
+) -> Result<(query::UnresolvedQueryNode<'s>, JoinLocations<'s>), error::Error> {
     let mut ndc_nested_field = None;
     let mut jl = JoinLocations::new();
     if let Some(nested_selection) = &ir.selection {
         let (fields, locations) = selection_set::plan_nested_selection(
             nested_selection,
-            join_id_counter,
             ir.data_connector.capabilities.supported_ndc_version,
             relationships,
         )?;
@@ -59,16 +49,9 @@ pub(crate) fn plan_query_node<'s, 'ir>(
     Ok((query, jl))
 }
 
-pub(crate) fn plan_query_execution<'s, 'ir>(
-    ir: &'ir FunctionBasedCommand<'s>,
-    join_id_counter: &mut MonotonicCounter,
-) -> Result<
-    (
-        query::UnresolvedQueryExecutionPlan<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
-    ),
-    error::Error,
-> {
+pub(crate) fn plan_query_execution<'s>(
+    ir: &FunctionBasedCommand<'s>,
+) -> Result<(query::UnresolvedQueryExecutionPlan<'s>, JoinLocations<'s>), error::Error> {
     let mut collection_relationships = BTreeMap::new();
     let mut arguments =
         arguments::plan_arguments(&ir.command_info.arguments, &mut collection_relationships)?;
@@ -83,11 +66,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
         );
     }
 
-    let (query_node, jl) = plan_query_node(
-        &ir.command_info,
-        join_id_counter,
-        &mut collection_relationships,
-    )?;
+    let (query_node, jl) = plan_query_node(&ir.command_info, &mut collection_relationships)?;
 
     let query_request = query::UnresolvedQueryExecutionPlan {
         query_node,
@@ -95,7 +74,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
         arguments: arguments.clone(),
         collection_relationships,
         variables: None,
-        data_connector: ir.command_info.data_connector,
+        data_connector: ir.command_info.data_connector.clone(),
     };
     Ok((query_request, jl))
 }
@@ -103,11 +82,10 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
 pub(crate) fn plan_mutation_execution<'s, 'ir>(
     procedure_name: &'ir ProcedureName,
     ir: &'ir ProcedureBasedCommand<'s>,
-    join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
         mutation::UnresolvedMutationExecutionPlan<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
+        JoinLocations<'s>,
     ),
     error::Error,
 > {
@@ -117,7 +95,6 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
     if let Some(nested_selection) = &ir.command_info.selection {
         let (fields, locations) = selection_set::plan_nested_selection(
             nested_selection,
-            join_id_counter,
             ir.command_info
                 .data_connector
                 .capabilities
@@ -135,7 +112,7 @@ pub(crate) fn plan_mutation_execution<'s, 'ir>(
         )?,
         procedure_fields: ndc_nested_field,
         collection_relationships,
-        data_connector: ir.command_info.data_connector,
+        data_connector: ir.command_info.data_connector.clone(),
     };
     Ok((mutation_request, jl))
 }

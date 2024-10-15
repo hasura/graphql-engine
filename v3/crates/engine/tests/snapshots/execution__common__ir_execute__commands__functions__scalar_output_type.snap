@@ -1,0 +1,32 @@
+---
+source: crates/engine/tests/common.rs
+expression: ir
+---
+V1(
+    QueryRequestV1 {
+        queries: {
+            Alias(
+                Identifier(
+                    "getLatestActorId",
+                ),
+            ): Command(
+                CommandSelection {
+                    target: CommandTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        command_name: CommandName(
+                            Identifier(
+                                "get_latest_actor_id",
+                            ),
+                        ),
+                        arguments: {},
+                    },
+                    selection: Some(
+                        {},
+                    ),
+                },
+            ),
+        },
+    },
+)

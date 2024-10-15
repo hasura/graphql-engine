@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 pub use types::{
     ArgumentPreset, ArgumentPresetValue, CommandsResponseConfig, DataConnectorCapabilities,
     DataConnectorContext, DataConnectorLink, DataConnectorSchema, DataConnectors,
-    DataConnectorsOutput, NdcVersion,
+    DataConnectorsOutput, HttpHeadersPreset, NdcVersion,
 };
 
 /// Resolve data connectors.
@@ -21,6 +21,7 @@ pub fn resolve<'a>(
     let mut data_connectors = BTreeMap::new();
     let mut issues = vec![];
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: data_connector,
     } in &metadata_accessor.data_connectors

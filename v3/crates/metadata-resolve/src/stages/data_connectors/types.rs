@@ -22,6 +22,7 @@ use open_dds::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 use strum_macros::EnumIter;
 
 pub struct DataConnectorsOutput<'a> {
@@ -245,7 +246,7 @@ pub struct DataConnectorLink {
     /// HTTP response headers configuration that is forwarded from a NDC
     /// function/procedure to the client.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub response_config: Option<CommandsResponseConfig>,
+    pub response_config: Option<Arc<CommandsResponseConfig>>,
     pub capabilities: DataConnectorCapabilities,
 }
 
@@ -302,6 +303,12 @@ impl DataConnectorLink {
                 .nested_fields
                 .filter_by
                 .is_some(),
+            supports_nested_array_filtering: context
+                .capabilities
+                .query
+                .exists
+                .nested_collections
+                .is_some(),
             supports_nested_object_aggregations: context
                 .capabilities
                 .query
@@ -314,7 +321,7 @@ impl DataConnectorLink {
             url,
             headers,
             capabilities,
-            response_config: context.response_headers.clone(),
+            response_config: context.response_headers.clone().map(Arc::new),
         })
     }
 }
@@ -452,6 +459,7 @@ pub struct DataConnectorCapabilities {
     pub supports_explaining_mutations: bool,
     pub supports_nested_object_filtering: bool,
     pub supports_nested_object_aggregations: bool,
+    pub supports_nested_array_filtering: bool,
 }
 
 #[cfg(test)]
@@ -503,7 +511,7 @@ mod tests {
                         }
                     }
                 }
-            ))
+            ), jsonpath::JSONPath::new())
             .unwrap();
 
         let explicit_capabilities: ndc_models::Capabilities =
@@ -544,7 +552,7 @@ mod tests {
                         }
                     }
                 }
-            ))
+            ), jsonpath::JSONPath::new())
             .unwrap();
 
         let explicit_capabilities: ndc_models::Capabilities =

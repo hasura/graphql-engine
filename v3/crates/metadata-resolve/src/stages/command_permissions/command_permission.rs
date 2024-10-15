@@ -6,7 +6,7 @@ use open_dds::{data_connector::DataConnectorName, models::ModelName, types::Cust
 
 use crate::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, models_graphql,
-    object_boolean_expressions, relationships, scalar_types,
+    object_boolean_expressions, object_relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
@@ -40,7 +40,10 @@ fn get_command_source_argument<'a>(
 pub fn resolve_command_permissions(
     command: &commands::Command,
     permissions: &CommandPermissionsV1,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -74,13 +77,13 @@ pub fn resolve_command_permissions(
                 .source
                 .as_ref()
                 .map(|source| &source.data_connector.name)
-                .ok_or(Error::CommandSourceRequiredForPredicate {
+                .ok_or(commands::CommandsError::CommandSourceRequiredForPredicate {
                     command_name: command.name.clone(),
                 })?;
 
             let data_connector_context =
                 data_connectors.0.get(data_connector_name).ok_or_else(|| {
-                    Error::UnknownCommandDataConnector {
+                    commands::CommandsError::UnknownCommandDataConnector {
                         command_name: command.name.clone(),
                         data_connector: data_connector_name.clone(),
                     }
@@ -129,10 +132,12 @@ pub fn resolve_command_permissions(
                     );
                 }
                 None => {
-                    return Err(Error::CommandArgumentPresetMismatch {
-                        command_name: command.name.clone(),
-                        argument_name: argument_preset.argument.clone(),
-                    });
+                    return Err(Error::from(
+                        commands::CommandsError::CommandArgumentPresetMismatch {
+                            command_name: command.name.clone(),
+                            argument_name: argument_preset.argument.clone(),
+                        },
+                    ));
                 }
             }
         }

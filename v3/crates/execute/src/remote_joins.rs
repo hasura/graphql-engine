@@ -57,24 +57,24 @@
 //! 1. Make the first top-level NDC query, and call the response as LHS response.
 //!
 //! 2. Traverse the join tree to get to the next remote join. Iterate through
-//! all the rows in the LHS response, use the field mapping in the remote join node
-//! to collect the values of those fields. In the above example, these would be
-//! collecting the city codes from the LHS city query.
+//!    all the rows in the LHS response, use the field mapping in the remote join node
+//!    to collect the values of those fields. In the above example, these would be
+//!    collecting the city codes from the LHS city query.
 //!
 //! 3. Get the NDC query from the remote join node, and attach the values in the
-//! above step as variables in the NDC query. This NDC query already has a
-//! "where" filter clause with a variable on the join mapping field. Make the
-//! NDC query, and call the response as RHS response.
+//!    above step as variables in the NDC query. This NDC query already has a
+//!    "where" filter clause with a variable on the join mapping field. Make the
+//!    NDC query, and call the response as RHS response.
 //!
 //! 4. If there is a sub-tree from this remote join node, recursively perform
-//! this algorithm.
+//!    this algorithm.
 //!
 //! 5. Perform join on LHS response and RHS response
 //!
 //! [plan_selection_set]: crate::plan::selection_set::plan_selection_set
-//! [generate_selection_set_ir]: ir::generate_selection_set_ir
-//! [build_remote_relationship]: ir::build_remote_relationship
-//! [build_remote_command_relationship]: ir::build_remote_command_relationship
+//! [generate_selection_set_ir]: graphql_ir::generate_selection_set_ir
+//! [build_remote_relationship]: graphql_ir::build_remote_relationship
+//! [build_remote_command_relationship]: graphql_ir::build_remote_command_relationship
 
 use async_recursion::async_recursion;
 
@@ -83,13 +83,14 @@ use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;
 
 use crate::plan;
+use crate::plan::filter::ResolveFilterExpressionContext;
 
 use super::ndc::execute_ndc_query;
 use super::plan::ProcessResponseAs;
 use super::{error, HttpContext, ProjectId};
 
 use self::collect::ExecutableJoinNode;
-use types::{Argument, JoinId, JoinLocations, RemoteJoin};
+use types::{Argument, JoinLocations};
 
 pub(crate) mod collect;
 pub(crate) mod join;
@@ -98,17 +99,14 @@ pub(crate) mod types;
 /// Execute remote joins. As an entry-point it assumes the response is available
 /// for the top-level query, and executes further remote joins recursively.
 #[async_recursion]
-pub(crate) async fn execute_join_locations<'ir>(
+pub(crate) async fn execute_join_locations(
     http_context: &HttpContext,
     execution_span_attribute: &'static str,
     lhs_response: &mut Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
-    join_locations: &JoinLocations<(RemoteJoin<'async_recursion, 'ir>, JoinId)>,
+    join_locations: &JoinLocations<'async_recursion>,
     project_id: Option<&ProjectId>,
-) -> Result<(), error::FieldError>
-where
-    'ir: 'async_recursion,
-{
+) -> Result<(), error::FieldError> {
     let tracer = tracing_util::global_tracer();
 
     // collect the join column arguments from the LHS response
@@ -142,7 +140,7 @@ where
             continue;
         }
         // patch the target/RHS IR with variable values
-        let foreach_variables: Vec<BTreeMap<ir::VariableName, json::Value>> = arguments
+        let foreach_variables: Vec<BTreeMap<plan_types::VariableName, json::Value>> = arguments
             .iter()
             .map(|bmap| bmap.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect())
             .collect();
@@ -150,7 +148,9 @@ where
         join_node.target_ndc_execution.variables = Some(foreach_variables);
 
         let execution_node = join_node.target_ndc_execution.clone();
-        let resolved_execution_plan = execution_node.resolve(http_context).await?;
+        let resolve_context =
+            ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
+        let resolved_execution_plan = execution_node.resolve(&resolve_context).await?;
         let ndc_query = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)?;
 
         // execute the remote query
@@ -163,7 +163,7 @@ where
                     Box::pin(execute_ndc_query(
                         http_context,
                         &ndc_query,
-                        join_node.target_data_connector,
+                        &join_node.target_data_connector,
                         execution_span_attribute,
                         remote_alias.clone(),
                         project_id,

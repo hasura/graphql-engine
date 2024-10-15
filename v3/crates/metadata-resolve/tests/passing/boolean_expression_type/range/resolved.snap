@@ -68,8 +68,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                 type_output_permissions: {},
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "__unknown_namespace",
@@ -103,7 +103,29 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         column_type_representation: Some(
                                             Number,
                                         ),
-                                        equal_operators: [],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "match",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "range",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "term",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "terms",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -122,14 +144,52 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         column_type_representation: Some(
                                             Number,
                                         ),
-                                        equal_operators: [],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "match",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "range",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "term",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "terms",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
                             },
                         },
                     },
-                ),
+                    scalar_representations: {
+                        FieldName(
+                            Identifier(
+                                "end",
+                            ),
+                        ): {
+                            Number,
+                        },
+                        FieldName(
+                            Identifier(
+                                "start",
+                            ),
+                        ): {
+                            Number,
+                        },
+                    },
+                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -232,8 +292,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                 },
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "__unknown_namespace",
@@ -267,7 +327,29 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         column_type_representation: Some(
                                             Integer,
                                         ),
-                                        equal_operators: [],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "match",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "range",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "term",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "terms",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -286,7 +368,29 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         column_type_representation: Some(
                                             Integer,
                                         ),
-                                        equal_operators: [],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "match",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "range",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "term",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "terms",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -305,14 +409,74 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         column_type_representation: Some(
                                             String,
                                         ),
-                                        equal_operators: [],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "match",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_bool_prefix",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "match_phrase_prefix",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "prefix",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "range",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "regexp",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "term",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "terms",
+                                                    ),
+                                                    DataConnectorOperatorName(
+                                                        "wildcard",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
                             },
                         },
                     },
-                ),
+                    scalar_representations: {
+                        FieldName(
+                            Identifier(
+                                "id",
+                            ),
+                        ): {
+                            Integer,
+                        },
+                        FieldName(
+                            Identifier(
+                                "rating",
+                            ),
+                        ): {
+                            Integer,
+                        },
+                        FieldName(
+                            Identifier(
+                                "title",
+                            ),
+                        ): {
+                            String,
+                        },
+                    },
+                },
             },
         },
         scalar_types: {},
@@ -326,8 +490,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                         "movies",
                     ),
                 ),
-            }: ModelWithPermissions {
+            }: ModelWithArgumentPresets {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Index(
+                                7,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "__unknown_namespace",
@@ -447,6 +618,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     supports_explaining_mutations: false,
                                     supports_nested_object_filtering: true,
                                     supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
                                 },
                             },
                             collection: CollectionName(
@@ -486,7 +658,29 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             column_type_representation: Some(
                                                 Integer,
                                             ),
-                                            equal_operators: [],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "match",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "match_phrase",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "range",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "term",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "terms",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -505,7 +699,29 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             column_type_representation: Some(
                                                 Integer,
                                             ),
-                                            equal_operators: [],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "match",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "match_phrase",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "range",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "term",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "terms",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -524,7 +740,44 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             column_type_representation: Some(
                                                 String,
                                             ),
-                                            equal_operators: [],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "match",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "match_bool_prefix",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "match_phrase",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "match_phrase_prefix",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "prefix",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "range",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "regexp",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "term",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "terms",
+                                                        ),
+                                                        DataConnectorOperatorName(
+                                                            "wildcard",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -575,6 +828,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                         ),
                                         description: None,
                                         deprecated: None,
+                                        subscription: None,
                                     },
                                 ),
                                 arguments_input_type: None,
@@ -586,12 +840,20 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                         description: None,
                     },
                 },
+                argument_presets: {
+                    Role(
+                        "admin",
+                    ): ArgumentPresets {
+                        argument_presets: {},
+                    },
+                },
                 select_permissions: {
                     Role(
                         "admin",
                     ): SelectPermission {
                         filter: AllowAll,
                         argument_presets: {},
+                        allow_subscriptions: false,
                     },
                 },
                 filter_expression_type: Some(
@@ -801,6 +1063,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             ),
                             description: None,
                             deprecated: None,
+                            subscription: None,
                         },
                     ),
                     select_aggregate: None,
@@ -1051,7 +1314,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             ),
                         ),
                     },
-                    representation: Inbuilt(
+                    operand_type: Inbuilt(
                         Int,
                     ),
                     comparison_operators: {},
@@ -1104,7 +1367,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             ),
                         ),
                     },
-                    representation: Inbuilt(
+                    operand_type: Inbuilt(
                         Int,
                     ),
                     comparison_operators: {
@@ -1177,7 +1440,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             ),
                         ),
                     },
-                    representation: Inbuilt(
+                    operand_type: Inbuilt(
                         String,
                     ),
                     comparison_operators: {},
@@ -1211,9 +1474,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     include_is_null: Yes,
                 },
             },
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {
+        order_by_expressions: OrderByExpressions {
+            objects: {
                 Qualified {
                     subgraph: SubgraphName(
                         "__unknown_namespace",
@@ -1225,7 +1490,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "__unknown_namespace",
@@ -1248,52 +1513,49 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             ),
                         ),
                     },
-                    orderable_fields: [
-                        Scalar(
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "id",
+                            ),
+                        ): Scalar(
                             OrderableScalarField {
-                                field_name: FieldName(
-                                    Identifier(
-                                        "id",
-                                    ),
-                                ),
                                 enable_order_by_directions: EnableAll(
                                     true,
                                 ),
                             },
                         ),
-                        Scalar(
+                        FieldName(
+                            Identifier(
+                                "rating",
+                            ),
+                        ): Scalar(
                             OrderableScalarField {
-                                field_name: FieldName(
-                                    Identifier(
-                                        "title",
-                                    ),
-                                ),
                                 enable_order_by_directions: EnableAll(
                                     true,
                                 ),
                             },
                         ),
-                        Scalar(
+                        FieldName(
+                            Identifier(
+                                "title",
+                            ),
+                        ): Scalar(
                             OrderableScalarField {
-                                field_name: FieldName(
-                                    Identifier(
-                                        "rating",
-                                    ),
-                                ),
                                 enable_order_by_directions: EnableAll(
                                     true,
                                 ),
                             },
                         ),
-                    ],
-                    orderable_relationships: [],
+                    },
+                    orderable_relationships: ModelV1AllowAll,
                     graphql: None,
                     description: Some(
                         "OrderByExpression for Model movies (in subgraph __unknown_namespace)",
                     ),
                 },
             },
-        ),
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
@@ -1306,6 +1568,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                     "Mutation",
                 ),
             ),
+            subscription_root_type_name: None,
             order_by_input: Some(
                 OrderByInputGraphqlConfig {
                     asc_direction_field_value: Name(
@@ -1322,8 +1585,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                 },
             ),
             enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
         },
-        pre_parse_plugins: [],
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+        },
         roles: [
             Role(
                 "admin",

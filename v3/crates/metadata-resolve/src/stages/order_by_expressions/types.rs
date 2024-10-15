@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::Qualified;
 
 #[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, derive_more::Display,
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, derive_more::Display, Hash,
 )]
 pub enum OrderByExpressionIdentifier {
     FromOrderByExpression(OrderByExpressionName),
@@ -21,9 +21,9 @@ pub enum OrderByExpressionIdentifier {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct OrderByExpressions(
-    pub BTreeMap<Qualified<OrderByExpressionIdentifier>, OrderByExpression>,
-);
+pub struct OrderByExpressions {
+    pub objects: BTreeMap<Qualified<OrderByExpressionIdentifier>, ObjectOrderByExpression>,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct OrderByExpressionsOutput {
@@ -31,45 +31,47 @@ pub struct OrderByExpressionsOutput {
     pub graphql_types: BTreeSet<ast::TypeName>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct OrderByExpression {
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ObjectOrderByExpression {
     pub identifier: Qualified<OrderByExpressionIdentifier>,
     pub ordered_type: Qualified<CustomTypeName>,
-    pub orderable_fields: Vec<OrderableField>,
-    pub orderable_relationships: Vec<OrderableRelationship>,
+    pub orderable_fields: BTreeMap<FieldName, OrderableField>,
+    pub orderable_relationships: OrderableRelationships,
     pub graphql: Option<OrderByExpressionGraphqlConfig>,
     pub description: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum OrderableRelationships {
+    ModelV1AllowAll,
+    ModelV2(BTreeMap<RelationshipName, OrderableRelationship>),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum OrderableField {
     Scalar(OrderableScalarField),
     Object(OrderableObjectField),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct OrderableScalarField {
-    pub field_name: FieldName,
     pub enable_order_by_directions: EnableAllOrSpecific<OrderByDirection>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct OrderableObjectField {
-    pub field_name: FieldName,
-    pub order_by_expression: Qualified<OrderByExpressionName>,
+    pub order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct OrderableRelationship {
-    pub relationship_name: RelationshipName,
-
     /// order_by_expression is optional.
     /// If not present we will use order_by_expression from the model
     /// that the relationship targets.
     pub order_by_expression: Option<Qualified<OrderByExpressionName>>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct OrderByExpressionGraphqlConfig {
     pub expression_type_name: ast::TypeName,
 }

@@ -1,11 +1,13 @@
-{
-  "data": {
-    "AuthorMany": [
-      {
-        "author_id": 1,
-        "first_name": "Peter"
-      }
-    ],
-    "a1": []
+[
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        }
+      ],
+      "a1": []
+    }
   }
-}
+]

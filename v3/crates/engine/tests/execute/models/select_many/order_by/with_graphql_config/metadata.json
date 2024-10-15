@@ -9,7 +9,7 @@
           "version": "v1",
           "definition": {
             "dataConnectorName": "db",
-            "dataConnectorScalarType": "String",
+            "dataConnectorScalarType": "text",
             "representation": "String",
             "graphql": {
               "comparisonExpressionTypeName": "String_Comparison_Exp"
@@ -21,7 +21,7 @@
           "version": "v1",
           "definition": {
             "dataConnectorName": "db",
-            "dataConnectorScalarType": "Int",
+            "dataConnectorScalarType": "int4",
             "representation": "Int"
           }
         },
@@ -191,6 +191,27 @@
                     }
                   }
                 }
+              },
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "articles_by_author",
+                "fieldMapping": {
+                  "article_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  }
+                }
               }
             ]
           }
@@ -202,7 +223,7 @@
             "name": "article_bool_exp",
             "objectType": "article",
             "dataConnectorName": "db",
-            "dataConnectorObjectType": "article",
+            "dataConnectorObjectType": "articles_by_author",
             "comparableFields": [
               {
                 "fieldName": "author_id",

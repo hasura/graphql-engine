@@ -8,29 +8,21 @@ use super::filter;
 use super::query;
 use super::relationships;
 use super::selection_set;
-use crate::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
-use ir::ModelSelection;
-use ir::NdcRelationshipName;
+use crate::remote_joins::types::JoinLocations;
+use graphql_ir::ModelSelection;
+use plan_types::NdcRelationshipName;
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings
 // #[async_recursion]
-pub(crate) fn plan_query_node<'s, 'ir>(
-    ir: &'ir ModelSelection<'s>,
+pub(crate) fn plan_query_node<'s>(
+    ir: &ModelSelection<'s>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-    join_id_counter: &mut MonotonicCounter,
-) -> Result<
-    (
-        query::UnresolvedQueryNode<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
-    ),
-    error::Error,
-> {
+) -> Result<(query::UnresolvedQueryNode<'s>, JoinLocations<'s>), error::Error> {
     let mut query_fields = None;
     let mut join_locations = JoinLocations::new();
     if let Some(selection) = &ir.selection {
         let (fields, locations) = selection_set::plan_selection_set(
             selection,
-            join_id_counter,
             ir.data_connector.capabilities.supported_ndc_version,
             relationships,
         )?;
@@ -52,19 +44,11 @@ pub(crate) fn plan_query_node<'s, 'ir>(
 }
 
 /// Generate query execution plan from internal IR (`ModelSelection`)
-pub(crate) fn plan_query_execution<'s, 'ir>(
-    ir: &'ir ModelSelection<'s>,
-    join_id_counter: &mut MonotonicCounter,
-) -> Result<
-    (
-        query::UnresolvedQueryExecutionPlan<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
-    ),
-    error::Error,
-> {
+pub(crate) fn plan_query_execution<'s>(
+    ir: &ModelSelection<'s>,
+) -> Result<(query::UnresolvedQueryExecutionPlan<'s>, JoinLocations<'s>), error::Error> {
     let mut collection_relationships = BTreeMap::new();
-    let (query, join_locations) =
-        plan_query_node(ir, &mut collection_relationships, join_id_counter)?;
+    let (query, join_locations) = plan_query_node(ir, &mut collection_relationships)?;
     // collection relationships from order_by clause
     relationships::collect_relationships_from_order_by(ir, &mut collection_relationships)?;
     let execution_node = query::UnresolvedQueryExecutionPlan {
@@ -73,7 +57,7 @@ pub(crate) fn plan_query_execution<'s, 'ir>(
         arguments: arguments::plan_arguments(&ir.arguments, &mut collection_relationships)?,
         collection_relationships,
         variables: None,
-        data_connector: ir.data_connector,
+        data_connector: ir.data_connector.clone(),
     };
     Ok((execution_node, join_locations))
 }

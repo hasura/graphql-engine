@@ -177,6 +177,7 @@ data BooleanOperators a
   | ASTOverlaps a
   | ASTTouches a
   | ASTWithin a
+  deriving stock (Eq)
 
 data Select = Select
   { selectWith :: (Maybe With),

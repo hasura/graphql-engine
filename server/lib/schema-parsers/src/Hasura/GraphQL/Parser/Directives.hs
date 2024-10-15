@@ -174,6 +174,7 @@ cachedDirective =
     True
     [G.DLExecutable G.EDLQUERY]
     (CachedDirective <$> ttlArgument <*> forcedArgument)
+    False
   where
     -- Optionally set the cache entry time to live
     ttlArgument :: InputFieldsParser origin m Int
@@ -198,6 +199,7 @@ multipleRootFieldsDirective =
     False -- not advertised in the schema
     [G.DLExecutable G.EDLSUBSCRIPTION]
     (pure ())
+    False
 
 multipleRootFields :: DirectiveKey ()
 multipleRootFields = DirectiveKey Name.__multiple_top_level_fields
@@ -215,6 +217,7 @@ skipDirective =
       G.DLExecutable G.EDLINLINE_FRAGMENT
     ]
     ifArgument
+    False
 
 includeDirective :: (MonadParse m) => Directive origin m
 includeDirective =
@@ -227,6 +230,7 @@ includeDirective =
       G.DLExecutable G.EDLINLINE_FRAGMENT
     ]
     ifArgument
+    False
 
 skip :: DirectiveKey Bool
 skip = DirectiveKey Name._skip
@@ -278,11 +282,12 @@ mkDirective ::
   Bool ->
   [G.DirectiveLocation] ->
   InputFieldsParser origin m a ->
+  Bool ->
   Directive origin m
 {-# INLINE mkDirective #-}
-mkDirective name description advertised location argsParser =
+mkDirective name description advertised location argsParser isRepeatable =
   Directive
-    { dDefinition = DirectiveInfo name description (ifDefinitions argsParser) location,
+    { dDefinition = DirectiveInfo name description (ifDefinitions argsParser) location isRepeatable,
       dAdvertised = advertised,
       dParser = \(G.Directive _name arguments) -> withKey (Key $ K.fromText $ G.unName name) $ do
         for_ (HashMap.keys arguments) \argumentName ->

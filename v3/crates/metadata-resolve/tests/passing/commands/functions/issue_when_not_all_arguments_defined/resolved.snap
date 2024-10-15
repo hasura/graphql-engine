@@ -40,7 +40,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/issue_when_
                         "function_with_args",
                     ),
                 ),
-            }: CommandWithPermissions {
+            }: CommandWithArgumentPresets {
                 command: Command {
                     name: Qualified {
                         subgraph: SubgraphName(
@@ -160,6 +160,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/issue_when_
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
                                     supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
                                 },
                             },
                             source: Function(
@@ -214,16 +215,19 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/issue_when_
                     description: None,
                 },
                 permissions: {},
+                argument_presets: {},
             },
         },
         object_boolean_expression_types: {},
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {},
-        ),
+        order_by_expressions: OrderByExpressions {
+            objects: {},
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
@@ -236,6 +240,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/issue_when_
                     "Mutation",
                 ),
             ),
+            subscription_root_type_name: None,
             order_by_input: Some(
                 OrderByInputGraphqlConfig {
                     asc_direction_field_value: Name(
@@ -252,8 +257,13 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/issue_when_
                 },
             ),
             enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
         },
-        pre_parse_plugins: [],
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+        },
         roles: [],
     },
     [

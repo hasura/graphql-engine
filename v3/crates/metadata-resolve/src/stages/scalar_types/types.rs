@@ -1,3 +1,4 @@
+use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::Qualified;
 use lang_graphql::ast::common as ast;
 use serde::{Deserialize, Serialize};
@@ -14,4 +15,21 @@ pub struct ScalarTypeRepresentation {
 pub struct ScalarTypesOutput {
     pub scalar_types: BTreeMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     pub graphql_types: BTreeSet<ast::TypeName>,
+    pub issues: Vec<ScalarTypesIssue>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ScalarTypesIssue {
+    #[error("Scalar type {type_name} conflicts with existing inbuilt type")]
+    NameConflictsWithBuiltInType { type_name: CustomTypeName },
+}
+
+impl ShouldBeAnError for ScalarTypesIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::Flags) -> bool {
+        match self {
+            ScalarTypesIssue::NameConflictsWithBuiltInType { .. } => {
+                flags.disallow_scalar_type_names_conflicting_with_inbuilt_types
+            }
+        }
+    }
 }

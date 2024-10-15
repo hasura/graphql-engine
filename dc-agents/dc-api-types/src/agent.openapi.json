@@ -1160,6 +1160,24 @@
         ],
         "type": "string"
       },
+      "ColumnTypeObject": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "object"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "type": "object"
+      },
       "ColumnType": {
         "additionalProperties": true,
         "anyOf": [
@@ -1193,24 +1211,6 @@
         ],
         "type": "object"
       },
-      "ColumnTypeObject": {
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "enum": [
-              "object"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "type"
-        ],
-        "type": "object"
-      },
       "ColumnTypeNonScalar": {
         "discriminator": {
           "mapping": {
@@ -1221,10 +1221,10 @@
         },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/ColumnTypeArray"
+            "$ref": "#/components/schemas/ColumnTypeObject"
           },
           {
-            "$ref": "#/components/schemas/ColumnTypeObject"
+            "$ref": "#/components/schemas/ColumnTypeArray"
           }
         ]
       },
@@ -1710,6 +1710,24 @@
         ],
         "type": "object"
       },
+      "TTable": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "table"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "type": "object"
+      },
       "TInterpolated": {
         "properties": {
           "id": {
@@ -1826,24 +1844,6 @@
         ],
         "type": "object"
       },
-      "TTable": {
-        "properties": {
-          "name": {
-            "$ref": "#/components/schemas/TableName"
-          },
-          "type": {
-            "enum": [
-              "table"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "type"
-        ],
-        "type": "object"
-      },
       "Target": {
         "discriminator": {
           "mapping": {
@@ -1855,13 +1855,13 @@
         },
         "oneOf": [
           {
+            "$ref": "#/components/schemas/TTable"
+          },
+          {
             "$ref": "#/components/schemas/TInterpolated"
           },
           {
             "$ref": "#/components/schemas/TFunction"
-          },
-          {
-            "$ref": "#/components/schemas/TTable"
           }
         ]
       },
@@ -1926,6 +1926,32 @@
         ],
         "type": "object"
       },
+      "TableRelationships": {
+        "properties": {
+          "relationships": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Relationship"
+            },
+            "description": "A map of relationships from the source table to targets. The key of the map is the relationship name",
+            "type": "object"
+          },
+          "source_table": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "table"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_table",
+          "relationships",
+          "type"
+        ],
+        "type": "object"
+      },
       "InterpolatedRelationships": {
         "properties": {
           "relationships": {
@@ -1979,32 +2005,6 @@
         ],
         "type": "object"
       },
-      "TableRelationships": {
-        "properties": {
-          "relationships": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/Relationship"
-            },
-            "description": "A map of relationships from the source table to targets. The key of the map is the relationship name",
-            "type": "object"
-          },
-          "source_table": {
-            "$ref": "#/components/schemas/TableName"
-          },
-          "type": {
-            "enum": [
-              "table"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "source_table",
-          "relationships",
-          "type"
-        ],
-        "type": "object"
-      },
       "Relationships": {
         "discriminator": {
           "mapping": {
@@ -2016,15 +2016,33 @@
         },
         "oneOf": [
           {
+            "$ref": "#/components/schemas/TableRelationships"
+          },
+          {
             "$ref": "#/components/schemas/InterpolatedRelationships"
           },
           {
             "$ref": "#/components/schemas/FunctionRelationships"
-          },
-          {
-            "$ref": "#/components/schemas/TableRelationships"
           }
         ]
+      },
+      "TNTable": {
+        "properties": {
+          "table": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "table"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "table",
+          "type"
+        ],
+        "type": "object"
       },
       "TNInterpolatedQuery": {
         "properties": {
@@ -2063,24 +2081,6 @@
         ],
         "type": "object"
       },
-      "TNTable": {
-        "properties": {
-          "table": {
-            "$ref": "#/components/schemas/TableName"
-          },
-          "type": {
-            "enum": [
-              "table"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "table",
-          "type"
-        ],
-        "type": "object"
-      },
       "TargetName": {
         "discriminator": {
           "mapping": {
@@ -2092,15 +2092,73 @@
         },
         "oneOf": [
           {
+            "$ref": "#/components/schemas/TNTable"
+          },
+          {
             "$ref": "#/components/schemas/TNInterpolatedQuery"
           },
           {
             "$ref": "#/components/schemas/TNFunction"
-          },
-          {
-            "$ref": "#/components/schemas/TNTable"
           }
         ]
+      },
+      "Expression": {
+        "discriminator": {
+          "mapping": {
+            "and": "AndExpression",
+            "binary_arr_op": "ApplyBinaryArrayComparisonOperator",
+            "binary_op": "ApplyBinaryComparisonOperator",
+            "exists": "ExistsExpression",
+            "not": "NotExpression",
+            "or": "OrExpression",
+            "unary_op": "ApplyUnaryComparisonOperator"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/OrExpression"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyBinaryComparisonOperator"
+          },
+          {
+            "$ref": "#/components/schemas/ExistsExpression"
+          },
+          {
+            "$ref": "#/components/schemas/NotExpression"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyBinaryArrayComparisonOperator"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyUnaryComparisonOperator"
+          },
+          {
+            "$ref": "#/components/schemas/AndExpression"
+          }
+        ]
+      },
+      "OrExpression": {
+        "properties": {
+          "expressions": {
+            "items": {
+              "$ref": "#/components/schemas/Expression"
+            },
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "or"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "expressions",
+          "type"
+        ],
+        "type": "object"
       },
       "BinaryComparisonOperator": {
         "additionalProperties": true,
@@ -2243,57 +2301,20 @@
         ],
         "type": "object"
       },
-      "Expression": {
-        "discriminator": {
-          "mapping": {
-            "and": "AndExpression",
-            "binary_arr_op": "ApplyBinaryArrayComparisonOperator",
-            "binary_op": "ApplyBinaryComparisonOperator",
-            "exists": "ExistsExpression",
-            "not": "NotExpression",
-            "or": "OrExpression",
-            "unary_op": "ApplyUnaryComparisonOperator"
-          },
-          "propertyName": "type"
-        },
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/ApplyBinaryComparisonOperator"
-          },
-          {
-            "$ref": "#/components/schemas/NotExpression"
-          },
-          {
-            "$ref": "#/components/schemas/ExistsExpression"
-          },
-          {
-            "$ref": "#/components/schemas/OrExpression"
-          },
-          {
-            "$ref": "#/components/schemas/ApplyBinaryArrayComparisonOperator"
-          },
-          {
-            "$ref": "#/components/schemas/ApplyUnaryComparisonOperator"
-          },
-          {
-            "$ref": "#/components/schemas/AndExpression"
-          }
-        ]
-      },
-      "NotExpression": {
+      "RelatedTable": {
         "properties": {
-          "expression": {
-            "$ref": "#/components/schemas/Expression"
+          "relationship": {
+            "type": "string"
           },
           "type": {
             "enum": [
-              "not"
+              "related"
             ],
             "type": "string"
           }
         },
         "required": [
-          "expression",
+          "relationship",
           "type"
         ],
         "type": "object"
@@ -2316,24 +2337,6 @@
         ],
         "type": "object"
       },
-      "RelatedTable": {
-        "properties": {
-          "relationship": {
-            "type": "string"
-          },
-          "type": {
-            "enum": [
-              "related"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "relationship",
-          "type"
-        ],
-        "type": "object"
-      },
       "ExistsInTable": {
         "discriminator": {
           "mapping": {
@@ -2344,10 +2347,10 @@
         },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/UnrelatedTable"
+            "$ref": "#/components/schemas/RelatedTable"
           },
           {
-            "$ref": "#/components/schemas/RelatedTable"
+            "$ref": "#/components/schemas/UnrelatedTable"
           }
         ]
       },
@@ -2373,23 +2376,20 @@
         ],
         "type": "object"
       },
-      "OrExpression": {
+      "NotExpression": {
         "properties": {
-          "expressions": {
-            "items": {
-              "$ref": "#/components/schemas/Expression"
-            },
-            "type": "array"
+          "expression": {
+            "$ref": "#/components/schemas/Expression"
           },
           "type": {
             "enum": [
-              "or"
+              "not"
             ],
             "type": "string"
           }
         },
         "required": [
-          "expressions",
+          "expression",
           "type"
         ],
         "type": "object"
@@ -2517,24 +2517,6 @@
         ],
         "type": "object"
       },
-      "InterpolatedText": {
-        "properties": {
-          "type": {
-            "enum": [
-              "text"
-            ],
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "value",
-          "type"
-        ],
-        "type": "object"
-      },
       "InterpolatedScalar": {
         "properties": {
           "type": {
@@ -2557,6 +2539,24 @@
         ],
         "type": "object"
       },
+      "InterpolatedText": {
+        "properties": {
+          "type": {
+            "enum": [
+              "text"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "type"
+        ],
+        "type": "object"
+      },
       "InterpolatedItem": {
         "discriminator": {
           "mapping": {
@@ -2567,10 +2567,10 @@
         },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/InterpolatedText"
+            "$ref": "#/components/schemas/InterpolatedScalar"
           },
           {
-            "$ref": "#/components/schemas/InterpolatedScalar"
+            "$ref": "#/components/schemas/InterpolatedText"
           }
         ]
       },
@@ -2600,6 +2600,76 @@
         },
         "type": "object"
       },
+      "Query": {
+        "properties": {
+          "aggregates": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Aggregate"
+            },
+            "description": "Aggregate fields of the query",
+            "nullable": true,
+            "type": "object"
+          },
+          "aggregates_limit": {
+            "description": "Optionally limit the maximum number of rows considered while applying aggregations. This limit does not apply to returned rows.",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "nullable": true,
+            "type": "number"
+          },
+          "fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Field"
+            },
+            "description": "Fields of the query",
+            "nullable": true,
+            "type": "object"
+          },
+          "limit": {
+            "description": "Optionally limit the maximum number of returned rows. This limit does not apply to records considered while apply aggregations.",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "nullable": true,
+            "type": "number"
+          },
+          "offset": {
+            "description": "Optionally offset from the Nth result. This applies to both row and aggregation results.",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "nullable": true,
+            "type": "number"
+          },
+          "order_by": {
+            "$ref": "#/components/schemas/OrderBy"
+          },
+          "where": {
+            "$ref": "#/components/schemas/Expression"
+          }
+        },
+        "type": "object"
+      },
+      "NestedObjField": {
+        "properties": {
+          "column": {
+            "type": "string"
+          },
+          "query": {
+            "$ref": "#/components/schemas/Query"
+          },
+          "type": {
+            "enum": [
+              "object"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "column",
+          "query",
+          "type"
+        ],
+        "type": "object"
+      },
       "Field": {
         "discriminator": {
           "mapping": {
@@ -2612,16 +2682,16 @@
         },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/NestedArrayField"
-          },
-          {
             "$ref": "#/components/schemas/NestedObjField"
           },
           {
-            "$ref": "#/components/schemas/ColumnField"
+            "$ref": "#/components/schemas/NestedArrayField"
           },
           {
             "$ref": "#/components/schemas/RelationshipField"
+          },
+          {
+            "$ref": "#/components/schemas/ColumnField"
           }
         ]
       },
@@ -2640,6 +2710,20 @@
         },
         "required": [
           "subrelations"
+        ],
+        "type": "object"
+      },
+      "OrderByStarCountAggregate": {
+        "properties": {
+          "type": {
+            "enum": [
+              "star_count_aggregate"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
         ],
         "type": "object"
       },
@@ -2708,20 +2792,6 @@
         ],
         "type": "object"
       },
-      "OrderByStarCountAggregate": {
-        "properties": {
-          "type": {
-            "enum": [
-              "star_count_aggregate"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "type"
-        ],
-        "type": "object"
-      },
       "OrderByTarget": {
         "discriminator": {
           "mapping": {
@@ -2733,13 +2803,13 @@
         },
         "oneOf": [
           {
+            "$ref": "#/components/schemas/OrderByStarCountAggregate"
+          },
+          {
             "$ref": "#/components/schemas/OrderBySingleColumnAggregate"
           },
           {
             "$ref": "#/components/schemas/OrderByColumn"
-          },
-          {
-            "$ref": "#/components/schemas/OrderByStarCountAggregate"
           }
         ]
       },
@@ -2835,71 +2905,24 @@
         ],
         "type": "object"
       },
-      "Query": {
+      "RelationshipField": {
         "properties": {
-          "aggregates": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/Aggregate"
-            },
-            "description": "Aggregate fields of the query",
-            "nullable": true,
-            "type": "object"
-          },
-          "aggregates_limit": {
-            "description": "Optionally limit the maximum number of rows considered while applying aggregations. This limit does not apply to returned rows.",
-            "maximum": 9223372036854776000,
-            "minimum": -9223372036854776000,
-            "nullable": true,
-            "type": "number"
-          },
-          "fields": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/Field"
-            },
-            "description": "Fields of the query",
-            "nullable": true,
-            "type": "object"
-          },
-          "limit": {
-            "description": "Optionally limit the maximum number of returned rows. This limit does not apply to records considered while apply aggregations.",
-            "maximum": 9223372036854776000,
-            "minimum": -9223372036854776000,
-            "nullable": true,
-            "type": "number"
-          },
-          "offset": {
-            "description": "Optionally offset from the Nth result. This applies to both row and aggregation results.",
-            "maximum": 9223372036854776000,
-            "minimum": -9223372036854776000,
-            "nullable": true,
-            "type": "number"
-          },
-          "order_by": {
-            "$ref": "#/components/schemas/OrderBy"
-          },
-          "where": {
-            "$ref": "#/components/schemas/Expression"
-          }
-        },
-        "type": "object"
-      },
-      "NestedObjField": {
-        "properties": {
-          "column": {
-            "type": "string"
-          },
           "query": {
             "$ref": "#/components/schemas/Query"
           },
+          "relationship": {
+            "description": "The name of the relationship to follow for the subquery",
+            "type": "string"
+          },
           "type": {
             "enum": [
-              "object"
+              "relationship"
             ],
             "type": "string"
           }
         },
         "required": [
-          "column",
+          "relationship",
           "query",
           "type"
         ],
@@ -2930,25 +2953,29 @@
         ],
         "type": "object"
       },
-      "RelationshipField": {
+      "ColumnCountAggregate": {
         "properties": {
-          "query": {
-            "$ref": "#/components/schemas/Query"
-          },
-          "relationship": {
-            "description": "The name of the relationship to follow for the subquery",
+          "column": {
+            "description": "The column to apply the count aggregate function to",
             "type": "string"
+          },
+          "distinct": {
+            "description": "Whether or not only distinct items should be counted",
+            "type": "boolean"
+          },
+          "redaction_expression": {
+            "$ref": "#/components/schemas/RedactionExpressionName"
           },
           "type": {
             "enum": [
-              "relationship"
+              "column_count"
             ],
             "type": "string"
           }
         },
         "required": [
-          "relationship",
-          "query",
+          "column",
+          "distinct",
           "type"
         ],
         "type": "object"
@@ -2983,33 +3010,6 @@
         ],
         "type": "object"
       },
-      "ColumnCountAggregate": {
-        "properties": {
-          "column": {
-            "description": "The column to apply the count aggregate function to",
-            "type": "string"
-          },
-          "distinct": {
-            "description": "Whether or not only distinct items should be counted",
-            "type": "boolean"
-          },
-          "redaction_expression": {
-            "$ref": "#/components/schemas/RedactionExpressionName"
-          },
-          "type": {
-            "enum": [
-              "column_count"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "column",
-          "distinct",
-          "type"
-        ],
-        "type": "object"
-      },
       "StarCountAggregate": {
         "properties": {
           "type": {
@@ -3035,10 +3035,10 @@
         },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/SingleColumnAggregate"
+            "$ref": "#/components/schemas/ColumnCountAggregate"
           },
           {
-            "$ref": "#/components/schemas/ColumnCountAggregate"
+            "$ref": "#/components/schemas/SingleColumnAggregate"
           },
           {
             "$ref": "#/components/schemas/StarCountAggregate"
@@ -3369,32 +3369,30 @@
         ],
         "type": "object"
       },
-      "DeleteMutationOperation": {
+      "SetColumnRowUpdate": {
         "properties": {
-          "returning_fields": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/Field"
-            },
-            "default": {},
-            "description": "The fields to return for the rows affected by this delete operation",
-            "nullable": true,
-            "type": "object"
-          },
-          "table": {
-            "$ref": "#/components/schemas/TableName"
+          "column": {
+            "description": "The name of the column in the row",
+            "type": "string"
           },
           "type": {
             "enum": [
-              "delete"
+              "set"
             ],
             "type": "string"
           },
-          "where": {
-            "$ref": "#/components/schemas/Expression"
+          "value": {
+            "additionalProperties": true,
+            "description": "The value to use with the column operator"
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
           }
         },
         "required": [
-          "table",
+          "column",
+          "value",
+          "value_type",
           "type"
         ],
         "type": "object"
@@ -3434,34 +3432,6 @@
         ],
         "type": "object"
       },
-      "SetColumnRowUpdate": {
-        "properties": {
-          "column": {
-            "description": "The name of the column in the row",
-            "type": "string"
-          },
-          "type": {
-            "enum": [
-              "set"
-            ],
-            "type": "string"
-          },
-          "value": {
-            "additionalProperties": true,
-            "description": "The value to use with the column operator"
-          },
-          "value_type": {
-            "$ref": "#/components/schemas/ScalarType"
-          }
-        },
-        "required": [
-          "column",
-          "value",
-          "value_type",
-          "type"
-        ],
-        "type": "object"
-      },
       "RowUpdate": {
         "discriminator": {
           "mapping": {
@@ -3472,10 +3442,10 @@
         },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/CustomUpdateColumnOperatorRowUpdate"
+            "$ref": "#/components/schemas/SetColumnRowUpdate"
           },
           {
-            "$ref": "#/components/schemas/SetColumnRowUpdate"
+            "$ref": "#/components/schemas/CustomUpdateColumnOperatorRowUpdate"
           }
         ]
       },
@@ -3520,6 +3490,36 @@
         ],
         "type": "object"
       },
+      "DeleteMutationOperation": {
+        "properties": {
+          "returning_fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Field"
+            },
+            "default": {},
+            "description": "The fields to return for the rows affected by this delete operation",
+            "nullable": true,
+            "type": "object"
+          },
+          "table": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "delete"
+            ],
+            "type": "string"
+          },
+          "where": {
+            "$ref": "#/components/schemas/Expression"
+          }
+        },
+        "required": [
+          "table",
+          "type"
+        ],
+        "type": "object"
+      },
       "MutationOperation": {
         "discriminator": {
           "mapping": {
@@ -3534,10 +3534,10 @@
             "$ref": "#/components/schemas/InsertMutationOperation"
           },
           {
-            "$ref": "#/components/schemas/DeleteMutationOperation"
+            "$ref": "#/components/schemas/UpdateMutationOperation"
           },
           {
-            "$ref": "#/components/schemas/UpdateMutationOperation"
+            "$ref": "#/components/schemas/DeleteMutationOperation"
           }
         ]
       },

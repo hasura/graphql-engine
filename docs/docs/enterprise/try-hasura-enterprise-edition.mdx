@@ -87,6 +87,13 @@ Example:
 docker-compose restart graphql-engine
 ```
 
+:::info Hard restart
+
+In some environments it may not be enough to run the `restart` command. In such cases, you may need to stop and
+start the container with `docker compose down` and `docker compose up -d` respectively.
+
+:::
+
 Now, refresh the Hasura Console and you're all set to explore Hasura Enterprise Edition 🎉
 
 <Thumbnail src="/img/enterprise/Trials_Activated.png" alt="Enterprise Edition Trial Activated view" width="1000px" />

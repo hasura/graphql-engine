@@ -1,0 +1,16 @@
+query MyQuery {
+  asc: InstitutionMany(order_by: { location: { city: Asc } }) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+  desc: InstitutionMany(order_by: { location: { city: Desc } }) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+}

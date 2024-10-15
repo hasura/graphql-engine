@@ -1,5 +1,7 @@
-{
-  "data": {
-    "__typename": "Query"
+[
+  {
+    "data": {
+      "__typename": "Query"
+    }
   }
-}
+]

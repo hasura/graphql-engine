@@ -6,7 +6,7 @@ use smol_str::SmolStr;
 
 use crate::{
     impl_JsonSchema_with_OpenDd_for,
-    traits::{JSONPath, OpenDd, OpenDdDeserializeError},
+    traits::{OpenDd, OpenDdDeserializeError},
 };
 
 // Macro to produce a validated identifier using a string literal that crashes
@@ -70,15 +70,18 @@ impl From<Identifier> for String {
 }
 
 impl OpenDd for Identifier {
-    fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
+    fn deserialize(
+        json: serde_json::Value,
+        _path: jsonpath::JSONPath,
+    ) -> Result<Self, OpenDdDeserializeError> {
         let string: String =
             serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
                 error,
-                path: JSONPath::default(),
+                path: jsonpath::JSONPath::default(),
             })?;
         Identifier::new(string).map_err(|e| OpenDdDeserializeError {
             error: serde_json::Error::custom(e),
-            path: JSONPath::default(),
+            path: jsonpath::JSONPath::default(),
         })
     }
 
@@ -113,7 +116,11 @@ impl<'de> Deserialize<'de> for Identifier {
     where
         D: serde::Deserializer<'de>,
     {
-        OpenDd::deserialize(serde_json::Value::deserialize(deserializer)?).map_err(D::Error::custom)
+        OpenDd::deserialize(
+            serde_json::Value::deserialize(deserializer)?,
+            jsonpath::JSONPath::new(),
+        )
+        .map_err(D::Error::custom)
     }
 }
 
@@ -157,15 +164,18 @@ impl std::borrow::Borrow<str> for SubgraphNameInput {
 }
 
 impl OpenDd for SubgraphNameInput {
-    fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
+    fn deserialize(
+        json: serde_json::Value,
+        _path: jsonpath::JSONPath,
+    ) -> Result<Self, OpenDdDeserializeError> {
         let string: String =
             serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
                 error,
-                path: JSONPath::default(),
+                path: jsonpath::JSONPath::default(),
             })?;
         SubgraphNameInput::new(string).map_err(|e| OpenDdDeserializeError {
             error: serde_json::Error::custom(e),
-            path: JSONPath::default(),
+            path: jsonpath::JSONPath::default(),
         })
     }
 
@@ -198,7 +208,11 @@ impl<'de> Deserialize<'de> for SubgraphNameInput {
     where
         D: serde::Deserializer<'de>,
     {
-        OpenDd::deserialize(serde_json::Value::deserialize(deserializer)?).map_err(D::Error::custom)
+        OpenDd::deserialize(
+            serde_json::Value::deserialize(deserializer)?,
+            jsonpath::JSONPath::new(),
+        )
+        .map_err(D::Error::custom)
     }
 }
 

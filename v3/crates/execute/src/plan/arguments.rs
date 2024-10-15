@@ -3,11 +3,13 @@ use std::collections::BTreeMap;
 
 use super::error as plan_error;
 use super::filter;
+use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
-use crate::{error, HttpContext};
-use ir::{NdcRelationshipName, VariableName};
+use crate::error;
+use plan_types::NdcRelationshipName;
+use plan_types::VariableName;
 
-pub type UnresolvedArgument<'s> = Argument<ir::Expression<'s>>;
+pub type UnresolvedArgument<'s> = Argument<plan_types::Expression<'s>>;
 pub type ResolvedArgument = Argument<filter::ResolvedFilterExpression>;
 
 /// Argument plan to express various kinds of arguments
@@ -29,14 +31,14 @@ pub enum Argument<TFilterExpression> {
 impl<'s> UnresolvedArgument<'s> {
     /// Generate the argument plan from IR argument
     pub fn plan<'a>(
-        ir_argument: &'a ir::Argument<'s>,
+        ir_argument: &'a graphql_ir::Argument<'s>,
         relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
     ) -> Result<Self, super::error::Error> {
         let planned_argument = match ir_argument {
-            ir::Argument::Literal { value } => Argument::Literal {
+            graphql_ir::Argument::Literal { value } => Argument::Literal {
                 value: value.clone(),
             },
-            ir::Argument::BooleanExpression { predicate } => {
+            graphql_ir::Argument::BooleanExpression { predicate } => {
                 let expression = super::filter::plan_expression(predicate, relationships)?;
                 Argument::BooleanExpression {
                     predicate: expression,
@@ -48,14 +50,14 @@ impl<'s> UnresolvedArgument<'s> {
 
     pub async fn resolve(
         self,
-        http_context: &HttpContext,
+        resolve_context: &ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedArgument, error::FieldError> {
         match self {
             Argument::Literal { value } => Ok(Argument::Literal { value }),
             Argument::Variable { name } => Ok(Argument::Variable { name }),
             Argument::BooleanExpression { predicate } => {
                 let resolved_predicate =
-                    filter::resolve_expression(predicate, http_context).await?;
+                    filter::resolve_expression(predicate, resolve_context).await?;
                 Ok(Argument::BooleanExpression {
                     predicate: resolved_predicate,
                 })
@@ -64,7 +66,7 @@ impl<'s> UnresolvedArgument<'s> {
     }
 }
 
-pub type UnresolvedMutationArgument<'s> = MutationArgument<ir::Expression<'s>>;
+pub type UnresolvedMutationArgument<'s> = MutationArgument<plan_types::Expression<'s>>;
 pub type ResolvedMutationArgument = MutationArgument<filter::ResolvedFilterExpression>;
 
 /// Argument plan to express various kinds of arguments
@@ -82,14 +84,14 @@ pub enum MutationArgument<TFilterExpression> {
 impl<'s> UnresolvedMutationArgument<'s> {
     /// Generate the argument plan from IR argument
     pub fn plan<'a>(
-        ir_argument: &'a ir::Argument<'s>,
+        ir_argument: &'a graphql_ir::Argument<'s>,
         relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
     ) -> Result<Self, super::error::Error> {
         let planned_argument = match ir_argument {
-            ir::Argument::Literal { value } => MutationArgument::Literal {
+            graphql_ir::Argument::Literal { value } => MutationArgument::Literal {
                 value: value.clone(),
             },
-            ir::Argument::BooleanExpression { predicate } => {
+            graphql_ir::Argument::BooleanExpression { predicate } => {
                 let expression = super::filter::plan_expression(predicate, relationships)?;
                 MutationArgument::BooleanExpression {
                     predicate: expression,
@@ -101,13 +103,13 @@ impl<'s> UnresolvedMutationArgument<'s> {
 
     pub async fn resolve(
         self,
-        http_context: &HttpContext,
+        resolve_context: &ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedMutationArgument, error::FieldError> {
         match self {
             MutationArgument::Literal { value } => Ok(MutationArgument::Literal { value }),
             MutationArgument::BooleanExpression { predicate } => {
                 let resolved_predicate =
-                    filter::resolve_expression(predicate, http_context).await?;
+                    filter::resolve_expression(predicate, resolve_context).await?;
                 Ok(MutationArgument::BooleanExpression {
                     predicate: resolved_predicate,
                 })
@@ -117,7 +119,7 @@ impl<'s> UnresolvedMutationArgument<'s> {
 }
 
 pub fn plan_arguments<'s>(
-    arguments: &BTreeMap<DataConnectorArgumentName, ir::Argument<'s>>,
+    arguments: &BTreeMap<DataConnectorArgumentName, graphql_ir::Argument<'s>>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedArgument<'s>>, plan_error::Error> {
     let mut result = BTreeMap::new();
@@ -131,7 +133,7 @@ pub fn plan_arguments<'s>(
 }
 
 pub fn plan_mutation_arguments<'s>(
-    arguments: &BTreeMap<DataConnectorArgumentName, ir::Argument<'s>>,
+    arguments: &BTreeMap<DataConnectorArgumentName, graphql_ir::Argument<'s>>,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
 ) -> Result<BTreeMap<DataConnectorArgumentName, UnresolvedMutationArgument<'s>>, plan_error::Error>
 {
@@ -147,29 +149,35 @@ pub fn plan_mutation_arguments<'s>(
 }
 
 pub(crate) async fn resolve_arguments<'s>(
-    http_context: &HttpContext,
-    arguments: BTreeMap<DataConnectorArgumentName, Argument<ir::Expression<'s>>>,
+    resolve_context: &ResolveFilterExpressionContext<'_>,
+    arguments: BTreeMap<DataConnectorArgumentName, Argument<plan_types::Expression<'s>>>,
 ) -> Result<
     BTreeMap<DataConnectorArgumentName, Argument<filter::ResolvedFilterExpression>>,
     error::FieldError,
 > {
     let mut result = BTreeMap::new();
     for (argument_name, argument_value) in arguments {
-        result.insert(argument_name, argument_value.resolve(http_context).await?);
+        result.insert(
+            argument_name,
+            argument_value.resolve(resolve_context).await?,
+        );
     }
     Ok(result)
 }
 
 pub(crate) async fn resolve_mutation_arguments<'s>(
-    http_context: &HttpContext,
-    arguments: BTreeMap<DataConnectorArgumentName, MutationArgument<ir::Expression<'s>>>,
+    resolve_context: &ResolveFilterExpressionContext<'_>,
+    arguments: BTreeMap<DataConnectorArgumentName, MutationArgument<plan_types::Expression<'s>>>,
 ) -> Result<
     BTreeMap<DataConnectorArgumentName, MutationArgument<filter::ResolvedFilterExpression>>,
     error::FieldError,
 > {
     let mut result = BTreeMap::new();
     for (argument_name, argument_value) in arguments {
-        result.insert(argument_name, argument_value.resolve(http_context).await?);
+        result.insert(
+            argument_name,
+            argument_value.resolve(resolve_context).await?,
+        );
     }
     Ok(result)
 }

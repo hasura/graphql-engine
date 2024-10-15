@@ -1,7 +1,8 @@
 //! Usage analytics, like model, command, field usage analytics, from a GraphQL query
 
-use metadata_resolve::Qualified;
+use metadata_resolve::{Qualified, UnTaggedQualifiedTypeName};
 use open_dds::{
+    arguments::ArgumentName,
     commands::CommandName,
     models::ModelName,
     relationships::{RelationshipName, RelationshipType},
@@ -71,6 +72,7 @@ pub struct FieldUsage {
     pub name: FieldName,
     pub opendd_type: Qualified<CustomTypeName>,
     pub deprecated: bool,
+    pub deprecated_reason: Option<String>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -102,6 +104,8 @@ pub struct RelationshipUsage {
     pub name: RelationshipName,
     pub source: Qualified<CustomTypeName>,
     pub target: RelationshipTarget,
+    pub deprecated: bool,
+    pub deprecated_reason: Option<String>,
 }
 
 #[derive(Serialize, JsonSchema, Clone)]
@@ -117,11 +121,31 @@ pub struct PredicateRelationshipUsage {
 pub enum RelationshipTarget {
     Model {
         model_name: Qualified<ModelName>,
+        opendd_type: Qualified<CustomTypeName>,
         relationship_type: RelationshipType,
+        mapping: Vec<RelationshipModelMapping>,
     },
     Command {
         command_name: Qualified<CommandName>,
+        // We don't want to use QualifiedTypeReference here as it is serialized with lots of unnecessary information and
+        // we don't need it for analytics. We are using the untaged qualified type name instead.
+        opendd_type: UnTaggedQualifiedTypeName,
+        mapping: Vec<RelationshipCommandMapping>,
     },
+}
+
+#[derive(Serialize, JsonSchema, Clone)]
+#[serde(rename_all = "snake_case")]
+pub struct RelationshipModelMapping {
+    pub source_field: FieldName,
+    pub target_field: FieldName,
+}
+
+#[derive(Serialize, JsonSchema, Clone)]
+#[serde(rename_all = "snake_case")]
+pub struct RelationshipCommandMapping {
+    pub source_field: FieldName,
+    pub target_argument: ArgumentName,
 }
 
 #[cfg(test)]
@@ -182,7 +206,17 @@ mod tests {
                     ModelName::new(identifier!("Products")),
                 ),
                 relationship_type: RelationshipType::Object,
+                opendd_type: Qualified::new(
+                    subgraph_identifier!("app"),
+                    CustomTypeName(identifier!("Products")),
+                ),
+                mapping: vec![RelationshipModelMapping {
+                    source_field: FieldName::new(identifier!("product_id")),
+                    target_field: FieldName::new(identifier!("id")),
+                }],
             },
+            deprecated: false,
+            deprecated_reason: None,
         });
 
         // id: {_eq: 5}
@@ -195,6 +229,7 @@ mod tests {
                     CustomTypeName(identifier!("Order")),
                 ),
                 deprecated: false,
+                deprecated_reason: None,
             })],
             fields: vec![GqlInputField {
                 name: "_eq".to_string(),
@@ -214,6 +249,7 @@ mod tests {
                         CustomTypeName(identifier!("Product")),
                     ),
                     deprecated: false,
+                    deprecated_reason: None,
                 })],
                 fields: vec![GqlInputField {
                     name: "_gt".to_string(),
@@ -245,6 +281,7 @@ mod tests {
                             CustomTypeName(identifier!("Product")),
                         ),
                         deprecated: false,
+                        deprecated_reason: None,
                     })],
                 }],
                 used: vec![product_relationship.clone()],
@@ -262,6 +299,7 @@ mod tests {
                     CustomTypeName(identifier!("Product")),
                 ),
                 deprecated: false,
+                deprecated_reason: None,
             })],
             fields: vec![GqlInputField {
                 name: "_gt".to_string(),
@@ -288,6 +326,7 @@ mod tests {
                         CustomTypeName(identifier!("Product")),
                     ),
                     deprecated: false,
+                    deprecated_reason: None,
                 })],
             }],
             used: vec![],
@@ -315,6 +354,7 @@ mod tests {
                                     CustomTypeName(identifier!("Order")),
                                 ),
                                 deprecated: false,
+                                deprecated_reason: None,
                             }],
                             relationships: vec![],
                         },
@@ -331,6 +371,7 @@ mod tests {
                                 CustomTypeName(identifier!("Order")),
                             ),
                             deprecated: false,
+                            deprecated_reason: None,
                         })],
                         fields: vec![],
                         arguments: vec![],
@@ -352,6 +393,7 @@ mod tests {
                                         CustomTypeName(identifier!("Address")),
                                     ),
                                     deprecated: false,
+                                    deprecated_reason: None,
                                 })],
                             },
                             GqlField {
@@ -366,6 +408,7 @@ mod tests {
                                         CustomTypeName(identifier!("Address")),
                                     ),
                                     deprecated: false,
+                                    deprecated_reason: None,
                                 })],
                             },
                         ],
@@ -376,6 +419,7 @@ mod tests {
                                 CustomTypeName(identifier!("Order")),
                             ),
                             deprecated: false,
+                            deprecated_reason: None,
                         })],
                     },
                     GqlField {
@@ -393,6 +437,7 @@ mod tests {
                                     CustomTypeName(identifier!("Product")),
                                 ),
                                 deprecated: false,
+                                deprecated_reason: None,
                             })],
                             arguments: vec![],
                             fields: vec![],

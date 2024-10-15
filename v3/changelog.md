@@ -8,6 +8,320 @@
 
 ### Changed
 
+## [v2024.10.14]
+
+### Added
+
+- Added contexts to more MBS errors: when a model refers to a collection that
+  doesn't exist, the path to the offending reference will be reported.
+
+### Fixed
+
+- Fix local `docker-compose.yaml` file so that running `docker compose up`
+  builds the engine and serves it along with a sample schema using
+  `ndc-postgres` and a `postgres` database.
+
+- Subgraph builds that have relationships to other external subgraphs can now be
+  run locally and no longer fail with missing subgraph errors. Subgraph builds
+  are marked with a new OpenDD flag and when these builds are run by the engine
+  relationships to unknown subgraphs are automatically pruned.
+
+- Aggregate queries now support `__typename` introspection fields.
+
+### Changed
+
+- metadata-build-service POST endpoints now accept zstd (preferred) or gzip
+  -encoded request bodies
+
+- The `--partial-supergraph` command-line argument and `PARTIAL_SUPERGRAPH`
+  environment variable have been removed. Builds now contain an OpenDD flag that
+  indicates if they are subgraph builds and should be run as such.
+
+## [v2024.10.02]
+
+### Added
+
+#### Metadata build error contexts
+
+Contexts are being added to errors raised during the build process to allow
+users to locate the source of the issue more quickly. These contexts will be
+surfaced in the Build Server API responses. The first example and test bed for
+developing the scaffolding is the error raised when a model refers to a
+nonexistent data connector. This error will now also contain the path to the
+offending data connector name.
+
+#### Pre-response Plugin
+
+Engine now supports calling a HTTP webhook in the pre-response execution step.
+This can be used to add some post execution functionalities to the DDN, such as
+sending the response to a logging service, sending notifications for specific
+requests like mutations, etc.
+
+The following is an example of the OpenDD metadata for the pre-response plugin:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+  name: logging
+  url:
+    value: http://localhost:5001/log
+  pre: response
+  config:
+    request:
+      headers:
+        additional:
+          hasura-m-auth:
+            value: "your-strong-m-auth-key"
+      session: {}
+      rawRequest:
+        query: {}
+        variables: {}
+      rawResponse: {}
+```
+
+Similar to the pre-parse plugin, the pre-response plugin's request can be
+customized using the `LifecyclePluginHook` metadata object. Currently we support
+the following customizations:
+
+- adding/removing session information
+- adding new headers
+- forwarding specific headers
+- adding/removing graphql query and variables
+- adding/removing response
+
+### Fixed
+
+- Fix poor performance of `process_response` for large and deeply-nested results
+- Fixed issue in partial supergraph builds where a `BooleanExpressionType` that
+  referenced a relationship that targeted an unknown subgraph would incorrectly
+  produce an error rather than ignoring the relationship
+- Fixed double string escaping when forwarding headers to a data connector
+
+### Changed
+
+- Making `args` non-compulsory for models where all arguments have presets.
+
+Previously, if a model had arguments specified that were all provided by
+presets, then we would require them to pass an empty `args: {}` argument:
+
+```graphql
+query MyQuery
+  ActorsByMovieMany(args: {}) {
+    actor_id
+    movie_id
+    name
+  }
+}
+```
+
+This change loosens the restriction, so now the following query is valid too:
+
+```graphql
+query MyQuery
+  ActorsByMovieMany {
+    actor_id
+    movie_id
+    name
+  }
+}
+```
+
+- OpenTelemetry service name set to `ddn-engine` to avoid confusion with
+  `graphql-engine`.
+
+- Builds can no longer contain two commands with the same root field name.
+  Previously, one of the two commands would be chosen arbitrarily as the exposed
+  root field. Now, this raises a build-time error.
+
+## [v2024.09.23]
+
+### Fixed
+
+- Disallow defining custom scalar types with names that conflict with built-in
+  types, such as `String` or `Int`.
+
+- Fixed bug where relationships defined on a boolean expression would not take
+  the target subgraph into account.
+
+- Propagate deprecation status to boolean expression relationship fields.
+
+## [v2024.09.16]
+
+### Fixed
+
+- Raise a warning when nested array comparisons are used without the necessary
+  data connector capability. A new OpenDD flag
+  `require_nested_array_filtering_capability` can be used to promote this
+  warning to an error.
+
+- Disallow recursive types in SQL table column types.
+
+- Previously, if you had `AggregateExpressions` that were configured to be used
+  in GraphQL, or `Models` configured for aggregates in GraphQL, but you did not
+  set the appropriate configuration in
+  `GraphqlConfig.definition.query.aggregates`, the build would fail with an
+  error. This has been relaxed so that the build now succeeds, but warnings are
+  raised instead. However, the aggregates will not appear in your GraphQL API
+  until the `GraphqlConfig` is updated. This allows you to add
+  `AggregateExpressions` and configure your `Model` but update your
+  `GraphqlConfig` separately, which is useful if they are in separate
+  repositories.
+
+- A build error is now raised if an `AggregateExpression` specifies an
+  `aggregatableField` that has field arguments. This is an unsupported scenario
+  and previously would have allowed invalid queries that omitted the required
+  field arguments. These queries may have failed with errors at query time.
+
+- Add a missing typecheck of `ValueExpression` while resolving model predicates.
+
+## [v2024.09.05]
+
+### Added
+
+- SQL endpoint can utilize uniqueness constraints
+
+### Fixed
+
+- Fix the name and description of the span resolving relationship predicates in
+  the Engine.
+
+### Changed
+
+## [v2024.09.02]
+
+### Added
+
+- Enhanced handling of relationships in predicates
+- Filter nested arrays
+- Order by nested fields
+- A new GraphQL config flag `require_valid_ndc_v01_version` to promote warnings
+  about NDC version as errors.
+
+#### Enhanced Handling of Relationships in Predicates
+
+Improved support for using relationships in boolean expressions even when the
+data connector lacks the `relation_comparisons` capability. This update
+introduces two strategies for handling relationship predicates:
+
+- **Data Connector Pushdown**: When the source and target connectors are the
+  same and the target connector supports relationship comparisons, predicates
+  are pushed down to the NDC (Data Connector) for more efficient processing.
+  This strategy optimizes query execution by leveraging the data connector’s
+  capabilities.
+
+- **Engine-Based Resolution**: When the data connector does not support
+  relationship comparisons or when dealing with relationships targeting models
+  from other data connectors (remote relationships), predicates are resolved
+  internally within the engine. This approach involves querying the target
+  model’s field values and constructing the necessary comparison expressions.
+
+This enhancement updates the GraphQL schema's boolean expression input types by
+introducing relationship predicates. The feature is gated by a compatibility
+date to ensure backward compatibility. To enable it, set the date to
+`2024-09-03` or later in your DDN project's `globals/compatibility-config.hml`
+file.
+
+#### Filter Nested Arrays
+
+If `institution` is a big JSON document, and `staff` is an array of objects
+inside it, we can now filter `institutions` based on matches that exist within
+that array.
+
+```graphql
+query MyQuery {
+  where_does_john_hughes_work: InstitutionMany(
+    where: { staff: { last_name: { _eq: "Hughes" } } }
+  ) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+```
+
+This query would return us details of `Chalmers University of Technology`, where
+`John Hughes` is a member of staff.
+
+#### Order by Nested Fields
+
+Add support for ordering by nested fields.
+
+Example query:
+
+```graphql
+query MyQuery {
+  InstitutionMany(order_by: { location: { city: Asc } }) {
+    id
+    location {
+      city
+      campuses
+    }
+  }
+}
+```
+
+This will order by the value of the nested field `city` within the `location`
+JSONB column.
+
+### Fixed
+
+- Stack overflow error on startup. Even if the (experimental) SQL feature was
+  turned off, engine would try to build a SQL catalog on startup. Now it will
+  build an empty catalog.
+
+### Changed
+
+## [v2024.08.22]
+
+### Added
+
+#### Pre-parse Engine Plugins
+
+Add support for pre-parse engine plugins. Engine now supports calling a HTTP
+webhook in pre-parse execution step. This can be used to add a bunch of
+functionalities to the DDN, such as an [allow list][plugin-allowlist].
+
+The following is an example of the OpenDD metadata for the plugins:
+
+```yaml
+kind: LifecyclePluginHook
+version: v1
+definition:
+name: allow list
+url: http://localhost:8787
+pre: parse
+config:
+  request:
+    headers:
+      additional:
+      hasura-m-auth:
+        value: "your-strong-m-auth-key"
+    session: {}
+    rawRequest:
+      query: {}
+      variables: {}
+```
+
+The pre-parse plugin hook's request can be customized using the
+`LifecyclePluginHook` metadata object. Currently we support the following
+customizations:
+
+- adding/removing session information
+- adding new headers
+- forwarding specific headers
+- adding/removing graphql query and variables
+
+### Fixed
+
+- Disallow model filter boolean expressions having relationship comparisons in
+  their nested object filters.
+
+### Changed
+
+[plugin-allowlist]: https://github.com/hasura/plugin-allowlist
+
 ## [v2024.08.07]
 
 ### Added
@@ -345,7 +659,13 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.08.07...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.10.14...HEAD
+[v2024.10.14]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.14
+[v2024.10.02]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.02
+[v2024.09.23]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.23
+[v2024.09.16]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.16
+[v2024.09.05]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.05
+[v2024.09.02]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.02
 [v2024.08.07]: https://github.com/hasura/v3-engine/releases/tag/v2024.08.07
 [v2024.07.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.25
 [v2024.07.24]: https://github.com/hasura/v3-engine/releases/tag/v2024.07.24

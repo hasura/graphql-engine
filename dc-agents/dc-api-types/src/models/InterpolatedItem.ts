@@ -5,5 +5,5 @@
 import type { InterpolatedScalar } from './InterpolatedScalar';
 import type { InterpolatedText } from './InterpolatedText';
 
-export type InterpolatedItem = (InterpolatedText | InterpolatedScalar);
+export type InterpolatedItem = (InterpolatedScalar | InterpolatedText);
 

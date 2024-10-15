@@ -222,7 +222,7 @@ impl Relationship {
                 "version": "v1",
                 "definition": {
                     "name": "Articles",
-                    "source": "author",
+                    "sourceType": "author",
                     "target": {
                         "model": {
                             "name": "Articles",

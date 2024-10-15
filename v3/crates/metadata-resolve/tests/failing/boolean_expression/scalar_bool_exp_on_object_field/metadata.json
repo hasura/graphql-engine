@@ -13,13 +13,20 @@
               "scalar": {
                 "type": "String",
                 "comparisonOperators": [
-                  { "name": "_eq", "argumentType": "String!" }
+                  {
+                    "name": "_eq",
+                    "argumentType": "String!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "String_Comparison_Exp"
             }
@@ -34,13 +41,20 @@
               "scalar": {
                 "type": "Int",
                 "comparisonOperators": [
-                  { "name": "_eq", "argumentType": "Int!" }
+                  {
+                    "name": "_eq",
+                    "argumentType": "Int!"
+                  }
                 ],
                 "dataConnectorOperatorMapping": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Int_Comparison_Exp"
             }
@@ -71,9 +85,15 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
-            "graphql": { "typeName": "InstitutionBoolExp" }
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "InstitutionBoolExp"
+            }
           }
         },
         {
@@ -151,12 +171,17 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
-            "graphql": { "typeName": "CountryBoolExp" }
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "CountryBoolExp"
+            }
           }
         },
-
         {
           "kind": "BooleanExpressionType",
           "version": "v1",
@@ -178,9 +203,15 @@
                 "comparableRelationships": []
               }
             },
-            "logicalOperators": { "enable": true },
-            "isNull": { "enable": true },
-            "graphql": { "typeName": "LocationBoolExp" }
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "LocationBoolExp"
+            }
           }
         },
         {
@@ -204,7 +235,6 @@
             "dataConnectorTypeMapping": []
           }
         },
-
         {
           "kind": "ObjectType",
           "version": "v1",
@@ -245,7 +275,6 @@
             ]
           }
         },
-
         {
           "kind": "TypePermissions",
           "version": "v1",

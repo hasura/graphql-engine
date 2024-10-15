@@ -5,11 +5,11 @@
 //! # Example:
 //! ```
 //! use tracing_util::{SpanVisibility, TraceableHttpResponse};
-//! use axum::{http::Request, middleware::Next};
+//! use axum::{body::Body, http::Request, middleware::Next};
 //!
-//! async fn graphql_request_tracing_middleware<B: Send>(
-//!     request: Request<B>,
-//!     next: Next<B>,
+//! async fn graphql_request_tracing_middleware(
+//!     request: Request<Body>,
+//!     next: Next,
 //! ) -> axum::response::Result<axum::response::Response> {
 //!     let tracer = tracing_util::global_tracer();
 //!     let path = "/graphql";
@@ -70,17 +70,17 @@ impl<T> Traceable for TraceableHttpResponse<T> {
     type ErrorType<'a> = ResponseError where T: 'a;
 
     fn get_error(&self) -> Option<Self::ErrorType<'_>> {
-        // If the response status is not OK, return an error.
-        if self.response.status() == http::StatusCode::OK {
-            None
-        } else {
+        // If the response status is either client or server error, return an error.
+        let response_status = self.response.status();
+        if response_status.is_client_error() || response_status.is_server_error() {
             Some(ResponseError {
                 error: format!(
                     "HTTP request to {} failed with status {}",
-                    self.path,
-                    self.response.status()
+                    self.path, response_status,
                 ),
             })
+        } else {
+            None
         }
     }
 }

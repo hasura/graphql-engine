@@ -6,9 +6,9 @@ use open_dds::types::DataConnectorArgumentName;
 use std::collections::BTreeMap;
 
 use crate::plan::error;
-use ir::ModelSelection;
-use ir::NdcRelationshipName;
-use ir::{LocalCommandRelationshipInfo, LocalModelRelationshipInfo};
+use graphql_ir::LocalCommandRelationshipInfo;
+use graphql_ir::ModelSelection;
+use plan_types::{LocalModelRelationshipInfo, NdcRelationshipName};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Relationship {
@@ -78,7 +78,7 @@ pub fn process_model_relationship_definition(
                 }
             })?;
 
-            let source_column = ir::get_field_mapping_of_field_name(
+            let source_column = metadata_resolve::get_field_mapping_of_field_name(
                 source_type_mappings,
                 source_type,
                 relationship_name,
@@ -134,7 +134,7 @@ pub(crate) fn process_command_relationship_definition(
             ),
             metadata_resolve::RelationshipExecutionCategory::Local
         ) {
-            let source_column = ir::get_field_mapping_of_field_name(
+            let source_column = metadata_resolve::get_field_mapping_of_field_name(
                 source_type_mappings,
                 &annotation.source_type,
                 &annotation.relationship_name,

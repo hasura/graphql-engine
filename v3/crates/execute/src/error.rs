@@ -1,5 +1,6 @@
 use gql::{ast::common as ast, http::GraphQLError};
 use lang_graphql as gql;
+use open_dds::relationships::RelationshipName;
 use reqwest::StatusCode;
 use serde_json as json;
 use thiserror::Error;
@@ -9,7 +10,7 @@ use transitive::Transitive;
 use crate::ndc::client as ndc_client;
 
 use super::plan;
-use schema::Annotation;
+use graphql_schema::Annotation;
 
 /// Request errors are raised before execution of root fields begins.
 /// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Request-errors>
@@ -22,7 +23,7 @@ pub enum RequestError {
     ValidationFailed(#[from] gql::validation::Error),
 
     #[error("{0}")]
-    IRConversionError(#[from] ir::Error),
+    IRConversionError(#[from] graphql_ir::Error),
 
     #[error("error while generating plan: {0}")]
     PlanError(#[from] plan::error::Error),
@@ -39,7 +40,7 @@ impl RequestError {
         let message = match (self, expose_internal_errors) {
             // Error messages for internal errors from IR conversion and Plan generations are masked.
             (
-                Self::IRConversionError(ir::Error::Internal(_))
+                Self::IRConversionError(graphql_ir::Error::Internal(_))
                 | Self::PlanError(plan::error::Error::Internal(_)),
                 crate::ExposeInternalErrors::Censor,
             ) => "internal error".into(),
@@ -84,6 +85,12 @@ pub enum FieldError {
     #[error("field '{field_name:} not found in _Service")]
     FieldNotFoundInService { field_name: String },
 
+    #[error("subscription are not supported over HTTP")]
+    SubscriptionsNotSupported,
+
+    #[error("Relationship '{name}' is either remote or not having 'relation_comparisons' NDC capability; not supported for filtering")]
+    RelationshipPredicatesNotSupported { name: RelationshipName },
+
     #[error("internal error: {0}")]
     InternalError(#[from] FieldInternalError),
 }
@@ -95,7 +102,9 @@ impl FieldError {
                 Some(connector_error.error_response.details().clone())
             }
             Self::InternalError(internal) => internal.get_details(),
-            Self::FieldNotFoundInService { .. } => None,
+            Self::FieldNotFoundInService { .. }
+            | Self::SubscriptionsNotSupported
+            | Self::RelationshipPredicatesNotSupported { .. } => None,
         }
     }
 
@@ -125,7 +134,10 @@ impl FieldError {
 impl TraceableError for FieldError {
     fn visibility(&self) -> ErrorVisibility {
         match self {
-            Self::NDCExpected { .. } | Self::FieldNotFoundInService { .. } => ErrorVisibility::User,
+            Self::NDCExpected { .. }
+            | Self::FieldNotFoundInService { .. }
+            | Self::RelationshipPredicatesNotSupported { .. }
+            | Self::SubscriptionsNotSupported => ErrorVisibility::User,
             Self::InternalError(internal_error) => internal_error.visibility(),
         }
     }

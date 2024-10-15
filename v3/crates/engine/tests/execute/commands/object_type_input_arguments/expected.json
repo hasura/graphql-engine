@@ -1,16 +1,18 @@
-{
-  "data": {
-    "leonardoDiCaprio": [
-      {
-        "movie_id": 1,
-        "name": "Leonardo DiCaprio"
-      }
-    ],
-    "kate": [
-      {
-        "movie_id": 1,
-        "name": "Kate Winslet"
-      }
-    ]
+[
+  {
+    "data": {
+      "leonardoDiCaprio": [
+        {
+          "movie_id": 1,
+          "name": "Leonardo DiCaprio"
+        }
+      ],
+      "kate": [
+        {
+          "movie_id": 1,
+          "name": "Kate Winslet"
+        }
+      ]
+    }
   }
-}
+]

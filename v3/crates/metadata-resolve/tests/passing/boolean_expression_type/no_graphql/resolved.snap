@@ -128,8 +128,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                 },
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "__unknown_namespace",
@@ -161,7 +161,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [],
+                                        comparison_operators: None,
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -178,11 +178,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -199,18 +209,29 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_like",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
                             },
                         },
                     },
-                ),
+                    scalar_representations: {},
+                },
             },
         },
         scalar_types: {},
@@ -274,7 +295,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                             ),
                         ),
                     },
-                    representation: Inbuilt(
+                    operand_type: Inbuilt(
                         Int,
                     ),
                     comparison_operators: {
@@ -355,7 +376,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                             ),
                         ),
                     },
-                    representation: Inbuilt(
+                    operand_type: Inbuilt(
                         String,
                     ),
                     comparison_operators: {
@@ -417,10 +438,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                     include_is_null: Yes,
                 },
             },
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {},
-        ),
+        order_by_expressions: OrderByExpressions {
+            objects: {},
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
@@ -433,6 +456,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                     "Mutation",
                 ),
             ),
+            subscription_root_type_name: None,
             order_by_input: Some(
                 OrderByInputGraphqlConfig {
                     asc_direction_field_value: Name(
@@ -449,8 +473,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                 },
             ),
             enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
         },
-        pre_parse_plugins: [],
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+        },
         roles: [
             Role(
                 "admin",

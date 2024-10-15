@@ -1,0 +1,123 @@
+{
+  "version": "v3",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "String_aggregate_bool_exp",
+            "operand": {
+              "scalarAggregate": {
+                "type": "String",
+                "aggregateExpression": "String_agg_exp",
+                "comparableAggregationFunctions": [],
+                "comparableCount": {
+                  "booleanExpressionType": "Int_bool_exp"
+                }
+              }
+            },
+            "isNull": {
+              "enable": false
+            },
+            "logicalOperators": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "AggregateExpression",
+          "version": "v1",
+          "definition": {
+            "name": "String_agg_exp",
+            "operand": {
+              "scalar": {
+                "aggregatedType": "String",
+                "aggregationFunctions": [],
+                "dataConnectorAggregationFunctionMapping": []
+              }
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "Int",
+                "comparisonOperators": [],
+                "dataConnectorOperatorMapping": []
+              }
+            },
+            "isNull": {
+              "enable": true
+            },
+            "logicalOperators": {
+              "enable": true
+            }
+          }
+        },
+        {
+          "kind": "GraphqlConfig",
+          "version": "v1",
+          "definition": {
+            "query": {
+              "rootOperationTypeName": "Query",
+              "argumentsInput": {
+                "fieldName": "args"
+              },
+              "limitInput": {
+                "fieldName": "limit"
+              },
+              "offsetInput": {
+                "fieldName": "offset"
+              },
+              "filterInput": {
+                "fieldName": "where",
+                "operatorNames": {
+                  "and": "_and",
+                  "or": "_or",
+                  "not": "_not",
+                  "isNull": "_is_null"
+                }
+              },
+              "orderByInput": {
+                "fieldName": "order_by",
+                "enumDirectionValues": {
+                  "asc": "Asc",
+                  "desc": "Desc"
+                },
+                "enumTypeNames": [
+                  {
+                    "directions": ["Asc", "Desc"],
+                    "typeName": "OrderBy"
+                  }
+                ]
+              },
+              "aggregate": {
+                "filterInputFieldName": "filter_input",
+                "countFieldName": "_count",
+                "countDistinctFieldName": "_count_distinct"
+              }
+            },
+            "mutation": {
+              "rootOperationTypeName": "Mutation"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "flags": {
+    "require_graphql_config": true,
+    "require_valid_ndc_v01_version": true,
+    "bypass_relation_comparisons_ndc_capability": true,
+    "require_nested_array_filtering_capability": true,
+    "disallow_scalar_type_names_conflicting_with_inbuilt_types": true,
+    "propagate_boolean_expression_deprecation_status": true
+  }
+}

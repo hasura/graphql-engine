@@ -5,6 +5,8 @@
       "name": "default",
       "objects": [
         {
+          "kind": "DataConnectorLink",
+          "version": "v1",
           "definition": {
             "name": "custom_connector",
             "url": {
@@ -819,7 +821,7 @@
                     "description": "Movies filtered by actor name search parameters",
                     "arguments": {
                       "_headers": {
-                        "description": "headers required",
+                        "description": "headers",
                         "type": {
                           "type": "named",
                           "name": "HeaderMap"
@@ -1292,9 +1294,7 @@
                 }
               }
             }
-          },
-          "version": "v1",
-          "kind": "DataConnectorLink"
+          }
         }
       ]
     }

@@ -328,12 +328,19 @@ impl<'s, S: SchemaContext> SelectionSet<'s, S> {
         }
     }
 
-    pub fn as_object_selection_set<E, V, F>(
+    /// `as_object_selection_set` provides a way to iterate over the fields in the selection set
+    /// and convert them into a JSON object.
+    /// This also handles the special case of the `__typename` field.
+    pub fn as_object_selection_set<E, F>(
         &self,
         mut f: F,
-    ) -> std::result::Result<IndexMap<ast::Alias, V>, E>
+    ) -> std::result::Result<IndexMap<ast::Alias, serde_json::Value>, E>
     where
-        F: FnMut(&ast::TypeName, &Field<S>, &FieldCall<S>) -> std::result::Result<V, E>,
+        F: FnMut(
+            &ast::TypeName,
+            &Field<S>,
+            &FieldCall<S>,
+        ) -> std::result::Result<serde_json::Value, E>,
         E: From<Error>,
     {
         let type_name = self
@@ -343,7 +350,11 @@ impl<'s, S: SchemaContext> SelectionSet<'s, S> {
         let mut response = IndexMap::new();
         for (alias, field) in &self.fields {
             let field_call = field.field_call()?;
-            let field_response = f(type_name, field, field_call)?;
+            let field_response = if field_call.name.as_str() == "__typename" {
+                serde_json::Value::String(type_name.to_string())
+            } else {
+                f(type_name, field, field_call)?
+            };
             response.insert(alias.clone(), field_response);
         }
         Ok(response)

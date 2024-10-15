@@ -14,22 +14,21 @@ use json_ext::ValueExt;
 
 use super::error;
 use super::types::{
-    Argument, JoinId, JoinLocations, JoinNode, LocationKind, RemoteJoin, SourceFieldAlias,
-    TargetField,
+    Argument, JoinLocations, JoinNode, LocationKind, RemoteJoin, SourceFieldAlias, TargetField,
 };
 use crate::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use crate::plan::ProcessResponseAs;
-use ir::VariableName;
+use plan_types::VariableName;
 
 /// An executable join node is a remote join node, it's collected join values
 /// from a LHS response, and the rest of the join sub-tree
 #[derive(Debug)]
-pub(crate) struct ExecutableJoinNode<'s, 'ir> {
-    pub(crate) join_node: RemoteJoin<'s, 'ir>,
+pub(crate) struct ExecutableJoinNode<'s> {
+    pub(crate) join_node: RemoteJoin<'s>,
     pub(crate) remote_alias: String,
     pub(crate) location_path: Vec<LocationInfo>,
     pub(crate) arguments: HashSet<Argument>,
-    pub(crate) sub_tree: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
+    pub(crate) sub_tree: JoinLocations<'s>,
 }
 
 /// Indicates a field alias which might have more nesting inside
@@ -41,12 +40,12 @@ pub(crate) struct LocationInfo {
 
 /// Given a LHS response and `JoinLocations` tree, get the next executable join
 /// nodes down the tree. Also, extract the join values from the response.
-pub(crate) fn collect_next_join_nodes<'s, 'ir>(
+pub(crate) fn collect_next_join_nodes<'s>(
     lhs_response: &Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
-    join_locations: &JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
+    join_locations: &JoinLocations<'s>,
     path: &mut [LocationInfo],
-) -> Result<Vec<ExecutableJoinNode<'s, 'ir>>, error::FieldError> {
+) -> Result<Vec<ExecutableJoinNode<'s>>, error::FieldError> {
     let mut arguments_results = Vec::new();
 
     // if lhs_response is empty, there are no rows to collect arguments from
@@ -56,7 +55,7 @@ pub(crate) fn collect_next_join_nodes<'s, 'ir>(
 
     for (alias, location) in &join_locations.locations {
         match &location.join_node {
-            JoinNode::Remote((join_node, _join_id)) => {
+            JoinNode::Remote(join_node) => {
                 let join_fields = get_join_fields(join_node);
                 let arguments = collect_argument_from_rows(
                     lhs_response,

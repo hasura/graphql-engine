@@ -18,11 +18,16 @@ crates
 │   │   ├── introspection
 │   │   ├── validation
 ├── metadata-resolve
-├── schema
-│   ├── operations
-│   ├── types
-├── ir
+├── graphql
+│   ├── schema
+│   │   ├── operations
+│   │   ├── types
+│   ├── ir
 ├── execute
+├── jsonapi
+├── sql
+├── frontends
+│   ├── graphql
 ├── engine
 │   ├── bin
 │   │   ├── engine
@@ -77,19 +82,19 @@ contain additional relevant data from the schema.
 Resolves and validates the input Open DDS metadata and creates intermediate
 structures that are used in the `engine` crate for schema generation.
 
-##### `schema`
+##### `graphql/schema`
 
 Provides functions to resolve the Open DDS metadata, generate the GraphQL scehma
 from it, and execute queries against the schema.
 
-##### `schema/operations`
+##### `graphql/schema/operations`
 
 Contains the logic to define and execute the operations that would be defined by
 the Open DDS spec.
 
 Technically, these are fields of the `query_root`, `subscription_root` or
-`mutation_root` and as such can be defined in `schema::types::*_root` module.
-However, this separation makes it easier to organize them (for example
+`mutation_root` and as such can be defined in `graphql_schema::types::*_root`
+module. However, this separation makes it easier to organize them (for example
 `subscription_root` can also import the same set of operations).
 
 Each module under `operations` would roughly define the following:
@@ -100,7 +105,7 @@ Each module under `operations` would roughly define the following:
 - Logic to parse a normalized field from the request into the defined IR format.
 - Logic to execute the operation.
 
-##### `schema/types`
+##### `graphql/schema/types`
 
 TODO: This is a bit outdated, so we should fix this.
 
@@ -118,7 +123,7 @@ Each module under `types` defines the following:
 - Logic to parse a normalized object (selection set or input value) from the
   request into the defined IR format.
 
-### `ir`
+### `graphql/ir`
 
 Responsible for combining the user input and our resolved metadata into our
 intermediate representation ready to plan a request.
@@ -126,8 +131,20 @@ intermediate representation ready to plan a request.
 ### `execute`
 
 Responsible for the core operation of the engine in the context of a user
-provided metadata, including the web server, requests processing, executing
-requests, etc.
+provided metadata, including requests processing, executing requests, etc.
+
+### `frontends/graphql`
+
+Entrypoints for GraphQL requests. Orchestrates parsing, validation and planning
+requests.
+
+### `sql`
+
+Responsible for SQL frontend currently in development
+
+### `jsonapi`
+
+Responsible for JSONAPI frontend currently in development
 
 #### `engine/bin`
 

@@ -7,11 +7,14 @@ use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 
 use crate::types::subgraph::Qualified;
 
-use crate::stages::{command_permissions, model_permissions, relationships};
+use crate::stages::{command_permissions, model_permissions, object_relationships};
 
 /// Gather all roles from various permission objects.
 pub fn resolve(
-    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        object_relationships::ObjectTypeWithRelationships,
+    >,
     models: &IndexMap<Qualified<ModelName>, model_permissions::ModelWithPermissions>,
     commands: &IndexMap<Qualified<CommandName>, command_permissions::CommandWithPermissions>,
 ) -> Vec<Role> {

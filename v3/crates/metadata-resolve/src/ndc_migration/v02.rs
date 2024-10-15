@@ -342,10 +342,7 @@ fn migrate_query_capabilities_from_v01(
         nested_fields: migrate_nested_field_capabilities_from_v01(
             old_query_capabilities.nested_fields,
         ),
-        exists: ndc_models_v02::ExistsCapabilities {
-            named_scopes: None, // v0.1.x does not have named scopes
-            unrelated: Some(ndc_models_v02::LeafCapability {}), // v0.1.x assumed this capability
-        },
+        exists: migrate_exists_capabilities_from_v01(old_query_capabilities.exists),
     }
 }
 
@@ -364,6 +361,18 @@ fn migrate_leaf_capability_from_v01(
     _old_leaf_capability: ndc_models_v01::LeafCapability,
 ) -> ndc_models_v02::LeafCapability {
     ndc_models_v02::LeafCapability {}
+}
+
+fn migrate_exists_capabilities_from_v01(
+    old_exists_capabilities: ndc_models_v01::ExistsCapabilities,
+) -> ndc_models_v02::ExistsCapabilities {
+    ndc_models_v02::ExistsCapabilities {
+        named_scopes: None, // v0.1.x does not have named scopes
+        unrelated: Some(ndc_models_v02::LeafCapability {}), // v0.1.x assumed this capability
+        nested_collections: old_exists_capabilities
+            .nested_collections
+            .map(migrate_leaf_capability_from_v01),
+    }
 }
 
 fn migrate_nested_field_capabilities_from_v01(

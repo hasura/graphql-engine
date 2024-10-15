@@ -3,12 +3,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
-use open_dds::order_by_expression::{self, OrderByExpressionName};
+use open_dds::order_by_expression::{self, OrderByExpressionName, OrderByExpressionOperand};
+use open_dds::relationships::RelationshipName;
 use open_dds::types::{CustomTypeName, FieldName};
-
+mod error;
 use crate::helpers::types::store_new_graphql_type;
-use crate::types::error::OrderByExpressionError;
 use crate::{mk_name, Error, Qualified, QualifiedBaseType, QualifiedTypeName};
+pub use error::OrderByExpressionError;
 
 mod types;
 pub use types::*;
@@ -16,33 +17,53 @@ pub use types::*;
 use super::{object_types, type_permissions};
 
 /// Resolve order by expressions.
-/// Resturns the mape of OrderByExpressions and updated graphql_types.
+/// Returns the map of OrderByExpressions and updated graphql_types.
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     mut graphql_types: BTreeSet<ast::TypeName>,
 ) -> Result<OrderByExpressionsOutput, Error> {
-    let mut resolved_order_by_expressions = OrderByExpressions(BTreeMap::new());
+    let mut resolved_order_by_expressions = OrderByExpressions {
+        objects: BTreeMap::new(),
+    };
+
     let order_by_expression_names_and_types: BTreeMap<OrderByExpressionName, CustomTypeName> =
         metadata_accessor
             .order_by_expressions
             .iter()
-            .map(|o| (o.object.name.clone(), o.object.ordered_type.clone()))
+            .map(|o| match &o.object.operand {
+                OrderByExpressionOperand::Object(object_operand) => {
+                    (o.object.name.clone(), object_operand.ordered_type.clone())
+                }
+            })
             .collect();
 
     for open_dds::accessor::QualifiedObject {
+        path: _,
         subgraph,
         object: order_by_expression,
     } in &metadata_accessor.order_by_expressions
     {
-        let resolved_order_by_expression = resolve_order_by_expression(
+        let OrderByExpressionOperand::Object(object_operand) = &order_by_expression.operand;
+
+        let resolved_order_by_expression = resolve_object_order_by_expression(
             subgraph,
             object_types,
             &order_by_expression_names_and_types,
-            order_by_expression,
+            &order_by_expression.name,
+            object_operand,
+            &order_by_expression.graphql,
+            &order_by_expression.description,
             &mut graphql_types,
-        )?;
-        resolved_order_by_expressions.0.insert(
+        )
+        .map_err(|error| Error::OrderByExpressionError {
+            order_by_expression_name: Qualified::new(
+                subgraph.clone(),
+                order_by_expression.name.clone(),
+            ),
+            error,
+        })?;
+        resolved_order_by_expressions.objects.insert(
             resolved_order_by_expression.identifier.clone(),
             resolved_order_by_expression,
         );
@@ -56,59 +77,61 @@ pub fn resolve(
 /// Resolve an order by expression.
 /// Resolves all orderable fields, orderable relationships, and
 /// checks graphql type names for validity and uniqueness.
-fn resolve_order_by_expression(
+fn resolve_object_order_by_expression(
     subgraph: &SubgraphName,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, CustomTypeName>,
-    order_by_expression: &order_by_expression::OrderByExpressionV1,
+    order_by_expression_name: &order_by_expression::OrderByExpressionName,
+    object_operand: &order_by_expression::OrderByExpressionObjectOperand,
+    order_by_expression_graphql: &Option<
+        order_by_expression::OrderByExpressionGraphQlConfiguration,
+    >,
+    description: &Option<String>,
     graphql_types: &mut BTreeSet<ast::TypeName>,
-) -> Result<OrderByExpression, Error> {
-    let name = Qualified::new(subgraph.clone(), order_by_expression.name.clone());
+) -> Result<ObjectOrderByExpression, OrderByExpressionError> {
     let identifier = Qualified::new(
         subgraph.clone(),
-        OrderByExpressionIdentifier::FromOrderByExpression(order_by_expression.name.clone()),
+        OrderByExpressionIdentifier::FromOrderByExpression(order_by_expression_name.clone()),
     );
-    let ordered_type = Qualified::new(subgraph.clone(), order_by_expression.ordered_type.clone());
+    let ordered_type = Qualified::new(subgraph.clone(), object_operand.ordered_type.clone());
 
     let orderable_fields = resolve_orderable_fields(
         subgraph,
         object_types,
         &ordered_type,
         order_by_expression_names_and_types,
-        &order_by_expression.orderable_fields,
-    )
-    .map_err(|error| Error::OrderByExpressionError {
-        order_by_expression_name: name.clone(),
-        error,
-    })?;
-    let orderable_relationships = order_by_expression
-        .orderable_relationships
-        .iter()
-        .map(|o| resolve_orderable_relationship(subgraph, order_by_expression_names_and_types, o))
-        .collect::<Result<_, _>>()
-        .map_err(|error| Error::OrderByExpressionError {
-            order_by_expression_name: name.clone(),
-            error,
-        })?;
-    let graphql = order_by_expression
-        .graphql
+        &object_operand.orderable_fields,
+    )?;
+
+    let orderable_relationships = OrderableRelationships::ModelV2(
+        object_operand
+            .orderable_relationships
+            .iter()
+            .map(|o| {
+                resolve_orderable_relationship(subgraph, order_by_expression_names_and_types, o)
+            })
+            .collect::<Result<_, _>>()?,
+    );
+
+    let graphql = order_by_expression_graphql
         .as_ref()
         .map(|config| {
             let expression_type_name =
                 mk_name(config.expression_type_name.as_str()).map(ast::TypeName)?;
             store_new_graphql_type(graphql_types, Some(&expression_type_name))?;
-            Ok::<_, Error>(OrderByExpressionGraphqlConfig {
+            Ok::<_, OrderByExpressionError>(OrderByExpressionGraphqlConfig {
                 expression_type_name,
             })
         })
         .transpose()?;
-    Ok(OrderByExpression {
+
+    Ok(ObjectOrderByExpression {
         identifier,
         ordered_type,
         orderable_fields,
         orderable_relationships,
         graphql,
-        description: order_by_expression.description.clone(),
+        description: description.clone(),
     })
 }
 
@@ -119,7 +142,7 @@ pub fn resolve_orderable_fields(
     ordered_type: &Qualified<CustomTypeName>,
     order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, CustomTypeName>,
     orderable_fields: &[order_by_expression::OrderByExpressionOrderableField],
-) -> Result<Vec<OrderableField>, OrderByExpressionError> {
+) -> Result<BTreeMap<FieldName, OrderableField>, OrderByExpressionError> {
     let object_type_representation = get_object_type_representation(object_types, ordered_type)?;
     orderable_fields
         .iter()
@@ -155,7 +178,7 @@ fn resolve_orderable_field(
     type_fields: &IndexMap<FieldName, object_types::FieldDefinition>,
     order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, CustomTypeName>,
     orderable_field: &order_by_expression::OrderByExpressionOrderableField,
-) -> Result<OrderableField, OrderByExpressionError> {
+) -> Result<(FieldName, OrderableField), OrderByExpressionError> {
     // Check for unknown orderable field
     let field_definition = type_fields
         .get(&orderable_field.field_name)
@@ -165,7 +188,7 @@ fn resolve_orderable_field(
 
     // Return an error if OrderByExpressionOrderableField
     // does not have exactly one of enable_order_by_directions and order_by_expression_name.
-    match &orderable_field.order_by_expression {
+    let resolved_orderable_field = match &orderable_field.order_by_expression {
         None => {
             match &orderable_field.enable_order_by_directions {
                 None => Err(OrderByExpressionError::InvalidOrderByExpressionOrderableField {
@@ -173,7 +196,6 @@ fn resolve_orderable_field(
                 }),
                 Some(dir@open_dds::models::EnableAllOrSpecific::EnableAll(true)) => {
                     Ok(OrderableField::Scalar(OrderableScalarField {
-                        field_name: orderable_field.field_name.clone(),
                         enable_order_by_directions: dir.clone(),
                     }))
                 },
@@ -197,8 +219,8 @@ fn resolve_orderable_field(
                     match &field_definition.field_type.underlying_type {
                         QualifiedBaseType::Named(QualifiedTypeName::Custom(Qualified{name: t, ..})) if t == order_by_expression_type =>
                         Ok(OrderableField::Object(OrderableObjectField {
-                            field_name: orderable_field.field_name.clone(),
-                            order_by_expression: Qualified::new( subgraph.clone(), order_by_expression_name.clone(),)})),
+                            order_by_expression_identifier:
+                                Qualified::new(subgraph.clone(), OrderByExpressionIdentifier::FromOrderByExpression(order_by_expression_name.clone()))})),
                         _ => Err(OrderByExpressionError::OrderableFieldTypeError { order_by_expression_name: order_by_expression_name.clone(),
                             order_by_expression_type: order_by_expression_type.clone(),
                             field_type: field_definition.field_type.underlying_type.clone(),
@@ -207,7 +229,8 @@ fn resolve_orderable_field(
                 }
             }
         },
-    }
+    }?;
+    Ok((orderable_field.field_name.clone(), resolved_orderable_field))
 }
 
 /// Resolve an orderable relationship.
@@ -217,16 +240,15 @@ fn resolve_orderable_relationship(
     subgraph: &SubgraphName,
     order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, CustomTypeName>,
     orderable_relationship: &order_by_expression::OrderByExpressionOrderableRelationship,
-) -> Result<OrderableRelationship, OrderByExpressionError> {
-    match orderable_relationship.order_by_expression.as_ref() {
+) -> Result<(RelationshipName, OrderableRelationship), OrderByExpressionError> {
+    let resolved_orderable_relationship = match orderable_relationship.order_by_expression.as_ref()
+    {
         None => Ok(OrderableRelationship {
-            relationship_name: orderable_relationship.relationship_name.clone(),
             order_by_expression: None,
         }),
         Some(order_by_expression_name) => {
             if order_by_expression_names_and_types.contains_key(order_by_expression_name) {
                 Ok(OrderableRelationship {
-                    relationship_name: orderable_relationship.relationship_name.clone(),
                     order_by_expression: Some(Qualified::new(
                         subgraph.clone(),
                         order_by_expression_name.clone(),
@@ -241,5 +263,9 @@ fn resolve_orderable_relationship(
                 )
             }
         }
-    }
+    }?;
+    Ok((
+        orderable_relationship.relationship_name.clone(),
+        resolved_orderable_relationship,
+    ))
 }

@@ -41,15 +41,16 @@ impl OptimizerRule for ReplaceTableScan {
                 ref source,
                 projection: _,
                 ref projected_schema,
-                filters: _,
-                fetch: _,
+                ref filters,
+                fetch,
             }) => {
                 if let Some(opendd_table) = source_as_provider(source)?
                     .as_ref()
                     .as_any()
                     .downcast_ref::<model::Table>()
                 {
-                    let plan = opendd_table.to_logical_plan(projected_schema.clone())?;
+                    let plan =
+                        opendd_table.to_logical_plan(projected_schema.clone(), filters, fetch)?;
                     Ok(Transformed::yes(plan))
                 } else {
                     Ok(Transformed::no(plan))

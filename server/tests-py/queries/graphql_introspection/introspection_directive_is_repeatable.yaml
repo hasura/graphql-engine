@@ -1,0 +1,60 @@
+description: GraphQL introspection query to fetch directives with isRepeatable field
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query IntrospectionQuery {
+      __schema {
+        directives {
+          name
+          description
+          locations
+          args {
+          ...InputValue
+          }
+          isRepeatable
+        }
+      }
+    }
+
+    fragment InputValue on __InputValue {
+    name
+    description
+    type {
+    ...TypeRef
+    }
+    defaultValue
+    }
+
+    fragment TypeRef on __Type {
+      kind
+      name
+      ofType {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+            ofType {
+              kind
+              name
+              ofType {
+                kind
+                name
+                ofType {
+                  kind
+                  name
+                  ofType {
+                    kind
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }

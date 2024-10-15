@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{data_connector::HttpHeaders, impl_OpenDd_default_for};
+use crate::{data_connector::HttpHeaders, impl_OpenDd_default_for, EnvironmentValue};
 
 #[derive(
     Serialize, Deserialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd, JsonSchema,
@@ -30,7 +30,9 @@ impl LifecyclePluginHook {
                 "definition": {
                     "pre": "parse",
                     "name": "test",
-                    "url": "http://localhost:8080",
+                    "url": {
+                        "value": "http://localhost:8080",
+                    },
                     "config": {
                         "request": {
                             "headers": {
@@ -69,10 +71,12 @@ impl LifecyclePluginHook {
 /// Definition of a lifecycle plugin hook - version 1.
 pub enum LifecyclePluginHookV1 {
     /// Definition of a lifecycle plugin hook for the pre-parse stage.
-    Parse(LifecyclePluginHookPreParse),
+    Parse(LifecyclePreParsePluginHook),
+    /// Definition of a lifecycle plugin hook for the pre-response stage.
+    Response(LifecyclePreResponsePluginHook),
 }
 
-type LifecyclePluginUrl = String;
+type LifecyclePluginUrl = EnvironmentValue;
 
 type LifecyclePluginName = String;
 
@@ -81,15 +85,15 @@ type LifecyclePluginName = String;
 )]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "LifecyclePluginHookPreParse")]
+#[schemars(title = "LifecyclePreParsePluginHook")]
 /// Definition of a lifecycle plugin hook for the pre-parse stage.
-pub struct LifecyclePluginHookPreParse {
+pub struct LifecyclePreParsePluginHook {
     /// The name of the lifecycle plugin hook.
     pub name: LifecyclePluginName,
     /// The URL to access the lifecycle plugin hook.
     pub url: LifecyclePluginUrl,
     /// Configuration for the lifecycle plugin hook.
-    pub config: LifecyclePluginHookConfig,
+    pub config: LifecyclePreParsePluginHookConfig,
 }
 
 #[derive(
@@ -97,11 +101,11 @@ pub struct LifecyclePluginHookPreParse {
 )]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "LifecyclePluginHookConfig")]
+#[schemars(title = "LifecyclePreParsePluginHookConfig")]
 /// Configuration for a lifecycle plugin hook.
-pub struct LifecyclePluginHookConfig {
+pub struct LifecyclePreParsePluginHookConfig {
     /// Configuration for the request to the lifecycle plugin hook.
-    pub request: LifecyclePluginHookConfigRequest,
+    pub request: LifecyclePreParsePluginHookConfigRequest,
 }
 
 #[derive(
@@ -109,9 +113,9 @@ pub struct LifecyclePluginHookConfig {
 )]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "LifecyclePluginHookConfigRequest")]
+#[schemars(title = "LifecyclePreParsePluginHookConfigRequest")]
 /// Configuration for a lifecycle plugin hook request.
-pub struct LifecyclePluginHookConfigRequest {
+pub struct LifecyclePreParsePluginHookConfigRequest {
     /// Configuration for the headers.
     pub headers: Option<LifecyclePluginHookHeadersConfig>,
     /// Configuration for the session (includes roles and session variables).
@@ -158,13 +162,61 @@ pub struct RawRequestConfig {
     pub variables: Option<LeafConfig>,
 }
 
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreResponsePluginHook")]
+/// Definition of a lifecycle plugin hook for the pre-parse stage.
+pub struct LifecyclePreResponsePluginHook {
+    /// The name of the lifecycle plugin hook.
+    pub name: LifecyclePluginName,
+    /// The URL to access the lifecycle plugin hook.
+    pub url: LifecyclePluginUrl,
+    /// Configuration for the lifecycle plugin hook.
+    pub config: LifecyclePreResponsePluginHookConfig,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreResponsePluginHookConfig")]
+/// Configuration for a lifecycle plugin hook.
+pub struct LifecyclePreResponsePluginHookConfig {
+    /// Configuration for the request to the lifecycle plugin hook.
+    pub request: LifecyclePreResponsePluginHookConfigRequest,
+}
+
+#[derive(
+    Serialize, Deserialize, JsonSchema, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd,
+)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "LifecyclePreResponsePluginHookConfigRequest")]
+/// Configuration for a lifecycle plugin hook request.
+pub struct LifecyclePreResponsePluginHookConfigRequest {
+    /// Configuration for the headers.
+    pub headers: Option<LifecyclePluginHookHeadersConfig>,
+    /// Configuration for the session (includes roles and session variables).
+    pub session: Option<LeafConfig>,
+    /// Configuration for the raw request.
+    pub raw_request: RawRequestConfig,
+    /// Configuration for the response.
+    pub raw_response: Option<LeafConfig>,
+}
+
 #[test]
 fn test_lifecycle_plugin_hook_parse() {
-    let hook = LifecyclePluginHook::V1(LifecyclePluginHookV1::Parse(LifecyclePluginHookPreParse {
+    let hook = LifecyclePluginHook::V1(LifecyclePluginHookV1::Parse(LifecyclePreParsePluginHook {
         name: "test".to_string(),
-        url: "http://localhost:8080".to_string(),
-        config: LifecyclePluginHookConfig {
-            request: LifecyclePluginHookConfigRequest {
+        url: crate::EnvironmentValue {
+            value: "http://localhost:8080".to_string(),
+        },
+        config: LifecyclePreParsePluginHookConfig {
+            request: LifecyclePreParsePluginHookConfigRequest {
                 headers: Some(LifecyclePluginHookHeadersConfig {
                     additional: Some(HttpHeaders(
                         vec![(

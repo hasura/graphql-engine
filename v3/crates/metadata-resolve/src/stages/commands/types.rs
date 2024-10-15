@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
 use crate::data_connectors::ArgumentPresetValue;
 use crate::helpers::argument::ArgumentMappingIssue;
 use crate::stages::{data_connectors, object_types};
+use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
     QualifiedTypeReference,
@@ -31,7 +34,7 @@ pub struct CommandGraphQlApi {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct CommandSource {
-    pub data_connector: data_connectors::DataConnectorLink,
+    pub data_connector: Arc<data_connectors::DataConnectorLink>,
     pub source: DataConnectorCommand,
     // Is the output type of this command in OpenDD and NDC same. This can be
     // different in the case when `CommandsResponseConfig` is set
@@ -53,7 +56,7 @@ pub struct Command {
     pub output_type: QualifiedTypeReference,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub graphql_api: Option<CommandGraphQlApi>,
-    pub source: Option<CommandSource>,
+    pub source: Option<Arc<CommandSource>>,
     pub description: Option<String>,
 }
 
@@ -73,4 +76,20 @@ pub enum CommandsIssue {
         procedure_name: ProcedureName,
         issue: ArgumentMappingIssue,
     },
+    #[error("Cannot add command {command_name:} to GraphQL schema as the root field name {graphql_name:} is already in use")]
+    GraphQlNameAlreadyInUse {
+        command_name: Qualified<CommandName>,
+        graphql_name: ast::Name,
+    },
+}
+
+impl ShouldBeAnError for CommandsIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::Flags) -> bool {
+        match self {
+            CommandsIssue::GraphQlNameAlreadyInUse { .. } => {
+                flags.require_unique_command_graphql_names
+            }
+            _ => false,
+        }
+    }
 }

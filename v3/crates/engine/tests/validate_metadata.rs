@@ -1,10 +1,10 @@
 use std::fs;
 use std::path::PathBuf;
 
+use graphql_schema::Error as SchemaError;
+use graphql_schema::GDS;
 use metadata_resolve::BooleanExpressionError;
 use metadata_resolve::Error as ResolveError;
-use schema::Error as SchemaError;
-use schema::GDS;
 
 #[test]
 fn test_select_many_model_arguments_without_arguments_input_type() -> anyhow::Result<()> {
@@ -230,7 +230,9 @@ fn test_disallow_object_mapped_to_scalar() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: ResolveError::ModelTypeMappingCollectionError { .. }
+                error: metadata_resolve::WithContext::Raw(ResolveError::ModelsError(
+                    metadata_resolve::ModelsError::ModelTypeMappingCollectionError { .. }
+                ))
             })
         ),
         "actual: {gds:?}"
@@ -250,7 +252,9 @@ fn test_disallow_filter_expression_without_source() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: ResolveError::CannotUseFilterExpressionsWithoutSource { .. }
+                error: metadata_resolve::WithContext::Raw(
+                    ResolveError::CannotUseFilterExpressionsWithoutSource { .. }
+                )
             })
         ),
         "actual: {gds:?}"
@@ -268,9 +272,9 @@ fn test_disallow_filter_expression_with_object_type_mismatch() -> anyhow::Result
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: ResolveError::BooleanExpressionError(
+                error: metadata_resolve::WithContext::Raw(ResolveError::BooleanExpressionError(
                     BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
-                )
+                ))
             })
         ),
         "actual: {gds:?}"
@@ -289,7 +293,8 @@ fn test_disallow_boolean_expression_without_mapping() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: ResolveError::BooleanExpressionError (BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression { .. })
+                error: metadata_resolve::WithContext::Raw(
+                           ResolveError::BooleanExpressionError (BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression { .. }))
             })
         ),
         "actual: {gds:?}"

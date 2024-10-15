@@ -179,8 +179,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 },
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "__unknown_namespace",
@@ -214,11 +214,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             },
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "like",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -235,11 +245,17 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -256,7 +272,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [],
+                                        comparison_operators: None,
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -273,11 +289,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "like",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -296,14 +322,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             },
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [],
+                                        comparison_operators: None,
                                         argument_mappings: {},
                                     },
                                 },
                             },
                         },
                     },
-                ),
+                    scalar_representations: {},
+                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -411,8 +438,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 },
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "__unknown_namespace",
@@ -446,11 +473,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             },
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "like",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -467,11 +504,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "like",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -488,18 +535,29 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "like",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
                             },
                         },
                     },
-                ),
+                    scalar_representations: {},
+                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -607,8 +665,8 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 },
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "__unknown_namespace",
@@ -640,11 +698,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "like",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -661,11 +729,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "like",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                     FieldName(
@@ -684,18 +762,29 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             },
                                         },
                                         column_type_representation: None,
-                                        equal_operators: [
-                                            DataConnectorOperatorName(
-                                                "_eq",
-                                            ),
-                                        ],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                ],
+                                                in_operators: [],
+                                                other_operators: [
+                                                    DataConnectorOperatorName(
+                                                        "like",
+                                                    ),
+                                                ],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
                             },
                         },
                     },
-                ),
+                    scalar_representations: {},
+                },
             },
         },
         scalar_types: {},
@@ -709,8 +798,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                         "institutions",
                     ),
                 ),
-            }: ModelWithPermissions {
+            }: ModelWithArgumentPresets {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Index(
+                                10,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "__unknown_namespace",
@@ -892,6 +988,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     supports_explaining_mutations: false,
                                     supports_nested_object_filtering: true,
                                     supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
                                 },
                             },
                             collection: CollectionName(
@@ -931,11 +1028,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 },
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "like",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -952,11 +1059,17 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -973,7 +1086,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [],
+                                            comparison_operators: None,
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -990,11 +1103,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "like",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1013,7 +1136,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 },
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [],
+                                            comparison_operators: None,
                                             argument_mappings: {},
                                         },
                                     },
@@ -1048,11 +1171,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 },
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "like",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1069,11 +1202,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "like",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1090,11 +1233,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "like",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -1127,11 +1280,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "like",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1148,11 +1311,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "like",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                         FieldName(
@@ -1171,11 +1344,21 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 },
                                             },
                                             column_type_representation: None,
-                                            equal_operators: [
-                                                DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            ],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "_eq",
+                                                        ),
+                                                    ],
+                                                    in_operators: [],
+                                                    other_operators: [
+                                                        DataConnectorOperatorName(
+                                                            "like",
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -1215,6 +1398,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                         ),
                                         description: None,
                                         deprecated: None,
+                                        subscription: None,
                                     },
                                 ),
                                 arguments_input_type: None,
@@ -1226,12 +1410,20 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                         description: None,
                     },
                 },
+                argument_presets: {
+                    Role(
+                        "admin",
+                    ): ArgumentPresets {
+                        argument_presets: {},
+                    },
+                },
                 select_permissions: {
                     Role(
                         "admin",
                     ): SelectPermission {
                         filter: AllowAll,
                         argument_presets: {},
+                        allow_subscriptions: false,
                     },
                 },
                 filter_expression_type: None,
@@ -1245,6 +1437,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             ),
                             description: None,
                             deprecated: None,
+                            subscription: None,
                         },
                     ),
                     select_aggregate: None,
@@ -1339,6 +1532,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                             ),
                                         ),
                                     },
+                                    field_kind: Object,
                                 },
                             },
                             scalar_fields: {
@@ -1607,7 +1801,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             ),
                         ),
                     },
-                    representation: Inbuilt(
+                    operand_type: Inbuilt(
                         Int,
                     ),
                     comparison_operators: {},
@@ -1660,7 +1854,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             ),
                         ),
                     },
-                    representation: Inbuilt(
+                    operand_type: Inbuilt(
                         String,
                     ),
                     comparison_operators: {},
@@ -1694,9 +1888,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     include_is_null: Yes,
                 },
             },
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {
+        order_by_expressions: OrderByExpressions {
+            objects: {
                 Qualified {
                     subgraph: SubgraphName(
                         "__unknown_namespace",
@@ -1708,7 +1904,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             ),
                         ),
                     ),
-                }: OrderByExpression {
+                }: ObjectOrderByExpression {
                     identifier: Qualified {
                         subgraph: SubgraphName(
                             "__unknown_namespace",
@@ -1731,76 +1927,71 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             ),
                         ),
                     },
-                    orderable_fields: [
-                        Scalar(
+                    orderable_fields: {
+                        FieldName(
+                            Identifier(
+                                "departments",
+                            ),
+                        ): Scalar(
                             OrderableScalarField {
-                                field_name: FieldName(
-                                    Identifier(
-                                        "id",
-                                    ),
-                                ),
                                 enable_order_by_directions: EnableAll(
                                     true,
                                 ),
                             },
                         ),
-                        Scalar(
+                        FieldName(
+                            Identifier(
+                                "id",
+                            ),
+                        ): Scalar(
                             OrderableScalarField {
-                                field_name: FieldName(
-                                    Identifier(
-                                        "name",
-                                    ),
-                                ),
                                 enable_order_by_directions: EnableAll(
                                     true,
                                 ),
                             },
                         ),
-                        Scalar(
+                        FieldName(
+                            Identifier(
+                                "location",
+                            ),
+                        ): Scalar(
                             OrderableScalarField {
-                                field_name: FieldName(
-                                    Identifier(
-                                        "location",
-                                    ),
-                                ),
                                 enable_order_by_directions: EnableAll(
                                     true,
                                 ),
                             },
                         ),
-                        Scalar(
+                        FieldName(
+                            Identifier(
+                                "name",
+                            ),
+                        ): Scalar(
                             OrderableScalarField {
-                                field_name: FieldName(
-                                    Identifier(
-                                        "staff",
-                                    ),
-                                ),
                                 enable_order_by_directions: EnableAll(
                                     true,
                                 ),
                             },
                         ),
-                        Scalar(
+                        FieldName(
+                            Identifier(
+                                "staff",
+                            ),
+                        ): Scalar(
                             OrderableScalarField {
-                                field_name: FieldName(
-                                    Identifier(
-                                        "departments",
-                                    ),
-                                ),
                                 enable_order_by_directions: EnableAll(
                                     true,
                                 ),
                             },
                         ),
-                    ],
-                    orderable_relationships: [],
+                    },
+                    orderable_relationships: ModelV1AllowAll,
                     graphql: None,
                     description: Some(
                         "OrderByExpression for Model institutions (in subgraph __unknown_namespace)",
                     ),
                 },
             },
-        ),
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
@@ -1813,6 +2004,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                     "Mutation",
                 ),
             ),
+            subscription_root_type_name: None,
             order_by_input: Some(
                 OrderByInputGraphqlConfig {
                     asc_direction_field_value: Name(
@@ -1829,8 +2021,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                 },
             ),
             enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
         },
-        pre_parse_plugins: [],
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+        },
         roles: [
             Role(
                 "admin",

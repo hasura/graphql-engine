@@ -45,8 +45,8 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                 type_output_permissions: {},
                 type_input_permissions: {},
                 relationship_fields: {},
-                type_mappings: DataConnectorTypeMappingsForObject(
-                    {
+                type_mappings: DataConnectorTypeMappingsForObject {
+                    mappings: {
                         Qualified {
                             subgraph: SubgraphName(
                                 "default",
@@ -80,14 +80,29 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                                         column_type_representation: Some(
                                             String,
                                         ),
-                                        equal_operators: [],
+                                        comparison_operators: Some(
+                                            ComparisonOperators {
+                                                equality_operators: [],
+                                                in_operators: [],
+                                                other_operators: [],
+                                            },
+                                        ),
                                         argument_mappings: {},
                                     },
                                 },
                             },
                         },
                     },
-                ),
+                    scalar_representations: {
+                        FieldName(
+                            Identifier(
+                                "test",
+                            ),
+                        ): {
+                            String,
+                        },
+                    },
+                },
             },
         },
         scalar_types: {},
@@ -101,8 +116,24 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                         "mymodel",
                     ),
                 ),
-            }: ModelWithPermissions {
+            }: ModelWithArgumentPresets {
                 model: Model {
+                    path: JSONPath(
+                        [
+                            Key(
+                                "subgraphs",
+                            ),
+                            Index(
+                                0,
+                            ),
+                            Key(
+                                "objects",
+                            ),
+                            Index(
+                                1,
+                            ),
+                        ],
+                    ),
                     name: Qualified {
                         subgraph: SubgraphName(
                             "default",
@@ -209,6 +240,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                                     supports_explaining_mutations: true,
                                     supports_nested_object_filtering: false,
                                     supports_nested_object_aggregations: false,
+                                    supports_nested_array_filtering: false,
                                 },
                             },
                             collection: CollectionName(
@@ -248,7 +280,13 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                                             column_type_representation: Some(
                                                 String,
                                             ),
-                                            equal_operators: [],
+                                            comparison_operators: Some(
+                                                ComparisonOperators {
+                                                    equality_operators: [],
+                                                    in_operators: [],
+                                                    other_operators: [],
+                                                },
+                                            ),
                                             argument_mappings: {},
                                         },
                                     },
@@ -275,6 +313,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                                         ),
                                         description: None,
                                         deprecated: None,
+                                        subscription: None,
                                     },
                                 ),
                                 arguments_input_type: None,
@@ -286,6 +325,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                         description: None,
                     },
                 },
+                argument_presets: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {
@@ -298,6 +338,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                             ),
                             description: None,
                             deprecated: None,
+                            subscription: None,
                         },
                     ),
                     select_aggregate: None,
@@ -325,10 +366,12 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
         boolean_expression_types: BooleanExpressionTypes {
             objects: {},
             scalars: {},
+            object_aggregates: {},
+            scalar_aggregates: {},
         },
-        order_by_expressions: OrderByExpressions(
-            {},
-        ),
+        order_by_expressions: OrderByExpressions {
+            objects: {},
+        },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {
             query_root_type_name: TypeName(
@@ -341,6 +384,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                     "Mutation",
                 ),
             ),
+            subscription_root_type_name: None,
             order_by_input: Some(
                 OrderByInputGraphqlConfig {
                     asc_direction_field_value: Name(
@@ -357,8 +401,13 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                 },
             ),
             enable_apollo_federation_fields: false,
+            bypass_relation_comparisons_ndc_capability: false,
+            propagate_boolean_expression_deprecation_status: false,
         },
-        pre_parse_plugins: [],
+        plugin_configs: LifecyclePluginConfigs {
+            pre_parse_plugins: [],
+            pre_response_plugins: [],
+        },
         roles: [],
     },
     [],

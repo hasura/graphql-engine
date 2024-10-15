@@ -1038,6 +1038,9 @@ fn eval_in_collection(
 
             get_collection_by_name(collection, &arguments, state)
         }
+        ndc_models::ExistsInCollection::NestedCollection { .. } => {
+            todo!("ExistsInCollection::NestedCollection not currently supported")
+        }
     }
 }
 
@@ -1068,22 +1071,16 @@ fn eval_column_field_path(
     field_path: &Option<Vec<ndc_models::FieldName>>,
 ) -> Result<serde_json::Value> {
     let column_value = eval_column(row, column_name)?;
-    match field_path {
-        None => Ok(column_value),
+    Ok(match field_path {
+        None => column_value,
         Some(path) => path
             .iter()
             .try_fold(&column_value, |value, field_name| {
                 value.get(field_name.as_str())
             })
             .cloned()
-            .ok_or((
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: "invalid field path".into(),
-                    details: serde_json::Value::Null,
-                }),
-            )),
-    }
+            .unwrap_or(serde_json::Value::Null),
+    })
 }
 
 fn eval_column(row: &Row, column_name: &ndc_models::FieldName) -> Result<serde_json::Value> {

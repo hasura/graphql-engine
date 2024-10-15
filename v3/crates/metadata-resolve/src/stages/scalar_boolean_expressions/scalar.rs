@@ -2,7 +2,7 @@ use super::error::ScalarBooleanExpressionTypeError;
 use super::types::{IncludeIsNull, ResolvedScalarBooleanExpressionType};
 use crate::helpers::types::{mk_name, store_new_graphql_type, unwrap_qualified_type_name};
 use crate::stages::{data_connectors, object_types, scalar_types};
-use crate::types::subgraph::mk_qualified_type_reference;
+use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference};
 use crate::{Qualified, QualifiedTypeName};
 use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
@@ -113,7 +113,7 @@ pub(crate) fn resolve_scalar_boolean_expression_type(
     Ok(ResolvedScalarBooleanExpressionType {
         name: boolean_expression_type_name.clone(),
         comparison_operators: resolved_comparison_operators,
-        representation: scalar_boolean_expression_operand.r#type.clone(),
+        operand_type: mk_qualified_type_name(&scalar_boolean_expression_operand.r#type, subgraph),
         data_connector_operator_mappings,
         include_is_null: resolve_is_null(is_null),
         graphql_name,

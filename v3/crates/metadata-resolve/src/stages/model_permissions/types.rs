@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use open_dds::{
     arguments::ArgumentName,
@@ -8,10 +8,12 @@ use open_dds::{
     models::ModelName,
     permissions::Role,
     relationships::{RelationshipName, RelationshipType},
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, Deprecated, FieldName},
 };
 
-use crate::stages::{data_connectors, models, models_graphql, object_types, relationships};
+use crate::stages::{
+    argument_presets, data_connectors, models, models_graphql, object_relationships, object_types,
+};
 use crate::types::error::{Error, RelationshipError};
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
@@ -31,14 +33,13 @@ pub enum FilterPermission {
     Filter(ModelPredicate),
 }
 
-pub type ArgumentPresets =
-    BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>;
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct SelectPermission {
     pub filter: FilterPermission,
     // pub allow_aggregations: bool,
-    pub argument_presets: ArgumentPresets,
+    pub argument_presets:
+        BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>,
+    pub allow_subscriptions: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -49,7 +50,7 @@ pub enum ModelPredicate {
         ndc_column: DataConnectorColumnName,
         operator: UnaryComparisonOperator,
         /// To mark a field as deprecated in the field usage while reporting query usage analytics.
-        deprecated: bool,
+        deprecated: Option<Deprecated>,
     },
     BinaryFieldComparison {
         field: FieldName,
@@ -59,7 +60,7 @@ pub enum ModelPredicate {
         argument_type: QualifiedTypeReference,
         value: ValueExpression,
         /// To mark a field as deprecated in the field usage while reporting query usage analytics.
-        deprecated: bool,
+        deprecated: Option<Deprecated>,
     },
     Relationship {
         relationship_info: PredicateRelationshipInfo,
@@ -89,38 +90,38 @@ pub struct PredicateRelationshipInfo {
     pub target_source: ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
-    pub mappings: Vec<relationships::RelationshipModelMapping>,
+    pub mappings: Vec<object_relationships::RelationshipModelMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ModelTargetSource {
-    pub model: models::ModelSource,
-    pub capabilities: relationships::RelationshipCapabilities,
+    pub model: Arc<models::ModelSource>,
+    pub capabilities: object_relationships::RelationshipCapabilities,
 }
 
 impl ModelTargetSource {
     pub fn new(
-        model: &ModelWithPermissions,
-        relationship: &relationships::RelationshipField,
+        model: &argument_presets::ModelWithArgumentPresets,
+        relationship: &object_relationships::RelationshipField,
     ) -> Result<Option<Self>, Error> {
         model
             .model
             .source
             .as_ref()
-            .map(|model_source| Self::from_model_source(model_source, relationship))
+            .map(|model_source| Self::from_model_source(&model_source.clone(), relationship))
             .transpose()
     }
 
     pub fn from_model_source(
-        model_source: &models::ModelSource,
-        relationship: &relationships::RelationshipField,
+        model_source: &Arc<models::ModelSource>,
+        relationship: &object_relationships::RelationshipField,
     ) -> Result<Self, Error> {
         Ok(Self {
             model: model_source.clone(),
             capabilities: relationship
                 .target_capabilities
                 .as_ref()
-                .ok_or_else(|| Error::RelationshipError {
+                .ok_or_else(|| Error::ObjectRelationshipError {
                     relationship_error: RelationshipError::NoRelationshipCapabilitiesDefined {
                         type_name: relationship.source.clone(),
                         relationship_name: relationship.relationship_name.clone(),

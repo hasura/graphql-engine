@@ -1,5 +1,5 @@
 # This should match the Rust version in rust-toolchain.yaml and the other Dockerfiles.
-FROM rust:1.79.0 as chef
+FROM rust:1.81.0 as chef
 
 WORKDIR app
 
@@ -18,6 +18,9 @@ ENV PATH="$PATH:$CARGO_HOME/bin"
 ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
 # Building with build.rs requires the Git context to be available across volumes.
 ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+# This Dockerfile is only for local development, we don't need to stamp it with
+# a version
+ENV RELEASE_VERSION=dev
 
 # Install Rust tools.
 COPY rust-toolchain.toml .
@@ -54,7 +57,6 @@ FROM builder AS built
 COPY .cargo ./.cargo
 COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
-COPY .git ./.git
 
 # Build the app
 RUN cargo build --release --all-targets

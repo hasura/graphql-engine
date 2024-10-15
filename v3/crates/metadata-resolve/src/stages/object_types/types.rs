@@ -18,9 +18,15 @@ use open_dds::data_connector::{
 
 /// A mapping from a data connector to their objects, which contain field types.
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
-pub struct DataConnectorTypeMappingsForObject(
-    BTreeMap<Qualified<DataConnectorName>, BTreeMap<DataConnectorObjectType, TypeMapping>>,
-);
+pub struct DataConnectorTypeMappingsForObject {
+    mappings:
+        BTreeMap<Qualified<DataConnectorName>, BTreeMap<DataConnectorObjectType, TypeMapping>>,
+    // Possible scalar representations for a field that are collected across all data connectors
+    // and across all data connector type mappings. Ideally, this should be a set of one and we
+    // should throw an error but to not break things, we'll only collect all the representations.
+    // This is currently used only in the SQL layer
+    scalar_representations: BTreeMap<FieldName, BTreeSet<ndc_models::TypeRepresentation>>,
+}
 
 impl Default for DataConnectorTypeMappingsForObject {
     fn default() -> Self {
@@ -30,9 +36,16 @@ impl Default for DataConnectorTypeMappingsForObject {
 
 impl DataConnectorTypeMappingsForObject {
     pub fn new() -> Self {
-        Self(BTreeMap::new())
+        Self {
+            mappings: BTreeMap::new(),
+            scalar_representations: BTreeMap::new(),
+        }
     }
-
+    pub fn scalar_representations(
+        &self,
+    ) -> &BTreeMap<FieldName, BTreeSet<ndc_models::TypeRepresentation>> {
+        &self.scalar_representations
+    }
     pub fn get<TObjectTypeName>(
         &self,
         data_connector_name: &Qualified<DataConnectorName>,
@@ -42,7 +55,7 @@ impl DataConnectorTypeMappingsForObject {
         DataConnectorObjectType: Borrow<TObjectTypeName>,
         TObjectTypeName: Ord + ?Sized,
     {
-        self.0
+        self.mappings
             .get(data_connector_name)
             .and_then(|data_connector_object_types| {
                 data_connector_object_types.get(data_connector_object_type)
@@ -55,8 +68,22 @@ impl DataConnectorTypeMappingsForObject {
         data_connector_object_type: &DataConnectorObjectType,
         type_mapping: TypeMapping,
     ) -> Result<(), ObjectTypesError> {
+        let TypeMapping::Object {
+            ndc_object_type_name: _,
+            field_mappings,
+        } = &type_mapping;
+
+        for (field_name, field_mapping) in field_mappings {
+            if let Some(type_representation) = &field_mapping.column_type_representation {
+                self.scalar_representations
+                    .entry(field_name.clone())
+                    .or_default()
+                    .insert(type_representation.clone());
+            }
+        }
+
         if self
-            .0
+            .mappings
             .entry(data_connector_name.clone())
             .or_default()
             .insert(data_connector_object_type.clone(), type_mapping)
@@ -71,14 +98,20 @@ impl DataConnectorTypeMappingsForObject {
     }
 
     pub fn data_connector_names(&self) -> impl Iterator<Item = &Qualified<DataConnectorName>> {
-        self.0.keys()
+        self.mappings.keys()
+    }
+
+    pub fn data_connector_mappings(
+        &self,
+    ) -> impl Iterator<Item = &BTreeMap<DataConnectorObjectType, TypeMapping>> {
+        self.mappings.values()
     }
 
     pub fn object_types_for_data_connector(
         &self,
         data_connector_name: &Qualified<DataConnectorName>,
     ) -> Vec<DataConnectorObjectType> {
-        match self.0.get(data_connector_name) {
+        match self.mappings.get(data_connector_name) {
             Some(map) => map.keys().cloned().collect(),
             None => vec![],
         }
@@ -130,12 +163,6 @@ pub struct FieldDefinition {
     pub field_arguments: IndexMap<ArgumentName, FieldArgumentInfo>,
 }
 
-impl FieldDefinition {
-    pub fn is_deprecated(&self) -> bool {
-        self.deprecated.is_some()
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldArgumentInfo {
     pub argument_type: QualifiedTypeReference,
@@ -158,8 +185,19 @@ pub struct FieldMapping {
     pub column: DataConnectorColumnName,
     pub column_type: ndc_models::Type,
     pub column_type_representation: Option<ndc_models::TypeRepresentation>,
-    pub equal_operators: Vec<DataConnectorOperatorName>,
+    pub comparison_operators: Option<ComparisonOperators>,
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
+}
+
+/// Mapping from a column to its type.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct ComparisonOperators {
+    pub equality_operators: Vec<DataConnectorOperatorName>,
+    pub in_operators: Vec<DataConnectorOperatorName>,
+
+    // TODO: for now, put other operators here. Later, once we have NDC
+    // operator meanings, categorize these by their meaning:
+    pub other_operators: Vec<DataConnectorOperatorName>,
 }
 
 /// Mapping from an object to their fields, which contain types.

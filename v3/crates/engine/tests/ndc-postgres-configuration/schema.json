@@ -92,6 +92,11 @@
             "operatorKind": "custom"
           },
           {
+            "operatorName": "<>",
+            "exposedName": "_neq",
+            "operatorKind": "custom"
+          },
+          {
             "operatorName": "!=",
             "exposedName": "_neq",
             "operatorKind": "custom"
@@ -589,7 +594,7 @@
           "required": ["scalarType"],
           "properties": {
             "scalarType": {
-              "$ref": "#/definitions/ScalarTypeName"
+              "type": "string"
             }
           },
           "additionalProperties": false
@@ -599,7 +604,7 @@
           "required": ["compositeType"],
           "properties": {
             "compositeType": {
-              "$ref": "#/definitions/CompositeTypeName"
+              "type": "string"
             }
           },
           "additionalProperties": false
@@ -615,14 +620,6 @@
           "additionalProperties": false
         }
       ]
-    },
-    "ScalarTypeName": {
-      "description": "A name of a Scalar Type, as it appears in the NDC scheme.",
-      "type": "string"
-    },
-    "CompositeTypeName": {
-      "description": "The name of a Composite Type, as it appears in the NDC schema",
-      "type": "string"
     },
     "Nullable": {
       "description": "Can this column contain null values",
@@ -652,7 +649,7 @@
       }
     },
     "UniquenessConstraint": {
-      "description": "The set of columns that make up a uniqueness constraint.",
+      "description": "The set of columns that make up a uniqueness constraint. We map each table column to their ndc field names.",
       "type": "array",
       "items": {
         "type": "string"
@@ -740,7 +737,7 @@
       "required": ["returnType"],
       "properties": {
         "returnType": {
-          "$ref": "#/definitions/ScalarTypeName"
+          "type": "string"
         }
       }
     },
@@ -756,7 +753,7 @@
           "$ref": "#/definitions/OperatorKind"
         },
         "argumentType": {
-          "$ref": "#/definitions/ScalarTypeName"
+          "type": "string"
         },
         "isInfix": {
           "default": true,
@@ -1108,6 +1105,11 @@
             {
               "operatorName": "<",
               "exposedName": "_lt",
+              "operatorKind": "custom"
+            },
+            {
+              "operatorName": "<>",
+              "exposedName": "_neq",
               "operatorKind": "custom"
             },
             {

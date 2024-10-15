@@ -285,6 +285,8 @@ tests = do
               title: Article 2 Title
       |]
 
+  -- NOTE: formerly this tested "order_by" was in error message, but I think this
+  -- is arbitrary, and has changed arbitrarily after 9.10 upgrade
   it "throws an `order_by` error when `returning_table` is not specified in metadata" $ \testEnv -> do
     let schemaName = Schema.getSchemaName testEnv
 
@@ -297,7 +299,7 @@ tests = do
               #{schemaName}_author(order_by: {id: asc}){
                 id
                 name
-                search_articles_explicit_return(args: {search: "%by%"} limit: 1 order_by: {id: asc}){
+                search_articles_explicit_return(args: {search: "%by%"} order_by: {id: asc}){
                   id
                   title
                   content

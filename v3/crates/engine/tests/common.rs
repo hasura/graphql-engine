@@ -1,11 +1,18 @@
+use anyhow::anyhow;
+use execute::{HttpContext, ProjectId};
 use goldenfile::{differs::text_diff, Mint};
+use graphql_frontend::execute_query;
+use graphql_schema::GDS;
 use hasura_authn_core::{Identity, Role, Session, SessionError, SessionVariableValue};
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
-use metadata_resolve::data_connectors::NdcVersion;
+use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
 use open_dds::session_variables::{SessionVariable, SESSION_VARIABLE_ROLE};
 use serde_json as json;
+use sql::execute::SqlRequest;
 use std::collections::BTreeMap;
+use std::iter;
+use std::sync::Arc;
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -14,16 +21,13 @@ use std::{
     path::PathBuf,
 };
 
-use execute::{execute_query, HttpContext};
-use schema::GDS;
-
 extern crate json_value_merge;
 use json_value_merge::Merge;
 use serde_json::Value;
 
 pub struct GoldenTestContext {
-    http_context: HttpContext,
-    mint: Mint,
+    pub(crate) http_context: HttpContext,
+    pub(crate) mint: Mint,
 }
 
 pub fn setup(test_dir: &Path) -> GoldenTestContext {
@@ -35,7 +39,7 @@ pub fn setup(test_dir: &Path) -> GoldenTestContext {
     GoldenTestContext { http_context, mint }
 }
 
-fn resolve_session(
+pub(crate) fn resolve_session(
     session_variables: HashMap<SessionVariable, SessionVariableValue>,
 ) -> Result<Session, SessionError> {
     //return an arbitrary identity with role emulation enabled
@@ -46,93 +50,6 @@ fn resolve_session(
     let role_authorization = authorization.get_role_authorization(role.as_ref())?;
     let session = role_authorization.build_session(session_variables);
     Ok(session)
-}
-
-// This function is deprecated in favour of test_execution_expectation
-// TODO: Remove this function after all tests are moved to use test_execution_expectation
-pub fn test_execution_expectation_legacy(
-    test_path_string: &str,
-    common_metadata_paths: &[&str],
-) -> anyhow::Result<()> {
-    tokio_test::block_on(async {
-        // Setup test context
-        let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
-        let mut test_ctx = setup(&root_test_dir);
-        let test_path = root_test_dir.join(test_path_string);
-
-        let request_path = test_path.join("request.gql");
-        let response_path = test_path_string.to_string() + "/expected.json";
-        let metadata_path = test_path.join("metadata.json");
-
-        let metadata_json_value = merge_with_common_metadata(
-            &metadata_path,
-            common_metadata_paths
-                .iter()
-                .map(|path| root_test_dir.join(path)),
-        )?;
-
-        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
-
-        // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
-        assert_eq!(
-            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata)?)?,
-            metadata
-        );
-
-        let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
-        let schema = GDS::build_schema(&gds)?;
-
-        // Ensure schema is serialized successfully.
-        serde_json::to_string(&schema)?;
-
-        let query = fs::read_to_string(request_path)?;
-
-        let request_headers = reqwest::header::HeaderMap::new();
-        let session = {
-            let session_vars_path = &test_path.join("session_variables.json");
-            let session_variables: HashMap<SessionVariable, SessionVariableValue> =
-                json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
-            resolve_session(session_variables)
-        }?;
-
-        let raw_request = RawRequest {
-            operation_name: None,
-            query,
-            variables: None,
-        };
-
-        // Execute the test
-
-        let response = execute_query(
-            execute::ExposeInternalErrors::Expose,
-            &test_ctx.http_context,
-            &schema,
-            &session,
-            &request_headers,
-            raw_request,
-            None,
-        )
-        .await;
-
-        let mut expected = test_ctx.mint.new_goldenfile_with_differ(
-            response_path,
-            Box::new(|file1, file2| {
-                let json1: serde_json::Value =
-                    serde_json::from_reader(File::open(file1).unwrap()).unwrap();
-                let json2: serde_json::Value =
-                    serde_json::from_reader(File::open(file2).unwrap()).unwrap();
-                if json1 != json2 {
-                    text_diff(file1, file2);
-                }
-            }),
-        )?;
-        write!(
-            expected,
-            "{}",
-            serde_json::to_string_pretty(&response.inner())?
-        )?;
-        Ok(())
-    })
 }
 
 #[allow(dead_code)]
@@ -157,7 +74,8 @@ pub(crate) fn test_introspection_expectation(
                 .map(|path| root_test_dir.join(path)),
         )?;
 
-        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
+        let metadata =
+            open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new())?;
 
         // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
         assert_eq!(
@@ -165,7 +83,7 @@ pub(crate) fn test_introspection_expectation(
             metadata
         );
 
-        let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
+        let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
 
         let schema = GDS::build_schema(&gds)?;
 
@@ -184,21 +102,16 @@ pub(crate) fn test_introspection_expectation(
             "initial built metadata does not match deserialized metadata"
         );
 
-        let query = fs::read_to_string(request_path)?;
+        let query = read_to_string(&request_path)?;
 
         let request_headers = reqwest::header::HeaderMap::new();
         let session_vars_path = &test_path.join("session_variables.json");
         let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
-            json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
+            json::from_str(read_to_string(session_vars_path)?.as_ref())?;
         let sessions: Vec<Session> = sessions
             .into_iter()
             .map(resolve_session)
             .collect::<Result<_, _>>()?;
-
-        assert!(
-            sessions.len() > 1,
-            "Found less than 2 roles in test scenario"
-        );
 
         let raw_request = RawRequest {
             operation_name: None,
@@ -209,7 +122,7 @@ pub(crate) fn test_introspection_expectation(
         // Execute the test
         let mut responses = Vec::new();
         for session in &sessions {
-            let response = execute_query(
+            let (_, response) = execute_query(
                 execute::ExposeInternalErrors::Expose,
                 &test_ctx.http_context,
                 &schema,
@@ -239,22 +152,26 @@ pub(crate) fn test_introspection_expectation(
     })
 }
 
+#[allow(dead_code)]
 pub fn test_execution_expectation(
     test_path_string: &str,
     common_metadata_paths: &[&str],
+    opendd_tests: TestOpenDDPipeline,
 ) -> anyhow::Result<()> {
     test_execution_expectation_for_multiple_ndc_versions(
         test_path_string,
         common_metadata_paths,
         BTreeMap::new(),
+        opendd_tests,
     )
 }
 
-#[allow(clippy::print_stdout)]
+#[allow(clippy::print_stdout, dead_code)]
 pub fn test_execution_expectation_for_multiple_ndc_versions(
     test_path_string: &str,
     common_metadata_paths: &[&str],
     common_metadata_paths_per_ndc_version: BTreeMap<NdcVersion, Vec<&str>>,
+    opendd_tests: TestOpenDDPipeline,
 ) -> anyhow::Result<()> {
     tokio_test::block_on(async {
         let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
@@ -299,7 +216,10 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                     .map(|path| root_test_dir.join(path)),
             )?;
 
-            let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
+            let metadata = open_dds::traits::OpenDd::deserialize(
+                metadata_json_value,
+                jsonpath::JSONPath::new(),
+            )?;
 
             // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
             assert_eq!(
@@ -307,7 +227,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 metadata
             );
 
-            let gds = GDS::new(metadata, test_metadata_resolve_configuration())?;
+            let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
             let schema = GDS::build_schema(&gds)?;
 
             // Verify successful serialization and deserialization of the schema.
@@ -325,14 +245,14 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 "initial built metadata does not match deserialized metadata"
             );
 
-            let query = fs::read_to_string(&request_path)?;
+            let query = read_to_string(&request_path)?;
 
             // Read optional GQL query variables.
             // NOTE: It is expected the variables.json file contains a list of
             // variables. Each item in the list corresponding to a session in
             // session_variables.json
             let query_vars: Option<Vec<HashMap<ast::Name, serde_json::Value>>> =
-                match fs::read_to_string(&variables_path) {
+                match read_to_string(&variables_path) {
                     Ok(query_vars_str) => Some(json::from_str(&query_vars_str)?),
                     Err(_) => None,
                 };
@@ -340,21 +260,16 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
             let request_headers = reqwest::header::HeaderMap::new();
             let session_vars_path = &test_path.join("session_variables.json");
             let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
-                json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
+                json::from_str(read_to_string(session_vars_path)?.as_ref())?;
             let sessions: Vec<Session> = sessions
                 .into_iter()
                 .map(resolve_session)
                 .collect::<Result<_, _>>()?;
 
-            assert!(
-                sessions.len() > 1,
-                "Found less than 2 roles in test scenario"
-            );
-
             // expected response headers are a `Vec<String>`; one set for each
             // session/role.
             let expected_headers: Option<Vec<Vec<String>>> =
-                match fs::read_to_string(&response_headers_path) {
+                match read_to_string(&response_headers_path) {
                     Ok(response_headers_str) => Some(json::from_str(&response_headers_str)?),
                     Err(_) => None,
                 };
@@ -366,11 +281,26 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 None => {
                     let raw_request = RawRequest {
                         operation_name: None,
-                        query,
+                        query: query.clone(),
                         variables: None,
                     };
                     for session in &sessions {
-                        let response = execute_query(
+                        // attempt to create open ir for this request
+                        open_dd_pipeline_test(
+                            test_path_string,
+                            opendd_tests,
+                            &query,
+                            &schema,
+                            &gds.metadata,
+                            session,
+                            raw_request.clone(),
+                            &test_ctx.http_context.clone().into(),
+                            &request_headers,
+                        )
+                        .await;
+
+                        // do actual test
+                        let (_, response) = execute_query(
                             execute::ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
@@ -380,7 +310,19 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             None,
                         )
                         .await;
-                        responses.push(response.inner());
+                        let http_response = response.inner();
+                        let graphql_ws_response = run_query_graphql_ws(
+                            execute::ExposeInternalErrors::Expose,
+                            &test_ctx.http_context,
+                            &schema,
+                            session,
+                            &request_headers,
+                            raw_request.clone(),
+                            None,
+                        )
+                        .await;
+                        compare_graphql_responses(&http_response, &graphql_ws_response);
+                        responses.push(http_response);
                     }
                 }
                 Some(vars) => {
@@ -390,7 +332,21 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             query: query.clone(),
                             variables: Some(variables),
                         };
-                        let response = execute_query(
+                        // attempt to create open ir for this request
+                        open_dd_pipeline_test(
+                            test_path_string,
+                            opendd_tests,
+                            &query,
+                            &schema,
+                            &gds.metadata,
+                            session,
+                            raw_request.clone(),
+                            &Arc::new(test_ctx.http_context.clone()),
+                            &request_headers,
+                        )
+                        .await;
+                        // do actual test
+                        let (_, response) = execute_query(
                             execute::ExposeInternalErrors::Expose,
                             &test_ctx.http_context,
                             &schema,
@@ -400,7 +356,19 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                             None,
                         )
                         .await;
-                        responses.push(response.inner());
+                        let http_response = response.inner();
+                        let graphql_ws_response = run_query_graphql_ws(
+                            execute::ExposeInternalErrors::Expose,
+                            &test_ctx.http_context,
+                            &schema,
+                            session,
+                            &request_headers,
+                            raw_request.clone(),
+                            None,
+                        )
+                        .await;
+                        compare_graphql_responses(&http_response, &graphql_ws_response);
+                        responses.push(http_response);
                     }
                 }
             }
@@ -439,7 +407,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
 }
 
 fn read_json(path: &Path) -> anyhow::Result<Value> {
-    let json_string = fs::read_to_string(path)?;
+    let json_string = read_to_string(path)?;
     let value = serde_json::from_str(&json_string)?;
     Ok(value)
 }
@@ -481,12 +449,14 @@ pub fn test_execute_explain(
             unstable_features: metadata_resolve::configuration::UnstableFeatures {
                 enable_order_by_expressions: false,
                 enable_ndc_v02_support: true,
+                enable_subscriptions: false,
+                enable_jsonapi: false,
+                ..Default::default()
             },
-            ..Default::default()
         };
         let gds = GDS::new(
-            open_dds::traits::OpenDd::deserialize(metadata)?,
-            configuration,
+            open_dds::traits::OpenDd::deserialize(metadata, jsonpath::JSONPath::new())?,
+            &configuration,
         )?;
 
         let schema = GDS::build_schema(&gds)?;
@@ -499,13 +469,13 @@ pub fn test_execute_explain(
                 serde_json::from_str(session_variables_raw)?;
             resolve_session(session_variables)
         }?;
-        let query = std::fs::read_to_string(root_test_dir.join(gql_request_file_path))?;
+        let query = read_to_string(&root_test_dir.join(gql_request_file_path))?;
         let raw_request = lang_graphql::http::RawRequest {
             operation_name: None,
             query,
             variables: None,
         };
-        let raw_response = execute::execute_explain(
+        let (_, raw_response) = graphql_frontend::execute_explain(
             execute::ExposeInternalErrors::Expose,
             &test_ctx.http_context,
             &schema,
@@ -515,7 +485,7 @@ pub fn test_execute_explain(
         )
         .await;
 
-        let response = execute::redact_ndc_explain(raw_response);
+        let response = graphql_frontend::redact_ndc_explain(raw_response);
 
         let mut expected = test_ctx.mint.new_goldenfile_with_differ(
             expected_response_file,
@@ -535,12 +505,352 @@ pub fn test_execute_explain(
 }
 
 // This is where we'll want to enable pre-release features in tests
-fn test_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration {
+pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration
+{
     metadata_resolve::configuration::Configuration {
-        allow_unknown_subgraphs: false,
         unstable_features: metadata_resolve::configuration::UnstableFeatures {
             enable_order_by_expressions: false,
             enable_ndc_v02_support: true,
+            enable_subscriptions: true,
+            enable_jsonapi: false,
+            ..Default::default()
         },
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
+    tokio_test::block_on(async {
+        // Setup test context
+        let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+        let mut test_ctx = setup(&root_test_dir);
+        let test_path = root_test_dir.join(test_path_string);
+
+        let request_path = test_path.join("query.sql");
+        let request_path_json = test_path.join("query.json");
+        let headers_path_json = test_path.join("headers.json");
+        let response_path = test_path_string.to_string() + "/expected.json";
+        let explain_path = test_path_string.to_string() + "/plan.json";
+        let metadata_path = root_test_dir.join("sql/metadata.json");
+
+        let metadata_json_value = merge_with_common_metadata(&metadata_path, iter::empty())?;
+
+        let metadata =
+            open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new())?;
+
+        // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
+        assert_eq!(
+            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata)?)?,
+            metadata
+        );
+
+        let gds = GDS::new(metadata, &test_metadata_resolve_configuration())?;
+        let schema = GDS::build_schema(&gds)?;
+
+        // Ensure schema is serialized successfully.
+        serde_json::to_string(&schema)?;
+
+        let request = if let Ok(content) = read_to_string(&request_path) {
+            SqlRequest::new(content)
+        } else {
+            let json_content = read_to_string(&request_path_json)?;
+            serde_json::from_str(&json_content)?
+        };
+
+        let header_map = if let Ok(content) = read_to_string(&headers_path_json) {
+            let header_map: HashMap<String, String> = serde_json::from_str(&content)?;
+            Arc::new(reqwest::header::HeaderMap::try_from(&header_map)?)
+        } else {
+            Arc::new(reqwest::header::HeaderMap::new())
+        };
+
+        let session = Arc::new({
+            let session_vars_path = &test_path.join("session_variables.json");
+            let session_variables: HashMap<SessionVariable, SessionVariableValue> =
+                serde_json::from_str(read_to_string(session_vars_path)?.as_ref())?;
+            resolve_session(session_variables)
+        }?);
+
+        let catalog = Arc::new(sql::catalog::Catalog::from_metadata(gds.metadata));
+        let http_context = Arc::new(test_ctx.http_context);
+
+        // Execute the test
+
+        snapshot_sql(
+            &catalog,
+            &session,
+            &http_context,
+            &mut test_ctx.mint,
+            explain_path,
+            &header_map,
+            &SqlRequest::new(format!("EXPLAIN {}", request.sql)),
+        )
+        .await?;
+
+        snapshot_sql(
+            &catalog,
+            &session,
+            &http_context,
+            &mut test_ctx.mint,
+            response_path,
+            &header_map,
+            &request,
+        )
+        .await?;
+
+        Ok(())
+    })
+}
+
+async fn snapshot_sql(
+    catalog: &Arc<sql::catalog::Catalog>,
+    session: &Arc<hasura_authn_core::Session>,
+    http_context: &Arc<execute::HttpContext>,
+    mint: &mut Mint,
+    response_path: String,
+    request_headers: &Arc<reqwest::header::HeaderMap>,
+    request: &SqlRequest,
+) -> Result<(), anyhow::Error> {
+    let response = sql::execute::execute_sql(
+        request_headers.clone(),
+        catalog.clone(),
+        session.clone(),
+        http_context.clone(),
+        request,
+    )
+    .await;
+
+    let response = match response {
+        Ok(r) => r,
+        Err(e) => serde_json::to_vec(&serde_json::json!({"error": e.to_string()}))?,
+    };
+    let response = serde_json::from_reader::<_, serde_json::Value>(response.as_slice())?;
+    let mut expected = mint.new_goldenfile_with_differ(
+        response_path,
+        Box::new(|file1, file2| {
+            let json1: serde_json::Value =
+                serde_json::from_reader(File::open(file1).unwrap()).unwrap();
+            let json2: serde_json::Value =
+                serde_json::from_reader(File::open(file2).unwrap()).unwrap();
+            if json1 != json2 {
+                text_diff(file1, file2);
+            }
+        }),
+    )?;
+    write!(expected, "{}", serde_json::to_string_pretty(&response)?)?;
+    Ok(())
+}
+
+/// A utility wrapper around std::read_to_string
+/// Prints path on error to help debugging
+fn read_to_string(path: &Path) -> anyhow::Result<String> {
+    fs::read_to_string(path).map_err(|e| anyhow!("path: {}, error: {}", path.to_string_lossy(), e))
+}
+
+fn compare_graphql_responses(
+    http_response: &lang_graphql::http::Response,
+    ws_response: &lang_graphql::http::Response,
+) {
+    assert_eq!(
+        http_response.status_code, ws_response.status_code,
+        "Status Codes donot match {}, {}",
+        http_response.status_code, ws_response.status_code,
+    );
+
+    assert_eq!(
+        http_response.errors, ws_response.errors,
+        "Errors do not match",
+    );
+
+    assert_eq!(http_response.data, ws_response.data, "Data do not match");
+}
+
+/// Execute a GraphQL query over a dummy WebSocket connection.
+async fn run_query_graphql_ws(
+    expose_internal_errors: execute::ExposeInternalErrors,
+    http_context: &HttpContext,
+    schema: &Schema<GDS>,
+    session: &Session,
+    request_headers: &reqwest::header::HeaderMap,
+    request: RawRequest,
+    project_id: Option<&ProjectId>,
+) -> lang_graphql::http::Response {
+    use graphql_ws;
+
+    // Dummy auth config. We never use it in the test. It is only used to create a dummy connection.
+    let dummy_auth_config = hasura_authn::AuthConfig::V1(hasura_authn::AuthConfigV1 {
+        allow_role_emulation_by: None,
+        mode: hasura_authn::AuthModeConfig::NoAuth(hasura_authn_noauth::NoAuthConfig {
+            role: Role::new("admin"),
+            session_variables: HashMap::new(),
+        }),
+    });
+
+    let context = graphql_ws::Context {
+        http_context: http_context.clone(),
+        expose_internal_errors,
+        project_id: project_id.cloned(),
+        schema: Arc::new(schema.clone()),
+        auth_config: Arc::new(dummy_auth_config),
+        plugin_configs: Arc::new(LifecyclePluginConfigs {
+            pre_parse_plugins: Vec::new(),
+            pre_response_plugins: Vec::new(),
+        }),
+    };
+    let (channel_sender, mut channel_receiver) =
+        tokio::sync::mpsc::channel::<graphql_ws::Message>(10);
+    let websocket_id = graphql_ws::WebSocketId::new();
+    let dummy_conn = graphql_ws::Connection::new(websocket_id, context, channel_sender);
+    let operation_id = graphql_ws::OperationId("some-operation-id".to_string());
+    // Using the internal function. The actual 'execute_request' function from
+    // graphl_ws crate needs a parent span context for linking purposes.
+    // Traces are not considered in tests
+    let result = graphql_ws::execute_request_internal(
+        operation_id.clone(),
+        session.clone(),
+        request_headers.clone(),
+        &dummy_conn,
+        request,
+    )
+    .await;
+    match result {
+        Ok(()) => {}
+        Err(e) => {
+            graphql_ws::send_request_error(
+                e,
+                expose_internal_errors,
+                operation_id.clone(),
+                &dummy_conn,
+            )
+            .await;
+        }
+    }
+
+    // Assert response
+    let message = channel_receiver.recv().await.expect("Expected a message");
+    let response = match message {
+        graphql_ws::Message::Protocol(graphql_ws::ServerMessage::Next { id, payload }) => {
+            assert_eq!(operation_id, id);
+            payload
+        }
+        graphql_ws::Message::Protocol(graphql_ws::ServerMessage::Error {
+            id,
+            payload: errors,
+        }) => {
+            assert_eq!(operation_id, id);
+            lang_graphql::http::Response::errors(errors)
+        }
+        _ => {
+            panic!("Expected a Next or Error message")
+        }
+    };
+
+    // Assert completion when no errors
+    if response.errors.is_none() {
+        let message = channel_receiver.recv().await.expect("Expected a message");
+        match message {
+            graphql_ws::Message::Protocol(graphql_ws::ServerMessage::Complete { id }) => {
+                assert_eq!(operation_id, id);
+            }
+            _ => {
+                panic!("Expected a Complete message")
+            }
+        };
+    }
+    response
+}
+
+// which OpenDD IR pipeline tests should we include for this test?
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy)]
+pub enum TestOpenDDPipeline {
+    Skip,
+    GenerateOpenDDQuery,
+    TestNDCResponses,
+    GenerateExecutionPlan,
+}
+
+// generate open_dd_ir for each test and see what happens
+// eventually these tests will be deleted once the OpenDD pipeline becomes the main one
+pub async fn open_dd_pipeline_test(
+    test_path_string: &str,
+    opendd_tests: TestOpenDDPipeline,
+    query: &str,
+    schema: &Schema<GDS>,
+    metadata: &metadata_resolve::Metadata,
+    session: &Session,
+    raw_request: lang_graphql::http::RawRequest,
+    http_context: &Arc<HttpContext>,
+    request_headers: &reqwest::header::HeaderMap,
+) {
+    match opendd_tests {
+        TestOpenDDPipeline::Skip => {}
+        TestOpenDDPipeline::GenerateOpenDDQuery => {
+            // parse the raw request into a GQL query
+            let query = graphql_frontend::parse_query(query).unwrap();
+
+            // normalize the parsed GQL query
+            if let Ok(normalized_request) =
+                graphql_frontend::normalize_request(schema, session, query, &raw_request)
+            {
+                // we can only generate for queries that would have worked,
+                // `normalize_request` fails when we try and access a field we're not allowed to,
+                // for instance
+                let ir = graphql_frontend::to_opendd_ir(&normalized_request);
+
+                insta::assert_debug_snapshot!(format!("ir_{test_path_string}"), ir);
+            }
+        }
+        TestOpenDDPipeline::TestNDCResponses => {
+            // test the partial NDC pipeline so we can sanity check the planning steps
+
+            // parse the raw request into a GQL query
+            let query = graphql_frontend::parse_query(query).unwrap();
+
+            // normalize the parsed GQL query
+            if let Ok(normalized_request) =
+                graphql_frontend::normalize_request(schema, session, query, &raw_request)
+            {
+                // we can only generate for queries that would have worked,
+                // `normalize_request` fails when we try and access a field we're not allowed to,
+                // for instance
+                let query_ir = graphql_frontend::to_opendd_ir(&normalized_request);
+
+                // check IR is what we expect
+                insta::assert_debug_snapshot!(format!("ir_{test_path_string}"), query_ir);
+
+                // create a query execution plan for a single node with the new pipeline
+                let (query_execution_plan, _) = plan::plan_query_request(
+                    &query_ir,
+                    metadata,
+                    &Arc::new(session.clone()),
+                    http_context,
+                    request_headers,
+                )
+                .await
+                .unwrap();
+
+                match query_execution_plan {
+                    plan::SingleNodeExecutionPlan::Mutation(_) => {
+                        todo!("Executing mutations in OpenDD IR pipeline tests not implemented yet")
+                    }
+                    plan::SingleNodeExecutionPlan::Query(plan) => {
+                        // run the pipeline using functions from GraphQL frontend
+                        let rowsets =
+                            graphql_frontend::resolve_ndc_query_execution(http_context, plan)
+                                .await
+                                .unwrap();
+
+                        insta::assert_json_snapshot!(
+                            format!("rowsets_{test_path_string}"),
+                            rowsets
+                        );
+                    }
+                }
+            }
+        }
+        TestOpenDDPipeline::GenerateExecutionPlan => {
+            todo!("GenerateExecutionPlan not implemented yet")
+        }
     }
 }

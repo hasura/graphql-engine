@@ -1,3 +1,6 @@
+use futures_util::FutureExt;
+use hasura_authn::{authenticate, resolve_auth_config, AuthConfig};
+use json_api::create_json_api_router;
 use std::fmt::Display;
 use std::hash;
 use std::hash::{Hash, Hasher};
@@ -6,7 +9,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use axum::{
-    body::HttpBody,
     extract::{DefaultBodyLimit, State},
     http::{HeaderMap, Request},
     middleware::Next,
@@ -14,34 +16,36 @@ use axum::{
     routing::{get, post},
     Extension, Json, Router,
 };
+use axum_core::body::Body;
 use base64::engine::Engine;
 use clap::Parser;
-use open_dds::plugins::LifecyclePluginHookPreParse;
-use pre_execution_plugin::execute::pre_execution_plugins_handler;
+use http_body_util::BodyExt;
+use metadata_resolve::LifecyclePluginConfigs;
+use pre_parse_plugin::execute::pre_parse_plugins_handler;
+use pre_response_plugin::execute::pre_response_plugins_handler;
 use reqwest::header::CONTENT_TYPE;
 use serde::Serialize;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
 use engine::{
-    authentication::{resolve_auth_config, AuthConfig, AuthModeConfig},
     internal_flags::{resolve_unstable_features, UnstableFeature},
     VERSION,
 };
 use execute::HttpContext;
+use graphql_schema::GDS;
 use hasura_authn_core::Session;
-use hasura_authn_jwt::auth as jwt_auth;
-use hasura_authn_jwt::jwt;
-use hasura_authn_noauth as noauth;
-use hasura_authn_webhook::webhook;
 use lang_graphql as gql;
-use schema::GDS;
 use tracing_util::{
     add_event_on_active_span, set_attribute_on_active_span, set_status_on_current_span,
     ErrorVisibility, SpanVisibility, TraceableError, TraceableHttpResponse,
 };
 
 mod cors;
+mod json_api;
+
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 const DEFAULT_PORT: u16 = 3000;
 
@@ -85,10 +89,6 @@ struct ServerOptions {
         value_delimiter = ','
     )]
     cors_allow_origin: Vec<String>,
-    /// Allow unknown subgraphs, pruning relationships that refer to them.
-    /// Useful when working with part of a supergraph.
-    #[arg(long, env = "PARTIAL_SUPERGRAPH")]
-    partial_supergraph: bool,
     /// List of internal unstable features to enable, separated by commas
     #[arg(
         long = "unstable-feature",
@@ -109,13 +109,17 @@ struct ServerOptions {
     export_traces_stdout: bool,
 }
 
-struct EngineState {
+#[derive(Clone)] // Cheap to clone as heavy fields are wrapped in `Arc`
+pub struct EngineState {
     expose_internal_errors: execute::ExposeInternalErrors,
     http_context: HttpContext,
-    schema: gql::schema::Schema<GDS>,
-    auth_config: AuthConfig,
+    graphql_state: Arc<gql::schema::Schema<GDS>>,
+    resolved_metadata: Arc<metadata_resolve::Metadata>,
+    jsonapi_state: Arc<jsonapi::State>,
+    auth_config: Arc<AuthConfig>,
     sql_context: Arc<sql::catalog::Catalog>,
-    pre_parse_plugins: Vec<LifecyclePluginHookPreParse>,
+    plugin_configs: Arc<LifecyclePluginConfigs>,
+    graphql_websocket_server: Arc<graphql_ws::WebSocketServer>,
 }
 
 #[tokio::main]
@@ -130,7 +134,7 @@ async fn main() {
 
     tracing_util::initialize_tracing(
         server_options.otlp_endpoint.as_deref(),
-        "graphql-engine",
+        "ddn-engine",
         Some(VERSION),
         tracing_util::PropagateBaggage::Disable,
         export_traces_stdout,
@@ -150,41 +154,6 @@ async fn main() {
     }
 
     tracing_util::shutdown_tracer();
-}
-
-// Connects a signal handler for the unix SIGTERM signal. (This is the standard signal that unix
-// systems send when pressing ctrl+c or running `kill`. It is distinct from the "force kill" signal
-// which is SIGKILL.) This function produces a future that resolves when a SIGTERM is received. We
-// pass the future to axum's `with_graceful_shutdown` method to instruct axum to start a graceful
-// shutdown when the signal is received.
-//
-// Listening for SIGTERM specifically avoids a 10-second delay when stopping the process.
-//
-// Also listens for tokio's cross-platform `ctrl_c` signal polyfill.
-//
-// copied from https://github.com/davidB/axum-tracing-opentelemetry/blob/main/examples/otlp/src/main.rs
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
-    };
-
-    #[cfg(unix)]
-    let terminate = async {
-        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
-            .recv()
-            .await;
-    };
-
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
-    tokio::select! {
-        () = ctrl_c => {},
-        () = terminate => {},
-    }
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -212,17 +181,30 @@ struct EngineRouter {
     metadata_routes: Option<Router>,
     /// Routes for the SQL interface
     sql_routes: Option<Router>,
+    /// Routes for the JSON:API interface
+    jsonapi_routes: Option<Router>,
     /// The CORS layer for the engine.
     cors_layer: Option<CorsLayer>,
 }
 
 impl EngineRouter {
-    fn new(state: Arc<EngineState>) -> Self {
+    fn new(state: EngineState) -> Self {
+        let graphql_ws_route = Router::new()
+            .route("/graphql", get(handle_websocket_request))
+            .layer(axum::middleware::from_fn(
+                graphql_request_tracing_middleware,
+            ))
+            // *PLEASE DO NOT ADD ANY MIDDLEWARE
+            // BEFORE THE `graphql_request_tracing_middleware`*
+            // Refer to it for more details.
+            .layer(TraceLayer::new_for_http())
+            .with_state(state.clone());
+
         let graphql_route = Router::new()
             .route("/graphql", post(handle_request))
             .layer(axum::middleware::from_fn_with_state(
                 state.clone(),
-                pre_execution_plugins_middleware,
+                plugins_middleware,
             ))
             .layer(axum::middleware::from_fn(
                 hasura_authn_core::resolve_session,
@@ -265,6 +247,8 @@ impl EngineRouter {
             .route("/", get(graphiql))
             // The '/graphql' route
             .merge(graphql_route)
+            // The '/graphql' route for websocket
+            .merge(graphql_ws_route)
             // The '/v1/explain' route
             .merge(explain_route)
             // The '/health' route
@@ -276,6 +260,7 @@ impl EngineRouter {
             base_router: base_routes,
             metadata_routes: None,
             sql_routes: None,
+            jsonapi_routes: None,
             cors_layer: None,
         }
     }
@@ -300,7 +285,7 @@ impl EngineRouter {
         Ok(())
     }
 
-    fn add_sql_route(&mut self, state: Arc<EngineState>) {
+    fn add_sql_route(&mut self, state: EngineState) {
         let sql_routes = Router::new()
             .route("/v1/sql", post(handle_sql_request))
             .layer(axum::middleware::from_fn(
@@ -319,6 +304,11 @@ impl EngineRouter {
         self.sql_routes = Some(sql_routes);
     }
 
+    fn add_jsonapi_route(&mut self, state: EngineState) {
+        let jsonapi_routes = create_json_api_router(state);
+        self.jsonapi_routes = Some(jsonapi_routes);
+    }
+
     fn add_cors_layer(&mut self, allow_origin: &[String]) {
         self.cors_layer = Some(cors::build_cors_layer(allow_origin));
     }
@@ -328,6 +318,9 @@ impl EngineRouter {
         // Merge the metadata routes if they exist.
         if let Some(sql_routes) = self.sql_routes {
             app = app.merge(sql_routes);
+        }
+        if let Some(jsonapi_routes) = self.jsonapi_routes {
+            app = app.merge(jsonapi_routes);
         }
         // Merge the metadata routes if they exist.
         if let Some(metadata_routes) = self.metadata_routes {
@@ -346,7 +339,6 @@ impl EngineRouter {
 #[allow(clippy::print_stdout)]
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let metadata_resolve_configuration = metadata_resolve::configuration::Configuration {
-        allow_unknown_subgraphs: server.partial_supergraph,
         unstable_features: resolve_unstable_features(&server.unstable_features),
     };
 
@@ -360,7 +352,8 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         expose_internal_errors,
         &server.authn_config_path,
         &server.metadata_path,
-        metadata_resolve_configuration,
+        server.enable_sql_interface,
+        &metadata_resolve_configuration,
     )
     .map_err(StartupError::ReadSchema)?;
 
@@ -368,6 +361,13 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
 
     if server.enable_sql_interface {
         engine_router.add_sql_route(state.clone());
+    }
+
+    if metadata_resolve_configuration
+        .unstable_features
+        .enable_jsonapi
+    {
+        engine_router.add_jsonapi_route(state.clone());
     }
 
     // If `--introspection-metadata` is specified we also serve the file indicated on `/metadata`
@@ -393,9 +393,15 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     );
 
     // run it with hyper on `addr`
-    axum::Server::bind(&address)
-        .serve(engine_router.into_make_service())
-        .with_graceful_shutdown(shutdown_signal())
+    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+
+    axum::serve(listener, engine_router.into_make_service())
+        .with_graceful_shutdown(axum_ext::shutdown_signal_with_handler(|| async move {
+            state
+                .graphql_websocket_server
+                .shutdown("Shutting server down")
+                .await;
+        }))
         .await
         .unwrap();
 
@@ -411,9 +417,9 @@ async fn handle_health() -> reqwest::StatusCode {
 /// This middleware must be active for the entire duration
 /// of the request i.e. this middleware should be the
 /// entry point and the exit point of the GraphQL request.
-async fn graphql_request_tracing_middleware<B: Send>(
-    request: Request<B>,
-    next: Next<B>,
+async fn graphql_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
 ) -> axum::response::Response {
     use tracing_util::*;
     let tracer = global_tracer();
@@ -447,9 +453,9 @@ async fn graphql_request_tracing_middleware<B: Send>(
 /// This middleware must be active for the entire duration
 /// of the request i.e. this middleware should be the
 /// entry point and the exit point of the GraphQL request.
-async fn explain_request_tracing_middleware<B: Send>(
-    request: Request<B>,
-    next: Next<B>,
+async fn explain_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
 ) -> axum::response::Response {
     let tracer = tracing_util::global_tracer();
     let path = "/v1/explain";
@@ -474,9 +480,9 @@ async fn explain_request_tracing_middleware<B: Send>(
 /// This middleware must be active for the entire duration
 /// of the request i.e. this middleware should be the
 /// entry point and the exit point of the SQL request.
-async fn sql_request_tracing_middleware<B: Send>(
-    request: Request<B>,
-    next: Next<B>,
+async fn sql_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
 ) -> axum::response::Response {
     let tracer = tracing_util::global_tracer();
     let path = "/v1/sql";
@@ -497,46 +503,16 @@ async fn sql_request_tracing_middleware<B: Send>(
         .response
 }
 
-#[derive(Debug, thiserror::Error)]
-enum AuthError {
-    #[error("JWT auth error: {0}")]
-    Jwt(#[from] jwt::Error),
-    #[error("Webhook auth error: {0}")]
-    Webhook(#[from] webhook::Error),
-}
-
-impl TraceableError for AuthError {
-    fn visibility(&self) -> tracing_util::ErrorVisibility {
-        match self {
-            AuthError::Jwt(e) => e.visibility(),
-            AuthError::Webhook(e) => e.visibility(),
-        }
-    }
-}
-
-impl IntoResponse for AuthError {
-    fn into_response(self) -> axum::response::Response {
-        match self {
-            AuthError::Jwt(e) => e.into_response(),
-            AuthError::Webhook(e) => e.into_response(),
-        }
-    }
-}
-
 /// This middleware authenticates the incoming GraphQL request according to the
 /// authentication configuration present in the `auth_config` of `EngineState`. The
 /// result of the authentication is `hasura-authn-core::Identity`, which is then
 /// made available to the GraphQL request handler.
-async fn authentication_middleware<'a, B>(
-    State(engine_state): State<Arc<EngineState>>,
+pub async fn authentication_middleware<'a>(
+    State(engine_state): State<EngineState>,
     headers_map: HeaderMap,
-    mut request: Request<B>,
-    next: Next<B>,
-) -> axum::response::Result<axum::response::Response>
-where
-    B: HttpBody,
-    B::Error: Display,
-{
+    mut request: Request<Body>,
+    next: Next,
+) -> axum::response::Result<axum::response::Response> {
     let tracer = tracing_util::global_tracer();
 
     let resolved_identity = tracer
@@ -545,39 +521,11 @@ where
             "Authentication middleware",
             SpanVisibility::Internal,
             || {
-                Box::pin(async {
-                    // We are still supporting AuthConfig::V1, hence we need to
-                    // support role emulation
-                    let (auth_mode, allow_role_emulation_by) = match &engine_state.auth_config {
-                        AuthConfig::V1(auth_config) => (
-                            &auth_config.mode,
-                            auth_config.allow_role_emulation_by.as_ref(),
-                        ),
-                        // There is no role emulation in AuthConfig::V2
-                        AuthConfig::V2(auth_config) => (&auth_config.mode, None),
-                    };
-                    match auth_mode {
-                        AuthModeConfig::NoAuth(no_auth_config) => {
-                            Ok(noauth::identity_from_config(no_auth_config))
-                        }
-                        AuthModeConfig::Webhook(webhook_config) => webhook::authenticate_request(
-                            &engine_state.http_context.client,
-                            webhook_config,
-                            &headers_map,
-                            allow_role_emulation_by,
-                        )
-                        .await
-                        .map_err(AuthError::from),
-                        AuthModeConfig::Jwt(jwt_secret_config) => jwt_auth::authenticate_request(
-                            &engine_state.http_context.client,
-                            *jwt_secret_config.clone(),
-                            &headers_map,
-                            allow_role_emulation_by,
-                        )
-                        .await
-                        .map_err(AuthError::from),
-                    }
-                })
+                Box::pin(authenticate(
+                    &headers_map,
+                    &engine_state.http_context.client,
+                    &engine_state.auth_config,
+                ))
             },
         )
         .await?;
@@ -592,7 +540,7 @@ async fn graphiql() -> Html<&'static str> {
 
 async fn handle_request(
     headers: axum::http::header::HeaderMap,
-    State(state): State<Arc<EngineState>>,
+    State(state): State<EngineState>,
     Extension(session): Extension<Session>,
     Json(request): Json<gql::http::RawRequest>,
 ) -> gql::http::Response {
@@ -603,15 +551,20 @@ async fn handle_request(
             "Handle request",
             SpanVisibility::User,
             || {
-                Box::pin(execute::execute_query(
-                    state.expose_internal_errors,
-                    &state.http_context,
-                    &state.schema,
-                    &session,
-                    &headers,
-                    request,
-                    None,
-                ))
+                {
+                    Box::pin(
+                        graphql_frontend::execute_query(
+                            state.expose_internal_errors,
+                            &state.http_context,
+                            &state.graphql_state,
+                            &session,
+                            &headers,
+                            request,
+                            None,
+                        )
+                        .map(|(_operation_type, graphql_response)| graphql_response),
+                    )
+                }
             },
         )
         .await;
@@ -628,10 +581,10 @@ async fn handle_request(
 
 async fn handle_explain_request(
     headers: axum::http::header::HeaderMap,
-    State(state): State<Arc<EngineState>>,
+    State(state): State<EngineState>,
     Extension(session): Extension<Session>,
     Json(request): Json<gql::http::RawRequest>,
-) -> execute::ExplainResponse {
+) -> graphql_frontend::ExplainResponse {
     let tracer = tracing_util::global_tracer();
     let response = tracer
         .in_span_async(
@@ -639,14 +592,17 @@ async fn handle_explain_request(
             "Handle explain request",
             SpanVisibility::User,
             || {
-                Box::pin(execute::execute_explain(
-                    state.expose_internal_errors,
-                    &state.http_context,
-                    &state.schema,
-                    &session,
-                    &headers,
-                    request,
-                ))
+                Box::pin(
+                    graphql_frontend::execute_explain(
+                        state.expose_internal_errors,
+                        &state.http_context,
+                        &state.graphql_state,
+                        &session,
+                        &headers,
+                        request,
+                    )
+                    .map(|(_operation_type, graphql_response)| graphql_response),
+                )
             },
         )
         .await;
@@ -656,40 +612,81 @@ async fn handle_explain_request(
     response
 }
 
-async fn pre_execution_plugins_middleware<'a>(
-    State(engine_state): State<Arc<EngineState>>,
+async fn plugins_middleware(
+    State(engine_state): State<EngineState>,
     Extension(session): Extension<Session>,
     headers_map: HeaderMap,
     request: Request<axum::body::Body>,
-    next: Next<axum::body::Body>,
-) -> axum::response::Result<axum::response::Response> {
-    // Check if the pre_execution_plugins_config is empty
-    match nonempty::NonEmpty::from_slice(&engine_state.pre_parse_plugins) {
-        None => {
-            // If empty, do nothing and pass the request to the next middleware
-            Ok(next.run(request).await)
-        }
-        Some(pre_parse_plugins) => {
-            let (request, response) = pre_execution_plugins_handler(
-                &pre_parse_plugins,
-                &engine_state.http_context.client,
-                session,
-                request,
-                headers_map,
-            )
-            .await?;
+    next: Next,
+) -> axum::response::Result<axum::response::Response<Body>> {
+    let (parts, body) = request.into_parts();
+    let bytes = body
+        .collect()
+        .await
+        .map_err(|err| {
+            (reqwest::StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response()
+        })?
+        .to_bytes();
+    let raw_request = bytes.clone();
 
-            match response {
-                Some(response) => Ok(response),
-                None => Ok(next.run(request).await),
+    // Check if the pre_parse_plugins_config is empty
+    let response =
+        match nonempty::NonEmpty::from_slice(&engine_state.plugin_configs.pre_parse_plugins) {
+            None => {
+                // If empty, do nothing and pass the request to the next middleware
+                let recreated_request = Request::from_parts(parts, axum::body::Body::from(bytes));
+                Ok::<_, axum::response::ErrorResponse>(next.run(recreated_request).await)
             }
-        }
+            Some(pre_parse_plugins) => {
+                let response = pre_parse_plugins_handler(
+                    &pre_parse_plugins,
+                    &engine_state.http_context.client,
+                    session.clone(),
+                    &bytes,
+                    headers_map.clone(),
+                )
+                .await?;
+
+                if let Some(response) = response {
+                    Ok(response)
+                } else {
+                    let recreated_request =
+                        Request::from_parts(parts, axum::body::Body::from(bytes));
+                    Ok(next.run(recreated_request).await)
+                }
+            }
+        }?;
+
+    let (parts, body) = response.into_parts();
+    let response_bytes = body
+        .collect()
+        .await
+        .map_err(|err| {
+            (reqwest::StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response()
+        })?
+        .to_bytes();
+
+    if let Some(pre_response_plugins) =
+        nonempty::NonEmpty::from_slice(&engine_state.plugin_configs.pre_response_plugins)
+    {
+        pre_response_plugins_handler(
+            &pre_response_plugins,
+            &engine_state.http_context.client,
+            session,
+            &raw_request,
+            &response_bytes,
+            headers_map,
+        )?;
     }
+    let recreated_response =
+        axum::response::Response::from_parts(parts, axum::body::Body::from(response_bytes));
+    Ok(recreated_response)
 }
 
 /// Handle a SQL request and execute it.
 async fn handle_sql_request(
-    State(state): State<Arc<EngineState>>,
+    headers: axum::http::header::HeaderMap,
+    State(state): State<EngineState>,
     Extension(session): Extension<Session>,
     Json(request): Json<sql::execute::SqlRequest>,
 ) -> axum::response::Response {
@@ -702,6 +699,7 @@ async fn handle_sql_request(
             || {
                 Box::pin(async {
                     sql::execute::execute_sql(
+                        Arc::new(headers),
                         state.sql_context.clone(),
                         Arc::new(session),
                         Arc::new(state.http_context.clone()),
@@ -746,8 +744,9 @@ fn build_state(
     expose_internal_errors: execute::ExposeInternalErrors,
     authn_config_path: &PathBuf,
     metadata_path: &PathBuf,
-    metadata_resolve_configuration: metadata_resolve::configuration::Configuration,
-) -> Result<Arc<EngineState>, anyhow::Error> {
+    enable_sql_interface: bool,
+    metadata_resolve_configuration: &metadata_resolve::configuration::Configuration,
+) -> Result<EngineState, anyhow::Error> {
     // Auth Config
     let raw_auth_config = std::fs::read_to_string(authn_config_path)?;
     let (auth_config, auth_warnings) =
@@ -767,19 +766,48 @@ fn build_state(
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
     };
-    let pre_parse_plugins = resolved_metadata.pre_parse_plugins.clone();
-    let sql_context = sql::catalog::Catalog::from_metadata(resolved_metadata.clone());
-    let schema = schema::GDS {
-        metadata: resolved_metadata,
+    let plugin_configs = resolved_metadata.plugin_configs.clone();
+    let sql_context = if enable_sql_interface {
+        sql::catalog::Catalog::from_metadata(resolved_metadata.clone())
+    } else {
+        sql::catalog::Catalog::empty_from_metadata(resolved_metadata.clone())
+    };
+
+    let schema = graphql_schema::GDS {
+        metadata: resolved_metadata.clone(),
     }
     .build_schema()?;
-    let state = Arc::new(EngineState {
+
+    let state = EngineState {
         expose_internal_errors,
         http_context,
-        schema,
-        auth_config,
+        graphql_state: Arc::new(schema),
+        jsonapi_state: Arc::new(jsonapi::State::new(&resolved_metadata)),
+        resolved_metadata,
+        auth_config: Arc::new(auth_config),
         sql_context: sql_context.into(),
-        pre_parse_plugins,
-    });
+        plugin_configs: Arc::new(plugin_configs),
+        graphql_websocket_server: Arc::new(graphql_ws::WebSocketServer::new()),
+    };
     Ok(state)
+}
+
+async fn handle_websocket_request(
+    headers: axum::http::header::HeaderMap,
+    State(engine_state): State<EngineState>,
+    ws: axum::extract::ws::WebSocketUpgrade,
+) -> impl IntoResponse {
+    // Create the context for the websocket server
+    let context = graphql_ws::Context {
+        http_context: engine_state.http_context,
+        project_id: None, // project_id is not needed for OSS v3-engine.
+        expose_internal_errors: engine_state.expose_internal_errors,
+        schema: engine_state.graphql_state,
+        auth_config: engine_state.auth_config,
+        plugin_configs: engine_state.plugin_configs,
+    };
+
+    engine_state
+        .graphql_websocket_server
+        .upgrade_and_handle_websocket(ws, &headers, context)
 }

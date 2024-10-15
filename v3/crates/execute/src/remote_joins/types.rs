@@ -2,6 +2,7 @@
 //!
 use indexmap::IndexMap;
 use std::collections::{BTreeMap, HashMap};
+use std::sync::Arc;
 
 use json_ext::ValueExt;
 use open_dds::arguments::ArgumentName;
@@ -14,17 +15,21 @@ use crate::plan::{self, ProcessResponseAs};
 ///
 /// It also includes other info, like field mapping etc., for the join
 #[derive(Debug, Clone)]
-pub struct JoinLocations<T> {
-    pub locations: IndexMap<String, Location<T>>,
+pub struct JoinLocations<'s> {
+    pub locations: IndexMap<String, Location<'s>>,
 }
 
-impl<T> JoinLocations<T> {
-    pub fn new() -> JoinLocations<T> {
+impl<'s> JoinLocations<'s> {
+    pub fn new() -> Self {
         JoinLocations::default()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.locations.is_empty()
     }
 }
 
-impl<T> Default for JoinLocations<T> {
+impl<'s> Default for JoinLocations<'s> {
     fn default() -> Self {
         JoinLocations {
             locations: IndexMap::new(),
@@ -39,9 +44,9 @@ pub enum LocationKind {
 }
 
 #[derive(Debug, Clone)]
-pub enum JoinNode<T> {
+pub enum JoinNode<'s> {
     Local(LocationKind),
-    Remote(T),
+    Remote(RemoteJoin<'s>),
 }
 
 /// Location indicates if the current node/field is a join node.
@@ -97,30 +102,30 @@ pub enum JoinNode<T> {
 /// Note: `join_node` and `rest` both cannot be empty; it is an invalid/illegal
 /// state.
 #[derive(Debug, Clone)]
-pub struct Location<T> {
-    pub join_node: JoinNode<T>,
-    pub rest: JoinLocations<T>,
+pub struct Location<'s> {
+    pub join_node: JoinNode<'s>,
+    pub rest: JoinLocations<'s>,
 }
 
 /// Contains information to be captured for a join node
 #[derive(Debug, Clone, PartialEq)]
-pub struct RemoteJoin<'s, 'ir> {
+pub struct RemoteJoin<'s> {
     /// target data connector to execute query on
-    pub target_data_connector: &'s metadata_resolve::DataConnectorLink,
+    pub target_data_connector: Arc<metadata_resolve::DataConnectorLink>,
     /// NDC node to execute on a data connector
     pub target_ndc_execution: plan::query::UnresolvedQueryExecutionPlan<'s>,
     /// Mapping of the fields in source to fields in target.
     /// The HashMap has the following info -
     ///   - key: is the field name in the source
     ///   - value->first item: is the alias we create for the
-    ///   source field. If the user did not request the join field in the
-    ///   selection set, we include the join mapping field and call it a phantom
-    ///   field.
+    ///     source field. If the user did not request the join field in the
+    ///     selection set, we include the join mapping field and call it a phantom
+    ///     field.
     ///   - value->second item: is the target NDC field. This could be a model
-    ///   field or an argument name.
+    ///     field or an argument name.
     pub join_mapping: HashMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
     /// Represents how to process the join response.
-    pub process_response_as: ProcessResponseAs<'ir>,
+    pub process_response_as: ProcessResponseAs,
     /// Represents the type of the remote join
     pub remote_join_type: RemoteJoinType,
 }
@@ -147,32 +152,6 @@ pub enum RemoteJoinType {
     ToCommand,
 }
 
-/// For assigning a unique number to each unique join
-#[derive(Debug, Clone, Copy)]
-pub struct JoinId(pub i16);
-
 /// An 'Argument' is a map of variable name to it's value.
 /// For example, `{"first_name": "John", "last_name": "Doe"}`
-pub type Argument = BTreeMap<ir::VariableName, ValueExt>;
-
-/// Monotonically increasing counter with i16 value
-pub(crate) struct MonotonicCounter {
-    id: i16,
-}
-
-impl MonotonicCounter {
-    pub fn new() -> MonotonicCounter {
-        MonotonicCounter { id: 0 }
-    }
-    /// increment the counter and get the value
-    pub fn get_next(&mut self) -> i16 {
-        self.id += 1;
-        self.id
-    }
-}
-
-impl Default for MonotonicCounter {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+pub type Argument = BTreeMap<plan_types::VariableName, ValueExt>;

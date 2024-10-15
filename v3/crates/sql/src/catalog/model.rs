@@ -1,46 +1,39 @@
 //! Describe a model for a SQL table and how to translate datafusion operations on the table
 //! to ndc-spec queries.
+pub(crate) mod common;
+pub(crate) mod filter;
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::{any::Any, sync::Arc};
 
+use ::datafusion::common::Constraints;
+use ::datafusion::logical_expr::{Expr, TableProviderFilterPushDown};
+use ::datafusion::sql::sqlparser::ast::TableConstraint;
 use async_trait::async_trait;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
-use metadata_resolve::{self as resolved, Qualified};
+use metadata_resolve::{self as resolved, Metadata, Qualified};
 use open_dds::arguments::ArgumentName;
 use open_dds::identifier::SubgraphName;
-use open_dds::{
-    models::ModelName,
-    types::{CustomTypeName, FieldName},
-};
+use open_dds::{models::ModelName, types::CustomTypeName};
 
 use serde::{Deserialize, Serialize};
 
-use crate::plan::ModelQuery;
+use crate::catalog::model::filter::can_pushdown_filters;
+use crate::execute::planner::model::ModelQuery;
+
+use super::types::{StructTypeName, TypeRegistry};
+
 mod datafusion {
     pub(super) use datafusion::{
-        arrow::datatypes::{DataType, Field, Schema, SchemaBuilder, SchemaRef, TimeUnit},
+        arrow::datatypes::{DataType, SchemaRef},
+        catalog::Session,
         common::{DFSchema, DFSchemaRef},
-        datasource::function::TableFunctionImpl,
-        datasource::{TableProvider, TableType},
+        datasource::{function::TableFunctionImpl, TableProvider, TableType},
         error::Result,
-        execution::context::SessionState,
-        logical_expr::Expr,
-        logical_expr::Extension,
-        logical_expr::LogicalPlan,
+        logical_expr::{Expr, Extension, LogicalPlan},
         physical_plan::ExecutionPlan,
     };
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub(crate) struct TypePermission {
-    pub output: open_dds::permissions::TypeOutputPermission,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct TypePermissionsOfRole {
-    pub(crate) permissions: HashMap<Qualified<CustomTypeName>, TypePermission>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -58,11 +51,11 @@ pub(crate) struct Model {
 
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
 
+    // The struct type of the model's object type
+    pub struct_type: StructTypeName,
+
     // Datafusion table schema
     pub schema: datafusion::SchemaRef,
-
-    // For now, descriptions of fields
-    pub columns: IndexMap<String, Option<String>>,
 
     // This is the entry point for the type mappings stored
     // in ModelSource
@@ -70,54 +63,23 @@ pub(crate) struct Model {
 }
 
 impl Model {
-    pub fn from_resolved_model(model: &resolved::ModelWithPermissions) -> Self {
-        let (schema, columns) = {
-            let mut columns = IndexMap::new();
-            let mut builder = datafusion::SchemaBuilder::new();
-            for (field_name, field_definition) in &model.model.type_fields {
-                let ndc_type_representation = get_type_representation(&model.model, field_name);
-                let field_type =
-                    to_arrow_type(&field_definition.field_type, ndc_type_representation);
-                if let Some(field_type) = field_type {
-                    builder.push(datafusion::Field::new(
-                        field_name.to_string(),
-                        field_type,
-                        field_definition.field_type.nullable,
-                    ));
-                    let description = if let Some(ndc_models::TypeRepresentation::Enum { one_of }) =
-                        ndc_type_representation
-                    {
-                        // TODO: Instead of stuffing the possible enum values in description,
-                        // surface them in the metadata tables.
-                        Some(
-                            field_definition
-                                .description
-                                .clone()
-                                .unwrap_or_else(String::new)
-                                + &format!(" Possible values: {}", one_of.join(", ")),
-                        )
-                    } else {
-                        field_definition.description.clone()
-                    };
-                    columns.insert(field_name.to_string(), description);
-                }
-            }
-            let fields = builder.finish().fields;
-            (
-                datafusion::SchemaRef::new(datafusion::Schema::new(fields)),
-                columns,
-            )
-        };
-
-        Model {
+    pub fn from_resolved_model(
+        type_registry: &TypeRegistry,
+        model: &resolved::ModelWithArgumentPresets,
+    ) -> Option<Self> {
+        let (type_name, schema) = type_registry
+            .get_object(&model.model.data_type)
+            .map(|object| (object.name(), object.table_schema()))?;
+        let model = Model {
             subgraph: model.model.name.subgraph.clone(),
             name: model.model.name.name.clone(),
             description: model.model.raw.description.clone(),
             arguments: IndexMap::new(),
-            schema,
+            struct_type: type_name.clone(),
+            schema: schema.clone(),
             data_type: model.model.data_type.clone(),
-            columns,
-        }
+        };
+        Some(model)
     }
 }
 
@@ -130,6 +92,7 @@ pub(crate) struct WithSession<T> {
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct TableValuedFunction {
+    pub(crate) metadata: Arc<Metadata>,
     /// Metadata about the model
     pub(crate) model: Arc<Model>,
     pub(crate) session: Arc<Session>,
@@ -138,8 +101,12 @@ pub(crate) struct TableValuedFunction {
 impl TableValuedFunction {
     // TODO: this will be removed when table valued functions are fully supported
     #[allow(dead_code)]
-    pub(crate) fn new(model: Arc<Model>, session: Arc<Session>) -> Self {
-        TableValuedFunction { model, session }
+    pub(crate) fn new(metadata: Arc<Metadata>, model: Arc<Model>, session: Arc<Session>) -> Self {
+        TableValuedFunction {
+            metadata,
+            model,
+            session,
+        }
     }
 }
 
@@ -150,7 +117,7 @@ impl datafusion::TableFunctionImpl for TableValuedFunction {
         _exprs: &[datafusion::Expr],
     ) -> datafusion::Result<Arc<dyn datafusion::TableProvider>> {
         let arguments = BTreeMap::new();
-        let table = Table::new(self.model.clone(), arguments);
+        let table = Table::new(self.metadata.clone(), self.model.clone(), arguments)?;
         Ok(Arc::new(table) as Arc<dyn datafusion::TableProvider>)
     }
 }
@@ -159,35 +126,103 @@ impl datafusion::TableFunctionImpl for TableValuedFunction {
 /// Currently, this is an instatation of a model with concrete arguments
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Table {
+    pub(crate) metadata: Arc<Metadata>,
     /// Metadata about the model
     pub(crate) model: Arc<Model>,
     /// This will be empty if the model doesn't take any arguments
     pub(crate) arguments: BTreeMap<ArgumentName, serde_json::Value>,
+    /// DF constraints which can help guide the planner,
+    /// e.g. uniqueness constraints establish functional dependencies
+    /// which ensure all correct columns are in scope under a GROUP BY.
+    pub(crate) constraints: ::datafusion::common::Constraints,
 }
 
 impl Table {
     pub(crate) fn new(
+        metadata: Arc<Metadata>,
         model: Arc<Model>,
         arguments: BTreeMap<ArgumentName, serde_json::Value>,
-    ) -> Self {
-        Table { model, arguments }
-    }
-    pub(crate) fn new_no_args(model: Arc<Model>) -> Self {
-        Table {
+    ) -> datafusion::Result<Self> {
+        let constraints = compute_table_constraints(&model, &metadata)?;
+        Ok(Table {
+            metadata,
             model,
-            arguments: BTreeMap::new(),
-        }
+            arguments,
+            constraints,
+        })
+    }
+    pub(crate) fn new_no_args(
+        metadata: Arc<Metadata>,
+        model: Arc<Model>,
+    ) -> datafusion::Result<Self> {
+        Self::new(metadata, model, BTreeMap::new())
     }
     pub(crate) fn to_logical_plan(
         &self,
         projected_schema: datafusion::DFSchemaRef,
+        filters: &[datafusion::Expr],
+        fetch: Option<usize>,
     ) -> datafusion::Result<datafusion::LogicalPlan> {
-        let model_query_node = ModelQuery::new(&self.model, &self.arguments, projected_schema)?;
+        let model_query_node = ModelQuery::new(
+            &self.model,
+            &self.arguments,
+            projected_schema,
+            filters,
+            fetch,
+        )?;
         let logical_plan = datafusion::LogicalPlan::Extension(datafusion::Extension {
             node: Arc::new(model_query_node),
         });
         Ok(logical_plan)
     }
+}
+
+/// Computes DF constraints from the model metadata.
+/// TODO: this function currently uses the select_uniques field from
+/// the GraphQL configuration section, but we should have that data on the
+/// model itself, since it's not just a GraphQL concern now.
+fn compute_table_constraints(
+    model: &Arc<Model>,
+    metadata: &Arc<Metadata>,
+) -> datafusion::Result<::datafusion::common::Constraints> {
+    let schema = model.schema.as_ref().clone();
+    let df_schema = datafusion::DFSchema::from_unqualified_fields(schema.fields, schema.metadata)?;
+    let model = metadata
+        .models
+        .get(&Qualified::new(model.subgraph.clone(), model.name.clone()))
+        .ok_or(::datafusion::error::DataFusionError::Internal(format!(
+            "Model {} could not be found",
+            model.name
+        )))?;
+
+    let table_constraints = model
+        .graphql_api
+        .select_uniques
+        .iter()
+        .filter_map(|unique| {
+            let mut columns: Vec<::datafusion::sql::sqlparser::ast::Ident> = vec![];
+
+            for (field_name, _) in &unique.unique_identifier {
+                let _ = df_schema.field_with_name(None, field_name.as_str()).ok()?;
+                columns.push(field_name.as_str().into());
+            }
+
+            Some(TableConstraint::Unique {
+                name: None,
+                index_name: None,
+                index_type_display: ::datafusion::sql::sqlparser::ast::KeyOrIndexDisplay::None,
+                index_type: None,
+                columns,
+                index_options: vec![],
+                characteristics: None,
+            })
+        })
+        .collect::<Vec<_>>();
+
+    ::datafusion::common::Constraints::new_from_table_constraints(
+        table_constraints.as_slice(),
+        &Arc::new(df_schema),
+    )
 }
 
 #[async_trait]
@@ -204,117 +239,32 @@ impl datafusion::TableProvider for Table {
         datafusion::TableType::Base
     }
 
+    fn constraints(&self) -> Option<&Constraints> {
+        Some(&self.constraints)
+    }
+
     async fn scan(
         &self,
-        state: &datafusion::SessionState,
+        state: &dyn datafusion::Session,
         projection: Option<&Vec<usize>>,
         // filters and limit can be used here to inject some push-down operations if needed
-        _filters: &[datafusion::Expr],
-        _limit: Option<usize>,
+        filters: &[datafusion::Expr],
+        limit: Option<usize>,
     ) -> datafusion::Result<Arc<dyn datafusion::ExecutionPlan>> {
         let projected_schema = self.model.schema.project(projection.unwrap_or(&vec![]))?;
         let qualified_projected_schema = datafusion::DFSchema::from_unqualified_fields(
             projected_schema.fields,
             projected_schema.metadata,
         )?;
-        let logical_plan = self.to_logical_plan(Arc::new(qualified_projected_schema))?;
+        let logical_plan =
+            self.to_logical_plan(Arc::new(qualified_projected_schema), filters, limit)?;
         state.create_physical_plan(&logical_plan).await
     }
-}
 
-/// Converts an opendd type to an arrow type.
-/// TODO: need to handle complex types
-#[allow(clippy::match_same_arms)]
-fn to_arrow_type(
-    ty: &resolved::QualifiedTypeReference,
-    ndc_type_representation: Option<&ndc_models::TypeRepresentation>,
-) -> Option<datafusion::DataType> {
-    match &ty.underlying_type {
-        resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Inbuilt(inbuilt_type)) => {
-            let data_type = match inbuilt_type {
-                open_dds::types::InbuiltType::ID => datafusion::DataType::Utf8,
-                open_dds::types::InbuiltType::Int => datafusion::DataType::Int32,
-                open_dds::types::InbuiltType::Float => datafusion::DataType::Float32,
-                open_dds::types::InbuiltType::Boolean => datafusion::DataType::Boolean,
-                open_dds::types::InbuiltType::String => datafusion::DataType::Utf8,
-            };
-            Some(data_type)
-        }
-        resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Custom(custom_type)) => {
-            if let Some(type_representation) = ndc_type_representation {
-                match type_representation {
-                    ndc_models::TypeRepresentation::Boolean => Some(datafusion::DataType::Boolean),
-                    ndc_models::TypeRepresentation::String => Some(datafusion::DataType::Utf8),
-                    ndc_models::TypeRepresentation::Int8 => Some(datafusion::DataType::Int8),
-                    ndc_models::TypeRepresentation::Int16 => Some(datafusion::DataType::Int16),
-                    ndc_models::TypeRepresentation::Int32 => Some(datafusion::DataType::Int32),
-                    ndc_models::TypeRepresentation::Int64 => Some(datafusion::DataType::Int64),
-                    ndc_models::TypeRepresentation::Float32 => Some(datafusion::DataType::Float32),
-                    ndc_models::TypeRepresentation::Float64 => Some(datafusion::DataType::Float64),
-                    // Can't do anything better for BigInteger, so we just use String.
-                    ndc_models::TypeRepresentation::BigInteger => Some(datafusion::DataType::Utf8),
-                    // BigDecimal128 is not supported by arrow.
-                    ndc_models::TypeRepresentation::BigDecimal => {
-                        Some(datafusion::DataType::Float64)
-                    }
-                    ndc_models::TypeRepresentation::UUID => Some(datafusion::DataType::Utf8),
-                    ndc_models::TypeRepresentation::Date => Some(datafusion::DataType::Date32),
-                    ndc_models::TypeRepresentation::Timestamp => Some(
-                        datafusion::DataType::Timestamp(datafusion::TimeUnit::Microsecond, None),
-                    ),
-                    ndc_models::TypeRepresentation::TimestampTZ => Some(
-                        datafusion::DataType::Timestamp(datafusion::TimeUnit::Microsecond, None),
-                    ),
-                    ndc_models::TypeRepresentation::Enum { .. } => Some(datafusion::DataType::Utf8),
-                    _ => None,
-                }
-            } else {
-                match custom_type.name.to_string().to_lowercase().as_str() {
-                    "bool" => Some(datafusion::DataType::Boolean),
-                    "int8" => Some(datafusion::DataType::Int8),
-                    "int16" => Some(datafusion::DataType::Int16),
-                    "int32" => Some(datafusion::DataType::Int32),
-                    "int64" => Some(datafusion::DataType::Int64),
-                    "float32" => Some(datafusion::DataType::Float32),
-                    "float64" => Some(datafusion::DataType::Float64),
-                    "varchar" => Some(datafusion::DataType::Utf8),
-                    "text" => Some(datafusion::DataType::Utf8),
-                    "timestamp" => Some(datafusion::DataType::Timestamp(
-                        datafusion::TimeUnit::Microsecond,
-                        None,
-                    )),
-                    "timestamptz" => Some(datafusion::DataType::Timestamp(
-                        datafusion::TimeUnit::Microsecond,
-                        None,
-                    )),
-                    // BigDecimal128 is not supported by arrow.
-                    "bigdecimal" => Some(datafusion::DataType::Float64),
-                    _ => None,
-                }
-            }
-        }
-        resolved::QualifiedBaseType::List(_) => None,
+    fn supports_filters_pushdown(
+        &self,
+        filters: &[&Expr],
+    ) -> datafusion::Result<Vec<TableProviderFilterPushDown>> {
+        Ok(can_pushdown_filters(&self.metadata, &self.model, filters))
     }
-}
-
-fn get_type_representation<'a>(
-    model: &'a resolved::Model,
-    field: &FieldName,
-) -> Option<&'a ndc_models::TypeRepresentation> {
-    model
-        .source
-        .as_ref()
-        .and_then(|source| {
-            source
-                .type_mappings
-                .get(&model.data_type)
-                .map(|type_mapping| {
-                    let resolved::TypeMapping::Object { field_mappings, .. } = type_mapping;
-                    field_mappings
-                        .get(field)
-                        .map(|mapping| mapping.column_type_representation.as_ref())
-                })
-        })
-        .flatten()
-        .flatten()
 }

@@ -8,7 +8,9 @@ license.workspace = true
 bench = false
 
 [dependencies]
+error-context = { path = "../utils/error-context" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
+jsonpath = { path = "../utils/jsonpath" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }
 
@@ -21,7 +23,7 @@ ref-cast = { workspace = true }
 reqwest = { workspace = true, features = ["json", "multipart"] }
 semver = { workspace = true }
 schemars = { workspace = true }
-serde = { workspace = true }
+serde = { workspace = true, features = ["rc"] }
 serde_json = { workspace = true }
 strum = { workspace = true }
 strum_macros = { workspace = true }

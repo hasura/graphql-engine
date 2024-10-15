@@ -1,8 +1,10 @@
-{
-  "data": null,
-  "errors": [
-    {
-      "message": "validation failed: no such field on type Author: last_name"
-    }
-  ]
-}
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: no such field on type Author: last_name"
+      }
+    ]
+  }
+]

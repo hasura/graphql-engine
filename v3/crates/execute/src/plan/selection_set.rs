@@ -7,46 +7,35 @@ use super::ProcessResponseAs;
 use crate::plan::error;
 use crate::remote_joins::types::SourceFieldAlias;
 use crate::remote_joins::types::{
-    JoinLocations, JoinNode, LocationKind, MonotonicCounter, RemoteJoinType, TargetField,
+    JoinLocations, JoinNode, LocationKind, RemoteJoinType, TargetField,
 };
 use crate::remote_joins::types::{Location, RemoteJoin};
+use graphql_ir::{FieldSelection, NestedSelection, ResultSelectionSet};
 use indexmap::IndexMap;
-use ir::NdcFieldAlias;
-use ir::NdcRelationshipName;
-use ir::{FieldSelection, NestedSelection, ResultSelectionSet};
 use metadata_resolve::data_connectors::NdcVersion;
 use metadata_resolve::FieldMapping;
 use open_dds::data_connector::DataConnectorColumnName;
+use plan_types::NdcFieldAlias;
+use plan_types::NdcRelationshipName;
 use std::collections::{BTreeMap, HashMap};
 
-pub(crate) fn plan_nested_selection<'s, 'ir>(
-    nested_selection: &'ir NestedSelection<'s>,
-    join_id_counter: &mut MonotonicCounter,
+pub(crate) fn plan_nested_selection<'s>(
+    nested_selection: &NestedSelection<'s>,
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
-) -> Result<
-    (
-        field::UnresolvedNestedField<'s>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
-    ),
-    error::Error,
-> {
+) -> Result<(field::UnresolvedNestedField<'s>, JoinLocations<'s>), error::Error> {
     match nested_selection {
         NestedSelection::Object(model_selection) => {
             let (fields, join_locations) =
-                plan_selection_set(model_selection, join_id_counter, ndc_version, relationships)?;
+                plan_selection_set(model_selection, ndc_version, relationships)?;
             Ok((
                 field::NestedField::Object(field::NestedObject { fields }),
                 join_locations,
             ))
         }
         NestedSelection::Array(nested_selection) => {
-            let (field, join_locations) = plan_nested_selection(
-                nested_selection,
-                join_id_counter,
-                ndc_version,
-                relationships,
-            )?;
+            let (field, join_locations) =
+                plan_nested_selection(nested_selection, ndc_version, relationships)?;
             Ok((
                 field::NestedField::Array(field::NestedArray {
                     fields: Box::new(field),
@@ -64,13 +53,12 @@ pub(crate) fn plan_nested_selection<'s, 'ir>(
 #[allow(irrefutable_let_patterns)]
 pub(crate) fn plan_selection_set<'s, 'ir>(
     model_selection: &'ir ResultSelectionSet<'s>,
-    join_id_counter: &mut MonotonicCounter,
     ndc_version: NdcVersion,
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
 ) -> Result<
     (
         IndexMap<NdcFieldAlias, field::UnresolvedField<'s>>,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
+        JoinLocations<'s>,
     ),
     error::Error,
 > {
@@ -86,12 +74,8 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                 let mut nested_field = None;
                 let mut nested_join_locations = JoinLocations::new();
                 if let Some(nested_selection) = nested_selection {
-                    let (nested_fields, jl) = plan_nested_selection(
-                        nested_selection,
-                        join_id_counter,
-                        ndc_version,
-                        relationships,
-                    )?;
+                    let (nested_fields, jl) =
+                        plan_nested_selection(nested_selection, ndc_version, relationships)?;
                     nested_field = Some(nested_fields);
                     nested_join_locations = jl;
                 }
@@ -124,7 +108,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                     relationships::process_model_relationship_definition(relationship_info)?,
                 );
                 let (relationship_query, jl) =
-                    model_selection::plan_query_node(query, relationships, join_id_counter)?;
+                    model_selection::plan_query_node(query, relationships)?;
                 let ndc_field = field::Field::Relationship {
                     query_node: Box::new(relationship_query),
                     relationship: name.clone(),
@@ -152,7 +136,7 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                     relationships::process_command_relationship_definition(relationship_info)?,
                 );
                 let (relationship_query, jl) =
-                    commands::plan_query_node(&ir.command_info, join_id_counter, relationships)?;
+                    commands::plan_query_node(&ir.command_info, relationships)?;
 
                 let relationship_arguments: BTreeMap<_, _> =
                     arguments::plan_arguments(&ir.command_info.arguments, relationships)?;
@@ -196,10 +180,10 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                 }
                 // Construct the `JoinLocations` tree
                 let (query_execution, sub_join_locations) =
-                    model_selection::plan_query_execution(ir, join_id_counter)?;
+                    model_selection::plan_query_execution(ir)?;
                 let rj_info = RemoteJoin {
                     target_ndc_execution: query_execution,
-                    target_data_connector: ir.data_connector,
+                    target_data_connector: ir.data_connector.clone(),
                     join_mapping,
                     process_response_as: ProcessResponseAs::Array { is_nullable: true },
                     remote_join_type: RemoteJoinType::ToModel,
@@ -234,16 +218,15 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
                     );
                 }
                 // Construct the `JoinLocations` tree
-                let (ndc_ir, sub_join_locations) =
-                    commands::plan_query_execution(ir, join_id_counter)?;
+                let (ndc_ir, sub_join_locations) = commands::plan_query_execution(ir)?;
                 let rj_info = RemoteJoin {
                     target_ndc_execution: ndc_ir,
-                    target_data_connector: ir.command_info.data_connector,
+                    target_data_connector: ir.command_info.data_connector.clone(),
                     join_mapping,
                     process_response_as: ProcessResponseAs::CommandResponse {
-                        command_name: &ir.command_info.command_name,
-                        type_container: &ir.command_info.type_container,
-                        response_config: &ir.command_info.data_connector.response_config,
+                        command_name: ir.command_info.command_name.clone(),
+                        type_container: ir.command_info.type_container.clone(),
+                        response_config: ir.command_info.data_connector.response_config.clone(),
                     },
                     remote_join_type: RemoteJoinType::ToCommand,
                 };
@@ -264,9 +247,9 @@ pub(crate) fn plan_selection_set<'s, 'ir>(
 /// the NDC IR for that field
 ///
 /// - if the selection set DOES NOT contain the field, insert it into the NDC IR
-/// (with an internal alias), and return the alias
+///   (with an internal alias), and return the alias
 /// - if the selection set already contains the field, do not insert the field
-/// in NDC IR, and return the existing alias
+///   in NDC IR, and return the existing alias
 fn process_remote_relationship_field_mapping(
     selection: &ResultSelectionSet<'_>,
     field_mapping: &FieldMapping,

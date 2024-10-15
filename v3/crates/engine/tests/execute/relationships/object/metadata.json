@@ -9,7 +9,7 @@
           "version": "v1",
           "definition": {
             "dataConnectorName": "db",
-            "dataConnectorScalarType": "String",
+            "dataConnectorScalarType": "varchar",
             "representation": "String",
             "graphql": {
               "comparisonExpressionTypeName": "String_Comparison_Exp"
@@ -21,11 +21,13 @@
           "version": "v1",
           "definition": {
             "dataConnectorName": "db",
-            "dataConnectorScalarType": "Int",
+            "dataConnectorScalarType": "int4",
             "representation": "Int"
           }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "name": "Artist",
             "fields": [
@@ -59,11 +61,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ObjectType"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "name": "Artists",
             "objectType": "Artist",
@@ -96,9 +98,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Model"
+          }
         },
         {
           "kind": "TypePermissions",
@@ -155,6 +155,8 @@
           }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
           "definition": {
             "name": "Album",
             "fields": [
@@ -197,11 +199,11 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "ObjectType"
+          }
         },
         {
+          "kind": "Model",
+          "version": "v1",
           "definition": {
             "name": "Albums",
             "objectType": "Album",
@@ -240,9 +242,7 @@
                 }
               }
             ]
-          },
-          "version": "v1",
-          "kind": "Model"
+          }
         },
         {
           "kind": "TypePermissions",

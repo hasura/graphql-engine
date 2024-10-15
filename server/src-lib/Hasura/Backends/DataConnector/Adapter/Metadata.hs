@@ -62,7 +62,7 @@ import Hasura.NativeQuery.Validation
 import Hasura.Prelude
 import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
 import Hasura.RQL.IR.BoolExp (ComparisonNullability (..), OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
-import Hasura.RQL.Types.Backend (FunctionReturnType (..), functionGraphQLName)
+import Hasura.RQL.Types.Backend (FunctionReturnType, functionGraphQLName)
 import Hasura.RQL.Types.BackendType (BackendSourceKind (..), BackendType (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
 import Hasura.RQL.Types.Common (JsonAggSelect (JASMultipleRows, JASSingleObject), OID (..), SourceName, SystemDefined)

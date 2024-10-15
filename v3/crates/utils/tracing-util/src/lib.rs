@@ -21,6 +21,7 @@ pub use opentelemetry::global::get_text_map_propagator;
 pub use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
 pub use opentelemetry::trace::get_active_span;
 pub use opentelemetry::trace::FutureExt;
+pub use opentelemetry::trace::SpanContext;
 pub use opentelemetry::trace::Status;
 pub use opentelemetry::Context;
 pub use opentelemetry::KeyValue;

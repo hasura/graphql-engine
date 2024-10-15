@@ -210,7 +210,16 @@ impl<'de> Deserialize<'de> for BaseType {
 }
 
 #[derive(
-    Serialize, Deserialize, Hash, Clone, Debug, PartialEq, Eq, JsonSchema, derive_more::Display,
+    Serialize,
+    Deserialize,
+    Hash,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    JsonSchema,
+    strum_macros::EnumIter,
+    derive_more::Display,
 )]
 #[schemars(title = "InbuiltType")]
 /// An inbuilt primitive OpenDD type.

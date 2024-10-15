@@ -21,7 +21,7 @@ export * from './lib/utils/console-dev-tools';
 export { ControlPlane };
 
 export { App as ConsoleCeApp } from './lib/client';
-
+export { DDNBanner } from './lib/components/Main/DDNBanner';
 export type {
   Metadata,
   SetOpenTelemetryQuery,
