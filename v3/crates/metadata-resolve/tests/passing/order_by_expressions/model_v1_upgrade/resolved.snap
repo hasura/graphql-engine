@@ -116,7 +116,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
                         "mymodel",
                     ),
                 ),
-            }: ModelWithPermissions {
+            }: ModelWithArgumentPresets {
                 model: Model {
                     path: JSONPath(
                         [
@@ -338,6 +338,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v1_
                         description: None,
                     },
                 },
+                argument_presets: {},
                 select_permissions: {},
                 filter_expression_type: None,
                 graphql_api: ModelGraphQlApi {

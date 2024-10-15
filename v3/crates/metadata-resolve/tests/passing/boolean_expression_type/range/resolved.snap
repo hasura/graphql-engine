@@ -490,7 +490,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                         "movies",
                     ),
                 ),
-            }: ModelWithPermissions {
+            }: ModelWithArgumentPresets {
                 model: Model {
                     path: JSONPath(
                         [
@@ -838,6 +838,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             },
                         ),
                         description: None,
+                    },
+                },
+                argument_presets: {
+                    Role(
+                        "admin",
+                    ): ArgumentPresets {
+                        argument_presets: {},
                     },
                 },
                 select_permissions: {

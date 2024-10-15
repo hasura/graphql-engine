@@ -23,7 +23,7 @@ use metadata_resolve;
 /// limit, offset, order_by and where.
 pub(crate) fn generate_select_many_arguments(
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithArgumentPresets,
 ) -> Result<BTreeMap<Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, crate::Error>
 {
     let mut arguments = BTreeMap::new();
@@ -40,7 +40,7 @@ pub(crate) fn generate_select_many_arguments(
 pub(crate) fn select_many_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithArgumentPresets,
     select_many: &metadata_resolve::SelectManyGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
@@ -55,7 +55,6 @@ pub(crate) fn select_many_field(
 
     add_model_arguments_field(
         &mut arguments,
-        gds,
         builder,
         model,
         &select_many.query_root_field,
@@ -82,10 +81,7 @@ pub(crate) fn select_many_field(
             arguments,
             mk_deprecation_status(&select_many.deprecated),
         ),
-        permissions::get_select_permissions_namespace_annotations(
-            model,
-            &gds.metadata.object_types,
-        )?,
+        permissions::get_select_permissions_namespace_annotations(model)?,
     );
     Ok((query_root_field, field))
 }

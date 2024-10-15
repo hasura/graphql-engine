@@ -14,7 +14,7 @@ use super::types::output_type::relationship::FilterRelationshipAnnotation;
 use super::types::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind, TypeId};
 use metadata_resolve::{
     mk_name, BooleanExpressionComparableRelationship, ComparisonExpressionInfo,
-    GlobalGraphqlConfig, IncludeLogicalOperators, ModelExpressionType, ModelWithPermissions,
+    GlobalGraphqlConfig, IncludeLogicalOperators, ModelExpressionType, ModelWithArgumentPresets,
     ObjectBooleanExpressionType, ObjectComparisonExpressionInfo, ObjectComparisonKind,
     ObjectTypeWithRelationships, Qualified, RelationshipCapabilities, RelationshipField,
     RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
@@ -403,7 +403,7 @@ fn build_new_comparable_relationships_schema(
 }
 
 fn filter_graphql_type_for_model(
-    model: &metadata_resolve::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithArgumentPresets,
 ) -> Option<ast::TypeName> {
     match &model.filter_expression_type {
         None => None,
@@ -514,7 +514,7 @@ fn build_model_relationship_schema(
     source_object_type_representation: &ObjectTypeWithRelationships,
     target_object_type_representation: &ObjectTypeWithRelationships,
     target_filter_expression_graphql_type: &ast::TypeName,
-    target_model: &ModelWithPermissions,
+    target_model: &ModelWithArgumentPresets,
     target_source: &Arc<metadata_resolve::ModelSource>,
     relationship: &RelationshipField,
     relationship_type: &RelationshipType,
@@ -545,7 +545,6 @@ fn build_model_relationship_schema(
         source_object_type_representation,
         target_object_type_representation,
         relationship_model_mappings,
-        &gds.metadata.object_types,
     )?;
 
     Ok((

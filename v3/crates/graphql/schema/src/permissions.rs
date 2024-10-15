@@ -1,115 +1,48 @@
 use indexmap::IndexMap;
-use open_dds::{
-    data_connector::DataConnectorColumnName,
-    types::{CustomTypeName, DataConnectorArgumentName, FieldName},
-};
-use std::collections::{BTreeMap, HashMap};
+use open_dds::types::FieldName;
+use std::collections::HashMap;
 
 use crate::types;
 use crate::Role;
-use metadata_resolve::ValueExpressionOrPredicate;
 use metadata_resolve::{self};
-use metadata_resolve::{object_type_exists, unwrap_custom_type_name};
-use metadata_resolve::{Qualified, QualifiedTypeReference};
-
-use super::types::ArgumentNameAndPath;
 
 /// Build namespace annotation for select permissions
 pub(crate) fn get_select_permissions_namespace_annotations(
-    model: &metadata_resolve::ModelWithPermissions,
-    object_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
+    model: &metadata_resolve::ModelWithArgumentPresets,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
-    let mut permissions: HashMap<Role, Option<types::NamespaceAnnotation>> = model
-        .select_permissions
-        .iter()
-        .map(|(role, select_permission)| {
-            (
-                role.clone(),
-                Some(types::NamespaceAnnotation::Model {
-                    filter: select_permission.filter.clone(),
-                    argument_presets: types::ArgumentPresets {
-                        argument_presets: select_permission
-                            .argument_presets
-                            .iter()
-                            .map(|(arg_name, preset)| {
-                                (
-                                    ArgumentNameAndPath {
-                                        ndc_argument_name: model
-                                            .model
-                                            .source
-                                            .as_ref()
-                                            .and_then(|model_source| {
-                                                model_source.argument_mappings.get(arg_name)
-                                            })
-                                            .cloned(),
-                                        field_path: vec![],
-                                    },
-                                    preset.clone(),
-                                )
-                            })
-                            .collect(),
-                    },
-                }),
-            )
-        })
-        .collect();
+    let mut namespace_annotations = HashMap::new();
 
-    // if any of model argument's input type has field presets defined, add
-    // them to model argument preset annotations as well. if there is no
-    // source defined for the model, we don't generate these preset
-    // annotations.
-    if let Some(model_source) = model.model.source.as_ref() {
-        let mut role_presets_map = HashMap::new();
-        for (arg_name, arg_info) in &model.model.arguments {
-            // get the NDC argument name of this command source
-            let ndc_argument_name = model_source.argument_mappings.get(arg_name).cloned();
-
-            // A list to keep track of the input types we have already processed
-            let mut processed_input_types = Vec::new();
-            let mut field_path = Vec::new();
-
-            build_annotations_from_input_object_type_permissions(
-                &mut field_path,
-                &arg_info.argument_type,
-                &ndc_argument_name,
-                object_types,
-                &model_source.type_mappings,
-                &mut role_presets_map,
-                &mut processed_input_types,
-            )?;
-        }
-
-        // go through the role presets map and extend them into the permissions map
-        for (role, preset_map) in role_presets_map {
-            if let Some(Some(types::NamespaceAnnotation::Model {
-                filter: _,
-                argument_presets,
-            })) = permissions.get_mut(&role)
-            {
-                *argument_presets = preset_map;
+    for (role, select_permission) in &model.select_permissions {
+        // these should always be defined, even if they are empty, so a lookup failure here is
+        // an internal error
+        let argument_presets = model.argument_presets.get(role).ok_or_else(|| {
+            crate::Error::InternalModelArgumentPresetLookupFailure {
+                role: role.clone(),
+                model_name: model.model.name.clone(),
             }
-        }
+        })?;
+
+        namespace_annotations.insert(
+            role.clone(),
+            Some(types::NamespaceAnnotation::Model {
+                filter: select_permission.filter.clone(),
+                argument_presets: argument_presets.clone(),
+            }),
+        );
     }
 
-    Ok(permissions)
+    Ok(namespace_annotations)
 }
 
 /// Build namespace annotation for select one permissions.
 /// This is different from generating permissions for select_many etc,
 /// as we need to check the permissions of the arguments used in the selection.
 pub(crate) fn get_select_one_namespace_annotations(
-    model: &metadata_resolve::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithArgumentPresets,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
-    object_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
-    let select_permissions = get_select_permissions_namespace_annotations(model, object_types)?;
+    let select_permissions = get_select_permissions_namespace_annotations(model)?;
 
     let permissions = select_permissions
         .into_iter()
@@ -127,17 +60,12 @@ pub(crate) fn get_select_one_namespace_annotations(
 /// We need to check the permissions of the source and target fields
 /// in the relationship mappings.
 pub(crate) fn get_model_relationship_namespace_annotations(
-    target_model: &metadata_resolve::ModelWithPermissions,
+    target_model: &metadata_resolve::ModelWithArgumentPresets,
     source_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     target_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     mappings: &[metadata_resolve::RelationshipModelMapping],
-    object_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
-    let select_permissions =
-        get_select_permissions_namespace_annotations(target_model, object_types)?;
+    let select_permissions = get_select_permissions_namespace_annotations(target_model)?;
     let permissions = select_permissions
         .into_iter()
         .filter(|(role, _)| {
@@ -157,251 +85,43 @@ pub(crate) fn get_model_relationship_namespace_annotations(
 
 /// Build namespace annotation for commands
 pub(crate) fn get_command_namespace_annotations(
-    command: &metadata_resolve::CommandWithPermissions,
-    object_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
+    command: &metadata_resolve::CommandWithArgumentPresets,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
     let mut permissions = HashMap::new();
 
     // process command permissions, and annotate any command argument presets
     for (role, permission) in &command.permissions {
         if permission.allow_execution {
-            let argument_presets = permission
-                .argument_presets
-                .iter()
-                .map(|(argument_name, preset)| {
-                    (
-                        ArgumentNameAndPath {
-                            ndc_argument_name: command
-                                .command
-                                .source
-                                .as_ref()
-                                .and_then(|command_source| {
-                                    command_source.argument_mappings.get(argument_name)
-                                })
-                                .cloned(),
-                            field_path: vec![],
-                        },
-                        preset.clone(),
-                    )
-                })
-                .collect();
+            // these should always be defined, even if they are empty, so a lookup failure here is
+            // an internal error
+            let argument_presets = command.argument_presets.get(role).ok_or_else(|| {
+                crate::Error::InternalCommandArgumentPresetLookupFailure {
+                    role: role.clone(),
+                    command_name: command.command.name.clone(),
+                }
+            })?;
+
             permissions.insert(
                 role.clone(),
                 Some(types::NamespaceAnnotation::Command(
-                    types::ArgumentPresets { argument_presets },
+                    argument_presets.clone(),
                 )),
             );
-        }
-    }
-
-    // if any of command argument's input type has field presets defined, add
-    // them to command argument preset annotations as well. if there is no
-    // source defined for the command, we don't generate these preset
-    // annotations.
-    if let Some(command_source) = command.command.source.as_ref() {
-        let mut role_presets_map = HashMap::new();
-        for (arg_name, arg_info) in &command.command.arguments {
-            // get the NDC argument name of this command source
-            let ndc_argument_name = command_source.argument_mappings.get(arg_name).cloned();
-
-            // A list to keep track of the input types we have already processed
-            let mut processed_input_types = Vec::new();
-            let mut field_path = Vec::new();
-            build_annotations_from_input_object_type_permissions(
-                &mut field_path,
-                &arg_info.argument_type,
-                &ndc_argument_name,
-                object_types,
-                &command_source.type_mappings,
-                &mut role_presets_map,
-                &mut processed_input_types,
-            )?;
-        }
-        // go through the role presets map and extend them into the permissions map
-        for (role, preset_map) in role_presets_map {
-            if let Some(Some(types::NamespaceAnnotation::Command(argument_presets))) =
-                permissions.get_mut(&role)
-            {
-                *argument_presets = preset_map;
-            }
         }
     }
 
     Ok(permissions)
 }
 
-fn build_annotations_from_input_object_type_permissions<'a>(
-    field_path: &mut [DataConnectorColumnName],
-    type_reference: &'a QualifiedTypeReference,
-    ndc_argument_name: &Option<DataConnectorArgumentName>,
-    object_types: &'a BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    role_presets_map: &mut HashMap<Role, types::ArgumentPresets>,
-    processed_input_types: &mut Vec<&'a Qualified<CustomTypeName>>,
-) -> Result<(), crate::Error> {
-    if let Some(object_type) = unwrap_custom_type_name(type_reference) {
-        // If the object type exists and it is not already processed (to avoid infinite recursion)
-        if object_type_exists(object_type, object_types).is_ok()
-            && !processed_input_types.contains(&object_type)
-        {
-            if let Some(object_type_repr) = object_types.get(object_type) {
-                let field_mappings =
-                    type_mappings
-                        .get(object_type)
-                        .map(|type_mapping| match type_mapping {
-                            metadata_resolve::TypeMapping::Object {
-                                ndc_object_type_name: _,
-                                field_mappings,
-                            } => field_mappings,
-                        });
-
-                for (role, permission) in &object_type_repr.type_input_permissions {
-                    let preset_map = build_preset_map_from_input_object_type_permission(
-                        permission,
-                        field_mappings,
-                        type_reference,
-                        field_path,
-                        ndc_argument_name,
-                        object_type,
-                    )?;
-
-                    role_presets_map.insert(
-                        role.clone(),
-                        types::ArgumentPresets {
-                            argument_presets: preset_map,
-                        },
-                    );
-                }
-
-                // Push the input type to the list of processed input types
-                processed_input_types.push(object_type);
-
-                // recursively process all the fields of this input object type
-                // the processed_input_types_ list is passed to avoid infinite recursion
-                for (field_name, field_definition) in &object_type_repr.object_type.fields {
-                    let mut field_path_ = field_path.to_owned();
-                    let ndc_field = field_mappings
-                        .and_then(|mappings| {
-                            mappings
-                                .get(field_name)
-                                .map(|field_mapping| field_mapping.column.clone())
-                        })
-                        .ok_or_else(|| crate::Error::InternalMappingNotFound {
-                            type_name: object_type.clone(),
-                            field_name: field_name.clone(),
-                        })?;
-
-                    field_path_.push(ndc_field.clone());
-                    build_annotations_from_input_object_type_permissions(
-                        &mut field_path_,
-                        &field_definition.field_type,
-                        ndc_argument_name,
-                        object_types,
-                        type_mappings,
-                        role_presets_map,
-                        processed_input_types,
-                    )?;
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-/// Given one input permission and other necessary info, build the arguments presets map
-///
-/// Example of a preset annotation -
-/// Command and types -
-/// ```ignore
-///    createPerson(person: Person) -> Result<PersonOutput>
-///    Person { name: Name, address: Address }
-///    Name { first_name: String, last_name: String }
-///    Address { street: String, city: String, country: String, zip_code: String }
-/// ```
-/// Field preset metadata -
-///   on type Address -
-///     `("user", fieldPreset: {country: {sessionVariable: "x-hasura-user-country"}})`
-/// Preset map we generate -
-///   `Map<("person", ["address", "country"]), ValueExpression(SessionVariable("x-hasura-user-country"))>`
-fn build_preset_map_from_input_object_type_permission(
-    permission: &metadata_resolve::TypeInputPermission,
-    field_mappings: Option<&BTreeMap<FieldName, metadata_resolve::FieldMapping>>,
-    type_reference: &QualifiedTypeReference,
-    field_path: &[DataConnectorColumnName],
-    ndc_argument_name: &Option<DataConnectorArgumentName>,
-    object_type: &Qualified<CustomTypeName>,
-) -> Result<
-    BTreeMap<
-        ArgumentNameAndPath,
-        (
-            QualifiedTypeReference,
-            metadata_resolve::ValueExpressionOrPredicate,
-        ),
-    >,
-    crate::Error,
-> {
-    let preset_map = permission
-        .field_presets
-        .iter()
-        .map(|(field_name, preset)| {
-            let ndc_field = field_mappings
-                .and_then(|mappings| {
-                    mappings
-                        .get(field_name)
-                        .map(|field_mapping| field_mapping.column.clone())
-                })
-                .ok_or_else(|| crate::Error::InternalMappingNotFound {
-                    type_name: object_type.clone(),
-                    field_name: field_name.clone(),
-                })?;
-
-            // extend the existing field path with a new field
-            let mut new_field_path = field_path.to_owned();
-            new_field_path.push(ndc_field);
-
-            let key = ArgumentNameAndPath {
-                ndc_argument_name: ndc_argument_name.clone(),
-                field_path: new_field_path,
-            };
-
-            let value = (
-                type_reference.clone(),
-                match &preset.value {
-                    open_dds::permissions::ValueExpression::Literal(literal) => {
-                        ValueExpressionOrPredicate::Literal(literal.clone())
-                    }
-                    open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-                        ValueExpressionOrPredicate::SessionVariable(session_variable.clone())
-                    }
-                },
-            );
-
-            Ok((key, value))
-        })
-        .collect::<Result<BTreeMap<_, _>, crate::Error>>()?;
-
-    Ok(preset_map)
-}
-
 /// Build namespace annotation for command relationship permissions.
 /// We need to check the permissions of the source fields
 /// in the relationship mappings.
 pub(crate) fn get_command_relationship_namespace_annotations(
-    command: &metadata_resolve::CommandWithPermissions,
+    command: &metadata_resolve::CommandWithArgumentPresets,
     source_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     mappings: &[metadata_resolve::RelationshipCommandMapping],
-    object_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::Error> {
-    let select_permissions = get_command_namespace_annotations(command, object_types)?;
+    let select_permissions = get_command_namespace_annotations(command)?;
 
     Ok(select_permissions
         .into_iter()
@@ -491,7 +211,7 @@ pub(crate) fn get_allowed_roles_for_field<'a>(
 /// Builds namespace annotations for the `node` field.
 pub(crate) fn get_node_field_namespace_permissions(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    model: &metadata_resolve::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithArgumentPresets,
 ) -> HashMap<Role, metadata_resolve::FilterPermission> {
     let mut permissions = HashMap::new();
 
@@ -522,7 +242,7 @@ pub(crate) fn get_node_field_namespace_permissions(
 /// Builds namespace annotations for the `_entities` field.
 pub(crate) fn get_entities_field_namespace_permissions(
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    model: &metadata_resolve::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithArgumentPresets,
 ) -> HashMap<Role, metadata_resolve::FilterPermission> {
     let mut permissions = HashMap::new();
 

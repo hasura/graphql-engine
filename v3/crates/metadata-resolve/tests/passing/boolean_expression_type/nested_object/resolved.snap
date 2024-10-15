@@ -798,7 +798,7 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                         "institutions",
                     ),
                 ),
-            }: ModelWithPermissions {
+            }: ModelWithArgumentPresets {
                 model: Model {
                     path: JSONPath(
                         [
@@ -1408,6 +1408,13 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         ),
                         description: None,
+                    },
+                },
+                argument_presets: {
+                    Role(
+                        "admin",
+                    ): ArgumentPresets {
+                        argument_presets: {},
                     },
                 },
                 select_permissions: {

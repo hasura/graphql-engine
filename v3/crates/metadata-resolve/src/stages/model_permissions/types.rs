@@ -11,7 +11,9 @@ use open_dds::{
     types::{CustomTypeName, Deprecated, FieldName},
 };
 
-use crate::stages::{data_connectors, models, models_graphql, object_relationships, object_types};
+use crate::stages::{
+    argument_presets, data_connectors, models, models_graphql, object_relationships, object_types,
+};
 use crate::types::error::{Error, RelationshipError};
 use crate::types::permission::{ValueExpression, ValueExpressionOrPredicate};
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
@@ -31,14 +33,12 @@ pub enum FilterPermission {
     Filter(ModelPredicate),
 }
 
-pub type ArgumentPresets =
-    BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>;
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct SelectPermission {
     pub filter: FilterPermission,
     // pub allow_aggregations: bool,
-    pub argument_presets: ArgumentPresets,
+    pub argument_presets:
+        BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpressionOrPredicate)>,
     pub allow_subscriptions: bool,
 }
 
@@ -101,7 +101,7 @@ pub struct ModelTargetSource {
 
 impl ModelTargetSource {
     pub fn new(
-        model: &ModelWithPermissions,
+        model: &argument_presets::ModelWithArgumentPresets,
         relationship: &object_relationships::RelationshipField,
     ) -> Result<Option<Self>, Error> {
         model

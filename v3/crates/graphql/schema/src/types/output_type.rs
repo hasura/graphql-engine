@@ -190,10 +190,6 @@ fn object_type_fields(
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &Qualified<CustomTypeName>,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    object_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
     parent_graphql_type_name: &ast::TypeName,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>>, Error> {
     let mut graphql_fields = object_type_representation
@@ -260,7 +256,6 @@ fn object_type_fields(
         gds,
         type_name,
         object_type_representation,
-        object_types,
         parent_graphql_type_name,
     )?;
 
@@ -274,10 +269,6 @@ fn add_relationship_fields(
     gds: &GDS,
     type_name: &Qualified<CustomTypeName>,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    object_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
     parent_graphql_type_name: &ast::TypeName,
 ) -> Result<(), Error> {
     for (relationship_field_name, relationship) in &object_type_representation.relationship_fields {
@@ -290,7 +281,6 @@ fn add_relationship_fields(
                     relationship_field_name,
                     relationship,
                     object_type_representation,
-                    object_types,
                 )?
             }
             metadata_resolve::RelationshipTarget::Model(model_relationship_target) => {
@@ -301,7 +291,6 @@ fn add_relationship_fields(
                     relationship_field_name,
                     relationship,
                     object_type_representation,
-                    object_types,
                 )?
             }
             metadata_resolve::RelationshipTarget::ModelAggregate(
@@ -313,7 +302,6 @@ fn add_relationship_fields(
                 relationship_field_name,
                 relationship,
                 object_type_representation,
-                object_types,
                 parent_graphql_type_name,
             )?,
         };
@@ -340,10 +328,6 @@ fn command_relationship_field(
     relationship_field_name: &ast::Name,
     relationship: &metadata_resolve::RelationshipField,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    object_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
 ) -> Result<gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>, Error> {
     let relationship_output_type =
         get_output_type(gds, builder, &command_relationship_target.target_type)?;
@@ -397,7 +381,6 @@ fn command_relationship_field(
             command,
             object_type_representation,
             &command_relationship_target.mappings,
-            object_types,
         )?,
     );
     Ok(field)
@@ -411,10 +394,6 @@ fn model_relationship_field(
     relationship_field_name: &ast::Name,
     relationship: &metadata_resolve::RelationshipField,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    object_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
 ) -> Result<gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>, Error> {
     let relationship_base_output_type =
         get_custom_output_type(gds, builder, &model_relationship_target.target_typename)?;
@@ -476,7 +455,6 @@ fn model_relationship_field(
             object_type_representation,
             target_object_type_representation,
             &model_relationship_target.mappings,
-            object_types,
         )?,
     );
     Ok(field)
@@ -490,10 +468,6 @@ fn model_aggregate_relationship_field(
     relationship_field_name: &ast::Name,
     relationship: &metadata_resolve::RelationshipField,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    object_types: &BTreeMap<
-        Qualified<CustomTypeName>,
-        metadata_resolve::ObjectTypeWithRelationships,
-    >,
     parent_graphql_type_name: &ast::TypeName,
 ) -> Result<gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>, Error> {
     let aggregate_expression_name = &model_aggregate_relationship_target.aggregate_expression;
@@ -517,7 +491,6 @@ fn model_aggregate_relationship_field(
         aggregates::get_aggregate_select_output_type(builder, aggregate_expression)?;
 
     let arguments = select_aggregate::generate_select_aggregate_arguments(
-        gds,
         builder,
         model,
         &model_aggregate_relationship_target.filter_input_field_name,
@@ -553,7 +526,6 @@ fn model_aggregate_relationship_field(
             object_type_representation,
             target_object_type_representation,
             &model_aggregate_relationship_target.mappings,
-            object_types,
         )?,
     );
     Ok(field)
@@ -607,7 +579,6 @@ pub fn output_type_schema(
         builder,
         type_name,
         object_type_representation,
-        &gds.metadata.object_types,
         &graphql_type_name,
     )?;
     let directives = match &object_type_representation

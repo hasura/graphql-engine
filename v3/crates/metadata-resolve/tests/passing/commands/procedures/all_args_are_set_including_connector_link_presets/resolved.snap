@@ -40,7 +40,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
                         "procedure_with_args",
                     ),
                 ),
-            }: CommandWithPermissions {
+            }: CommandWithArgumentPresets {
                 command: Command {
                     name: Qualified {
                         subgraph: SubgraphName(
@@ -234,6 +234,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
                     description: None,
                 },
                 permissions: {},
+                argument_presets: {},
             },
         },
         object_boolean_expression_types: {},

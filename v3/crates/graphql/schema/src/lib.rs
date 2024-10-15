@@ -39,11 +39,10 @@ pub use types::output_type::relationship::{
     OrderByRelationshipAnnotation,
 };
 pub use types::{
-    Annotation, ApolloFederationRootFields, ArgumentNameAndPath, ArgumentPresets,
-    BooleanExpressionAnnotation, CommandSourceDetail, EntityFieldTypeNameMapping, GlobalID,
-    InputAnnotation, ModelFilterArgument, ModelInputAnnotation, ModelOrderByDirection,
-    NamespaceAnnotation, NodeFieldTypeNameMapping, ObjectFieldKind, OutputAnnotation,
-    RootFieldAnnotation, RootFieldKind, TypeKind,
+    Annotation, ApolloFederationRootFields, BooleanExpressionAnnotation, CommandSourceDetail,
+    EntityFieldTypeNameMapping, GlobalID, InputAnnotation, ModelFilterArgument,
+    ModelInputAnnotation, ModelOrderByDirection, NamespaceAnnotation, NodeFieldTypeNameMapping,
+    ObjectFieldKind, OutputAnnotation, RootFieldAnnotation, RootFieldKind, TypeKind,
 };
 
 /// This 'NamespacedGetter' looks up 'NamespacedNodeInfo's according to actual roles.
@@ -302,6 +301,20 @@ pub enum Error {
     InternalObjectTypeFieldNotFound {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
+    },
+    #[error(
+        "internal error while building schema, role {role} not found in argument presets for model {model_name}"
+    )]
+    InternalModelArgumentPresetLookupFailure {
+        model_name: Qualified<ModelName>,
+        role: Role,
+    },
+    #[error(
+        "internal error while building schema, role {role} not found in argument presets for command {command_name}"
+    )]
+    InternalCommandArgumentPresetLookupFailure {
+        command_name: Qualified<CommandName>,
+        role: Role,
     },
     #[error("duplicate field name {field_name} generated while building object type {type_name}")]
     DuplicateFieldNameGeneratedInObjectType {

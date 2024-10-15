@@ -12,7 +12,7 @@ use crate::types::{self};
 use crate::{mk_deprecation_status, GDS};
 use crate::{permissions, ModelInputAnnotation};
 use metadata_resolve::{
-    mk_name, ModelWithPermissions, ObjectTypeWithRelationships, OrderByExpressionGraphqlConfig,
+    mk_name, ModelWithArgumentPresets, ObjectTypeWithRelationships, OrderByExpressionGraphqlConfig,
     OrderByExpressionIdentifier, OrderableField, OrderableObjectField, OrderableRelationship,
     OrderableRelationships,
 };
@@ -282,7 +282,7 @@ fn build_all_relationships(
     gds: &GDS,
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &ModelWithPermissions,
+    model: &ModelWithArgumentPresets,
     object_type_representation: &ObjectTypeWithRelationships,
 ) -> Result<(), Error> {
     for (rel_name, relationship) in &object_type_representation.relationship_fields {
@@ -369,7 +369,6 @@ fn build_all_relationships(
                                             object_type_representation,
                                             target_object_type_representation,
                                             mappings,
-                                            &gds.metadata.object_types,
                                         )?,
                                     ),
                                 );
@@ -388,7 +387,7 @@ fn build_orderable_relationships(
     gds: &GDS,
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &ModelWithPermissions,
+    model: &ModelWithArgumentPresets,
     object_type_representation: &ObjectTypeWithRelationships,
     orderable_relationships: &BTreeMap<RelationshipName, OrderableRelationship>,
 ) -> Result<(), Error> {
@@ -533,7 +532,6 @@ fn build_orderable_relationships(
                                             object_type_representation,
                                             target_object_type_representation,
                                             mappings,
-                                            &gds.metadata.object_types,
                                         )?,
                                     ),
                                 );

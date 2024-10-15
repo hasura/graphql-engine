@@ -52,7 +52,7 @@ pub(crate) fn get_select_filter_predicate<'s>(
 /// but if unexpected ones are found an error will be thrown.
 pub(crate) fn get_argument_presets(
     namespaced_info: &'_ Option<graphql_schema::NamespaceAnnotation>,
-) -> Result<Option<&'_ graphql_schema::ArgumentPresets>, error::Error> {
+) -> Result<Option<&'_ metadata_resolve::ArgumentPresets>, error::Error> {
     match namespaced_info.as_ref() {
         None => Ok(None), // no annotation is fine...
         Some(annotation) => match annotation {

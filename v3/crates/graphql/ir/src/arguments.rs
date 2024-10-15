@@ -3,16 +3,14 @@ use std::collections::BTreeMap;
 use crate::error;
 use crate::filter;
 use graphql_schema::GDS;
-use graphql_schema::{
-    Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
-};
+use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
 use metadata_resolve::data_connectors::ArgumentPresetValue;
 use metadata_resolve::{
-    ArgumentKind, DataConnectorLink, Qualified, QualifiedBaseType, QualifiedTypeName,
-    QualifiedTypeReference, TypeMapping,
+    ArgumentKind, ArgumentNameAndPath, ArgumentPresets, DataConnectorLink, Qualified,
+    QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference, TypeMapping,
 };
 use nonempty::NonEmpty;
 use open_dds::{

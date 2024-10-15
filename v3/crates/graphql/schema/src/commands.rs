@@ -21,7 +21,7 @@ use super::types::output_type::get_type_kind;
 pub(crate) fn generate_command_argument(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &metadata_resolve::CommandWithPermissions,
+    command: &metadata_resolve::CommandWithArgumentPresets,
     argument_name: &ArgumentName,
     argument_type: &metadata_resolve::ArgumentInfo,
 ) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::Error> {
@@ -68,7 +68,7 @@ pub(crate) fn generate_command_argument(
 pub(crate) fn command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &metadata_resolve::CommandWithPermissions,
+    command: &metadata_resolve::CommandWithArgumentPresets,
     command_field_name: ast::Name,
     command_annotation: Annotation,
     deprecation_status: gql_schema::DeprecationStatus,
@@ -97,7 +97,7 @@ pub(crate) fn command_field(
             arguments,
             deprecation_status,
         ),
-        permissions::get_command_namespace_annotations(command, &gds.metadata.object_types)?,
+        permissions::get_command_namespace_annotations(command)?,
     );
     Ok((command_field_name, field))
 }
@@ -105,7 +105,7 @@ pub(crate) fn command_field(
 pub(crate) fn function_command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &metadata_resolve::CommandWithPermissions,
+    command: &metadata_resolve::CommandWithArgumentPresets,
     command_field_name: ast::Name,
     deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
@@ -162,7 +162,7 @@ pub(crate) fn function_command_field(
 pub(crate) fn procedure_command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &metadata_resolve::CommandWithPermissions,
+    command: &metadata_resolve::CommandWithArgumentPresets,
     command_field_name: ast::Name,
     deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<

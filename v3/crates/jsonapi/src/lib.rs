@@ -8,7 +8,7 @@ use axum::{
 };
 use axum_core::body::Body;
 use indexmap::IndexMap;
-use metadata_resolve::{Metadata, ModelExpressionType, ModelWithPermissions, Qualified};
+use metadata_resolve::{Metadata, ModelExpressionType, ModelWithArgumentPresets, Qualified};
 use open_dds::{
     identifier,
     identifier::{Identifier, SubgraphName},
@@ -20,7 +20,7 @@ use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError, TraceableHtt
 
 #[derive(Debug)]
 pub struct State {
-    pub routes: HashMap<String, ModelWithPermissions>,
+    pub routes: HashMap<String, ModelWithArgumentPresets>,
 }
 
 impl State {
@@ -87,7 +87,7 @@ pub async fn handler_internal<'metadata>(
     }
 }
 
-fn validate_route<'a>(state: &'a State, uri: &'a Uri) -> Option<&'a ModelWithPermissions> {
+fn validate_route<'a>(state: &'a State, uri: &'a Uri) -> Option<&'a ModelWithArgumentPresets> {
     // TODO: to_string() maybe not optimal. Optimize later
     let uri_s = uri.to_string();
     for (route, model) in &state.routes {
@@ -188,7 +188,7 @@ fn include_field(
 }
 
 fn create_query_ir(
-    model: &ModelWithPermissions,
+    model: &ModelWithArgumentPresets,
     _http_method: &Method,
     uri: &Uri,
     query_string: &jsonapi_library::query::Query,
@@ -329,7 +329,7 @@ fn build_order_by_element(elem: &String) -> Result<open_dds::query::OrderByEleme
 }
 */
 fn build_boolean_expression(
-    model: &ModelWithPermissions,
+    model: &ModelWithArgumentPresets,
     _filter: &BTreeMap<String, Vec<String>>,
 ) -> open_dds::query::BooleanExpression {
     // TODO: actually parse and create a BooleanExpression

@@ -1,7 +1,8 @@
 pub mod aggregate_boolean_expressions;
 pub mod aggregates;
 pub mod apollo;
-mod arguments;
+pub mod argument_presets;
+pub mod arguments;
 pub mod boolean_expressions;
 pub mod command_permissions;
 pub mod commands;
@@ -244,7 +245,7 @@ pub fn resolve(
 
     // now we know about relationships, we can check our arguments (particularly, any
     // boolean expressions they use and whether their relationships are valid)
-    arguments::resolve(
+    let issues = arguments::resolve(
         &commands,
         &models,
         &object_types_with_relationships,
@@ -252,6 +253,8 @@ pub fn resolve(
         &object_boolean_expression_types,
         &boolean_expression_types,
     )?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     // Resolve the filter expressions and graphql settings for models
     // This is a separate step so we can look up resolved models and their sources
@@ -296,6 +299,14 @@ pub fn resolve(
         &boolean_expression_types,
     )?;
 
+    // calculate any preset arguments for these models
+    let argument_presets::ArgumentPresetsOutput { models, commands } = argument_presets::resolve(
+        &models_with_permissions,
+        &commands_with_permissions,
+        &object_types_with_relationships,
+    )
+    .map_err(Error::from)?;
+
     let roles = roles::resolve(
         &object_types_with_relationships,
         &models_with_permissions,
@@ -310,8 +321,8 @@ pub fn resolve(
         Metadata {
             scalar_types,
             object_types: object_types_with_relationships,
-            models: models_with_permissions,
-            commands: commands_with_permissions,
+            models,
+            commands,
             object_boolean_expression_types,
             boolean_expression_types,
             order_by_expressions,

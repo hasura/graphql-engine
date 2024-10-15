@@ -1,6 +1,6 @@
 use crate::helpers::typecheck::TypecheckError;
 use crate::stages::{
-    aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo,
+    aggregate_boolean_expressions, aggregates::AggregateExpressionError, apollo, argument_presets,
     boolean_expressions, commands, data_connector_scalar_types, data_connectors, graphql_config,
     models, object_types, order_by_expressions, relationships, relay, scalar_boolean_expressions,
     scalar_types, type_permissions,
@@ -337,6 +337,8 @@ pub enum Error {
     DataConnectorScalarTypesError(
         #[from] data_connector_scalar_types::DataConnectorScalarTypesError,
     ),
+    #[error("{0}")]
+    ArgumentPresetError(#[from] argument_presets::ArgumentPresetError),
     #[error(
         "The following issues were raised but disallowed by compatibility configuration:\n\n{warnings_as_errors}"
     )]

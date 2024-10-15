@@ -131,7 +131,7 @@ impl Command {
     // 3. if any of the arguments to the command cannot be converted to datafusion's types
     pub fn from_resolved_command(
         type_registry: &TypeRegistry,
-        command: &resolved::CommandWithPermissions,
+        command: &resolved::CommandWithArgumentPresets,
     ) -> Option<Self> {
         let argument_presets_defined = command
             .permissions

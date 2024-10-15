@@ -397,7 +397,7 @@ fn analyze_namespace_annotation(
 }
 
 fn analyze_argument_presets(
-    argument_presets: &graphql_schema::ArgumentPresets,
+    argument_presets: &metadata_resolve::ArgumentPresets,
 ) -> Option<OpenddObject> {
     let mut arguments = Vec::new();
     for argument in argument_presets.argument_presets.keys() {

@@ -23,6 +23,9 @@ pub use stages::aggregates::{
     AggregatableFieldInfo, AggregateExpression, AggregateExpressionGraphqlConfig, AggregateOperand,
     AggregationFunctionInfo, DataConnectorAggregationFunctionInfo,
 };
+pub use stages::argument_presets::{
+    ArgumentNameAndPath, ArgumentPresets, CommandWithArgumentPresets, ModelWithArgumentPresets,
+};
 pub use stages::boolean_expressions::{
     BooleanExpressionComparableRelationship, BooleanExpressionError,
     BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,
@@ -32,8 +35,8 @@ pub use stages::boolean_expressions::{
 pub use stages::data_connectors::{ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset};
 pub use stages::graphql_config::GlobalGraphqlConfig;
 pub use stages::model_permissions::{
-    ArgumentPresets, FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
-    SelectPermission, UnaryComparisonOperator,
+    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions, SelectPermission,
+    UnaryComparisonOperator,
 };
 pub use stages::models::{Model, ModelSource, ModelsError};
 pub use stages::models_graphql::{

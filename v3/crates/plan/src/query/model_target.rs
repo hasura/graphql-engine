@@ -16,7 +16,7 @@ pub async fn model_target_to_ndc_query(
     metadata: &metadata_resolve::Metadata,
     // The following are things we could compute, but we have them on hand
     // at all call sites anyway:
-    model: &metadata_resolve::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithArgumentPresets,
     model_source: &metadata_resolve::ModelSource,
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
 ) -> Result<NDCQuery, PlanError> {

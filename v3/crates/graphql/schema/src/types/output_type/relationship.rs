@@ -91,7 +91,7 @@ pub struct CommandTargetSource {
 
 impl CommandTargetSource {
     pub fn new(
-        command: &metadata_resolve::CommandWithPermissions,
+        command: &metadata_resolve::CommandWithArgumentPresets,
         relationship: &metadata_resolve::RelationshipField,
     ) -> Result<Option<Self>, crate::Error> {
         command

@@ -85,7 +85,7 @@ pub fn subscription_root_schema(
 fn select_one_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithArgumentPresets,
     unique_identifier: &IndexMap<FieldName, metadata_resolve::UniqueIdentifierField>,
     subscription: &metadata_resolve::SubscriptionGraphQlDefinition,
     parent_type: &ast::TypeName,
@@ -112,7 +112,6 @@ fn select_one_field(
         model,
         object_type_representation,
         unique_identifier,
-        &gds.metadata.object_types,
     )?;
     let field = builder.conditional_namespaced(
         gql_schema::Field::new(
@@ -140,7 +139,7 @@ fn select_one_field(
 fn select_many_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithArgumentPresets,
     subscription: &metadata_resolve::SubscriptionGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
@@ -155,7 +154,6 @@ fn select_many_field(
 
     model_arguments::add_model_arguments_field(
         &mut arguments,
-        gds,
         builder,
         model,
         &subscription.root_field,
@@ -183,10 +181,7 @@ fn select_many_field(
             arguments,
             mk_deprecation_status(&subscription.deprecated),
         ),
-        permissions::get_select_permissions_namespace_annotations(
-            model,
-            &gds.metadata.object_types,
-        )?,
+        permissions::get_select_permissions_namespace_annotations(model)?,
     );
     Ok((subscription_root_field, field))
 }
@@ -195,7 +190,7 @@ fn select_many_field(
 fn select_aggregate_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &metadata_resolve::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithArgumentPresets,
     aggregate_expression_name: &metadata_resolve::Qualified<AggregateExpressionName>,
     filter_input_field_name: &ast::Name,
     subscription: &metadata_resolve::SubscriptionGraphQlDefinition,
@@ -218,7 +213,6 @@ fn select_aggregate_field(
     let subscription_field_name = subscription.root_field.clone();
 
     let arguments = select_aggregate::generate_select_aggregate_arguments(
-        gds,
         builder,
         model,
         filter_input_field_name,
@@ -226,10 +220,7 @@ fn select_aggregate_field(
         parent_type,
     )?;
 
-    let field_permissions = permissions::get_select_permissions_namespace_annotations(
-        model,
-        &gds.metadata.object_types,
-    )?;
+    let field_permissions = permissions::get_select_permissions_namespace_annotations(model)?;
 
     let output_typename = get_aggregate_select_output_type(builder, aggregate_expression)?;
 

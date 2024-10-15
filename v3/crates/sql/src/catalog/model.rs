@@ -65,7 +65,7 @@ pub(crate) struct Model {
 impl Model {
     pub fn from_resolved_model(
         type_registry: &TypeRegistry,
-        model: &resolved::ModelWithPermissions,
+        model: &resolved::ModelWithArgumentPresets,
     ) -> Option<Self> {
         let (type_name, schema) = type_registry
             .get_object(&model.model.data_type)
