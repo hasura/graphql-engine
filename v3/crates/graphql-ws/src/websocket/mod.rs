@@ -3,7 +3,7 @@ pub mod types;
 
 use axum::{
     extract::ws,
-    http::{HeaderMap, StatusCode},
+    http::{header::InvalidHeaderValue, HeaderMap, StatusCode},
     response::{IntoResponse, Response},
 };
 use futures_util::StreamExt;
@@ -11,6 +11,7 @@ use futures_util::StreamExt;
 use crate::protocol;
 
 pub static SEC_WEBSOCKET_PROTOCOL: &str = "Sec-WebSocket-Protocol";
+static SEC_WEBSOCKET_ID: &str = "Sec-WebSocket-Id";
 static WEBSOCKET_CHANNEL_SIZE: usize = 50;
 
 /// GraphQL WebSocket server implementation.
@@ -56,62 +57,101 @@ impl WebSocketServer {
         context: types::Context,
     ) -> Response {
         let tracer = tracing_util::global_tracer();
-        tracer
-            .in_span(
-                "upgrade_and_handle_websocket",
-                "Processing WebSocket upgrade request for GraphQL protoco",
-                tracing_util::SpanVisibility::User,
-                || {
-                    let response = {
-                        let protocol_header = headers
-                            .get(SEC_WEBSOCKET_PROTOCOL)
-                            .and_then(|val| val.to_str().ok());
+        let result = tracer.in_span(
+            "upgrade_and_handle_websocket",
+            "Processing WebSocket upgrade request for GraphQL protoco",
+            tracing_util::SpanVisibility::User,
+            || {
+                // Create a websocket id
+                let websocket_id = types::WebSocketId::new();
 
-                        // Create a websocket id
-                        let websocket_id = types::WebSocketId::new();
+                // Set websocket id attribute
+                tracing_util::set_attribute_on_active_span(
+                    tracing_util::AttributeVisibility::Default,
+                    "websocket.id",
+                    websocket_id.to_string(),
+                );
 
-                        // Set websocket id attribute
-                        tracing_util::set_attribute_on_active_span(
-                            tracing_util::AttributeVisibility::Default,
-                            "websocket.id",
-                            websocket_id.to_string(),
-                        );
+                let protocol = headers
+                    .get(SEC_WEBSOCKET_PROTOCOL)
+                    .and_then(|val| val.to_str().ok())
+                    .ok_or(WebSocketError::MissingProtocolHeader)?;
 
-                        // Validate the WebSocket protocol
-                        if let Some(protocol) = protocol_header {
-                            if protocol == protocol::GRAPHQL_WS_PROTOCOL {
-                                let connections = self.connections.clone();
-                                // Upgrade the WebSocket connection and handle it
-                                tracing_util::get_active_span(|span| {
-                                    let span_context = span.span_context().clone();
-                                    ws_upgrade
-                                        .protocols(vec![protocol::GRAPHQL_WS_PROTOCOL])
-                                        .on_upgrade(move |socket| {
-                                            start_websocket_session(
-                                                socket,
-                                                websocket_id,
-                                                context,
-                                                connections,
-                                                span_context,
-                                            )
-                                        })
-                                })
-                            } else {
-                                // Return 400 Bad Request if the protocol doesn't match
-                                let error_message =
-                                    format!("Invalid WebSocket protocol: {protocol}");
-                                (StatusCode::BAD_REQUEST, error_message).into_response()
-                            }
-                        } else {
-                            // Return 400 Bad Request if the protocol header is missing
-                            let error_message = format!("Missing {SEC_WEBSOCKET_PROTOCOL} header");
-                            (StatusCode::BAD_REQUEST, error_message).into_response()
-                        }
-                    };
-                    tracing_util::TraceableHttpResponse::new(response, "/graphql")
-                },
+                let mut response = if protocol == protocol::GRAPHQL_WS_PROTOCOL {
+                    let connections = self.connections.clone();
+                    // Upgrade the WebSocket connection and handle it
+                    tracing_util::get_active_span(|span| {
+                        let span_context = span.span_context().clone();
+                        // Clone the websocket_id to move it into the closure
+                        let websocket_id = websocket_id.clone();
+                        ws_upgrade
+                            .protocols(vec![protocol::GRAPHQL_WS_PROTOCOL])
+                            .on_upgrade(move |socket| {
+                                start_websocket_session(
+                                    socket,
+                                    websocket_id,
+                                    context,
+                                    connections,
+                                    span_context,
+                                )
+                            })
+                    })
+                } else {
+                    // Return error if the protocol doesn't match
+                    return Err(WebSocketError::InvalidProtocol(protocol.to_string()));
+                };
+
+                // Set the WebSocket id response header
+                response
+                    .headers_mut()
+                    .insert(SEC_WEBSOCKET_ID, websocket_id.to_string().parse()?);
+                Ok(response)
+            },
+        );
+
+        result.unwrap_or_else(IntoResponse::into_response)
+    }
+}
+
+/// Error types for WebSocket connections.
+#[derive(Debug, thiserror::Error)]
+pub enum WebSocketError {
+    #[error("Missing {SEC_WEBSOCKET_PROTOCOL} header")]
+    MissingProtocolHeader,
+    #[error("Invalid WebSocket protocol: {0}")]
+    InvalidProtocol(String),
+    #[error("Unable to set {SEC_WEBSOCKET_ID} header value: {0}")]
+    WebSocketIdInvalidHeaderValue(#[from] InvalidHeaderValue),
+}
+
+impl tracing_util::TraceableError for WebSocketError {
+    fn visibility(&self) -> tracing_util::ErrorVisibility {
+        match self {
+            Self::MissingProtocolHeader | Self::InvalidProtocol(_) => {
+                tracing_util::ErrorVisibility::User
+            }
+            Self::WebSocketIdInvalidHeaderValue(_) => tracing_util::ErrorVisibility::Internal,
+        }
+    }
+}
+
+impl IntoResponse for WebSocketError {
+    fn into_response(self) -> Response {
+        match self {
+            Self::MissingProtocolHeader => (
+                StatusCode::BAD_REQUEST,
+                "Missing Sec-WebSocket-Protocol header",
             )
-            .response
+                .into_response(),
+            Self::InvalidProtocol(protocol) => (
+                StatusCode::BAD_REQUEST,
+                format!("Invalid WebSocket protocol: {protocol}"),
+            )
+                .into_response(),
+            Self::WebSocketIdInvalidHeaderValue(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error").into_response()
+            }
+        }
     }
 }
 
