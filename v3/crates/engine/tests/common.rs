@@ -811,7 +811,10 @@ pub async fn open_dd_pipeline_test(
                 // for instance
                 let ir = graphql_frontend::to_opendd_ir(&normalized_request);
 
-                insta::assert_debug_snapshot!(format!("ir_{test_path_string}"), ir);
+                insta::assert_debug_snapshot!(
+                    format!("ir_{test_path_string}_{}", session.role),
+                    ir
+                );
             }
         }
         TestOpenDDPipeline::TestNDCResponses => {
@@ -830,7 +833,10 @@ pub async fn open_dd_pipeline_test(
                 let query_ir = graphql_frontend::to_opendd_ir(&normalized_request);
 
                 // check IR is what we expect
-                insta::assert_debug_snapshot!(format!("ir_{test_path_string}"), query_ir);
+                insta::assert_debug_snapshot!(
+                    format!("ir_{test_path_string}_{}", session.role),
+                    query_ir
+                );
 
                 // create a query execution plan for a single node with the new pipeline
                 let (query_execution_plan, _) = plan::plan_query_request(
@@ -855,7 +861,7 @@ pub async fn open_dd_pipeline_test(
                                 .unwrap();
 
                         insta::assert_json_snapshot!(
-                            format!("rowsets_{test_path_string}"),
+                            format!("rowsets_{test_path_string}_{}", session.role),
                             rowsets
                         );
                     }

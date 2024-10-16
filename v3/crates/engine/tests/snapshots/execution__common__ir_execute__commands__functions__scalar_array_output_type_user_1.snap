@@ -1,0 +1,40 @@
+---
+source: crates/engine/tests/common.rs
+expression: ir
+---
+V1(
+    QueryRequestV1 {
+        queries: {
+            Alias(
+                Identifier(
+                    "getActorNamesByMovieId",
+                ),
+            ): Command(
+                CommandSelection {
+                    target: CommandTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        command_name: CommandName(
+                            Identifier(
+                                "get_actor_names_by_movie_id",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "movie_id",
+                                ),
+                            ): Literal(
+                                Number(1),
+                            ),
+                        },
+                    },
+                    selection: Some(
+                        {},
+                    ),
+                },
+            ),
+        },
+    },
+)

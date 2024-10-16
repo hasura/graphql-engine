@@ -1,0 +1,84 @@
+---
+source: crates/engine/tests/common.rs
+expression: query_ir
+---
+V1(
+    QueryRequestV1 {
+        queries: {
+            Alias(
+                Identifier(
+                    "getAllActors",
+                ),
+            ): Command(
+                CommandSelection {
+                    target: CommandTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        command_name: CommandName(
+                            Identifier(
+                                "get_all_actors",
+                            ),
+                        ),
+                        arguments: {},
+                    },
+                    selection: Some(
+                        {
+                            Alias(
+                                Identifier(
+                                    "actor_id",
+                                ),
+                            ): Field(
+                                ObjectFieldSelection {
+                                    target: ObjectFieldTarget {
+                                        field_name: FieldName(
+                                            Identifier(
+                                                "actor_id",
+                                            ),
+                                        ),
+                                        arguments: {},
+                                    },
+                                    selection: None,
+                                },
+                            ),
+                            Alias(
+                                Identifier(
+                                    "name",
+                                ),
+                            ): Field(
+                                ObjectFieldSelection {
+                                    target: ObjectFieldTarget {
+                                        field_name: FieldName(
+                                            Identifier(
+                                                "name",
+                                            ),
+                                        ),
+                                        arguments: {},
+                                    },
+                                    selection: None,
+                                },
+                            ),
+                            Alias(
+                                Identifier(
+                                    "movie_id",
+                                ),
+                            ): Field(
+                                ObjectFieldSelection {
+                                    target: ObjectFieldTarget {
+                                        field_name: FieldName(
+                                            Identifier(
+                                                "movie_id",
+                                            ),
+                                        ),
+                                        arguments: {},
+                                    },
+                                    selection: None,
+                                },
+                            ),
+                        },
+                    ),
+                },
+            ),
+        },
+    },
+)

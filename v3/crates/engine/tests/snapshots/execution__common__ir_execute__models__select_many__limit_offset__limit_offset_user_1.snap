@@ -1,0 +1,73 @@
+---
+source: crates/engine/tests/common.rs
+expression: query_ir
+---
+V1(
+    QueryRequestV1 {
+        queries: {
+            Alias(
+                Identifier(
+                    "AuthorMany",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "Authors",
+                            ),
+                        ),
+                        arguments: {},
+                        filter: None,
+                        order_by: [],
+                        limit: Some(
+                            2,
+                        ),
+                        offset: Some(
+                            2,
+                        ),
+                    },
+                    selection: {
+                        Alias(
+                            Identifier(
+                                "author_id",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "author_id",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "first_name",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "first_name",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                    },
+                },
+            ),
+        },
+    },
+)
