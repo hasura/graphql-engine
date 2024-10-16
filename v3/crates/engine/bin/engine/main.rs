@@ -684,7 +684,7 @@ async fn plugins_middleware(
 }
 
 /// Handle a SQL request and execute it.
-async fn handle_sql_request(
+pub async fn handle_sql_request(
     headers: axum::http::header::HeaderMap,
     State(state): State<EngineState>,
     Extension(session): Extension<Session>,

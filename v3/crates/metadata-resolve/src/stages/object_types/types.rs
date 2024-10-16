@@ -5,6 +5,7 @@ use open_dds::arguments::ArgumentName;
 use open_dds::models::ModelName;
 use open_dds::types::{CustomTypeName, DataConnectorArgumentName, Deprecated, FieldName};
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use std::borrow::Borrow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Deref;
@@ -16,9 +17,11 @@ use open_dds::data_connector::{
     DataConnectorColumnName, DataConnectorName, DataConnectorObjectType, DataConnectorOperatorName,
 };
 
+#[serde_as]
 /// A mapping from a data connector to their objects, which contain field types.
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct DataConnectorTypeMappingsForObject {
+    #[serde_as(as = "Vec<(_, _)>")]
     mappings:
         BTreeMap<Qualified<DataConnectorName>, BTreeMap<DataConnectorObjectType, TypeMapping>>,
     // Possible scalar representations for a field that are collected across all data connectors

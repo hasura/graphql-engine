@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common as ast;
+use serde_with::serde_as;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ScalarBooleanExpressionsOutput {
@@ -15,6 +16,7 @@ pub struct ScalarBooleanExpressionsOutput {
     pub graphql_types: BTreeSet<ast::TypeName>,
 }
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ResolvedScalarBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
@@ -27,6 +29,7 @@ pub struct ResolvedScalarBooleanExpressionType {
 
     /// The list of mappings between OpenDD operator names and the names used in the data
     /// connector schema
+    #[serde_as(as = "Vec<(_, _)>")]
     pub data_connector_operator_mappings: BTreeMap<
         Qualified<open_dds::data_connector::DataConnectorName>,
         open_dds::boolean_expression::DataConnectorOperatorMapping,

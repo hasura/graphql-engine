@@ -8,6 +8,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName, OperatorName},
 };
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, thiserror::Error, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -29,17 +30,23 @@ impl ShouldBeAnError for BooleanExpressionIssue {
         }
     }
 }
+
+#[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionTypes {
+    #[serde_as(as = "Vec<(_, _)>")]
     pub objects: BTreeMap<Qualified<CustomTypeName>, ResolvedObjectBooleanExpressionType>,
+    #[serde_as(as = "Vec<(_, _)>")]
     pub scalars: BTreeMap<
         Qualified<CustomTypeName>,
         scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
     >,
+    #[serde_as(as = "Vec<(_, _)>")]
     pub object_aggregates: BTreeMap<
         Qualified<CustomTypeName>,
         aggregate_boolean_expressions::ObjectAggregateBooleanExpression,
     >,
+    #[serde_as(as = "Vec<(_, _)>")]
     pub scalar_aggregates: BTreeMap<
         Qualified<CustomTypeName>,
         aggregate_boolean_expressions::ScalarAggregateBooleanExpression,
@@ -74,6 +81,7 @@ pub enum IncludeLogicalOperators {
     No,
 }
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparisonExpressionInfo {
     // we reuse this type for ObjectBooleanExpressionType and BooleanExpressionType
@@ -82,6 +90,7 @@ pub struct ComparisonExpressionInfo {
     pub object_type_name: Option<Qualified<CustomTypeName>>,
     pub type_name: ast::TypeName,
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
+    #[serde_as(as = "Vec<(_, _)>")]
     pub operator_mapping:
         BTreeMap<Qualified<DataConnectorName>, BTreeMap<OperatorName, DataConnectorOperatorName>>,
     pub is_null_operator_name: Option<ast::Name>,

@@ -8,6 +8,7 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
 use open_dds::session_variables::{SessionVariable, SESSION_VARIABLE_ROLE};
+use pretty_assertions::assert_eq;
 use serde_json as json;
 use sql::execute::SqlRequest;
 use std::collections::BTreeMap;
@@ -240,6 +241,12 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 serde_json::to_string(&schema).expect("Failed to serialize schema");
             let deserialized_metadata: Schema<GDS> =
                 serde_json::from_str(&serialized_metadata).expect("Failed to deserialize metadata");
+
+            // Ensure sql_context can be serialized and deserialized
+            let sql_context = sql::catalog::Catalog::from_metadata(gds.metadata.clone());
+            let sql_context_str = serde_json::to_string(&sql_context)?;
+            let sql_context_parsed = serde_json::from_str(&sql_context_str)?;
+            assert_eq!(sql_context, sql_context_parsed);
             assert_eq!(
                 schema, deserialized_metadata,
                 "initial built metadata does not match deserialized metadata"
@@ -549,6 +556,12 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
 
         // Ensure schema is serialized successfully.
         serde_json::to_string(&schema)?;
+
+        // Ensure sql_context can be serialized and deserialized
+        let sql_context = sql::catalog::Catalog::from_metadata(gds.metadata.clone());
+        let sql_context_str = serde_json::to_string(&sql_context)?;
+        let sql_context_parsed = serde_json::from_str(&sql_context_str)?;
+        assert_eq!(sql_context, sql_context_parsed);
 
         let request = if let Ok(content) = read_to_string(&request_path) {
             SqlRequest::new(content)

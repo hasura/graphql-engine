@@ -1,3 +1,4 @@
+use serde_with::serde_as;
 use std::collections::{BTreeMap, BTreeSet};
 
 use open_dds::{
@@ -20,8 +21,10 @@ pub enum OrderByExpressionIdentifier {
     FromModel(ModelName),
 }
 
+#[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct OrderByExpressions {
+    #[serde_as(as = "Vec<(_, _)>")]
     pub objects: BTreeMap<Qualified<OrderByExpressionIdentifier>, ObjectOrderByExpression>,
 }
 
