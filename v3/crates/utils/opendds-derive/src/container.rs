@@ -12,7 +12,8 @@ struct JsonSchemaOpts {
     rename: Option<String>,
     id: Option<String>,
     title: Option<String>,
-    example: Option<syn::Path>,
+    #[darling(multiple, rename = "example")]
+    examples: Vec<syn::Path>,
 }
 
 /// Struct container attributes
@@ -89,7 +90,8 @@ struct EnumOpts {
 #[darling(default)]
 pub struct JsonSchemaVariantOpts {
     pub title: Option<String>,
-    pub example: Option<syn::Path>,
+    #[darling(multiple, rename = "example")]
+    pub examples: Vec<syn::Path>,
 }
 
 /// Variant attributes
@@ -113,7 +115,7 @@ pub struct JsonSchemaMetadata {
     pub id: String,
     pub title: String,
     pub description: Option<String>,
-    pub example: Option<syn::Path>,
+    pub examples: Vec<syn::Path>,
 }
 
 impl<'a> Container<'a> {
@@ -162,14 +164,14 @@ impl<'a> Container<'a> {
             .title
             .or(doc_title)
             .unwrap_or_else(|| schema_name.clone());
-        let schema_example = json_schema_opts.example;
+        let examples = json_schema_opts.examples;
 
         let json_schema_metadata = JsonSchemaMetadata {
             schema_name,
             title: schema_title,
             id: schema_id,
             description: doc_description,
-            example: schema_example,
+            examples,
         };
         Ok(Self {
             json_schema_metadata,

@@ -513,15 +513,7 @@ fn build_variant_json_schema_metadata(
             }
         })
         .unwrap_or_default();
-    let example_expr = json_schema_opts
-        .example
-        .as_ref()
-        .map(|example| {
-            quote! {
-                metadata.examples = [#example()].to_vec();
-            }
-        })
-        .unwrap_or_default();
+    let example_expr = helpers::set_metadata_examples(&json_schema_opts.examples);
     quote! {
         {
             let mut metadata = schemars::schema::Metadata::default();

@@ -2552,6 +2552,53 @@
               "sessionVariable": "x-hasura-user-id"
             }
           }
+        },
+        {
+          "relationship": {
+            "name": "author",
+            "predicate": {
+              "fieldComparison": {
+                "field": "id",
+                "operator": "_eq",
+                "value": {
+                  "sessionVariable": "x-hasura-user-id"
+                }
+              }
+            }
+          }
+        },
+        {
+          "and": [
+            {
+              "fieldComparison": {
+                "field": "author_id",
+                "operator": "_eq",
+                "value": {
+                  "sessionVariable": "x-hasura-user-id"
+                }
+              }
+            },
+            {
+              "fieldComparison": {
+                "field": "title",
+                "operator": "_eq",
+                "value": {
+                  "literal": "Hello World"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "not": {
+            "fieldComparison": {
+              "field": "author_id",
+              "operator": "_eq",
+              "value": {
+                "sessionVariable": "x-hasura-user-id"
+              }
+            }
+          }
         }
       ],
       "oneOf": [
@@ -4174,6 +4221,40 @@
                           "operator": "_eq",
                           "value": {
                             "sessionVariable": "x-hasura-user-id"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "ModelPermissions",
+              "version": "v1",
+              "definition": {
+                "modelName": "Articles",
+                "permissions": [
+                  {
+                    "role": "admin",
+                    "select": {
+                      "filter": null
+                    }
+                  },
+                  {
+                    "role": "user",
+                    "select": {
+                      "filter": {
+                        "relationship": {
+                          "name": "author",
+                          "predicate": {
+                            "fieldComparison": {
+                              "field": "id",
+                              "operator": "_eq",
+                              "value": {
+                                "sessionVariable": "x-hasura-user-id"
+                              }
+                            }
                           }
                         }
                       }
