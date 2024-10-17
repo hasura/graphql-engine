@@ -33,6 +33,7 @@ use ref_cast::RefCast;
 use std::collections::BTreeMap;
 
 fn resolve_model_predicate_with_model(
+    flags: &open_dds::flags::Flags,
     model_predicate: &open_dds::permissions::ModelPredicate,
     model: &models::Model,
     subgraph: &SubgraphName,
@@ -102,6 +103,7 @@ fn resolve_model_predicate_with_model(
     )?;
 
     resolve_model_predicate_with_type(
+        flags,
         model_predicate,
         &model.data_type,
         object_type_representation,
@@ -136,6 +138,7 @@ pub fn get_model_source_argument<'a>(
 }
 
 pub fn resolve_model_select_permissions(
+    flags: &open_dds::flags::Flags,
     model: &models::Model,
     subgraph: &SubgraphName,
     model_permissions: &ModelPermissionsV1,
@@ -163,6 +166,7 @@ pub fn resolve_model_select_permissions(
             let resolved_predicate = match &select.filter {
                 NullableModelPredicate::NotNull(model_predicate) => {
                     resolve_model_predicate_with_model(
+                        flags,
                         model_predicate,
                         model,
                         subgraph,
@@ -210,6 +214,7 @@ pub fn resolve_model_select_permissions(
                 match model.arguments.get(&argument_preset.argument) {
                     Some(argument) => {
                         let value_expression = resolve_value_expression_for_argument(
+                            flags,
                             &argument_preset.argument,
                             &argument_preset.value,
                             &argument.argument_type,
@@ -269,6 +274,7 @@ pub fn resolve_model_select_permissions(
 /// re-add in future. Because this function takes the `data_connector_field_mappings` as an input,
 /// many of the errors thrown in `resolve_model_predicate` are pushed out.
 pub(crate) fn resolve_model_predicate_with_type(
+    flags: &open_dds::flags::Flags,
     model_predicate: &open_dds::permissions::ModelPredicate,
     type_name: &Qualified<CustomTypeName>,
     object_type_representation: &object_relationships::ObjectTypeWithRelationships,
@@ -385,7 +391,10 @@ pub(crate) fn resolve_model_predicate_with_type(
                     ValueExpression::Literal(json_value.clone())
                 }
                 open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-                    ValueExpression::SessionVariable(session_variable.clone())
+                    ValueExpression::SessionVariable(hasura_authn_core::SessionVariableReference {
+                        name: session_variable.clone(),
+                        passed_as_json: flags.json_session_variables,
+                    })
                 }
             };
 
@@ -641,6 +650,7 @@ pub(crate) fn resolve_model_predicate_with_type(
                             }?;
 
                             let target_model_predicate = resolve_model_predicate_with_type(
+                                flags,
                                 nested_predicate,
                                 &target_model.inner.data_type,
                                 target_object_type,
@@ -682,6 +692,7 @@ pub(crate) fn resolve_model_predicate_with_type(
 
         open_dds::permissions::ModelPredicate::Not(predicate) => {
             let resolved_predicate = resolve_model_predicate_with_type(
+                flags,
                 predicate,
                 type_name,
                 object_type_representation,
@@ -702,6 +713,7 @@ pub(crate) fn resolve_model_predicate_with_type(
             let mut resolved_predicates = Vec::new();
             for predicate in predicates {
                 resolved_predicates.push(resolve_model_predicate_with_type(
+                    flags,
                     predicate,
                     type_name,
                     object_type_representation,
@@ -723,6 +735,7 @@ pub(crate) fn resolve_model_predicate_with_type(
             let mut resolved_predicates = Vec::new();
             for predicate in predicates {
                 resolved_predicates.push(resolve_model_predicate_with_type(
+                    flags,
                     predicate,
                     type_name,
                     object_type_representation,

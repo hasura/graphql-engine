@@ -1,4 +1,4 @@
-use hasura_authn_core::{Role, SessionVariable, SessionVariableValue};
+use hasura_authn_core::{Role, SessionVariableName, SessionVariableValue};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -15,7 +15,7 @@ pub struct NoAuthConfig {
     pub role: Role,
     /// static session variables to use whilst running the engine
     #[schemars(title = "SessionVariables")]
-    pub session_variables: HashMap<SessionVariable, SessionVariableValue>,
+    pub session_variables: HashMap<SessionVariableName, SessionVariableValue>,
 }
 
 impl NoAuthConfig {

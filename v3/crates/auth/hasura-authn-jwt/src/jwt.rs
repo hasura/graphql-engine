@@ -4,10 +4,11 @@ use std::time::Duration;
 use axum::http::{HeaderMap, HeaderValue};
 use axum::response::IntoResponse;
 use cookie::{self, Cookie};
-use hasura_authn_core::{Role, SessionVariable, SessionVariableValue};
+use hasura_authn_core::{Role, SessionVariableValue};
 use jsonptr::Pointer;
 use jsonwebtoken::{self as jwt, decode, DecodingKey, Validation};
 use jwt::decode_header;
+use open_dds::session_variables::SessionVariableName;
 use reqwest::header::{AUTHORIZATION, COOKIE};
 use reqwest::StatusCode;
 use schemars::gen::SchemaGenerator;
@@ -253,7 +254,7 @@ pub struct JWTClaimsMap {
     /// A dictionary of the custom claims, where the key is the name of the claim and the value
     /// is the JSON pointer to lookup the custom claims within the decoded JWT.
     pub custom_claims:
-        Option<HashMap<SessionVariable, JWTClaimsMappingEntry<SessionVariableValue>>>,
+        Option<HashMap<SessionVariableName, JWTClaimsMappingEntry<SessionVariableValue>>>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, JsonSchema, Debug)]
@@ -390,7 +391,7 @@ pub struct HasuraClaims {
     /// as per the user's defined permissions.
     /// For example, things like `x-hasura-user-id` can go here.
     #[serde(flatten)]
-    pub custom_claims: HashMap<SessionVariable, SessionVariableValue>,
+    pub custom_claims: HashMap<SessionVariableName, SessionVariableValue>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -733,7 +734,7 @@ mod tests {
     fn get_default_hasura_claims() -> HasuraClaims {
         let mut hasura_custom_claims = HashMap::new();
         hasura_custom_claims.insert(
-            SessionVariable::from_str("x-hasura-user-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue("1".to_string()),
         );
         HasuraClaims {

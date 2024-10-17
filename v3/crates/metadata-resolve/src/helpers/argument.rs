@@ -253,6 +253,7 @@ pub fn get_argument_mappings<'a>(
 /// type to validate it against to ensure the fields it refers to
 /// exist etc
 pub(crate) fn resolve_value_expression_for_argument(
+    flags: &open_dds::flags::Flags,
     argument_name: &open_dds::arguments::ArgumentName,
     value_expression: &open_dds::permissions::ValueExpressionOrPredicate,
     argument_type: &QualifiedTypeReference,
@@ -278,7 +279,10 @@ pub(crate) fn resolve_value_expression_for_argument(
     match value_expression {
         open_dds::permissions::ValueExpressionOrPredicate::SessionVariable(session_variable) => {
             Ok::<ValueExpressionOrPredicate, Error>(ValueExpressionOrPredicate::SessionVariable(
-                session_variable.clone(),
+                hasura_authn_core::SessionVariableReference {
+                    name: session_variable.clone(),
+                    passed_as_json: flags.json_session_variables,
+                },
             ))
         }
         open_dds::permissions::ValueExpressionOrPredicate::Literal(json_value) => {
@@ -365,6 +369,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                 })?;
 
             let resolved_model_predicate = model_permissions::resolve_model_predicate_with_type(
+                flags,
                 bool_exp,
                 base_type,
                 object_type_representation,

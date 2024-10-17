@@ -8,7 +8,7 @@ use crate::{
     commands::CommandName,
     models::ModelName,
     relationships::RelationshipName,
-    session_variables::SessionVariable,
+    session_variables::SessionVariableName,
     traits,
     types::{CustomTypeName, FieldName, OperatorName},
 };
@@ -649,7 +649,7 @@ pub enum ValueExpression {
     #[schemars(title = "Literal")]
     Literal(JsonValue),
     #[schemars(title = "SessionVariable")]
-    SessionVariable(SessionVariable),
+    SessionVariable(SessionVariableName),
 }
 
 #[derive(
@@ -663,7 +663,7 @@ pub enum ValueExpressionOrPredicate {
     #[schemars(title = "Literal")]
     Literal(JsonValue),
     #[schemars(title = "SessionVariable")]
-    SessionVariable(SessionVariable),
+    SessionVariable(SessionVariableName),
     #[schemars(title = "BooleanExpression")]
     BooleanExpression(Box<ModelPredicate>),
 }

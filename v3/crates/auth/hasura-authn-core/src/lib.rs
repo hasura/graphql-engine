@@ -23,7 +23,7 @@ use std::{
 // Session variable and role are defined as part of OpenDD
 pub use open_dds::{
     permissions::Role,
-    session_variables::{SessionVariable, SESSION_VARIABLE_ROLE},
+    session_variables::{SessionVariableName, SessionVariableReference, SESSION_VARIABLE_ROLE},
 };
 
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize, JsonSchema)]
@@ -37,10 +37,10 @@ impl SessionVariableValue {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
-pub struct SessionVariables(HashMap<SessionVariable, SessionVariableValue>);
+pub struct SessionVariables(HashMap<SessionVariableName, SessionVariableValue>);
 
 impl SessionVariables {
-    pub fn get(&self, session_variable: &SessionVariable) -> Option<&SessionVariableValue> {
+    pub fn get(&self, session_variable: &SessionVariableName) -> Option<&SessionVariableValue> {
         self.0.get(session_variable)
     }
 }
@@ -56,14 +56,14 @@ pub struct Session {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RoleAuthorization {
     pub role: Role,
-    pub session_variables: HashMap<SessionVariable, SessionVariableValue>,
+    pub session_variables: HashMap<SessionVariableName, SessionVariableValue>,
     pub allowed_session_variables_from_request: SessionVariableList,
 }
 
 impl RoleAuthorization {
     pub fn build_session(
         &self,
-        mut variables: HashMap<SessionVariable, SessionVariableValue>,
+        mut variables: HashMap<SessionVariableName, SessionVariableValue>,
     ) -> Session {
         let allowed_client_session_variables = match &self.allowed_session_variables_from_request {
             SessionVariableList::All => variables,
@@ -87,7 +87,7 @@ pub enum SessionVariableList {
     // like * in Select * from ...
     All,
     // An explicit list
-    Some(HashSet<SessionVariable>),
+    Some(HashSet<SessionVariableName>),
 }
 
 // Privileges of the current user
@@ -183,7 +183,7 @@ pub fn authorize_identity(
     let mut role = None;
     // traverse through the headers and collect role and session variables
     for (header_name, header_value) in headers {
-        if let Ok(session_variable) = SessionVariable::from_str(header_name.as_str()) {
+        if let Ok(session_variable) = SessionVariableName::from_str(header_name.as_str()) {
             let variable_value = match header_value.to_str() {
                 Err(e) => Err(SessionError::InvalidHeaderValue {
                     header_name: header_name.to_string(),
@@ -220,16 +220,16 @@ mod tests {
         let mut authenticated_session_variables = HashMap::new();
 
         authenticated_session_variables.insert(
-            SessionVariable::from_str("x-hasura-user-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
         );
 
         client_session_variables.insert(
-            SessionVariable::from_str("x-hasura-custom").unwrap(),
+            SessionVariableName::from_str("x-hasura-custom").unwrap(),
             SessionVariableValue::new("test"),
         );
         client_session_variables.insert(
-            SessionVariable::from_str("x-hasura-custom-claim").unwrap(),
+            SessionVariableName::from_str("x-hasura-custom-claim").unwrap(),
             SessionVariableValue::new("claim-value"),
         );
         let role_authorization = RoleAuthorization {
@@ -243,7 +243,7 @@ mod tests {
         let mut expected_session_variables = client_session_variables.clone();
 
         expected_session_variables.insert(
-            SessionVariable::from_str("x-hasura-user-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
         );
         pa::assert_eq!(
@@ -262,23 +262,23 @@ mod tests {
         let mut authenticated_session_variables = HashMap::new();
 
         authenticated_session_variables.insert(
-            SessionVariable::from_str("x-hasura-user-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
         );
 
         client_session_variables.insert(
-            SessionVariable::from_str("x-hasura-custom").unwrap(),
+            SessionVariableName::from_str("x-hasura-custom").unwrap(),
             SessionVariableValue::new("test"),
         );
         client_session_variables.insert(
-            SessionVariable::from_str("x-hasura-custom-claim").unwrap(),
+            SessionVariableName::from_str("x-hasura-custom-claim").unwrap(),
             SessionVariableValue::new("claim-value"),
         );
         let mut allowed_sesion_variables_from_request = HashSet::new();
         allowed_sesion_variables_from_request
-            .insert(SessionVariable::from_str("x-hasura-custom").unwrap());
+            .insert(SessionVariableName::from_str("x-hasura-custom").unwrap());
         allowed_sesion_variables_from_request
-            .insert(SessionVariable::from_str("x-hasura-custom-author-id").unwrap());
+            .insert(SessionVariableName::from_str("x-hasura-custom-author-id").unwrap());
         let role_authorization = RoleAuthorization {
             role: Role::new("test-role"),
             session_variables: authenticated_session_variables,
@@ -291,10 +291,10 @@ mod tests {
 
         let mut expected_session_variables = client_session_variables;
         expected_session_variables
-            .remove(&SessionVariable::from_str("x-hasura-custom-claim").unwrap());
+            .remove(&SessionVariableName::from_str("x-hasura-custom-claim").unwrap());
 
         expected_session_variables.insert(
-            SessionVariable::from_str("x-hasura-user-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
         );
         pa::assert_eq!(
@@ -313,16 +313,16 @@ mod tests {
         let mut authenticated_session_variables = HashMap::new();
 
         authenticated_session_variables.insert(
-            SessionVariable::from_str("x-hasura-user-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
         );
 
         client_session_variables.insert(
-            SessionVariable::from_str("x-hasura-custom").unwrap(),
+            SessionVariableName::from_str("x-hasura-custom").unwrap(),
             SessionVariableValue::new("test"),
         );
         client_session_variables.insert(
-            SessionVariable::from_str("x-hasura-custom-claim").unwrap(),
+            SessionVariableName::from_str("x-hasura-custom-claim").unwrap(),
             SessionVariableValue::new("claim-value"),
         );
 
@@ -337,7 +337,7 @@ mod tests {
         let mut expected_session_variables = HashMap::new();
 
         expected_session_variables.insert(
-            SessionVariable::from_str("x-hasura-user-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
         );
 

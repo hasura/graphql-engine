@@ -67,6 +67,7 @@ pub fn resolve(
             })?;
         if command.permissions.is_empty() {
             command.permissions = command_permission::resolve_command_permissions(
+                &metadata_accessor.flags,
                 &command.command,
                 command_permissions,
                 object_types,

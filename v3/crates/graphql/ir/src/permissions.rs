@@ -223,13 +223,13 @@ pub(crate) fn make_argument_from_value_expression(
     match val_expr {
         metadata_resolve::ValueExpression::Literal(val) => Ok(val.clone()),
         metadata_resolve::ValueExpression::SessionVariable(session_var) => {
-            let value = session_variables.get(session_var).ok_or_else(|| {
+            let value = session_variables.get(&session_var.name).ok_or_else(|| {
                 error::InternalDeveloperError::MissingSessionVariable {
-                    session_variable: session_var.clone(),
+                    session_variable: session_var.name.clone(),
                 }
             })?;
 
-            typecast_session_variable(value, value_type)
+            typecast_session_variable(session_var.passed_as_json, value, value_type)
         }
     }
 }
@@ -247,14 +247,14 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
             Ok(Argument::Literal { value: val.clone() })
         }
         metadata_resolve::ValueExpressionOrPredicate::SessionVariable(session_var) => {
-            let value = session_variables.get(session_var).ok_or_else(|| {
+            let value = session_variables.get(&session_var.name).ok_or_else(|| {
                 error::InternalDeveloperError::MissingSessionVariable {
-                    session_variable: session_var.clone(),
+                    session_variable: session_var.name.clone(),
                 }
             })?;
 
             Ok(Argument::Literal {
-                value: typecast_session_variable(value, value_type)?,
+                value: typecast_session_variable(session_var.passed_as_json, value, value_type)?,
             })
         }
         metadata_resolve::ValueExpressionOrPredicate::BooleanExpression(model_predicate) => {
@@ -274,6 +274,18 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
 
 /// Typecast a stringified session variable into a given type, but as a serde_json::Value
 fn typecast_session_variable(
+    passed_as_json: bool,
+    session_var_value_wrapped: &SessionVariableValue,
+    to_type: &QualifiedTypeReference,
+) -> Result<serde_json::Value, error::Error> {
+    if passed_as_json {
+        typecast_session_variable_v2(session_var_value_wrapped, to_type)
+    } else {
+        typecast_session_variable_v1(session_var_value_wrapped, to_type)
+    }
+}
+
+fn typecast_session_variable_v1(
     session_var_value_wrapped: &SessionVariableValue,
     to_type: &QualifiedTypeReference,
 ) -> Result<serde_json::Value, error::Error> {
@@ -326,5 +338,75 @@ fn typecast_session_variable(
             }
         }
         QualifiedBaseType::List(_) => Err(error::InternalDeveloperError::VariableArrayTypeCast)?,
+    }
+}
+
+fn typecast_session_variable_v2(
+    session_var_value: &SessionVariableValue,
+    to_type: &QualifiedTypeReference,
+) -> Result<serde_json::Value, error::Error> {
+    let value = serde_json::from_str(&session_var_value.0)?;
+    typecheck_session_variable(&value, to_type)?;
+    Ok(value)
+}
+
+fn typecheck_session_variable(
+    value: &serde_json::Value,
+    to_type: &QualifiedTypeReference,
+) -> Result<(), crate::Error> {
+    match &to_type.underlying_type {
+        QualifiedBaseType::Named(type_name) => match type_name {
+            QualifiedTypeName::Inbuilt(primitive) => match primitive {
+                InbuiltType::Int => {
+                    if !value.is_i64() {
+                        Err(error::InternalDeveloperError::VariableTypeCast {
+                            expected: "int".into(),
+                            found: value.to_string(),
+                        })?;
+                    }
+                    Ok(())
+                }
+                InbuiltType::Float => {
+                    if !value.is_f64() {
+                        Err(error::InternalDeveloperError::VariableTypeCast {
+                            expected: "float".into(),
+                            found: value.to_string(),
+                        })?;
+                    }
+                    Ok(())
+                }
+                InbuiltType::Boolean => {
+                    if !value.is_boolean() {
+                        Err(error::InternalDeveloperError::VariableTypeCast {
+                            expected: "true or false".into(),
+                            found: value.to_string(),
+                        })?;
+                    }
+                    Ok(())
+                }
+                InbuiltType::ID | InbuiltType::String => {
+                    if !value.is_string() {
+                        Err(error::InternalDeveloperError::VariableTypeCast {
+                            expected: "string".into(),
+                            found: value.to_string(),
+                        })?;
+                    }
+                    Ok(())
+                }
+            },
+            QualifiedTypeName::Custom(_) => Ok(()),
+        },
+        QualifiedBaseType::List(element_type) => {
+            let elements = value.as_array().ok_or_else(|| {
+                error::InternalDeveloperError::VariableTypeCast {
+                    expected: "array".into(),
+                    found: value.to_string(),
+                }
+            })?;
+            for element in elements {
+                typecheck_session_variable(element, element_type)?;
+            }
+            Ok(())
+        }
     }
 }

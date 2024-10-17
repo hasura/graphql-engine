@@ -110,10 +110,11 @@ pub async fn authenticate_request(
 mod tests {
     use std::str::FromStr;
 
-    use auth_base::{RoleAuthorization, SessionVariable, SessionVariableValue};
+    use auth_base::{RoleAuthorization, SessionVariableValue};
     use jsonwebtoken as jwt;
     use jsonwebtoken::Algorithm;
     use jwt::{encode, EncodingKey};
+    use open_dds::session_variables::SessionVariableName;
     use reqwest::header::AUTHORIZATION;
     use serde_json::json;
     use tokio;
@@ -166,7 +167,7 @@ mod tests {
     fn get_default_hasura_claims() -> HasuraClaims {
         let mut hasura_custom_claims = HashMap::new();
         hasura_custom_claims.insert(
-            SessionVariable::from_str("x-hasura-user-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue("1".to_string()),
         );
         HasuraClaims {
@@ -223,7 +224,7 @@ mod tests {
         let mut role_authorization_session_variables = HashMap::new();
 
         role_authorization_session_variables.insert(
-            SessionVariable::from_str("x-hasura-user-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
         );
         expected_allowed_roles.insert(
@@ -272,7 +273,7 @@ mod tests {
     async fn test_successful_role_emulation() -> anyhow::Result<()> {
         let mut hasura_claims = get_default_hasura_claims();
         hasura_claims.custom_claims.insert(
-            SessionVariable::from_str("x-hasura-role").unwrap(),
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
             SessionVariableValue::new("admin"),
         );
         let encoded_claims = get_encoded_claims(Algorithm::HS256, &hasura_claims)?;

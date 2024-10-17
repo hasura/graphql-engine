@@ -21,7 +21,7 @@ mod tests {
     use hasura_authn_core::{Identity, Role, Session, SessionVariableValue};
     use lang_graphql::http::Request;
     use lang_graphql::{parser::Parser, validation::normalize_request};
-    use open_dds::session_variables::{SessionVariable, SESSION_VARIABLE_ROLE};
+    use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
     use serde_json as json;
     use std::{
         collections::HashMap,
@@ -160,7 +160,7 @@ mod tests {
     // TODO: remove duplication between this function and 'add_session'
     fn resolve_session(session_vars_path: PathBuf) -> Session {
         let authorization = Identity::admin(Role::new("admin"));
-        let session_variables: HashMap<SessionVariable, SessionVariableValue> = {
+        let session_variables: HashMap<SessionVariableName, SessionVariableValue> = {
             if session_vars_path.exists() {
                 json::from_str(fs::read_to_string(session_vars_path).unwrap().as_ref()).unwrap()
             } else {

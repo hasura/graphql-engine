@@ -12,6 +12,7 @@ use crate::types::subgraph::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::OperationType;
 use ndc_models;
+use open_dds::accessor::MetadataAccessor;
 use open_dds::data_connector::DataConnectorColumnName;
 use open_dds::types::DataConnectorArgumentName;
 use open_dds::{
@@ -63,6 +64,7 @@ pub struct DataConnectorContext<'a> {
 
 impl<'a> DataConnectorContext<'a> {
     pub fn new(
+        metadata_accessor: &MetadataAccessor,
         data_connector: &'a data_connector::DataConnectorLinkV1,
         unstable_features: &UnstableFeatures,
     ) -> Result<(Self, Vec<DataConnectorIssue>), DataConnectorError> {
@@ -102,7 +104,8 @@ impl<'a> DataConnectorContext<'a> {
             .argument_presets
             .iter()
             .map(|argument_preset| -> Result<_, DataConnectorError> {
-                let header_presets = HttpHeadersPreset::new(&argument_preset.value.http_headers)?;
+                let header_presets =
+                    HttpHeadersPreset::new(metadata_accessor, &argument_preset.value.http_headers)?;
                 Ok(ArgumentPreset {
                     name: argument_preset.argument.clone(),
                     value: ArgumentPresetValue {
@@ -376,6 +379,7 @@ pub struct HttpHeadersPreset {
 
 impl HttpHeadersPreset {
     fn new(
+        metadata_accessor: &MetadataAccessor,
         headers_preset: &open_dds::data_connector::HttpHeadersPreset,
     ) -> Result<Self, DataConnectorError> {
         let forward = headers_preset
@@ -389,7 +393,7 @@ impl HttpHeadersPreset {
             .iter()
             .map(|(header_name, header_val)| {
                 let key = SerializableHeaderName::new(header_name.to_string()).map_err(to_error)?;
-                let val = resolve_value_expression(header_val.clone());
+                let val = resolve_value_expression(metadata_accessor, header_val.clone());
                 Ok((key, val))
             })
             .collect::<Result<IndexMap<_, _>, DataConnectorError>>()?;
@@ -402,11 +406,15 @@ impl HttpHeadersPreset {
 }
 
 fn resolve_value_expression(
+    metadata_accessor: &MetadataAccessor,
     value_expression_input: open_dds::permissions::ValueExpression,
 ) -> ValueExpression {
     match value_expression_input {
         open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-            ValueExpression::SessionVariable(session_variable)
+            ValueExpression::SessionVariable(hasura_authn_core::SessionVariableReference {
+                name: session_variable,
+                passed_as_json: metadata_accessor.flags.json_session_variables,
+            })
         }
         open_dds::permissions::ValueExpression::Literal(json_value) => {
             ValueExpression::Literal(json_value)
@@ -465,7 +473,7 @@ pub struct DataConnectorCapabilities {
 #[cfg(test)]
 mod tests {
     use ndc_models;
-    use open_dds::data_connector::DataConnectorLinkV1;
+    use open_dds::{accessor::MetadataAccessor, data_connector::DataConnectorLinkV1, Metadata};
     use strum::IntoEnumIterator;
 
     use crate::{
@@ -525,9 +533,13 @@ mod tests {
             enable_ndc_v02_support: true,
             ..Default::default()
         };
-        let (context, issues) =
-            DataConnectorContext::new(&data_connector_with_capabilities, &unstable_features)
-                .unwrap();
+        let metadata_accessor = MetadataAccessor::new(Metadata::WithoutNamespaces(vec![]));
+        let (context, issues) = DataConnectorContext::new(
+            &metadata_accessor,
+            &data_connector_with_capabilities,
+            &unstable_features,
+        )
+        .unwrap();
         assert_eq!(context.capabilities, explicit_capabilities);
         assert_eq!(context.supported_ndc_version, NdcVersion::V01);
         assert_eq!(issues.len(), 0, "Issues: {issues:#?}");
@@ -566,9 +578,13 @@ mod tests {
             enable_ndc_v02_support: true,
             ..Default::default()
         };
-        let (context, issues) =
-            DataConnectorContext::new(&data_connector_with_capabilities, &unstable_features)
-                .unwrap();
+        let metadata_accessor = MetadataAccessor::new(Metadata::WithoutNamespaces(vec![]));
+        let (context, issues) = DataConnectorContext::new(
+            &metadata_accessor,
+            &data_connector_with_capabilities,
+            &unstable_features,
+        )
+        .unwrap();
         assert_eq!(context.capabilities, explicit_capabilities);
         assert_eq!(context.supported_ndc_version, NdcVersion::V02);
         assert_eq!(issues.len(), 0, "Issues: {issues:#?}");

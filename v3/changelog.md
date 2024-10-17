@@ -4,6 +4,8 @@
 
 ### Added
 
+- Support array values in session variables
+
 ### Fixed
 
 ### Changed

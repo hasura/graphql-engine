@@ -130,6 +130,17 @@ fn test_model_select_many_empty_select() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_model_select_many_array_session_variable() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/array_session_variable";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::TestNDCResponses,
+    )
+}
+
+#[test]
 fn test_model_select_many_field_arguments() -> anyhow::Result<()> {
     common::test_execution_expectation_for_multiple_ndc_versions(
         "execute/models/select_many/field_arguments",

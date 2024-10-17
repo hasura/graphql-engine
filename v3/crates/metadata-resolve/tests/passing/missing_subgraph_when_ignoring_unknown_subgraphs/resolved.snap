@@ -818,9 +818,12 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
                                     nullable: false,
                                 },
                                 value: SessionVariable(
-                                    SessionVariable(
-                                        "x-hasura-user-id",
-                                    ),
+                                    SessionVariableReference {
+                                        name: SessionVariableName(
+                                            "x-hasura-user-id",
+                                        ),
+                                        passed_as_json: false,
+                                    },
                                 ),
                                 deprecated: None,
                             },

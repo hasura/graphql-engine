@@ -81,6 +81,7 @@ pub fn resolve(
                 .and_then(|bool_exp| bool_exp.graphql.as_ref());
 
             let select_permissions = model_permission::resolve_model_select_permissions(
+                &metadata_accessor.flags,
                 &model.model,
                 subgraph,
                 permissions,

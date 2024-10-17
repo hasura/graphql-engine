@@ -38,6 +38,7 @@ fn get_command_source_argument<'a>(
 }
 
 pub fn resolve_command_permissions(
+    flags: &open_dds::flags::Flags,
     command: &commands::Command,
     permissions: &CommandPermissionsV1,
     object_types: &BTreeMap<
@@ -97,6 +98,7 @@ pub fn resolve_command_permissions(
             match command.arguments.get(&argument_preset.argument) {
                 Some(argument) => {
                     let value_expression = resolve_value_expression_for_argument(
+                        flags,
                         &argument_preset.argument,
                         &argument_preset.value,
                         &argument.argument_type,

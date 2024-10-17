@@ -3254,6 +3254,10 @@
         "allow_partial_supergraph": {
           "default": false,
           "type": "boolean"
+        },
+        "json_session_variables": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -3294,7 +3298,8 @@
                 "disallow_scalar_type_names_conflicting_with_inbuilt_types": false,
                 "propagate_boolean_expression_deprecation_status": false,
                 "require_unique_command_graphql_names": false,
-                "allow_partial_supergraph": false
+                "allow_partial_supergraph": false,
+                "json_session_variables": false
               },
               "allOf": [
                 {
@@ -3346,7 +3351,8 @@
                 "disallow_scalar_type_names_conflicting_with_inbuilt_types": false,
                 "propagate_boolean_expression_deprecation_status": false,
                 "require_unique_command_graphql_names": false,
-                "allow_partial_supergraph": false
+                "allow_partial_supergraph": false,
+                "json_session_variables": false
               },
               "allOf": [
                 {
@@ -3388,7 +3394,8 @@
                 "disallow_scalar_type_names_conflicting_with_inbuilt_types": false,
                 "propagate_boolean_expression_deprecation_status": false,
                 "require_unique_command_graphql_names": false,
-                "allow_partial_supergraph": false
+                "allow_partial_supergraph": false,
+                "json_session_variables": false
               },
               "allOf": [
                 {

@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use auth_base::{Identity, Role, RoleAuthorization, SessionVariable, SessionVariableValue};
+use auth_base::{Identity, Role, RoleAuthorization, SessionVariableName, SessionVariableValue};
 use axum::{
     http::{HeaderMap, HeaderName, StatusCode},
     response::IntoResponse,
@@ -206,7 +206,7 @@ async fn make_auth_hook_request(
                 response.json().await.map_err(InternalError::ReqwestError)?;
             let mut session_variables = HashMap::new();
             for (k, v) in &auth_hook_response {
-                match SessionVariable::from_str(k) {
+                match SessionVariableName::from_str(k) {
                     Ok(session_variable) => {
                         session_variables
                             .insert(session_variable, SessionVariableValue(v.to_string()));
@@ -366,11 +366,11 @@ mod tests {
         let mut expected_allowed_roles = HashMap::new();
         let mut role_authorization_session_variables = HashMap::new();
         role_authorization_session_variables.insert(
-            SessionVariable::from_str("x-hasura-role").unwrap(),
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
             SessionVariableValue::new("test-role"),
         );
         role_authorization_session_variables.insert(
-            SessionVariable::from_str("x-hasura-test-role-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-test-role-id").unwrap(),
             SessionVariableValue::new("1"),
         );
         expected_allowed_roles.insert(
@@ -437,11 +437,11 @@ mod tests {
         let mut expected_allowed_roles = HashMap::new();
         let mut role_authorization_session_variables = HashMap::new();
         role_authorization_session_variables.insert(
-            SessionVariable::from_str("x-hasura-role").unwrap(),
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
             SessionVariableValue::new("test-role"),
         );
         role_authorization_session_variables.insert(
-            SessionVariable::from_str("x-hasura-test-role-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-test-role-id").unwrap(),
             SessionVariableValue::new("1"),
         );
         expected_allowed_roles.insert(
@@ -509,15 +509,15 @@ mod tests {
         let mut expected_allowed_roles = HashMap::new();
         let mut role_authorization_session_variables = HashMap::new();
         role_authorization_session_variables.insert(
-            SessionVariable::from_str("x-hasura-role").unwrap(),
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
             SessionVariableValue::new("test-role"),
         );
         role_authorization_session_variables.insert(
-            SessionVariable::from_str("x-hasura-test-role-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-test-role-id").unwrap(),
             SessionVariableValue::new("1"),
         );
         role_authorization_session_variables.insert(
-            SessionVariable::from_str("status").unwrap(),
+            SessionVariableName::from_str("status").unwrap(),
             SessionVariableValue::new("true"),
         );
         expected_allowed_roles.insert(
@@ -637,11 +637,11 @@ mod tests {
         let mut expected_allowed_roles = HashMap::new();
         let mut role_authorization_session_variables = HashMap::new();
         role_authorization_session_variables.insert(
-            SessionVariable::from_str("x-hasura-role").unwrap(),
+            SessionVariableName::from_str("x-hasura-role").unwrap(),
             SessionVariableValue::new("user"),
         );
         role_authorization_session_variables.insert(
-            SessionVariable::from_str("x-hasura-user-id").unwrap(),
+            SessionVariableName::from_str("x-hasura-user-id").unwrap(),
             SessionVariableValue::new("1"),
         );
         expected_allowed_roles.insert(

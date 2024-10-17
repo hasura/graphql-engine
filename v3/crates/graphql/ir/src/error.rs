@@ -5,7 +5,7 @@ use open_dds::{
     arguments::ArgumentName,
     data_connector::{DataConnectorColumnName, DataConnectorName},
     relationships::RelationshipName,
-    session_variables::SessionVariable,
+    session_variables::SessionVariableName,
     types::{CustomTypeName, FieldName},
 };
 use serde_json as json;
@@ -118,7 +118,9 @@ pub enum InternalDeveloperError {
     },
 
     #[error("Required session variable not found in the request: {session_variable}")]
-    MissingSessionVariable { session_variable: SessionVariable },
+    MissingSessionVariable {
+        session_variable: SessionVariableName,
+    },
 
     #[error("Unable to typecast session variable. Expected: {expected:}, but found: {found:}")]
     VariableTypeCast { expected: String, found: String },

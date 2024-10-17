@@ -304,17 +304,7 @@ fn build_preset_map_from_input_object_type_permission(
                 field_path: new_field_path,
             };
 
-            let value = (
-                type_reference.clone(),
-                match &preset.value {
-                    open_dds::permissions::ValueExpression::Literal(literal) => {
-                        ValueExpressionOrPredicate::Literal(literal.clone())
-                    }
-                    open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-                        ValueExpressionOrPredicate::SessionVariable(session_variable.clone())
-                    }
-                },
-            );
+            let value = (type_reference.clone(), preset.value.clone());
 
             Ok((key, value))
         })

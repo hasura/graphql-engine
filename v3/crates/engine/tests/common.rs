@@ -7,7 +7,7 @@ use hasura_authn_core::{Identity, Role, Session, SessionError, SessionVariableVa
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
-use open_dds::session_variables::{SessionVariable, SESSION_VARIABLE_ROLE};
+use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
 use pretty_assertions::assert_eq;
 use serde_json as json;
 use sql::execute::SqlRequest;
@@ -41,7 +41,7 @@ pub fn setup(test_dir: &Path) -> GoldenTestContext {
 }
 
 pub(crate) fn resolve_session(
-    session_variables: HashMap<SessionVariable, SessionVariableValue>,
+    session_variables: HashMap<SessionVariableName, SessionVariableValue>,
 ) -> Result<Session, SessionError> {
     //return an arbitrary identity with role emulation enabled
     let authorization = Identity::admin(Role::new("admin"));
@@ -107,7 +107,7 @@ pub(crate) fn test_introspection_expectation(
 
         let request_headers = reqwest::header::HeaderMap::new();
         let session_vars_path = &test_path.join("session_variables.json");
-        let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
+        let sessions: Vec<HashMap<SessionVariableName, SessionVariableValue>> =
             json::from_str(read_to_string(session_vars_path)?.as_ref())?;
         let sessions: Vec<Session> = sessions
             .into_iter()
@@ -266,7 +266,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
 
             let request_headers = reqwest::header::HeaderMap::new();
             let session_vars_path = &test_path.join("session_variables.json");
-            let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
+            let sessions: Vec<HashMap<SessionVariableName, SessionVariableValue>> =
                 json::from_str(read_to_string(session_vars_path)?.as_ref())?;
             let sessions: Vec<Session> = sessions
                 .into_iter()
@@ -472,7 +472,7 @@ pub fn test_execute_explain(
             let session_variables_raw = r#"{
                 "x-hasura-role": "admin"
             }"#;
-            let session_variables: HashMap<SessionVariable, SessionVariableValue> =
+            let session_variables: HashMap<SessionVariableName, SessionVariableValue> =
                 serde_json::from_str(session_variables_raw)?;
             resolve_session(session_variables)
         }?;
@@ -579,7 +579,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
 
         let session = Arc::new({
             let session_vars_path = &test_path.join("session_variables.json");
-            let session_variables: HashMap<SessionVariable, SessionVariableValue> =
+            let session_variables: HashMap<SessionVariableName, SessionVariableValue> =
                 serde_json::from_str(read_to_string(session_vars_path)?.as_ref())?;
             resolve_session(session_variables)
         }?);

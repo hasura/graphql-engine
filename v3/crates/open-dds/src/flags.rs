@@ -32,6 +32,9 @@ pub struct Flags {
 
     #[opendd(default, rename = "allow_partial_supergraph")]
     pub allow_partial_supergraph: bool,
+
+    #[opendd(default, rename = "json_session_variables")]
+    pub json_session_variables: bool,
 }
 
 impl Flags {
@@ -46,6 +49,7 @@ impl Flags {
             propagate_boolean_expression_deprecation_status: false,
             require_unique_command_graphql_names: false,
             allow_partial_supergraph: false,
+            json_session_variables: false,
         }
     }
 
