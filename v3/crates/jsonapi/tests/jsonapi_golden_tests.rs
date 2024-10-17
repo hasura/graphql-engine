@@ -102,16 +102,28 @@ struct TestRequest {
     resolved_metadata: metadata_resolve::Metadata,
 }
 
+fn trim_newline(s: &mut String) {
+    if s.ends_with('\n') {
+        s.pop();
+        if s.ends_with('\r') {
+            s.pop();
+        }
+    }
+}
+
 fn test_setup(path: &Path) -> TestRequest {
     let directory = path.parent().unwrap();
     let model_name = path.file_stem().unwrap().to_str().unwrap();
 
-    let query_params = std::fs::read_to_string(path).unwrap_or_else(|error| {
+    let mut query_params = std::fs::read_to_string(path).unwrap_or_else(|error| {
         panic!(
             "{}: Could not read file {path:?}: {error}",
             directory.display()
         )
     });
+
+    // our input files contain trailing newlines that break the JSONAPI parser
+    trim_newline(&mut query_params);
 
     let jsonapi_query = jsonapi_library::query::Query::from_params(&query_params);
 

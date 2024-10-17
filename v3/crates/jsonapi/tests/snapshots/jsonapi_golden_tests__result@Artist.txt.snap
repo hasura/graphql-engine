@@ -8,30 +8,8 @@ DocumentData {
         Multiple(
             [
                 Resource {
-                    _type: "Artist (in subgraph default)",
+                    _type: "default_Artist",
                     id: "1",
-                    attributes: {
-                        "ArtistId": Number(1),
-                        "Name": String("AC/DC"),
-                    },
-                    relationships: None,
-                    links: None,
-                    meta: None,
-                },
-                Resource {
-                    _type: "Artist (in subgraph default)",
-                    id: "2",
-                    attributes: {
-                        "ArtistId": Number(2),
-                        "Name": String("Accept"),
-                    },
-                    relationships: None,
-                    links: None,
-                    meta: None,
-                },
-                Resource {
-                    _type: "Artist (in subgraph default)",
-                    id: "3",
                     attributes: {
                         "ArtistId": Number(3),
                         "Name": String("Aerosmith"),
@@ -41,8 +19,8 @@ DocumentData {
                     meta: None,
                 },
                 Resource {
-                    _type: "Artist (in subgraph default)",
-                    id: "4",
+                    _type: "default_Artist",
+                    id: "2",
                     attributes: {
                         "ArtistId": Number(4),
                         "Name": String("Alanis Morissette"),
@@ -52,11 +30,44 @@ DocumentData {
                     meta: None,
                 },
                 Resource {
-                    _type: "Artist (in subgraph default)",
-                    id: "5",
+                    _type: "default_Artist",
+                    id: "3",
                     attributes: {
                         "ArtistId": Number(5),
                         "Name": String("Alice In Chains"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "4",
+                    attributes: {
+                        "ArtistId": Number(6),
+                        "Name": String("Antônio Carlos Jobim"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "5",
+                    attributes: {
+                        "ArtistId": Number(7),
+                        "Name": String("Apocalyptica"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "6",
+                    attributes: {
+                        "ArtistId": Number(8),
+                        "Name": String("Audioslave"),
                     },
                     relationships: None,
                     links: None,

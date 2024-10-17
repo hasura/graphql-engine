@@ -2886,7 +2886,7 @@ dependencies = [
 [[package]]
 name = "jsonapi"
 version = "0.7.0"
-source = "git+https://github.com/hasura/jsonapi-rust.git?rev=b908b340ddfc620d33b71f279b88a0233bd5ff5c#b908b340ddfc620d33b71f279b88a0233bd5ff5c"
+source = "git+https://github.com/hasura/jsonapi-rust.git?rev=10c531a534dbf7210679cb838c893102933a4ce9#10c531a534dbf7210679cb838c893102933a4ce9"
 dependencies = [
  "error-chain",
  "log",

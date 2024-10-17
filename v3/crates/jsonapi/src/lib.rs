@@ -241,12 +241,12 @@ fn create_query_ir(
     let limit = query_string
         .page
         .as_ref()
-        .map(|page| usize::try_from(page.size).unwrap());
+        .map(|page| usize::try_from(page.limit).unwrap());
 
     let offset = query_string
         .page
         .as_ref()
-        .map(|page| usize::try_from(page.number).unwrap());
+        .map(|page| usize::try_from(page.offset).unwrap());
 
     // form the model selection
     let model_selection = open_dds::query::ModelSelection {

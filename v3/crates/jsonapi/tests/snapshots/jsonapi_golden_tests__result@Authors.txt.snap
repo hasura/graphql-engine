@@ -6,7 +6,19 @@ input_file: crates/jsonapi/tests/passing/select_model/Authors.txt
 DocumentData {
     data: Some(
         Multiple(
-            [],
+            [
+                Resource {
+                    _type: "default_author",
+                    id: "1",
+                    attributes: {
+                        "author_id": Number(2),
+                        "first_name": String("John"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+            ],
         ),
     ),
     included: None,

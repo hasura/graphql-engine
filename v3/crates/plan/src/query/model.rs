@@ -260,13 +260,20 @@ pub fn ndc_query_to_query_execution_plan(
         })
     };
 
+    // only send an ordering if there are actually elements
+    let order_by = if query.order_by.order_by_elements.is_empty() {
+        None
+    } else {
+        Some(query.order_by.order_by_elements.clone())
+    };
+
     QueryExecutionPlan {
         query_node: QueryNode {
             fields: query_fields,
             aggregates: query_aggregate_fields,
             limit: query.limit,
             offset: query.offset,
-            order_by: Some(query.order_by.order_by_elements.clone()),
+            order_by,
             predicate: query.filter.clone(),
         },
         collection: query.collection_name.clone(),

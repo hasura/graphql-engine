@@ -102,7 +102,7 @@ human_bytes = "0.4"
 indexmap = "2"
 insta = "1"
 json_value_merge = "2"
-jsonapi_library = { package = "jsonapi", git = "https://github.com/hasura/jsonapi-rust.git", rev = "b908b340ddfc620d33b71f279b88a0233bd5ff5c" }
+jsonapi_library = { package = "jsonapi", git = "https://github.com/hasura/jsonapi-rust.git", rev = "10c531a534dbf7210679cb838c893102933a4ce9" }
 jsonptr = "0.4"
 jsonwebkey = "0.3"
 jsonwebtoken = "8"

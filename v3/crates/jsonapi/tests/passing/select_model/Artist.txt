@@ -1,1 +1,1 @@
-fields[Artist]=ArtistId,Name&page[size]=5&page[number]=2
+fields[Artist]=ArtistId,Name&page[offset]=2&page[limit]=6

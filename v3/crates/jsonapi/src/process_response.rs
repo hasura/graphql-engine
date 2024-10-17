@@ -34,8 +34,10 @@ fn to_resource(
                 attributes.insert(key.to_string(), value);
             }
 
+            let rendered_type_name = format!("{}_{}", type_name.subgraph, type_name.name);
+
             resources.push(jsonapi_library::api::Resource {
-                _type: type_name.to_string(),
+                _type: rendered_type_name,
                 id: id.to_string(),
                 attributes,
                 links: None,

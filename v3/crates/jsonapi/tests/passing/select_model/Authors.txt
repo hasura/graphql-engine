@@ -1,1 +1,1 @@
-fields[Authors]=author_id,first_name&page[number]=3&page[size]=1
+fields[Authors]=author_id,first_name&page[offset]=1&page[limit]=4
