@@ -331,6 +331,7 @@ pub enum NamespaceAnnotation {
     Model {
         filter: metadata_resolve::FilterPermission,
         argument_presets: ArgumentPresets,
+        allow_subscriptions: bool,
     },
     /// Field presets for an input field.
     ///

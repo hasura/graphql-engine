@@ -27,6 +27,7 @@ pub(crate) fn get_select_permissions_namespace_annotations(
             Some(types::NamespaceAnnotation::Model {
                 filter: select_permission.filter.clone(),
                 argument_presets: argument_presets.clone(),
+                allow_subscriptions: select_permission.allow_subscriptions,
             }),
         );
     }

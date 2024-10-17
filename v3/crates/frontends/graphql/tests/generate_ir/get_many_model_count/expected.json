@@ -169,7 +169,8 @@
                           "filter": "AllowAll",
                           "argument_presets": {
                             "argument_presets": {}
-                          }
+                          },
+                          "allow_subscriptions": false
                         }
                       }
                     },
@@ -358,7 +359,8 @@
                                 "filter": "AllowAll",
                                 "argument_presets": {
                                   "argument_presets": {}
-                                }
+                                },
+                                "allow_subscriptions": false
                               }
                             }
                           },
@@ -539,7 +541,8 @@
                                       "filter": "AllowAll",
                                       "argument_presets": {
                                         "argument_presets": {}
-                                      }
+                                      },
+                                      "allow_subscriptions": false
                                     }
                                   }
                                 },

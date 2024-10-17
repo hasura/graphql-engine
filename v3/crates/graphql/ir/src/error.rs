@@ -213,6 +213,9 @@ pub enum InternalEngineError {
     #[error("internal error during execution of argument presets: {description}")]
     ArgumentPresetExecution { description: String },
 
+    #[error("Subscription is restricted by select permission")]
+    SubscriptionNotAllowed,
+
     #[error("internal error: {description}")]
     InternalGeneric { description: String },
 }

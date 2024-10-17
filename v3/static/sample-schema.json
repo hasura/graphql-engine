@@ -2307,7 +2307,8 @@
               {
                 "role": "admin",
                 "select": {
-                  "filter": null
+                  "filter": null,
+                  "allowSubscriptions": true
                 }
               },
               {
@@ -2409,7 +2410,8 @@
               {
                 "role": "admin",
                 "select": {
-                  "filter": null
+                  "filter": null,
+                  "allowSubscriptions": true
                 }
               }
             ]
@@ -4299,7 +4301,8 @@
               {
                 "role": "admin",
                 "select": {
-                  "filter": null
+                  "filter": null,
+                  "allowSubscriptions": true
                 }
               }
             ]

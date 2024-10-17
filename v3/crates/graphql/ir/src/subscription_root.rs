@@ -12,7 +12,7 @@ use super::query_root::{select_aggregate, select_many, select_one};
 use super::root_field;
 use graphql_schema::RootFieldKind;
 use graphql_schema::GDS;
-use graphql_schema::{Annotation, OutputAnnotation, RootFieldAnnotation};
+use graphql_schema::{Annotation, NamespaceAnnotation, OutputAnnotation, RootFieldAnnotation};
 
 pub fn generate_ir<'n, 's>(
     session: &Session,
@@ -89,6 +89,18 @@ fn generate_model_rootfield_ir<'n, 's>(
                 type_name: type_name.clone(),
                 field_name: field_call.name.clone(),
             })?;
+    // Check if subscription is allowed
+    // We won't be generating graphql schema any way if subscription is not allowed in permission.
+    // This is just a double check, if in case we missed something.
+    if let Some(NamespaceAnnotation::Model {
+        allow_subscriptions,
+        ..
+    }) = field_call.info.namespaced
+    {
+        if !allow_subscriptions {
+            Err(error::InternalEngineError::SubscriptionNotAllowed)?;
+        }
+    }
     let ir = match kind {
         RootFieldKind::SelectOne => root_field::SubscriptionRootField::ModelSelectOne {
             selection_set: &field.selection_set,

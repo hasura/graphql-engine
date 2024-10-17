@@ -356,6 +356,7 @@ fn analyze_namespace_annotation(
         graphql_schema::NamespaceAnnotation::Model {
             filter,
             argument_presets,
+            allow_subscriptions: _,
         } => {
             result.extend(analyze_filter_permission(filter));
             result.extend(analyze_argument_presets(argument_presets));
