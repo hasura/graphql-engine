@@ -72,7 +72,12 @@ impl ExtensionPlanner for NDCPushDownPlanner {
             assert_eq!(logical_inputs.len(), 0, "Inconsistent number of inputs");
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
             let ndc_pushdown = model_query
-                .to_physical_node(&self.session, &self.http_context, &self.catalog.metadata)
+                .to_physical_node(
+                    &self.session,
+                    &self.http_context,
+                    &self.catalog.metadata,
+                    &self.request_headers,
+                )
                 .await?;
             Ok(Some(Arc::new(ndc_pushdown)))
         } else if let Some(command_query) = node.as_any().downcast_ref::<command::CommandQuery>() {
@@ -94,7 +99,12 @@ impl ExtensionPlanner for NDCPushDownPlanner {
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
 
             let ndc_pushdown = model_aggregate
-                .to_physical_node(&self.session, &self.http_context, &self.catalog.metadata)
+                .to_physical_node(
+                    &self.session,
+                    &self.http_context,
+                    &self.catalog.metadata,
+                    &self.request_headers,
+                )
                 .await?;
 
             Ok(Some(Arc::new(ndc_pushdown)))

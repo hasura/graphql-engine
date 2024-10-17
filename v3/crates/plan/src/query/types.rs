@@ -24,7 +24,7 @@ pub struct QueryContext {
 // intermediate type constructed whilst planning a model selection
 pub struct NDCQuery {
     pub collection_name: CollectionName,
-    pub arguments: BTreeMap<DataConnectorArgumentName, serde_json::Value>,
+    pub arguments: BTreeMap<DataConnectorArgumentName, execute::plan::ResolvedArgument>,
     pub filter: Option<ResolvedFilterExpression>,
     pub order_by: ResolvedOrderBy<'static>,
     pub limit: Option<u32>,

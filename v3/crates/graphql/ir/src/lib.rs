@@ -24,7 +24,7 @@ pub use error::{Error, InternalDeveloperError, InternalEngineError};
 pub use aggregates::{
     mk_alias_from_graphql_field_path, AggregateFieldSelection, AggregateSelectionSet,
 };
-pub use arguments::{process_connector_link_presets, Argument};
+pub use arguments::{process_argument_presets, process_connector_link_presets, Argument};
 pub use commands::{CommandInfo, FunctionBasedCommand, ProcedureBasedCommand};
 pub use filter::FilterExpression;
 pub use global_id::{global_id_col_format, GLOBAL_ID_VERSION};

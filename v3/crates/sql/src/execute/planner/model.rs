@@ -79,6 +79,7 @@ impl ModelAggregate {
         session: &Arc<Session>,
         http_context: &Arc<execute::HttpContext>,
         metadata: &metadata_resolve::Metadata,
+        request_headers: &reqwest::header::HeaderMap,
     ) -> Result<NDCAggregatePushdown> {
         let (_, query, fields) = from_model_aggregate_selection(
             &self.model_target,
@@ -86,6 +87,7 @@ impl ModelAggregate {
             metadata,
             session,
             http_context,
+            request_headers,
         )
         .await
         .map_err(from_plan_error)?;
@@ -409,11 +411,17 @@ impl ModelQuery {
         session: &Arc<Session>,
         http_context: &Arc<execute::HttpContext>,
         metadata: &metadata_resolve::Metadata,
+        request_headers: &reqwest::header::HeaderMap,
     ) -> Result<NDCQueryPushDown> {
-        let (_, query, ndc_fields) =
-            from_model_selection(&self.model_selection, metadata, session, http_context)
-                .await
-                .map_err(from_plan_error)?;
+        let (_, query, ndc_fields) = from_model_selection(
+            &self.model_selection,
+            metadata,
+            session,
+            http_context,
+            request_headers,
+        )
+        .await
+        .map_err(from_plan_error)?;
 
         let ndc_pushdown = NDCQueryPushDown::new(
             http_context.clone(),

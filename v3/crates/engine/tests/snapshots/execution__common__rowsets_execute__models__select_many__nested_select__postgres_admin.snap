@@ -2,160 +2,162 @@
 source: crates/engine/tests/common.rs
 expression: rowsets
 ---
-[
-  {
-    "rows": [
-      {
-        "id": 1,
-        "location": {
-          "campuses": [
-            "Mile End",
-            "Whitechapel",
-            "Charterhouse Square",
-            "West Smithfield"
-          ],
-          "city": "London",
-          "country": {
-            "continent": "Europe",
-            "name": "UK"
-          }
-        },
-        "location_country": {
-          "campuses": [
-            "Mile End",
-            "Whitechapel",
-            "Charterhouse Square",
-            "West Smithfield"
-          ],
-          "city": "London",
-          "country": {
-            "continent": "Europe",
-            "name": "UK"
-          }
-        },
-        "staff": [
-          {
-            "first_name": "Peter",
-            "last_name": "Landin",
-            "specialities": [
-              "Computer Science",
-              "Education"
-            ]
-          }
-        ],
-        "staff_first_name": [
-          {
-            "first_name": "Peter",
-            "last_name": "Landin",
-            "specialities": [
-              "Computer Science",
-              "Education"
-            ]
-          }
-        ],
-        "departments": [
-          "Humanities and Social Sciences",
-          "Science and Engineering",
-          "Medicine and Dentistry"
-        ]
-      },
-      {
-        "id": 2,
-        "location": {
-          "campuses": [
-            "Johanneberg",
-            "Lindholmen"
-          ],
-          "city": "Gothenburg",
-          "country": {
-            "continent": "Europe",
-            "name": "Sweden"
-          }
-        },
-        "location_country": {
-          "campuses": [
-            "Johanneberg",
-            "Lindholmen"
-          ],
-          "city": "Gothenburg",
-          "country": {
-            "continent": "Europe",
-            "name": "Sweden"
-          }
-        },
-        "staff": [
-          {
-            "first_name": "John",
-            "last_name": "Hughes",
-            "specialities": [
-              "Computer Science",
-              "Functional Programming",
-              "Software Testing"
-            ]
+{
+  "Ok": [
+    {
+      "rows": [
+        {
+          "id": 1,
+          "location": {
+            "campuses": [
+              "Mile End",
+              "Whitechapel",
+              "Charterhouse Square",
+              "West Smithfield"
+            ],
+            "city": "London",
+            "country": {
+              "continent": "Europe",
+              "name": "UK"
+            }
           },
-          {
-            "first_name": "Koen",
-            "last_name": "Claessen",
-            "specialities": [
-              "Computer Science",
-              "Functional Programming",
-              "Automated Reasoning"
-            ]
-          }
-        ],
-        "staff_first_name": [
-          {
-            "first_name": "John",
-            "last_name": "Hughes",
-            "specialities": [
-              "Computer Science",
-              "Functional Programming",
-              "Software Testing"
-            ]
+          "location_country": {
+            "campuses": [
+              "Mile End",
+              "Whitechapel",
+              "Charterhouse Square",
+              "West Smithfield"
+            ],
+            "city": "London",
+            "country": {
+              "continent": "Europe",
+              "name": "UK"
+            }
           },
-          {
-            "first_name": "Koen",
-            "last_name": "Claessen",
-            "specialities": [
-              "Computer Science",
-              "Functional Programming",
-              "Automated Reasoning"
-            ]
-          }
-        ],
-        "departments": [
-          "Architecture and Civil Engineering",
-          "Computer Science and Engineering",
-          "Electrical Engineering",
-          "Physics",
-          "Industrial and Materials Science"
-        ]
-      },
-      {
-        "id": 3,
-        "location": {
-          "campuses": null,
-          "city": null,
-          "country": {
-            "continent": null,
-            "name": null
-          }
+          "staff": [
+            {
+              "first_name": "Peter",
+              "last_name": "Landin",
+              "specialities": [
+                "Computer Science",
+                "Education"
+              ]
+            }
+          ],
+          "staff_first_name": [
+            {
+              "first_name": "Peter",
+              "last_name": "Landin",
+              "specialities": [
+                "Computer Science",
+                "Education"
+              ]
+            }
+          ],
+          "departments": [
+            "Humanities and Social Sciences",
+            "Science and Engineering",
+            "Medicine and Dentistry"
+          ]
         },
-        "location_country": {
-          "campuses": null,
-          "city": null,
-          "country": {
-            "continent": null,
-            "name": null
-          }
+        {
+          "id": 2,
+          "location": {
+            "campuses": [
+              "Johanneberg",
+              "Lindholmen"
+            ],
+            "city": "Gothenburg",
+            "country": {
+              "continent": "Europe",
+              "name": "Sweden"
+            }
+          },
+          "location_country": {
+            "campuses": [
+              "Johanneberg",
+              "Lindholmen"
+            ],
+            "city": "Gothenburg",
+            "country": {
+              "continent": "Europe",
+              "name": "Sweden"
+            }
+          },
+          "staff": [
+            {
+              "first_name": "John",
+              "last_name": "Hughes",
+              "specialities": [
+                "Computer Science",
+                "Functional Programming",
+                "Software Testing"
+              ]
+            },
+            {
+              "first_name": "Koen",
+              "last_name": "Claessen",
+              "specialities": [
+                "Computer Science",
+                "Functional Programming",
+                "Automated Reasoning"
+              ]
+            }
+          ],
+          "staff_first_name": [
+            {
+              "first_name": "John",
+              "last_name": "Hughes",
+              "specialities": [
+                "Computer Science",
+                "Functional Programming",
+                "Software Testing"
+              ]
+            },
+            {
+              "first_name": "Koen",
+              "last_name": "Claessen",
+              "specialities": [
+                "Computer Science",
+                "Functional Programming",
+                "Automated Reasoning"
+              ]
+            }
+          ],
+          "departments": [
+            "Architecture and Civil Engineering",
+            "Computer Science and Engineering",
+            "Electrical Engineering",
+            "Physics",
+            "Industrial and Materials Science"
+          ]
         },
-        "staff": null,
-        "staff_first_name": null,
-        "departments": [
-          "nothing",
-          null
-        ]
-      }
-    ]
-  }
-]
+        {
+          "id": 3,
+          "location": {
+            "campuses": null,
+            "city": null,
+            "country": {
+              "continent": null,
+              "name": null
+            }
+          },
+          "location_country": {
+            "campuses": null,
+            "city": null,
+            "country": {
+              "continent": null,
+              "name": null
+            }
+          },
+          "staff": null,
+          "staff_first_name": null,
+          "departments": [
+            "nothing",
+            null
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -102,31 +102,53 @@ fn to_model_arguments(
     let mut model_limit = None;
 
     for (name, argument) in arguments {
-        // unfortunately we've just got to string match on arguments
-        // with built-in meaning
-        if name.as_str() == "offset" {
-            if let Some(offset_value) = match &argument.value {
-                lang_graphql::normalized_ast::Value::SimpleValue(
-                    lang_graphql::normalized_ast::SimpleValue::Integer(i),
-                ) => usize::try_from(*i).ok(),
-                _ => None,
-            } {
-                model_offset = Some(offset_value);
+        // currently we are magically matching on strings, really we should be looking up the correct names
+        // for each thing in `graphql_config` in resolved metadata
+        match name.as_str() {
+            "offset" => {
+                if let Some(offset_value) = match &argument.value {
+                    lang_graphql::normalized_ast::Value::SimpleValue(
+                        lang_graphql::normalized_ast::SimpleValue::Integer(i),
+                    ) => usize::try_from(*i).ok(),
+                    _ => None,
+                } {
+                    model_offset = Some(offset_value);
+                }
             }
-        } else if name.as_str() == "limit" {
-            if let Some(limit_value) = match &argument.value {
-                lang_graphql::normalized_ast::Value::SimpleValue(
-                    lang_graphql::normalized_ast::SimpleValue::Integer(i),
-                ) => usize::try_from(*i).ok(),
-                _ => None,
-            } {
-                model_limit = Some(limit_value);
+            "limit" => {
+                if let Some(limit_value) = match &argument.value {
+                    lang_graphql::normalized_ast::Value::SimpleValue(
+                        lang_graphql::normalized_ast::SimpleValue::Integer(i),
+                    ) => usize::try_from(*i).ok(),
+                    _ => None,
+                } {
+                    model_limit = Some(limit_value);
+                }
             }
-        } else {
-            let argument_name = ArgumentName::new(Identifier::new(name.as_str()).unwrap());
-            let argument_value = open_dds::query::Value::Literal(argument.value.as_json());
+            "args" => {
+                // these are the `actual` model arguments, as opposed to stuff like `where` and `limit`
+                // etc
+                if let Ok(value_object) = argument.value.as_object() {
+                    for (inner_name, inner_argument) in value_object {
+                        let argument_name =
+                            ArgumentName::new(Identifier::new(inner_name.as_str()).unwrap());
+                        let argument_value =
+                            open_dds::query::Value::Literal(inner_argument.value.as_json());
 
-            model_arguments.insert(argument_name, argument_value);
+                        model_arguments.insert(argument_name, argument_value);
+                    }
+                }
+            }
+            _ => {
+                // currently we add any other arguments for the time being, we will also need to
+                // separate out `where` arguments and other bits and pieces, as well as decide what
+                // happens with top-level arguments for select one (ie, the `albumId` primary key)
+                //
+                let argument_name = ArgumentName::new(Identifier::new(name.as_str()).unwrap());
+                let argument_value = open_dds::query::Value::Literal(argument.value.as_json());
+
+                model_arguments.insert(argument_name, argument_value);
+            }
         }
     }
 

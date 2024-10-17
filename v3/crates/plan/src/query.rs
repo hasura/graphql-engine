@@ -1,3 +1,4 @@
+mod boolean_expression;
 mod command;
 pub mod field_selection;
 mod model;
@@ -57,9 +58,14 @@ where
 {
     match query {
         open_dds::query::Query::Model(model_selection) => {
-            let (type_name, ndc_query, fields) =
-                model::from_model_selection(model_selection, metadata, session, http_context)
-                    .await?;
+            let (type_name, ndc_query, fields) = model::from_model_selection(
+                model_selection,
+                metadata,
+                session,
+                http_context,
+                request_headers,
+            )
+            .await?;
             let query_execution_plan =
                 model::ndc_query_to_query_execution_plan(&ndc_query, &fields, &IndexMap::new());
             let query_context = QueryContext { type_name };
@@ -84,6 +90,7 @@ where
                 metadata,
                 session,
                 http_context,
+                request_headers,
             )
             .await?;
 

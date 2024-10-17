@@ -1513,7 +1513,7 @@ fn test_model_argument_presets_select_many() -> anyhow::Result<()> {
                 vec!["execute/common_metadata/custom_connector_v02_schema.json"],
             ),
         ]),
-        common::TestOpenDDPipeline::GenerateOpenDDQuery,
+        common::TestOpenDDPipeline::TestNDCResponses,
     )
 }
 

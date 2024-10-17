@@ -858,7 +858,7 @@ pub async fn open_dd_pipeline_test(
                         let rowsets =
                             graphql_frontend::resolve_ndc_query_execution(http_context, plan)
                                 .await
-                                .unwrap();
+                                .map_err(|e| e.to_string());
 
                         insta::assert_json_snapshot!(
                             format!("rowsets_{test_path_string}_{}", session.role),

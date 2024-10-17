@@ -23,14 +23,12 @@ V1(
                         arguments: {
                             ArgumentName(
                                 Identifier(
-                                    "args",
+                                    "actor_name_filter",
                                 ),
                             ): Literal(
                                 Object {
-                                    "actor_name_filter": Object {
-                                        "first_name": String("Leonardo"),
-                                        "surname": String("DiCaprio"),
-                                    },
+                                    "first_name": String("Leonardo"),
+                                    "surname": String("DiCaprio"),
                                 },
                             ),
                         },

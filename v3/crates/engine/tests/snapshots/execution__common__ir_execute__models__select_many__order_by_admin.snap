@@ -98,12 +98,10 @@ V1(
                         arguments: {
                             ArgumentName(
                                 Identifier(
-                                    "args",
+                                    "author_id",
                                 ),
                             ): Literal(
-                                Object {
-                                    "author_id": Number(2),
-                                },
+                                Number(2),
                             ),
                             ArgumentName(
                                 Identifier(

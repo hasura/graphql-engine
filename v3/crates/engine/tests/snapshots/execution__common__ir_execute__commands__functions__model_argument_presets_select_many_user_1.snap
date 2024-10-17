@@ -1,6 +1,6 @@
 ---
 source: crates/engine/tests/common.rs
-expression: ir
+expression: query_ir
 ---
 V1(
     QueryRequestV1 {
@@ -20,15 +20,7 @@ V1(
                                 "ActorsByMovie",
                             ),
                         ),
-                        arguments: {
-                            ArgumentName(
-                                Identifier(
-                                    "args",
-                                ),
-                            ): Literal(
-                                Object {},
-                            ),
-                        },
+                        arguments: {},
                         filter: None,
                         order_by: [],
                         limit: None,

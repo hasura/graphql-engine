@@ -12,7 +12,7 @@ pub(crate) mod query;
 mod relationships;
 pub(crate) mod selection_set;
 
-pub use arguments::{Argument, MutationArgument};
+pub use arguments::{Argument, MutationArgument, ResolvedArgument};
 pub use field::{ResolvedField, ResolvedNestedField};
 pub use filter::{
     plan_expression, resolve_expression, ResolveFilterExpressionContext, ResolvedFilterExpression,

@@ -7,9 +7,9 @@ expression: rowsets
     {
       "rows": [
         {
-          "author_id": 2,
-          "first_name": "John",
-          "last_name": "Hughes"
+          "actor_id": 6,
+          "movie_id": 4,
+          "name": "Morgan Freeman"
         }
       ]
     }

@@ -83,7 +83,7 @@ pub(crate) fn follow_field_path_and_insert_value(
 /// Takes 'ArgumentPresets' annotations, data connector link argument presets, and
 /// existing arguments (which might be partially filled), and fill values in the
 /// existing arguments based on the presets
-pub(crate) fn process_argument_presets<'s, 'a>(
+pub fn process_argument_presets<'s, 'a>(
     data_connector_link: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
     argument_presets: Option<&'a ArgumentPresets>,

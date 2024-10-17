@@ -1,0 +1,20 @@
+---
+source: crates/engine/tests/common.rs
+expression: rowsets
+---
+[
+  {
+    "rows": [
+      {
+        "actor_id": 4,
+        "movie_id": 3,
+        "name": "Al Pacino"
+      },
+      {
+        "actor_id": 5,
+        "movie_id": 3,
+        "name": "Robert De Niro"
+      }
+    ]
+  }
+]

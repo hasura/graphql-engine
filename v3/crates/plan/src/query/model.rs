@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use execute::{
-    plan::{field::Field, Argument, ResolvedFilterExpression},
+    plan::{field::Field, ResolvedFilterExpression},
     QueryExecutionPlan, QueryNode,
 };
 use graphql_ir::AggregateFieldSelection;
@@ -26,6 +26,7 @@ pub async fn from_model_aggregate_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
     http_context: &Arc<execute::HttpContext>,
+    request_headers: &reqwest::header::HeaderMap,
 ) -> Result<
     (
         Qualified<CustomTypeName>,
@@ -95,6 +96,7 @@ pub async fn from_model_aggregate_selection(
         session,
         http_context,
         metadata,
+        request_headers,
         model,
         model_source,
         model_object_type,
@@ -109,6 +111,7 @@ pub async fn from_model_selection(
     metadata: &Metadata,
     session: &Arc<Session>,
     http_context: &Arc<execute::HttpContext>,
+    request_headers: &reqwest::header::HeaderMap,
 ) -> Result<
     (
         Qualified<CustomTypeName>,
@@ -226,6 +229,7 @@ pub async fn from_model_selection(
         session,
         http_context,
         metadata,
+        request_headers,
         model,
         model_source,
         model_object_type,
@@ -277,18 +281,7 @@ pub fn ndc_query_to_query_execution_plan(
             predicate: query.filter.clone(),
         },
         collection: query.collection_name.clone(),
-        arguments: query
-            .arguments
-            .iter()
-            .map(|(argument, value)| {
-                (
-                    argument.clone(),
-                    Argument::Literal {
-                        value: value.clone(),
-                    },
-                )
-            })
-            .collect(),
+        arguments: query.arguments.clone(),
         collection_relationships: query.collection_relationships.clone(),
         variables: None,
         data_connector: query.data_connector.clone(),
