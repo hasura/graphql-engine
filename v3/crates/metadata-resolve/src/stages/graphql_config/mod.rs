@@ -262,7 +262,6 @@ fn fallback_graphql_config() -> &'static graphql_config::GraphqlConfig {
             mutation: graphql_config::MutationGraphqlConfig {
                 root_operation_type_name: GraphQlTypeName::from("Mutation"),
             },
-            // TODO: Subscriptions are still unsupported. No need to consider them for now.
             subscription: None,
             apollo_federation: None,
         })

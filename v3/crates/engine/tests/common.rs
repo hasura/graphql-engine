@@ -456,7 +456,6 @@ pub fn test_execute_explain(
             unstable_features: metadata_resolve::configuration::UnstableFeatures {
                 enable_order_by_expressions: false,
                 enable_ndc_v02_support: true,
-                enable_subscriptions: false,
                 enable_jsonapi: false,
                 ..Default::default()
             },
@@ -518,7 +517,6 @@ pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configu
         unstable_features: metadata_resolve::configuration::UnstableFeatures {
             enable_order_by_expressions: false,
             enable_ndc_v02_support: true,
-            enable_subscriptions: true,
             enable_jsonapi: false,
             ..Default::default()
         },

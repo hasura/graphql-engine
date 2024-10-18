@@ -345,8 +345,6 @@ pub enum Error {
     CompatibilityError {
         warnings_as_errors: SeparatedBy<crate::Warning>,
     },
-    #[error("Subscriptions are currently unstable. Please add 'subscriptions' to unstable features to enable them.")]
-    UnstableFeatureSubscriptions,
 }
 
 pub trait ShouldBeAnError {
