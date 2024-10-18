@@ -11,7 +11,7 @@ modify the database and the data returned by the function is filtered using the
 permissions that are specified precisely for that data.
 
 Now consider mutable/volatile functions, we can't automatically infer whether
-or not these functions should be exposed for the sole reason that they *can*
+these functions should be exposed for the sole reason that they *can*
 modify the database. This necessitates a permission system for functions.
 
 ## Permissions on functions
@@ -30,7 +30,7 @@ args:
   definition: {}
 ```
 
-Inside the metadata, it be as follows:
+Inside the metadata, it is as follows:
 
 ```yaml
 version: 3
@@ -44,12 +44,12 @@ sources:
         definition: {}
 ```
 
-`definition` is empty for now but we'll have more options as we extend
+`definition` is empty for now, but we'll have more options as we extend
 the feature set.
 
 ## Backwards compatibility
 
-Currently stable/immutable functions are exposed automatically, so we need to
+Currently, stable/immutable functions are exposed automatically, so we need to
 preserve this behaviour. So, we can introduce a new flag
 `--infer-function-permissions`, the presence of which is an explicit indication
 from the user that they want stable/immutable functions which return a table
