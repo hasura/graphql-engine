@@ -1,0 +1,72 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/reversed-ordering/Artist.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_Artist",
+                    id: "1",
+                    attributes: {
+                        "ArtistId": Number(155),
+                        "Name": String("Zeca Pagodinho"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "2",
+                    attributes: {
+                        "ArtistId": Number(212),
+                        "Name": String("Yo-Yo Ma"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "3",
+                    attributes: {
+                        "ArtistId": Number(168),
+                        "Name": String("Youssou E'Dour"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "4",
+                    attributes: {
+                        "ArtistId": Number(255),
+                        "Name": String("Yehudi Menuhin"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "5",
+                    attributes: {
+                        "ArtistId": Number(181),
+                        "Name": String("Xis"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: None,
+    links: None,
+    meta: None,
+    jsonapi: None,
+}

@@ -1,0 +1,72 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: result
+input_file: crates/jsonapi/tests/passing/ordering/Artist.txt
+---
+DocumentData {
+    data: Some(
+        Multiple(
+            [
+                Resource {
+                    _type: "default_Artist",
+                    id: "1",
+                    attributes: {
+                        "ArtistId": Number(230),
+                        "Name": String("Aaron Copland & London Symphony Orchestra"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "2",
+                    attributes: {
+                        "ArtistId": Number(202),
+                        "Name": String("Aaron Goldberg"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "3",
+                    attributes: {
+                        "ArtistId": Number(215),
+                        "Name": String("Academy of St. Martin in the Fields Chamber Ensemble & Sir Neville Marriner"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "4",
+                    attributes: {
+                        "ArtistId": Number(222),
+                        "Name": String("Academy of St. Martin in the Fields, John Birch, Sir Neville Marriner & Sylvia McNair"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+                Resource {
+                    _type: "default_Artist",
+                    id: "5",
+                    attributes: {
+                        "ArtistId": Number(214),
+                        "Name": String("Academy of St. Martin in the Fields & Sir Neville Marriner"),
+                    },
+                    relationships: None,
+                    links: None,
+                    meta: None,
+                },
+            ],
+        ),
+    ),
+    included: None,
+    links: None,
+    meta: None,
+    jsonapi: None,
+}
