@@ -274,6 +274,7 @@ pub fn resolve(
         &order_by_expressions,
         &graphql_types,
         &graphql_config,
+        configuration,
     )?;
 
     all_issues.extend(issues);

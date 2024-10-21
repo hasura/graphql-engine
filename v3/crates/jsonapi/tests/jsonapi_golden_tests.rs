@@ -179,6 +179,7 @@ fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Conf
     let unstable_features = metadata_resolve::configuration::UnstableFeatures {
         enable_order_by_expressions: false,
         enable_ndc_v02_support: false,
+        enable_subscriptions: true,
         enable_jsonapi: true,
         enable_aggregation_predicates: false,
     };

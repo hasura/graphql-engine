@@ -11,6 +11,7 @@ use super::types::{
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
     SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
+use crate::configuration::Configuration;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::stages::order_by_expressions::OrderByExpressions;
 use crate::stages::{data_connector_scalar_types, graphql_config, models, object_types};
@@ -35,6 +36,7 @@ pub(crate) fn resolve_model_graphql_api(
     aggregate_expression_name: &Option<Qualified<AggregateExpressionName>>,
     order_by_expressions: &OrderByExpressions,
     graphql_config: &graphql_config::GraphqlConfig,
+    configuration: &Configuration,
     issues: &mut Vec<Warning>,
 ) -> Result<ModelGraphQlApi, Error> {
     let model_name = &model.name;
@@ -92,7 +94,7 @@ pub(crate) fn resolve_model_graphql_api(
         let subscription = select_unique
             .subscription
             .as_ref()
-            .map(resolve_subscription_graphql_api)
+            .map(|s| resolve_subscription_graphql_api(s, configuration))
             .transpose()?;
         graphql_api
             .select_uniques
@@ -169,7 +171,7 @@ pub(crate) fn resolve_model_graphql_api(
             let subscription = gql_definition
                 .subscription
                 .as_ref()
-                .map(resolve_subscription_graphql_api)
+                .map(|s| resolve_subscription_graphql_api(s, configuration))
                 .transpose()?;
             mk_name(gql_definition.query_root_field.as_str()).map(|f: ast::Name| {
                 let select_many_description = if gql_definition.description.is_some() {
@@ -240,7 +242,7 @@ pub(crate) fn resolve_model_graphql_api(
             let subscription = graphql_aggregate
                 .subscription
                 .as_ref()
-                .map(resolve_subscription_graphql_api)
+                .map(|s| resolve_subscription_graphql_api(s, configuration))
                 .transpose()?;
 
             Some(SelectAggregateGraphQlDefinition {
@@ -334,8 +336,12 @@ fn is_model_used_in_any_aggregate_relationship(
 
 fn resolve_subscription_graphql_api(
     subscription: &open_dds::models::SubscriptionGraphQlDefinition,
+    configuration: &Configuration,
 ) -> Result<SubscriptionGraphQlDefinition, Error> {
     // Subscriptions are currently unstable.
+    if !configuration.unstable_features.enable_subscriptions {
+        return Err(Error::UnstableFeatureSubscriptions);
+    }
     let open_dds::models::SubscriptionGraphQlDefinition {
         root_field,
         description,
