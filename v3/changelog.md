@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2024.10.21]
+
+### Added
+
 - Support array values in session variables
 
 ### Fixed
@@ -661,7 +669,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.10.14...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.10.21...HEAD
+[v2024.10.21]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.21
 [v2024.10.14]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.14
 [v2024.10.02]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.02
 [v2024.09.23]: https://github.com/hasura/v3-engine/releases/tag/v2024.09.23
