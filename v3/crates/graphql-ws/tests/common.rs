@@ -59,12 +59,7 @@ pub(crate) async fn start_websocket_server() -> TestServer {
     let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(METADATA_PATH);
     let raw_metadata = std::fs::read_to_string(metadata_path).unwrap();
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata).unwrap();
-    let metadata_resolve_configuration = metadata_resolve::configuration::Configuration {
-        unstable_features: metadata_resolve::configuration::UnstableFeatures {
-            enable_subscriptions: true,
-            ..Default::default()
-        },
-    };
+    let metadata_resolve_configuration = metadata_resolve::configuration::Configuration::default();
     let (resolved_metadata, _warnings) =
         metadata_resolve::resolve(metadata, &metadata_resolve_configuration).unwrap();
 

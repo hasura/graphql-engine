@@ -16,7 +16,6 @@ pub struct Configuration {
 pub struct UnstableFeatures {
     pub enable_order_by_expressions: bool,
     pub enable_ndc_v02_support: bool,
-    pub enable_subscriptions: bool,
     pub enable_jsonapi: bool,
     pub enable_aggregation_predicates: bool,
 }
