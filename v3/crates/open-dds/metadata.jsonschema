@@ -1948,16 +1948,6 @@
         "mutation": {
           "$ref": "#/definitions/MutationGraphqlConfig"
         },
-        "subscription": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/SubscriptionGraphqlConfig"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "apolloFederation": {
           "anyOf": [
             {
@@ -2327,17 +2317,6 @@
           "anyOf": [
             {
               "$ref": "#/definitions/Deprecated"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "subscription": {
-          "description": "Enable subscription on this aggregate root field.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/SubscriptionGraphQlDefinition"
             },
             {
               "type": "null"
@@ -5259,17 +5238,6 @@
               "type": "null"
             }
           ]
-        },
-        "subscription": {
-          "description": "Enable subscription on this select many root field.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/SubscriptionGraphQlDefinition"
-            },
-            {
-              "type": "null"
-            }
-          ]
         }
       },
       "additionalProperties": false
@@ -5298,11 +5266,6 @@
           "items": {
             "$ref": "#/definitions/ArgumentPreset"
           }
-        },
-        "allowSubscriptions": {
-          "description": "Whether the role is allowed to subscribe to the root fields of this model.",
-          "default": false,
-          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -5347,82 +5310,6 @@
             },
             {
               "type": "null"
-            }
-          ]
-        },
-        "subscription": {
-          "description": "Enable subscription on this select unique root field.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/SubscriptionGraphQlDefinition"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "SubscriptionGraphQlDefinition": {
-      "$id": "https://hasura.io/jsonschemas/metadata/SubscriptionGraphQlDefinition",
-      "title": "SubscriptionGraphQlDefinition",
-      "description": "The definition of the GraphQL API for enabling subscription on query root fields.",
-      "type": "object",
-      "required": [
-        "rootField"
-      ],
-      "properties": {
-        "rootField": {
-          "description": "The name of the subscription root field.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/GraphQlFieldName"
-            }
-          ]
-        },
-        "description": {
-          "description": "The description of the subscription graphql definition. Gets added to the description of the subscription root field in the graphql schema.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "deprecated": {
-          "description": "Whether this subscription root field is deprecated. If set, the deprecation status is added to the subscription root field's graphql schema.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Deprecated"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "pollingIntervalMs": {
-          "description": "Polling interval in milliseconds for the subscription.",
-          "default": 1000,
-          "type": "integer",
-          "format": "uint64",
-          "minimum": 0.0
-        }
-      },
-      "additionalProperties": false
-    },
-    "SubscriptionGraphqlConfig": {
-      "$id": "https://hasura.io/jsonschemas/metadata/SubscriptionGraphqlConfig",
-      "title": "SubscriptionGraphqlConfig",
-      "description": "Configuration for the GraphQL schema of Hasura features for subscriptions.",
-      "type": "object",
-      "required": [
-        "rootOperationTypeName"
-      ],
-      "properties": {
-        "rootOperationTypeName": {
-          "description": "The name of the root operation type name for subscriptions. Usually `subscription`.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/GraphQlTypeName"
             }
           ]
         }

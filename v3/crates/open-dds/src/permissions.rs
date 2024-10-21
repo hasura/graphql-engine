@@ -342,8 +342,12 @@ pub struct SelectPermission {
     /// Preset values for arguments for this role
     #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub argument_presets: Vec<ArgumentPreset>,
-    /// Whether the role is allowed to subscribe to the root fields of this model.
-    #[opendd(default, json_schema(default_exp = "serde_json::json!(false)"))]
+    /// Whether to allow subscriptions for this role.
+    #[opendd(
+        hidden = true,
+        default,
+        json_schema(default_exp = "serde_json::json!(false)")
+    )]
     pub allow_subscriptions: bool,
 }
 
