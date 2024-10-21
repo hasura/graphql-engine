@@ -1,6 +1,7 @@
 use super::error::BooleanExpressionError;
 use super::graphql;
 use super::helpers;
+use super::BooleanExpressionIssue;
 pub use super::{
     BooleanExpressionComparableRelationship, ComparableFieldKind,
     ResolvedObjectBooleanExpressionType,
@@ -47,7 +48,13 @@ pub(crate) fn resolve_object_boolean_expression_type(
     relationships: &relationships::Relationships,
     graphql_config: &graphql_config::GraphqlConfig,
     graphql_types: &mut BTreeSet<ast::TypeName>,
-) -> Result<ResolvedObjectBooleanExpressionType, BooleanExpressionError> {
+) -> Result<
+    (
+        ResolvedObjectBooleanExpressionType,
+        Vec<BooleanExpressionIssue>,
+    ),
+    BooleanExpressionError,
+> {
     let qualified_object_type_name = Qualified::new(
         subgraph.clone(),
         object_boolean_expression_operand.r#type.clone(),
@@ -64,7 +71,10 @@ pub(crate) fn resolve_object_boolean_expression_type(
             )?;
 
     // resolve any comparable fields
-    let ComparableFieldsOutput(comparable_fields) = resolve_comparable_fields(
+    let ComparableFieldsOutput {
+        comparable_fields,
+        issues,
+    } = resolve_comparable_fields(
         &object_boolean_expression_operand.comparable_fields,
         &object_type_representation.object_type,
         boolean_expression_type_name,
@@ -99,12 +109,15 @@ pub(crate) fn resolve_object_boolean_expression_type(
         })
         .transpose()?;
 
-    Ok(ResolvedObjectBooleanExpressionType {
-        name: boolean_expression_type_name.clone(),
-        include_logical_operators: helpers::resolve_logical_operators(logical_operators),
-        object_type: qualified_object_type_name.clone(),
-        graphql: resolved_graphql,
-    })
+    Ok((
+        ResolvedObjectBooleanExpressionType {
+            name: boolean_expression_type_name.clone(),
+            include_logical_operators: helpers::resolve_logical_operators(logical_operators),
+            object_type: qualified_object_type_name.clone(),
+            graphql: resolved_graphql,
+        },
+        issues,
+    ))
 }
 
 // resolve comparable relationships. More indepth checks
@@ -174,9 +187,10 @@ fn resolve_comparable_relationships(
     Ok(resolved_comparable_relationships)
 }
 
-pub struct ComparableFieldsOutput(
-    BTreeMap<FieldName, (ComparableFieldKind, Qualified<CustomTypeName>)>,
-);
+pub struct ComparableFieldsOutput {
+    comparable_fields: BTreeMap<FieldName, (ComparableFieldKind, Qualified<CustomTypeName>)>,
+    issues: Vec<BooleanExpressionIssue>,
+}
 
 // comparable_fields don't do much, all we can do is ensure that the other BooleanExpressionTypes
 // they refer to exist
@@ -188,6 +202,7 @@ fn resolve_comparable_fields(
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
 ) -> Result<ComparableFieldsOutput, BooleanExpressionError> {
     let mut resolved_comparable_fields = BTreeMap::new();
+    let mut issues = Vec::new();
 
     // validate comparable fields all exist in underlying object
     for comparable_field in comparable_fields {
@@ -240,6 +255,17 @@ fn resolve_comparable_fields(
                 BooleanExpressionScalarAggregateOperand { r#type, .. },
             ) => (ComparableFieldKind::Scalar, r#type.clone()),
         };
+        if let QualifiedBaseType::List(_) = field.field_type.underlying_type {
+            if field_kind == ComparableFieldKind::Scalar {
+                issues.push(
+                    BooleanExpressionIssue::BooleanExpressionArrayFieldComparedWithScalarType {
+                        field_name: comparable_field.field_name.clone(),
+                        boolean_expression_type_name: field_boolean_expression_type_name,
+                    },
+                );
+                continue;
+            }
+        }
 
         let qualified_boolean_expression_type =
             mk_qualified_type_name(&boolean_expression_underlying_type, subgraph);
@@ -260,5 +286,8 @@ fn resolve_comparable_fields(
         );
     }
 
-    Ok(ComparableFieldsOutput(resolved_comparable_fields))
+    Ok(ComparableFieldsOutput {
+        comparable_fields: resolved_comparable_fields,
+        issues,
+    })
 }

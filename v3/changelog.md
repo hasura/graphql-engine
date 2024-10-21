@@ -13,6 +13,8 @@
 ### Added
 
 - Support array values in session variables
+- Add a check to disallow defining boolean expression of array fields with
+  scalar boolean type while resolving the boolean expression
 
 ### Fixed
 

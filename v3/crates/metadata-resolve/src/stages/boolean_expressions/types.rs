@@ -19,6 +19,11 @@ pub enum BooleanExpressionIssue {
         nested_type_name: Qualified<CustomTypeName>,
         data_connector_name: Qualified<DataConnectorName>,
     },
+    #[error("The underlying type for the field {field_name} is array, but the boolean expression type used for the field is {boolean_expression_type_name}, which is a scalar boolean expression type")]
+    BooleanExpressionArrayFieldComparedWithScalarType {
+        field_name: FieldName,
+        boolean_expression_type_name: Qualified<CustomTypeName>,
+    },
 }
 
 impl ShouldBeAnError for BooleanExpressionIssue {
@@ -27,6 +32,9 @@ impl ShouldBeAnError for BooleanExpressionIssue {
             BooleanExpressionIssue::NoNestedArrayFilteringCapabilitiesDefined { .. } => {
                 flags.require_nested_array_filtering_capability
             }
+            BooleanExpressionIssue::BooleanExpressionArrayFieldComparedWithScalarType {
+                ..
+            } => flags.disallow_array_field_compared_with_scalar_boolean_type,
         }
     }
 }
@@ -57,6 +65,7 @@ pub struct BooleanExpressionTypes {
 pub struct BooleanExpressionsOutput {
     pub boolean_expression_types: BooleanExpressionTypes,
     pub graphql_types: BTreeSet<ast::TypeName>,
+    pub issues: Vec<BooleanExpressionIssue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

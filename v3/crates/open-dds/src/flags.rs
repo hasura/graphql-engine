@@ -35,6 +35,12 @@ pub struct Flags {
 
     #[opendd(default, rename = "json_session_variables")]
     pub json_session_variables: bool,
+
+    #[opendd(
+        default,
+        rename = "disallow_array_field_compared_with_scalar_boolean_type"
+    )]
+    pub disallow_array_field_compared_with_scalar_boolean_type: bool,
 }
 
 impl Flags {
@@ -50,6 +56,7 @@ impl Flags {
             require_unique_command_graphql_names: false,
             allow_partial_supergraph: false,
             json_session_variables: false,
+            disallow_array_field_compared_with_scalar_boolean_type: false,
         }
     }
 

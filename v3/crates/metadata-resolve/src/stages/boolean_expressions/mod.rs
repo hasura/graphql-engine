@@ -43,6 +43,7 @@ pub fn resolve(
     relationships: &relationships::Relationships,
 ) -> Result<BooleanExpressionsOutput, BooleanExpressionError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
+    let mut issues = Vec::new();
 
     // first we collect all the boolean_expression_types
     // so we have a full set to refer to when resolving them
@@ -66,20 +67,22 @@ pub fn resolve(
         if let BooleanExpressionOperand::Object(boolean_expression_object_operand) =
             &boolean_expression_type.operand
         {
-            let object_boolean_expression_type = object::resolve_object_boolean_expression_type(
-                boolean_expression_type_name,
-                boolean_expression_object_operand,
-                &boolean_expression_type.logical_operators,
-                subgraph,
-                &boolean_expression_type.graphql,
-                object_types,
-                &boolean_expression_scalar_types,
-                &raw_boolean_expression_types,
-                relationships,
-                graphql_config,
-                &mut graphql_types,
-            )?;
+            let (object_boolean_expression_type, boolean_expression_issues) =
+                object::resolve_object_boolean_expression_type(
+                    boolean_expression_type_name,
+                    boolean_expression_object_operand,
+                    &boolean_expression_type.logical_operators,
+                    subgraph,
+                    &boolean_expression_type.graphql,
+                    object_types,
+                    &boolean_expression_scalar_types,
+                    &raw_boolean_expression_types,
+                    relationships,
+                    graphql_config,
+                    &mut graphql_types,
+                )?;
 
+            issues.extend(boolean_expression_issues);
             boolean_expression_object_types.insert(
                 boolean_expression_type_name.clone(),
                 object_boolean_expression_type,
@@ -96,5 +99,6 @@ pub fn resolve(
         },
         // TODO: make sure we are adding new types to graphql_types
         graphql_types,
+        issues,
     })
 }

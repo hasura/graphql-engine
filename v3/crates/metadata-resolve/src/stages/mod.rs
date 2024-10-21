@@ -150,6 +150,7 @@ pub fn resolve(
     let boolean_expressions::BooleanExpressionsOutput {
         boolean_expression_types,
         graphql_types,
+        issues,
     } = boolean_expressions::resolve(
         &metadata_accessor,
         boolean_expression_scalar_types,
@@ -161,6 +162,8 @@ pub fn resolve(
         &relationships,
     )
     .map_err(Error::from)?;
+
+    all_issues.extend(issues.into_iter().map(Warning::from));
 
     let order_by_expressions::OrderByExpressionsOutput {
         order_by_expressions,
