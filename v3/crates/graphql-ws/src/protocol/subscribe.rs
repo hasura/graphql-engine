@@ -80,16 +80,16 @@ pub async fn handle_subscribe(
                                 match plugin_response {
                                     pre_parse_plugin::PreExecutePluginResponse::Continue => {
                                         // Start a new poller for the operation and insert it into the connection.
-                                        let poller = tracing_util::get_active_span(|span| {
-                                            start_poller(
-                                                operation_id.clone(),
-                                                session.clone(),
-                                                headers.clone(),
-                                                connection.clone(),
-                                                payload,
-                                                span.span_context().clone(),
-                                            )
-                                        });
+                                        let current_span_link =
+                                            tracing_util::SpanLink::from_current_span();
+                                        let poller = start_poller(
+                                            operation_id.clone(),
+                                            session.clone(),
+                                            headers.clone(),
+                                            connection.clone(),
+                                            payload,
+                                            current_span_link,
+                                        );
                                         connection
                                             .insert_poller(operation_id.clone(), poller)
                                             .await;
@@ -156,18 +156,18 @@ fn start_poller(
     headers: http::HeaderMap,
     connection: ws::Connection,
     raw_request: lang_graphql::http::RawRequest,
-    parent_span_context: tracing_util::SpanContext,
+    parent_span_link: tracing_util::SpanLink,
 ) -> poller::Poller {
     poller::Poller::new(|| {
         Box::pin(async move {
             // Executes the GraphQL request and handles any errors.
-            execute_request(
+            execute_query(
                 operation_id.clone(),
                 session,
                 headers,
                 &connection,
                 raw_request,
-                parent_span_context,
+                parent_span_link,
             )
             .await;
         })
@@ -175,36 +175,33 @@ fn start_poller(
 }
 
 /// Executes the GraphQL request, handling queries, mutations, and subscriptions.
-async fn execute_request(
+async fn execute_query(
     operation_id: OperationId,
     session: Session,
     headers: http::HeaderMap,
     connection: &ws::Connection,
     raw_request: lang_graphql::http::RawRequest,
-    parent_span_context: tracing_util::SpanContext,
+    parent_span_link: tracing_util::SpanLink,
 ) {
     let tracer = tracing_util::global_tracer();
     // Execute the GraphQL request and handle any errors.
     let result = tracer
         .new_trace_async_with_link(
-            "websocket_execute_request",
-            "Executing a GraphQL request over WebSocket",
+            "websocket_execute_query",
+            "Executing a GraphQL query over WebSocket",
             tracing_util::SpanVisibility::User,
-            parent_span_context,
+            parent_span_link,
             || {
-                // Set websocket_id and operation_id as attributes
-                tracing_util::set_attribute_on_active_span(
-                    tracing_util::AttributeVisibility::Default,
-                    "websocket.id",
-                    connection.id.to_string(),
-                );
                 tracing_util::set_attribute_on_active_span(
                     tracing_util::AttributeVisibility::Default,
                     "graphql.operation.id",
                     operation_id.0.clone(),
                 );
+                // Set GraphQL request meta attributes on the current span.
+                // This includes session role, operation_name and the graphql query.
+                graphql_frontend::set_request_metadata_attributes(&raw_request, &session);
                 Box::pin(async {
-                    execute_request_internal(
+                    execute_query_internal(
                         operation_id.clone(),
                         session,
                         headers,
@@ -246,7 +243,7 @@ pub async fn send_request_error(
 }
 
 // Exported for testing purpose
-pub async fn execute_request_internal(
+pub async fn execute_query_internal(
     operation_id: OperationId,
     session: Session,
     headers: http::HeaderMap,
@@ -254,10 +251,6 @@ pub async fn execute_request_internal(
     raw_request: lang_graphql::http::RawRequest,
 ) -> Result<(), execute::RequestError> {
     let schema = &connection.context.schema;
-    let project_id = connection.context.project_id.as_ref();
-    let http_context = &connection.context.http_context;
-    let expose_internal_errors = connection.context.expose_internal_errors;
-
     // Parse the raw GraphQL request.
     let query = graphql_frontend::parse_query(&raw_request.query)?;
     // Normalize the parsed GraphQL query.
@@ -268,6 +261,49 @@ pub async fn execute_request_internal(
     // Build a request plan based on the IR.
     let request_plan = graphql_frontend::build_request_plan(&ir)?;
 
+    let display_name = match normalized_request.name {
+        Some(ref name) => std::borrow::Cow::Owned(format!("Execute {name}")),
+        None => std::borrow::Cow::Borrowed("Execute request plan"),
+    };
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "execute",
+            display_name,
+            tracing_util::SpanVisibility::User,
+            || {
+                // Set usage analytics attributes on the current span
+                graphql_frontend::set_usage_attributes(&normalized_request, &ir);
+                Box::pin(async {
+                    execute(
+                        operation_id,
+                        connection,
+                        session,
+                        headers,
+                        raw_request,
+                        request_plan,
+                    )
+                    .await;
+                    tracing_util::Successful::new(())
+                })
+            },
+        )
+        .await
+        .into_inner();
+    Ok(())
+}
+
+async fn execute(
+    operation_id: OperationId,
+    connection: &ws::Connection,
+    session: Session,
+    headers: http::HeaderMap,
+    raw_request: lang_graphql::http::RawRequest,
+    request_plan: execute::RequestPlan<'_, '_, '_>,
+) {
+    let project_id = connection.context.project_id.as_ref();
+    let http_context = &connection.context.http_context;
+    let expose_internal_errors = connection.context.expose_internal_errors;
     match request_plan {
         // Handle mutations.
         plan::RequestPlan::MutationPlan(mutation_plan) => {
@@ -315,8 +351,7 @@ pub async fn execute_request_internal(
                     let mut response_hash = ResponseHash::new();
 
                     let tracer = tracing_util::global_tracer();
-                    let this_span_context =
-                        tracing_util::get_active_span(|span_ref| span_ref.span_context().clone());
+                    let this_span_link = tracing_util::SpanLink::from_current_span();
 
                     // A loop to periodically wait for the polling interval, then fetch data from NDC.
                     loop {
@@ -325,14 +360,8 @@ pub async fn execute_request_internal(
                                 "websocket_poll_subscription",
                                 "Polling a subscription query",
                                 tracing_util::SpanVisibility::User,
-                                this_span_context.clone(),
+                                this_span_link.clone(),
                                 || {
-                                    // Set websocket_id and operation_id as attributes
-                                    tracing_util::set_attribute_on_active_span(
-                                        tracing_util::AttributeVisibility::Default,
-                                        "websocket.id",
-                                        connection.id.to_string(),
-                                    );
                                     tracing_util::set_attribute_on_active_span(
                                         tracing_util::AttributeVisibility::Default,
                                         "graphql.operation.id",
@@ -422,7 +451,6 @@ pub async fn execute_request_internal(
             }
         }
     }
-    Ok(())
 }
 
 #[derive(PartialEq, Eq)]
@@ -610,22 +638,20 @@ fn run_pre_response_plugins(
             tracing_util::SpanVisibility::User,
             || {
                 let response_json = serde_json::to_value(response)?;
-                tracing_util::get_active_span(|span| {
-                    // Open new trace for executing pre-response plugin with linking current span
-                    let plugin_execution_tracing_strategy =
-                        pre_response_plugin::ExecutePluginsTracing::NewTraceWithLink {
-                            span_context: span.span_context().clone(),
-                        };
-                    pre_response_plugin::execute_pre_response_plugins_in_task(
-                        pre_response_plugins,
-                        connection.context.http_context.client.clone(),
-                        session,
-                        raw_request.clone(),
-                        response_json,
-                        headers,
-                        plugin_execution_tracing_strategy,
-                    );
-                });
+                // Open new trace for executing pre-response plugin with linking current span
+                let plugin_execution_tracing_strategy =
+                    pre_response_plugin::ExecutePluginsTracing::NewTraceWithLink {
+                        span_link: tracing_util::SpanLink::from_current_span(),
+                    };
+                pre_response_plugin::execute_pre_response_plugins_in_task(
+                    pre_response_plugins,
+                    connection.context.http_context.client.clone(),
+                    session,
+                    raw_request.clone(),
+                    response_json,
+                    headers,
+                    plugin_execution_tracing_strategy,
+                );
                 Ok(())
             },
         );

@@ -72,16 +72,21 @@ impl WebSocketServer {
                     websocket_id.to_string(),
                 );
 
-                let protocol = headers
-                    .get(SEC_WEBSOCKET_PROTOCOL)
-                    .and_then(|val| val.to_str().ok())
-                    .ok_or(WebSocketError::MissingProtocolHeader)?;
+                // Put the websocket id in the baggage
+                let trace_baggage = vec![tracing_util::KeyValue::new(
+                    "websocket.id",
+                    websocket_id.to_string(),
+                )];
+                tracing_util::run_with_baggage(trace_baggage, || {
+                    let protocol = headers
+                        .get(SEC_WEBSOCKET_PROTOCOL)
+                        .and_then(|val| val.to_str().ok())
+                        .ok_or(WebSocketError::MissingProtocolHeader)?;
 
-                let mut response = if protocol == protocol::GRAPHQL_WS_PROTOCOL {
-                    let connections = self.connections.clone();
-                    // Upgrade the WebSocket connection and handle it
-                    tracing_util::get_active_span(|span| {
-                        let span_context = span.span_context().clone();
+                    let mut response = if protocol == protocol::GRAPHQL_WS_PROTOCOL {
+                        let connections = self.connections.clone();
+                        // Upgrade the WebSocket connection and handle it
+                        let span_link = tracing_util::SpanLink::from_current_span();
                         // Clone the websocket_id to move it into the closure
                         let websocket_id = websocket_id.clone();
                         ws_upgrade
@@ -92,20 +97,20 @@ impl WebSocketServer {
                                     websocket_id,
                                     context,
                                     connections,
-                                    span_context,
+                                    span_link,
                                 )
                             })
-                    })
-                } else {
-                    // Return error if the protocol doesn't match
-                    return Err(WebSocketError::InvalidProtocol(protocol.to_string()));
-                };
+                    } else {
+                        // Return error if the protocol doesn't match
+                        return Err(WebSocketError::InvalidProtocol(protocol.to_string()));
+                    };
 
-                // Set the WebSocket id response header
-                response
-                    .headers_mut()
-                    .insert(SEC_WEBSOCKET_ID, websocket_id.to_string().parse()?);
-                Ok(response)
+                    // Set the WebSocket id response header
+                    response
+                        .headers_mut()
+                        .insert(SEC_WEBSOCKET_ID, websocket_id.to_string().parse()?);
+                    Ok(response)
+                })
             },
         );
 
@@ -162,7 +167,7 @@ async fn start_websocket_session(
     websocket_id: types::WebSocketId,
     context: types::Context,
     connections: types::Connections,
-    parent_span_context: tracing_util::SpanContext,
+    parent_span_link: tracing_util::SpanLink,
 ) {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -170,14 +175,8 @@ async fn start_websocket_session(
             "start_websocket_session",
             "Start a WebSocket Session",
             tracing_util::SpanVisibility::User,
-            parent_span_context,
+            parent_span_link,
             || {
-                // Set websocket id attribute
-                tracing_util::set_attribute_on_active_span(
-                    tracing_util::AttributeVisibility::Default,
-                    "websocket.id",
-                    websocket_id.to_string(),
-                );
                 Box::pin(async {
                     // Split the socket into a sender and receiver
                     let (websocket_sender, websocket_receiver) = socket.split();
@@ -191,14 +190,13 @@ async fn start_websocket_session(
                         .new_connection(websocket_id, context, channel_sender)
                         .await;
 
-                    let this_span_context =
-                        tracing_util::get_active_span(|span| span.span_context().clone());
+                    let this_span_link = tracing_util::SpanLink::from_current_span();
 
                     // Spawn a task to verify the graphql-ws connection_init state with a timeout
                     let init_checker_task = tokio::spawn(tasks::verify_connection_init(
                         connection.clone(),
                         protocol::CONNECTION_INIT_TIMEOUT,
-                        this_span_context.clone(),
+                        this_span_link.clone(),
                     ));
 
                     // Spawn a task to handle outgoing messages
@@ -206,14 +204,14 @@ async fn start_websocket_session(
                         connection.clone(),
                         websocket_sender,
                         channel_receiver,
-                        this_span_context.clone(),
+                        this_span_link.clone(),
                     ));
 
                     // Spawn a task to handle incoming messages
                     let incoming_task = tokio::spawn(tasks::process_incoming_message(
                         connection.clone(),
                         websocket_receiver,
-                        this_span_context,
+                        this_span_link,
                     ));
 
                     // Handle the result of the initialization checker

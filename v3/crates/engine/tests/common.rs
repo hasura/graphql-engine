@@ -718,7 +718,7 @@ async fn run_query_graphql_ws(
     // Using the internal function. The actual 'execute_request' function from
     // graphl_ws crate needs a parent span context for linking purposes.
     // Traces are not considered in tests
-    let result = graphql_ws::execute_request_internal(
+    let result = graphql_ws::execute_query_internal(
         operation_id.clone(),
         session.clone(),
         request_headers.clone(),

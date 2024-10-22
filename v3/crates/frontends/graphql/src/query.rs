@@ -61,23 +61,8 @@ pub async fn execute_query_internal(
             "Execute query request",
             SpanVisibility::User,
             || {
-                if let Some(name) = &raw_request.operation_name {
-                    tracing_util::set_attribute_on_active_span(
-                        AttributeVisibility::Default,
-                        "operation_name",
-                        name.to_string(),
-                    );
-                }
-                tracing_util::set_attribute_on_active_span(
-                    AttributeVisibility::Default,
-                    "session.role",
-                    session.role.to_string(),
-                );
-                tracing_util::set_attribute_on_active_span(
-                    AttributeVisibility::Default,
-                    "request.graphql_query",
-                    raw_request.query.clone(),
-                );
+                // Set GraphQL request metadata attributes on the current span
+                set_request_metadata_attributes(&raw_request, session);
                 Box::pin(async {
                     // parse the raw request into a GQL query
                     let query = steps::parse_query(&raw_request.query)?;
@@ -101,16 +86,10 @@ pub async fn execute_query_internal(
                     // execute the query plan
                     let response = tracer
                         .in_span_async("execute", display_name, SpanVisibility::User, || {
-                            let all_usage_counts = graphql_ir::get_all_usage_counts_in_query(&ir);
-                            let serialized_data = serde_json::to_string(&all_usage_counts).unwrap();
+                            // Set usage analytics attributes on the current span
+                            set_usage_attributes(&normalized_request, &ir);
 
-                            set_attribute_on_active_span(
-                                AttributeVisibility::Default,
-                                "usage_counts",
-                                serialized_data,
-                            );
-
-                            let execute_response = Box::pin(async {
+                            Box::pin(async {
                                 let execute_query_result = match request_plan {
                                     plan::RequestPlan::MutationPlan(mutation_plan) => {
                                         plan::execute_mutation_plan(
@@ -155,30 +134,7 @@ pub async fn execute_query_internal(
                                     execute_query_result,
                                     expose_internal_errors,
                                 )
-                            });
-
-                            // Analyze the query usage
-                            // It is attached to this span as an attribute
-                            match steps::analyze_query_usage(&normalized_request) {
-                                Err(analyze_error) => {
-                                    // Set query usage analytics error as a span attribute
-                                    set_attribute_on_active_span(
-                                        AttributeVisibility::Internal,
-                                        "query_usage_analytics_error",
-                                        analyze_error.to_string(),
-                                    );
-                                }
-                                Ok(query_usage_analytics) => {
-                                    // Set query usage analytics as a span attribute
-                                    set_attribute_on_active_span(
-                                        AttributeVisibility::Internal,
-                                        "query_usage_analytics",
-                                        query_usage_analytics,
-                                    );
-                                }
-                            }
-
-                            execute_response
+                            })
                         })
                         .await;
                     Ok((normalized_request.ty, response))
@@ -186,4 +142,64 @@ pub async fn execute_query_internal(
             },
         )
         .await
+}
+
+/// Set GraphQL request metadata attributes on the current span.
+/// This includes the session role, operation name and the GraphQL query.
+pub fn set_request_metadata_attributes(raw_request: &gql::http::RawRequest, session: &Session) {
+    // Set request session role
+    tracing_util::set_attribute_on_active_span(
+        AttributeVisibility::Default,
+        "session.role",
+        session.role.to_string(),
+    );
+    // Set the GraphQL request operation name if exists
+    if let Some(name) = &raw_request.operation_name {
+        tracing_util::set_attribute_on_active_span(
+            AttributeVisibility::Default,
+            "operation_name",
+            name.to_string(),
+        );
+    }
+    // Set the GraphQL query
+    tracing_util::set_attribute_on_active_span(
+        AttributeVisibility::Default,
+        "request.graphql_query",
+        raw_request.query.clone(),
+    );
+}
+
+/// Set usage analytics attributes on the current span
+pub fn set_usage_attributes<'s, 'n>(
+    normalized_request: &'n gql::normalized_ast::Operation<'s, GDS>,
+    ir: &graphql_ir::IR<'n, 's>,
+) {
+    // Set usage counts as a span attributes
+    let all_usage_counts = graphql_ir::get_all_usage_counts_in_query(ir);
+    let serialized_data = serde_json::to_string(&all_usage_counts).unwrap();
+    set_attribute_on_active_span(
+        AttributeVisibility::Default,
+        "usage_counts",
+        serialized_data,
+    );
+
+    // Analyze the query usage and attach to this span as an attribute
+    match steps::analyze_query_usage(normalized_request) {
+        Err(analyze_error) => {
+            // Set query usage analytics error as a span attribute
+            set_attribute_on_active_span(
+                AttributeVisibility::Internal,
+                "query_usage_analytics_error",
+                analyze_error.to_string(),
+            );
+        }
+        Ok(query_usage_analytics) => {
+            // Set query usage analytics as a span attribute
+            set_attribute_on_active_span(
+                AttributeVisibility::Internal,
+                "query_usage_analytics",
+                query_usage_analytics,
+            );
+        }
+    }
 }

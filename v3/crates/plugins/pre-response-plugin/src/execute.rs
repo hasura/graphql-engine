@@ -193,8 +193,8 @@ pub enum ExecutePluginsTracing {
     /// in long-lived websocket connections while allowing for independent tracing
     /// of individual operations.
     NewTraceWithLink {
-        /// The context of the parent span to which this new trace will be linked
-        span_context: tracing_util::SpanContext,
+        /// The parent span to which this new trace will be linked
+        span_link: tracing_util::SpanLink,
     },
 }
 
@@ -241,13 +241,13 @@ pub fn execute_pre_response_plugins_in_task(
                     )
                     .await;
             }
-            ExecutePluginsTracing::NewTraceWithLink { span_context } => {
+            ExecutePluginsTracing::NewTraceWithLink { span_link } => {
                 tracer
                     .new_trace_async_with_link(
                         span_name,
                         span_display_name,
                         span_visibility,
-                        span_context,
+                        span_link,
                         || {
                             Box::pin(async {
                                 execute_all_plugins(

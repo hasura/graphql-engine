@@ -10,7 +10,7 @@ pub use websocket::{
 
 // For tests
 pub use protocol::{
-    subscribe::{execute_request_internal, send_request_error},
+    subscribe::{execute_query_internal, send_request_error},
     types::ServerMessage,
     GRAPHQL_WS_PROTOCOL,
 };

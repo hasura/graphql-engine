@@ -12,7 +12,9 @@ pub use steps::{
 };
 pub use to_opendd_ir::to_opendd_ir;
 
-pub use query::{execute_query, execute_query_internal};
+pub use query::{
+    execute_query, execute_query_internal, set_request_metadata_attributes, set_usage_attributes,
+};
 pub use types::{GraphQLErrors, GraphQLResponse};
 
 #[cfg(test)]

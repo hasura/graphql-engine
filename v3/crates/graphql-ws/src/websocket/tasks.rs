@@ -30,7 +30,7 @@ impl tracing_util::TraceableError for ConnectionTimeOutError {
 pub(crate) async fn verify_connection_init(
     connection: types::Connection,
     timeout_duration: Duration,
-    parent_span_context: tracing_util::SpanContext,
+    parent_span_link: tracing_util::SpanLink,
 ) -> Result<(), ConnectionTimeOutError> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -38,14 +38,8 @@ pub(crate) async fn verify_connection_init(
             "websocket_verify_connection_init",
             "Verifying graphql-ws protocol connection_init within timeout",
             tracing_util::SpanVisibility::User,
-            parent_span_context,
+            parent_span_link,
             || {
-                // Set websocket id attribute
-                tracing_util::set_attribute_on_active_span(
-                    tracing_util::AttributeVisibility::Default,
-                    "websocket.id",
-                    connection.id.to_string(),
-                );
                 Box::pin(async {
                     if !matches!(
                         timeout(timeout_duration, wait_for_initialization(connection)).await,
@@ -82,23 +76,17 @@ async fn wait_for_initialization(connection: types::Connection) {
 pub(crate) async fn process_incoming_message(
     connection: types::Connection,
     mut websocket_receiver: futures_util::stream::SplitStream<ws::WebSocket>,
-    parent_span_context: tracing_util::SpanContext,
+    parent_span_link: tracing_util::SpanLink,
 ) {
+    let tracer = tracing_util::global_tracer();
     while let Some(message) = websocket_receiver.next().await {
-        let tracer = tracing_util::global_tracer();
         let break_loop = tracer
             .new_trace_async_with_link(
                 "websocket_process_incoming_message",
                 "Processing incoming WebSocket message",
                 tracing_util::SpanVisibility::User,
-                parent_span_context.clone(),
+                parent_span_link.clone(),
                 || {
-                    // Set websocket id attribute
-                    tracing_util::set_attribute_on_active_span(
-                        tracing_util::AttributeVisibility::Default,
-                        "websocket.id",
-                        connection.id.to_string(),
-                    );
                     Box::pin(async {
                         // Parse message
                         let break_loop = match parse_incoming_message(message) {
@@ -215,7 +203,7 @@ pub(crate) async fn manage_outgoing_messages(
     connection: types::Connection,
     mut websocket_sender: futures_util::stream::SplitSink<ws::WebSocket, ws::Message>,
     mut channel_receiver: tokio::sync::mpsc::Receiver<types::Message>,
-    parent_span_context: tracing_util::SpanContext,
+    parent_span_link: tracing_util::SpanLink,
 ) {
     while let Some(message) = channel_receiver.recv().await {
         let tracer = tracing_util::global_tracer();
@@ -224,14 +212,8 @@ pub(crate) async fn manage_outgoing_messages(
                 "websocket_manage_outgoing_message",
                 "Manage outgoing WebSocket message",
                 tracing_util::SpanVisibility::User,
-                parent_span_context.clone(),
+                parent_span_link.clone(),
                 || {
-                    // Set websocket id attribute
-                    tracing_util::set_attribute_on_active_span(
-                        tracing_util::AttributeVisibility::Default,
-                        "websocket.id",
-                        connection.id.to_string(),
-                    );
                     Box::pin(async {
                         match message {
                             // Handle raw WebSocket messages
