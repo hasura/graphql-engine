@@ -122,11 +122,28 @@ pub enum InternalDeveloperError {
         session_variable: SessionVariableName,
     },
 
-    #[error("Unable to typecast session variable. Expected: {expected:}, but found: {found:}")]
-    VariableTypeCast { expected: String, found: String },
+    #[error("The session variables {session_variable} is not encoded as a string. JSON-typed session variables are not supported unless you update your compatibility date")]
+    VariableJsonNotSupported {
+        session_variable: SessionVariableName,
+    },
 
-    #[error("Typecasting to array is not supported.")]
-    VariableArrayTypeCast,
+    #[error("Session variable {session_variable} value is of an unexpected type. Expected: {expected}, but found: {found}")]
+    VariableTypeCast {
+        session_variable: SessionVariableName,
+        expected: String,
+        found: String,
+    },
+
+    #[error("Typecasting session variable {session_variable} to an array is not supported. Update your compatibility date to enable JSON session variables")]
+    VariableArrayTypeCastNotSupported {
+        session_variable: SessionVariableName,
+    },
+
+    #[error("Expected session variable {session_variable} to be a valid JSON value, but encountered a JSON parsing error: {parse_error}")]
+    VariableExpectedJson {
+        session_variable: SessionVariableName,
+        parse_error: serde_json::Error,
+    },
 
     #[error("Mapping for the {mapping_kind} typename {type_name:} not found")]
     TypenameMappingNotFound {

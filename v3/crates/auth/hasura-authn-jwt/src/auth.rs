@@ -16,7 +16,11 @@ fn build_allowed_roles(
             // Note: The same `custom_claims` is being cloned
             // for every role present in the allowed roles.
             // We should think of having common claims.
-            session_variables: hasura_claims.custom_claims.clone(),
+            session_variables: hasura_claims
+                .custom_claims
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone().into()))
+                .collect(),
             allowed_session_variables_from_request: auth_base::SessionVariableList::Some(
                 HashSet::new(),
             ),
@@ -75,7 +79,14 @@ pub async fn authenticate_request(
                                 let role = hasura_claims
                                     .custom_claims
                                     .get(&SESSION_VARIABLE_ROLE)
-                                    .map(|v| Role::new(v.0.as_str()));
+                                    .map(|v| {
+                                        Ok::<_, Error>(Role::new(v.0.as_str().ok_or_else(
+                                            || Error::ClaimMustBeAString {
+                                                claim_name: SESSION_VARIABLE_ROLE.to_string(),
+                                            },
+                                        )?))
+                                    })
+                                    .transpose()?;
                                 match role {
                                     // `x-hasura-role` is found, check if it's the
                                     // role that can emulate by comparing it to
@@ -111,6 +122,7 @@ mod tests {
     use std::str::FromStr;
 
     use auth_base::{RoleAuthorization, SessionVariableValue};
+    use hasura_authn_core::JsonSessionVariableValue;
     use jsonwebtoken as jwt;
     use jsonwebtoken::Algorithm;
     use jwt::{encode, EncodingKey};
@@ -168,7 +180,7 @@ mod tests {
         let mut hasura_custom_claims = HashMap::new();
         hasura_custom_claims.insert(
             SessionVariableName::from_str("x-hasura-user-id").unwrap(),
-            SessionVariableValue("1".to_string()),
+            JsonSessionVariableValue(json!("1")),
         );
         HasuraClaims {
             default_role: Role::new("user"),
@@ -225,7 +237,7 @@ mod tests {
 
         role_authorization_session_variables.insert(
             SessionVariableName::from_str("x-hasura-user-id").unwrap(),
-            SessionVariableValue::new("1"),
+            SessionVariableValue::Parsed(json!("1")),
         );
         expected_allowed_roles.insert(
             test_role.clone(),
@@ -274,7 +286,7 @@ mod tests {
         let mut hasura_claims = get_default_hasura_claims();
         hasura_claims.custom_claims.insert(
             SessionVariableName::from_str("x-hasura-role").unwrap(),
-            SessionVariableValue::new("admin"),
+            JsonSessionVariableValue(json!("admin")),
         );
         let encoded_claims = get_encoded_claims(Algorithm::HS256, &hasura_claims)?;
 

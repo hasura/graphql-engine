@@ -13,9 +13,11 @@ open-dds = { path = "../../open-dds" }
 
 axum = { workspace = true }
 axum-core = { workspace = true }
+derive_more = { workspace = true }
 http = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]

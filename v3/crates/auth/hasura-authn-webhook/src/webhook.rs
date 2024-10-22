@@ -46,6 +46,8 @@ pub enum InternalError {
     ReqwestError(reqwest::Error),
     #[error("'x-hasura-role' session variable not found in the webhook response.")]
     RoleSessionVariableNotFound,
+    #[error("'x-hasura-role' session variable in the webhook response was not a string.")]
+    RoleSessionVariableMustBeString,
 }
 
 impl TraceableError for InternalError {
@@ -202,14 +204,14 @@ async fn make_auth_hook_request(
     match response.status() {
         reqwest::StatusCode::UNAUTHORIZED => Err(Error::AuthenticationFailed),
         reqwest::StatusCode::OK => {
-            let auth_hook_response: HashMap<String, String> =
+            let auth_hook_response: HashMap<String, serde_json::Value> =
                 response.json().await.map_err(InternalError::ReqwestError)?;
             let mut session_variables = HashMap::new();
             for (k, v) in &auth_hook_response {
                 match SessionVariableName::from_str(k) {
                     Ok(session_variable) => {
                         session_variables
-                            .insert(session_variable, SessionVariableValue(v.to_string()));
+                            .insert(session_variable, SessionVariableValue::Parsed(v.clone()));
                     }
                     Err(_e) => {}
                 }
@@ -218,8 +220,8 @@ async fn make_auth_hook_request(
                 session_variables
                     .get(&session_variables::SESSION_VARIABLE_ROLE)
                     .ok_or(InternalError::RoleSessionVariableNotFound)?
-                    .0
-                    .as_str(),
+                    .as_str()
+                    .ok_or_else(|| InternalError::RoleSessionVariableMustBeString)?,
             );
             let role_authorization = RoleAuthorization {
                 role: role.clone(),
@@ -324,6 +326,7 @@ mod tests {
     use mockito;
     use rand::{thread_rng, Rng};
     use reqwest::header::CONTENT_TYPE;
+    use serde_json::json;
 
     #[tokio::test]
     // This test emulates a successful authentication by the webhook using Get method
@@ -367,11 +370,11 @@ mod tests {
         let mut role_authorization_session_variables = HashMap::new();
         role_authorization_session_variables.insert(
             SessionVariableName::from_str("x-hasura-role").unwrap(),
-            SessionVariableValue::new("test-role"),
+            SessionVariableValue::Parsed(json!("test-role")),
         );
         role_authorization_session_variables.insert(
             SessionVariableName::from_str("x-hasura-test-role-id").unwrap(),
-            SessionVariableValue::new("1"),
+            SessionVariableValue::Parsed(json!("1")),
         );
         expected_allowed_roles.insert(
             test_role.clone(),
@@ -438,11 +441,11 @@ mod tests {
         let mut role_authorization_session_variables = HashMap::new();
         role_authorization_session_variables.insert(
             SessionVariableName::from_str("x-hasura-role").unwrap(),
-            SessionVariableValue::new("test-role"),
+            SessionVariableValue::Parsed(json!("test-role")),
         );
         role_authorization_session_variables.insert(
             SessionVariableName::from_str("x-hasura-test-role-id").unwrap(),
-            SessionVariableValue::new("1"),
+            SessionVariableValue::Parsed(json!("1")),
         );
         expected_allowed_roles.insert(
             test_role.clone(),
@@ -510,15 +513,15 @@ mod tests {
         let mut role_authorization_session_variables = HashMap::new();
         role_authorization_session_variables.insert(
             SessionVariableName::from_str("x-hasura-role").unwrap(),
-            SessionVariableValue::new("test-role"),
+            SessionVariableValue::Parsed(json!("test-role")),
         );
         role_authorization_session_variables.insert(
             SessionVariableName::from_str("x-hasura-test-role-id").unwrap(),
-            SessionVariableValue::new("1"),
+            SessionVariableValue::Parsed(json!("1")),
         );
         role_authorization_session_variables.insert(
             SessionVariableName::from_str("status").unwrap(),
-            SessionVariableValue::new("true"),
+            SessionVariableValue::Parsed(json!("true")),
         );
         expected_allowed_roles.insert(
             test_role.clone(),
@@ -638,11 +641,11 @@ mod tests {
         let mut role_authorization_session_variables = HashMap::new();
         role_authorization_session_variables.insert(
             SessionVariableName::from_str("x-hasura-role").unwrap(),
-            SessionVariableValue::new("user"),
+            SessionVariableValue::Parsed(json!("user")),
         );
         role_authorization_session_variables.insert(
             SessionVariableName::from_str("x-hasura-user-id").unwrap(),
-            SessionVariableValue::new("1"),
+            SessionVariableValue::Parsed(json!("1")),
         );
         expected_allowed_roles.insert(
             test_role.clone(),

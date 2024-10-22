@@ -162,7 +162,7 @@ mod tests {
     // TODO: remove duplication between this function and 'add_session'
     fn resolve_session(session_vars_path: PathBuf) -> Session {
         let authorization = Identity::admin(Role::new("admin"));
-        let session_variables: HashMap<SessionVariableName, SessionVariableValue> = {
+        let session_variables: HashMap<SessionVariableName, String> = {
             if session_vars_path.exists() {
                 json::from_str(fs::read_to_string(session_vars_path).unwrap().as_ref()).unwrap()
             } else {
@@ -172,7 +172,11 @@ mod tests {
 
         let role = session_variables
             .get(&SESSION_VARIABLE_ROLE)
-            .map(|v| Role::new(&v.0));
+            .map(|v| Role::new(v));
+        let session_variables = session_variables
+            .into_iter()
+            .map(|(k, v)| (k, SessionVariableValue::Unparsed(v)))
+            .collect();
         authorization
             .get_role_authorization(role.as_ref())
             .unwrap()

@@ -1,4 +1,4 @@
-use hasura_authn_core::{SessionVariableValue, SessionVariables};
+use hasura_authn_core::{SessionVariableName, SessionVariableValue, SessionVariables};
 use lang_graphql::normalized_ast;
 use std::collections::BTreeMap;
 
@@ -229,7 +229,12 @@ pub(crate) fn make_argument_from_value_expression(
                 }
             })?;
 
-            typecast_session_variable(session_var.passed_as_json, value, value_type)
+            typecast_session_variable(
+                &session_var.name,
+                value,
+                session_var.passed_as_json,
+                value_type,
+            )
         }
     }
 }
@@ -254,7 +259,12 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
             })?;
 
             Ok(Argument::Literal {
-                value: typecast_session_variable(session_var.passed_as_json, value, value_type)?,
+                value: typecast_session_variable(
+                    &session_var.name,
+                    value,
+                    session_var.passed_as_json,
+                    value_type,
+                )?,
             })
         }
         metadata_resolve::ValueExpressionOrPredicate::BooleanExpression(model_predicate) => {
@@ -274,22 +284,31 @@ pub(crate) fn make_argument_from_value_expression_or_predicate<'s>(
 
 /// Typecast a stringified session variable into a given type, but as a serde_json::Value
 fn typecast_session_variable(
-    passed_as_json: bool,
+    session_var_name: &SessionVariableName,
     session_var_value_wrapped: &SessionVariableValue,
+    passed_as_json: bool,
     to_type: &QualifiedTypeReference,
 ) -> Result<serde_json::Value, error::Error> {
     if passed_as_json {
-        typecast_session_variable_v2(session_var_value_wrapped, to_type)
+        typecast_session_variable_v2(session_var_name, session_var_value_wrapped, to_type)
     } else {
-        typecast_session_variable_v1(session_var_value_wrapped, to_type)
+        typecast_session_variable_v1(session_var_name, session_var_value_wrapped, to_type)
     }
 }
 
 fn typecast_session_variable_v1(
+    session_var_name: &SessionVariableName,
     session_var_value_wrapped: &SessionVariableValue,
     to_type: &QualifiedTypeReference,
 ) -> Result<serde_json::Value, error::Error> {
-    let session_var_value = &session_var_value_wrapped.0;
+    // In v1 (ie before json type support in session variables), we expect every session
+    // variable to arrive as a string and then we parse that string into whatever type we need
+    let session_var_value = &session_var_value_wrapped
+        .as_str()
+        .ok_or(error::InternalDeveloperError::VariableJsonNotSupported {
+            session_variable: session_var_name.clone(),
+        })?
+        .to_string();
     match &to_type.underlying_type {
         QualifiedBaseType::Named(type_name) => {
             match type_name {
@@ -297,6 +316,7 @@ fn typecast_session_variable_v1(
                     InbuiltType::Int => {
                         let value: i32 = session_var_value.parse().map_err(|_| {
                             error::InternalDeveloperError::VariableTypeCast {
+                                session_variable: session_var_name.clone(),
                                 expected: "int".into(),
                                 found: session_var_value.clone(),
                             }
@@ -306,6 +326,7 @@ fn typecast_session_variable_v1(
                     InbuiltType::Float => {
                         let value: f32 = session_var_value.parse().map_err(|_| {
                             error::InternalDeveloperError::VariableTypeCast {
+                                session_variable: session_var_name.clone(),
                                 expected: "float".into(),
                                 found: session_var_value.clone(),
                             }
@@ -316,6 +337,7 @@ fn typecast_session_variable_v1(
                         "true" => Ok(serde_json::Value::Bool(true)),
                         "false" => Ok(serde_json::Value::Bool(false)),
                         _ => Err(error::InternalDeveloperError::VariableTypeCast {
+                            session_variable: session_var_name.clone(),
                             expected: "true or false".into(),
                             found: session_var_value.clone(),
                         })?,
@@ -337,76 +359,107 @@ fn typecast_session_variable_v1(
                 }
             }
         }
-        QualifiedBaseType::List(_) => Err(error::InternalDeveloperError::VariableArrayTypeCast)?,
+        QualifiedBaseType::List(_) => Err(
+            error::InternalDeveloperError::VariableArrayTypeCastNotSupported {
+                session_variable: session_var_name.clone(),
+            },
+        )?,
     }
 }
 
 fn typecast_session_variable_v2(
+    session_var_name: &SessionVariableName,
     session_var_value: &SessionVariableValue,
     to_type: &QualifiedTypeReference,
 ) -> Result<serde_json::Value, error::Error> {
-    let value = serde_json::from_str(&session_var_value.0)?;
-    typecheck_session_variable(&value, to_type)?;
-    Ok(value)
-}
-
-fn typecheck_session_variable(
-    value: &serde_json::Value,
-    to_type: &QualifiedTypeReference,
-) -> Result<(), crate::Error> {
     match &to_type.underlying_type {
         QualifiedBaseType::Named(type_name) => match type_name {
             QualifiedTypeName::Inbuilt(primitive) => match primitive {
                 InbuiltType::Int => {
-                    if !value.is_i64() {
-                        Err(error::InternalDeveloperError::VariableTypeCast {
+                    let value: i64 = session_var_value.as_i64().ok_or_else(|| {
+                        error::InternalDeveloperError::VariableTypeCast {
+                            session_variable: session_var_name.clone(),
                             expected: "int".into(),
-                            found: value.to_string(),
-                        })?;
-                    }
-                    Ok(())
+                            found: session_var_value.to_string(),
+                        }
+                    })?;
+                    Ok(serde_json::Value::Number(value.into()))
                 }
                 InbuiltType::Float => {
-                    if !value.is_f64() {
-                        Err(error::InternalDeveloperError::VariableTypeCast {
+                    let value: f64 = session_var_value.as_f64().ok_or_else(|| {
+                        error::InternalDeveloperError::VariableTypeCast {
+                            session_variable: session_var_name.clone(),
+                            expected: "float".into(),
+                            found: session_var_value.to_string(),
+                        }
+                    })?;
+                    serde_json::to_value(value).map_err(|_error| {
+                        // f64 may not cleanly go into JSON numbers if the value is a NaN or infinite
+                        error::InternalDeveloperError::VariableTypeCast {
+                            session_variable: session_var_name.clone(),
                             expected: "float".into(),
                             found: value.to_string(),
-                        })?;
-                    }
-                    Ok(())
+                        }
+                        .into()
+                    })
                 }
                 InbuiltType::Boolean => {
-                    if !value.is_boolean() {
-                        Err(error::InternalDeveloperError::VariableTypeCast {
+                    let value: bool = session_var_value.as_bool().ok_or_else(|| {
+                        error::InternalDeveloperError::VariableTypeCast {
+                            session_variable: session_var_name.clone(),
                             expected: "true or false".into(),
-                            found: value.to_string(),
-                        })?;
-                    }
-                    Ok(())
+                            found: session_var_value.to_string(),
+                        }
+                    })?;
+                    Ok(serde_json::Value::Bool(value))
                 }
                 InbuiltType::ID | InbuiltType::String => {
-                    if !value.is_string() {
-                        Err(error::InternalDeveloperError::VariableTypeCast {
+                    let value: &str = session_var_value.as_str().ok_or_else(|| {
+                        error::InternalDeveloperError::VariableTypeCast {
+                            session_variable: session_var_name.clone(),
                             expected: "string".into(),
-                            found: value.to_string(),
-                        })?;
-                    }
-                    Ok(())
+                            found: session_var_value.to_string(),
+                        }
+                    })?;
+                    Ok(serde_json::Value::String(value.to_string()))
                 }
             },
-            QualifiedTypeName::Custom(_) => Ok(()),
+            QualifiedTypeName::Custom(_) => {
+                let value = session_var_value.as_value().map_err(|parse_error| {
+                    error::InternalDeveloperError::VariableExpectedJson {
+                        session_variable: session_var_name.clone(),
+                        parse_error,
+                    }
+                })?;
+                Ok(value)
+            }
         },
         QualifiedBaseType::List(element_type) => {
+            let value = session_var_value.as_value().map_err(|parse_error| {
+                error::InternalDeveloperError::VariableExpectedJson {
+                    session_variable: session_var_name.clone(),
+                    parse_error,
+                }
+            })?;
             let elements = value.as_array().ok_or_else(|| {
                 error::InternalDeveloperError::VariableTypeCast {
+                    session_variable: session_var_name.clone(),
                     expected: "array".into(),
                     found: value.to_string(),
                 }
             })?;
-            for element in elements {
-                typecheck_session_variable(element, element_type)?;
-            }
-            Ok(())
+            let typecasted_elements = elements
+                .iter()
+                .map(|element| {
+                    typecast_session_variable_v2(
+                        session_var_name,
+                        &SessionVariableValue::Parsed(element.clone()),
+                        element_type,
+                    )
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+
+            Ok(serde_json::Value::Array(typecasted_elements))
         }
     }
 }

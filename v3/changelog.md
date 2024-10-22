@@ -9,6 +9,15 @@
 
 ### Fixed
 
+- When the `CompatibilityConfig` date is set to `2024-10-16` or newer, session
+  variables returned by webhooks, set in `noAuth` config in `AuthConfig` or set
+  in JWT claims are now correctly allowed to be full JSON values, not just JSON
+  strings. This fixes the bug where you were incorrectly required to JSON-encode
+  your JSON value inside a string. For example, you were previously incorrectly
+  required to return session variables like this
+  `{ "X-Hasura-AllowedUserIds": "[1,2,3]" }`, but now you can correctly return
+  them like this: `{ "X-Hasura-AllowedUserIds": [1,2,3] }`.
+
 ### Changed
 
 ## [v2024.10.21]

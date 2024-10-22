@@ -480,8 +480,7 @@
       ]
     },
     "SessionVariableValue": {
-      "description": "Value of a session variable",
-      "type": "string"
+      "description": "JSON value of a session variable"
     },
     "JWTClaimsMappingPathEntry_for_SessionVariableValue": {
       "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingPathEntry_for_SessionVariableValue",

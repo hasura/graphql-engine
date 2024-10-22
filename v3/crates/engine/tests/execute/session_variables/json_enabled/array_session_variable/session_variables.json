@@ -1,6 +1,6 @@
 [
   {
     "x-hasura-role": "user",
-    "x-hasura-allowed-author-ids": "[1]"
+    "x-hasura-allowed-author-ids": [1]
   }
 ]

@@ -3,7 +3,9 @@ use execute::{HttpContext, ProjectId};
 use goldenfile::{differs::text_diff, Mint};
 use graphql_frontend::execute_query;
 use graphql_schema::GDS;
-use hasura_authn_core::{Identity, Role, Session, SessionError, SessionVariableValue};
+use hasura_authn_core::{
+    Identity, JsonSessionVariableValue, Role, Session, SessionError, SessionVariableValue,
+};
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
@@ -47,7 +49,15 @@ pub(crate) fn resolve_session(
     let authorization = Identity::admin(Role::new("admin"));
     let role = session_variables
         .get(&SESSION_VARIABLE_ROLE)
-        .map(|v| Role::new(&v.0));
+        .map(|v| {
+            Ok(Role::new(v.as_str().ok_or_else(|| {
+                SessionError::InvalidHeaderValue {
+                    header_name: SESSION_VARIABLE_ROLE.to_string(),
+                    error: "session variable value is not a string".to_owned(),
+                }
+            })?))
+        })
+        .transpose()?;
     let role_authorization = authorization.get_role_authorization(role.as_ref())?;
     let session = role_authorization.build_session(session_variables);
     Ok(session)
@@ -107,11 +117,18 @@ pub(crate) fn test_introspection_expectation(
 
         let request_headers = reqwest::header::HeaderMap::new();
         let session_vars_path = &test_path.join("session_variables.json");
-        let sessions: Vec<HashMap<SessionVariableName, SessionVariableValue>> =
+        let sessions: Vec<HashMap<SessionVariableName, JsonSessionVariableValue>> =
             json::from_str(read_to_string(session_vars_path)?.as_ref())?;
         let sessions: Vec<Session> = sessions
             .into_iter()
-            .map(resolve_session)
+            .map(|session_vars| {
+                resolve_session(
+                    session_vars
+                        .into_iter()
+                        .map(|(k, v)| (k, v.into()))
+                        .collect(),
+                )
+            })
             .collect::<Result<_, _>>()?;
 
         let raw_request = RawRequest {
@@ -266,11 +283,18 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
 
             let request_headers = reqwest::header::HeaderMap::new();
             let session_vars_path = &test_path.join("session_variables.json");
-            let sessions: Vec<HashMap<SessionVariableName, SessionVariableValue>> =
+            let sessions: Vec<HashMap<SessionVariableName, JsonSessionVariableValue>> =
                 json::from_str(read_to_string(session_vars_path)?.as_ref())?;
             let sessions: Vec<Session> = sessions
                 .into_iter()
-                .map(resolve_session)
+                .map(|session_vars| {
+                    resolve_session(
+                        session_vars
+                            .into_iter()
+                            .map(|(k, v)| (k, v.into()))
+                            .collect(),
+                    )
+                })
                 .collect::<Result<_, _>>()?;
 
             // expected response headers are a `Vec<String>`; one set for each
@@ -469,11 +493,11 @@ pub fn test_execute_explain(
         let schema = GDS::build_schema(&gds)?;
         let request_headers = reqwest::header::HeaderMap::new();
         let session = {
-            let session_variables_raw = r#"{
-                "x-hasura-role": "admin"
-            }"#;
             let session_variables: HashMap<SessionVariableName, SessionVariableValue> =
-                serde_json::from_str(session_variables_raw)?;
+                HashMap::from_iter([(
+                    SESSION_VARIABLE_ROLE.clone(),
+                    SessionVariableValue::Unparsed("admin".to_owned()),
+                )]);
             resolve_session(session_variables)
         }?;
         let query = read_to_string(&root_test_dir.join(gql_request_file_path))?;
@@ -579,9 +603,14 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
 
         let session = Arc::new({
             let session_vars_path = &test_path.join("session_variables.json");
-            let session_variables: HashMap<SessionVariableName, SessionVariableValue> =
+            let session_variables: HashMap<SessionVariableName, JsonSessionVariableValue> =
                 serde_json::from_str(read_to_string(session_vars_path)?.as_ref())?;
-            resolve_session(session_variables)
+            resolve_session(
+                session_variables
+                    .into_iter()
+                    .map(|(k, v)| (k, v.into()))
+                    .collect(),
+            )
         }?);
 
         let catalog = Arc::new(sql::catalog::Catalog::from_metadata(gds.metadata));

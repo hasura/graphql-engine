@@ -2425,12 +2425,14 @@ version = "3.0.0"
 dependencies = [
  "axum",
  "axum-core",
+ "derive_more 0.99.18",
  "http 1.1.0",
  "lang-graphql",
  "open-dds",
  "pretty_assertions",
  "schemars",
  "serde",
+ "serde_json",
  "thiserror",
 ]
 

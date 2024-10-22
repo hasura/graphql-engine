@@ -100,7 +100,7 @@ machete:
 
 # update golden tests
 update-golden-files: start-docker-test-deps
-    UPDATE_GOLDENFILES=1 cargo test
+    UPDATE_GOLDENFILES=1 just test
     just fix-format
 
 update-custom-connector-schema-in-test-metadata:
