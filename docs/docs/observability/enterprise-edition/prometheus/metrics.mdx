@@ -485,6 +485,16 @@ The time taken to acquire a connection from the pool.
 | Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
 | Unit   | seconds                                                                                                                                                                           |
 
+#### Hasura Postgres Connection Errors Total 
+
+Total number of PostgreSQL connection errors.
+
+|        |                                                                                                                                                                                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name   | `hasura_postgres_connection_error_total`                                                                                                                                          |
+| Type   | Counter                                                                                                                                                                           |
+| Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
+
 ### Hasura source health
 
 Health check status of a particular data source, corresponding to the output of `/healthz/sources`, with possible values
