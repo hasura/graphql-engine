@@ -1650,6 +1650,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_more"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
+dependencies = [
+ "derive_more-impl",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.82",
+ "unicode-xid",
+]
+
+[[package]]
 name = "dev-auth-webhook"
 version = "3.0.0"
 dependencies = [
@@ -1813,6 +1834,7 @@ dependencies = [
  "metadata-resolve",
  "mimalloc",
  "nonempty",
+ "oas3",
  "open-dds",
  "plan",
  "pre-parse-plugin",
@@ -2257,7 +2279,7 @@ version = "3.0.0"
 dependencies = [
  "axum",
  "blake2",
- "derive_more",
+ "derive_more 0.99.18",
  "execute",
  "futures-util",
  "graphql-frontend",
@@ -2902,7 +2924,7 @@ version = "3.0.0"
 dependencies = [
  "axum",
  "axum-core",
- "derive_more",
+ "derive_more 0.99.18",
  "execute",
  "hasura-authn-core",
  "indexmap 2.6.0",
@@ -2911,6 +2933,7 @@ dependencies = [
  "jsonpath",
  "metadata-resolve",
  "ndc-models 0.2.0",
+ "oas3",
  "open-dds",
  "plan",
  "reqwest",
@@ -3105,6 +3128,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "libyml"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3302702afa434ffa30847a83305f0a69d6abd74293b6554c18ec85c7ef30c980"
+dependencies = [
+ "anyhow",
+ "version_check",
+]
+
+[[package]]
 name = "linked-hash-map"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3178,7 +3211,7 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 name = "metadata-resolve"
 version = "3.0.0"
 dependencies = [
- "derive_more",
+ "derive_more 0.99.18",
  "error-context",
  "hasura-authn-core",
  "indexmap 2.6.0",
@@ -3448,6 +3481,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "oas3"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "caad8a11807e43c49ab8f9527c96d0ec926f525549e65e5cd3b502115704a58e"
+dependencies = [
+ "derive_more 1.0.0",
+ "http 1.1.0",
+ "log",
+ "once_cell",
+ "regex",
+ "semver",
+ "serde",
+ "serde_json",
+ "serde_yml",
+ "url",
+]
+
+[[package]]
 name = "object"
 version = "0.36.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3499,7 +3550,7 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 name = "open-dds"
 version = "3.0.0"
 dependencies = [
- "derive_more",
+ "derive_more 0.99.18",
  "goldenfile",
  "indexmap 2.6.0",
  "jsonpath",
@@ -3941,7 +3992,7 @@ checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
 name = "plan"
 version = "3.0.0"
 dependencies = [
- "derive_more",
+ "derive_more 0.99.18",
  "execute",
  "graphql-ir",
  "graphql-schema",
@@ -3958,7 +4009,7 @@ dependencies = [
 name = "plan-types"
 version = "3.0.0"
 dependencies = [
- "derive_more",
+ "derive_more 0.99.18",
  "metadata-resolve",
  "open-dds",
  "schemars",
@@ -4228,9 +4279,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.10.6"
+version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4219d74c6b67a3654a9fbebc4b419e22126d13d2f3c4a07ee0cb61ff79a79619"
+checksum = "38200e5ee88914975b69f657f0801b6f6dccafd44fd9326302a4aaeecfacb1d8"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -4240,9 +4291,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.7"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38caf58cc5ef2fed281f89292ef23f6365465ed9a41b7a7754eb4e26496c92df"
+checksum = "368758f23274712b504848e9d5a6f010445cc8b87a7cdb4d7cbee666c1288da3"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -4251,9 +4302,9 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
-version = "0.8.4"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
+checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
 name = "reqwest"
@@ -4646,6 +4697,21 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.82",
+]
+
+[[package]]
+name = "serde_yml"
+version = "0.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59e2dd588bf1597a252c3b920e0143eb99b0f76e4e082f4c92ce34fbc9e71ddd"
+dependencies = [
+ "indexmap 2.6.0",
+ "itoa",
+ "libyml",
+ "memchr",
+ "ryu",
+ "serde",
+ "version_check",
 ]
 
 [[package]]
@@ -5373,7 +5439,7 @@ name = "tracing-util"
 version = "3.0.0"
 dependencies = [
  "axum",
- "derive_more",
+ "derive_more 0.99.18",
  "http 1.1.0",
  "opentelemetry",
  "opentelemetry-contrib",
@@ -5507,6 +5573,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0336d538f7abc86d282a4189614dfaa90810dfc2c6f6427eaf88e16311dd225d"
 
 [[package]]
+name = "unicode-xid"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
+
+[[package]]
 name = "unreachable"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5530,6 +5602,7 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]

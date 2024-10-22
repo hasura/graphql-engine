@@ -1,0 +1,49 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: generated_openapi
+---
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "JSONAPI",
+    "version": "0.1"
+  },
+  "paths": {
+    "/default/Articles": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Articles]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "article_id",
+                  "title"
+                ]
+              }
+            },
+            "example": "article_id,title"
+          }
+        ],
+        "responses": null
+      }
+    }
+  }
+}

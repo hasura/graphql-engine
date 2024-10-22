@@ -16,12 +16,12 @@ fn test_get_succeeding_requests() {
             .unwrap();
 
         runtime.block_on(async {
-            let TestRequest {
-                query,
-                model_name,
-                jsonapi_state,
+            let TestEnvironment {
+                jsonapi_catalog,
                 resolved_metadata,
-            } = test_setup(path);
+            } = test_environment_setup();
+
+            let TestRequest { query, model_name } = test_request_setup(path);
 
             // always test in `default` subgraph for now
             let path = format!("/default/{model_name}");
@@ -31,11 +31,13 @@ fn test_get_succeeding_requests() {
                 ndc_response_size_limit: None,
             };
 
+            let session = create_default_session();
+
             let result = jsonapi::handler_internal(
                 Arc::new(HeaderMap::default()),
                 Arc::new(http_context.clone()),
-                Arc::new(create_default_session()),
-                &jsonapi_state,
+                Arc::new(session.clone()),
+                &jsonapi_catalog,
                 &resolved_metadata,
                 axum::http::method::Method::GET,
                 axum::http::uri::Uri::from_str(&path).unwrap(),
@@ -44,7 +46,12 @@ fn test_get_succeeding_requests() {
             .await;
 
             match result {
-                Ok(result) => insta::assert_debug_snapshot!("result", result),
+                Ok(result) => {
+                    insta::assert_debug_snapshot!(
+                        format!("result_for_role_{}", session.role),
+                        result
+                    );
+                }
                 Err(e) => panic!("expected success, instead got {e}"),
             }
         });
@@ -60,12 +67,12 @@ fn test_get_failing_requests() {
             .unwrap();
 
         runtime.block_on(async {
-            let TestRequest {
-                query,
-                model_name,
-                jsonapi_state,
+            let TestEnvironment {
+                jsonapi_catalog,
                 resolved_metadata,
-            } = test_setup(path);
+            } = test_environment_setup();
+
+            let TestRequest { query, model_name } = test_request_setup(path);
 
             // always test in `default` subgraph for now
             let path = format!("/default/{model_name}");
@@ -75,11 +82,13 @@ fn test_get_failing_requests() {
                 ndc_response_size_limit: None,
             };
 
+            let session = create_default_session();
+
             let result = jsonapi::handler_internal(
                 Arc::new(HeaderMap::default()),
                 Arc::new(http_context.clone()),
-                Arc::new(create_default_session()),
-                &jsonapi_state,
+                Arc::new(session.clone()),
+                &jsonapi_catalog,
                 &resolved_metadata,
                 axum::http::method::Method::GET,
                 axum::http::uri::Uri::from_str(&path).unwrap(),
@@ -87,18 +96,40 @@ fn test_get_failing_requests() {
             )
             .await;
 
-            match result {
-                Ok(_) => panic!("expected failure"),
-                Err(e) => insta::assert_debug_snapshot!("error", e),
-            }
+            insta::assert_debug_snapshot!(format!("error_for_role_{}", session.role), result);
         });
     });
+}
+
+#[test]
+fn test_openapi_generation() {
+    let TestEnvironment {
+        jsonapi_catalog,
+        resolved_metadata: _,
+    } = test_environment_setup();
+
+    for (role, state) in &jsonapi_catalog.state_per_role {
+        let generated_openapi = jsonapi::openapi_schema(state);
+
+        // if the test fails, let's take a look at what was generated
+        dbg!(&serde_json::to_value(&generated_openapi)
+            .unwrap()
+            .to_string());
+
+        insta::assert_json_snapshot!(
+            format!("generated_openapi_for_role_{role}"),
+            generated_openapi
+        );
+    }
 }
 
 struct TestRequest {
     query: jsonapi_library::query::Query,
     model_name: String,
-    jsonapi_state: jsonapi::State,
+}
+
+struct TestEnvironment {
+    jsonapi_catalog: jsonapi::Catalog,
     resolved_metadata: metadata_resolve::Metadata,
 }
 
@@ -111,7 +142,35 @@ fn trim_newline(s: &mut String) {
     }
 }
 
-fn test_setup(path: &Path) -> TestRequest {
+fn test_environment_setup() -> TestEnvironment {
+    // Setup test context
+    let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+    let metadata_path = root_test_dir.join("static").join("metadata.json");
+
+    let metadata_string = std::fs::read_to_string(metadata_path.clone()).unwrap_or_else(|error| {
+        panic!("{}: Could not read file: {error}", metadata_path.display())
+    });
+
+    let metadata_json_value = serde_json::from_str(&metadata_string).unwrap();
+
+    let input_metadata: open_dds::Metadata =
+        open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new())
+            .unwrap();
+
+    let configuration = get_metadata_resolve_configuration();
+
+    let (resolved_metadata, _) = metadata_resolve::resolve(input_metadata, &configuration)
+        .unwrap_or_else(|error| panic!("Could not resolve metadata: {error}",));
+
+    let (jsonapi_catalog, _warnings) = jsonapi::Catalog::new(&resolved_metadata);
+
+    TestEnvironment {
+        jsonapi_catalog,
+        resolved_metadata,
+    }
+}
+
+fn test_request_setup(path: &Path) -> TestRequest {
     let directory = path.parent().unwrap();
     let model_name = path.file_stem().unwrap().to_str().unwrap();
 
@@ -127,40 +186,9 @@ fn test_setup(path: &Path) -> TestRequest {
 
     let jsonapi_query = jsonapi_library::query::Query::from_params(&query_params);
 
-    // Setup test context
-    let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
-    let metadata_path = root_test_dir.join("static").join("metadata.json");
-
-    let metadata_string = std::fs::read_to_string(metadata_path.clone()).unwrap_or_else(|error| {
-        panic!(
-            "{}: Could not read file {path:?}: {error}",
-            metadata_path.display()
-        )
-    });
-
-    let metadata_json_value = serde_json::from_str(&metadata_string).unwrap();
-
-    let input_metadata: open_dds::Metadata =
-        open_dds::traits::OpenDd::deserialize(metadata_json_value, jsonpath::JSONPath::new())
-            .unwrap();
-
-    let configuration = get_metadata_resolve_configuration();
-
-    let (resolved_metadata, _) = metadata_resolve::resolve(input_metadata, &configuration)
-        .unwrap_or_else(|error| {
-            panic!(
-                "{}: Could not resolve metadata: {error}",
-                directory.display()
-            )
-        });
-
-    let jsonapi_state = jsonapi::State::new(&resolved_metadata);
-
     TestRequest {
         query: jsonapi_query,
         model_name: model_name.to_string(),
-        jsonapi_state,
-        resolved_metadata,
     }
 }
 

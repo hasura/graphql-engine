@@ -2035,6 +2035,12 @@
                 "output": {
                   "allowedFields": ["AlbumId", "ArtistId", "Title"]
                 }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["AlbumId", "Title"]
+                }
               }
             ]
           }
@@ -2468,6 +2474,12 @@
             "permissions": [
               {
                 "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_1",
                 "select": {
                   "filter": null
                 }
@@ -4937,7 +4949,7 @@
                 }
               },
               {
-                "role": "user",
+                "role": "user_1",
                 "output": {
                   "allowedFields": ["article_id", "title", "author_id"]
                 }
@@ -5005,7 +5017,7 @@
                 }
               },
               {
-                "role": "user",
+                "role": "user_1",
                 "output": {
                   "allowedFields": ["id", "first_name", "last_name"]
                 }
@@ -5024,7 +5036,7 @@
                 "allowExecution": true
               },
               {
-                "role": "user",
+                "role": "user_1",
                 "allowExecution": true
               }
             ]
@@ -5070,7 +5082,7 @@
                 "allowExecution": true
               },
               {
-                "role": "user",
+                "role": "user_1",
                 "allowExecution": true
               }
             ]

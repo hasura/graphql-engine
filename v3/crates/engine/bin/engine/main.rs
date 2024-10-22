@@ -115,7 +115,7 @@ pub struct EngineState {
     http_context: HttpContext,
     graphql_state: Arc<gql::schema::Schema<GDS>>,
     resolved_metadata: Arc<metadata_resolve::Metadata>,
-    jsonapi_state: Arc<jsonapi::State>,
+    jsonapi_catalog: Arc<jsonapi::Catalog>,
     auth_config: Arc<AuthConfig>,
     sql_context: Arc<sql::catalog::Catalog>,
     plugin_configs: Arc<LifecyclePluginConfigs>,
@@ -778,11 +778,13 @@ fn build_state(
     }
     .build_schema()?;
 
+    let (jsonapi_catalog, _json_api_warnings) = jsonapi::Catalog::new(&resolved_metadata);
+
     let state = EngineState {
         expose_internal_errors,
         http_context,
         graphql_state: Arc::new(schema),
-        jsonapi_state: Arc::new(jsonapi::State::new(&resolved_metadata)),
+        jsonapi_catalog: Arc::new(jsonapi_catalog),
         resolved_metadata,
         auth_config: Arc::new(auth_config),
         sql_context: sql_context.into(),

@@ -1,7 +1,7 @@
-use super::types::{ModelInfo, ParseError, RequestError};
+use super::types::{Model, ModelInfo, ParseError, RequestError};
 use axum::http::{Method, Uri};
 use indexmap::IndexMap;
-use metadata_resolve::{ModelExpressionType, ModelWithArgumentPresets};
+use metadata_resolve::ModelExpressionType;
 use open_dds::{
     identifier,
     identifier::{Identifier, SubgraphName},
@@ -11,7 +11,7 @@ use open_dds::{
 use std::collections::BTreeMap;
 
 pub fn create_query_ir(
-    model: &ModelWithArgumentPresets,
+    model: &Model,
     _http_method: &Method,
     uri: &Uri,
     query_string: &jsonapi_library::query::Query,
@@ -24,10 +24,12 @@ pub fn create_query_ir(
         relationship: _,
     } = parse_url(uri)?;
 
+    validate_sparse_fields(model, query_string)?;
+
     // create the selection fields; include all fields of the model output type
     let mut selection = IndexMap::new();
-    for (field_name, _field_def) in &model.model.type_fields {
-        if include_field(query_string, field_name, &model.model.name.name) {
+    for field_name in &model.type_fields {
+        if include_field(query_string, field_name, &model.name.name) {
             let field_name_ident = Identifier::new(field_name.as_str()).unwrap();
             let field_name = open_dds::types::FieldName::new(field_name_ident.clone());
             let field_alias = open_dds::query::Alias::new(field_name_ident);
@@ -93,6 +95,36 @@ pub fn create_query_ir(
     ))
 }
 
+// check all fields in sparse fields are accessible, explode if not
+// this will disallow relationship or nested fields
+fn validate_sparse_fields(
+    model: &Model,
+    query_string: &jsonapi_library::query::Query,
+) -> Result<(), RequestError> {
+    let model_name_string = model.name.name.to_string();
+    if let Some(fields) = &query_string.fields {
+        for (model_name, model_fields) in fields {
+            if *model_name == model_name_string {
+                for models_field in model_fields {
+                    let string_fields: Vec<_> =
+                        model.type_fields.iter().map(ToString::to_string).collect();
+
+                    if !string_fields.contains(models_field) {
+                        return Err(RequestError::BadRequest(format!(
+                            "Unknown field in sparse fields: {models_field}"
+                        )));
+                    }
+                }
+            } else {
+                return Err(RequestError::BadRequest(format!(
+                    "Unknown model in sparse fields: {model_name}"
+                )));
+            }
+        }
+    }
+    Ok(())
+}
+
 // given the sparse fields for this request, should be include a given field in the query?
 // this does not consider subgraphs at the moment - we match on `ModelName` not
 // `Qualified<ModelName>`.
@@ -123,8 +155,8 @@ fn include_field(
             }
         }
     }
-    // if no sparse fields provided for our model, for now, default to including nothing
-    false
+    // if no sparse fields provided for our model, return everything
+    true
 }
 
 // Sorting spec: <https://jsonapi.org/format/#fetching-sorting>
@@ -186,7 +218,7 @@ fn build_order_by_element(elem: &String) -> Result<open_dds::query::OrderByEleme
 }
 */
 fn build_boolean_expression(
-    model: &ModelWithArgumentPresets,
+    model: &Model,
     _filter: &BTreeMap<String, Vec<String>>,
 ) -> open_dds::query::BooleanExpression {
     // TODO: actually parse and create a BooleanExpression

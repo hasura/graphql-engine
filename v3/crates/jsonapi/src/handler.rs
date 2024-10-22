@@ -2,22 +2,27 @@ use std::sync::Arc;
 
 use super::parse;
 use super::process_response;
-use super::types::{QueryResult, RequestError, State};
+use super::types::{Catalog, Model, QueryResult, RequestError, State};
 use axum::http::{HeaderMap, Method, Uri};
 use hasura_authn_core::Session;
-use metadata_resolve::{Metadata, ModelWithArgumentPresets};
+use metadata_resolve::Metadata;
 
 #[allow(clippy::unused_async)]
 pub async fn handler_internal<'metadata>(
     request_headers: Arc<HeaderMap>,
     http_context: Arc<execute::HttpContext>,
     session: Arc<Session>,
-    state: &State,
+    catalog: &Catalog,
     metadata: &'metadata Metadata,
     http_method: Method,
     uri: Uri,
     query_string: jsonapi_library::query::Query,
 ) -> Result<jsonapi_library::api::DocumentData, RequestError> {
+    let state = catalog
+        .state_per_role
+        .get(&session.role)
+        .ok_or_else(|| RequestError::NotFound)?;
+
     // route matching/validation
     match validate_route(state, &uri) {
         None => Err(RequestError::NotFound),
@@ -40,7 +45,7 @@ pub async fn handler_internal<'metadata>(
     }
 }
 
-fn validate_route<'a>(state: &'a State, uri: &'a Uri) -> Option<&'a ModelWithArgumentPresets> {
+fn validate_route<'a>(state: &'a State, uri: &'a Uri) -> Option<&'a Model> {
     // TODO: to_string() maybe not optimal. Optimize later
     let uri_s = uri.to_string();
     for (route, model) in &state.routes {

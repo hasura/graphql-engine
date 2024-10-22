@@ -1,0 +1,644 @@
+---
+source: crates/jsonapi/tests/jsonapi_golden_tests.rs
+expression: generated_openapi
+---
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "JSONAPI",
+    "version": "0.1"
+  },
+  "paths": {
+    "/default/Album": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Album]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "AlbumId",
+                  "ArtistId",
+                  "Title"
+                ]
+              }
+            },
+            "example": "AlbumId,ArtistId,Title"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/Articles": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Articles]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "article_id",
+                  "title",
+                  "author_id"
+                ]
+              }
+            },
+            "example": "article_id,title,author_id"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/Artist": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Artist]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "ArtistId",
+                  "Name"
+                ]
+              }
+            },
+            "example": "ArtistId,Name"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/Authors": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Authors]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "author_id",
+                  "first_name"
+                ]
+              }
+            },
+            "example": "author_id,first_name"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/Customer": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Customer]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "Address",
+                  "City",
+                  "Company",
+                  "Country",
+                  "CustomerId",
+                  "Email",
+                  "Fax",
+                  "FirstName",
+                  "LastName",
+                  "Phone",
+                  "PostalCode",
+                  "State",
+                  "SupportRepId"
+                ]
+              }
+            },
+            "example": "Address,City,Company,Country,CustomerId,Email,Fax,FirstName,LastName,Phone,PostalCode,State,SupportRepId"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/Employee": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Employee]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "Address",
+                  "BirthDate",
+                  "City",
+                  "Country",
+                  "Email",
+                  "EmployeeId",
+                  "Fax",
+                  "FirstName",
+                  "HireDate",
+                  "LastName",
+                  "Phone",
+                  "PostalCode",
+                  "ReportsTo",
+                  "State",
+                  "Title"
+                ]
+              }
+            },
+            "example": "Address,BirthDate,City,Country,Email,EmployeeId,Fax,FirstName,HireDate,LastName,Phone,PostalCode,ReportsTo,State,Title"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/Genre": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Genre]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "GenreId",
+                  "Name"
+                ]
+              }
+            },
+            "example": "GenreId,Name"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/Invoice": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Invoice]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "BillingAddress",
+                  "BillingCity",
+                  "BillingCountry",
+                  "BillingPostalCode",
+                  "BillingState",
+                  "CustomerId",
+                  "InvoiceDate",
+                  "InvoiceId",
+                  "Total"
+                ]
+              }
+            },
+            "example": "BillingAddress,BillingCity,BillingCountry,BillingPostalCode,BillingState,CustomerId,InvoiceDate,InvoiceId,Total"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/InvoiceLine": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[InvoiceLine]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "InvoiceId",
+                  "InvoiceLineId",
+                  "Quantity",
+                  "TrackId",
+                  "UnitPrice"
+                ]
+              }
+            },
+            "example": "InvoiceId,InvoiceLineId,Quantity,TrackId,UnitPrice"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/MediaType": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[MediaType]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "MediaTypeId",
+                  "Name"
+                ]
+              }
+            },
+            "example": "MediaTypeId,Name"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/Playlist": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Playlist]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "Name",
+                  "PlaylistId"
+                ]
+              }
+            },
+            "example": "Name,PlaylistId"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/PlaylistTrack": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[PlaylistTrack]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "PlaylistId",
+                  "TrackId"
+                ]
+              }
+            },
+            "example": "PlaylistId,TrackId"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/Track": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[Track]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "AlbumId",
+                  "Bytes",
+                  "Composer",
+                  "GenreId",
+                  "MediaTypeId",
+                  "Milliseconds",
+                  "Name",
+                  "TrackId",
+                  "UnitPrice"
+                ]
+              }
+            },
+            "example": "AlbumId,Bytes,Composer,GenreId,MediaTypeId,Milliseconds,Name,TrackId,UnitPrice"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/spatial_ref_sys": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[spatial_ref_sys]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "auth_name",
+                  "auth_srid",
+                  "proj4text",
+                  "srid",
+                  "srtext"
+                ]
+              }
+            },
+            "example": "auth_name,auth_srid,proj4text,srid,srtext"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/topology_layer": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[topology_layer]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "child_id",
+                  "feature_column",
+                  "feature_type",
+                  "layer_id",
+                  "level",
+                  "schema_name",
+                  "table_name",
+                  "topology_id"
+                ]
+              }
+            },
+            "example": "child_id,feature_column,feature_type,layer_id,level,schema_name,table_name,topology_id"
+          }
+        ],
+        "responses": null
+      }
+    },
+    "/default/topology_topology": {
+      "get": {
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[topology_topology]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "hasz",
+                  "id",
+                  "name",
+                  "precision",
+                  "srid"
+                ]
+              }
+            },
+            "example": "hasz,id,name,precision,srid"
+          }
+        ],
+        "responses": null
+      }
+    }
+  }
+}

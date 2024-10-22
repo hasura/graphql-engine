@@ -5,14 +5,16 @@ use axum::{
     Extension, Json, Router,
 };
 use hasura_authn_core::Session;
+use std::convert::Infallible;
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
-use tracing_util::{set_status_on_current_span, SpanVisibility};
+use tracing_util::{set_status_on_current_span, SpanVisibility, Traceable};
 
 use crate::{authentication_middleware, EngineState};
 
 pub(crate) fn create_json_api_router(state: EngineState) -> axum::Router {
     let router = Router::new()
+        .route("/__schema", get(handle_schema))
         // TODO: update method GET; for now we are only supporting queries. And
         // in JSON:API spec, all queries have the GET method. Not even HEAD is
         // supported. So this should be fine.
@@ -32,7 +34,48 @@ pub(crate) fn create_json_api_router(state: EngineState) -> axum::Router {
         // Refer to it for more details.
         .layer(TraceLayer::new_for_http())
         .with_state(state);
-    Router::new().nest("/v1/jsonapi", router)
+    Router::new().nest("/v1/rest", router)
+}
+
+struct JsonApiSchemaResponse {
+    spec: oas3::spec::Spec,
+}
+
+impl IntoResponse for JsonApiSchemaResponse {
+    fn into_response(self) -> axum::response::Response {
+        (axum::http::StatusCode::OK, axum::Json(self.spec)).into_response()
+    }
+}
+
+/// Implement traceable for GraphQL Response
+impl Traceable for JsonApiSchemaResponse {
+    type ErrorType<'a> = Infallible where Self: 'a;
+
+    fn get_error(&self) -> Option<Self::ErrorType<'_>> {
+        None
+    }
+}
+
+async fn handle_schema(
+    axum::extract::State(state): axum::extract::State<EngineState>,
+    Extension(session): Extension<Session>,
+) -> impl IntoResponse {
+    let tracer = tracing_util::global_tracer();
+
+    tracer.in_span(
+        "handle_schema",
+        "Handle schema",
+        SpanVisibility::User,
+        || match state.jsonapi_catalog.state_per_role.get(&session.role) {
+            Some(jsonapi_state) => {
+                let spec = jsonapi::openapi_schema(jsonapi_state);
+                JsonApiSchemaResponse { spec }
+            }
+            None => JsonApiSchemaResponse {
+                spec: jsonapi::empty_schema(),
+            },
+        },
+    )
 }
 
 async fn handle_request(
@@ -54,7 +97,7 @@ async fn handle_request(
                     Arc::new(request_headers),
                     Arc::new(state.http_context.clone()),
                     Arc::new(session),
-                    &state.jsonapi_state,
+                    &state.jsonapi_catalog,
                     &state.resolved_metadata,
                     method,
                     uri,
