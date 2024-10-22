@@ -985,6 +985,20 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                     ),
                 ),
                 description: None,
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "mypg",
+                            ),
+                        ),
+                    }: FromDataConnectorSchema(
+                        Int32,
+                    ),
+                },
             },
             Qualified {
                 subgraph: SubgraphName(
@@ -1004,6 +1018,18 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
                     ),
                 ),
                 description: None,
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "mypg",
+                            ),
+                        ),
+                    }: AssumeJson,
+                },
             },
         },
         models: {

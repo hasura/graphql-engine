@@ -14,7 +14,7 @@ use crate::types::subgraph::Qualified;
 
 use crate::stages::{
     aggregates, argument_presets, boolean_expressions, graphql_config, object_boolean_expressions,
-    object_relationships, order_by_expressions, scalar_types,
+    object_relationships, order_by_expressions, scalar_type_representations,
 };
 
 use super::plugins::LifecyclePluginConfigs;
@@ -27,7 +27,8 @@ pub struct Metadata {
     pub object_types:
         BTreeMap<Qualified<CustomTypeName>, object_relationships::ObjectTypeWithRelationships>,
     #[serde_as(as = "Vec<(_, _)>")]
-    pub scalar_types: BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    pub scalar_types:
+        BTreeMap<Qualified<CustomTypeName>, scalar_type_representations::ScalarTypeRepresentation>,
     #[serde_as(as = "Vec<(_, _)>")]
     pub models: IndexMap<Qualified<ModelName>, argument_presets::ModelWithArgumentPresets>,
     #[serde_as(as = "Vec<(_, _)>")]

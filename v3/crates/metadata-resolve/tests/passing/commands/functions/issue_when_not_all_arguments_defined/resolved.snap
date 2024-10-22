@@ -27,6 +27,20 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/issue_when_
                 description: Some(
                     "Headers map",
                 ),
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "myconnector",
+                            ),
+                        ),
+                    }: FromDataConnectorSchema(
+                        JSON,
+                    ),
+                },
             },
         },
         models: {},

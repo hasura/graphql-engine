@@ -126,6 +126,20 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                 description: Some(
                     "Headers map",
                 ),
+                representations: {
+                    Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: DataConnectorName(
+                            Identifier(
+                                "myconnector",
+                            ),
+                        ),
+                    }: FromDataConnectorSchema(
+                        JSON,
+                    ),
+                },
             },
         },
         models: {

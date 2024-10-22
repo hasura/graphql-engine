@@ -30,7 +30,7 @@ pub(crate) fn resolve_model_graphql_api(
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     model_description: &Option<String>,
     aggregate_expression_name: &Option<Qualified<AggregateExpressionName>>,

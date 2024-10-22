@@ -25,7 +25,7 @@ pub fn resolve(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     mut graphql_types: BTreeSet<ast::TypeName>,
@@ -83,7 +83,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
@@ -263,7 +263,7 @@ pub fn resolve_boolean_expression_graphql_config(
     data_connector_name: &Qualified<open_dds::data_connector::DataConnectorName>,
     where_type_name: ast::TypeName,
     subgraph: &SubgraphName,
-    scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    scalars: &data_connector_scalar_types::DataConnectorScalars,
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
     fields: &IndexMap<open_dds::types::FieldName, object_types::FieldDefinition>,

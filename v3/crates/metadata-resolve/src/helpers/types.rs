@@ -1,6 +1,6 @@
 use crate::stages::{
     boolean_expressions, graphql_config, object_boolean_expressions, object_relationships,
-    scalar_boolean_expressions, scalar_types,
+    scalar_boolean_expressions,
 };
 use crate::types::error::Error;
 
@@ -43,8 +43,8 @@ pub fn store_new_graphql_type(
 #[derive(Debug)]
 /// we do not want to store our types like this, but occasionally it is useful
 /// for pattern matching
-pub enum TypeRepresentation<'a, ObjectType> {
-    Scalar(&'a scalar_types::ScalarTypeRepresentation),
+pub enum TypeRepresentation<'a, ObjectType, ScalarType> {
+    Scalar(&'a ScalarType),
     Object(&'a ObjectType),
     /// The old expression of boolean expression types
     BooleanExpression(&'a object_boolean_expressions::ObjectBooleanExpressionType),
@@ -56,16 +56,16 @@ pub enum TypeRepresentation<'a, ObjectType> {
 
 /// validate whether a given CustomTypeName exists within `object_types`, `scalar_types` or
 /// `object_boolean_expression_types`
-pub fn get_type_representation<'a, ObjectType>(
+pub fn get_type_representation<'a, ObjectType, ScalarType>(
     custom_type_name: &Qualified<CustomTypeName>,
     object_types: &'a BTreeMap<Qualified<CustomTypeName>, ObjectType>,
-    scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, ScalarType>,
     object_boolean_expression_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &'a boolean_expressions::BooleanExpressionTypes,
-) -> Result<TypeRepresentation<'a, ObjectType>, Error> {
+) -> Result<TypeRepresentation<'a, ObjectType, ScalarType>, Error> {
     object_types
         .get(custom_type_name)
         .map(|object_type_representation| TypeRepresentation::Object(object_type_representation))

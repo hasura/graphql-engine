@@ -273,7 +273,7 @@ pub(crate) fn resolve_value_expression_for_argument(
     models: &IndexMap<Qualified<ModelName>, models_graphql::ModelWithGraphql>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
 ) -> Result<ValueExpressionOrPredicate, Error> {
     match value_expression {
@@ -414,7 +414,10 @@ pub fn get_argument_kind(
             TypeName::Custom(type_name) => {
                 let qualified_type_name = Qualified::new(subgraph.clone(), type_name.to_owned());
 
-                match get_type_representation::<type_permissions::ObjectTypesWithPermissions>(
+                match get_type_representation::<
+                    type_permissions::ObjectTypesWithPermissions,
+                    scalar_types::ScalarTypeRepresentation,
+                >(
                     &qualified_type_name,
                     &BTreeMap::new(),
                     &BTreeMap::new(),

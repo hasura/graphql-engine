@@ -27,6 +27,7 @@ mod types;
 use crate::types::warning::Warning;
 use open_dds::flags;
 pub use types::Metadata;
+pub mod scalar_type_representations;
 
 use crate::types::configuration::Configuration;
 use crate::types::error::{Error, SeparatedBy, ShouldBeAnError, WithContext};
@@ -316,13 +317,17 @@ pub fn resolve(
         &commands_with_permissions,
     );
 
+    // include data connector information for each scalar type
+    let scalar_types_with_representations =
+        scalar_type_representations::resolve(&data_connector_scalars, &scalar_types);
+
     let plugin_configs = plugins::resolve(&metadata_accessor);
 
     let all_warnings = warnings_as_errors_by_compatibility(&metadata_accessor.flags, all_issues)?;
 
     Ok((
         Metadata {
-            scalar_types,
+            scalar_types: scalar_types_with_representations,
             object_types: object_types_with_relationships,
             models,
             commands,

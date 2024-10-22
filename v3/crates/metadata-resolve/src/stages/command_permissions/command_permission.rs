@@ -55,7 +55,7 @@ pub fn resolve_command_permissions(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     subgraph: &SubgraphName,
 ) -> Result<BTreeMap<Role, CommandPermission>, Error> {

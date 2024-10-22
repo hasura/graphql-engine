@@ -4,13 +4,12 @@ use ndc_models;
 use open_dds::data_connector::{
     DataConnectorName, DataConnectorOperatorName, DataConnectorScalarType,
 };
-use open_dds::types::TypeName;
+use open_dds::types::{CustomTypeName, TypeName};
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 pub struct DataConnectorWithScalarsOutput<'a> {
-    pub data_connector_scalars:
-        BTreeMap<Qualified<DataConnectorName>, ScalarTypeWithRepresentationInfoMap<'a>>,
+    pub data_connector_scalars: BTreeMap<Qualified<DataConnectorName>, DataConnectorScalars<'a>>,
     pub graphql_types: BTreeSet<ast::TypeName>,
 }
 
@@ -26,9 +25,11 @@ pub struct ScalarTypeWithRepresentationInfo<'a> {
 }
 
 #[derive(Debug)]
-pub struct ScalarTypeWithRepresentationInfoMap<'a>(
-    pub BTreeMap<DataConnectorScalarType, ScalarTypeWithRepresentationInfo<'a>>,
-);
+pub struct DataConnectorScalars<'a> {
+    pub by_ndc_type: BTreeMap<DataConnectorScalarType, ScalarTypeWithRepresentationInfo<'a>>,
+    pub by_custom_type_name:
+        BTreeMap<Qualified<CustomTypeName>, Option<ndc_models::TypeRepresentation>>,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Default)]
 pub struct ComparisonOperators {

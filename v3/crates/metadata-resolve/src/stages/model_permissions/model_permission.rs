@@ -41,7 +41,7 @@ fn resolve_model_predicate_with_model(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
     object_types: &BTreeMap<
@@ -146,7 +146,7 @@ pub fn resolve_model_select_permissions(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -282,7 +282,7 @@ pub(crate) fn resolve_model_predicate_with_type(
     data_connector_field_mappings: &BTreeMap<FieldName, object_types::FieldMapping>,
     data_connector_link: &data_connectors::DataConnectorLink,
     subgraph: &SubgraphName,
-    scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    scalars: &data_connector_scalar_types::DataConnectorScalars,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         object_relationships::ObjectTypeWithRelationships,
@@ -811,7 +811,7 @@ fn resolve_binary_operator_for_type<'a>(
     data_connector: &'a Qualified<DataConnectorName>,
     field_name: &'a FieldName,
     fields: &'a IndexMap<FieldName, object_types::FieldDefinition>,
-    scalars: &'a data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    scalars: &'a data_connector_scalar_types::DataConnectorScalars,
     ndc_scalar_type: &'a ndc_models::ScalarType,
     subgraph: &'a SubgraphName,
 ) -> Result<(DataConnectorOperatorName, QualifiedTypeReference), Error> {

@@ -299,6 +299,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                     ),
                 ),
                 description: None,
+                representations: {},
             },
         },
         models: {},

@@ -31,7 +31,7 @@ pub fn resolve(
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     object_types: &BTreeMap<
         Qualified<CustomTypeName>,

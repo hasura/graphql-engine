@@ -8,10 +8,7 @@ use open_dds::types::{CustomTypeName, TypeName};
 
 use crate::helpers::check_for_duplicates;
 use crate::helpers::types::{store_new_graphql_type, unwrap_qualified_type_name};
-use crate::stages::{
-    data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap, graphql_config, scalar_types,
-    type_permissions,
-};
+use crate::stages::{data_connector_scalar_types, graphql_config, scalar_types, type_permissions};
 use crate::types::subgraph::{mk_qualified_type_name, mk_qualified_type_reference};
 use crate::{mk_name, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 
@@ -25,7 +22,7 @@ pub fn resolve(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -84,7 +81,7 @@ fn resolve_aggregate_expression(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -283,7 +280,7 @@ fn resolve_scalar_operand(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -358,7 +355,7 @@ fn resolve_aggregation_function(
     data_connectors: &data_connectors::DataConnectors,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
-        ScalarTypeWithRepresentationInfoMap,
+        data_connector_scalar_types::DataConnectorScalars,
     >,
 ) -> Result<AggregationFunctionInfo, AggregateExpressionError> {
     let return_type = mk_qualified_type_reference(
@@ -420,7 +417,7 @@ fn resolve_aggregation_function(
                 })?;
 
             // Check that the data connector operand scalar type actually exists on the data connector
-            let data_connector_scalar_type = scalars.0.get(&data_connector_fn_mappings.data_connector_scalar_type)
+            let data_connector_scalar_type = scalars.by_ndc_type.get(&data_connector_fn_mappings.data_connector_scalar_type)
                 .ok_or_else(||
                     AggregateExpressionError::AggregateOperandDataConnectorFunctionUnknownScalarType {
                         name: aggregate_expression_name.clone(),
@@ -473,7 +470,7 @@ fn check_aggregation_function_return_type(
     aggregate_expression_name: &Qualified<AggregateExpressionName>,
     aggregation_function_name: &AggregationFunctionName,
     data_connector_name: &Qualified<DataConnectorName>,
-    data_connector_scalars: &ScalarTypeWithRepresentationInfoMap,
+    data_connector_scalars: &data_connector_scalar_types::DataConnectorScalars,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_types: &type_permissions::ObjectTypesWithPermissions,
 ) -> Result<(), AggregateExpressionError> {
@@ -497,7 +494,7 @@ fn check_aggregation_function_return_type(
     )?;
 
     let validate_scalar_representation = || -> Result<(), AggregateExpressionError> {
-        let type_name = data_connector_scalars.0.get(ndc_named_return_type.as_str())
+        let type_name = data_connector_scalars.by_ndc_type.get(ndc_named_return_type.as_str())
             .ok_or_else(||
                 mk_error(format!("The data connector's return type ({ndc_named_return_type}) isn't a scalar type").as_str())
             )?
