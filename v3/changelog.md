@@ -17,6 +17,8 @@
   required to return session variables like this
   `{ "X-Hasura-AllowedUserIds": "[1,2,3]" }`, but now you can correctly return
   them like this: `{ "X-Hasura-AllowedUserIds": [1,2,3] }`.
+- The warning about AuthConfig v1 being deprecated was only being displayed in
+  the engine's stdout logs and not as a build warning. This has been corrected.
 
 ### Changed
 

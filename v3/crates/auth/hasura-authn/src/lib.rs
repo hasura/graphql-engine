@@ -104,7 +104,7 @@ impl AuthConfigV1 {
 
 /// Warnings for the user raised during auth config generation
 /// These are things that don't break the build, but may do so in future
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, PartialEq, thiserror::Error)]
 pub enum Warning {
     #[error("AuthConfig v1 is deprecated. `allowRoleEmulationBy` has been removed. Please consider upgrading to AuthConfig v2.")]
     PleaseUpgradeToV2,
@@ -115,16 +115,21 @@ pub enum Warning {
 pub fn resolve_auth_config(
     raw_auth_config: &str,
 ) -> Result<(AuthConfig, Vec<Warning>), anyhow::Error> {
-    let mut warnings = vec![];
     let auth_config: AuthConfig = open_dds::traits::OpenDd::deserialize(
         serde_json::from_str(raw_auth_config)?,
         jsonpath::JSONPath::new(),
     )?;
-    match &auth_config {
+    let warnings = validate_auth_config(&auth_config);
+    Ok((auth_config, warnings))
+}
+
+pub fn validate_auth_config(auth_config: &AuthConfig) -> Vec<Warning> {
+    let mut warnings = vec![];
+    match auth_config {
         AuthConfig::V1(_) => warnings.push(Warning::PleaseUpgradeToV2),
         AuthConfig::V2(_) => (),
     }
-    Ok((auth_config, warnings))
+    warnings
 }
 
 /// Errors that can occur during authentication
