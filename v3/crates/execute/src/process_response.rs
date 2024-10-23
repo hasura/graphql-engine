@@ -36,8 +36,8 @@ impl KeyValueResponse for IndexMap<ndc_models::FieldName, ndc_models::RowFieldVa
         self.swap_remove(key).map(|row_field| row_field.0)
     }
 }
-// --------------------------------------------------
-// These three bits are workarounds for the performance issue documented in ENG-1073
+
+// Workaround for the performance issue documented in ENG-1073
 //
 // Assumes the input is an object. Used for our performance workaround, bypassing RowSet, which
 // hopefully we can revert
@@ -46,22 +46,6 @@ impl KeyValueResponse for serde_json::Value {
         self.as_object_mut()?.swap_remove(key)
     }
 }
-// More efficient `to_value`, for our performance workaround.
-fn alias_map_to_value(index_map: IndexMap<ast::Alias, json::Value>) -> json::Value {
-    let mut json_object = json::Map::with_capacity(index_map.len());
-    for (alias, value) in index_map {
-        let key: String = alias.0.get().to_string();
-        json_object.insert(key, value);
-    }
-    json::Value::Object(json_object)
-}
-// More efficient `to_value`, for our performance workaround.
-fn vec_alias_map_to_value(index_maps: Vec<IndexMap<ast::Alias, json::Value>>) -> json::Value {
-    let json_array: Vec<json::Value> = index_maps.into_iter().map(alias_map_to_value).collect();
-
-    json::Value::Array(json_array)
-}
-// --------------------------------------------------
 
 // With the response headers forwarding feature, we also need to extract the
 // response headers from NDC result. So that engine's server layer can use that
@@ -180,14 +164,16 @@ where
                                 )
                                 // NOTE: I assume a Null returned here is internal error, but
                                 // this behavior is preserved for now:
-                                .map(|v| v.map_or(json::Value::Null, vec_alias_map_to_value))
+                                .map(|v| {
+                                    v.map_or(json::Value::Null, json_ext::vec_alias_map_to_value)
+                                })
                             } else {
                                 process_selection_set_as_object(
                                     rows_set_rows,
                                     &field.selection_set,
                                     response_config,
                                 )
-                                .map(|v| v.map_or(json::Value::Null, alias_map_to_value))
+                                .map(|v| v.map_or(json::Value::Null, json_ext::alias_map_to_value))
                             }
                         }
                         OutputAnnotation::RelationshipToModelAggregate { .. } => {

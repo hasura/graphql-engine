@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- improve performance of metadata build service `/validate` and `/build`
 - When the `CompatibilityConfig` date is set to `2024-10-16` or newer, session
   variables returned by webhooks, set in `noAuth` config in `AuthConfig` or set
   in JWT claims are now correctly allowed to be full JSON values, not just JSON

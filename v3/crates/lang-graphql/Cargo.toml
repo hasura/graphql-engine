@@ -38,6 +38,7 @@ serde_with = { workspace = true }
 smol_str = { workspace = true }
 thiserror = { workspace = true }
 tracing-util = { path = "../utils/tracing-util" }
+json-ext = { path = "../utils/json-ext" }
 
 [dev-dependencies]
 anyhow = { workspace = true }

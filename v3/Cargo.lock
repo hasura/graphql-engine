@@ -2894,6 +2894,7 @@ dependencies = [
 name = "json-ext"
 version = "3.0.0"
 dependencies = [
+ "indexmap 2.6.0",
  "serde",
  "serde_json",
 ]
@@ -3022,6 +3023,7 @@ dependencies = [
  "http 1.1.0",
  "human_bytes",
  "indexmap 2.6.0",
+ "json-ext",
  "lexical-core",
  "nonempty",
  "postcard",

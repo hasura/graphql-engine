@@ -7,6 +7,10 @@ pub enum JSONPathElement {
     Index(usize),
 }
 
+// NOTE (performance): the required clones of JSONPath for calls to deserialize() was ~8% of
+// runtime of validate(). Replacing Vec with imbl::Vector for structural sharing was a slight
+// improvement, but not worth the dependency.
+
 /// Represents a JSON path.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct JSONPath(pub Vec<JSONPathElement>);

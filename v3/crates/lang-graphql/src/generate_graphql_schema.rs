@@ -2,6 +2,7 @@
 This module provides functions to generate introspection result as GraphQL schema
 for each namespace from the schema.
  */
+use json_ext;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use tracing_util::SpanVisibility;
@@ -48,18 +49,19 @@ pub fn build_namespace_schema<
                 introspection_request(),
             )
             .map_err(|e| Error::NormalizeIntrospectionQuery(e.to_string()))?;
-            let mut result = HashMap::new();
+            // Build a Value directly to avoid the same performance hit we fixed in f709e4f8a
+            let mut result = serde_json::Map::with_capacity(nr.selection_set.fields.len());
             for (_alias, field) in &nr.selection_set.fields {
                 let field_call = field.field_call().map_err(|_| Error::FieldCallNotFound)?;
                 match field_call.name.as_str() {
                     "__schema" => {
                         result.insert(
-                            &field_call.name,
-                            serde_json::to_value(crate::introspection::schema_type(
+                            field_call.name.to_string(),
+                            json_ext::alias_map_to_value(crate::introspection::schema_type(
                                 schema,
                                 namespaced_getter,
                                 &field.selection_set,
-                            )?)?,
+                            )?),
                         );
                     }
                     name => Err(Error::OnlySchemaFieldExpected {
@@ -67,7 +69,7 @@ pub fn build_namespace_schema<
                     })?,
                 }
             }
-            Ok(serde_json::to_value(result)?)
+            Ok(serde_json::Value::Object(result))
         },
     )
 }

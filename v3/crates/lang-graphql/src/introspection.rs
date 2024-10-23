@@ -49,16 +49,16 @@ where
     Ok(json::to_value(response?)?)
 }
 
-fn array_response<A, B, F>(l: &[A], f: F) -> Result<json::Value>
+/// for l map f, returning a Value::Array
+fn array_response<A, F>(l: &[A], f: F) -> Result<json::Value>
 where
-    F: Fn(&A) -> Result<B>,
-    B: serde::Serialize,
+    F: Fn(&A) -> Result<IndexMap<ast::Alias, json::Value>>,
 {
-    let mut response = Vec::new();
-    for v in l {
-        response.push(json::to_value(f(v)?)?);
-    }
-    Ok(json::Value::Array(response))
+    l.iter()
+        .map(f)
+        .collect::<Result<Vec<_>>>()
+        // vec_alias_map_to_value() for effeciency vs. to_value()
+        .map(json_ext::vec_alias_map_to_value)
 }
 
 pub fn named_type<'s, S: schema::SchemaContext, NSGet: schema::NamespacedGetter<S>>(
