@@ -4,12 +4,21 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2024.10.23]
+
+### Added
+
 - Add a check to disallow defining boolean expression of array fields with
   scalar boolean type while resolving the boolean expression
 
 ### Fixed
 
-- improve performance of metadata build service `/validate` and `/build`
+- Improve performance of metadata builds
+
 - When the `CompatibilityConfig` date is set to `2024-10-16` or newer, session
   variables returned by webhooks, set in `noAuth` config in `AuthConfig` or set
   in JWT claims are now correctly allowed to be full JSON values, not just JSON
@@ -18,10 +27,9 @@
   required to return session variables like this
   `{ "X-Hasura-AllowedUserIds": "[1,2,3]" }`, but now you can correctly return
   them like this: `{ "X-Hasura-AllowedUserIds": [1,2,3] }`.
+
 - The warning about AuthConfig v1 being deprecated was only being displayed in
   the engine's stdout logs and not as a build warning. This has been corrected.
-
-### Changed
 
 ## [v2024.10.21]
 
@@ -684,7 +692,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.10.21...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.10.23...HEAD
+[v2024.10.23]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.23
 [v2024.10.21]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.21
 [v2024.10.14]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.14
 [v2024.10.02]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.02
