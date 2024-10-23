@@ -385,7 +385,6 @@ pub struct SelectUniqueGraphQlDefinition {
     /// If set, the deprecation status is added to the select unique root field's graphql schema.
     pub deprecated: Option<Deprecated>,
     /// Enable subscription on this select unique root field.
-    #[opendd(hidden = true)]
     pub subscription: Option<SubscriptionGraphQlDefinition>,
 }
 
@@ -403,11 +402,10 @@ pub struct SelectManyGraphQlDefinition {
     /// If set, the deprecation status is added to the select many root field's graphql schema.
     pub deprecated: Option<Deprecated>,
     /// Enable subscription on this select many root field.
-    #[opendd(hidden = true)]
     pub subscription: Option<SubscriptionGraphQlDefinition>,
 }
 
-/// The definition of the GraphQL API for enabling subscription on select_many or select_uniques root fields.
+/// The definition of the GraphQL API for enabling subscription on query root fields.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "SubscriptionGraphQlDefinition"))]
@@ -502,6 +500,5 @@ pub struct ModelAggregateGraphQlDefinition {
     /// If set, the deprecation status is added to the aggregate root field's graphql schema.
     pub deprecated: Option<Deprecated>,
     /// Enable subscription on this aggregate root field.
-    #[opendd(hidden = true)]
     pub subscription: Option<SubscriptionGraphQlDefinition>,
 }
