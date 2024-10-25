@@ -1,4 +1,4 @@
-use super::ndc_validation::NDCValidationError;
+use super::ndc_validation::{unwrap_nullable_type, NDCValidationError};
 
 use crate::data_connectors::DataConnectorContext;
 use crate::helpers::ndc_validation;
@@ -325,22 +325,24 @@ pub(crate) fn resolve_value_expression_for_argument(
 
             // get the data_connector_object_type from the NDC command argument type
             // or explode
-            let data_connector_object_type = match &source_argument_type {
-                Some(ndc_models::Type::Predicate { object_type_name }) => {
-                    Some(DataConnectorObjectType::from(object_type_name.as_str()))
-                }
-                _ => None,
-            }
-            .ok_or_else(|| {
-                Error::from(
-                    object_types::ObjectTypesError::DataConnectorTypeMappingValidationError {
-                        type_name: base_type.clone(),
-                        error: object_types::TypeMappingValidationError::PredicateTypeNotFound {
-                            argument_name: argument_name.clone(),
+            let data_connector_object_type = source_argument_type
+                .and_then(|argument_type| match unwrap_nullable_type(argument_type) {
+                    ndc_models::Type::Predicate { object_type_name } => {
+                        Some(DataConnectorObjectType::from(object_type_name.as_str()))
+                    }
+                    _ => None,
+                })
+                .ok_or_else(|| {
+                    Error::from(
+                        object_types::ObjectTypesError::DataConnectorTypeMappingValidationError {
+                            type_name: base_type.clone(),
+                            error:
+                                object_types::TypeMappingValidationError::PredicateTypeNotFound {
+                                    argument_name: argument_name.clone(),
+                                },
                         },
-                    },
-                )
-            })?;
+                    )
+                })?;
 
             let data_connector_field_mappings = object_type_representation
                 .type_mappings

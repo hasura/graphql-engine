@@ -526,3 +526,11 @@ pub fn get_underlying_named_type(result_type: &ndc_models::Type) -> &ndc_models:
         ndc_models::Type::Predicate { object_type_name } => object_type_name.as_ref(),
     }
 }
+
+pub fn unwrap_nullable_type(ndc_type: &ndc_models::Type) -> &ndc_models::Type {
+    if let ndc_models::Type::Nullable { underlying_type } = ndc_type {
+        unwrap_nullable_type(underlying_type)
+    } else {
+        ndc_type
+    }
+}

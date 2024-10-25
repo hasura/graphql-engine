@@ -6,6 +6,10 @@
 
 ### Fixed
 
+- `ModelPermissions` and `CommandPermissions` can now correctly preset
+  predicate-typed arguments that are nullable. Previously, trying to do so
+  resulted in a build error.
+
 ### Changed
 
 ## [v2024.10.23]
