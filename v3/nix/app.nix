@@ -42,11 +42,14 @@ let
     ];
   };
 
+  # only build the binary we care about
+  cargoExtraArgs = "--package ${packageName}";
+
   # Build the dependencies first.
   cargoArtifacts = craneLib.buildDepsOnly (buildArgs //
     {
       # without this we'll build deps for the entire workspace every time
-      buildPhaseCargoCommand = "cargo build --profile $CARGO_PROFILE";
+      buildPhaseCargoCommand = "cargo build --profile $CARGO_PROFILE --package ${packageName}";
       doCheck = false;
     }
 
@@ -55,7 +58,7 @@ in
 # Then build the crate.
 craneLib.buildPackage
   (buildArgs // {
-    inherit cargoArtifacts;
+    inherit cargoArtifacts cargoExtraArgs;
     doCheck = false;
     RELEASE_VERSION = version;
   })
