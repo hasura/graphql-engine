@@ -28,7 +28,7 @@ pub fn create_query_ir(
 
     // create the selection fields; include all fields of the model output type
     let mut selection = IndexMap::new();
-    for field_name in &model.type_fields {
+    for field_name in model.type_fields.keys() {
         if include_field(query_string, field_name, &model.name.name) {
             let field_name_ident = Identifier::new(field_name.as_str()).unwrap();
             let field_name = open_dds::types::FieldName::new(field_name_ident.clone());
@@ -107,7 +107,7 @@ fn validate_sparse_fields(
             if *model_name == model_name_string {
                 for models_field in model_fields {
                     let string_fields: Vec<_> =
-                        model.type_fields.iter().map(ToString::to_string).collect();
+                        model.type_fields.keys().map(ToString::to_string).collect();
 
                     if !string_fields.contains(models_field) {
                         return Err(RequestError::BadRequest(format!(

@@ -1,23 +1,12 @@
 use crate::{Model, State};
 use std::collections::BTreeMap;
 use std::string::ToString;
-
-fn int_schema() -> oas3::spec::ObjectSchema {
-    oas3::spec::ObjectSchema {
-        schema_type: Some(oas3::spec::SchemaTypeSet::Single(
-            oas3::spec::SchemaType::Integer,
-        )),
-        ..oas3::spec::ObjectSchema::default()
-    }
-}
-
-// schema for a string that matches one of a list of values
-fn enum_schema(enum_values: Vec<String>) -> oas3::spec::ObjectSchema {
-    oas3::spec::ObjectSchema {
-        enum_values,
-        ..oas3::spec::ObjectSchema::default()
-    }
-}
+mod output;
+mod shared;
+use shared::{
+    array_schema, bool_schema, enum_schema, float_schema, int_schema, json_schema, object_schema,
+    string_schema,
+};
 
 fn page_offset_parameter() -> oas3::spec::Parameter {
     let schema = oas3::spec::ObjectOrReference::Object(int_schema());
@@ -62,13 +51,13 @@ fn page_limit_parameter() -> oas3::spec::Parameter {
 fn get_fields_for_model(model: &Model) -> oas3::spec::Parameter {
     let schema = oas3::spec::ObjectOrReference::Object(oas3::spec::ObjectSchema {
         items: Some(Box::new(oas3::spec::ObjectOrReference::Object(
-            enum_schema(model.type_fields.iter().map(ToString::to_string).collect()),
+            enum_schema(model.type_fields.keys().map(ToString::to_string).collect()),
         ))),
         ..oas3::spec::ObjectSchema::default()
     });
 
     let mut example = String::new();
-    for (i, field) in model.type_fields.iter().enumerate() {
+    for (i, field) in model.type_fields.keys().enumerate() {
         if i > 0 && i < model.type_fields.len() {
             example.push(',');
         }
@@ -81,7 +70,7 @@ fn get_fields_for_model(model: &Model) -> oas3::spec::Parameter {
         allow_reserved: None,
         content: None,
         deprecated: None,
-        description: None,
+        description: model.description.clone(),
         example: Some(example.into()),
         explode: None,
         examples: BTreeMap::new(),
@@ -93,12 +82,39 @@ fn get_fields_for_model(model: &Model) -> oas3::spec::Parameter {
     }
 }
 
+fn get_response(model: &Model) -> oas3::spec::Response {
+    let schema = oas3::spec::ObjectOrReference::Object(output::jsonapi_document_schema(model));
+
+    let media_type = oas3::spec::MediaType {
+        encoding: BTreeMap::new(),
+        examples: None,
+        schema: Some(schema),
+    };
+
+    let mut content = BTreeMap::new();
+    content.insert("Success".into(), media_type);
+
+    oas3::spec::Response {
+        description: None,
+        extensions: BTreeMap::new(),
+        headers: BTreeMap::new(),
+        links: BTreeMap::new(),
+        content,
+    }
+}
+
 fn get_route_for_model(model: &Model) -> oas3::spec::Operation {
     let parameters = vec![
         oas3::spec::ObjectOrReference::Object(page_limit_parameter()),
         oas3::spec::ObjectOrReference::Object(page_offset_parameter()),
         oas3::spec::ObjectOrReference::Object(get_fields_for_model(model)),
     ];
+
+    let mut responses = BTreeMap::new();
+    responses.insert(
+        "200".into(),
+        oas3::spec::ObjectOrReference::Object(get_response(model)),
+    );
 
     oas3::spec::Operation {
         callbacks: BTreeMap::new(),
@@ -109,9 +125,9 @@ fn get_route_for_model(model: &Model) -> oas3::spec::Operation {
         operation_id: None,
         parameters,
         request_body: None,
-        responses: None,
+        responses: Some(responses),
         servers: vec![],
-        summary: None,
+        summary: Some(format!("Fetch {} values", model.data_type.name)),
         tags: vec![],
     }
 }

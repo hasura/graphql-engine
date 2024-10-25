@@ -11,6 +11,7 @@ expression: generated_openapi
   "paths": {
     "/default/Articles": {
       "get": {
+        "summary": "Fetch article values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -42,7 +43,55 @@ expression: generated_openapi
             "example": "article_id,title"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_article"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "article_id": {
+                                "type": "integer"
+                              },
+                              "title": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

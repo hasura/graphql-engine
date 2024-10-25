@@ -11,6 +11,7 @@ expression: generated_openapi
   "paths": {
     "/default/Album": {
       "get": {
+        "summary": "Fetch Album values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -43,11 +44,63 @@ expression: generated_openapi
             "example": "AlbumId,ArtistId,Title"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_Album"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "AlbumId": {
+                                "type": "object"
+                              },
+                              "ArtistId": {
+                                "type": "object"
+                              },
+                              "Title": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/Articles": {
       "get": {
+        "summary": "Fetch article values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -80,11 +133,63 @@ expression: generated_openapi
             "example": "article_id,title,author_id"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_article"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "article_id": {
+                                "type": "integer"
+                              },
+                              "author_id": {
+                                "type": "object"
+                              },
+                              "title": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/Artist": {
       "get": {
+        "summary": "Fetch Artist values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -116,11 +221,60 @@ expression: generated_openapi
             "example": "ArtistId,Name"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_Artist"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "ArtistId": {
+                                "type": "object"
+                              },
+                              "Name": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/Authors": {
       "get": {
+        "summary": "Fetch author values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -141,6 +295,7 @@ expression: generated_openapi
           {
             "name": "fields[Authors]",
             "in": "query",
+            "description": "top level Authors model description",
             "schema": {
               "items": {
                 "enum": [
@@ -152,11 +307,60 @@ expression: generated_openapi
             "example": "author_id,first_name"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_author"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "author_id": {
+                                "type": "object"
+                              },
+                              "first_name": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/Customer": {
       "get": {
+        "summary": "Fetch Customer values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -199,11 +403,93 @@ expression: generated_openapi
             "example": "Address,City,Company,Country,CustomerId,Email,Fax,FirstName,LastName,Phone,PostalCode,State,SupportRepId"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_Customer"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "Address": {
+                                "type": "object"
+                              },
+                              "City": {
+                                "type": "object"
+                              },
+                              "Company": {
+                                "type": "object"
+                              },
+                              "Country": {
+                                "type": "object"
+                              },
+                              "CustomerId": {
+                                "type": "object"
+                              },
+                              "Email": {
+                                "type": "object"
+                              },
+                              "Fax": {
+                                "type": "object"
+                              },
+                              "FirstName": {
+                                "type": "object"
+                              },
+                              "LastName": {
+                                "type": "object"
+                              },
+                              "Phone": {
+                                "type": "object"
+                              },
+                              "PostalCode": {
+                                "type": "object"
+                              },
+                              "State": {
+                                "type": "object"
+                              },
+                              "SupportRepId": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/Employee": {
       "get": {
+        "summary": "Fetch Employee values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -248,11 +534,99 @@ expression: generated_openapi
             "example": "Address,BirthDate,City,Country,Email,EmployeeId,Fax,FirstName,HireDate,LastName,Phone,PostalCode,ReportsTo,State,Title"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_Employee"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "Address": {
+                                "type": "object"
+                              },
+                              "BirthDate": {
+                                "type": "object"
+                              },
+                              "City": {
+                                "type": "object"
+                              },
+                              "Country": {
+                                "type": "object"
+                              },
+                              "Email": {
+                                "type": "object"
+                              },
+                              "EmployeeId": {
+                                "type": "object"
+                              },
+                              "Fax": {
+                                "type": "object"
+                              },
+                              "FirstName": {
+                                "type": "object"
+                              },
+                              "HireDate": {
+                                "type": "object"
+                              },
+                              "LastName": {
+                                "type": "object"
+                              },
+                              "Phone": {
+                                "type": "object"
+                              },
+                              "PostalCode": {
+                                "type": "object"
+                              },
+                              "ReportsTo": {
+                                "type": "object"
+                              },
+                              "State": {
+                                "type": "object"
+                              },
+                              "Title": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/Genre": {
       "get": {
+        "summary": "Fetch Genre values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -284,11 +658,60 @@ expression: generated_openapi
             "example": "GenreId,Name"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_Genre"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "GenreId": {
+                                "type": "object"
+                              },
+                              "Name": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/Invoice": {
       "get": {
+        "summary": "Fetch Invoice values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -327,11 +750,81 @@ expression: generated_openapi
             "example": "BillingAddress,BillingCity,BillingCountry,BillingPostalCode,BillingState,CustomerId,InvoiceDate,InvoiceId,Total"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_Invoice"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "BillingAddress": {
+                                "type": "object"
+                              },
+                              "BillingCity": {
+                                "type": "object"
+                              },
+                              "BillingCountry": {
+                                "type": "object"
+                              },
+                              "BillingPostalCode": {
+                                "type": "object"
+                              },
+                              "BillingState": {
+                                "type": "object"
+                              },
+                              "CustomerId": {
+                                "type": "object"
+                              },
+                              "InvoiceDate": {
+                                "type": "object"
+                              },
+                              "InvoiceId": {
+                                "type": "object"
+                              },
+                              "Total": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/InvoiceLine": {
       "get": {
+        "summary": "Fetch InvoiceLine values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -366,11 +859,69 @@ expression: generated_openapi
             "example": "InvoiceId,InvoiceLineId,Quantity,TrackId,UnitPrice"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_InvoiceLine"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "InvoiceId": {
+                                "type": "object"
+                              },
+                              "InvoiceLineId": {
+                                "type": "object"
+                              },
+                              "Quantity": {
+                                "type": "object"
+                              },
+                              "TrackId": {
+                                "type": "object"
+                              },
+                              "UnitPrice": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/MediaType": {
       "get": {
+        "summary": "Fetch MediaType values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -402,11 +953,60 @@ expression: generated_openapi
             "example": "MediaTypeId,Name"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_MediaType"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "MediaTypeId": {
+                                "type": "object"
+                              },
+                              "Name": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/Playlist": {
       "get": {
+        "summary": "Fetch Playlist values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -438,11 +1038,60 @@ expression: generated_openapi
             "example": "Name,PlaylistId"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_Playlist"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "Name": {
+                                "type": "object"
+                              },
+                              "PlaylistId": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/PlaylistTrack": {
       "get": {
+        "summary": "Fetch PlaylistTrack values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -474,11 +1123,60 @@ expression: generated_openapi
             "example": "PlaylistId,TrackId"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_PlaylistTrack"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "PlaylistId": {
+                                "type": "object"
+                              },
+                              "TrackId": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/Track": {
       "get": {
+        "summary": "Fetch Track values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -517,11 +1215,212 @@ expression: generated_openapi
             "example": "AlbumId,Bytes,Composer,GenreId,MediaTypeId,Milliseconds,Name,TrackId,UnitPrice"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_Track"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "AlbumId": {
+                                "type": "object"
+                              },
+                              "Bytes": {
+                                "type": "object"
+                              },
+                              "Composer": {
+                                "type": "object"
+                              },
+                              "GenreId": {
+                                "type": "object"
+                              },
+                              "MediaTypeId": {
+                                "type": "object"
+                              },
+                              "Milliseconds": {
+                                "type": "object"
+                              },
+                              "Name": {
+                                "type": "object"
+                              },
+                              "TrackId": {
+                                "type": "object"
+                              },
+                              "UnitPrice": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/default/institutions": {
+      "get": {
+        "summary": "Fetch institution values",
+        "parameters": [
+          {
+            "name": "page[limit]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "5"
+          },
+          {
+            "name": "page[offset]",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "10"
+          },
+          {
+            "name": "fields[institutions]",
+            "in": "query",
+            "schema": {
+              "items": {
+                "enum": [
+                  "id",
+                  "name",
+                  "location",
+                  "staff",
+                  "departments"
+                ]
+              }
+            },
+            "example": "id,name,location,staff,departments"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_institution"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "departments": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "id": {
+                                "type": "integer"
+                              },
+                              "location": {
+                                "type": "object",
+                                "properties": {
+                                  "campuses": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "city": {
+                                    "type": "string"
+                                  },
+                                  "country": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "staff": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "first_name": {
+                                      "type": "string"
+                                    },
+                                    "last_name": {
+                                      "type": "string"
+                                    },
+                                    "specialities": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/spatial_ref_sys": {
       "get": {
+        "summary": "Fetch spatial_ref_sys values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -556,11 +1455,69 @@ expression: generated_openapi
             "example": "auth_name,auth_srid,proj4text,srid,srtext"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_spatial_ref_sys"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "auth_name": {
+                                "type": "object"
+                              },
+                              "auth_srid": {
+                                "type": "object"
+                              },
+                              "proj4text": {
+                                "type": "object"
+                              },
+                              "srid": {
+                                "type": "object"
+                              },
+                              "srtext": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/topology_layer": {
       "get": {
+        "summary": "Fetch topology_layer values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -598,11 +1555,78 @@ expression: generated_openapi
             "example": "child_id,feature_column,feature_type,layer_id,level,schema_name,table_name,topology_id"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_topology_layer"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "child_id": {
+                                "type": "object"
+                              },
+                              "feature_column": {
+                                "type": "object"
+                              },
+                              "feature_type": {
+                                "type": "object"
+                              },
+                              "layer_id": {
+                                "type": "object"
+                              },
+                              "level": {
+                                "type": "object"
+                              },
+                              "schema_name": {
+                                "type": "object"
+                              },
+                              "table_name": {
+                                "type": "object"
+                              },
+                              "topology_id": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/topology_topology": {
       "get": {
+        "summary": "Fetch topology_topology values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -637,7 +1661,64 @@ expression: generated_openapi
             "example": "hasz,id,name,precision,srid"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_topology_topology"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "hasz": {
+                                "type": "object"
+                              },
+                              "id": {
+                                "type": "object"
+                              },
+                              "name": {
+                                "type": "object"
+                              },
+                              "precision": {
+                                "type": "object"
+                              },
+                              "srid": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

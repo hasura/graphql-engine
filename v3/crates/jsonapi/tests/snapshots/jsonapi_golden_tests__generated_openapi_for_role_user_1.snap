@@ -11,6 +11,7 @@ expression: generated_openapi
   "paths": {
     "/default/Album": {
       "get": {
+        "summary": "Fetch Album values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -42,11 +43,60 @@ expression: generated_openapi
             "example": "AlbumId,Title"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_Album"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "AlbumId": {
+                                "type": "object"
+                              },
+                              "Title": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/default/Articles": {
       "get": {
+        "summary": "Fetch article values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -78,7 +128,55 @@ expression: generated_openapi
             "example": "article_id,author_id"
           }
         ],
-        "responses": null
+        "responses": {
+          "200": {
+            "description": null,
+            "content": {
+              "Success": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "_type",
+                          "attributes"
+                        ],
+                        "properties": {
+                          "_type": {
+                            "enum": [
+                              "default_article"
+                            ]
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "article_id": {
+                                "type": "integer"
+                              },
+                              "author_id": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

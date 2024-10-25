@@ -1,8 +1,12 @@
+use crate::catalog::get_model_fields;
 use hasura_authn_core::Role;
+use indexmap::IndexMap;
 use metadata_resolve::{
     ModelExpressionType, ModelWithArgumentPresets, ObjectTypeWithRelationships, Qualified,
+    ScalarTypeRepresentation,
 };
 use open_dds::{
+    data_connector::DataConnectorName,
     identifier::SubgraphName,
     models::ModelName,
     types::{CustomTypeName, FieldName},
@@ -49,7 +53,7 @@ impl State {
             .models
             .iter()
             .filter_map(|(model_name, model)| {
-                match Model::new(model, role, &metadata.object_types) {
+                match Model::new(model, role, &metadata.object_types, &metadata.scalar_types) {
                     Ok(jsonapi_model) => Some((
                         format!("/{}/{}", model_name.subgraph, model_name.name),
                         jsonapi_model,
@@ -69,12 +73,22 @@ impl State {
     }
 }
 
+// feel we're going to need to think about object types for nested stuff here too
+#[derive(Debug)]
+pub enum FieldType {
+    TypeRepresentation(ndc_models::TypeRepresentation),
+    List(Box<FieldType>),
+    Object(IndexMap<FieldName, FieldType>),
+}
+
 // only the parts of a Model we need to construct a JSONAPI
 // we'll filter out fields a given role can't see
 #[derive(Debug)]
 pub struct Model {
     pub name: Qualified<ModelName>,
-    pub type_fields: Vec<FieldName>,
+    pub description: Option<String>,
+    pub data_type: Qualified<CustomTypeName>,
+    pub type_fields: IndexMap<FieldName, FieldType>,
     /// let's consider only making this work with `BooleanExpressionType`
     /// to simplify implementation and nudge users to upgrade
     pub filter_expression_type: Option<ModelExpressionType>,
@@ -85,13 +99,21 @@ impl Model {
         model: &ModelWithArgumentPresets,
         role: &Role,
         object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
+        scalar_types: &BTreeMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     ) -> Result<Model, ModelWarning> {
-        let type_fields = get_model_fields(model, role, object_types)?;
+        let type_fields = get_model_fields(model, role, object_types, scalar_types)?;
+
         Ok(Model {
             name: model.model.name.clone(),
+            description: model.model.raw.description.clone(),
+            data_type: model.model.data_type.clone(),
             type_fields,
             filter_expression_type: model.filter_expression_type.clone(),
         })
+    }
+
+    pub fn pretty_typename(&self) -> String {
+        format!("{}_{}", self.data_type.subgraph, self.data_type.name)
     }
 }
 
@@ -110,47 +132,20 @@ pub enum RoleWarning {
 
 // if we exclude something, let's say why
 #[derive(Debug, Clone)]
+#[allow(clippy::enum_variant_names)]
 pub enum ModelWarning {
     NoSelectPermission,
     NoObjectTypeFound {
         object_type_name: Qualified<CustomTypeName>,
     },
-}
-
-// look at permissions and work out which fields we're allowed to see
-// this is quite limited and leans to be overcautious
-fn get_model_fields(
-    model: &ModelWithArgumentPresets,
-    role: &Role,
-    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
-) -> Result<Vec<FieldName>, ModelWarning> {
-    // if we have no select permission for the model, ignore it
-    if !model.select_permissions.contains_key(role) {
-        return Err(ModelWarning::NoSelectPermission);
-    }
-    let underlying_object_type = object_types.get(&model.model.data_type).ok_or_else(|| {
-        ModelWarning::NoObjectTypeFound {
-            object_type_name: model.model.data_type.clone(),
-        }
-    })?;
-    let output_permissions_for_role = underlying_object_type
-        .type_output_permissions
-        .get(role)
-        .unwrap();
-
-    // otherwise return all fields (we need to check the type perms next and filter this)
-    let type_fields = model
-        .model
-        .type_fields
-        .keys()
-        .filter(|field_name| {
-            output_permissions_for_role
-                .allowed_fields
-                .contains(*field_name)
-        })
-        .cloned()
-        .collect();
-    Ok(type_fields)
+    NoModelSource,
+    NoTypeRepresentationFound {
+        object_type_name: Qualified<CustomTypeName>,
+    },
+    NoTypeRepresentationFoundForDataConnector {
+        data_connector_name: Qualified<DataConnectorName>,
+        object_type_name: Qualified<CustomTypeName>,
+    },
 }
 
 #[derive(Debug, derive_more::Display)]

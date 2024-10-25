@@ -64,7 +64,7 @@ pub use stages::order_by_expressions::{
 };
 pub use stages::plugins::LifecyclePluginConfigs;
 pub use stages::scalar_boolean_expressions::ResolvedScalarBooleanExpressionType;
-pub use stages::scalar_type_representations::ScalarTypeRepresentation;
+pub use stages::scalar_type_representations::{ScalarTypeRepresentation, ValueRepresentation};
 pub use stages::type_permissions::{FieldPresetInfo, TypeInputPermission};
 pub use stages::{
     command_permissions::CommandWithPermissions,
