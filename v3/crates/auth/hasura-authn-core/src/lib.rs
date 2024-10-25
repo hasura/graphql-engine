@@ -240,22 +240,21 @@ pub fn authorize_identity(
     let mut role = None;
     // traverse through the headers and collect role and session variables
     for (header_name, header_value) in headers {
-        if let Ok(session_variable) = SessionVariableName::from_str(header_name.as_str()) {
-            let variable_value_str = match header_value.to_str() {
-                Err(e) => Err(SessionError::InvalidHeaderValue {
-                    header_name: header_name.to_string(),
-                    error: e.to_string(),
-                })?,
-                Ok(h) => h,
-            };
-            let variable_value = SessionVariableValue::Unparsed(variable_value_str.to_string());
+        let Ok(session_variable) = SessionVariableName::from_str(header_name.as_str());
+        let variable_value_str = match header_value.to_str() {
+            Err(e) => Err(SessionError::InvalidHeaderValue {
+                header_name: header_name.to_string(),
+                error: e.to_string(),
+            })?,
+            Ok(h) => h,
+        };
+        let variable_value = SessionVariableValue::Unparsed(variable_value_str.to_string());
 
-            if session_variable == SESSION_VARIABLE_ROLE {
-                role = Some(Role::new(variable_value_str));
-            } else {
-                // TODO: Handle the duplicate case?
-                session_variables.insert(session_variable, variable_value);
-            }
+        if session_variable == SESSION_VARIABLE_ROLE {
+            role = Some(Role::new(variable_value_str));
+        } else {
+            // TODO: Handle the duplicate case?
+            session_variables.insert(session_variable, variable_value);
         }
     }
     let session = identity

@@ -769,30 +769,38 @@ async fn run_query_graphql_ws(
     // Assert response
     let message = channel_receiver.recv().await.expect("Expected a message");
     let response = match message {
-        graphql_ws::Message::Protocol(graphql_ws::ServerMessage::Next { id, payload }) => {
-            assert_eq!(operation_id, id);
-            payload
-        }
-        graphql_ws::Message::Protocol(graphql_ws::ServerMessage::Error {
-            id,
-            payload: errors,
-        }) => {
-            assert_eq!(operation_id, id);
-            lang_graphql::http::Response::errors(errors)
-        }
-        _ => {
-            panic!("Expected a Next or Error message")
-        }
+        graphql_ws::Message::Protocol(message) => match *message {
+            graphql_ws::ServerMessage::Next { id, payload } => {
+                assert_eq!(operation_id, id);
+                payload
+            }
+            graphql_ws::ServerMessage::Error {
+                id,
+                payload: errors,
+            } => {
+                assert_eq!(operation_id, id);
+                lang_graphql::http::Response::errors(errors)
+            }
+            _ => {
+                panic!("Expected a Next or Error message")
+            }
+        },
+        graphql_ws::Message::Raw(_) => panic!("Expected a Next or Error message"),
     };
 
     // Assert completion when no errors
     if response.errors.is_none() {
         let message = channel_receiver.recv().await.expect("Expected a message");
         match message {
-            graphql_ws::Message::Protocol(graphql_ws::ServerMessage::Complete { id }) => {
-                assert_eq!(operation_id, id);
-            }
-            _ => {
+            graphql_ws::Message::Protocol(message) => match *message {
+                graphql_ws::ServerMessage::Complete { id } => {
+                    assert_eq!(operation_id, id);
+                }
+                _ => {
+                    panic!("Expected a Complete message")
+                }
+            },
+            graphql_ws::Message::Raw(_) => {
                 panic!("Expected a Complete message")
             }
         };

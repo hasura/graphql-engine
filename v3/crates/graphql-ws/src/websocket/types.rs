@@ -164,7 +164,7 @@ pub enum Message {
     /// Represents a raw WebSocket message.
     Raw(ws::Message),
     /// Represents a message using the protocol server format.
-    Protocol(protocol::ServerMessage),
+    Protocol(Box<protocol::ServerMessage>),
 }
 
 impl Message {

@@ -1,5 +1,5 @@
 # This should match the Rust version in rust-toolchain.yaml and the other Dockerfiles.
-FROM rust:1.81.0 as chef
+FROM rust:1.82.0 as chef
 
 WORKDIR app
 

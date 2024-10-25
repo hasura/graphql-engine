@@ -109,10 +109,12 @@ pub async fn handle_subscribe(
                                         // Send the plugin error response to the client
                                         let graphql_error = error.into_graphql_error(&plugin_name);
                                         connection
-                                            .send(ws::Message::Protocol(ServerMessage::Error {
-                                                id: operation_id.clone(),
-                                                payload: NonEmpty::new(graphql_error),
-                                            }))
+                                            .send(ws::Message::Protocol(Box::new(
+                                                ServerMessage::Error {
+                                                    id: operation_id.clone(),
+                                                    payload: NonEmpty::new(graphql_error),
+                                                },
+                                            )))
                                             .await;
                                     }
                                 }
@@ -139,10 +141,10 @@ pub async fn handle_subscribe(
             Error::PreParsePlugin(e) => {
                 // If the pre-parse plugin fails, send an error message.
                 connection
-                    .send(ws::Message::Protocol(ServerMessage::Error {
+                    .send(ws::Message::Protocol(Box::new(ServerMessage::Error {
                         id: operation_id,
                         payload: NonEmpty::new(e.into_graphql_error()),
-                    }))
+                    })))
                     .await;
             }
         }
@@ -239,7 +241,9 @@ pub async fn send_request_error(
         id: operation_id,
         payload: NonEmpty::new(gql_error),
     };
-    connection.send(ws::Message::Protocol(message)).await;
+    connection
+        .send(ws::Message::Protocol(Box::new(message)))
+        .await;
 }
 
 // Exported for testing purpose
@@ -482,10 +486,10 @@ async fn send_graphql_ok(
     connection: &ws::Connection,
 ) {
     connection
-        .send(ws::Message::Protocol(ServerMessage::Next {
+        .send(ws::Message::Protocol(Box::new(ServerMessage::Next {
             id: operation_id,
             payload: response,
-        }))
+        })))
         .await;
 }
 
@@ -496,19 +500,19 @@ async fn send_graphql_errors(
     connection: &ws::Connection,
 ) {
     connection
-        .send(ws::Message::Protocol(ServerMessage::Error {
+        .send(ws::Message::Protocol(Box::new(ServerMessage::Error {
             id: operation_id,
             payload: errors,
-        }))
+        })))
         .await;
 }
 
 /// Sends a complete message after the query/mutation execution finishes.
 async fn send_complete(operation_id: OperationId, connection: &ws::Connection) {
     connection
-        .send(ws::Message::Protocol(ServerMessage::Complete {
+        .send(ws::Message::Protocol(Box::new(ServerMessage::Complete {
             id: operation_id,
-        }))
+        })))
         .await;
 }
 

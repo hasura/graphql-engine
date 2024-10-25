@@ -28,7 +28,9 @@ pub async fn handle_connection_init(connection: ws::Connection, payload: Option<
                             // Update state to Initialized and send a connection acknowledgment
                             *state = ConnectionInitState::Initialized { session, headers };
                             connection
-                                .send(ws::Message::Protocol(ServerMessage::ConnectionAck))
+                                .send(ws::Message::Protocol(Box::new(
+                                    ServerMessage::ConnectionAck,
+                                )))
                                 .await;
                         }
                         Err(ConnectionInitError::AlreadyInitialized) => {

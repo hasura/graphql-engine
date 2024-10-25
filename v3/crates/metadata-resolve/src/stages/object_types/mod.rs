@@ -170,34 +170,31 @@ pub fn resolve_object_type(
             });
         }
     }
-    match &object_type_definition.global_id_fields {
-        Some(global_id_fields) => {
-            if !global_id_fields.is_empty() {
-                // Throw error if the object type has a field called id" and has global fields configured.
-                // Because, when the global id fields are configured, the `id` field will be auto-generated.
-                if resolved_fields.contains_key("id") {
-                    return Err(ObjectTypesError::IdFieldConflictingGlobalId {
-                        type_name: qualified_type_name.clone(),
-                    });
-                }
-                // To check if global_id_fields are defined in object type but no model has global_id_source set to
-                // true:
-                //   - If the object type has globalIdFields configured, add the object type to the
-                //     global_id_enabled_types map.
-                global_id_enabled_types.insert(qualified_type_name.clone(), Vec::new());
-            };
-            for global_id_field in global_id_fields {
-                if resolved_fields.contains_key(global_id_field) {
-                    resolved_global_id_fields.push(global_id_field.clone());
-                } else {
-                    return Err(ObjectTypesError::UnknownFieldInGlobalId {
-                        field_name: global_id_field.clone(),
-                        type_name: qualified_type_name.clone(),
-                    });
-                }
+    if let Some(global_id_fields) = &object_type_definition.global_id_fields {
+        if !global_id_fields.is_empty() {
+            // Throw error if the object type has a field called id" and has global fields configured.
+            // Because, when the global id fields are configured, the `id` field will be auto-generated.
+            if resolved_fields.contains_key("id") {
+                return Err(ObjectTypesError::IdFieldConflictingGlobalId {
+                    type_name: qualified_type_name.clone(),
+                });
+            }
+            // To check if global_id_fields are defined in object type but no model has global_id_source set to
+            // true:
+            //   - If the object type has globalIdFields configured, add the object type to the
+            //     global_id_enabled_types map.
+            global_id_enabled_types.insert(qualified_type_name.clone(), Vec::new());
+        };
+        for global_id_field in global_id_fields {
+            if resolved_fields.contains_key(global_id_field) {
+                resolved_global_id_fields.push(global_id_field.clone());
+            } else {
+                return Err(ObjectTypesError::UnknownFieldInGlobalId {
+                    field_name: global_id_field.clone(),
+                    type_name: qualified_type_name.clone(),
+                });
             }
         }
-        None => {}
     }
     let (graphql_type_name, graphql_input_type_name, apollo_federation_config) =
         match object_type_definition.graphql.as_ref() {

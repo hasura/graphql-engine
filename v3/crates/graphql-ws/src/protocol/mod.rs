@@ -43,7 +43,7 @@ pub async fn handle_graphql_ws_message(connection: ws::Connection, message: Clie
                         // Respond to a Ping message by sending a Pong
                         ClientMessage::Ping => {
                             connection
-                                .send(ws::Message::Protocol(ServerMessage::Pong))
+                                .send(ws::Message::Protocol(Box::new(ServerMessage::Pong)))
                                 .await;
                         }
                         // Ignore the Pong message as no action is needed
