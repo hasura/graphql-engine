@@ -43,7 +43,7 @@ pub(crate) fn parse_datafusion_literal(
         #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
         (DataType::Float32, ScalarValue::Int64(Some(i))) => {
             let f = *i as f32;
-            if f as i64 == *i {
+            if f.is_finite()  {
                 Ok(serde_json::Value::Number(
                     serde_json::Number::from_f64(f64::from(f)).ok_or_else(|| {
                         DataFusionError::Plan(
@@ -53,7 +53,7 @@ pub(crate) fn parse_datafusion_literal(
                 ))
             } else {
                 Err(DataFusionError::Plan(
-                    format!("Int64 value {i} cannot be precisely represented as Float32")
+                    format!("Int64 value {i} cannot be finitely represented as Float32")
                 ))
             }
         }
@@ -69,7 +69,7 @@ pub(crate) fn parse_datafusion_literal(
         #[allow(clippy::cast_possible_truncation)]
         (DataType::Float32, ScalarValue::Float64(Some(f))) => {
             let f32_value = *f as f32;
-            if (f64::from(f32_value) - *f).abs() < f64::EPSILON {
+            if f32_value.is_finite() {
                 Ok(serde_json::Value::Number(
                     serde_json::Number::from_f64(f64::from(f32_value)).ok_or_else(|| {
                         DataFusionError::Plan(
@@ -79,18 +79,18 @@ pub(crate) fn parse_datafusion_literal(
                 ))
             } else {
                 Err(DataFusionError::Plan(
-                    format!("Float64 value {f} cannot be precisely represented as Float32")
+                    format!("Float64 value {f} cannot be finitely represented as Float32")
                 ))
             }
         }
         #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
         (DataType::Float64, ScalarValue::Int64(Some(i))) => {
             let f = *i as f64;
-            if f as i64 == *i {
+            if f.is_finite() {
                 Ok(serde_json::Value::String(f.to_string()))
             } else {
                 Err(DataFusionError::Plan(
-                    format!("Int64 value {i} cannot be precisely represented as Float64")
+                    format!("Int64 value {i} cannot be finitely represented as Float64")
                 ))
             }
         }
@@ -338,6 +338,28 @@ mod tests {
             result,
             serde_json::Value::String("3.141592653589793".to_string())
         );
+    }
+
+    #[test]
+    fn test_parse_float64_from_int64() {
+        let result =
+            parse_datafusion_literal(&DataType::Float64, &ScalarValue::Int64(Some(2))).unwrap();
+        assert_eq!(result, serde_json::Value::String("2".to_string()));
+    }
+
+    #[test]
+    fn test_parse_float32() {
+        let result =
+            parse_datafusion_literal(&DataType::Float32, &ScalarValue::Float64(Some(2.99)))
+                .unwrap();
+        assert!(result.is_number());
+    }
+
+    #[test]
+    fn test_parse_float32_from_int64() {
+        let result =
+            parse_datafusion_literal(&DataType::Float32, &ScalarValue::Int64(Some(2))).unwrap();
+        assert!(result.is_number());
     }
 
     #[test]
