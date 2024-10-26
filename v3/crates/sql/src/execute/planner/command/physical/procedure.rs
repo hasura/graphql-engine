@@ -14,7 +14,7 @@ use futures::TryFutureExt;
 use std::{any::Any, sync::Arc};
 
 use execute::{ndc::NdcMutationResponse, HttpContext};
-use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::{data_connector::DataConnectorColumnName, query::CommandTarget};
 use plan::NDCProcedure;
 use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 
@@ -40,7 +40,7 @@ pub enum ExecutionPlanError {
     PhysicalPlanOptionsNotFound,
 
     #[error("Mutations are requested to be disallowed as part of the request")]
-    MutationsAreDisallowed,
+    MutationsAreDisallowed(CommandTarget),
 }
 
 impl TraceableError for ExecutionPlanError {
@@ -55,6 +55,8 @@ impl TraceableError for ExecutionPlanError {
 pub(crate) struct NDCProcedurePushDown {
     http_context: Arc<execute::HttpContext>,
     procedure: NDCProcedure,
+    // the original invocation of this procedure, useful for error messages
+    opendd_source: CommandTarget,
     // used to post process a command's output
     output: CommandOutput,
     //  The key from which the response has to be extracted if the command output is not the
@@ -70,6 +72,7 @@ pub(crate) struct NDCProcedurePushDown {
 impl NDCProcedurePushDown {
     pub fn new(
         procedure: NDCProcedure,
+        opendd_source: CommandTarget,
         http_context: Arc<execute::HttpContext>,
         // schema of the output of the command selection
         schema: &DFSchemaRef,
@@ -81,6 +84,7 @@ impl NDCProcedurePushDown {
         Self {
             http_context,
             procedure,
+            opendd_source,
             output,
             extract_response_from,
             projected_schema: schema.inner().clone(),
@@ -155,7 +159,7 @@ impl ExecutionPlan for NDCProcedurePushDown {
 
         if physical_plan_options.disallow_mutations {
             return Err(DataFusionError::External(Box::new(
-                ExecutionPlanError::MutationsAreDisallowed,
+                ExecutionPlanError::MutationsAreDisallowed(self.opendd_source.clone()),
             )));
         }
 

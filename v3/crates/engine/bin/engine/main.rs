@@ -725,7 +725,7 @@ pub async fn handle_sql_request(
         }
         Err(e) => (
             axum::http::StatusCode::BAD_REQUEST,
-            Json(serde_json::json!({"error": e.to_string()})),
+            Json(e.to_error_response()),
         )
             .into_response(),
     }

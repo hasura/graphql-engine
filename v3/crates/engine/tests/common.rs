@@ -662,7 +662,7 @@ async fn snapshot_sql(
 
     let response = match response {
         Ok(r) => r,
-        Err(e) => serde_json::to_vec(&serde_json::json!({"error": e.to_string()}))?,
+        Err(e) => serde_json::to_vec(&e.to_error_response())?,
     };
     let response = serde_json::from_reader::<_, serde_json::Value>(response.as_slice())?;
     let mut expected = mint.new_goldenfile_with_differ(

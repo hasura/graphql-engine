@@ -4,8 +4,8 @@ use std::sync::Arc;
 use hasura_authn_core::Session;
 use open_dds::query::CommandSelection;
 
-mod function;
-mod procedure;
+pub mod function;
+pub mod procedure;
 use crate::execute::planner::common::from_plan_error;
 pub(crate) use function::CommandOutput;
 pub(crate) use function::NDCFunctionPushDown;
@@ -43,6 +43,7 @@ pub fn build_execution_plan(
         CommandPlan::Procedure(procedure) => {
             let ndc_pushdown = NDCProcedurePushDown::new(
                 procedure,
+                command_selection.target.clone(),
                 http_context.clone(),
                 schema,
                 output.clone(),

@@ -45,17 +45,35 @@ impl SqlRequest {
     }
 }
 
-#[derive(Error, Debug, Clone)]
+#[derive(Error, Debug)]
 pub enum SqlExecutionError {
     #[error("error in data fusion: {0}")]
-    DataFusion(String),
+    DataFusion(#[from] DataFusionError),
     #[error("error in encoding data: {0}")]
     Arrow(String),
 }
 
-impl From<DataFusionError> for SqlExecutionError {
-    fn from(e: DataFusionError) -> Self {
-        Self::DataFusion(e.to_string())
+impl SqlExecutionError {
+    pub fn to_error_response(&self) -> serde_json::Value {
+        let message = self.to_string();
+        let detail = match self {
+            SqlExecutionError::DataFusion(DataFusionError::External(e)) => {
+                use planner::command::physical::procedure::ExecutionPlanError;
+                if let Some(ExecutionPlanError::MutationsAreDisallowed(command_target)) =
+                    e.downcast_ref::<ExecutionPlanError>()
+                {
+                    serde_json::to_value(command_target).unwrap_or(serde_json::Value::Null)
+                } else {
+                    serde_json::Value::Null
+                }
+            }
+            _ => serde_json::Value::Null,
+        };
+        if detail == serde_json::Value::Null {
+            serde_json::json!({"error": message})
+        } else {
+            serde_json::json!({"error": message, "detail": detail})
+        }
     }
 }
 
@@ -99,10 +117,7 @@ pub async fn execute_sql(
             SpanVisibility::User,
             || {
                 Box::pin(async {
-                    let logical_plan = session_context
-                        .sql(&request.sql)
-                        .await
-                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))?;
+                    let logical_plan = session_context.sql(&request.sql).await?;
                     set_attribute_on_active_span(
                         tracing_util::AttributeVisibility::Default,
                         "logical_plan",
@@ -148,7 +163,7 @@ async fn execute_logical_plan(
                     frame
                         .create_physical_plan()
                         .await
-                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))
+                        .map_err(SqlExecutionError::DataFusion)
                 })
             },
         )
@@ -167,9 +182,8 @@ async fn execute_logical_plan(
                     ),
                 );
                 Box::pin(async {
-                    let results = datafusion::physical_plan::collect(plan.clone(), task_ctx)
-                        .await
-                        .map_err(|e| SqlExecutionError::DataFusion(e.to_string()))?;
+                    let results =
+                        datafusion::physical_plan::collect(plan.clone(), task_ctx).await?;
 
                     set_attribute_on_active_span(
                         tracing_util::AttributeVisibility::Default,
