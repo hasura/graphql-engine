@@ -31,21 +31,6 @@
           }
         },
         {
-          "kind": "Relationship",
-          "version": "v1",
-          "definition": {
-            "name": "MyRelationship",
-            "sourceType": "RowType",
-            "target": {
-              "model": {
-                "name": "Foo",
-                "relationshipType": "Object"
-              }
-            },
-            "mapping": []
-          }
-        },
-        {
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
@@ -63,8 +48,7 @@
                 ],
                 "orderableRelationships": [
                   {
-                    "relationshipName": "MyRelationship",
-                    "orderByExpression": "Foo"
+                    "relationshipName": "NonExistentRelationship"
                   }
                 ]
               }

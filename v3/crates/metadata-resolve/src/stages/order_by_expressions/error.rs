@@ -15,6 +15,13 @@ pub enum OrderByExpressionError {
     UnknownOrderableType {
         data_type: Qualified<CustomTypeName>,
     },
+    #[error(
+        "The relationship {relationship_name} on object type {object_type_name} could not be found"
+    )]
+    UnknownRelationship {
+        relationship_name: RelationshipName,
+        object_type_name: Qualified<CustomTypeName>,
+    },
     #[error("Invalid orderable field {field_name}. Exactly one of `enable_order_by_directions` or `order_by_expression_name` must be specified.")]
     InvalidOrderByExpressionOrderableField { field_name: FieldName },
     #[error("The order by expression {order_by_expression_name} referenced in field {field_name} has not been defined")]

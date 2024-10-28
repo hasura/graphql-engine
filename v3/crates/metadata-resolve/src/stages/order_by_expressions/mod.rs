@@ -14,13 +14,14 @@ pub use error::OrderByExpressionError;
 mod types;
 pub use types::*;
 
-use super::{object_types, type_permissions};
+use crate::stages::{object_types, relationships, type_permissions};
 
 /// Resolve order by expressions.
 /// Returns the map of OrderByExpressions and updated graphql_types.
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     object_types: &type_permissions::ObjectTypesWithPermissions,
+    relationships: &relationships::Relationships,
     mut graphql_types: BTreeSet<ast::TypeName>,
 ) -> Result<OrderByExpressionsOutput, Error> {
     let mut resolved_order_by_expressions = OrderByExpressions {
@@ -54,6 +55,7 @@ pub fn resolve(
             object_operand,
             &order_by_expression.graphql,
             &order_by_expression.description,
+            relationships,
             &mut graphql_types,
         )
         .map_err(|error| Error::OrderByExpressionError {
@@ -87,6 +89,7 @@ fn resolve_object_order_by_expression(
         order_by_expression::OrderByExpressionGraphQlConfiguration,
     >,
     description: &Option<String>,
+    relationships: &relationships::Relationships,
     graphql_types: &mut BTreeSet<ast::TypeName>,
 ) -> Result<ObjectOrderByExpression, OrderByExpressionError> {
     let identifier = Qualified::new(
@@ -103,15 +106,21 @@ fn resolve_object_order_by_expression(
         &object_operand.orderable_fields,
     )?;
 
-    let orderable_relationships = OrderableRelationships::ModelV2(
-        object_operand
-            .orderable_relationships
-            .iter()
-            .map(|o| {
-                resolve_orderable_relationship(subgraph, order_by_expression_names_and_types, o)
-            })
-            .collect::<Result<_, _>>()?,
-    );
+    let mut orderable_relationships = BTreeMap::new();
+    for orderable_relationship in &object_operand.orderable_relationships {
+        if let Some((_, resolved_orderable_relationship)) = resolve_orderable_relationship(
+            subgraph,
+            &ordered_type,
+            order_by_expression_names_and_types,
+            orderable_relationship,
+            relationships,
+        )? {
+            orderable_relationships.insert(
+                orderable_relationship.relationship_name.clone(),
+                resolved_orderable_relationship,
+            );
+        }
+    }
 
     let graphql = order_by_expression_graphql
         .as_ref()
@@ -129,7 +138,7 @@ fn resolve_object_order_by_expression(
         identifier,
         ordered_type,
         orderable_fields,
-        orderable_relationships,
+        orderable_relationships: OrderableRelationships::ModelV2(orderable_relationships),
         graphql,
         description: description.clone(),
     })
@@ -238,34 +247,53 @@ fn resolve_orderable_field(
 /// Does _not_ check that the relationship itself exists as we have not yet resolved relationships.
 fn resolve_orderable_relationship(
     subgraph: &SubgraphName,
+    ordered_type: &Qualified<CustomTypeName>,
     order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, CustomTypeName>,
     orderable_relationship: &order_by_expression::OrderByExpressionOrderableRelationship,
-) -> Result<(RelationshipName, OrderableRelationship), OrderByExpressionError> {
-    let resolved_orderable_relationship = match orderable_relationship.order_by_expression.as_ref()
-    {
-        None => Ok(OrderableRelationship {
-            order_by_expression: None,
-        }),
-        Some(order_by_expression_name) => {
-            if order_by_expression_names_and_types.contains_key(order_by_expression_name) {
-                Ok(OrderableRelationship {
-                    order_by_expression: Some(Qualified::new(
-                        subgraph.clone(),
-                        order_by_expression_name.clone(),
-                    )),
-                })
-            } else {
-                Err(
+    relationships: &relationships::Relationships,
+) -> Result<Option<(RelationshipName, OrderableRelationship)>, OrderByExpressionError> {
+    // does the relationship exist?
+    let relationship = relationships
+        .get(ordered_type, &orderable_relationship.relationship_name)
+        .map_err(|_| OrderByExpressionError::UnknownRelationship {
+            relationship_name: orderable_relationship.relationship_name.clone(),
+            object_type_name: ordered_type.clone(),
+        })?;
+
+    // if the relationship is to unknown subgraph, drop this `orderable_relationship` (this will
+    // only happen in partial supergraph resolve mode)
+    match relationship {
+        relationships::Relationship::RelationshipToUnknownSubgraph => Ok(None),
+        relationships::Relationship::Relationship(_) => {
+            let resolved_orderable_relationship = match orderable_relationship
+                .order_by_expression
+                .as_ref()
+            {
+                None => Ok(OrderableRelationship {
+                    order_by_expression: None,
+                }),
+                Some(order_by_expression_name) => {
+                    if order_by_expression_names_and_types.contains_key(order_by_expression_name) {
+                        Ok(OrderableRelationship {
+                            order_by_expression: Some(Qualified::new(
+                                subgraph.clone(),
+                                order_by_expression_name.clone(),
+                            )),
+                        })
+                    } else {
+                        Err(
                     OrderByExpressionError::UnknownOrderByExpressionNameInOrderableRelationship {
                         order_by_expression_name: order_by_expression_name.clone(),
                         relationship_name: orderable_relationship.relationship_name.clone(),
                     },
                 )
-            }
+                    }
+                }
+            }?;
+            Ok(Some((
+                orderable_relationship.relationship_name.clone(),
+                resolved_orderable_relationship,
+            )))
         }
-    }?;
-    Ok((
-        orderable_relationship.relationship_name.clone(),
-        resolved_orderable_relationship,
-    ))
+    }
 }
