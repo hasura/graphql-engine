@@ -15,6 +15,7 @@ use crate::protocol::types as protocol;
 /// Context required to handle a WebSocket connection
 #[derive(Clone)] // Cheap to clone as heavy fields are wrapped in `Arc`
 pub struct Context {
+    pub connection_expiry: ConnectionExpiry,
     pub http_context: HttpContext,
     pub expose_internal_errors: ExposeInternalErrors,
     pub project_id: Option<ProjectId>,
@@ -38,6 +39,13 @@ impl Default for WebSocketId {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Configures the expiry for a WebSocket connection
+#[derive(Clone)]
+pub enum ConnectionExpiry {
+    Never,
+    After(std::time::Duration),
 }
 
 /// A mutable and free clone-able collection of WebSocket connections.
@@ -212,6 +220,13 @@ impl Message {
     /// Force re-connect with a message
     pub fn force_reconnect(message: &'static str) -> Self {
         Self::close_message(1012, message)
+    }
+
+    /// Connection expired
+    pub fn conn_expired() -> Self {
+        // THe 1013 code is used to indicate "Try Again Later".
+        // The session is expired and the client should try to reconnect.
+        Self::close_message(1013, "WebSocket session expired")
     }
 }
 

@@ -71,6 +71,12 @@ async fn wait_for_initialization(connection: types::Connection) {
     }
 }
 
+/// Waits until the connection expires and sends a close message.
+pub(crate) async fn wait_until_expiry(connection: types::Connection, expiry: std::time::Duration) {
+    tokio::time::sleep(expiry).await;
+    connection.send(types::Message::conn_expired()).await;
+}
+
 /// Handles incoming WebSocket messages from the client.
 /// This task runs indefinitely until the connection is closed or an error occurs.
 pub(crate) async fn process_incoming_message(

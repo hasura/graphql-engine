@@ -45,6 +45,13 @@ pub(crate) async fn ws_handler(
 
 #[allow(dead_code)]
 pub(crate) async fn start_websocket_server() -> TestServer {
+    start_websocket_server_expiry(graphql_ws::ConnectionExpiry::Never).await
+}
+
+#[allow(dead_code)]
+pub(crate) async fn start_websocket_server_expiry(
+    expiry: graphql_ws::ConnectionExpiry,
+) -> TestServer {
     // Create a TCP listener
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
@@ -79,6 +86,7 @@ pub(crate) async fn start_websocket_server() -> TestServer {
         pre_response_plugins: Vec::new(),
     };
     let context = Context {
+        connection_expiry: expiry,
         http_context,
         expose_internal_errors: execute::ExposeInternalErrors::Expose,
         project_id: None,

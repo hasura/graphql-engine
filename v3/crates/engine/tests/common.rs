@@ -727,6 +727,7 @@ async fn run_query_graphql_ws(
     });
 
     let context = graphql_ws::Context {
+        connection_expiry: graphql_ws::ConnectionExpiry::Never,
         http_context: http_context.clone(),
         expose_internal_errors,
         project_id: project_id.cloned(),

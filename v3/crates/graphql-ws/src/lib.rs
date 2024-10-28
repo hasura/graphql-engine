@@ -4,7 +4,7 @@ pub(crate) mod websocket;
 
 pub use protocol::types::OperationId;
 pub use websocket::{
-    types::{ActiveConnection, Context, WebSocketId},
+    types::{ActiveConnection, ConnectionExpiry, Context, WebSocketId},
     WebSocketServer,
 };
 

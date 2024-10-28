@@ -178,6 +178,7 @@ async fn start_websocket_session(
             parent_span_link,
             || {
                 Box::pin(async {
+                    let connection_expiry = context.connection_expiry.clone();
                     // Split the socket into a sender and receiver
                     let (websocket_sender, websocket_receiver) = socket.split();
 
@@ -191,6 +192,19 @@ async fn start_websocket_session(
                         .await;
 
                     let this_span_link = tracing_util::SpanLink::from_current_span();
+
+                    let expiry_task = match connection_expiry {
+                        types::ConnectionExpiry::Never => None,
+                        types::ConnectionExpiry::After(duration) => {
+                            // Spawn a task to wait until the connection expires
+                            // The task will send a close message to the client after the expiry duration.
+                            // Sending a close message will make the outgoing task exit, thus closing the connection.
+                            let connection = connection.clone();
+                            Some(tokio::spawn(async move {
+                                tasks::wait_until_expiry(connection, duration).await;
+                            }))
+                        }
+                    };
 
                     // Spawn a task to verify the graphql-ws connection_init state with a timeout
                     let init_checker_task = tokio::spawn(tasks::verify_connection_init(
@@ -246,6 +260,10 @@ async fn start_websocket_session(
                         }
                     };
 
+                    // Abort the expiry task
+                    if let Some(task) = expiry_task {
+                        task.abort();
+                    }
                     // Remove the connection from the active connections map
                     connections.drop(&connection.id).await;
 

@@ -384,3 +384,29 @@ async fn test_graphql_ws_subscribe_user_1_validation_error() {
     assert_zero_connections_timeout(connections).await;
     server_handle.abort();
 }
+
+#[tokio::test]
+async fn test_graphql_ws_connection_expiry() {
+    // Expiry in 4 seconds
+    let expiry = graphql_ws::ConnectionExpiry::After(std::time::Duration::from_secs(4));
+    let TestServer {
+        connections,
+        mut socket,
+        server_handle,
+    } = start_websocket_server_expiry(expiry).await;
+    // Send connection_init and check ack
+    graphql_ws_connection_init(&mut socket, connection_init_admin()).await;
+    // Wait for the connection to expire
+    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    // Wait for a close message
+    let message = expect_close_message(&mut socket).await;
+    // Check close code
+    let close_code = tungstenite::protocol::frame::coding::CloseCode::Again;
+    if let tungstenite::Message::Close(Some(close_frame)) = message {
+        assert_eq!(close_frame.code, close_code);
+        assert_eq!(close_frame.reason, "WebSocket session expired");
+    }
+    // Assert zero connections
+    assert_zero_connections_timeout(connections).await;
+    server_handle.abort();
+}

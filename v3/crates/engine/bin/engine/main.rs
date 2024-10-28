@@ -801,6 +801,7 @@ async fn handle_websocket_request(
 ) -> impl IntoResponse {
     // Create the context for the websocket server
     let context = graphql_ws::Context {
+        connection_expiry: graphql_ws::ConnectionExpiry::Never,
         http_context: engine_state.http_context,
         project_id: None, // project_id is not needed for OSS v3-engine.
         expose_internal_errors: engine_state.expose_internal_errors,
