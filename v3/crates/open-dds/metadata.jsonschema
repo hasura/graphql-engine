@@ -2470,6 +2470,101 @@
       },
       "additionalProperties": false
     },
+    "ModelGraphQlDefinitionV2": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ModelGraphQlDefinitionV2",
+      "title": "ModelGraphQlDefinitionV2",
+      "description": "The definition of how a model appears in the GraphQL API. Note: ModelGraphQlDefinitionV2 removed the `order_by_expression_type` property. See rfcs/open-dd-expression-type-changes.md.",
+      "examples": [
+        {
+          "selectUniques": [
+            {
+              "queryRootField": "ArticleByID",
+              "uniqueIdentifier": [
+                "article_id"
+              ],
+              "description": "Description for the select unique ArticleByID"
+            }
+          ],
+          "selectMany": {
+            "queryRootField": "ArticleMany",
+            "description": "Description for the select many ArticleMany"
+          },
+          "aggregate": {
+            "queryRootField": "ArticleAggregate",
+            "description": "Aggregate over Articles"
+          }
+        }
+      ],
+      "type": "object",
+      "required": [
+        "selectUniques"
+      ],
+      "properties": {
+        "selectUniques": {
+          "description": "For each select unique defined here, a query root field is added to the GraphQL API that can be used to select a unique object from the model.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SelectUniqueGraphQlDefinition"
+          }
+        },
+        "selectMany": {
+          "description": "Select many configuration for a model adds a query root field to the GraphQl API that can be used to retrieve multiple objects from the model.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SelectManyGraphQlDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "argumentsInputType": {
+          "description": "The type name of the input type used to hold the arguments of the model.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GraphQlTypeName"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "apolloFederation": {
+          "description": "Apollo Federation configuration",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ModelApolloFederationConfiguration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filterInputTypeName": {
+          "description": "The type name of the input type used to hold the filtering settings used by aggregates (etc) to filter their input before processing",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GraphQlTypeName"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aggregate": {
+          "description": "Configures the query root field added to the GraphQL API that can be used to aggregate over the model",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ModelAggregateGraphQlDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "ModelName": {
       "$id": "https://hasura.io/jsonschemas/metadata/ModelName",
       "title": "ModelName",
@@ -2912,6 +3007,110 @@
           "anyOf": [
             {
               "$ref": "#/definitions/ModelGraphQlDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "description": "The description of the model. Gets added to the description of the model in the graphql schema.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ModelV2": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ModelV2",
+      "title": "ModelV2",
+      "description": "The definition of a data model. A data model is a collection of objects of a particular type. Models can support one or more CRUD operations. ModelV2 implements the changes described in rfcs/open-dd-expression-type-changes.md.",
+      "type": "object",
+      "required": [
+        "name",
+        "objectType"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name of the data model.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ModelName"
+            }
+          ]
+        },
+        "objectType": {
+          "description": "The type of the objects of which this model is a collection.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            }
+          ]
+        },
+        "globalIdSource": {
+          "description": "Whether this model should be used as the global ID source for all objects of its type.",
+          "default": false,
+          "type": "boolean"
+        },
+        "arguments": {
+          "description": "A list of arguments accepted by this model. Defaults to no arguments.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArgumentDefinition"
+          }
+        },
+        "source": {
+          "description": "The source configuration for this model.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ModelSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filterExpressionType": {
+          "description": "The boolean expression type that should be used to perform filtering on this model.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "orderByExpression": {
+          "description": "The order by expression to use for this model.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OrderByExpressionName"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aggregateExpression": {
+          "description": "The name of the AggregateExpression that defines how to aggregate over this model",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/AggregateExpressionName"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "graphql": {
+          "description": "Configuration for how this model should appear in the GraphQL schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ModelGraphQlDefinitionV2"
             },
             {
               "type": "null"
@@ -3862,6 +4061,96 @@
           ]
         },
         {
+          "$id": "https://hasura.io/jsonschemas/metadata/OrderByExpression",
+          "title": "OrderByExpression",
+          "description": "Definition of an order by expression on an OpenDD type.",
+          "examples": [
+            {
+              "kind": "OrderByExpression",
+              "version": "v1",
+              "definition": {
+                "name": "Album_order_by_exp",
+                "operand": {
+                  "object": {
+                    "orderedType": "Album",
+                    "orderableFields": [
+                      {
+                        "fieldName": "AlbumId",
+                        "orderByExpression": "Int_order_by_exp"
+                      },
+                      {
+                        "fieldName": "ArtistId",
+                        "orderByExpression": "Int_order_by_exp"
+                      },
+                      {
+                        "fieldName": "Address",
+                        "orderByExpression": "Address_order_by_default_exp"
+                      }
+                    ],
+                    "orderableRelationships": [
+                      {
+                        "relationshipName": "artist",
+                        "orderByExpression": "Artist_order_by_default_exp"
+                      }
+                    ]
+                  }
+                },
+                "graphql": {
+                  "expressionTypeName": "App_Album_order_by_exp"
+                },
+                "description": "Order by expression for Albums"
+              }
+            },
+            {
+              "kind": "OrderByExpression",
+              "version": "v1",
+              "definition": {
+                "name": "Int_order_by_exp",
+                "operand": {
+                  "scalar": {
+                    "orderedType": "Int",
+                    "enableOrderByDirections": {
+                      "enableAll": true
+                    }
+                  }
+                },
+                "graphql": {
+                  "expressionTypeName": "App_Int_order_by_exp"
+                },
+                "description": "Order by expression for Int"
+              }
+            }
+          ],
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "OrderByExpression"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v1"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/OrderByExpressionV1"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
           "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorScalarRepresentation",
           "title": "DataConnectorScalarRepresentation",
           "description": "The representation of a data connector scalar in terms of Open DD types",
@@ -4036,6 +4325,32 @@
                 },
                 "definition": {
                   "$ref": "#/definitions/ModelV1"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "Model"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v2"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/ModelV2"
                 }
               },
               "additionalProperties": false
@@ -4582,6 +4897,230 @@
         },
         "typeName": {
           "$ref": "#/definitions/GraphQlTypeName"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByExpressionGraphQlConfiguration": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByExpressionGraphQlConfiguration",
+      "title": "OrderByExpressionGraphQlConfiguration",
+      "description": "GraphQL configuration settings for a type representing an order by expression on an OpenDD type.",
+      "type": "object",
+      "required": [
+        "expressionTypeName"
+      ],
+      "properties": {
+        "expressionTypeName": {
+          "$ref": "#/definitions/GraphQlTypeName"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByExpressionName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByExpressionName",
+      "title": "OrderByExpressionName",
+      "description": "The name of an order by expression.",
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+    },
+    "OrderByExpressionObjectOperand": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByExpressionObjectOperand",
+      "title": "OrderByExpressionObjectOperand",
+      "description": "Definition of an type representing an order by expression on an OpenDD object type.",
+      "type": "object",
+      "required": [
+        "orderableFields",
+        "orderableRelationships",
+        "orderedType"
+      ],
+      "properties": {
+        "orderedType": {
+          "description": "The type that this expression applies to.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            }
+          ]
+        },
+        "orderableFields": {
+          "description": "Orderable fields of the `orderedType`",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderByExpressionOrderableField"
+          }
+        },
+        "orderableRelationships": {
+          "description": "Orderable relationships",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderByExpressionOrderableRelationship"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByExpressionOperand": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByExpressionOperand",
+      "title": "OrderByExpressionOperand",
+      "description": "Configuration for object or scalar order by expression",
+      "oneOf": [
+        {
+          "title": "Object",
+          "description": "Definition of an order by expression on an OpenDD object type",
+          "type": "object",
+          "required": [
+            "object"
+          ],
+          "properties": {
+            "object": {
+              "$ref": "#/definitions/OrderByExpressionObjectOperand"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "Scalar",
+          "description": "Definition of an order by expression on an OpenDD scalar type",
+          "type": "object",
+          "required": [
+            "scalar"
+          ],
+          "properties": {
+            "scalar": {
+              "$ref": "#/definitions/OrderByExpressionScalarOperand"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "OrderByExpressionOrderableField": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByExpressionOrderableField",
+      "title": "OrderByExpressionOrderableField",
+      "description": "Definition of a field in a type representing an order by expression on an OpenDD type.",
+      "type": "object",
+      "required": [
+        "fieldName",
+        "orderByExpression"
+      ],
+      "properties": {
+        "fieldName": {
+          "$ref": "#/definitions/FieldName"
+        },
+        "orderByExpression": {
+          "description": "OrderByExpression to use for this field.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OrderByExpressionName"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByExpressionOrderableRelationship": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByExpressionOrderableRelationship",
+      "title": "OrderByExpressionOrderableRelationship",
+      "description": "Definition of a relationship in a type representing an order by expression on an OpenDD type.",
+      "type": "object",
+      "required": [
+        "relationshipName"
+      ],
+      "properties": {
+        "relationshipName": {
+          "description": "The name of the relationship.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RelationshipName"
+            }
+          ]
+        },
+        "orderByExpression": {
+          "description": "The OrderByExpression to use for this relationship. This is optional for model relationships. If not specified we use the model's OrderByExpression configuration. For local command relationships this is required.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OrderByExpressionName"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByExpressionScalarOperand": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByExpressionScalarOperand",
+      "title": "OrderByExpressionScalarOperand",
+      "description": "Definition of a type representing an order by expression on an OpenDD scalar type.",
+      "type": "object",
+      "required": [
+        "enableOrderByDirections",
+        "orderedType"
+      ],
+      "properties": {
+        "orderedType": {
+          "description": "The type that this expression applies to.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/TypeName"
+            }
+          ]
+        },
+        "enableOrderByDirections": {
+          "description": "Order by directions supported by this scalar type.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/EnableAllOrSpecific_for_OrderByDirection"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByExpressionV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByExpressionV1",
+      "title": "OrderByExpressionV1",
+      "description": "Definition of a type representing an order by expression on an OpenDD type.",
+      "type": "object",
+      "required": [
+        "name",
+        "operand"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name used to refer to this expression. This name is unique only in the context of the `orderedType`",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OrderByExpressionName"
+            }
+          ]
+        },
+        "operand": {
+          "description": "The type that this expression applies to.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OrderByExpressionOperand"
+            }
+          ]
+        },
+        "graphql": {
+          "description": "Configuration for how this order by expression should appear in the GraphQL schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OrderByExpressionGraphQlConfiguration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "description": "The description of the order by expression.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false

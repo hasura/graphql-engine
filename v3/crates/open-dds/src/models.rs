@@ -27,7 +27,6 @@ str_newtype!(ModelName over Identifier | doc "The name of data model.");
 )]
 pub enum Model {
     V1(ModelV1),
-    #[opendd(hidden = true)]
     V2(ModelV2),
 }
 

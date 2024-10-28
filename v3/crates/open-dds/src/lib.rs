@@ -99,7 +99,6 @@ pub enum OpenDdSubgraphObject {
     BooleanExpressionType(boolean_expression::BooleanExpressionType),
 
     // OrderBy Expressions
-    #[opendd(hidden = true)]
     OrderByExpression(order_by_expression::OrderByExpression),
 
     // Data Connector Scalar Representation

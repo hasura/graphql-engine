@@ -14,14 +14,18 @@ use crate::{
 #[serde(rename_all = "camelCase")]
 #[opendd(
     as_versioned_with_definition,
-    json_schema(title = "OrderByExpression", example = "OrderByExpression::example")
+    json_schema(
+        title = "OrderByExpression",
+        example = "OrderByExpression::object_example",
+        example = "OrderByExpression::scalar_example",
+    )
 )]
 pub enum OrderByExpression {
     V1(OrderByExpressionV1),
 }
 
 impl OrderByExpression {
-    fn example() -> serde_json::Value {
+    fn object_example() -> serde_json::Value {
         serde_json::json!(
           {
             "kind": "OrderByExpression",
@@ -34,16 +38,11 @@ impl OrderByExpression {
                   "orderableFields": [
                     {
                       "fieldName": "AlbumId",
-                      "enableOrderByDirections": [
-                        "Asc",
-                        "Desc"
-                      ]
+                      "orderByExpression": "Int_order_by_exp"
                     },
                     {
                       "fieldName": "ArtistId",
-                      "enableOrderByDirections": [
-                        "Asc"
-                      ]
+                      "orderByExpression": "Int_order_by_exp"
                     },
                     {
                       "fieldName": "Address",
@@ -67,6 +66,30 @@ impl OrderByExpression {
         )
     }
 
+    fn scalar_example() -> serde_json::Value {
+        serde_json::json!(
+          {
+            "kind": "OrderByExpression",
+            "version": "v1",
+            "definition": {
+              "name": "Int_order_by_exp",
+              "operand": {
+                "scalar": {
+                  "orderedType": "Int",
+                  "enableOrderByDirections": {
+                      "enableAll": true
+                  }
+                }
+              },
+              "graphql": {
+                "expressionTypeName": "App_Int_order_by_exp"
+              },
+              "description": "Order by expression for Int"
+            }
+          }
+        )
+    }
+
     pub fn upgrade(self) -> OrderByExpressionV1 {
         match self {
             OrderByExpression::V1(v1) => v1,
@@ -79,6 +102,7 @@ str_newtype!(OrderByExpressionName over Identifier | doc "The name of an order b
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "OrderByExpressionV1",))]
+/// Definition of a type representing an order by expression on an OpenDD type.
 pub struct OrderByExpressionV1 {
     /// The name used to refer to this expression.
     /// This name is unique only in the context of the `orderedType`
@@ -137,6 +161,7 @@ pub struct OrderByExpressionScalarOperand {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "OrderByExpressionOrderableField",))]
+/// Definition of a field in a type representing an order by expression on an OpenDD type.
 pub struct OrderByExpressionOrderableField {
     pub field_name: FieldName,
 
@@ -147,6 +172,7 @@ pub struct OrderByExpressionOrderableField {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "OrderByExpressionOrderableRelationship",))]
+/// Definition of a relationship in a type representing an order by expression on an OpenDD type.
 pub struct OrderByExpressionOrderableRelationship {
     /// The name of the relationship.
     pub relationship_name: RelationshipName,
@@ -161,6 +187,7 @@ pub struct OrderByExpressionOrderableRelationship {
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "OrderByExpressionGraphQlConfiguration",))]
+/// GraphQL configuration settings for a type representing an order by expression on an OpenDD type.
 pub struct OrderByExpressionGraphQlConfiguration {
     pub expression_type_name: GraphQlTypeName,
 }
