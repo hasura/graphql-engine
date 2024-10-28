@@ -598,9 +598,23 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "collection_with_args",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "test",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                     },
@@ -619,6 +633,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                     ),
                 },
             },
+            scalars: {},
         },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {

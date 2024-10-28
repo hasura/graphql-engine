@@ -18,6 +18,7 @@ input_file: crates/metadata-resolve/tests/passing/data_connector_link/invalid_nd
         },
         order_by_expressions: OrderByExpressions {
             objects: {},
+            scalars: {},
         },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {

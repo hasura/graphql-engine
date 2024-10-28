@@ -1471,9 +1471,23 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "subgraphs",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Albums",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "AlbumId",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -1482,9 +1496,23 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "subgraphs",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Albums",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "ArtistId",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -1493,9 +1521,23 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "subgraphs",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Albums",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "Title",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                     },
@@ -1506,6 +1548,7 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                     ),
                 },
             },
+            scalars: {},
         },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {

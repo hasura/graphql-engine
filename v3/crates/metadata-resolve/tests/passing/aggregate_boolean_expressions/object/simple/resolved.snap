@@ -1531,9 +1531,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Albums",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "album_id",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -1542,9 +1556,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Albums",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "artist_id",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -1553,9 +1581,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Albums",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "title",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                     },
@@ -1606,9 +1648,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Artists",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "artist_id",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                         FieldName(
@@ -1617,9 +1673,23 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "Artists",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "name",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                     },
@@ -1630,6 +1700,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                     ),
                 },
             },
+            scalars: {},
         },
         aggregate_expressions: {
             Qualified {

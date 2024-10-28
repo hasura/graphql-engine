@@ -34,6 +34,21 @@
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
             "name": "MyOrderByExpression",
             "operand": {
               "object": {
@@ -41,9 +56,7 @@
                 "orderableFields": [
                   {
                     "fieldName": "test",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   }
                 ],
                 "orderableRelationships": []

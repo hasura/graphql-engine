@@ -1,20 +1,16 @@
 use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
-use open_dds::order_by_expression::{
-    OrderByExpressionName, OrderByExpressionOperand, OrderByExpressionOrderableField,
-};
 use std::sync::Arc;
 pub use types::{Model, ModelRaw, ModelSource, ModelsIssue, ModelsOutput, NDCFieldSourceMapping};
 mod aggregation;
 mod error;
 mod helpers;
+mod order_by;
 mod source;
 mod types;
 pub use error::ModelsError;
 
 pub use crate::helpers::argument::get_argument_kind;
-use crate::helpers::types::store_new_graphql_type;
-use crate::mk_name;
 pub use aggregation::resolve_aggregate_expression;
 pub use helpers::get_ndc_column_for_comparison;
 
@@ -33,10 +29,7 @@ use open_dds::{
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::order_by_expressions::{
-    resolve_orderable_fields, OrderByExpressionGraphqlConfig, OrderByExpressionIdentifier,
-    OrderByExpressions, OrderableRelationships,
-};
+use super::order_by_expressions::{OrderByExpressionIdentifier, OrderByExpressions};
 
 /// resolve models and their sources
 /// we check aggregations, filtering and graphql in the next stage (`models_graphql`)
@@ -72,17 +65,6 @@ pub fn resolve(
     let mut global_id_models = BTreeMap::new();
     let mut issues = vec![];
 
-    let order_by_expression_names_and_types: BTreeMap<OrderByExpressionName, CustomTypeName> =
-        metadata_accessor
-            .order_by_expressions
-            .iter()
-            .map(|o| match &o.object.operand {
-                OrderByExpressionOperand::Object(object_operand) => {
-                    (o.object.name.clone(), object_operand.ordered_type.clone())
-                }
-            })
-            .collect();
-
     for open_dds::accessor::QualifiedObject {
         path,
         subgraph,
@@ -97,7 +79,6 @@ pub fn resolve(
             object_types,
             object_boolean_expression_types,
             boolean_expression_types,
-            &order_by_expression_names_and_types,
             &mut global_id_enabled_types,
             &mut apollo_federation_entity_enabled_types,
             &mut order_by_expressions,
@@ -183,7 +164,6 @@ fn resolve_model(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
-    order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, CustomTypeName>,
     global_id_enabled_types: &mut BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &mut BTreeMap<
         Qualified<CustomTypeName>,
@@ -334,11 +314,10 @@ fn resolve_model(
     };
 
     let order_by_expression = match model {
-        open_dds::models::Model::V1(model_v1) => Ok(Some(make_order_by_expression(
+        open_dds::models::Model::V1(model_v1) => Ok(Some(order_by::make_order_by_expression(
             model_v1,
-            order_by_expression_names_and_types,
+            object_type_representation,
             subgraph,
-            object_types,
             graphql_types,
             &qualified_model_name,
             order_by_expressions,
@@ -398,70 +377,4 @@ fn resolve_model(
         apollo_federation_key_source,
         raw: model_raw,
     })
-}
-
-fn make_order_by_expression(
-    model_v1: &open_dds::models::ModelV1,
-    order_by_expression_names_and_types: &BTreeMap<OrderByExpressionName, CustomTypeName>,
-    subgraph: &SubgraphName,
-    object_types: &type_permissions::ObjectTypesWithPermissions,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
-    qualified_model_name: &Qualified<ModelName>,
-    order_by_expressions: &mut OrderByExpressions,
-) -> Result<Qualified<OrderByExpressionIdentifier>, ModelsError> {
-    let identifier = Qualified::new(
-        subgraph.clone(),
-        OrderByExpressionIdentifier::FromModel(model_v1.name.clone()),
-    );
-    let ordered_type = Qualified::new(subgraph.clone(), model_v1.object_type.clone());
-    let open_dds_orderable_fields = model_v1
-        .orderable_fields
-        .iter()
-        .map(|orderable_field| OrderByExpressionOrderableField {
-            field_name: orderable_field.field_name.clone(),
-            enable_order_by_directions: Some(orderable_field.order_by_directions.clone()),
-            order_by_expression: None,
-        })
-        .collect::<Vec<_>>();
-    let orderable_fields = resolve_orderable_fields(
-        subgraph,
-        object_types,
-        &ordered_type,
-        order_by_expression_names_and_types,
-        &open_dds_orderable_fields,
-    )
-    .map_err(|error| ModelsError::ModelV1OrderableFieldsError {
-        model_name: qualified_model_name.clone(),
-        error,
-    })?;
-    let graphql = model_v1
-        .graphql
-        .as_ref()
-        .and_then(|g| {
-            g.order_by_expression_type.as_ref().map(|type_name| {
-                let expression_type_name = mk_name(type_name.as_str()).map(ast::TypeName)?;
-                store_new_graphql_type(graphql_types, Some(&expression_type_name))?;
-                Ok::<_, ModelsError>(OrderByExpressionGraphqlConfig {
-                    expression_type_name,
-                })
-            })
-        })
-        .transpose()?;
-
-    let object_order_by_expression = order_by_expressions::ObjectOrderByExpression {
-        identifier: identifier.clone(),
-        ordered_type,
-        orderable_fields,
-        orderable_relationships: OrderableRelationships::ModelV1AllowAll,
-        graphql,
-        description: Some(format!(
-            "OrderByExpression for Model {qualified_model_name}"
-        )),
-    };
-
-    order_by_expressions
-        .objects
-        .insert(identifier.clone(), object_order_by_expression);
-
-    Ok(identifier)
 }

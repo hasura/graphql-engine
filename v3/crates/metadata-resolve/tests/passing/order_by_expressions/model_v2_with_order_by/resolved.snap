@@ -130,7 +130,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                                 "objects",
                             ),
                             Index(
-                                2,
+                                3,
                             ),
                         ],
                     ),
@@ -458,9 +458,18 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromOrderByExpression(
+                                        OrderByExpressionName(
+                                            Identifier(
+                                                "StringOrderByExpression",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                     },
@@ -479,6 +488,38 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
                     description: Some(
                         "Order by expression for mycollection RowType",
                     ),
+                },
+            },
+            scalars: {
+                Qualified {
+                    subgraph: SubgraphName(
+                        "default",
+                    ),
+                    name: FromOrderByExpression(
+                        OrderByExpressionName(
+                            Identifier(
+                                "StringOrderByExpression",
+                            ),
+                        ),
+                    ),
+                }: ScalarOrderByExpression {
+                    identifier: Qualified {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        name: FromOrderByExpression(
+                            OrderByExpressionName(
+                                Identifier(
+                                    "StringOrderByExpression",
+                                ),
+                            ),
+                        ),
+                    },
+                    enable_order_by_directions: EnableAll(
+                        true,
+                    ),
+                    graphql: None,
+                    description: None,
                 },
             },
         },

@@ -313,6 +313,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
         },
         order_by_expressions: OrderByExpressions {
             objects: {},
+            scalars: {},
         },
         aggregate_expressions: {
             Qualified {

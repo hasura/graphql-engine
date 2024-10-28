@@ -18,6 +18,7 @@ input_file: crates/metadata-resolve/tests/passing/supergraph/config_object_in_su
         },
         order_by_expressions: OrderByExpressions {
             objects: {},
+            scalars: {},
         },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {

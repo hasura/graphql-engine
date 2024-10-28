@@ -83,21 +83,15 @@
                 "orderableFields": [
                   {
                     "fieldName": "author_id",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "IntOrderByExpression"
                   },
                   {
                     "fieldName": "first_name",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   },
                   {
                     "fieldName": "last_name",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   }
                 ],
                 "orderableRelationships": []
@@ -264,6 +258,36 @@
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "IntOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "Int",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
             "name": "ArticleOrderByExpression",
             "operand": {
               "object": {
@@ -271,21 +295,15 @@
                 "orderableFields": [
                   {
                     "fieldName": "article_id",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "IntOrderByExpression"
                   },
                   {
                     "fieldName": "title",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   },
                   {
                     "fieldName": "author_id",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "IntOrderByExpression"
                   }
                 ],
                 "orderableRelationships": []

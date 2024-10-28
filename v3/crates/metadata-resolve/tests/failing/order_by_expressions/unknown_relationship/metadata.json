@@ -38,14 +38,7 @@
             "operand": {
               "object": {
                 "orderedType": "RowType",
-                "orderableFields": [
-                  {
-                    "fieldName": "test",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
-                  }
-                ],
+                "orderableFields": [],
                 "orderableRelationships": [
                   {
                     "relationshipName": "NonExistentRelationship"

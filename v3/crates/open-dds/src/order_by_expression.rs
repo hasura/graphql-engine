@@ -5,7 +5,7 @@ use crate::{
     models::{EnableAllOrSpecific, OrderByDirection},
     relationships::RelationshipName,
     str_newtype,
-    types::{CustomTypeName, FieldName, GraphQlTypeName},
+    types::{CustomTypeName, FieldName, GraphQlTypeName, TypeName},
 };
 
 /// Definition of an order by expression on an OpenDD type.
@@ -102,9 +102,12 @@ pub enum OrderByExpressionOperand {
     /// Definition of an order by expression on an OpenDD object type
     #[opendd(json_schema(title = "Object"))]
     Object(OrderByExpressionObjectOperand),
+    /// Definition of an order by expression on an OpenDD scalar type
+    #[opendd(json_schema(title = "Scalar"))]
+    Scalar(OrderByExpressionScalarOperand),
 }
 
-/// Definition of an object type representing an order by expression on an OpenDD object type.
+/// Definition of an type representing an order by expression on an OpenDD object type.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[opendd(json_schema(title = "OrderByExpressionObjectOperand"))]
@@ -119,19 +122,26 @@ pub struct OrderByExpressionObjectOperand {
     pub orderable_relationships: Vec<OrderByExpressionOrderableRelationship>,
 }
 
+/// Definition of a type representing an order by expression on an OpenDD scalar type.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[opendd(json_schema(title = "OrderByExpressionScalarOperand"))]
+pub struct OrderByExpressionScalarOperand {
+    /// The type that this expression applies to.
+    pub ordered_type: TypeName,
+
+    /// Order by directions supported by this scalar type.
+    pub enable_order_by_directions: EnableAllOrSpecific<OrderByDirection>,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "OrderByExpressionOrderableField",))]
 pub struct OrderByExpressionOrderableField {
     pub field_name: FieldName,
 
-    /// Order by directions supported by this field.
-    /// Only applicable if the field has a scalar type.
-    pub enable_order_by_directions: Option<EnableAllOrSpecific<OrderByDirection>>,
-
     /// OrderByExpression to use for this field.
-    /// Only applicable if the field has an object type.
-    pub order_by_expression: Option<OrderByExpressionName>,
+    pub order_by_expression: OrderByExpressionName,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]

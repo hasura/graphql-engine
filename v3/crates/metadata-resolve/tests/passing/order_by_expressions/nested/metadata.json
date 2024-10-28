@@ -83,6 +83,21 @@
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
             "name": "FooOrderByExpression",
             "operand": {
               "object": {
@@ -90,9 +105,7 @@
                 "orderableFields": [
                   {
                     "fieldName": "foo",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   }
                 ],
                 "orderableRelationships": []

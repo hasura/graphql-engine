@@ -260,6 +260,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
         },
         order_by_expressions: OrderByExpressions {
             objects: {},
+            scalars: {},
         },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {

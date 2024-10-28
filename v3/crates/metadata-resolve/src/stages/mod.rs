@@ -173,6 +173,7 @@ pub fn resolve(
         &metadata_accessor,
         &object_types_with_permissions,
         &relationships,
+        &scalar_types,
         graphql_types,
     )?;
 

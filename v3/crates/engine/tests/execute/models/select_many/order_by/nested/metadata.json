@@ -73,6 +73,36 @@
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
+            "name": "IntOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "Int",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
             "name": "InstitutionOrderByExpression",
             "operand": {
               "object": {
@@ -80,15 +110,11 @@
                 "orderableFields": [
                   {
                     "fieldName": "id",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "IntOrderByExpression"
                   },
                   {
                     "fieldName": "name",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   },
                   {
                     "fieldName": "location",
@@ -182,15 +208,11 @@
                 "orderableFields": [
                   {
                     "fieldName": "city",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   },
                   {
                     "fieldName": "country",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   }
                 ],
                 "orderableRelationships": []

@@ -184,6 +184,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
         },
         order_by_expressions: OrderByExpressions {
             objects: {},
+            scalars: {},
         },
         aggregate_expressions: {
             Qualified {

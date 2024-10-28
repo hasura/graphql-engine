@@ -41,9 +41,7 @@
                 "orderableFields": [
                   {
                     "fieldName": "test",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "testOrderByExpression"
                   }
                 ],
                 "orderableRelationships": []

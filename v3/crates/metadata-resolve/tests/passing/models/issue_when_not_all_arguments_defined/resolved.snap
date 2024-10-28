@@ -579,9 +579,23 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                             ),
                         ): Scalar(
                             OrderableScalarField {
-                                enable_order_by_directions: EnableAll(
-                                    true,
-                                ),
+                                order_by_expression_identifier: Qualified {
+                                    subgraph: SubgraphName(
+                                        "default",
+                                    ),
+                                    name: FromModelField(
+                                        ModelName(
+                                            Identifier(
+                                                "collection_with_args",
+                                            ),
+                                        ),
+                                        FieldName(
+                                            Identifier(
+                                                "test",
+                                            ),
+                                        ),
+                                    ),
+                                },
                             },
                         ),
                     },
@@ -600,6 +614,7 @@ input_file: crates/metadata-resolve/tests/passing/models/issue_when_not_all_argu
                     ),
                 },
             },
+            scalars: {},
         },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {

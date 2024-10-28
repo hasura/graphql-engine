@@ -90,9 +90,7 @@
                 "orderableFields": [
                   {
                     "fieldName": "foo",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "SomeNonExistentOrderByExpression"
                   }
                 ],
                 "orderableRelationships": []

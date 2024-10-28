@@ -182,6 +182,36 @@
           "kind": "OrderByExpression",
           "version": "v1",
           "definition": {
+            "name": "IntOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "Int",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
+            "name": "StringOrderByExpression",
+            "operand": {
+              "scalar": {
+                "orderedType": "String",
+                "enableOrderByDirections": {
+                  "enableAll": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "OrderByExpression",
+          "version": "v1",
+          "definition": {
             "name": "album_order_by",
             "operand": {
               "object": {
@@ -189,21 +219,15 @@
                 "orderableFields": [
                   {
                     "fieldName": "AlbumId",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "IntOrderByExpression"
                   },
                   {
                     "fieldName": "Title",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   },
                   {
                     "fieldName": "ArtistId",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "IntOrderByExpression"
                   }
                 ],
                 "orderableRelationships": [
@@ -291,21 +315,15 @@
                 "orderableFields": [
                   {
                     "fieldName": "TrackId",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "IntOrderByExpression"
                   },
                   {
                     "fieldName": "Name",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   },
                   {
                     "fieldName": "AlbumId",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "IntOrderByExpression"
                   }
                 ],
                 "orderableRelationships": [
@@ -601,9 +619,7 @@
                 "orderableFields": [
                   {
                     "fieldName": "Name",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   }
                 ],
                 "orderableRelationships": []
@@ -625,15 +641,11 @@
                 "orderableFields": [
                   {
                     "fieldName": "ArtistId",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "IntOrderByExpression"
                   },
                   {
                     "fieldName": "Name",
-                    "enableOrderByDirections": {
-                      "enableAll": true
-                    }
+                    "orderByExpression": "StringOrderByExpression"
                   }
                 ],
                 "orderableRelationships": []

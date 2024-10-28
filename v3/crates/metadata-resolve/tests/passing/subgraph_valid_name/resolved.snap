@@ -18,6 +18,7 @@ input_file: crates/metadata-resolve/tests/passing/subgraph_valid_name/metadata.j
         },
         order_by_expressions: OrderByExpressions {
             objects: {},
+            scalars: {},
         },
         aggregate_expressions: {},
         graphql_config: GlobalGraphqlConfig {

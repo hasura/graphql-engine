@@ -1,24 +1,39 @@
-use serde_with::serde_as;
-use std::collections::{BTreeMap, BTreeSet};
-
 use open_dds::{
     models::{EnableAllOrSpecific, ModelName, OrderByDirection},
     order_by_expression::OrderByExpressionName,
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName},
 };
+use serde_with::serde_as;
+use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Display;
 
 use lang_graphql::ast::common::{self as ast};
 use serde::{Deserialize, Serialize};
 
 use crate::Qualified;
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, derive_more::Display, Hash,
-)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum OrderByExpressionIdentifier {
     FromOrderByExpression(OrderByExpressionName),
     FromModel(ModelName),
+    FromModelField(ModelName, FieldName),
+}
+
+impl Display for OrderByExpressionIdentifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        match self {
+            OrderByExpressionIdentifier::FromOrderByExpression(inner) => {
+                write!(f, "{inner}")
+            }
+            OrderByExpressionIdentifier::FromModel(model_name) => {
+                write!(f, "{model_name}")
+            }
+            OrderByExpressionIdentifier::FromModelField(model_name, field_name) => {
+                write!(f, "{model_name}.{field_name}")
+            }
+        }
+    }
 }
 
 #[serde_as]
@@ -26,6 +41,8 @@ pub enum OrderByExpressionIdentifier {
 pub struct OrderByExpressions {
     #[serde_as(as = "Vec<(_, _)>")]
     pub objects: BTreeMap<Qualified<OrderByExpressionIdentifier>, ObjectOrderByExpression>,
+    #[serde_as(as = "Vec<(_, _)>")]
+    pub scalars: BTreeMap<Qualified<OrderByExpressionIdentifier>, ScalarOrderByExpression>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -45,6 +62,14 @@ pub struct ObjectOrderByExpression {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ScalarOrderByExpression {
+    pub identifier: Qualified<OrderByExpressionIdentifier>,
+    pub enable_order_by_directions: EnableAllOrSpecific<OrderByDirection>,
+    pub graphql: Option<OrderByExpressionGraphqlConfig>,
+    pub description: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum OrderableRelationships {
     ModelV1AllowAll,
     ModelV2(BTreeMap<RelationshipName, OrderableRelationship>),
@@ -58,7 +83,7 @@ pub enum OrderableField {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct OrderableScalarField {
-    pub enable_order_by_directions: EnableAllOrSpecific<OrderByDirection>,
+    pub order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
