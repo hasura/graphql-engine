@@ -13,7 +13,7 @@ import { AlertProvider } from '../../new-components/Alert/AlertProvider';
 
 import { theme } from '../UIKit/theme';
 import { trackCustomEvent } from '../../features/Analytics';
-import { withLDProvider } from 'launchdarkly-react-client-sdk';
+import { useLDClient, withLDProvider } from 'launchdarkly-react-client-sdk';
 import { isCloudConsole } from '../../utils';
 
 export const GlobalContext = React.createContext(globals);
@@ -61,29 +61,41 @@ const App = ({
 
   return (
     <GlobalContext.Provider value={globals}>
-      <ThemeProvider theme={theme}>
-        <ErrorBoundary metadata={metadata} dispatch={dispatch}>
-          <AlertProvider>
-            <div>
-              {connectionFailMsg}
-              {ongoingRequest && (
-                <ProgressBar
-                  percent={percent}
-                  autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
-                  intervalTime={intervalTime}
-                  spinner={false}
-                />
-              )}
-              <div>{children}</div>
-              <ToastsHub />
-            </div>
-          </AlertProvider>
-        </ErrorBoundary>
-      </ThemeProvider>
+      <LaunchdarklyIntializer>
+        <ThemeProvider theme={theme}>
+          <ErrorBoundary metadata={metadata} dispatch={dispatch}>
+            <AlertProvider>
+              <div>
+                {connectionFailMsg}
+                {ongoingRequest && (
+                  <ProgressBar
+                    percent={percent}
+                    autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
+                    intervalTime={intervalTime}
+                    spinner={false}
+                  />
+                )}
+                <div>{children}</div>
+                <ToastsHub />
+              </div>
+            </AlertProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
+      </LaunchdarklyIntializer>
     </GlobalContext.Provider>
   );
 };
-
+const LaunchdarklyIntializer = ({ children }) => {
+  const ldClient = useLDClient();
+  if (ldClient && globals.userEmail && globals.userEmail) {
+    ldClient.identify({
+      kind: 'user',
+      key: globals.userId,
+      email: globals.userEmail,
+    });
+  }
+  return <>{children}</>;
+};
 App.propTypes = {
   reqURL: PropTypes.string,
   reqData: PropTypes.object,
