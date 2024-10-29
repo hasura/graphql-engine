@@ -5,11 +5,15 @@ use hasura_authn_core::{authorize_identity, Session, SessionError};
 use std::collections::HashMap;
 
 use super::types::{ConnectionInitState, InitPayload, ServerMessage};
+use crate::metrics::WebSocketMetrics;
 use crate::websocket::types as ws;
 
 /// Handles the connection initialization message from the client.
 /// This function authenticates, authorizes, and initializes the WebSocket connection.
-pub async fn handle_connection_init(connection: ws::Connection, payload: Option<InitPayload>) {
+pub async fn handle_connection_init<M: WebSocketMetrics>(
+    connection: ws::Connection<M>,
+    payload: Option<InitPayload>,
+) {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(

@@ -18,14 +18,14 @@ static METADATA_PATH: &str = "tests/static/metadata.json";
 static AUTH_CONFIG_PATH: &str = "tests/static/auth_config_v2.json";
 
 #[allow(dead_code)]
-pub(crate) struct ServerState {
-    pub(crate) ws_server: graphql_ws::WebSocketServer,
-    pub(crate) context: Context,
+pub(crate) struct ServerState<M> {
+    pub(crate) ws_server: graphql_ws::WebSocketServer<M>,
+    pub(crate) context: Context<M>,
 }
 
 #[allow(dead_code)]
 pub(crate) struct TestServer {
-    pub(crate) connections: graphql_ws::Connections,
+    pub(crate) connections: graphql_ws::Connections<graphql_ws::NoOpWebSocketMetrics>,
     pub(crate) socket: WebSocketStream<MaybeTlsStream<TcpStream>>,
     pub(crate) server_handle: JoinHandle<()>,
 }
@@ -33,7 +33,7 @@ pub(crate) struct TestServer {
 #[allow(dead_code)]
 pub(crate) async fn ws_handler(
     headers: axum::http::header::HeaderMap,
-    State(state): State<Arc<ServerState>>,
+    State(state): State<Arc<ServerState<graphql_ws::NoOpWebSocketMetrics>>>,
     ws: axum::extract::ws::WebSocketUpgrade,
 ) -> impl IntoResponse {
     let context = state.context.clone();
@@ -93,6 +93,7 @@ pub(crate) async fn start_websocket_server_expiry(
         schema: Arc::new(schema),
         auth_config: Arc::new(auth_config),
         plugin_configs: Arc::new(plugin_configs),
+        metrics: graphql_ws::NoOpWebSocketMetrics,
     };
 
     let connections = graphql_ws::Connections::new();
@@ -129,7 +130,7 @@ pub(crate) async fn start_websocket_server_expiry(
 }
 
 #[allow(dead_code)]
-pub(crate) async fn assert_zero_connections_timeout(connections: graphql_ws::Connections) {
+pub(crate) async fn assert_zero_connections_timeout<M>(connections: graphql_ws::Connections<M>) {
     // Closure of a websocket connection is not immediate. So, we keep checking zero connections
     // for at most 5 seconds.
     let result = tokio::time::timeout(tokio::time::Duration::from_secs(5), async {
@@ -146,7 +147,7 @@ pub(crate) async fn assert_zero_connections_timeout(connections: graphql_ws::Con
 }
 
 #[allow(dead_code)]
-pub(crate) async fn assert_zero_operations_timeout(connections: &graphql_ws::Connections) {
+pub(crate) async fn assert_zero_operations_timeout<M>(connections: &graphql_ws::Connections<M>) {
     // One connection should be present in an active test
     let connections = connections.0.read().await;
     let (_, connection) = connections.iter().next().unwrap();
@@ -263,7 +264,10 @@ pub(crate) async fn graphql_ws_connection_init(
 }
 
 #[allow(dead_code)]
-pub(crate) async fn check_operation_id(operation_id: &str, connections: &graphql_ws::Connections) {
+pub(crate) async fn check_operation_id<M>(
+    operation_id: &str,
+    connections: &graphql_ws::Connections<M>,
+) {
     let operation_id = graphql_ws::OperationId(operation_id.to_string());
     // One connection should be present in an active test
     let connections = connections.0.read().await;

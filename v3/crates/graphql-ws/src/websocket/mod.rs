@@ -8,6 +8,7 @@ use axum::{
 };
 use futures_util::StreamExt;
 
+use crate::metrics::WebSocketMetrics;
 use crate::protocol;
 
 pub static SEC_WEBSOCKET_PROTOCOL: &str = "Sec-WebSocket-Protocol";
@@ -15,11 +16,11 @@ static SEC_WEBSOCKET_ID: &str = "Sec-WebSocket-Id";
 static WEBSOCKET_CHANNEL_SIZE: usize = 50;
 
 /// GraphQL WebSocket server implementation.
-pub struct WebSocketServer {
-    pub connections: types::Connections,
+pub struct WebSocketServer<M> {
+    pub connections: types::Connections<M>,
 }
 
-impl WebSocketServer {
+impl<M> WebSocketServer<M> {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
@@ -38,24 +39,17 @@ impl WebSocketServer {
         }
     }
 
-    /// Fetch active websocket connections
-    pub async fn fetch_active_connections(&self) -> Vec<types::ActiveConnection> {
-        let map = self.connections.0.read().await;
-        let mut active_connections = Vec::new();
-        for connection in map.values() {
-            active_connections.push(connection.to_active_connection().await);
-        }
-        active_connections
-    }
-
     /// Handles the GraphQL WebSocket connection upgrade request.
     /// Validates the WebSocket protocol and upgrades the connection if valid.
     pub fn upgrade_and_handle_websocket(
         &self,
         ws_upgrade: ws::WebSocketUpgrade,
         headers: &HeaderMap,
-        context: types::Context,
-    ) -> Response {
+        context: types::Context<M>,
+    ) -> Response
+    where
+        M: WebSocketMetrics,
+    {
         let tracer = tracing_util::global_tracer();
         let result = tracer.in_span(
             "upgrade_and_handle_websocket",
@@ -162,11 +156,11 @@ impl IntoResponse for WebSocketError {
 
 /// Handles the WebSocket connection by splitting it into sender and receiver.
 /// Manages incoming and outgoing messages and initializes a connection.
-async fn start_websocket_session(
+async fn start_websocket_session<M: WebSocketMetrics>(
     socket: ws::WebSocket,
     websocket_id: types::WebSocketId,
-    context: types::Context,
-    connections: types::Connections,
+    context: types::Context<M>,
+    connections: types::Connections<M>,
     parent_span_link: tracing_util::SpanLink,
 ) {
     let tracer = tracing_util::global_tracer();

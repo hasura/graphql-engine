@@ -8,6 +8,7 @@ use pre_parse_plugin::execute as pre_parse_plugin;
 use pre_response_plugin::execute as pre_response_plugin;
 
 use super::types::{ConnectionInitState, OperationId, ServerMessage};
+use crate::metrics::WebSocketMetrics;
 use crate::poller;
 use crate::websocket::types as ws;
 
@@ -29,8 +30,8 @@ impl tracing_util::TraceableError for Error {
 
 /// Handles the subscription message from the client.
 /// It either starts a new poller or sends a close message if the poller with given operation_id already exists.
-pub async fn handle_subscribe(
-    connection: ws::Connection,
+pub async fn handle_subscribe<M: WebSocketMetrics>(
+    connection: ws::Connection<M>,
     operation_id: OperationId,
     payload: lang_graphql::http::RawRequest,
 ) {
@@ -152,14 +153,19 @@ pub async fn handle_subscribe(
 }
 
 /// Starts a new poller to handle GraphQL operations (queries, mutations, subscriptions).
-fn start_poller(
+fn start_poller<M: WebSocketMetrics>(
     operation_id: OperationId,
     session: Session,
     headers: http::HeaderMap,
-    connection: ws::Connection,
+    connection: ws::Connection<M>,
     raw_request: lang_graphql::http::RawRequest,
     parent_span_link: tracing_util::SpanLink,
 ) -> poller::Poller {
+    // Record the start of the poller in the metrics.
+    connection
+        .context
+        .metrics
+        .record_poller_start(&connection.id);
     poller::Poller::new(|| {
         Box::pin(async move {
             // Executes the GraphQL request and handles any errors.
@@ -177,11 +183,11 @@ fn start_poller(
 }
 
 /// Executes the GraphQL request, handling queries, mutations, and subscriptions.
-async fn execute_query(
+async fn execute_query<M: WebSocketMetrics>(
     operation_id: OperationId,
     session: Session,
     headers: http::HeaderMap,
-    connection: &ws::Connection,
+    connection: &ws::Connection<M>,
     raw_request: lang_graphql::http::RawRequest,
     parent_span_link: tracing_util::SpanLink,
 ) {
@@ -230,11 +236,11 @@ async fn execute_query(
     }
 }
 
-pub async fn send_request_error(
+pub async fn send_request_error<M: WebSocketMetrics>(
     error: execute::RequestError,
     expose_internal_errors: ExposeInternalErrors,
     operation_id: OperationId,
-    connection: &ws::Connection,
+    connection: &ws::Connection<M>,
 ) {
     let gql_error = error.to_graphql_error(expose_internal_errors);
     let message = ServerMessage::Error {
@@ -247,11 +253,11 @@ pub async fn send_request_error(
 }
 
 // Exported for testing purpose
-pub async fn execute_query_internal(
+pub async fn execute_query_internal<M: WebSocketMetrics>(
     operation_id: OperationId,
     session: Session,
     headers: http::HeaderMap,
-    connection: &ws::Connection,
+    connection: &ws::Connection<M>,
     raw_request: lang_graphql::http::RawRequest,
 ) -> Result<(), execute::RequestError> {
     let schema = &connection.context.schema;
@@ -297,9 +303,9 @@ pub async fn execute_query_internal(
     Ok(())
 }
 
-async fn execute(
+async fn execute<M: WebSocketMetrics>(
     operation_id: OperationId,
-    connection: &ws::Connection,
+    connection: &ws::Connection<M>,
     session: Session,
     headers: http::HeaderMap,
     raw_request: lang_graphql::http::RawRequest,
@@ -480,10 +486,10 @@ impl ResponseHash {
 }
 
 /// Sends a GraphQL response with no errors.
-async fn send_graphql_ok(
+async fn send_graphql_ok<M: WebSocketMetrics>(
     operation_id: OperationId,
     response: lang_graphql::http::Response,
-    connection: &ws::Connection,
+    connection: &ws::Connection<M>,
 ) {
     connection
         .send(ws::Message::Protocol(Box::new(ServerMessage::Next {
@@ -494,10 +500,10 @@ async fn send_graphql_ok(
 }
 
 /// Sends GraphQL errors to the client.
-async fn send_graphql_errors(
+async fn send_graphql_errors<M: WebSocketMetrics>(
     operation_id: OperationId,
     errors: NonEmpty<lang_graphql::http::GraphQLError>,
-    connection: &ws::Connection,
+    connection: &ws::Connection<M>,
 ) {
     connection
         .send(ws::Message::Protocol(Box::new(ServerMessage::Error {
@@ -508,7 +514,7 @@ async fn send_graphql_errors(
 }
 
 /// Sends a complete message after the query/mutation execution finishes.
-async fn send_complete(operation_id: OperationId, connection: &ws::Connection) {
+async fn send_complete<M>(operation_id: OperationId, connection: &ws::Connection<M>) {
     connection
         .send(ws::Message::Protocol(Box::new(ServerMessage::Complete {
             id: operation_id,
@@ -547,14 +553,14 @@ impl GraphQLResponse {
 
 /// Sends a single result (query or mutation) along with a completion message.
 /// If there are errors, they are sent before the complete message.
-async fn send_single_result_operation_response(
+async fn send_single_result_operation_response<M: WebSocketMetrics>(
     operation_id: OperationId,
     raw_request: &lang_graphql::http::RawRequest,
     session: Session,
     headers: http::HeaderMap,
     result: execute::ExecuteQueryResult,
     expose_internal_errors: ExposeInternalErrors,
-    connection: &ws::Connection,
+    connection: &ws::Connection<M>,
 ) {
     let graphql_response =
         graphql_frontend::GraphQLResponse::from_result(result, expose_internal_errors).inner();
@@ -575,14 +581,14 @@ async fn send_single_result_operation_response(
 }
 
 /// Sends a subscription operation response.
-async fn send_subscription_operation_response(
+async fn send_subscription_operation_response<M: WebSocketMetrics>(
     response_hash: &mut ResponseHash,
     operation_id: OperationId,
     raw_request: &lang_graphql::http::RawRequest,
     session: &Session,
     headers: &http::HeaderMap,
     response: lang_graphql::http::Response,
-    connection: &ws::Connection,
+    connection: &ws::Connection<M>,
 ) -> bool {
     let mut stop_subscription = false;
     if !response_hash.matches(&response) {
@@ -619,12 +625,12 @@ impl tracing_util::TraceableError for ExecutePreResponsePluginsError {
     }
 }
 
-fn run_pre_response_plugins(
+fn run_pre_response_plugins<M: WebSocketMetrics>(
     raw_request: &lang_graphql::http::RawRequest,
     session: Session,
     headers: http::HeaderMap,
     response: &lang_graphql::http::Response,
-    connection: &ws::Connection,
+    connection: &ws::Connection<M>,
 ) {
     // Execute pre-response plugins only if there are any
     if let Some(pre_response_plugins) = NonEmpty::from_vec(

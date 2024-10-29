@@ -4,6 +4,7 @@ pub mod types;
 
 use types::{ClientMessage, ServerMessage};
 
+use crate::metrics::WebSocketMetrics;
 use crate::websocket::types as ws;
 
 /// Protocol name for the GraphQL over WebSocket.
@@ -14,7 +15,10 @@ pub static GRAPHQL_WS_PROTOCOL: &str = "graphql-transport-ws";
 pub static CONNECTION_INIT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);
 
 /// Handles incoming client messages and dispatches them to appropriate handlers.
-pub async fn handle_graphql_ws_message(connection: ws::Connection, message: ClientMessage) {
+pub async fn handle_graphql_ws_message<M: WebSocketMetrics>(
+    connection: ws::Connection<M>,
+    message: ClientMessage,
+) {
     let tracer = tracing_util::global_tracer();
     let message_type = message.message_type();
     tracer

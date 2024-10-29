@@ -735,6 +735,7 @@ async fn run_query_graphql_ws(
             pre_parse_plugins: Vec::new(),
             pre_response_plugins: Vec::new(),
         }),
+        metrics: graphql_ws::NoOpWebSocketMetrics,
     };
     let (channel_sender, mut channel_receiver) =
         tokio::sync::mpsc::channel::<graphql_ws::Message>(10);

@@ -119,7 +119,7 @@ pub struct EngineState {
     auth_config: Arc<AuthConfig>,
     sql_context: Arc<sql::catalog::Catalog>,
     plugin_configs: Arc<LifecyclePluginConfigs>,
-    graphql_websocket_server: Arc<graphql_ws::WebSocketServer>,
+    graphql_websocket_server: Arc<graphql_ws::WebSocketServer<graphql_ws::NoOpWebSocketMetrics>>,
 }
 
 #[tokio::main]
@@ -808,6 +808,7 @@ async fn handle_websocket_request(
         schema: engine_state.graphql_state,
         auth_config: engine_state.auth_config,
         plugin_configs: engine_state.plugin_configs,
+        metrics: graphql_ws::NoOpWebSocketMetrics, // No metrics implementation
     };
 
     engine_state

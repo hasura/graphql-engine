@@ -3,6 +3,7 @@ use futures_util::{SinkExt, StreamExt};
 use tokio::time::{timeout, Duration};
 
 use super::types;
+use crate::metrics::WebSocketMetrics;
 use crate::protocol;
 
 /// Enum to represent whether the loop should continue or break.
@@ -27,8 +28,8 @@ impl tracing_util::TraceableError for ConnectionTimeOutError {
 
 /// Checks if the graphql-ws protocol is initialized within the specified timeout duration.
 /// Ref: <https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#connectioninit>
-pub(crate) async fn verify_connection_init(
-    connection: types::Connection,
+pub(crate) async fn verify_connection_init<M: Send>(
+    connection: types::Connection<M>,
     timeout_duration: Duration,
     parent_span_link: tracing_util::SpanLink,
 ) -> Result<(), ConnectionTimeOutError> {
@@ -57,7 +58,7 @@ pub(crate) async fn verify_connection_init(
 /// Waits for the WebSocket connection to reach the initialized state.
 ///
 /// This function checks the state of the connection and only returns once initialization is complete.
-async fn wait_for_initialization(connection: types::Connection) {
+async fn wait_for_initialization<M>(connection: types::Connection<M>) {
     loop {
         let state = connection.protocol_init_state.read().await;
         match *state {
@@ -72,15 +73,18 @@ async fn wait_for_initialization(connection: types::Connection) {
 }
 
 /// Waits until the connection expires and sends a close message.
-pub(crate) async fn wait_until_expiry(connection: types::Connection, expiry: std::time::Duration) {
+pub(crate) async fn wait_until_expiry<M>(
+    connection: types::Connection<M>,
+    expiry: std::time::Duration,
+) {
     tokio::time::sleep(expiry).await;
     connection.send(types::Message::conn_expired()).await;
 }
 
 /// Handles incoming WebSocket messages from the client.
 /// This task runs indefinitely until the connection is closed or an error occurs.
-pub(crate) async fn process_incoming_message(
-    connection: types::Connection,
+pub(crate) async fn process_incoming_message<M: WebSocketMetrics>(
+    connection: types::Connection<M>,
     mut websocket_receiver: futures_util::stream::SplitStream<ws::WebSocket>,
     parent_span_link: tracing_util::SpanLink,
 ) {
@@ -205,8 +209,8 @@ impl tracing_util::TraceableError for ManageOutgoingMessageError {
 
 /// Manages outgoing WebSocket messages.
 /// Sends messages from the connection's channel to the WebSocket client.
-pub(crate) async fn manage_outgoing_messages(
-    connection: types::Connection,
+pub(crate) async fn manage_outgoing_messages<M: WebSocketMetrics + Sync>(
+    connection: types::Connection<M>,
     mut websocket_sender: futures_util::stream::SplitSink<ws::WebSocket, ws::Message>,
     mut channel_receiver: tokio::sync::mpsc::Receiver<types::Message>,
     parent_span_link: tracing_util::SpanLink,
