@@ -9,7 +9,7 @@ bench = false
 
 [dependencies]
 hasura-authn-core = { path = "../hasura-authn-core" }
-lang-graphql = { path = "../../lang-graphql" }
+lang-graphql = { path = "../../graphql/lang-graphql" }
 open-dds = { path = "../../open-dds" }
 tracing-util = { path = "../../utils/tracing-util"}
 

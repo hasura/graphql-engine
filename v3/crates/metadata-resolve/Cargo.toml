@@ -11,7 +11,7 @@ bench = false
 error-context = { path = "../utils/error-context" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 jsonpath = { path = "../utils/jsonpath" }
-lang-graphql = { path = "../lang-graphql" }
+lang-graphql = { path = "../graphql/lang-graphql" }
 open-dds = { path = "../open-dds" }
 
 derive_more = { workspace = true }

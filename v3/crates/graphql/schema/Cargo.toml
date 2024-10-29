@@ -16,7 +16,7 @@ bench = false
 hasura-authn-core = { path = "../../auth/hasura-authn-core" }
 json-ext = { path = "../../utils/json-ext" }
 jsonpath = { path = "../../utils/jsonpath" }
-lang-graphql = { path = "../../lang-graphql" }
+lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../../open-dds" }
 metadata-resolve = {path = "../../metadata-resolve" }
 

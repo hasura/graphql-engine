@@ -23,15 +23,15 @@ harness = false
 [dependencies]
 axum-ext = { path = "../utils/axum-ext" }
 execute = { path = "../execute" }
-graphql-frontend = { path = "../frontends/graphql" }
+graphql-frontend = { path = "../graphql/frontend" }
 graphql-schema = { path = "../graphql/schema" }
-graphql-ws = { path = "../graphql-ws" }
+graphql-ws = { path = "../graphql/graphql-ws" }
 hasura-authn = { path = "../auth/hasura-authn" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 hasura-authn-noauth = { path = "../auth/hasura-authn-noauth" }
 jsonapi = { path = "../jsonapi" }
 jsonpath = { path = "../utils/jsonpath" }
-lang-graphql = { path = "../lang-graphql" }
+lang-graphql = { path = "../graphql/lang-graphql" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
 plan = { path = "../plan" }

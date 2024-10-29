@@ -8,7 +8,7 @@ license.workspace = true
 bench = false
 
 [dependencies]
-lang-graphql = { path = "../../lang-graphql" }
+lang-graphql = { path = "../../graphql/lang-graphql" }
 open-dds = { path = "../../open-dds" }
 
 axum = { workspace = true }

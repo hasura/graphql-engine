@@ -8,26 +8,25 @@ here. Explanations of each are given below:
 ```
 crates
 ├── open-dds
-├── lang-graphql
-│   ├── src
-│   │   ├── ast
-│   │   ├── normalized_ast
-│   │   ├── lexer
-│   │   ├── parser
-│   │   ├── schema
-│   │   ├── introspection
-│   │   ├── validation
 ├── metadata-resolve
 ├── graphql
+│   ├── lang-graphql
+│   │   ├── src
+│   │   │   ├── ast
+│   │   │   ├── normalized_ast
+│   │   │   ├── lexer
+│   │   │   ├── parser
+│   │   │   ├── schema
+│   │   │   ├── introspection
+│   │   │   ├── validation
 │   ├── schema
 │   │   ├── operations
 │   │   ├── types
 │   ├── ir
+│   ├── frontend
 ├── execute
 ├── jsonapi
 ├── sql
-├── frontends
-│   ├── graphql
 ├── engine
 │   ├── bin
 │   │   ├── engine
@@ -40,39 +39,39 @@ This metadata is used to specify the data models, permissions, connectors, and
 essentially everything the engine needs to know about the project when it
 starts.
 
-### `lang-graphql`
+### `graphql/lang-graphql`
 
 This crate is an implementation of the GraphQL specification in Rust. It
 provides types for the GraphQL AST, implements the lexer and parser, as well as
 validation and introspection operations.
 
-#### `lang-graphql/src/ast`
+#### `graphql/lang-graphql/src/ast`
 
 The raw GraphQL AST (abstract syntax tree) types that are emitted by the parser.
 
-#### `lang-graphql/src/normalized_ast`
+#### `graphql/lang-graphql/src/normalized_ast`
 
 The normalized AST types. The raw AST can be validated and elaborated with
 respect to a GraphQL schema, producing the normalized AST.
 
-#### `lang-graphql/src/lexer`
+#### `graphql/lang-graphql/src/lexer`
 
 Lexer that emits tokens (eg: String, Number, Punctuation) for a raw GraphQL
 document string.
 
-#### `lang-graphql/src/parser`
+#### `graphql/lang-graphql/src/parser`
 
 Parser for GraphQL documents (executable operations and schema documents).
 
-#### `lang-graphql/src/schema`
+#### `graphql/lang-graphql/src/schema`
 
 Types to define a GraphQL schema.
 
-#### `lang-graphql/src/introspection`
+#### `graphql/lang-graphql/src/introspection`
 
 Provides schema and type introspection for GraphQL schemas.
 
-#### `lang-graphql/src/validation`
+#### `graphql/lang-graphql/src/validation`
 
 Validates GraphQL requests vs a schema, and produces normalized ASTs, which
 contain additional relevant data from the schema.
@@ -133,7 +132,7 @@ intermediate representation ready to plan a request.
 Responsible for the core operation of the engine in the context of a user
 provided metadata, including requests processing, executing requests, etc.
 
-### `frontends/graphql`
+### `graphql/frontend`
 
 Entrypoints for GraphQL requests. Orchestrates parsing, validation and planning
 requests.

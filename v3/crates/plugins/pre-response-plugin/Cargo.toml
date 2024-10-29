@@ -7,7 +7,7 @@ license.workspace = true
 [dependencies]
 
 hasura-authn-core = { path = "../../auth/hasura-authn-core" }
-lang-graphql = { path = "../../lang-graphql" }
+lang-graphql = { path = "../../graphql/lang-graphql" }
 tracing-util = { path = "../../utils/tracing-util" }
 open-dds = { path = "../../open-dds" }
 

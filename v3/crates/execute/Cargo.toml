@@ -12,7 +12,7 @@ graphql-schema = { path = "../graphql/schema" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 graphql-ir = { path = "../graphql/ir" }
 json-ext = { path = "../utils/json-ext" }
-lang-graphql = { path = "../lang-graphql" }
+lang-graphql = { path = "../graphql/lang-graphql" }
 open-dds = { path = "../open-dds" }
 plan-types = { path = "../plan-types" }
 tracing-util = { path = "../utils/tracing-util" }

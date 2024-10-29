@@ -24,7 +24,7 @@ name = "schema_serde"
 harness = false
 
 [dependencies]
-recursion_limit_macro = { path = "../utils/recursion_limit_macro" }
+recursion_limit_macro = { path = "../../utils/recursion_limit_macro" }
 
 axum = { workspace = true }
 http = { workspace = true }
@@ -37,8 +37,8 @@ serde_json = { workspace = true }
 serde_with = { workspace = true }
 smol_str = { workspace = true }
 thiserror = { workspace = true }
-tracing-util = { path = "../utils/tracing-util" }
-json-ext = { path = "../utils/json-ext" }
+tracing-util = { path = "../../utils/tracing-util" }
+json-ext = { path = "../../utils/json-ext" }
 
 [dev-dependencies]
 anyhow = { workspace = true }
