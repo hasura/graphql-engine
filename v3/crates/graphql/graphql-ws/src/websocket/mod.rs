@@ -3,7 +3,10 @@ pub mod types;
 
 use axum::{
     extract::ws,
-    http::{header::InvalidHeaderValue, HeaderMap, StatusCode},
+    http::{
+        header::{InvalidHeaderValue, ToStrError},
+        HeaderMap, StatusCode,
+    },
     response::{IntoResponse, Response},
 };
 use futures_util::StreamExt;
@@ -51,7 +54,7 @@ impl<M> WebSocketServer<M> {
         M: WebSocketMetrics,
     {
         let tracer = tracing_util::global_tracer();
-        let result = tracer.in_span(
+        let result: Result<_, WebSocketError> = tracer.in_span(
             "upgrade_and_handle_websocket",
             "Processing WebSocket upgrade request for GraphQL protoco",
             tracing_util::SpanVisibility::User,
@@ -72,33 +75,24 @@ impl<M> WebSocketServer<M> {
                     websocket_id.to_string(),
                 )];
                 tracing_util::run_with_baggage(trace_baggage, || {
-                    let protocol = headers
-                        .get(SEC_WEBSOCKET_PROTOCOL)
-                        .and_then(|val| val.to_str().ok())
-                        .ok_or(WebSocketError::MissingProtocolHeader)?;
-
-                    let mut response = if protocol == protocol::GRAPHQL_WS_PROTOCOL {
-                        let connections = self.connections.clone();
-                        // Upgrade the WebSocket connection and handle it
-                        let span_link = tracing_util::SpanLink::from_current_span();
-                        // Clone the websocket_id to move it into the closure
-                        let websocket_id = websocket_id.clone();
-                        ws_upgrade
-                            .protocols(vec![protocol::GRAPHQL_WS_PROTOCOL])
-                            .on_upgrade(move |socket| {
-                                start_websocket_session(
-                                    socket,
-                                    websocket_id,
-                                    context,
-                                    connections,
-                                    span_link,
-                                )
-                            })
-                    } else {
-                        // Return error if the protocol doesn't match
-                        return Err(WebSocketError::InvalidProtocol(protocol.to_string()));
-                    };
-
+                    // Check if headers contain graphql-transport-ws protocol
+                    check_protocol_in_headers(headers)?;
+                    let connections = self.connections.clone();
+                    // Upgrade the WebSocket connection and handle it
+                    let span_link = tracing_util::SpanLink::from_current_span();
+                    // // Clone the websocket_id to move it into the closure
+                    let websocket_id_cloned = websocket_id.clone();
+                    let mut response = ws_upgrade
+                        .protocols(vec![protocol::GRAPHQL_WS_PROTOCOL])
+                        .on_upgrade(move |socket| {
+                            start_websocket_session(
+                                socket,
+                                websocket_id_cloned,
+                                context,
+                                connections,
+                                span_link,
+                            )
+                        });
                     // Set the WebSocket id response header
                     response
                         .headers_mut()
@@ -115,10 +109,19 @@ impl<M> WebSocketServer<M> {
 /// Error types for WebSocket connections.
 #[derive(Debug, thiserror::Error)]
 pub enum WebSocketError {
+    /// Error when the Sec-WebSocket-Protocol header is missing
     #[error("Missing {SEC_WEBSOCKET_PROTOCOL} header")]
     MissingProtocolHeader,
-    #[error("Invalid WebSocket protocol: {0}")]
-    InvalidProtocol(String),
+
+    /// Error when the header value cannot be converted to a string
+    #[error("{SEC_WEBSOCKET_PROTOCOL} header: {0}")]
+    InvalidHeaderValue(#[from] ToStrError),
+
+    /// Error when the GraphQL WebSocket protocol is not included
+    #[error("Expecting {} protocol", protocol::GRAPHQL_WS_PROTOCOL)]
+    ExpectingGraphqlWsProtocol,
+
+    /// Error when setting the WebSocket ID header value fails in response
     #[error("Unable to set {SEC_WEBSOCKET_ID} header value: {0}")]
     WebSocketIdInvalidHeaderValue(#[from] InvalidHeaderValue),
 }
@@ -126,9 +129,9 @@ pub enum WebSocketError {
 impl tracing_util::TraceableError for WebSocketError {
     fn visibility(&self) -> tracing_util::ErrorVisibility {
         match self {
-            Self::MissingProtocolHeader | Self::InvalidProtocol(_) => {
-                tracing_util::ErrorVisibility::User
-            }
+            Self::MissingProtocolHeader
+            | Self::ExpectingGraphqlWsProtocol
+            | Self::InvalidHeaderValue(_) => tracing_util::ErrorVisibility::User,
             Self::WebSocketIdInvalidHeaderValue(_) => tracing_util::ErrorVisibility::Internal,
         }
     }
@@ -137,16 +140,11 @@ impl tracing_util::TraceableError for WebSocketError {
 impl IntoResponse for WebSocketError {
     fn into_response(self) -> Response {
         match self {
-            Self::MissingProtocolHeader => (
-                StatusCode::BAD_REQUEST,
-                "Missing Sec-WebSocket-Protocol header",
-            )
-                .into_response(),
-            Self::InvalidProtocol(protocol) => (
-                StatusCode::BAD_REQUEST,
-                format!("Invalid WebSocket protocol: {protocol}"),
-            )
-                .into_response(),
+            Self::MissingProtocolHeader
+            | Self::ExpectingGraphqlWsProtocol
+            | Self::InvalidHeaderValue(_) => {
+                (StatusCode::BAD_REQUEST, self.to_string()).into_response()
+            }
             Self::WebSocketIdInvalidHeaderValue(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error").into_response()
             }
@@ -267,4 +265,97 @@ async fn start_websocket_session<M: WebSocketMetrics>(
         )
         .await
         .into_inner();
+}
+
+/// Validates that the required WebSocket protocol is present in the connection headers.
+///
+/// This function checks that:
+/// 1. The Sec-WebSocket-Protocol header exists
+/// 2. The header contains the GraphQL WebSocket ("graphql-transport-ws") protocol
+pub(crate) fn check_protocol_in_headers(headers: &HeaderMap) -> Result<(), WebSocketError> {
+    let protocol_header_values = headers.get_all(SEC_WEBSOCKET_PROTOCOL).iter();
+    let mut provided_protocols = Vec::new();
+    for protocol in protocol_header_values {
+        let protocol_str = protocol.to_str()?;
+        provided_protocols.extend_from_slice(&parse_comma_separated_header_values(protocol_str));
+    }
+    if provided_protocols.is_empty() {
+        Err(WebSocketError::MissingProtocolHeader)?;
+    } else if !provided_protocols.contains(&protocol::GRAPHQL_WS_PROTOCOL) {
+        Err(WebSocketError::ExpectingGraphqlWsProtocol)?;
+    }
+    Ok(())
+}
+
+/// Parses a comma-separated header value into a vector of trimmed strings.
+fn parse_comma_separated_header_values(header: &str) -> Vec<&str> {
+    header
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::http::HeaderValue;
+
+    #[test]
+    fn test_check_protocol_missing_header() {
+        let headers = HeaderMap::new();
+        let result = check_protocol_in_headers(&headers);
+        assert!(matches!(result, Err(WebSocketError::MissingProtocolHeader)));
+    }
+
+    #[test]
+    fn test_check_protocol_wrong_protocol() {
+        let mut headers = HeaderMap::new();
+        headers.append(
+            SEC_WEBSOCKET_PROTOCOL,
+            HeaderValue::from_static("wrong-protocol"),
+        );
+        let result = check_protocol_in_headers(&headers);
+        assert!(matches!(
+            result,
+            Err(WebSocketError::ExpectingGraphqlWsProtocol)
+        ));
+    }
+
+    #[test]
+    fn test_check_protocol_valid() {
+        let mut headers = HeaderMap::new();
+        headers.append(
+            SEC_WEBSOCKET_PROTOCOL,
+            HeaderValue::from_static(protocol::GRAPHQL_WS_PROTOCOL),
+        );
+        let result = check_protocol_in_headers(&headers);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_check_protocol_multiple_values() {
+        let mut headers = HeaderMap::new();
+        headers.append(
+            SEC_WEBSOCKET_PROTOCOL,
+            HeaderValue::from_static("other-protocol, graphql-transport-ws"),
+        );
+        let result = check_protocol_in_headers(&headers);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_check_protocol_multiple_headers() {
+        let mut headers = HeaderMap::new();
+        headers.append(
+            SEC_WEBSOCKET_PROTOCOL,
+            HeaderValue::from_static("other-protocol"),
+        );
+        headers.append(
+            SEC_WEBSOCKET_PROTOCOL,
+            HeaderValue::from_static(protocol::GRAPHQL_WS_PROTOCOL),
+        );
+        let result = check_protocol_in_headers(&headers);
+        assert!(result.is_ok());
+    }
 }
