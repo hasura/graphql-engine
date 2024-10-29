@@ -5,17 +5,19 @@ expression: generated_openapi
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "JSONAPI",
+    "title": "Hasura JSONAPI (alpha)",
+    "description": "REST API generated to match the JSON:API spec: https://jsonapi.org",
     "version": "0.1"
   },
   "paths": {
-    "/default/Articles": {
+    "/v1/rest/default/Articles": {
       "get": {
         "summary": "Fetch article values",
         "parameters": [
           {
             "name": "page[limit]",
             "in": "query",
+            "description": "Optional limit for fetched items",
             "schema": {
               "type": "integer"
             },
@@ -24,6 +26,7 @@ expression: generated_openapi
           {
             "name": "page[offset]",
             "in": "query",
+            "description": "Optional offset for fetched items",
             "schema": {
               "type": "integer"
             },
@@ -32,6 +35,7 @@ expression: generated_openapi
           {
             "name": "fields[Articles]",
             "in": "query",
+            "description": "Optional list of fields from Articles to include in response. If no fields are provided, all fields are returned",
             "schema": {
               "items": {
                 "enum": [
@@ -41,13 +45,29 @@ expression: generated_openapi
               }
             },
             "example": "article_id,title"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Optional list of fields from Articles to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+            "schema": {
+              "items": {
+                "enum": [
+                  "article_id",
+                  "-article_id",
+                  "title",
+                  "-title"
+                ]
+              }
+            },
+            "example": "article_id,-title"
           }
         ],
         "responses": {
           "200": {
-            "description": null,
+            "description": "Successful Articles response",
             "content": {
-              "Success": {
+              "application/json": {
                 "schema": {
                   "type": "object",
                   "required": [

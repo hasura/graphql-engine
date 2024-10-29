@@ -1,86 +1,16 @@
 use crate::{Model, State};
 use std::collections::BTreeMap;
-use std::string::ToString;
 mod output;
+mod parameters;
 mod shared;
 use shared::{
     array_schema, bool_schema, enum_schema, float_schema, int_schema, json_schema, object_schema,
     string_schema,
 };
 
-fn page_offset_parameter() -> oas3::spec::Parameter {
-    let schema = oas3::spec::ObjectOrReference::Object(int_schema());
-    oas3::spec::Parameter {
-        name: "page[offset]".into(),
-        allow_empty_value: None,
-        allow_reserved: None,
-        content: None,
-        deprecated: None,
-        description: None,
-        example: Some("10".into()),
-        explode: None,
-        examples: BTreeMap::new(),
-        extensions: BTreeMap::new(),
-        location: oas3::spec::ParameterIn::Query,
-        schema: Some(schema),
-        style: None,
-        required: None,
-    }
-}
-
-fn page_limit_parameter() -> oas3::spec::Parameter {
-    let schema = oas3::spec::ObjectOrReference::Object(int_schema());
-    oas3::spec::Parameter {
-        name: "page[limit]".into(),
-        allow_empty_value: None,
-        allow_reserved: None,
-        content: None,
-        deprecated: None,
-        description: None,
-        example: Some("5".into()),
-        explode: None,
-        examples: BTreeMap::new(),
-        extensions: BTreeMap::new(),
-        location: oas3::spec::ParameterIn::Query,
-        schema: Some(schema),
-        style: None,
-        required: None,
-    }
-}
-
-fn get_fields_for_model(model: &Model) -> oas3::spec::Parameter {
-    let schema = oas3::spec::ObjectOrReference::Object(oas3::spec::ObjectSchema {
-        items: Some(Box::new(oas3::spec::ObjectOrReference::Object(
-            enum_schema(model.type_fields.keys().map(ToString::to_string).collect()),
-        ))),
-        ..oas3::spec::ObjectSchema::default()
-    });
-
-    let mut example = String::new();
-    for (i, field) in model.type_fields.keys().enumerate() {
-        if i > 0 && i < model.type_fields.len() {
-            example.push(',');
-        }
-        example.push_str(&field.to_string());
-    }
-
-    oas3::spec::Parameter {
-        name: format!("fields[{}]", model.name.name),
-        allow_empty_value: None,
-        allow_reserved: None,
-        content: None,
-        deprecated: None,
-        description: model.description.clone(),
-        example: Some(example.into()),
-        explode: None,
-        examples: BTreeMap::new(),
-        extensions: BTreeMap::new(),
-        location: oas3::spec::ParameterIn::Query,
-        schema: Some(schema),
-        style: None,
-        required: None,
-    }
-}
+// JSONAPI specifies "application/vnd.api+json"
+// we're going with the more universally supported application/json
+static JSONAPI_MEDIA_TYPE: &str = "application/json";
 
 fn get_response(model: &Model) -> oas3::spec::Response {
     let schema = oas3::spec::ObjectOrReference::Object(output::jsonapi_document_schema(model));
@@ -92,10 +22,10 @@ fn get_response(model: &Model) -> oas3::spec::Response {
     };
 
     let mut content = BTreeMap::new();
-    content.insert("Success".into(), media_type);
+    content.insert(JSONAPI_MEDIA_TYPE.into(), media_type);
 
     oas3::spec::Response {
-        description: None,
+        description: Some(format!("Successful {} response", model.name.name)),
         extensions: BTreeMap::new(),
         headers: BTreeMap::new(),
         links: BTreeMap::new(),
@@ -105,9 +35,10 @@ fn get_response(model: &Model) -> oas3::spec::Response {
 
 fn get_route_for_model(model: &Model) -> oas3::spec::Operation {
     let parameters = vec![
-        oas3::spec::ObjectOrReference::Object(page_limit_parameter()),
-        oas3::spec::ObjectOrReference::Object(page_offset_parameter()),
-        oas3::spec::ObjectOrReference::Object(get_fields_for_model(model)),
+        oas3::spec::ObjectOrReference::Object(parameters::page_limit_parameter()),
+        oas3::spec::ObjectOrReference::Object(parameters::page_offset_parameter()),
+        oas3::spec::ObjectOrReference::Object(parameters::fields_parameter(model)),
+        oas3::spec::ObjectOrReference::Object(parameters::ordering_parameter(model)),
     ];
 
     let mut responses = BTreeMap::new();
@@ -119,7 +50,7 @@ fn get_route_for_model(model: &Model) -> oas3::spec::Operation {
     oas3::spec::Operation {
         callbacks: BTreeMap::new(),
         deprecated: None,
-        description: None,
+        description: model.description.clone(),
         extensions: BTreeMap::new(),
         external_docs: None,
         operation_id: None,
@@ -158,9 +89,11 @@ pub fn empty_schema() -> oas3::Spec {
 }
 pub fn openapi_schema(state: &State) -> oas3::Spec {
     let info = oas3::spec::Info {
-        title: "JSONAPI".into(),
+        title: "Hasura JSONAPI (alpha)".into(),
         summary: None,
-        description: None,
+        description: Some(
+            "REST API generated to match the JSON:API spec: https://jsonapi.org".into(),
+        ),
         terms_of_service: None,
         version: "0.1".into(),
         contact: None,
@@ -170,6 +103,8 @@ pub fn openapi_schema(state: &State) -> oas3::Spec {
     let mut paths = BTreeMap::new();
     for (route_name, route) in &state.routes {
         let get = get_route_for_model(route);
+
+        let full_route_path = format!("/v1/rest{route_name}");
 
         let path_item = oas3::spec::PathItem {
             delete: None,
@@ -188,7 +123,7 @@ pub fn openapi_schema(state: &State) -> oas3::Spec {
             trace: None,
         };
 
-        paths.insert(route_name.clone(), path_item);
+        paths.insert(full_route_path, path_item);
     }
     oas3::Spec {
         openapi: "3.1.0".into(),
