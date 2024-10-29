@@ -1,0 +1,209 @@
+use crate::EngineState;
+use crate::VERSION;
+use axum::{
+    extract::State,
+    http::{HeaderMap, Request},
+    middleware::Next,
+    response::IntoResponse,
+    Extension,
+};
+use axum_core::body::Body;
+use hasura_authn::authenticate;
+use http_body_util::BodyExt;
+use pre_parse_plugin::execute::pre_parse_plugins_handler;
+use pre_response_plugin::execute::pre_response_plugins_handler;
+
+use hasura_authn_core::Session;
+use tracing_util::{SpanVisibility, TraceableHttpResponse};
+
+/// Middleware to start tracing of the `/graphql` request.
+/// This middleware must be active for the entire duration
+/// of the request i.e. this middleware should be the
+/// entry point and the exit point of the GraphQL request.
+pub async fn graphql_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
+) -> axum::response::Response {
+    use tracing_util::*;
+    let tracer = global_tracer();
+    let path = "/graphql";
+
+    tracer
+        .in_span_async_with_parent_context(
+            path,
+            path,
+            SpanVisibility::User,
+            &request.headers().clone(),
+            || {
+                set_attribute_on_active_span(AttributeVisibility::Internal, "version", VERSION);
+                Box::pin(async move {
+                    let mut response = next.run(request).await;
+                    get_text_map_propagator(|propagator| {
+                        propagator.inject_context(
+                            &Context::current(),
+                            &mut HeaderInjector(response.headers_mut()),
+                        );
+                    });
+                    TraceableHttpResponse::new(response, path)
+                })
+            },
+        )
+        .await
+        .response
+}
+
+/// Middleware to start tracing of the `/v1/explain` request.
+/// This middleware must be active for the entire duration
+/// of the request i.e. this middleware should be the
+/// entry point and the exit point of the GraphQL request.
+pub async fn explain_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
+) -> axum::response::Response {
+    let tracer = tracing_util::global_tracer();
+    let path = "/v1/explain";
+    tracer
+        .in_span_async_with_parent_context(
+            path,
+            path,
+            SpanVisibility::User,
+            &request.headers().clone(),
+            || {
+                Box::pin(async move {
+                    let response = next.run(request).await;
+                    TraceableHttpResponse::new(response, path)
+                })
+            },
+        )
+        .await
+        .response
+}
+
+/// Middleware to start tracing of the `/v1/sql` request.
+/// This middleware must be active for the entire duration
+/// of the request i.e. this middleware should be the
+/// entry point and the exit point of the SQL request.
+pub async fn sql_request_tracing_middleware(
+    request: Request<Body>,
+    next: Next,
+) -> axum::response::Response {
+    let tracer = tracing_util::global_tracer();
+    let path = "/v1/sql";
+    tracer
+        .in_span_async_with_parent_context(
+            path,
+            path,
+            SpanVisibility::User,
+            &request.headers().clone(),
+            || {
+                Box::pin(async move {
+                    let response = next.run(request).await;
+                    TraceableHttpResponse::new(response, path)
+                })
+            },
+        )
+        .await
+        .response
+}
+
+/// This middleware authenticates the incoming GraphQL request according to the
+/// authentication configuration present in the `auth_config` of `EngineState`. The
+/// result of the authentication is `hasura-authn-core::Identity`, which is then
+/// made available to the GraphQL request handler.
+pub async fn authentication_middleware<'a>(
+    State(engine_state): State<EngineState>,
+    headers_map: HeaderMap,
+    mut request: Request<Body>,
+    next: Next,
+) -> axum::response::Result<axum::response::Response> {
+    let tracer = tracing_util::global_tracer();
+
+    let resolved_identity = tracer
+        .in_span_async(
+            "authentication_middleware",
+            "Authentication middleware",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(authenticate(
+                    &headers_map,
+                    &engine_state.http_context.client,
+                    &engine_state.auth_config,
+                ))
+            },
+        )
+        .await?;
+
+    request.extensions_mut().insert(resolved_identity);
+    Ok(next.run(request).await)
+}
+
+pub async fn plugins_middleware(
+    State(engine_state): State<EngineState>,
+    Extension(session): Extension<Session>,
+    headers_map: HeaderMap,
+    request: Request<axum::body::Body>,
+    next: Next,
+) -> axum::response::Result<axum::response::Response<Body>> {
+    let (parts, body) = request.into_parts();
+    let bytes = body
+        .collect()
+        .await
+        .map_err(|err| {
+            (reqwest::StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response()
+        })?
+        .to_bytes();
+    let raw_request = bytes.clone();
+
+    // Check if the pre_parse_plugins_config is empty
+    let response =
+        match nonempty::NonEmpty::from_slice(&engine_state.plugin_configs.pre_parse_plugins) {
+            None => {
+                // If empty, do nothing and pass the request to the next middleware
+                let recreated_request = Request::from_parts(parts, axum::body::Body::from(bytes));
+                Ok::<_, axum::response::ErrorResponse>(next.run(recreated_request).await)
+            }
+            Some(pre_parse_plugins) => {
+                let response = pre_parse_plugins_handler(
+                    &pre_parse_plugins,
+                    &engine_state.http_context.client,
+                    session.clone(),
+                    &bytes,
+                    headers_map.clone(),
+                )
+                .await?;
+
+                if let Some(response) = response {
+                    Ok(response)
+                } else {
+                    let recreated_request =
+                        Request::from_parts(parts, axum::body::Body::from(bytes));
+                    Ok(next.run(recreated_request).await)
+                }
+            }
+        }?;
+
+    let (parts, body) = response.into_parts();
+    let response_bytes = body
+        .collect()
+        .await
+        .map_err(|err| {
+            (reqwest::StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response()
+        })?
+        .to_bytes();
+
+    if let Some(pre_response_plugins) =
+        nonempty::NonEmpty::from_slice(&engine_state.plugin_configs.pre_response_plugins)
+    {
+        pre_response_plugins_handler(
+            &pre_response_plugins,
+            &engine_state.http_context.client,
+            session,
+            &raw_request,
+            &response_bytes,
+            headers_map,
+        )?;
+    }
+    let recreated_response =
+        axum::response::Response::from_parts(parts, axum::body::Body::from(response_bytes));
+    Ok(recreated_response)
+}

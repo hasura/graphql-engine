@@ -12,13 +12,13 @@ use tracing_util::{set_status_on_current_span, SpanVisibility, Traceable};
 
 use crate::{authentication_middleware, EngineState};
 
-pub(crate) fn create_json_api_router(state: EngineState) -> axum::Router {
+pub fn create_json_api_router(state: EngineState) -> axum::Router {
     let router = Router::new()
-        .route("/__schema", get(handle_schema))
+        .route("/__schema", get(handle_rest_schema))
         // TODO: update method GET; for now we are only supporting queries. And
         // in JSON:API spec, all queries have the GET method. Not even HEAD is
         // supported. So this should be fine.
-        .route("/*path", get(handle_request))
+        .route("/*path", get(handle_rest_request))
         .layer(axum::middleware::from_fn(
             hasura_authn_core::resolve_session,
         ))
@@ -56,7 +56,7 @@ impl Traceable for JsonApiSchemaResponse {
     }
 }
 
-async fn handle_schema(
+async fn handle_rest_schema(
     axum::extract::State(state): axum::extract::State<EngineState>,
     Extension(session): Extension<Session>,
 ) -> impl IntoResponse {
@@ -78,7 +78,7 @@ async fn handle_schema(
     )
 }
 
-async fn handle_request(
+async fn handle_rest_request(
     request_headers: HeaderMap,
     method: Method,
     uri: Uri,
