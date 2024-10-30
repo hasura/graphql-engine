@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2024.10.30]
+
+### Added
+
 #### Order by Nested Fields
 
 Add support for ordering by nested fields.
@@ -704,7 +712,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.10.25...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.10.30...HEAD
+[v2024.10.30]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.30
 [v2024.10.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.25
 [v2024.10.23]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.23
 [v2024.10.21]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.21
