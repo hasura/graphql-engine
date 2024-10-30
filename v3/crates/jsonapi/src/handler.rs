@@ -6,6 +6,7 @@ use super::types::{Catalog, Model, QueryResult, RequestError, State};
 use axum::http::{HeaderMap, Method, Uri};
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
+use tracing_util::SpanVisibility;
 
 #[allow(clippy::unused_async)]
 pub async fn handler_internal<'metadata>(
@@ -18,6 +19,8 @@ pub async fn handler_internal<'metadata>(
     uri: Uri,
     query_string: jsonapi_library::query::Query,
 ) -> Result<jsonapi_library::api::DocumentData, RequestError> {
+    let tracer = tracing_util::global_tracer();
+
     let state = catalog
         .state_per_role
         .get(&session.role)
@@ -28,19 +31,38 @@ pub async fn handler_internal<'metadata>(
         None => Err(RequestError::NotFound),
         Some(model) => {
             // create the query IR
-            let query_ir = parse::create_query_ir(model, &http_method, &uri, &query_string)?;
+            let query_ir = tracer.in_span(
+                "create_query_ir",
+                "Create query IR",
+                SpanVisibility::User,
+                || parse::create_query_ir(model, &http_method, &uri, &query_string),
+            )?;
+
             // execute the query with the query-engine
-            let result = query_engine_execute(
-                &query_ir,
-                metadata,
-                &session,
-                &http_context,
-                &request_headers,
-            )
-            .await?;
+            let result = tracer
+                .in_span_async(
+                    "query_engine_execute",
+                    "Execute query",
+                    SpanVisibility::User,
+                    || {
+                        Box::pin(query_engine_execute(
+                            &query_ir,
+                            metadata,
+                            &session,
+                            &http_context,
+                            &request_headers,
+                        ))
+                    },
+                )
+                .await?;
 
             // process result to JSON:API compliant response
-            Ok(process_response::process_result(result))
+            tracer.in_span(
+                "process_response",
+                "Process response",
+                SpanVisibility::User,
+                || Ok(process_response::process_result(result)),
+            )
         }
     }
 }

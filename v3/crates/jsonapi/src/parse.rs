@@ -66,12 +66,14 @@ pub fn create_query_ir(
     let limit = query_string
         .page
         .as_ref()
-        .map(|page| usize::try_from(page.limit).unwrap());
+        .and_then(|page| usize::try_from(page.limit).ok())
+        .filter(|page| *page > 0);
 
     let offset = query_string
         .page
         .as_ref()
-        .map(|page| usize::try_from(page.offset).unwrap());
+        .and_then(|page| usize::try_from(page.offset).ok())
+        .filter(|page| *page > 0);
 
     // form the model selection
     let model_selection = open_dds::query::ModelSelection {
@@ -86,6 +88,7 @@ pub fn create_query_ir(
             subgraph,
         },
     };
+
     let queries = IndexMap::from_iter([(
         open_dds::query::Alias::new(identifier!("jsonapi_model_query")),
         open_dds::query::Query::Model(model_selection),

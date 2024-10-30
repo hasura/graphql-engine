@@ -89,8 +89,8 @@ async fn handle_rest_request(
     let tracer = tracing_util::global_tracer();
     let response = tracer
         .in_span_async(
-            "handle_request",
-            "Handle request",
+            "handle_rest_request",
+            "Handle rest request",
             SpanVisibility::User,
             || {
                 Box::pin(jsonapi::handler_internal(
