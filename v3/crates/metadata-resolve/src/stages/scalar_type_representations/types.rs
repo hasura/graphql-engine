@@ -4,7 +4,7 @@ use open_dds::data_connector::DataConnectorName;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 // what type should we advertise for this value? useful for generating schema for
 // JSONAPI and SQL frontends
 pub enum ValueRepresentation {

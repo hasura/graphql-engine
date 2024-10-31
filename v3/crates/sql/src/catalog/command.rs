@@ -5,6 +5,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::{any::Any, sync::Arc};
+use thiserror::Error;
 
 use metadata_resolve as resolved;
 use open_dds::arguments::ArgumentName;
@@ -12,7 +13,9 @@ use open_dds::commands::CommandName;
 use open_dds::identifier::SubgraphName;
 
 use super::model::WithSession;
-use super::types::{NormalizedType, StructType, StructTypeName, TypeRegistry};
+use super::types::{
+    NormalizedType, StructType, StructTypeName, TypeRegistry, UnsupportedObject, UnsupportedType,
+};
 use crate::execute::planner::command::{CommandOutput, CommandQuery};
 use crate::execute::planner::scalar::{parse_datafusion_literal, parse_struct_literal};
 
@@ -43,7 +46,7 @@ impl ArgumentInfo {
     fn from_resolved(
         type_registry: &TypeRegistry,
         argument: &resolved::ArgumentInfo,
-    ) -> Option<Self> {
+    ) -> Result<Self, UnsupportedType> {
         // TODO, ArgumentInfo doesn't have the underlying scalar representation
         let (argument_type_normalized, argument_type) =
             type_registry.get_datafusion_type(&argument.argument_type.underlying_type)?;
@@ -53,7 +56,7 @@ impl ArgumentInfo {
             is_nullable: argument.argument_type.nullable,
             description: argument.description.clone(),
         };
-        Some(argument_info)
+        Ok(argument_info)
     }
 }
 
@@ -75,6 +78,19 @@ pub(crate) struct Command {
     pub output_type: CommandOutput,
 }
 
+// These return types are not supported
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Error)]
+pub enum UnsupportedReturnType {
+    #[error("scalar return types are not supported")]
+    Scalar,
+    #[error("object type not supported: {0}")]
+    ObjectNotSupported(UnsupportedObject),
+    #[error("sist of scalar types as return type is not supported")]
+    ListOfScalars,
+    #[error("nested lists are not supported as return type")]
+    ListOfLists,
+}
+
 // The conversion is as follows:
 // 1. If the types is a list of objects, then it would be a table of those entities.
 // 2. If the type is an object, it would be a table that returns a single row.
@@ -86,29 +102,46 @@ pub(crate) struct Command {
 fn return_type<'r>(
     registry: &'r TypeRegistry,
     output_type: &resolved::QualifiedTypeReference,
-) -> Option<(
-    // datafusion's table schema
-    &'r StructType,
-    // the expected output
-    CommandOutput,
-)> {
+) -> Result<
+    (
+        // datafusion's table schema
+        &'r StructType,
+        // the expected output
+        CommandOutput,
+    ),
+    UnsupportedReturnType,
+> {
     match &output_type.underlying_type {
         resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Inbuilt(_)) => {
-            None
+            Err(UnsupportedReturnType::Scalar)
             // scalar_type_to_table_schema(&data_type)
         }
         resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Custom(custom_type)) => {
-            registry
+            let object = registry
                 .get_object(custom_type)
-                .map(|object| (object, CommandOutput::Object(custom_type.clone())))
+                .ok_or(UnsupportedReturnType::Scalar)?
+                .as_ref()
+                .map_err(|unsupported_object| {
+                    UnsupportedReturnType::ObjectNotSupported(unsupported_object.clone())
+                })?;
+
+            Ok((object, CommandOutput::Object(custom_type.clone())))
         }
         resolved::QualifiedBaseType::List(element_type) => match &element_type.underlying_type {
             resolved::QualifiedBaseType::Named(resolved::QualifiedTypeName::Custom(
                 custom_type,
-            )) => registry
-                .get_object(custom_type)
-                .map(|object| (object, CommandOutput::ListOfObjects(custom_type.clone()))),
-            _ => None,
+            )) => {
+                let object = registry
+                    .get_object(custom_type)
+                    .ok_or(UnsupportedReturnType::ListOfScalars)?
+                    .as_ref()
+                    .map_err(|unsupported_object| {
+                        UnsupportedReturnType::ObjectNotSupported(unsupported_object.clone())
+                    })?;
+
+                Ok((object, CommandOutput::ListOfObjects(custom_type.clone())))
+            }
+            _ => Err(UnsupportedReturnType::ListOfLists),
         },
     }
 }
@@ -123,6 +156,22 @@ fn return_type<'r>(
 //     // TODO
 //     None
 // }
+//
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Error)]
+pub enum UnsupportedCommand {
+    #[error("Command has argument presets defined")]
+    ArgumentPresetsDefined,
+    #[error("Return type not supported: {type_} (reason: {reason})")]
+    ReturnTypeNotSupported {
+        type_: resolved::QualifiedTypeReference,
+        reason: UnsupportedReturnType,
+    },
+    #[error("Argument not supported: {argument} (reason: {reason:?})")]
+    ArgumentNotSupported {
+        argument: ArgumentName,
+        reason: UnsupportedType,
+    },
+}
 
 impl Command {
     // this returns None if any of the following is true
@@ -132,29 +181,39 @@ impl Command {
     pub fn from_resolved_command(
         type_registry: &TypeRegistry,
         command: &resolved::CommandWithArgumentPresets,
-    ) -> Option<Self> {
+    ) -> Result<Self, UnsupportedCommand> {
         let argument_presets_defined = command
             .permissions
             .values()
             .any(|permission| !permission.argument_presets.is_empty());
 
         if argument_presets_defined {
-            return None;
+            return Err(UnsupportedCommand::ArgumentPresetsDefined);
         }
 
         let (struct_type, command_output) =
-            return_type(type_registry, &command.command.output_type)?;
+            return_type(type_registry, &command.command.output_type).map_err(|reason| {
+                UnsupportedCommand::ReturnTypeNotSupported {
+                    type_: command.command.output_type.clone(),
+                    reason,
+                }
+            })?;
 
-        let arguments = command
-            .command
-            .arguments
-            .iter()
-            .map(|(argument_name, argument)| {
-                let argument_info = ArgumentInfo::from_resolved(type_registry, argument)?;
-                Some((argument_name.clone(), argument_info))
-            })
-            // this returns None if any of the arguments cannot be converted
-            .collect::<Option<IndexMap<_, _>>>()?;
+        let arguments =
+            command
+                .command
+                .arguments
+                .iter()
+                .map(|(argument_name, argument)| {
+                    let argument_info = ArgumentInfo::from_resolved(type_registry, argument)
+                        .map_err(|reason| UnsupportedCommand::ArgumentNotSupported {
+                            argument: argument_name.clone(),
+                            reason,
+                        })?;
+                    Ok((argument_name.clone(), argument_info))
+                })
+                // this returns None if any of the arguments cannot be converted
+                .collect::<Result<IndexMap<_, _>, _>>()?;
 
         let command = Command {
             subgraph: command.command.name.subgraph.clone(),
@@ -165,7 +224,7 @@ impl Command {
             schema: struct_type.schema.clone(),
             output_type: command_output,
         };
-        Some(command)
+        Ok(command)
     }
 }
 

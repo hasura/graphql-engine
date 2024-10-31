@@ -18,11 +18,12 @@ use open_dds::identifier::SubgraphName;
 use open_dds::{models::ModelName, types::CustomTypeName};
 
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 use crate::catalog::model::filter::can_pushdown_filters;
 use crate::execute::planner::model::ModelQuery;
 
-use super::types::{StructTypeName, TypeRegistry};
+use super::types::{StructTypeName, TypeRegistry, UnsupportedObject};
 
 mod datafusion {
     pub(super) use datafusion::{
@@ -40,6 +41,17 @@ mod datafusion {
 pub struct ArgumentInfo {
     pub argument_type: datafusion::DataType,
     pub description: Option<String>,
+}
+
+#[derive(Error, Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum UnsupportedModel {
+    #[error("return type {type_} not supported: {reason}")]
+    ReturnTypeNotSupported {
+        type_: Qualified<CustomTypeName>,
+        reason: UnsupportedObject,
+    },
+    #[error("internal error: object type {0} not found in registry")]
+    InternalNotFound(Qualified<CustomTypeName>),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -66,20 +78,27 @@ impl Model {
     pub fn from_resolved_model(
         type_registry: &TypeRegistry,
         model: &resolved::ModelWithArgumentPresets,
-    ) -> Option<Self> {
-        let (type_name, schema) = type_registry
+    ) -> Result<Self, UnsupportedModel> {
+        let object = type_registry
             .get_object(&model.model.data_type)
-            .map(|object| (object.name(), object.table_schema()))?;
+            .ok_or_else(|| UnsupportedModel::InternalNotFound(model.model.data_type.clone()))?
+            .as_ref()
+            .map_err(
+                |unsupported_object| UnsupportedModel::ReturnTypeNotSupported {
+                    type_: model.model.data_type.clone(),
+                    reason: unsupported_object.clone(),
+                },
+            )?;
         let model = Model {
             subgraph: model.model.name.subgraph.clone(),
             name: model.model.name.name.clone(),
             description: model.model.raw.description.clone(),
             arguments: IndexMap::new(),
-            struct_type: type_name.clone(),
-            schema: schema.clone(),
+            struct_type: object.name.clone(),
+            schema: object.schema.clone(),
             data_type: model.model.data_type.clone(),
         };
-        Some(model)
+        Ok(model)
     }
 }
 
