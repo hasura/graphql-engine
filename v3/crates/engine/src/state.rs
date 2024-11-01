@@ -43,9 +43,9 @@ pub fn build_state(
     };
     let plugin_configs = resolved_metadata.plugin_configs.clone();
     let sql_context = if enable_sql_interface {
-        sql::catalog::Catalog::from_metadata(resolved_metadata.clone())
+        sql::catalog::Catalog::from_metadata(&resolved_metadata)
     } else {
-        sql::catalog::Catalog::empty_from_metadata(resolved_metadata.clone())
+        sql::catalog::Catalog::empty()
     };
 
     let schema = graphql_schema::GDS {

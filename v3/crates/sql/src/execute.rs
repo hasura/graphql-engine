@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use datafusion::{
     arrow::{
         array::RecordBatch,
@@ -11,12 +9,14 @@ use datafusion::{
     error::DataFusionError,
 };
 use hasura_authn_core::Session;
+use metadata_resolve as resolved;
 use planner::{
     command::{NDCFunctionPushDown, NDCProcedurePushDown},
     common::PhysicalPlanOptions,
     model::{NDCAggregatePushdown, NDCQueryPushDown},
 };
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use thiserror::Error;
 
 use tracing_util::{
@@ -93,6 +93,7 @@ impl TraceableError for SqlExecutionError {
 pub async fn execute_sql(
     request_headers: Arc<reqwest::header::HeaderMap>,
     catalog: Arc<crate::catalog::Catalog>,
+    metadata: Arc<resolved::Metadata>,
     session: Arc<Session>,
     http_context: Arc<execute::HttpContext>,
     request: &SqlRequest,
@@ -104,8 +105,12 @@ pub async fn execute_sql(
             "Create a datafusion SessionContext",
             SpanVisibility::Internal,
             || {
-                let session =
-                    catalog.create_session_context(&request_headers, &session, &http_context);
+                let session = catalog.create_session_context(
+                    metadata,
+                    &request_headers,
+                    &session,
+                    &http_context,
+                );
                 Successful::new(session)
             },
         )

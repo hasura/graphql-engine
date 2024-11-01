@@ -24,6 +24,7 @@ pub async fn handle_sql_request(
                     sql::execute::execute_sql(
                         Arc::new(headers),
                         state.sql_context.clone(),
+                        state.resolved_metadata.clone(),
                         Arc::new(session),
                         Arc::new(state.http_context.clone()),
                         &request,

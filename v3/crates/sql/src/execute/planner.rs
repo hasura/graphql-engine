@@ -5,6 +5,7 @@ pub(crate) mod scalar;
 
 use command::build_execution_plan;
 use hasura_authn_core::Session;
+use metadata_resolve as resolved;
 use std::sync::Arc;
 
 use datafusion::{
@@ -21,7 +22,7 @@ pub(crate) struct OpenDDQueryPlanner {
     pub(crate) request_headers: Arc<reqwest::header::HeaderMap>,
     pub(crate) session: Arc<Session>,
     pub(crate) http_context: Arc<execute::HttpContext>,
-    pub(crate) catalog: Arc<crate::catalog::Catalog>,
+    pub(crate) metadata: Arc<resolved::Metadata>,
 }
 
 #[async_trait]
@@ -39,7 +40,7 @@ impl QueryPlanner for OpenDDQueryPlanner {
                 request_headers: self.request_headers.clone(),
                 session: self.session.clone(),
                 http_context: self.http_context.clone(),
-                catalog: self.catalog.clone(),
+                metadata: self.metadata.clone(),
             })]);
         // Delegate most work of physical planning to the default physical planner
         physical_planner
@@ -52,7 +53,7 @@ pub(crate) struct NDCPushDownPlanner {
     pub(crate) request_headers: Arc<reqwest::header::HeaderMap>,
     pub(crate) session: Arc<Session>,
     pub(crate) http_context: Arc<execute::HttpContext>,
-    pub(crate) catalog: Arc<crate::catalog::Catalog>,
+    pub(crate) metadata: Arc<resolved::Metadata>,
 }
 
 impl NDCPushDownPlanner {}
@@ -75,7 +76,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                 .to_physical_node(
                     &self.session,
                     &self.http_context,
-                    &self.catalog.metadata,
+                    &self.metadata,
                     &self.request_headers,
                 )
                 .await?;
@@ -85,7 +86,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
             assert_eq!(physical_inputs.len(), 0, "Inconsistent number of inputs");
             build_execution_plan(
                 &self.request_headers,
-                &self.catalog.metadata,
+                &self.metadata,
                 &self.http_context,
                 &self.session,
                 &command_query.command_selection,
@@ -102,7 +103,7 @@ impl ExtensionPlanner for NDCPushDownPlanner {
                 .to_physical_node(
                     &self.session,
                     &self.http_context,
-                    &self.catalog.metadata,
+                    &self.metadata,
                     &self.request_headers,
                 )
                 .await?;

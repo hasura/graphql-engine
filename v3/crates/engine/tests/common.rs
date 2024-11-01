@@ -260,7 +260,7 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
                 serde_json::from_str(&serialized_metadata).expect("Failed to deserialize metadata");
 
             // Ensure sql_context can be serialized and deserialized
-            let sql_context = sql::catalog::Catalog::from_metadata(gds.metadata.clone());
+            let sql_context = sql::catalog::Catalog::from_metadata(&gds.metadata);
             let sql_context_str = serde_json::to_string(&sql_context)?;
             let sql_context_parsed = serde_json::from_str(&sql_context_str)?;
             assert_eq!(sql_context, sql_context_parsed);
@@ -578,7 +578,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
         serde_json::to_string(&schema)?;
 
         // Ensure sql_context can be serialized and deserialized
-        let sql_context = sql::catalog::Catalog::from_metadata(gds.metadata.clone());
+        let sql_context = sql::catalog::Catalog::from_metadata(&gds.metadata);
         let sql_context_str = serde_json::to_string(&sql_context)?;
         let sql_context_parsed = serde_json::from_str(&sql_context_str)?;
         assert_eq!(sql_context, sql_context_parsed);
@@ -609,13 +609,14 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
             )
         }?);
 
-        let catalog = Arc::new(sql::catalog::Catalog::from_metadata(gds.metadata));
+        let catalog = Arc::new(sql::catalog::Catalog::from_metadata(&gds.metadata));
         let http_context = Arc::new(test_ctx.http_context);
 
         // Execute the test
 
         snapshot_sql(
             &catalog,
+            &gds.metadata,
             &session,
             &http_context,
             &mut test_ctx.mint,
@@ -627,6 +628,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
 
         snapshot_sql(
             &catalog,
+            &gds.metadata,
             &session,
             &http_context,
             &mut test_ctx.mint,
@@ -642,6 +644,7 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
 
 async fn snapshot_sql(
     catalog: &Arc<sql::catalog::Catalog>,
+    metadata: &Arc<metadata_resolve::Metadata>,
     session: &Arc<hasura_authn_core::Session>,
     http_context: &Arc<execute::HttpContext>,
     mint: &mut Mint,
@@ -652,6 +655,7 @@ async fn snapshot_sql(
     let response = sql::execute::execute_sql(
         request_headers.clone(),
         catalog.clone(),
+        metadata.clone(),
         session.clone(),
         http_context.clone(),
         request,

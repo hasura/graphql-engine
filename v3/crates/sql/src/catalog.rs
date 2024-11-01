@@ -28,7 +28,6 @@ pub mod types;
 /// The context in which to compile and execute SQL queries.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Catalog {
-    pub(crate) metadata: Arc<resolved::Metadata>,
     pub(crate) subgraphs: IndexMap<String, Arc<subgraph::Subgraph>>,
     pub(crate) table_valued_functions: IndexMap<String, Arc<command::Command>>,
     pub(crate) introspection: Arc<introspection::IntrospectionSchemaProvider>,
@@ -37,9 +36,8 @@ pub struct Catalog {
 
 impl Catalog {
     /// Create a no-op Catalog, used when `sql` layer is disabled
-    pub fn empty_from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
+    pub fn empty() -> Self {
         Catalog {
-            metadata,
             subgraphs: IndexMap::default(),
             table_valued_functions: IndexMap::default(),
             introspection: Arc::new(introspection::IntrospectionSchemaProvider::new(
@@ -49,8 +47,8 @@ impl Catalog {
         }
     }
     /// Derive a SQL Context from resolved Open DDS metadata.
-    pub fn from_metadata(metadata: Arc<resolved::Metadata>) -> Self {
-        let type_registry = TypeRegistry::build_type_registry(&metadata);
+    pub fn from_metadata(metadata: &Arc<resolved::Metadata>) -> Self {
+        let type_registry = TypeRegistry::build_type_registry(metadata);
         // process models
         let mut subgraphs = IndexMap::new();
         let mut unsupported_models = IndexMap::new();
@@ -101,7 +99,7 @@ impl Catalog {
 
         let introspection = introspection::IntrospectionSchemaProvider::new(
             &introspection::Introspection::from_metadata(
-                &metadata,
+                metadata,
                 &type_registry,
                 &subgraphs,
                 &table_valued_functions,
@@ -111,7 +109,6 @@ impl Catalog {
         );
 
         Catalog {
-            metadata,
             subgraphs: subgraphs
                 .into_iter()
                 .map(|(k, v)| (k, Arc::new(v)))
@@ -152,6 +149,7 @@ impl datafusion::CatalogProvider for model::WithSession<Catalog> {
 impl Catalog {
     pub fn create_session_context(
         self: Arc<Self>,
+        metadata: Arc<resolved::Metadata>,
         request_headers: &Arc<reqwest::header::HeaderMap>,
         session: &Arc<Session>,
         http_context: &Arc<execute::HttpContext>,
@@ -187,10 +185,10 @@ impl Catalog {
             session_config
         };
         let query_planner = Arc::new(super::execute::planner::OpenDDQueryPlanner {
-            catalog: self.clone(),
             session: session.clone(),
             http_context: http_context.clone(),
             request_headers: request_headers.clone(),
+            metadata,
         });
         let session_state = datafusion::SessionStateBuilder::new()
             .with_config(session_config)
