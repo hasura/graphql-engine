@@ -1018,12 +1018,6 @@ checksum = "f7144d30dcf0fafbce74250a3963025d8d52177934239851c917d29f1df280c2"
 
 [[package]]
 name = "convert_case"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
-
-[[package]]
-name = "convert_case"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec182b0ca2f35d8fc196cf3404988fd8b8c739a4d270ff118a398feb0cbec1ca"
@@ -1638,19 +1632,6 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "0.99.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f33878137e4dafd7fa914ad4e259e18a4e8e532b9617a2d0150262bf53abfce"
-dependencies = [
- "convert_case 0.4.0",
- "proc-macro2",
- "quote",
- "rustc_version",
- "syn 2.0.82",
-]
-
-[[package]]
-name = "derive_more"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
@@ -1664,6 +1645,7 @@ version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
 dependencies = [
+ "convert_case",
  "proc-macro2",
  "quote",
  "syn 2.0.82",
@@ -2279,7 +2261,7 @@ version = "3.0.0"
 dependencies = [
  "axum",
  "blake2",
- "derive_more 0.99.18",
+ "derive_more",
  "execute",
  "futures-util",
  "graphql-frontend",
@@ -2425,7 +2407,7 @@ version = "3.0.0"
 dependencies = [
  "axum",
  "axum-core",
- "derive_more 0.99.18",
+ "derive_more",
  "http 1.1.0",
  "lang-graphql",
  "open-dds",
@@ -2927,7 +2909,7 @@ version = "3.0.0"
 dependencies = [
  "axum",
  "axum-core",
- "derive_more 0.99.18",
+ "derive_more",
  "execute",
  "hasura-authn-core",
  "indexmap 2.6.0",
@@ -3215,7 +3197,7 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 name = "metadata-resolve"
 version = "3.0.0"
 dependencies = [
- "derive_more 0.99.18",
+ "derive_more",
  "error-context",
  "hasura-authn-core",
  "indexmap 2.6.0",
@@ -3490,7 +3472,7 @@ version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "caad8a11807e43c49ab8f9527c96d0ec926f525549e65e5cd3b502115704a58e"
 dependencies = [
- "derive_more 1.0.0",
+ "derive_more",
  "http 1.1.0",
  "log",
  "once_cell",
@@ -3554,7 +3536,7 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 name = "open-dds"
 version = "3.0.0"
 dependencies = [
- "derive_more 0.99.18",
+ "derive_more",
  "goldenfile",
  "indexmap 2.6.0",
  "jsonpath",
@@ -3578,7 +3560,7 @@ dependencies = [
 name = "opendds-derive"
 version = "3.0.0"
 dependencies = [
- "convert_case 0.6.0",
+ "convert_case",
  "darling",
  "proc-macro2",
  "quote",
@@ -3996,7 +3978,7 @@ checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
 name = "plan"
 version = "3.0.0"
 dependencies = [
- "derive_more 0.99.18",
+ "derive_more",
  "execute",
  "graphql-ir",
  "graphql-schema",
@@ -4013,7 +3995,7 @@ dependencies = [
 name = "plan-types"
 version = "3.0.0"
 dependencies = [
- "derive_more 0.99.18",
+ "derive_more",
  "metadata-resolve",
  "open-dds",
  "schemars",
@@ -5443,7 +5425,7 @@ name = "tracing-util"
 version = "3.0.0"
 dependencies = [
  "axum",
- "derive_more 0.99.18",
+ "derive_more",
  "http 1.1.0",
  "opentelemetry",
  "opentelemetry-contrib",

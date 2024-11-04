@@ -85,7 +85,7 @@ cookie = "0.18"
 criterion = "0.5"
 darling = "0.20"
 datafusion = "41"
-derive_more = "0.99"
+derive_more = { version = "1.0", features = ["full"] }
 diffy = "0.4"
 env_logger = "0.11"
 expect-test = "1"

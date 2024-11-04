@@ -16,9 +16,9 @@ pub static GLOBAL_TRACER_NAME: &str = "engine-tracing-util";
 
 #[derive(Clone, Copy, derive_more::Display)]
 pub enum SpanVisibility {
-    #[display(fmt = "internal")]
+    #[display("internal")]
     Internal,
-    #[display(fmt = "user")]
+    #[display("user")]
     User,
 }
 

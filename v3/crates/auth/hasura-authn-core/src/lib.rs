@@ -32,10 +32,10 @@ pub use open_dds::{
 pub enum SessionVariableValue {
     /// An unparsed session variable value as a string. Might be a raw string, might be a number, might be json.
     /// How we interpret it depends on what type we're trying to coerce to from the string
-    #[display(fmt = "{_0}")]
+    #[display("{_0}")]
     Unparsed(String),
     /// A parsed JSON session variable value. We know what the type is because we parsed it from JSON.
-    #[display(fmt = "{_0}")]
+    #[display("{_0}")]
     Parsed(serde_json::Value),
 }
 

@@ -53,7 +53,7 @@ impl<T> TraceableHttpResponse<T> {
 /// Error type for `TraceableHttpResponse`.
 /// Only used as an associated type when implementing [`Traceable`] trait for [`TraceableHttpResponse`].
 #[derive(Debug, derive_more::Display)]
-#[display(fmt = "{error}")]
+#[display("{error}")]
 pub struct ResponseError {
     error: String,
 }

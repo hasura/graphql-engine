@@ -166,9 +166,9 @@ impl JsonSchema for TypeReference {
 
 #[derive(Hash, Clone, Debug, PartialEq, Eq, derive_more::Display)]
 pub enum BaseType {
-    #[display(fmt = "{_0}")]
+    #[display("{_0}")]
     Named(TypeName),
-    #[display(fmt = "[{_0}]")]
+    #[display("[{_0}]")]
     List(Box<TypeReference>),
 }
 

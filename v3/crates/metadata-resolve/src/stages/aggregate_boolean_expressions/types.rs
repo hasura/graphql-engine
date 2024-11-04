@@ -340,33 +340,33 @@ pub enum AggregateBooleanExpressionError {
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]
 pub enum CountAggregateType {
-    #[display(fmt = "count")]
+    #[display("count")]
     Count,
-    #[display(fmt = "count distinct")]
+    #[display("count distinct")]
     CountDistinct,
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]
 pub enum AggregateOperandType {
-    #[display(fmt = "object aggregate")]
+    #[display("object aggregate")]
     ObjectAggregate,
-    #[display(fmt = "scalar aggregate")]
+    #[display("scalar aggregate")]
     ScalarAggregate,
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, derive_more::Display)]
 pub enum NameSource {
-    #[display(fmt = "comparable aggregation function")]
+    #[display("comparable aggregation function")]
     ComparableAggregationFunction,
-    #[display(fmt = "comparable aggregatable field")]
+    #[display("comparable aggregatable field")]
     ComparableAggregatableField,
-    #[display(fmt = "comparable aggregatable relationship")]
+    #[display("comparable aggregatable relationship")]
     ComparableAggregatableRelationship,
-    #[display(fmt = "logical operator")]
+    #[display("logical operator")]
     LogicalOperator,
-    #[display(fmt = "count aggregation function")]
+    #[display("count aggregation function")]
     CountAggregationFunction,
-    #[display(fmt = "count distinct aggregation function")]
+    #[display("count distinct aggregation function")]
     CountDistinctAggregationFunction,
 }
 
