@@ -11,10 +11,11 @@ use open_dds::{
     models::ModelName,
     types::{CustomTypeName, FieldName},
 };
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use tracing_util::{ErrorVisibility, TraceableError};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Catalog {
     pub state_per_role: BTreeMap<Role, State>,
 }
@@ -40,7 +41,7 @@ impl Catalog {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct State {
     pub routes: BTreeMap<String, Model>,
 }
@@ -74,7 +75,7 @@ impl State {
 }
 
 // feel we're going to need to think about object types for nested stuff here too
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum FieldType {
     TypeRepresentation(ndc_models::TypeRepresentation),
     List(Box<FieldType>),
@@ -83,7 +84,7 @@ pub enum FieldType {
 
 // only the parts of a Model we need to construct a JSONAPI
 // we'll filter out fields a given role can't see
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Model {
     pub name: Qualified<ModelName>,
     pub description: Option<String>,
@@ -138,6 +139,12 @@ pub enum ModelWarning {
     NoObjectTypeFound {
         object_type_name: Qualified<CustomTypeName>,
     },
+    NoObjectTypePermission {
+        object_type_name: Qualified<CustomTypeName>,
+    },
+    RecursiveTypeFound {
+        object_type_name: Qualified<CustomTypeName>,
+    },
     NoModelSource,
     NoTypeRepresentationFound {
         object_type_name: Qualified<CustomTypeName>,
@@ -155,6 +162,32 @@ pub enum RequestError {
     InternalError(InternalError),
     PlanError(plan::PlanError),
     ExecuteError(execute::FieldError),
+}
+
+impl RequestError {
+    pub fn to_error_response(&self) -> serde_json::Value {
+        match self {
+            RequestError::BadRequest(err) => serde_json::json!({"error": err}),
+            RequestError::NotFound => {
+                serde_json::json!({"error": "invalid route or path"})
+            }
+            RequestError::InternalError(InternalError::EmptyQuerySet) => {
+                serde_json::json!({"error": "Internal error"})
+            }
+            RequestError::PlanError(plan::PlanError::Internal(msg)) => {
+                serde_json::json!({"error": msg })
+            }
+            RequestError::PlanError(plan::PlanError::External(_err)) => {
+                serde_json::json!({"error": "Internal error" })
+            }
+            RequestError::PlanError(plan::PlanError::Permission(_msg)) => {
+                serde_json::json!({"error": "Access forbidden" })
+            }
+            RequestError::ExecuteError(field_error) => {
+                serde_json::json!({"error": field_error.to_string() })
+            }
+        }
+    }
 }
 
 #[derive(Debug, derive_more::Display)]

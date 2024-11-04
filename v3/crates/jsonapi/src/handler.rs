@@ -14,7 +14,7 @@ pub async fn handler_internal<'metadata>(
     http_context: Arc<execute::HttpContext>,
     session: Arc<Session>,
     catalog: &Catalog,
-    metadata: &'metadata Metadata,
+    metadata: Arc<Metadata>,
     http_method: Method,
     uri: Uri,
     query_string: jsonapi_library::query::Query,
@@ -47,7 +47,7 @@ pub async fn handler_internal<'metadata>(
                     || {
                         Box::pin(query_engine_execute(
                             &query_ir,
-                            metadata,
+                            &metadata,
                             &session,
                             &http_context,
                             &request_headers,

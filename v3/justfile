@@ -85,7 +85,6 @@ watch: start-docker-test-deps start-docker-run-deps
       --otlp-endpoint http://localhost:4317 \
       --authn-config-path static/auth/auth_config.json \
       --metadata-path static/sample-schema.json \
-      --unstable-feature enable-json-api \
       --expose-internal-errors'
 
 # check the code is fine
@@ -174,5 +173,5 @@ run METADATA_PATH="static/sample-schema.json": start-docker-test-deps start-dock
     --otlp-endpoint http://localhost:4317 \
     --authn-config-path static/auth/auth_config.json \
     --metadata-path {{ METADATA_PATH }} \
-    --unstable-feature enable-json-api \
-    --expose-internal-errors
+    --expose-internal-errors \
+    --export-traces-stdout

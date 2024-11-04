@@ -2922,6 +2922,7 @@ dependencies = [
  "open-dds",
  "plan",
  "reqwest",
+ "serde",
  "serde_json",
  "tokio",
  "tracing-util",

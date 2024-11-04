@@ -18,7 +18,7 @@ fn test_get_succeeding_requests() {
         runtime.block_on(async {
             let TestEnvironment {
                 jsonapi_catalog,
-                resolved_metadata,
+                metadata,
             } = test_environment_setup();
 
             let TestRequest { query, model_name } = test_request_setup(path);
@@ -38,7 +38,7 @@ fn test_get_succeeding_requests() {
                 Arc::new(http_context.clone()),
                 Arc::new(session.clone()),
                 &jsonapi_catalog,
-                &resolved_metadata,
+                metadata.into(),
                 axum::http::method::Method::GET,
                 axum::http::uri::Uri::from_str(&path).unwrap(),
                 query,
@@ -68,8 +68,8 @@ fn test_get_failing_requests() {
 
         runtime.block_on(async {
             let TestEnvironment {
+                metadata,
                 jsonapi_catalog,
-                resolved_metadata,
             } = test_environment_setup();
 
             let TestRequest { query, model_name } = test_request_setup(path);
@@ -89,7 +89,7 @@ fn test_get_failing_requests() {
                 Arc::new(http_context.clone()),
                 Arc::new(session.clone()),
                 &jsonapi_catalog,
-                &resolved_metadata,
+                metadata.into(),
                 axum::http::method::Method::GET,
                 axum::http::uri::Uri::from_str(&path).unwrap(),
                 query,
@@ -105,7 +105,7 @@ fn test_get_failing_requests() {
 fn test_openapi_generation() {
     let TestEnvironment {
         jsonapi_catalog,
-        resolved_metadata: _,
+        metadata: _,
     } = test_environment_setup();
 
     for (role, state) in &jsonapi_catalog.state_per_role {
@@ -130,7 +130,7 @@ struct TestRequest {
 
 struct TestEnvironment {
     jsonapi_catalog: jsonapi::Catalog,
-    resolved_metadata: metadata_resolve::Metadata,
+    metadata: metadata_resolve::Metadata,
 }
 
 fn trim_newline(s: &mut String) {
@@ -166,7 +166,7 @@ fn test_environment_setup() -> TestEnvironment {
 
     TestEnvironment {
         jsonapi_catalog,
-        resolved_metadata,
+        metadata: resolved_metadata,
     }
 }
 
@@ -206,7 +206,6 @@ fn create_default_session() -> hasura_authn_core::Session {
 fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Configuration {
     let unstable_features = metadata_resolve::configuration::UnstableFeatures {
         enable_ndc_v02_support: false,
-        enable_jsonapi: true,
         enable_aggregation_predicates: false,
     };
 

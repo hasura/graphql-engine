@@ -82,7 +82,6 @@ fn read_test_configuration(
 ) -> Result<configuration::Configuration, Box<dyn std::error::Error>> {
     let unstable_features = configuration::UnstableFeatures {
         enable_ndc_v02_support: false,
-        enable_jsonapi: false,
         enable_aggregation_predicates: true,
     };
 

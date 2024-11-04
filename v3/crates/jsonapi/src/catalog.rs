@@ -9,7 +9,7 @@ use open_dds::{
     data_connector::DataConnectorName,
     types::{CustomTypeName, FieldName, InbuiltType},
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 // look at permissions and work out which fields we're allowed to see
 // this is quite limited and leans to be overcautious
@@ -35,13 +35,17 @@ pub fn get_model_fields(
         .as_ref()
         .ok_or_else(|| ModelWarning::NoModelSource)?;
 
+    // if we have no output permissions for the underlying object type, ignore it
     let output_permissions_for_role = underlying_object_type
         .type_output_permissions
         .get(role)
-        .unwrap();
+        .ok_or_else(|| ModelWarning::NoObjectTypePermission {
+            object_type_name: model.model.data_type.clone(),
+        })?;
+
+    let mut type_fields = IndexMap::new();
 
     // otherwise return all fields
-    let mut type_fields = IndexMap::new();
     for (field_name, field_info) in
         model
             .model
@@ -58,10 +62,12 @@ pub fn get_model_fields(
             scalar_types,
             object_types,
             &model_source.data_connector.name,
+            &mut BTreeSet::new(),
         )?;
 
         type_fields.insert(field_name.clone(), field_type);
     }
+
     Ok(type_fields)
 }
 
@@ -71,6 +77,7 @@ fn field_type_from_type_representation(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
     data_connector_name: &Qualified<DataConnectorName>,
+    found_objects: &mut BTreeSet<Qualified<CustomTypeName>>,
 ) -> Result<FieldType, ModelWarning> {
     // NOTE: currently we assume everything is nullable because a user might
     // not include a field in sparse fields
@@ -106,6 +113,15 @@ fn field_type_from_type_representation(
                     }
                     None => match object_types.get(custom_type_name) {
                         Some(object_type) => {
+                            // let's just disallow recursive types for now
+                            if found_objects.contains(custom_type_name) {
+                                return Err(ModelWarning::RecursiveTypeFound {
+                                    object_type_name: custom_type_name.clone(),
+                                });
+                            }
+                            // store this type to check if it appears again
+                            found_objects.insert(custom_type_name.clone());
+
                             let mut items = IndexMap::new();
                             for (field_name, field) in &object_type.object_type.fields {
                                 items.insert(
@@ -115,6 +131,7 @@ fn field_type_from_type_representation(
                                         scalar_types,
                                         object_types,
                                         data_connector_name,
+                                        found_objects,
                                     )?,
                                 );
                             }
@@ -133,6 +150,7 @@ fn field_type_from_type_representation(
                 scalar_types,
                 object_types,
                 data_connector_name,
+                found_objects,
             )?,
         ))),
     }

@@ -133,12 +133,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         engine_router.add_sql_route(state.clone());
     }
 
-    if metadata_resolve_configuration
-        .unstable_features
-        .enable_jsonapi
-    {
-        engine_router.add_jsonapi_route(state.clone());
-    }
+    engine_router.add_jsonapi_route(state.clone());
 
     // If `--introspection-metadata` is specified we also serve the file indicated on `/metadata`
     // and its hash on `/metadata-hash`.

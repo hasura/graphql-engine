@@ -479,7 +479,6 @@ pub fn test_execute_explain(
         let configuration = metadata_resolve::configuration::Configuration {
             unstable_features: metadata_resolve::configuration::UnstableFeatures {
                 enable_ndc_v02_support: true,
-                enable_jsonapi: false,
                 ..Default::default()
             },
         };
@@ -539,7 +538,6 @@ pub(crate) fn test_metadata_resolve_configuration() -> metadata_resolve::configu
     metadata_resolve::configuration::Configuration {
         unstable_features: metadata_resolve::configuration::UnstableFeatures {
             enable_ndc_v02_support: true,
-            enable_jsonapi: false,
             ..Default::default()
         },
     }

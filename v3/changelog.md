@@ -4,6 +4,31 @@
 
 ### Added
 
+#### JSONAPI alpha release
+
+Adds a new set of endpoints at `/v1/rest` that follow the
+[JSONAPI](https://jsonapi.org/) specification.
+
+An [OpenAPI](https://swagger.io/specification/) schema for a given role can be
+accessed at `v1/rest/__schema`.
+
+Currently, every model that a given role is able to access is exposed at
+`GET v1/rest/subgraph/model`. In further releases models will be explicitly
+configured and exposed via metadata to match the GraphQL schema.
+
+Select the fields you receive with `?fields[model]=fieldname,anotherfield`.
+
+Limit the number of results with `?page[limit]=10`
+
+Offset the results with `?page[offset]=5`
+
+Order the results with `?sort[model]=fieldname,-anotherfield`. Default is
+sorting in ascending order, adding `-` at the start of the field name makes the
+ordering descending instead.
+
+This feature is still very much alpha and in active development, all feedback
+gratefully received.
+
 ### Fixed
 
 ### Changed

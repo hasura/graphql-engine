@@ -98,7 +98,7 @@ async fn handle_rest_request(
                     Arc::new(state.http_context.clone()),
                     Arc::new(session),
                     &state.jsonapi_catalog,
-                    &state.resolved_metadata,
+                    state.resolved_metadata,
                     method,
                     uri,
                     jsonapi_library::query::Query::from_params(&raw_query.unwrap_or_default()),

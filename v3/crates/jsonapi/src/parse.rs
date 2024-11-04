@@ -30,7 +30,9 @@ pub fn create_query_ir(
     let mut selection = IndexMap::new();
     for field_name in model.type_fields.keys() {
         if include_field(query_string, field_name, &model.name.name) {
-            let field_name_ident = Identifier::new(field_name.as_str()).unwrap();
+            let field_name_ident = Identifier::new(field_name.as_str())
+                .map_err(|e| RequestError::BadRequest(e.into()))?;
+
             let field_name = open_dds::types::FieldName::new(field_name_ident.clone());
             let field_alias = open_dds::query::Alias::new(field_name_ident);
             let sub_sel =
@@ -62,7 +64,6 @@ pub fn create_query_ir(
 
     // pagination
     // spec: <https://jsonapi.org/format/#fetching-pagMetadata>
-    // FIXME: unwrap
     let limit = query_string
         .page
         .as_ref()
