@@ -293,7 +293,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [],
+        roles: {},
     },
     [],
 )

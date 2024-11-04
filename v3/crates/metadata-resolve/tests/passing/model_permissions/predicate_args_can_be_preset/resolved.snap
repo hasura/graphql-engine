@@ -1586,14 +1586,11 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [
+        roles: {
             Role(
                 "user",
             ),
-            Role(
-                "user",
-            ),
-        ],
+        },
     },
     [],
 )

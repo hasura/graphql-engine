@@ -2771,7 +2771,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/root_fie
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [],
+        roles: {},
     },
     [],
 )

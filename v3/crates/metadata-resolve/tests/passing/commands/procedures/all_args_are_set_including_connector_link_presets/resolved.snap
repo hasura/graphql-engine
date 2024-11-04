@@ -298,7 +298,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/procedures/all_args_a
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [],
+        roles: {},
     },
     [],
 )

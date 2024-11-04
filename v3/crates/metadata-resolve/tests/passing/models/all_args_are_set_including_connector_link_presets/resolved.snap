@@ -671,7 +671,7 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [],
+        roles: {},
     },
     [],
 )

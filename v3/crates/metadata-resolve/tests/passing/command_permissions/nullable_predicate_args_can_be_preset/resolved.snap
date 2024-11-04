@@ -1111,14 +1111,11 @@ input_file: crates/metadata-resolve/tests/passing/command_permissions/nullable_p
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [
+        roles: {
             Role(
                 "user",
             ),
-            Role(
-                "user",
-            ),
-        ],
+        },
     },
     [],
 )

@@ -2749,7 +2749,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [],
+        roles: {},
     },
     [
         ModelGraphqlIssue(

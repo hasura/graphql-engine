@@ -1039,7 +1039,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [
+        roles: {
             Role(
                 "admin",
             ),
@@ -1049,16 +1049,7 @@ input_file: crates/metadata-resolve/tests/passing/missing_subgraph_when_ignoring
             Role(
                 "user2",
             ),
-            Role(
-                "admin",
-            ),
-            Role(
-                "user1",
-            ),
-            Role(
-                "user2",
-            ),
-        ],
+        },
     },
     [],
 )

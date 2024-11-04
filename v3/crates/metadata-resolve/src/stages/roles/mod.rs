@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
@@ -17,24 +17,24 @@ pub fn resolve(
     >,
     models: &IndexMap<Qualified<ModelName>, model_permissions::ModelWithPermissions>,
     commands: &IndexMap<Qualified<CommandName>, command_permissions::CommandWithPermissions>,
-) -> Vec<Role> {
-    let mut roles = Vec::new();
+) -> BTreeSet<Role> {
+    let mut roles = BTreeSet::new();
     for object_type in object_types.values() {
         for role in object_type.type_output_permissions.keys() {
-            roles.push(role.clone());
+            roles.insert(role.clone());
         }
         for role in object_type.type_input_permissions.keys() {
-            roles.push(role.clone());
+            roles.insert(role.clone());
         }
     }
     for model in models.values() {
         for role in model.select_permissions.keys() {
-            roles.push(role.clone());
+            roles.insert(role.clone());
         }
     }
     for command in commands.values() {
         for role in command.permissions.keys() {
-            roles.push(role.clone());
+            roles.insert(role.clone());
         }
     }
     roles

@@ -1588,14 +1588,11 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/nullable_pre
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [
+        roles: {
             Role(
                 "user",
             ),
-            Role(
-                "user",
-            ),
-        ],
+        },
     },
     [],
 )

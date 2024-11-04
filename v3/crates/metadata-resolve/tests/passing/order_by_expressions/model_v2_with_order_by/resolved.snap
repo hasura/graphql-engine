@@ -559,7 +559,7 @@ input_file: crates/metadata-resolve/tests/passing/order_by_expressions/model_v2_
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [],
+        roles: {},
     },
     [],
 )

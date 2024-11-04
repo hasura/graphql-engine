@@ -1,5 +1,5 @@
 use serde_with::serde_as;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
@@ -45,5 +45,5 @@ pub struct Metadata {
         BTreeMap<Qualified<AggregateExpressionName>, aggregates::AggregateExpression>,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
     pub plugin_configs: LifecyclePluginConfigs,
-    pub roles: Vec<Role>,
+    pub roles: BTreeSet<Role>,
 }

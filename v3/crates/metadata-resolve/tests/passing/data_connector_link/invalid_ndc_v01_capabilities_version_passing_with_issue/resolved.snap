@@ -56,7 +56,7 @@ input_file: crates/metadata-resolve/tests/passing/data_connector_link/invalid_nd
             pre_parse_plugins: [],
             pre_response_plugins: [],
         },
-        roles: [],
+        roles: {},
     },
     [
         DataConnectorIssue(
