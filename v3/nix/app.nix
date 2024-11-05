@@ -15,6 +15,8 @@ let
   buildArgs = {
     inherit pname;
 
+    strictDeps = true;
+
     src =
       let
         isGraphqlFile = path: _type: builtins.match ".*graphql" path != null;
