@@ -11,7 +11,6 @@ DocumentData {
                     _type: "default_author",
                     id: "1",
                     attributes: {
-                        "author_id": Number(2),
                         "first_name": String("John"),
                     },
                     relationships: None,

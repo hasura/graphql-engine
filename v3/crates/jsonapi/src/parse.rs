@@ -157,6 +157,7 @@ fn include_field(
                     return true;
                 }
             }
+            return false;
         }
     }
     // if no sparse fields provided for our model, return everything
