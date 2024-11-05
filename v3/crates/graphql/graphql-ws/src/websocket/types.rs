@@ -88,10 +88,8 @@ impl<M> Connections<M> {
         if let Some(connection) = self.remove_connection(id).await {
             // Record the connection drop in metrics
             connection.context.metrics.record_connection_drop();
-            // Clean up pollers when the connection ends
-            for operation_id in connection.pollers.read().await.keys() {
-                connection.stop_poller(operation_id).await;
-            }
+            // Stop all pollers associated with the connection
+            connection.stop_all_pollers().await;
         }
     }
 
@@ -155,6 +153,25 @@ impl<M> Connection<M> {
             // Record the poller drop in the metrics.
             self.context.metrics.record_poller_stop(&self.id);
             poller.stop(); // Stop the poller before dropping it
+        }
+    }
+
+    /// Stops all pollers associated with the connection.
+    pub(crate) async fn stop_all_pollers(&self)
+    where
+        M: WebSocketMetrics,
+    {
+        // Fetch all poller keys from the mutex-protected map by cloning them into a vector.
+        // This is necessary to avoid holding the mutex guard lock while dropping the pollers.
+        let pollers = self
+            .pollers
+            .read()
+            .await
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>();
+        for operation_id in pollers {
+            self.stop_poller(&operation_id).await;
         }
     }
 
