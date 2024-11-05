@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2024.11.05]
+
+### Added
+
 #### JSONAPI alpha release
 
 Adds a new set of endpoints at `/v1/rest` that follow the
@@ -28,10 +36,6 @@ ordering descending instead.
 
 This feature is still very much alpha and in active development, all feedback
 gratefully received.
-
-### Fixed
-
-### Changed
 
 ## [v2024.10.30]
 
@@ -737,7 +741,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.10.30...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.05...HEAD
+[v2024.11.05]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.05
 [v2024.10.30]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.30
 [v2024.10.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.25
 [v2024.10.23]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.23
