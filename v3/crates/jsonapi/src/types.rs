@@ -1,4 +1,5 @@
 use crate::catalog::get_model_fields;
+use crate::parse;
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use metadata_resolve::{
@@ -162,11 +163,13 @@ pub enum RequestError {
     InternalError(InternalError),
     PlanError(plan::PlanError),
     ExecuteError(execute::FieldError),
+    ParseError(parse::ParseError),
 }
 
 impl RequestError {
     pub fn to_error_response(&self) -> serde_json::Value {
         match self {
+            RequestError::ParseError(err) => serde_json::json!({"error": err}),
             RequestError::BadRequest(err) => serde_json::json!({"error": err}),
             RequestError::NotFound => {
                 serde_json::json!({"error": "invalid route or path"})
@@ -211,20 +214,6 @@ pub struct ModelInfo {
     pub unique_identifier: Option<String>,
     /// path to a relationship; like `["artist", "albums", "tracks"]`
     pub relationship: Vec<String>,
-}
-
-pub struct ParseError(String);
-
-impl From<&str> for ParseError {
-    fn from(value: &str) -> Self {
-        Self(value.to_string())
-    }
-}
-
-impl From<ParseError> for RequestError {
-    fn from(value: ParseError) -> Self {
-        Self::BadRequest(format!("Parse Error: {}", value.0))
-    }
 }
 
 // this is not the correct output type, we should be outputting a JSONAPI document instead

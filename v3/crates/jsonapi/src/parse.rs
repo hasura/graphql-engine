@@ -1,14 +1,23 @@
-use super::types::{Model, ModelInfo, ParseError, RequestError};
+use super::types::{Model, ModelInfo, RequestError};
 use axum::http::{Method, Uri};
 use indexmap::IndexMap;
-use metadata_resolve::ModelExpressionType;
 use open_dds::{
     identifier,
     identifier::{Identifier, SubgraphName},
     models::ModelName,
     types::FieldName,
 };
-use std::collections::BTreeMap;
+use serde::{Deserialize, Serialize};
+mod filter;
+
+#[derive(Debug, derive_more::Display, Serialize, Deserialize)]
+pub enum ParseError {
+    Filter(filter::FilterError),
+    InvalidFieldName(String),
+    InvalidModelName(String),
+    InvalidSubgraph(String),
+    PathLengthMustBeAtLeastTwo,
+}
 
 pub fn create_query_ir(
     model: &Model,
@@ -22,7 +31,7 @@ pub fn create_query_ir(
         name: model_name,
         unique_identifier: _,
         relationship: _,
-    } = parse_url(uri)?;
+    } = parse_url(uri).map_err(RequestError::ParseError)?;
 
     validate_sparse_fields(model, query_string)?;
 
@@ -48,17 +57,21 @@ pub fn create_query_ir(
     }
 
     // create filters
-    let filter_query = query_string
-        .filter
-        .as_ref()
-        .map(|filter| build_boolean_expression(model, filter));
+    let filter_query = match &query_string.filter {
+        Some(filter) => {
+            let boolean_expression = filter::build_boolean_expression(model, filter)
+                .map_err(|parse_error| RequestError::ParseError(ParseError::Filter(parse_error)))?;
+            Ok(Some(boolean_expression))
+        }
+        None => Ok(None),
+    }?;
 
     // create sorts
     let sort_query = match &query_string.sort {
         None => Ok(vec![]),
         Some(sort) => sort
             .iter()
-            .map(|elem| Ok(build_order_by_element(elem)?))
+            .map(|elem| build_order_by_element(elem).map_err(RequestError::ParseError))
             .collect::<Result<Vec<_>, RequestError>>(),
     }?;
 
@@ -164,6 +177,12 @@ fn include_field(
     true
 }
 
+fn create_field_name(field_name: &str) -> Result<FieldName, ParseError> {
+    let identifier = Identifier::new(field_name)
+        .map_err(|_| ParseError::InvalidFieldName(field_name.to_string()))?;
+    Ok(open_dds::types::FieldName::new(identifier))
+}
+
 // Sorting spec: <https://jsonapi.org/format/#fetching-sorting>
 fn build_order_by_element(elem: &String) -> Result<open_dds::query::OrderByElement, ParseError> {
     let (field_name, direction) = if elem.starts_with('-') {
@@ -177,72 +196,12 @@ fn build_order_by_element(elem: &String) -> Result<open_dds::query::OrderByEleme
 
     let operand = open_dds::query::Operand::Field(open_dds::query::ObjectFieldOperand {
         target: Box::new(open_dds::query::ObjectFieldTarget {
-            field_name: open_dds::types::FieldName::new(Identifier::new(field_name)?),
+            field_name: create_field_name(&field_name)?,
             arguments: IndexMap::new(),
         }),
         nested: None,
     });
     Ok(open_dds::query::OrderByElement { operand, direction })
-}
-
-/* Example filter as query string - /movies?sort=...&filter=<json>
-{
-  "$or": [
-    {
-      "name": {
-        "$eq": "Braveheart"
-      }
-    },
-    {
-      "name": {
-        "$eq": "Gladiator"
-      }
-    },
-    {
-      "$and": [
-        {
-          "director": {
-            "last_name": {
-              "$eq": "Scorcese"
-            }
-          }
-        },
-        {
-          "director": {
-            "age": {
-              "$gt": 50
-            }
-          }
-        }
-      ]
-    }
-  ],
-  "name": {
-    "$eq": "Foobar"
-  }
-}
-*/
-fn build_boolean_expression(
-    model: &Model,
-    _filter: &BTreeMap<String, Vec<String>>,
-) -> open_dds::query::BooleanExpression {
-    // TODO: actually parse and create a BooleanExpression
-    if let Some(filter_exp_type) = &model.filter_expression_type {
-        match filter_exp_type {
-            ModelExpressionType::BooleanExpressionType(_x) => {}
-            ModelExpressionType::ObjectBooleanExpressionType(_x) => {}
-        }
-    }
-    // dummy return
-    open_dds::query::BooleanExpression::IsNull(open_dds::query::Operand::Field(
-        open_dds::query::ObjectFieldOperand {
-            target: Box::new(open_dds::query::ObjectFieldTarget {
-                field_name: open_dds::types::FieldName::new(identifier!("dummy")),
-                arguments: IndexMap::new(),
-            }),
-            nested: None,
-        },
-    ))
 }
 
 fn parse_url(uri: &Uri) -> Result<ModelInfo, ParseError> {
@@ -252,7 +211,7 @@ fn parse_url(uri: &Uri) -> Result<ModelInfo, ParseError> {
         .filter(|p| !p.is_empty())
         .collect::<Vec<_>>();
     if paths.len() < 2 {
-        return Err("Path length MUST BE >=2".into());
+        return Err(ParseError::PathLengthMustBeAtLeastTwo);
     }
     let subgraph = paths[0];
     let model_name = paths[1];
@@ -262,8 +221,12 @@ fn parse_url(uri: &Uri) -> Result<ModelInfo, ParseError> {
         relationship = paths[3..].iter().map(|i| (*i).to_string()).collect();
     }
     Ok(ModelInfo {
-        name: ModelName::new(Identifier::new(model_name)?),
-        subgraph: SubgraphName::try_new(subgraph)?,
+        name: ModelName::new(
+            Identifier::new(model_name)
+                .map_err(|_| ParseError::InvalidModelName(model_name.to_string()))?,
+        ),
+        subgraph: SubgraphName::try_new(subgraph)
+            .map_err(|_| ParseError::InvalidSubgraph(subgraph.to_string()))?,
         unique_identifier,
         relationship,
     })

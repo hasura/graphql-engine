@@ -115,6 +115,10 @@ async fn handle_rest_request(
                 axum::http::StatusCode::BAD_REQUEST,
                 Json(serde_json::json!({"error": err})),
             ),
+            jsonapi::RequestError::ParseError(err) => (
+                axum::http::StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error": err})),
+            ),
             jsonapi::RequestError::NotFound => (
                 axum::http::StatusCode::NOT_FOUND,
                 Json(serde_json::json!({"error": "invalid route or path"})),

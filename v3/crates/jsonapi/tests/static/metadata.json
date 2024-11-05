@@ -1965,60 +1965,68 @@
           }
         },
         {
-          "kind": "ObjectBooleanExpressionType",
+          "kind": "BooleanExpressionType",
           "version": "v1",
           "definition": {
             "name": "artist_bool_exp",
-            "objectType": "Artist",
-            "dataConnectorName": "db",
-            "dataConnectorObjectType": "Artist",
-            "comparableFields": [
-              {
-                "fieldName": "ArtistId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Name",
-                "operators": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "type": "Artist",
+                "comparableFields": [
+                  {
+                    "fieldName": "ArtistId",
+                    "booleanExpressionType": "int4_bool_exp"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "booleanExpressionType": "varchar_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
               }
-            ],
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "ArtistBoolExp"
             }
           }
         },
         {
-          "kind": "ObjectBooleanExpressionType",
+          "kind": "BooleanExpressionType",
           "version": "v1",
           "definition": {
             "name": "album_bool_exp",
-            "objectType": "Album",
-            "dataConnectorName": "db",
-            "dataConnectorObjectType": "Album",
-            "comparableFields": [
-              {
-                "fieldName": "AlbumId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "ArtistId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Title",
-                "operators": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "type": "Album",
+                "comparableFields": [
+                  {
+                    "fieldName": "AlbumId",
+                    "booleanExpressionType": "int4_bool_exp"
+                  },
+                  {
+                    "fieldName": "ArtistId",
+                    "booleanExpressionType": "int4_bool_exp"
+                  },
+                  {
+                    "fieldName": "Title",
+                    "booleanExpressionType": "varchar_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
               }
-            ],
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "AlbumBoolExp"
             }
@@ -2094,33 +2102,36 @@
           }
         },
         {
-          "kind": "ObjectBooleanExpressionType",
+          "kind": "BooleanExpressionType",
           "version": "v1",
           "definition": {
             "name": "article_bool_exp",
-            "objectType": "article",
-            "dataConnectorName": "db",
-            "dataConnectorObjectType": "article",
-            "comparableFields": [
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "article_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "type": "article",
+                "comparableFields": [
+                  {
+                    "fieldName": "author_id",
+                    "booleanExpressionType": "custom_int_bool_exp"
+                  },
+                  {
+                    "fieldName": "article_id",
+                    "booleanExpressionType": "int_bool_exp"
+                  },
+                  {
+                    "fieldName": "title",
+                    "booleanExpressionType": "string_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
               }
-            ],
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Article_Where_Exp"
             }
@@ -2204,33 +2215,36 @@
           }
         },
         {
-          "kind": "ObjectBooleanExpressionType",
+          "kind": "BooleanExpressionType",
           "version": "v1",
           "definition": {
             "name": "author_bool_exp",
-            "objectType": "author",
-            "dataConnectorName": "db",
-            "dataConnectorObjectType": "author",
-            "comparableFields": [
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "first_name",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "last_name",
-                "operators": {
-                  "enableAll": true
-                }
+            "operand": {
+              "object": {
+                "type": "author",
+                "comparableFields": [
+                  {
+                    "fieldName": "author_id",
+                    "booleanExpressionType": "custom_int_bool_exp"
+                  },
+                  {
+                    "fieldName": "first_name",
+                    "booleanExpressionType": "string_bool_exp"
+                  },
+                  {
+                    "fieldName": "last_name",
+                    "booleanExpressionType": "string_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
               }
-            ],
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
             "graphql": {
               "typeName": "Author_Where_Exp"
             }
@@ -3806,6 +3820,29 @@
           }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "media_type_bool_exp",
+            "operand": {
+              "object": {
+                "type": "MediaType",
+                "comparableFields": [],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "MediaType_Comparison_Exp"
+            }
+          }
+        },
+        {
           "kind": "TypePermissions",
           "version": "v1",
           "definition": {
@@ -3840,6 +3877,7 @@
                 }
               }
             ],
+            "filterExpressionType": "media_type_bool_exp",
             "arguments": [],
             "graphql": {
               "selectUniques": [
@@ -6123,15 +6161,64 @@
           "kind": "BooleanExpressionType",
           "version": "v1",
           "definition": {
-            "name": "string_bool_exp",
+            "name": "varchar_bool_exp",
             "operand": {
               "scalar": {
-                "type": "String",
-                "comparisonOperators": [],
+                "type": "varchar",
+                "comparisonOperators": [
+                  {
+                    "name": "_like",
+                    "argumentType": "varchar"
+                  }
+                ],
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "custom",
                     "dataConnectorScalarType": "String",
+                    "operatorMapping": {}
+                  },
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "varchar",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Varchar_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "string_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "String",
+                "comparisonOperators": [
+                  {
+                    "name": "_like",
+                    "argumentType": "String"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "String",
+                    "operatorMapping": {}
+                  },
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "varchar",
                     "operatorMapping": {}
                   }
                 ]
@@ -6152,6 +6239,35 @@
           "kind": "BooleanExpressionType",
           "version": "v1",
           "definition": {
+            "name": "int4_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "int4",
+                "comparisonOperators": [],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "int4",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Int4_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
             "name": "int_bool_exp",
             "operand": {
               "scalar": {
@@ -6161,6 +6277,11 @@
                   {
                     "dataConnectorName": "custom",
                     "dataConnectorScalarType": "Int",
+                    "operatorMapping": {}
+                  },
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "int4",
                     "operatorMapping": {}
                   }
                 ]
@@ -6174,6 +6295,40 @@
             },
             "graphql": {
               "typeName": "Int_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "custom_int_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "CustomInt",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "CustomInt"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "int4",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Custom_Int_Comparison_Exp"
             }
           }
         },

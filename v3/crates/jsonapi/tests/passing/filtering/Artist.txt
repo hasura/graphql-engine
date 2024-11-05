@@ -1,0 +1,1 @@
+fields[Artist]=Name&filter={"$or":[{"Name":{"$eq": "Aerosmith"}},{"Name":{"$eq": "Queen"}}]}&page[limit]=10
