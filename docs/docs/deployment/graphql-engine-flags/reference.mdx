@@ -1317,8 +1317,8 @@ Enable WebSocket `permessage-deflate` compression.
 
 ### Websocket Connection Init Timeout
 
-Used to set the connection initialization timeout for `graphql-ws` clients. This is ignored for
-[`subscription-transport-ws` (Apollo) clients](/subscriptions/postgres/index.mdx).
+Used to set the connection initialization timeout for GraphQL subscription protocols
+(`graphql-transport-ws` and `subscriptions-transport-ws`).
 
 |                     |                                                            |
 | ------------------- | ---------------------------------------------------------- |
@@ -1330,7 +1330,7 @@ Used to set the connection initialization timeout for `graphql-ws` clients. This
 
 ### Websocket Keepalive
 
-Used to set the `Keep Alive` delay for clients that use the `subscription-transport-ws` (Apollo) protocol. For
+Used to set the `Keep Alive` delay for clients that use the `subscriptions-transport-ws` (Apollo) protocol. For
 `graphql-ws` clients, the `graphql-engine` sends `PING` messages instead.
 
 |                     |                                           |

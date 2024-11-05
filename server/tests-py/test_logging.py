@@ -31,7 +31,7 @@ def parse_logs(stream):
 pytestmark = [
     pytest.mark.capture_hge_logs,
     pytest.mark.admin_secret,
-	pytest.mark.hge_env('HASURA_GRAPHQL_LOG_LEVEL', 'debug'),
+    pytest.mark.hge_env('HASURA_GRAPHQL_LOG_LEVEL', 'debug'),
 ]
 
 
@@ -259,17 +259,18 @@ class TestWebsocketLogging:
 
     @pytest.fixture(scope='class', autouse=True)
     def make_requests(self, hge_ctx, ws_client):
+        '''
+            Create connection using connection_init
+        '''
+        headers = {'x-request-id': self.query_id}
+        if hge_ctx.hge_key:
+            headers['x-hasura-admin-secret'] = hge_ctx.hge_key
+        ws_client.init(headers=headers)
         # setup some tables
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
 
         # make a successful websocket query
-        headers = {'x-request-id': self.query_id}
-        if hge_ctx.hge_key:
-            headers['x-hasura-admin-secret'] = hge_ctx.hge_key
-
-        resp = ws_client.send_query(self.query, headers=headers,
-                                            query_id=self.query_id,
-                                            timeout=5)
+        resp = ws_client.send_query(self.query, query_id=self.query_id, timeout=5)
         try:
             ev = next(resp)
             assert ev['type'] == 'data' and ev['id'] == self.query_id, ev

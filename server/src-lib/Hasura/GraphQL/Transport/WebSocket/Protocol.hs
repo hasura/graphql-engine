@@ -15,22 +15,22 @@ module Hasura.GraphQL.Transport.WebSocket.Protocol
     ServerMsgType (..),
     StartMsg (StartMsg),
     StopMsg (StopMsg),
-    WSConnInitTimerStatus (Done),
+    WSConnInitTimeoutStatus (..),
+    WSConnInitTimeout,
     WSSubProtocol (..),
     encodeServerErrorMsg,
     encodeServerMsg,
-    getNewWSTimer,
-    getWSTimerState,
     keepAliveMessage,
     showSubProtocol,
     toWSSubProtocol,
+    newWSConnInitTimeout,
+    runTimer,
 
     -- * exported for testing
     unsafeMkOperationId,
   )
 where
 
-import Control.Concurrent
 import Control.Concurrent.Extended (sleep)
 import Control.Concurrent.STM
 import Data.Aeson qualified as J
@@ -312,32 +312,25 @@ encodeServerMsg msg =
         ]
       Nothing -> [encTy msgType]
 
--- This "timer" is necessary while initialising the connection
--- with the server. Also, this is specific to the GraphQL-WS protocol.
-data WSConnInitTimerStatus = Running | Done
+-- Status for connection initialisation in sub-protocol
+-- This is used to timeout the 'connection_init' message sent by the client
+data WSConnInitTimeoutStatus = Initialized | TimedOut
   deriving stock (Show, Eq)
 
-type WSConnInitTimer = (TVar WSConnInitTimerStatus, TMVar ())
+type WSConnInitTimeout = TMVar WSConnInitTimeoutStatus
 
-getWSTimerState :: WSConnInitTimer -> IO WSConnInitTimerStatus
-getWSTimerState (timerState, _) = readTVarIO timerState
+newWSConnInitTimeout :: IO WSConnInitTimeout
+newWSConnInitTimeout = newEmptyTMVarIO
 
-{-# ANN getNewWSTimer ("HLint: ignore Use withAsync" :: String) #-}
-getNewWSTimer :: Seconds -> IO WSConnInitTimer
-getNewWSTimer timeout = do
-  timerState <- newTVarIO Running
-  timer <- newEmptyTMVarIO
-  void
-    $ forkIO
-    $ do
-      labelMe "getNewWSTimer"
-      sleep (seconds timeout)
-      atomically $ do
-        runTimerState <- readTVar timerState
-        case runTimerState of
-          Running -> do
-            -- time's up, we set status to "Done"
-            writeTVar timerState Done
-            putTMVar timer ()
-          Done -> pure ()
-  pure (timerState, timer)
+-- | Run the timer for the given timeout duration
+runTimer :: Seconds -> WSConnInitTimeout -> IO ()
+runTimer timeout timer = do
+  -- sleep for the timeout duration
+  sleep (seconds timeout)
+  atomically $ do
+    -- check the status of the timer
+    timerState <- tryReadTMVar timer
+    -- if the timer is not set, set it to 'TimedOut'
+    case timerState of
+      Nothing -> writeTMVar timer TimedOut
+      Just _ -> pure ()
