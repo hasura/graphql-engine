@@ -3,7 +3,7 @@ use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use metadata_resolve::{
     ModelWithArgumentPresets, ObjectTypeWithRelationships, Qualified, QualifiedBaseType,
-    QualifiedTypeName, QualifiedTypeReference, ScalarTypeRepresentation, ValueRepresentation,
+    QualifiedTypeName, QualifiedTypeReference, ScalarTypeRepresentation,
 };
 use open_dds::{
     data_connector::DataConnectorName,
@@ -96,14 +96,7 @@ fn field_type_from_type_representation(
                     Some(scalar_type) => {
                         match scalar_type.representations.get(data_connector_name) {
                             Some(value_representation) => {
-                                Ok(FieldType::TypeRepresentation(match value_representation {
-                                    ValueRepresentation::FromDataConnectorSchema(
-                                        type_representation,
-                                    ) => type_representation.clone(),
-                                    ValueRepresentation::AssumeJson => {
-                                        ndc_models::TypeRepresentation::JSON
-                                    }
-                                }))
+                                Ok(FieldType::TypeRepresentation(value_representation.clone()))
                             }
                             None => Err(ModelWarning::NoTypeRepresentationFoundForDataConnector {
                                 data_connector_name: data_connector_name.clone(),

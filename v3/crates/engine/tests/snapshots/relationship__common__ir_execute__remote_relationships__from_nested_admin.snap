@@ -13,7 +13,7 @@ V1(
                 ModelSelection {
                     target: ModelTarget {
                         subgraph: SubgraphName(
-                            "__unknown_namespace",
+                            "default",
                         ),
                         model_name: ModelName(
                             Identifier(

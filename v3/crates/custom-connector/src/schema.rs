@@ -38,7 +38,9 @@ pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
                 variables: Some(ndc_models::LeafCapability {}),
                 nested_fields: ndc_models::NestedFieldCapabilities {
                     aggregates: Some(ndc_models::LeafCapability {}),
-                    filter_by: Some(ndc_models::LeafCapability {}),
+                    filter_by: Some(ndc_models::NestedFieldFilterByCapabilities {
+                        nested_arrays: None,
+                    }),
                     order_by: Some(ndc_models::LeafCapability {}),
                     nested_collections: None,
                 },
@@ -46,11 +48,13 @@ pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
                     named_scopes: None,
                     unrelated: Some(ndc_models::LeafCapability {}),
                     nested_collections: None,
+                    nested_scalar_collections: None,
                 },
             },
             relationships: Some(ndc_models::RelationshipCapabilities {
                 relation_comparisons: Some(ndc_models::LeafCapability {}),
                 order_by_aggregate: Some(ndc_models::LeafCapability {}),
+                nested: None,
             }),
         },
     }

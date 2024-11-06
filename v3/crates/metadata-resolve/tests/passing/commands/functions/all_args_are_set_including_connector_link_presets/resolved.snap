@@ -37,9 +37,7 @@ input_file: crates/metadata-resolve/tests/passing/commands/functions/all_args_ar
                                 "myconnector",
                             ),
                         ),
-                    }: FromDataConnectorSchema(
-                        JSON,
-                    ),
+                    }: JSON,
                 },
             },
         },

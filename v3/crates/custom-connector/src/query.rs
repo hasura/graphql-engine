@@ -199,6 +199,7 @@ fn eval_aggregate(
         ndc_models::Aggregate::StarCount {} => Ok(serde_json::Value::from(paginated.len())),
         ndc_models::Aggregate::ColumnCount {
             column,
+            arguments: _,
             field_path,
             distinct,
         } => {
@@ -251,6 +252,7 @@ fn eval_aggregate(
         }
         ndc_models::Aggregate::SingleColumn {
             column,
+            arguments: _,
             field_path,
             function,
         } => {
@@ -534,6 +536,7 @@ fn eval_order_by_element(
     match &element.target {
         ndc_models::OrderByTarget::Column {
             name,
+            arguments: _,
             field_path,
             path,
         } => eval_order_by_column(
@@ -548,6 +551,7 @@ fn eval_order_by_element(
         ndc_models::OrderByTarget::Aggregate { aggregate, path } => match aggregate {
             ndc_models::Aggregate::ColumnCount {
                 column,
+                arguments: _,
                 field_path: _,
                 distinct,
             } => eval_order_by_column_count_aggregate(
@@ -561,6 +565,7 @@ fn eval_order_by_element(
             ),
             ndc_models::Aggregate::SingleColumn {
                 column,
+                arguments: _,
                 field_path: _,
                 function,
             } => eval_order_by_single_column_aggregate(
@@ -955,6 +960,15 @@ fn eval_expression(
                 }),
             )),
         },
+
+        ndc_models::Expression::ArrayComparison { .. } => Err((
+            StatusCode::NOT_IMPLEMENTED,
+            Json(ndc_models::ErrorResponse {
+                message: "array comparison in expression is not supported".to_string(),
+                details: serde_json::Value::Null,
+            }),
+        )),
+
         ndc_models::Expression::Exists {
             in_collection,
             predicate,
@@ -1005,6 +1019,7 @@ fn eval_in_collection(
     match in_collection {
         ndc_models::ExistsInCollection::Related {
             relationship,
+            field_path: _,
             arguments,
         } => {
             let relationship = collection_relationships.get(relationship.as_str()).ok_or((
@@ -1038,9 +1053,20 @@ fn eval_in_collection(
 
             get_collection_by_name(collection, &arguments, state)
         }
-        ndc_models::ExistsInCollection::NestedCollection { .. } => {
-            todo!("ExistsInCollection::NestedCollection not currently supported")
-        }
+        ndc_models::ExistsInCollection::NestedCollection { .. } => Err((
+            StatusCode::NOT_IMPLEMENTED,
+            Json(ndc_models::ErrorResponse {
+                message: "ExistsInCollection::NestedCollection is not supported".to_string(),
+                details: serde_json::Value::Null,
+            }),
+        )),
+        ndc_models::ExistsInCollection::NestedScalarCollection { .. } => Err((
+            StatusCode::NOT_IMPLEMENTED,
+            Json(ndc_models::ErrorResponse {
+                message: "ExistsInCollection::NestedScalarCollection is not supported".to_string(),
+                details: serde_json::Value::Null,
+            }),
+        )),
     }
 }
 
@@ -1049,9 +1075,11 @@ fn eval_comparison_target(
     item: &Row,
 ) -> Result<serde_json::Value> {
     match target {
-        ndc_models::ComparisonTarget::Column { name, field_path } => {
-            Ok(eval_column_field_path(item, name, field_path)?)
-        }
+        ndc_models::ComparisonTarget::Column {
+            name,
+            arguments: _,
+            field_path,
+        } => Ok(eval_column_field_path(item, name, field_path)?),
         ndc_models::ComparisonTarget::Aggregate {
             aggregate: _,
             path: _,
@@ -1103,6 +1131,7 @@ fn eval_comparison_value(
     match comparison_value {
         ndc_models::ComparisonValue::Column {
             name,
+            arguments: _,
             field_path,
             path,
             scope: _,
@@ -1289,7 +1318,7 @@ fn eval_column_mapping(
 ) -> Result<bool> {
     for (src_column, tgt_column) in &relationship.column_mapping {
         let src_value = eval_column(src_row, src_column)?;
-        let tgt_value = eval_column(tgt_row, tgt_column)?;
+        let tgt_value = eval_column(tgt_row, tgt_column.first().unwrap())?; // tgt_column should only contain one element until relationships.nested capability is enabled
         if src_value != tgt_value {
             return Ok(false);
         }

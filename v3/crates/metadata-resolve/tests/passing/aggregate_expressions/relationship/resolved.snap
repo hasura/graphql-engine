@@ -1545,9 +1545,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 "mypg",
                             ),
                         ),
-                    }: FromDataConnectorSchema(
-                        Int32,
-                    ),
+                    }: Int32,
                 },
             },
             Qualified {
@@ -1578,7 +1576,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 "mypg",
                             ),
                         ),
-                    }: AssumeJson,
+                    }: JSON,
                 },
             },
         },

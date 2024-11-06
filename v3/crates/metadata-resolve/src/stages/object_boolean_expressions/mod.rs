@@ -347,7 +347,13 @@ fn get_argument_type(
     field_type: &ndc_models::Type,
 ) -> ndc_models::Type {
     match op_definition {
-        ndc_models::ComparisonOperatorDefinition::Equal => unwrap_nullable_type(field_type).clone(),
+        ndc_models::ComparisonOperatorDefinition::Equal
+        | ndc_models::ComparisonOperatorDefinition::LessThan
+        | ndc_models::ComparisonOperatorDefinition::LessThanOrEqual
+        | ndc_models::ComparisonOperatorDefinition::GreaterThan
+        | ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual => {
+            unwrap_nullable_type(field_type).clone()
+        }
         ndc_models::ComparisonOperatorDefinition::In => ndc_models::Type::Array {
             element_type: Box::new(unwrap_nullable_type(field_type).clone()),
         },

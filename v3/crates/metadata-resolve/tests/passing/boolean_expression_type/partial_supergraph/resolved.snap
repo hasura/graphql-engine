@@ -177,7 +177,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 "int4",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -220,7 +222,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 "int4",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -263,7 +267,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 "varchar",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -533,7 +539,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                     "int4",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -576,7 +584,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                     "int4",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -619,7 +629,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                     "varchar",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [

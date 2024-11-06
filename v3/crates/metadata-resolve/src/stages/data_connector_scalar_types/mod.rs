@@ -207,7 +207,11 @@ pub(crate) fn get_comparison_operators(
                         operator_name.inner().clone(),
                     ));
             }
-            ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {
+            ndc_models::ComparisonOperatorDefinition::LessThan
+            | ndc_models::ComparisonOperatorDefinition::LessThanOrEqual
+            | ndc_models::ComparisonOperatorDefinition::GreaterThan
+            | ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual
+            | ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {
                 comparison_operators
                     .other_operators
                     .push(DataConnectorOperatorName::new(

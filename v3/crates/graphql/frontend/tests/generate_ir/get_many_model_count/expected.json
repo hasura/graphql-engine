@@ -59,7 +59,9 @@
                                             "type": "named",
                                             "name": "int4"
                                           },
-                                          "column_type_representation": null,
+                                          "column_type_representation": {
+                                            "type": "json"
+                                          },
                                           "comparison_operators": {
                                             "equality_operators": ["_eq"],
                                             "in_operators": [],
@@ -79,7 +81,9 @@
                                             "type": "named",
                                             "name": "int4"
                                           },
-                                          "column_type_representation": null,
+                                          "column_type_representation": {
+                                            "type": "json"
+                                          },
                                           "comparison_operators": {
                                             "equality_operators": ["_eq"],
                                             "in_operators": [],
@@ -99,7 +103,9 @@
                                             "type": "named",
                                             "name": "varchar"
                                           },
-                                          "column_type_representation": null,
+                                          "column_type_representation": {
+                                            "type": "json"
+                                          },
                                           "comparison_operators": {
                                             "equality_operators": ["_eq"],
                                             "in_operators": [],
@@ -235,7 +241,9 @@
                                                   "type": "named",
                                                   "name": "int8"
                                                 },
-                                                "column_type_representation": null,
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
                                                   "in_operators": [],
@@ -255,7 +263,9 @@
                                                   "type": "named",
                                                   "name": "varchar"
                                                 },
-                                                "column_type_representation": null,
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
                                                   "in_operators": [],
@@ -289,7 +299,9 @@
                                                   "type": "named",
                                                   "name": "varchar"
                                                 },
-                                                "column_type_representation": null,
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
                                                   "in_operators": [],
@@ -425,7 +437,9 @@
                                                         "type": "named",
                                                         "name": "int4"
                                                       },
-                                                      "column_type_representation": null,
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
                                                       "comparison_operators": {
                                                         "equality_operators": [
                                                           "_eq"
@@ -447,7 +461,9 @@
                                                         "type": "named",
                                                         "name": "int4"
                                                       },
-                                                      "column_type_representation": null,
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
                                                       "comparison_operators": {
                                                         "equality_operators": [
                                                           "_eq"
@@ -469,7 +485,9 @@
                                                         "type": "named",
                                                         "name": "varchar"
                                                       },
-                                                      "column_type_representation": null,
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
                                                       "comparison_operators": {
                                                         "equality_operators": [
                                                           "_eq"
@@ -871,7 +889,9 @@
                                                         "type": "named",
                                                         "name": "int8"
                                                       },
-                                                      "column_type_representation": null,
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
                                                       "comparison_operators": {
                                                         "equality_operators": [
                                                           "_eq"
@@ -893,7 +913,9 @@
                                                         "type": "named",
                                                         "name": "varchar"
                                                       },
-                                                      "column_type_representation": null,
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
                                                       "comparison_operators": {
                                                         "equality_operators": [
                                                           "_eq"
@@ -929,7 +951,9 @@
                                                         "type": "named",
                                                         "name": "varchar"
                                                       },
-                                                      "column_type_representation": null,
+                                                      "column_type_representation": {
+                                                        "type": "json"
+                                                      },
                                                       "comparison_operators": {
                                                         "equality_operators": [
                                                           "_eq"
@@ -998,7 +1022,9 @@
                                                             "type": "named",
                                                             "name": "int4"
                                                           },
-                                                          "column_type_representation": null,
+                                                          "column_type_representation": {
+                                                            "type": "json"
+                                                          },
                                                           "comparison_operators": {
                                                             "equality_operators": [
                                                               "_eq"
@@ -1020,7 +1046,9 @@
                                                             "type": "named",
                                                             "name": "int4"
                                                           },
-                                                          "column_type_representation": null,
+                                                          "column_type_representation": {
+                                                            "type": "json"
+                                                          },
                                                           "comparison_operators": {
                                                             "equality_operators": [
                                                               "_eq"
@@ -1042,7 +1070,9 @@
                                                             "type": "named",
                                                             "name": "varchar"
                                                           },
-                                                          "column_type_representation": null,
+                                                          "column_type_representation": {
+                                                            "type": "json"
+                                                          },
                                                           "comparison_operators": {
                                                             "equality_operators": [
                                                               "_eq"
@@ -1150,7 +1180,9 @@
                                               "type": "named",
                                               "name": "int4"
                                             },
-                                            "column_type_representation": null,
+                                            "column_type_representation": {
+                                              "type": "json"
+                                            },
                                             "comparison_operators": {
                                               "equality_operators": ["_eq"],
                                               "in_operators": [],
@@ -1170,7 +1202,9 @@
                                               "type": "named",
                                               "name": "int4"
                                             },
-                                            "column_type_representation": null,
+                                            "column_type_representation": {
+                                              "type": "json"
+                                            },
                                             "comparison_operators": {
                                               "equality_operators": ["_eq"],
                                               "in_operators": [],
@@ -1190,7 +1224,9 @@
                                               "type": "named",
                                               "name": "varchar"
                                             },
-                                            "column_type_representation": null,
+                                            "column_type_representation": {
+                                              "type": "json"
+                                            },
                                             "comparison_operators": {
                                               "equality_operators": ["_eq"],
                                               "in_operators": [],
@@ -1257,7 +1293,9 @@
                                                   "type": "named",
                                                   "name": "int8"
                                                 },
-                                                "column_type_representation": null,
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
                                                   "in_operators": [],
@@ -1277,7 +1315,9 @@
                                                   "type": "named",
                                                   "name": "varchar"
                                                 },
-                                                "column_type_representation": null,
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
                                                   "in_operators": [],
@@ -1311,7 +1351,9 @@
                                                   "type": "named",
                                                   "name": "varchar"
                                                 },
-                                                "column_type_representation": null,
+                                                "column_type_representation": {
+                                                  "type": "json"
+                                                },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
                                                   "in_operators": [],
@@ -1417,7 +1459,9 @@
                                     "type": "named",
                                     "name": "int4"
                                   },
-                                  "column_type_representation": null,
+                                  "column_type_representation": {
+                                    "type": "json"
+                                  },
                                   "comparison_operators": {
                                     "equality_operators": ["_eq"],
                                     "in_operators": [],
@@ -1437,7 +1481,9 @@
                                     "type": "named",
                                     "name": "int4"
                                   },
-                                  "column_type_representation": null,
+                                  "column_type_representation": {
+                                    "type": "json"
+                                  },
                                   "comparison_operators": {
                                     "equality_operators": ["_eq"],
                                     "in_operators": [],
@@ -1457,7 +1503,9 @@
                                     "type": "named",
                                     "name": "varchar"
                                   },
-                                  "column_type_representation": null,
+                                  "column_type_representation": {
+                                    "type": "json"
+                                  },
                                   "comparison_operators": {
                                     "equality_operators": ["_eq"],
                                     "in_operators": [],
@@ -1524,7 +1572,9 @@
                                         "type": "named",
                                         "name": "int4"
                                       },
-                                      "column_type_representation": null,
+                                      "column_type_representation": {
+                                        "type": "json"
+                                      },
                                       "comparison_operators": {
                                         "equality_operators": ["_eq"],
                                         "in_operators": [],
@@ -1544,7 +1594,9 @@
                                         "type": "named",
                                         "name": "int4"
                                       },
-                                      "column_type_representation": null,
+                                      "column_type_representation": {
+                                        "type": "json"
+                                      },
                                       "comparison_operators": {
                                         "equality_operators": ["_eq"],
                                         "in_operators": [],
@@ -1564,7 +1616,9 @@
                                         "type": "named",
                                         "name": "varchar"
                                       },
-                                      "column_type_representation": null,
+                                      "column_type_representation": {
+                                        "type": "json"
+                                      },
                                       "comparison_operators": {
                                         "equality_operators": ["_eq"],
                                         "in_operators": [],

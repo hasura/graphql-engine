@@ -436,9 +436,17 @@ fn resolve_aggregation_function(
                         data_connector_aggregate_function_name: fn_mapping.name.clone(),
                 })?;
 
+            let data_connector_fn_result_type = match data_connector_fn {
+                ndc_models::AggregateFunctionDefinition::Min |
+                ndc_models::AggregateFunctionDefinition::Max => ndc_models::Type::Named { name: ndc_models::TypeName::from(data_connector_fn_mappings.data_connector_scalar_type.as_str()) },
+                ndc_models::AggregateFunctionDefinition::Sum { result_type } |
+                ndc_models::AggregateFunctionDefinition::Average { result_type } => ndc_models::Type::Named { name: result_type.inner().clone() },
+                ndc_models::AggregateFunctionDefinition::Custom { result_type } => result_type.clone(),
+            };
+
             check_aggregation_function_return_type(
                 &return_type,
-                &data_connector_fn.result_type,
+                &data_connector_fn_result_type,
                 aggregate_expression_name,
                 &aggregation_function_def.name,
                 &data_connector_name,

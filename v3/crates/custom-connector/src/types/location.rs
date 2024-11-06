@@ -41,5 +41,6 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                 },
             ),
         ]),
+        foreign_keys: BTreeMap::new(),
     }
 }

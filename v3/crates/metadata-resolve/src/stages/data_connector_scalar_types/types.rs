@@ -27,8 +27,7 @@ pub struct ScalarTypeWithRepresentationInfo<'a> {
 #[derive(Debug)]
 pub struct DataConnectorScalars<'a> {
     pub by_ndc_type: BTreeMap<DataConnectorScalarType, ScalarTypeWithRepresentationInfo<'a>>,
-    pub by_custom_type_name:
-        BTreeMap<Qualified<CustomTypeName>, Option<ndc_models::TypeRepresentation>>,
+    pub by_custom_type_name: BTreeMap<Qualified<CustomTypeName>, ndc_models::TypeRepresentation>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Default)]

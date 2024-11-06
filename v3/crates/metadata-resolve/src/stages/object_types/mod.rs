@@ -349,7 +349,7 @@ pub fn resolve_data_connector_type_mapping(
             .scalar_types
             .get(underlying_column_type.as_str());
 
-        let column_type_representation = scalar_type.and_then(|ty| ty.representation.clone());
+        let column_type_representation = scalar_type.map(|ty| ty.representation.clone());
 
         let comparison_operators = scalar_type.map(|ty| {
             let c = get_comparison_operators(ty);

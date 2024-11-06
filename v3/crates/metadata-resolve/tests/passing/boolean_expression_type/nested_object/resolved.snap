@@ -213,7 +213,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             },
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -244,7 +246,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 "Int",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -288,7 +292,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 "String",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -471,7 +477,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             },
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -502,7 +510,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 "String",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -533,7 +543,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 "String",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -695,7 +707,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 "String",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -726,7 +740,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 "String",
                                             ),
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -759,7 +775,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 ),
                                             },
                                         },
-                                        column_type_representation: None,
+                                        column_type_representation: Some(
+                                            JSON,
+                                        ),
                                         comparison_operators: Some(
                                             ComparisonOperators {
                                                 equality_operators: [
@@ -1024,7 +1042,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     ),
                                                 },
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -1055,7 +1075,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     "Int",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -1099,7 +1121,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     "String",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -1167,7 +1191,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     ),
                                                 },
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -1198,7 +1224,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     "String",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -1229,7 +1257,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     "String",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -1276,7 +1306,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     "String",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -1307,7 +1339,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     "String",
                                                 ),
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [
@@ -1340,7 +1374,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                     ),
                                                 },
                                             },
-                                            column_type_representation: None,
+                                            column_type_representation: Some(
+                                                JSON,
+                                            ),
                                             comparison_operators: Some(
                                                 ComparisonOperators {
                                                     equality_operators: [

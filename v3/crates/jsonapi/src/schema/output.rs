@@ -43,14 +43,12 @@ fn type_schema(field_type: &FieldType) -> ObjectSchema {
 fn from_type_representation(type_representation: &ndc_models::TypeRepresentation) -> ObjectSchema {
     match type_representation {
         ndc_models::TypeRepresentation::Boolean => bool_schema(),
-        ndc_models::TypeRepresentation::Integer
-        | ndc_models::TypeRepresentation::Int8
+        ndc_models::TypeRepresentation::Int8
         | ndc_models::TypeRepresentation::Int16
         | ndc_models::TypeRepresentation::Int32
         | ndc_models::TypeRepresentation::Int64
         | ndc_models::TypeRepresentation::BigInteger => int_schema(),
-        ndc_models::TypeRepresentation::Number
-        | ndc_models::TypeRepresentation::Float32
+        ndc_models::TypeRepresentation::Float32
         | ndc_models::TypeRepresentation::Float64
         | ndc_models::TypeRepresentation::BigDecimal => float_schema(),
         ndc_models::TypeRepresentation::JSON => json_schema(),

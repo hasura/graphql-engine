@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use metadata_resolve::data_connectors::NdcVersion;
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::de::DeserializeOwned;
 use thiserror::Error;
@@ -92,10 +93,13 @@ pub async fn explain_query_post(
 
                     match query_request {
                         NdcQueryRequest::V01(req) => {
-                            let request =
-                                construct_request(configuration, reqwest::Method::POST, url, |r| {
-                                    r.json(req)
-                                });
+                            let request = construct_request(
+                                configuration,
+                                NdcVersion::V01,
+                                reqwest::Method::POST,
+                                url,
+                                |r| r.json(req),
+                            );
                             let response = execute_request(
                                 request,
                                 response_size_limit,
@@ -105,10 +109,13 @@ pub async fn explain_query_post(
                             Ok(NdcExplainResponse::V01(response))
                         }
                         NdcQueryRequest::V02(req) => {
-                            let request =
-                                construct_request(configuration, reqwest::Method::POST, url, |r| {
-                                    r.json(req)
-                                });
+                            let request = construct_request(
+                                configuration,
+                                NdcVersion::V02,
+                                reqwest::Method::POST,
+                                url,
+                                |r| r.json(req),
+                            );
                             let response = execute_request(
                                 request,
                                 response_size_limit,
@@ -144,10 +151,13 @@ pub async fn explain_mutation_post(
 
                     match mutation_request {
                         NdcMutationRequest::V01(req) => {
-                            let request =
-                                construct_request(configuration, reqwest::Method::POST, url, |r| {
-                                    r.json(req)
-                                });
+                            let request = construct_request(
+                                configuration,
+                                NdcVersion::V01,
+                                reqwest::Method::POST,
+                                url,
+                                |r| r.json(req),
+                            );
                             let response = execute_request(
                                 request,
                                 response_size_limit,
@@ -157,10 +167,13 @@ pub async fn explain_mutation_post(
                             Ok(NdcExplainResponse::V01(response))
                         }
                         NdcMutationRequest::V02(req) => {
-                            let request =
-                                construct_request(configuration, reqwest::Method::POST, url, |r| {
-                                    r.json(req)
-                                });
+                            let request = construct_request(
+                                configuration,
+                                NdcVersion::V02,
+                                reqwest::Method::POST,
+                                url,
+                                |r| r.json(req),
+                            );
                             let response = execute_request(
                                 request,
                                 response_size_limit,
@@ -196,10 +209,13 @@ pub async fn mutation_post(
 
                     match mutation_request {
                         NdcMutationRequest::V01(req) => {
-                            let request =
-                                construct_request(configuration, reqwest::Method::POST, url, |r| {
-                                    r.json(req)
-                                });
+                            let request = construct_request(
+                                configuration,
+                                NdcVersion::V01,
+                                reqwest::Method::POST,
+                                url,
+                                |r| r.json(req),
+                            );
                             let response = execute_request(
                                 request,
                                 response_size_limit,
@@ -209,10 +225,13 @@ pub async fn mutation_post(
                             Ok(NdcMutationResponse::V01(response))
                         }
                         NdcMutationRequest::V02(req) => {
-                            let request =
-                                construct_request(configuration, reqwest::Method::POST, url, |r| {
-                                    r.json(req)
-                                });
+                            let request = construct_request(
+                                configuration,
+                                NdcVersion::V02,
+                                reqwest::Method::POST,
+                                url,
+                                |r| r.json(req),
+                            );
                             let response = execute_request(
                                 request,
                                 response_size_limit,
@@ -248,10 +267,13 @@ pub async fn query_post(
 
                     match query_request {
                         NdcQueryRequest::V01(req) => {
-                            let request =
-                                construct_request(configuration, reqwest::Method::POST, url, |r| {
-                                    r.json(req)
-                                });
+                            let request = construct_request(
+                                configuration,
+                                NdcVersion::V01,
+                                reqwest::Method::POST,
+                                url,
+                                |r| r.json(req),
+                            );
                             let response = execute_request(
                                 request,
                                 response_size_limit,
@@ -261,10 +283,13 @@ pub async fn query_post(
                             Ok(NdcQueryResponse::V01(response))
                         }
                         NdcQueryRequest::V02(req) => {
-                            let request =
-                                construct_request(configuration, reqwest::Method::POST, url, |r| {
-                                    r.json(req)
-                                });
+                            let request = construct_request(
+                                configuration,
+                                NdcVersion::V02,
+                                reqwest::Method::POST,
+                                url,
+                                |r| r.json(req),
+                            );
                             let response = execute_request(
                                 request,
                                 response_size_limit,
@@ -294,6 +319,7 @@ fn append_path(url: &reqwest::Url, path: &[&str]) -> Result<reqwest::Url, Error>
 
 fn construct_request(
     configuration: Configuration,
+    ndc_version: NdcVersion,
     method: reqwest::Method,
     url: reqwest::Url,
     modify: impl FnOnce(reqwest::RequestBuilder) -> reqwest::RequestBuilder,
@@ -310,6 +336,12 @@ fn construct_request(
                 request_builder = modify(request_builder);
                 // Set headers from configuration
                 request_builder = request_builder.headers(configuration.headers.into_owned());
+                // Set X-Hasura-NDC-Version
+                let version = match ndc_version {
+                    NdcVersion::V01 => "0.1.0",
+                    NdcVersion::V02 => "0.2.0",
+                };
+                request_builder = request_builder.header(ndc_models::VERSION_HEADER_NAME, version);
                 // Return the prepared request
                 Successful::new(request_builder)
             },

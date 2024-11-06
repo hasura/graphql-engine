@@ -30,78 +30,83 @@
                     },
                     "aggregate_functions": {
                       "avg": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "bit_and": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "int4"
                         }
                       },
                       "bit_or": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "int4"
                         }
                       },
                       "bit_xor": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "int4"
                         }
                       },
                       "max": {
-                        "result_type": {
-                          "type": "named",
-                          "name": "int4"
-                        }
+                        "type": "max"
                       },
                       "min": {
-                        "result_type": {
-                          "type": "named",
-                          "name": "Invoice"
-                        }
+                        "type": "min"
                       },
                       "stddev": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "stddev_pop": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "stddev_samp": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "sum": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "int8"
                         }
                       },
                       "var_pop": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "var_samp": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "variance": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
@@ -153,6 +158,9 @@
                     }
                   },
                   "int8": {
+                    "representation": {
+                      "type": "int64"
+                    },
                     "aggregate_functions": {},
                     "comparison_operators": {}
                   },
@@ -162,60 +170,56 @@
                     },
                     "aggregate_functions": {
                       "avg": {
-                        "result_type": {
-                          "type": "named",
-                          "name": "numeric"
-                        }
+                        "type": "average",
+                        "result_type": "numeric"
                       },
                       "max": {
-                        "result_type": {
-                          "type": "named",
-                          "name": "numeric"
-                        }
+                        "type": "max"
                       },
                       "min": {
-                        "result_type": {
-                          "type": "named",
-                          "name": "numeric"
-                        }
+                        "type": "min"
                       },
                       "stddev": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "stddev_pop": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "stddev_samp": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "sum": {
-                        "result_type": {
-                          "type": "named",
-                          "name": "numeric"
-                        }
+                        "type": "sum",
+                        "result_type": "numeric"
                       },
                       "var_pop": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "var_samp": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
                         }
                       },
                       "variance": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "numeric"
@@ -267,6 +271,9 @@
                     }
                   },
                   "text": {
+                    "representation": {
+                      "type": "string"
+                    },
                     "aggregate_functions": {},
                     "comparison_operators": {}
                   },
@@ -276,16 +283,10 @@
                     },
                     "aggregate_functions": {
                       "max": {
-                        "result_type": {
-                          "type": "named",
-                          "name": "timestamp"
-                        }
+                        "type": "max"
                       },
                       "min": {
-                        "result_type": {
-                          "type": "named",
-                          "name": "timestamp"
-                        }
+                        "type": "min"
                       }
                     },
                     "comparison_operators": {
@@ -338,12 +339,14 @@
                     },
                     "aggregate_functions": {
                       "max": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "text"
                         }
                       },
                       "min": {
+                        "type": "custom",
                         "result_type": {
                           "type": "named",
                           "name": "text"
@@ -490,6 +493,14 @@
                           "name": "varchar"
                         }
                       }
+                    },
+                    "foreign_keys": {
+                      "FK_AlbumArtistId": {
+                        "column_mapping": {
+                          "ArtistId": ["ArtistId"]
+                        },
+                        "foreign_collection": "Artist"
+                      }
                     }
                   },
                   "Artist": {
@@ -512,7 +523,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "Customer": {
                     "description": "The record of all customers",
@@ -624,6 +636,14 @@
                             "name": "int4"
                           }
                         }
+                      }
+                    },
+                    "foreign_keys": {
+                      "FK_CustomerSupportRepId": {
+                        "column_mapping": {
+                          "SupportRepId": ["EmployeeId"]
+                        },
+                        "foreign_collection": "Employee"
                       }
                     }
                   },
@@ -755,6 +775,14 @@
                           }
                         }
                       }
+                    },
+                    "foreign_keys": {
+                      "FK_EmployeeReportsTo": {
+                        "column_mapping": {
+                          "ReportsTo": ["EmployeeId"]
+                        },
+                        "foreign_collection": "Employee"
+                      }
                     }
                   },
                   "Genre": {
@@ -774,7 +802,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "Invoice": {
                     "fields": {
@@ -847,6 +876,14 @@
                           "name": "numeric"
                         }
                       }
+                    },
+                    "foreign_keys": {
+                      "FK_InvoiceCustomerId": {
+                        "column_mapping": {
+                          "CustomerId": ["CustomerId"]
+                        },
+                        "foreign_collection": "Customer"
+                      }
                     }
                   },
                   "InvoiceLine": {
@@ -881,6 +918,20 @@
                           "name": "numeric"
                         }
                       }
+                    },
+                    "foreign_keys": {
+                      "FK_InvoiceLineInvoiceId": {
+                        "column_mapping": {
+                          "InvoiceId": ["InvoiceId"]
+                        },
+                        "foreign_collection": "Invoice"
+                      },
+                      "FK_InvoiceLineTrackId": {
+                        "column_mapping": {
+                          "TrackId": ["TrackId"]
+                        },
+                        "foreign_collection": "Track"
+                      }
                     }
                   },
                   "MediaType": {
@@ -900,7 +951,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "Playlist": {
                     "fields": {
@@ -919,7 +971,8 @@
                           "name": "int4"
                         }
                       }
-                    }
+                    },
+                    "foreign_keys": {}
                   },
                   "PlaylistTrack": {
                     "fields": {
@@ -934,6 +987,20 @@
                           "type": "named",
                           "name": "int4"
                         }
+                      }
+                    },
+                    "foreign_keys": {
+                      "FK_PlaylistTrackPlaylistId": {
+                        "column_mapping": {
+                          "PlaylistId": ["PlaylistId"]
+                        },
+                        "foreign_collection": "Playlist"
+                      },
+                      "FK_PlaylistTrackTrackId": {
+                        "column_mapping": {
+                          "TrackId": ["TrackId"]
+                        },
+                        "foreign_collection": "Track"
                       }
                     }
                   },
@@ -1005,6 +1072,26 @@
                           "name": "numeric"
                         }
                       }
+                    },
+                    "foreign_keys": {
+                      "FK_TrackAlbumId": {
+                        "column_mapping": {
+                          "AlbumId": ["AlbumId"]
+                        },
+                        "foreign_collection": "Album"
+                      },
+                      "FK_TrackGenreId": {
+                        "column_mapping": {
+                          "GenreId": ["GenreId"]
+                        },
+                        "foreign_collection": "Genre"
+                      },
+                      "FK_TrackMediaTypeId": {
+                        "column_mapping": {
+                          "MediaTypeId": ["MediaTypeId"]
+                        },
+                        "foreign_collection": "MediaType"
+                      }
                     }
                   }
                 },
@@ -1018,14 +1105,6 @@
                       "PK_Album": {
                         "unique_columns": ["AlbumId"]
                       }
-                    },
-                    "foreign_keys": {
-                      "FK_AlbumArtistId": {
-                        "column_mapping": {
-                          "ArtistId": "ArtistId"
-                        },
-                        "foreign_collection": "Artist"
-                      }
                     }
                   },
                   {
@@ -1037,8 +1116,7 @@
                       "PK_Artist": {
                         "unique_columns": ["ArtistId"]
                       }
-                    },
-                    "foreign_keys": {}
+                    }
                   },
                   {
                     "name": "Customer",
@@ -1048,14 +1126,6 @@
                     "uniqueness_constraints": {
                       "PK_Customer": {
                         "unique_columns": ["CustomerId"]
-                      }
-                    },
-                    "foreign_keys": {
-                      "FK_CustomerSupportRepId": {
-                        "column_mapping": {
-                          "SupportRepId": "EmployeeId"
-                        },
-                        "foreign_collection": "Employee"
                       }
                     }
                   },
@@ -1067,14 +1137,6 @@
                       "PK_Employee": {
                         "unique_columns": ["EmployeeId"]
                       }
-                    },
-                    "foreign_keys": {
-                      "FK_EmployeeReportsTo": {
-                        "column_mapping": {
-                          "ReportsTo": "EmployeeId"
-                        },
-                        "foreign_collection": "Employee"
-                      }
                     }
                   },
                   {
@@ -1085,8 +1147,7 @@
                       "PK_Genre": {
                         "unique_columns": ["GenreId"]
                       }
-                    },
-                    "foreign_keys": {}
+                    }
                   },
                   {
                     "name": "Invoice",
@@ -1095,14 +1156,6 @@
                     "uniqueness_constraints": {
                       "PK_Invoice": {
                         "unique_columns": ["InvoiceId"]
-                      }
-                    },
-                    "foreign_keys": {
-                      "FK_InvoiceCustomerId": {
-                        "column_mapping": {
-                          "CustomerId": "CustomerId"
-                        },
-                        "foreign_collection": "Customer"
                       }
                     }
                   },
@@ -1114,20 +1167,6 @@
                       "PK_InvoiceLine": {
                         "unique_columns": ["InvoiceLineId"]
                       }
-                    },
-                    "foreign_keys": {
-                      "FK_InvoiceLineInvoiceId": {
-                        "column_mapping": {
-                          "InvoiceId": "InvoiceId"
-                        },
-                        "foreign_collection": "Invoice"
-                      },
-                      "FK_InvoiceLineTrackId": {
-                        "column_mapping": {
-                          "TrackId": "TrackId"
-                        },
-                        "foreign_collection": "Track"
-                      }
                     }
                   },
                   {
@@ -1138,8 +1177,7 @@
                       "PK_MediaType": {
                         "unique_columns": ["MediaTypeId"]
                       }
-                    },
-                    "foreign_keys": {}
+                    }
                   },
                   {
                     "name": "Playlist",
@@ -1149,8 +1187,7 @@
                       "PK_Playlist": {
                         "unique_columns": ["PlaylistId"]
                       }
-                    },
-                    "foreign_keys": {}
+                    }
                   },
                   {
                     "name": "PlaylistTrack",
@@ -1159,20 +1196,6 @@
                     "uniqueness_constraints": {
                       "PK_PlaylistTrack": {
                         "unique_columns": ["PlaylistId", "TrackId"]
-                      }
-                    },
-                    "foreign_keys": {
-                      "FK_PlaylistTrackPlaylistId": {
-                        "column_mapping": {
-                          "PlaylistId": "PlaylistId"
-                        },
-                        "foreign_collection": "Playlist"
-                      },
-                      "FK_PlaylistTrackTrackId": {
-                        "column_mapping": {
-                          "TrackId": "TrackId"
-                        },
-                        "foreign_collection": "Track"
                       }
                     }
                   },
@@ -1183,26 +1206,6 @@
                     "uniqueness_constraints": {
                       "PK_Track": {
                         "unique_columns": ["TrackId"]
-                      }
-                    },
-                    "foreign_keys": {
-                      "FK_TrackAlbumId": {
-                        "column_mapping": {
-                          "AlbumId": "AlbumId"
-                        },
-                        "foreign_collection": "Album"
-                      },
-                      "FK_TrackGenreId": {
-                        "column_mapping": {
-                          "GenreId": "GenreId"
-                        },
-                        "foreign_collection": "Genre"
-                      },
-                      "FK_TrackMediaTypeId": {
-                        "column_mapping": {
-                          "MediaTypeId": "MediaTypeId"
-                        },
-                        "foreign_collection": "MediaType"
                       }
                     }
                   }

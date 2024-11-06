@@ -7,7 +7,6 @@ use std::{
 use indexmap::IndexMap;
 use metadata_resolve::{
     self as resolved, Qualified, QualifiedTypeReference, ScalarTypeRepresentation,
-    ValueRepresentation,
 };
 use open_dds::{identifier::SubgraphName, types::CustomTypeName};
 
@@ -30,7 +29,7 @@ type SupportedScalar = (NormalizedType, datafusion::DataType);
 #[derive(Error, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum UnsupportedScalar {
     #[error("Multiple NDC type representations found for scalar type '{0}'")]
-    MultipleNdcTypeRepresentations(CustomTypeName, HashSet<ValueRepresentation>),
+    MultipleNdcTypeRepresentations(CustomTypeName, HashSet<ndc_models::TypeRepresentation>),
     #[error("No NDC representation found for scalar type '{0}'")]
     NoNdcRepresentation(CustomTypeName),
     #[error("Unsupported NDC type representation for scalar type '{0}': {1:?}")]
@@ -43,11 +42,11 @@ pub fn resolve_scalar_type(
     scalar_type_name: &Qualified<CustomTypeName>,
     representation: &ScalarTypeRepresentation,
 ) -> Scalar {
-    let representations: HashSet<ValueRepresentation> =
+    let representations: HashSet<ndc_models::TypeRepresentation> =
         representation.representations.values().cloned().collect();
     let mut iter = representations.into_iter();
     let ndc_representation = match iter.next() {
-        Some(value_representation) => {
+        Some(type_representation) => {
             // more than one representation
             if iter.next().is_some() {
                 return Err(UnsupportedScalar::MultipleNdcTypeRepresentations(
@@ -55,13 +54,18 @@ pub fn resolve_scalar_type(
                     representation.representations.values().cloned().collect(),
                 ));
             }
-            match value_representation {
-                ValueRepresentation::FromDataConnectorSchema(representation) => {
-                    Some(representation)
+            // since NDC 0.2.0 we can no longer differentiate between a JSON TypeRepresentation
+            // that is explicitly provided by a user, and one that is provided as a default when
+            // upgrading a `0.1.x` connector. Therefore if we see JSON we always try and match the
+            // name first, falling back to JSON.
+            // When NDC 0.1.0 is no longer in active use we should revisit this behaviour and
+            // instead trust the connector for more predictable results
+            Some(match type_representation {
+                ndc_models::TypeRepresentation::JSON => {
+                    infer_ndc_representation(&scalar_type_name.name).unwrap_or(type_representation)
                 }
-                // if it is json, let's try and infer it from name
-                ValueRepresentation::AssumeJson => infer_ndc_representation(&scalar_type_name.name),
-            }
+                _ => type_representation,
+            })
         }
         // if no representation, let's try and infer it from name
         None => infer_ndc_representation(&scalar_type_name.name),

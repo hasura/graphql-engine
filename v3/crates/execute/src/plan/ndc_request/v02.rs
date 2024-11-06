@@ -287,6 +287,7 @@ pub fn make_expression(
             let ndc_expression = make_expression(*predicate)?;
             Ok(ndc_models_v02::Expression::Exists {
                 in_collection: ndc_models_v02::ExistsInCollection::Related {
+                    field_path: None,
                     relationship: ndc_models_v02::RelationshipName::from(relationship.as_str()),
                     arguments: BTreeMap::new(),
                 },
@@ -303,6 +304,7 @@ fn make_comparison_target(
         plan_types::ComparisonTarget::Column { name, field_path } => {
             ndc_models_v02::ComparisonTarget::Column {
                 name: ndc_models_v02::FieldName::new(name.into_inner()),
+                arguments: BTreeMap::new(),
                 field_path: if field_path.is_empty() {
                     None
                 } else {
@@ -426,7 +428,7 @@ fn make_relationship(relationship: relationships::Relationship) -> ndc_models_v0
             .map(|(s, t)| {
                 (
                     ndc_models_v02::FieldName::new(s.into_inner()),
-                    ndc_models_v02::FieldName::new(t.into_inner()),
+                    vec![ndc_models_v02::FieldName::new(t.into_inner())],
                 )
             })
             .collect(),
@@ -482,6 +484,7 @@ fn make_order_by_target(target: graphql_ir::OrderByTarget) -> ndc_models_v02::Or
             // ["UserPosts", "PostsComments"]
             for path in relationship_path {
                 order_by_element_path.push(ndc_models_v02::PathElement {
+                    field_path: None,
                     relationship: ndc_models_v02::RelationshipName::from(path.0.as_str()),
                     arguments: BTreeMap::new(),
                     // 'AND' predicate indicates that the column can be accessed
@@ -508,6 +511,7 @@ fn make_order_by_target(target: graphql_ir::OrderByTarget) -> ndc_models_v02::Or
 
             ndc_models_v02::OrderByTarget::Column {
                 name: ndc_models_v02::FieldName::new(name.into_inner()),
+                arguments: BTreeMap::new(),
                 path: order_by_element_path,
                 field_path: field_path.map(|field_path| {
                     field_path
@@ -551,6 +555,7 @@ fn make_aggregates(
                         .collect::<Vec<_>>();
                     ndc_models_v02::Aggregate::SingleColumn {
                         column: ndc_models_v02::FieldName::from(column.into_inner()),
+                        arguments: BTreeMap::new(),
                         field_path: if nested_field_path.is_empty() {
                             None
                         } else {
@@ -588,6 +593,7 @@ fn make_count_aggregate(
         };
         ndc_models_v02::Aggregate::ColumnCount {
             column: ndc_models_v02::FieldName::from(first_path_element.into_inner()),
+            arguments: BTreeMap::new(),
             field_path: nested_field_path,
             distinct,
         }

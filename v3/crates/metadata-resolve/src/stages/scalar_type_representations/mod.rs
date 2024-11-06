@@ -3,7 +3,7 @@ use crate::Qualified;
 use open_dds::{data_connector::DataConnectorName, types::CustomTypeName};
 use std::collections::BTreeMap;
 mod types;
-pub use types::{ScalarTypeRepresentation, ValueRepresentation};
+pub use types::ScalarTypeRepresentation;
 
 /// include data connector type representations for each scalar type
 pub fn resolve(
@@ -22,11 +22,10 @@ pub fn resolve(
                 .by_custom_type_name
                 .get(scalar_type_name)
             {
-                let scalar_type_representation = match data_connector_representation {
-                    Some(rep) => ValueRepresentation::FromDataConnectorSchema(rep.clone()),
-                    None => ValueRepresentation::AssumeJson,
-                };
-                representations.insert(data_connector_name.clone(), scalar_type_representation);
+                representations.insert(
+                    data_connector_name.clone(),
+                    data_connector_representation.clone(),
+                );
             }
         }
         new_scalar_types.insert(

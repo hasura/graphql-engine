@@ -14,7 +14,6 @@ pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
         description: Some("A collection of movies".into()),
         collection_type: "movie".into(),
         arguments: BTreeMap::new(),
-        foreign_keys: BTreeMap::new(),
         uniqueness_constraints: BTreeMap::from_iter([(
             "MovieByID".into(),
             ndc_models::UniquenessConstraint {

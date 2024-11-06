@@ -839,7 +839,11 @@ fn resolve_binary_operator_for_type<'a>(
         })?;
 
     match comparison_operator_definition {
-        ndc_models::ComparisonOperatorDefinition::Equal => {
+        ndc_models::ComparisonOperatorDefinition::Equal
+        | ndc_models::ComparisonOperatorDefinition::LessThan
+        | ndc_models::ComparisonOperatorDefinition::LessThanOrEqual
+        | ndc_models::ComparisonOperatorDefinition::GreaterThan
+        | ndc_models::ComparisonOperatorDefinition::GreaterThanOrEqual => {
             Ok((ndc_operator_name, field_definition.field_type.clone()))
         }
         ndc_models::ComparisonOperatorDefinition::In => Ok((
