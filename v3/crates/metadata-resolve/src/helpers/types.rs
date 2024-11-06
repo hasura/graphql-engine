@@ -40,6 +40,64 @@ pub fn store_new_graphql_type(
     Ok(())
 }
 
+/// Track the root fields of the GraphQL schema while resolving the metadata.
+/// This is used to ensure that the schema has unique root fields for Query, Mutation and Subscription.
+// NOTE: The `ast::Name` is cheap to clone, so storing them directly without references
+pub struct TrackGraphQLRootFields {
+    pub query: BTreeSet<ast::Name>,
+    pub mutation: BTreeSet<ast::Name>,
+    pub subscription: BTreeSet<ast::Name>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum DuplicateRootFieldError {
+    #[error("Cannot add query root field {0} as it already in use")]
+    Query(ast::Name),
+    #[error("Cannot add mutation root field {0} as it already in use")]
+    Mutation(ast::Name),
+    #[error("Cannot add subscription root field {0} as it already in use")]
+    Subscription(ast::Name),
+}
+
+impl TrackGraphQLRootFields {
+    pub fn new() -> Self {
+        Self {
+            query: BTreeSet::new(),
+            mutation: BTreeSet::new(),
+            subscription: BTreeSet::new(),
+        }
+    }
+    pub fn track_query_root_field(
+        &mut self,
+        name: &ast::Name,
+    ) -> Result<(), DuplicateRootFieldError> {
+        if !self.query.insert(name.clone()) {
+            return Err(DuplicateRootFieldError::Query(name.clone()));
+        }
+        Ok(())
+    }
+    pub fn track_mutation_root_field(
+        &mut self,
+        name: &ast::Name,
+    ) -> Result<(), DuplicateRootFieldError> {
+        if !self.mutation.insert(name.clone()) {
+            return Err(DuplicateRootFieldError::Mutation(name.clone()));
+        }
+        Ok(())
+    }
+
+    #[allow(dead_code)] // to be used later
+    pub fn track_subscription_root_field(
+        &mut self,
+        name: &ast::Name,
+    ) -> Result<(), DuplicateRootFieldError> {
+        if !self.subscription.insert(name.clone()) {
+            return Err(DuplicateRootFieldError::Subscription(name.clone()));
+        }
+        Ok(())
+    }
+}
+
 #[derive(Debug)]
 /// we do not want to store our types like this, but occasionally it is useful
 /// for pattern matching

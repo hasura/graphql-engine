@@ -1,5 +1,3 @@
-use lang_graphql::ast::common as ast;
-use std::collections::BTreeSet;
 use std::sync::Arc;
 
 mod command;
@@ -8,6 +6,7 @@ mod source;
 mod types;
 pub use error::CommandsError;
 
+use crate::helpers::types::TrackGraphQLRootFields;
 use crate::stages::{
     boolean_expressions, data_connectors, object_boolean_expressions, scalar_types,
     type_permissions,
@@ -27,7 +26,7 @@ pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &type_permissions::ObjectTypesWithPermissions,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    track_root_fields: &mut TrackGraphQLRootFields,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -47,7 +46,7 @@ pub fn resolve(
             command,
             subgraph,
             object_types,
-            graphql_types,
+            track_root_fields,
             scalar_types,
             object_boolean_expression_types,
             boolean_expression_types,

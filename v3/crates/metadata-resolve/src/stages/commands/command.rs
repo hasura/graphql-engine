@@ -1,26 +1,25 @@
 use crate::helpers::argument::get_argument_kind;
-use crate::helpers::types::{get_type_representation, mk_name, store_new_graphql_type};
+use crate::helpers::types::{get_type_representation, mk_name, TrackGraphQLRootFields};
 use crate::stages::{
     boolean_expressions, object_boolean_expressions, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
 use open_dds::identifier::SubgraphName;
 
 use super::types::{Command, CommandGraphQlApi, CommandsIssue};
-use open_dds::commands::CommandV1;
+use open_dds::commands::{CommandV1, GraphQlRootFieldKind};
 
 use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 
 use super::error::CommandsError;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 pub fn resolve_command(
     command: &CommandV1,
     subgraph: &SubgraphName,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    graphql_types: &mut BTreeSet<ast::TypeName>,
+    track_root_fields: &mut TrackGraphQLRootFields,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
@@ -87,22 +86,29 @@ pub fn resolve_command(
             // b) raise a warning, that we can raise to an error using CompatibilityConfig
             // making it an error for new projects but not old ones
             let root_field_name = mk_name(graphql_definition.root_field_name.as_ref())?;
-            if let Ok(()) =
-                store_new_graphql_type(graphql_types, Some(&ast::TypeName(root_field_name.clone())))
-            {
-                Ok(Some(CommandGraphQlApi {
+            let root_field_tracked = match graphql_definition.root_field_kind {
+                GraphQlRootFieldKind::Query => {
+                    track_root_fields.track_query_root_field(&root_field_name)
+                }
+                GraphQlRootFieldKind::Mutation => {
+                    track_root_fields.track_mutation_root_field(&root_field_name)
+                }
+            };
+            match root_field_tracked {
+                Ok(()) => Ok(Some(CommandGraphQlApi {
                     root_field_kind: graphql_definition.root_field_kind.clone(),
                     root_field_name,
                     deprecated: graphql_definition.deprecated.clone(),
-                }))
-            } else {
-                // raise a warning
-                issues.push(CommandsIssue::GraphQlNameAlreadyInUse {
-                    command_name: qualified_command_name.clone(),
-                    graphql_name: root_field_name,
-                });
-                // don't include the field in GraphQL schema
-                Ok(None)
+                })),
+                Err(error) => {
+                    // raise a warning
+                    issues.push(CommandsIssue::GraphQlRootFieldAlreadyInUse {
+                        command_name: qualified_command_name.clone(),
+                        error,
+                    });
+                    // don't include the field in GraphQL schema
+                    Ok(None)
+                }
             }
         }
         None => Ok::<Option<CommandGraphQlApi>, CommandsError>(None),
