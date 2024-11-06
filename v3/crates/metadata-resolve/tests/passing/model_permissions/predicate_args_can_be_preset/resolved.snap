@@ -223,29 +223,6 @@ input_file: crates/metadata-resolve/tests/passing/model_permissions/predicate_ar
                             },
                         },
                     },
-                    scalar_representations: {
-                        FieldName(
-                            Identifier(
-                                "AlbumId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "ArtistId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "Title",
-                            ),
-                        ): {
-                            String,
-                        },
-                    },
                 },
             },
         },

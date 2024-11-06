@@ -93,15 +93,6 @@ input_file: crates/metadata-resolve/tests/passing/models/all_args_are_set_includ
                             },
                         },
                     },
-                    scalar_representations: {
-                        FieldName(
-                            Identifier(
-                                "test",
-                            ),
-                        ): {
-                            String,
-                        },
-                    },
                 },
             },
         },

@@ -329,7 +329,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     },
-                    scalar_representations: {},
                 },
             },
             Qualified {
@@ -556,7 +555,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     },
-                    scalar_representations: {},
                 },
             },
             Qualified {
@@ -783,7 +781,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     },
-                    scalar_representations: {},
                 },
             },
         },

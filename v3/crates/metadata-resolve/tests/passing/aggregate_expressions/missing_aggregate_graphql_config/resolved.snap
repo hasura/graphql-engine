@@ -276,7 +276,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/missing_
                 relationship_fields: {},
                 type_mappings: DataConnectorTypeMappingsForObject {
                     mappings: {},
-                    scalar_representations: {},
                 },
             },
         },

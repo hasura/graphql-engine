@@ -173,22 +173,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             },
                         },
                     },
-                    scalar_representations: {
-                        FieldName(
-                            Identifier(
-                                "end",
-                            ),
-                        ): {
-                            Number,
-                        },
-                        FieldName(
-                            Identifier(
-                                "start",
-                            ),
-                        ): {
-                            Number,
-                        },
-                    },
                 },
             },
             Qualified {
@@ -451,29 +435,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     },
                                 },
                             },
-                        },
-                    },
-                    scalar_representations: {
-                        FieldName(
-                            Identifier(
-                                "id",
-                            ),
-                        ): {
-                            Integer,
-                        },
-                        FieldName(
-                            Identifier(
-                                "rating",
-                            ),
-                        ): {
-                            Integer,
-                        },
-                        FieldName(
-                            Identifier(
-                                "title",
-                            ),
-                        ): {
-                            String,
                         },
                     },
                 },

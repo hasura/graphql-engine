@@ -24,11 +24,6 @@ pub struct DataConnectorTypeMappingsForObject {
     #[serde_as(as = "Vec<(_, _)>")]
     mappings:
         BTreeMap<Qualified<DataConnectorName>, BTreeMap<DataConnectorObjectType, TypeMapping>>,
-    // Possible scalar representations for a field that are collected across all data connectors
-    // and across all data connector type mappings. Ideally, this should be a set of one and we
-    // should throw an error but to not break things, we'll only collect all the representations.
-    // This is currently used only in the SQL layer
-    scalar_representations: BTreeMap<FieldName, BTreeSet<ndc_models::TypeRepresentation>>,
 }
 
 impl Default for DataConnectorTypeMappingsForObject {
@@ -41,13 +36,7 @@ impl DataConnectorTypeMappingsForObject {
     pub fn new() -> Self {
         Self {
             mappings: BTreeMap::new(),
-            scalar_representations: BTreeMap::new(),
         }
-    }
-    pub fn scalar_representations(
-        &self,
-    ) -> &BTreeMap<FieldName, BTreeSet<ndc_models::TypeRepresentation>> {
-        &self.scalar_representations
     }
     pub fn get<TObjectTypeName>(
         &self,
@@ -71,20 +60,6 @@ impl DataConnectorTypeMappingsForObject {
         data_connector_object_type: &DataConnectorObjectType,
         type_mapping: TypeMapping,
     ) -> Result<(), ObjectTypesError> {
-        let TypeMapping::Object {
-            ndc_object_type_name: _,
-            field_mappings,
-        } = &type_mapping;
-
-        for (field_name, field_mapping) in field_mappings {
-            if let Some(type_representation) = &field_mapping.column_type_representation {
-                self.scalar_representations
-                    .entry(field_name.clone())
-                    .or_default()
-                    .insert(type_representation.clone());
-            }
-        }
-
         if self
             .mappings
             .entry(data_connector_name.clone())

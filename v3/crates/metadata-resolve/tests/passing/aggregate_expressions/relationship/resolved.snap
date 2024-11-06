@@ -1079,71 +1079,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                             },
                         },
                     },
-                    scalar_representations: {
-                        FieldName(
-                            Identifier(
-                                "billingAddress",
-                            ),
-                        ): {
-                            String,
-                        },
-                        FieldName(
-                            Identifier(
-                                "billingCity",
-                            ),
-                        ): {
-                            String,
-                        },
-                        FieldName(
-                            Identifier(
-                                "billingCountry",
-                            ),
-                        ): {
-                            String,
-                        },
-                        FieldName(
-                            Identifier(
-                                "billingPostalCode",
-                            ),
-                        ): {
-                            String,
-                        },
-                        FieldName(
-                            Identifier(
-                                "billingState",
-                            ),
-                        ): {
-                            String,
-                        },
-                        FieldName(
-                            Identifier(
-                                "customerId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "invoiceDate",
-                            ),
-                        ): {
-                            Timestamp,
-                        },
-                        FieldName(
-                            Identifier(
-                                "invoiceId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "total",
-                            ),
-                        ): {
-                            BigDecimal,
-                        },
-                    },
                 },
             },
             Qualified {
@@ -1576,43 +1511,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                     },
                                 },
                             },
-                        },
-                    },
-                    scalar_representations: {
-                        FieldName(
-                            Identifier(
-                                "invoiceId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "invoiceLineId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "quantity",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "trackId",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "unitPrice",
-                            ),
-                        ): {
-                            BigDecimal,
                         },
                     },
                 },

@@ -195,29 +195,6 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                             },
                         },
                     },
-                    scalar_representations: {
-                        FieldName(
-                            Identifier(
-                                "album_id",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "artist_id",
-                            ),
-                        ): {
-                            Int32,
-                        },
-                        FieldName(
-                            Identifier(
-                                "title",
-                            ),
-                        ): {
-                            String,
-                        },
-                    },
                 },
             },
         },
