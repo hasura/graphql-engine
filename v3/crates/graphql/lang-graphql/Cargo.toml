@@ -25,6 +25,7 @@ harness = false
 
 [dependencies]
 recursion_limit_macro = { path = "../../utils/recursion_limit_macro" }
+serde-ext = { path = "../../utils/serde-ext" }
 
 axum = { workspace = true }
 http = { workspace = true }

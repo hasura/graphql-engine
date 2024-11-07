@@ -33,7 +33,6 @@
                     "field": {
                       "name": "title",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "article"
                       },
                       "deprecated": false,
@@ -48,17 +47,14 @@
                 "relationship": {
                   "name": "article",
                   "source": {
-                    "subgraph": "default",
                     "name": "commandArticle"
                   },
                   "target": {
                     "model": {
                       "model_name": {
-                        "subgraph": "default",
                         "name": "Articles"
                       },
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "article"
                       },
                       "relationship_type": "Object",
@@ -86,7 +82,6 @@
                 "field": {
                   "name": "title",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "commandArticle"
                   },
                   "deprecated": false,
@@ -100,7 +95,6 @@
           {
             "command": {
               "name": {
-                "subgraph": "default",
                 "name": "update_article_title_by_id"
               }
             }

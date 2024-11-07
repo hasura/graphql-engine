@@ -13,6 +13,7 @@ hasura-authn-core = { path = "../auth/hasura-authn-core" }
 jsonpath = { path = "../utils/jsonpath" }
 lang-graphql = { path = "../graphql/lang-graphql" }
 open-dds = { path = "../open-dds" }
+serde-ext = { path = "../utils/serde-ext" }
 
 derive_more = { workspace = true }
 indexmap = { workspace = true, features = ["serde"] }

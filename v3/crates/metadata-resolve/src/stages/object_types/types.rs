@@ -124,6 +124,8 @@ pub struct ObjectTypeRepresentation {
     pub apollo_federation_config: Option<ResolvedObjectApolloFederationConfig>,
     pub graphql_output_type_name: Option<ast::TypeName>,
     pub graphql_input_type_name: Option<ast::TypeName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     // TODO: add graphql_output_type_kind if we support creating interfaces.
 }
@@ -136,14 +138,22 @@ pub struct ObjectTypeWithTypeMappings {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldDefinition {
     pub field_type: QualifiedTypeReference,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub deprecated: Option<Deprecated>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub field_arguments: IndexMap<ArgumentName, FieldArgumentInfo>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldArgumentInfo {
     pub argument_type: QualifiedTypeReference,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 
@@ -162,8 +172,12 @@ pub struct ResolvedApolloFederationObjectKey {
 pub struct FieldMapping {
     pub column: DataConnectorColumnName,
     pub column_type: ndc_models::Type,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub column_type_representation: Option<ndc_models::TypeRepresentation>,
     pub comparison_operators: Option<ComparisonOperators>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub argument_mappings: BTreeMap<ArgumentName, DataConnectorArgumentName>,
 }
 
@@ -171,6 +185,8 @@ pub struct FieldMapping {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ComparisonOperators {
     pub equality_operators: Vec<DataConnectorOperatorName>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub in_operators: Vec<DataConnectorOperatorName>,
 
     // TODO: for now, put other operators here. Later, once we have NDC

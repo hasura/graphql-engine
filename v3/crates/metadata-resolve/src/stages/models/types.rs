@@ -68,6 +68,8 @@ pub struct Model {
 pub struct ModelRaw {
     pub filter_expression_type: Option<Qualified<CustomTypeName>>,
     pub graphql: Option<ModelGraphQlDefinitionV2>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 

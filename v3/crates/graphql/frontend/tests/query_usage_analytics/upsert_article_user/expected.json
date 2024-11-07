@@ -17,7 +17,6 @@
                     "field": {
                       "name": "article_id",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "article"
                       },
                       "deprecated": false,
@@ -34,7 +33,6 @@
                     "field": {
                       "name": "title",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "article"
                       },
                       "deprecated": false,
@@ -52,7 +50,6 @@
                       {
                         "name": "author_id",
                         "opendd_type": {
-                          "subgraph": "default",
                           "name": "article"
                         },
                         "deprecated": false,
@@ -76,7 +73,6 @@
                 "field": {
                   "name": "article_id",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "commandArticle"
                   },
                   "deprecated": false,
@@ -95,7 +91,6 @@
                 "field": {
                   "name": "author_id",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "commandArticle"
                   },
                   "deprecated": false,
@@ -114,7 +109,6 @@
                 "field": {
                   "name": "title",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "commandArticle"
                   },
                   "deprecated": false,
@@ -128,7 +122,6 @@
           {
             "command": {
               "name": {
-                "subgraph": "default",
                 "name": "upsert_article"
               }
             }

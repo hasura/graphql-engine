@@ -38,6 +38,8 @@ pub struct ScalarAggregateBooleanExpression {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparableAggregationFunction {
     pub aggregate_function_name: AggregationFunctionName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub boolean_expression_type: Qualified<CustomTypeName>,
 }
@@ -102,6 +104,8 @@ pub struct ObjectAggregateBooleanExpression {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparableAggregatableField {
     pub field_name: FieldName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub aggregate_boolean_expression_type: Qualified<CustomTypeName>,
 }
@@ -109,6 +113,8 @@ pub struct ComparableAggregatableField {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparableAggregatableRelationship {
     pub relationship_name: RelationshipName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub aggregate_boolean_expression_type: Qualified<CustomTypeName>,
 }

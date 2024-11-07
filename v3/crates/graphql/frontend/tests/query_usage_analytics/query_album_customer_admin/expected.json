@@ -23,7 +23,6 @@
                 "field": {
                   "name": "Title",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "Album"
                   },
                   "deprecated": false,
@@ -42,7 +41,6 @@
                 "field": {
                   "name": "AlbumId",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "Album"
                   },
                   "deprecated": false,
@@ -66,7 +64,6 @@
                     "field": {
                       "name": "Name",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "Track"
                       },
                       "deprecated": false,
@@ -85,7 +82,6 @@
                     "field": {
                       "name": "TrackId",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "Track"
                       },
                       "deprecated": false,
@@ -109,7 +105,6 @@
                         "field": {
                           "name": "TrackId",
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "PlaylistTrack"
                           },
                           "deprecated": false,
@@ -124,17 +119,14 @@
                     "relationship": {
                       "name": "PlaylistTracks",
                       "source": {
-                        "subgraph": "default",
                         "name": "Track"
                       },
                       "target": {
                         "model": {
                           "model_name": {
-                            "subgraph": "default",
                             "name": "PlaylistTrack"
                           },
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "PlaylistTrack"
                           },
                           "relationship_type": "Array",
@@ -158,17 +150,14 @@
                 "relationship": {
                   "name": "Tracks",
                   "source": {
-                    "subgraph": "default",
                     "name": "Album"
                   },
                   "target": {
                     "model": {
                       "model_name": {
-                        "subgraph": "default",
                         "name": "Track"
                       },
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "Track"
                       },
                       "relationship_type": "Array",
@@ -191,7 +180,6 @@
           {
             "model": {
               "name": {
-                "subgraph": "default",
                 "name": "Album"
               }
             }
@@ -219,7 +207,6 @@
                 "field": {
                   "name": "Address",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "Customer"
                   },
                   "deprecated": false,
@@ -238,7 +225,6 @@
                 "field": {
                   "name": "City",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "Customer"
                   },
                   "deprecated": false,
@@ -257,7 +243,6 @@
                 "field": {
                   "name": "Company",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "Customer"
                   },
                   "deprecated": false,
@@ -276,7 +261,6 @@
                 "field": {
                   "name": "Country",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "Customer"
                   },
                   "deprecated": false,
@@ -300,7 +284,6 @@
                     "field": {
                       "name": "BirthDate",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "Employee"
                       },
                       "deprecated": false,
@@ -319,7 +302,6 @@
                     "field": {
                       "name": "City",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "Employee"
                       },
                       "deprecated": false,
@@ -338,7 +320,6 @@
                     "field": {
                       "name": "Fax",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "Employee"
                       },
                       "deprecated": true,
@@ -357,7 +338,6 @@
                     "field": {
                       "name": "Email",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "Employee"
                       },
                       "deprecated": false,
@@ -387,7 +367,6 @@
                         "field": {
                           "name": "BirthDate",
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "Employee"
                           },
                           "deprecated": false,
@@ -406,7 +385,6 @@
                         "field": {
                           "name": "City",
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "Employee"
                           },
                           "deprecated": false,
@@ -421,17 +399,14 @@
                     "relationship": {
                       "name": "Employees",
                       "source": {
-                        "subgraph": "default",
                         "name": "Employee"
                       },
                       "target": {
                         "model": {
                           "model_name": {
-                            "subgraph": "default",
                             "name": "Employee"
                           },
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "Employee"
                           },
                           "relationship_type": "Array",
@@ -455,17 +430,14 @@
                 "relationship": {
                   "name": "Employee",
                   "source": {
-                    "subgraph": "default",
                     "name": "Customer"
                   },
                   "target": {
                     "model": {
                       "model_name": {
-                        "subgraph": "default",
                         "name": "Employee"
                       },
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "Employee"
                       },
                       "relationship_type": "Object",
@@ -488,7 +460,6 @@
           {
             "model": {
               "name": {
-                "subgraph": "default",
                 "name": "Customer"
               }
             }

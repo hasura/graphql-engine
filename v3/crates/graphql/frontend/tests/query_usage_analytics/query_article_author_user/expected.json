@@ -26,7 +26,6 @@
                         "field": {
                           "name": "article_id",
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "article"
                           },
                           "deprecated": false,
@@ -49,7 +48,6 @@
                         "field": {
                           "name": "title",
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "article"
                           },
                           "deprecated": false,
@@ -76,7 +74,6 @@
                 "field": {
                   "name": "title",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "article"
                   },
                   "deprecated": false,
@@ -95,7 +92,6 @@
                 "field": {
                   "name": "article_id",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "article"
                   },
                   "deprecated": false,
@@ -109,7 +105,6 @@
           {
             "model": {
               "name": {
-                "subgraph": "default",
                 "name": "Articles"
               }
             }
@@ -121,7 +116,6 @@
                   {
                     "name": "title",
                     "opendd_type": {
-                      "subgraph": "default",
                       "name": "article"
                     },
                     "deprecated": false,
@@ -130,7 +124,6 @@
                   {
                     "name": "author_id",
                     "opendd_type": {
-                      "subgraph": "default",
                       "name": "article"
                     },
                     "deprecated": false,
@@ -141,17 +134,14 @@
                   {
                     "name": "Author",
                     "source": {
-                      "subgraph": "default",
                       "name": "article"
                     },
                     "target": {
                       "model": {
                         "model_name": {
-                          "subgraph": "default",
                           "name": "Authors"
                         },
                         "opendd_type": {
-                          "subgraph": "default",
                           "name": "author"
                         },
                         "relationship_type": "Object",
@@ -168,7 +158,6 @@
                         {
                           "name": "author_id",
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "author"
                           },
                           "deprecated": false,
@@ -205,7 +194,6 @@
                 "field": {
                   "name": "id",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "commandAuthor"
                   },
                   "deprecated": false,
@@ -224,7 +212,6 @@
                 "field": {
                   "name": "last_name",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "commandAuthor"
                   },
                   "deprecated": false,
@@ -243,7 +230,6 @@
                 "field": {
                   "name": "first_name",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "commandAuthor"
                   },
                   "deprecated": false,
@@ -257,7 +243,6 @@
           {
             "command": {
               "name": {
-                "subgraph": "default",
                 "name": "get_author_by_id"
               }
             }

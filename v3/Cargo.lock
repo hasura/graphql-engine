@@ -3015,6 +3015,7 @@ dependencies = [
  "rmp-serde",
  "schemars",
  "serde",
+ "serde-ext",
  "serde_json",
  "serde_with",
  "smol_str",
@@ -3214,6 +3215,7 @@ dependencies = [
  "schemars",
  "semver",
  "serde",
+ "serde-ext",
  "serde_json",
  "serde_with",
  "strum",
@@ -4588,6 +4590,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8e3592472072e6e22e0a54d5904d9febf8508f65fb8552499a1abc7d1078c3a"
 dependencies = [
  "serde_derive",
+]
+
+[[package]]
+name = "serde-ext"
+version = "3.0.0"
+dependencies = [
+ "indexmap 2.6.0",
 ]
 
 [[package]]

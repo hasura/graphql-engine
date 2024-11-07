@@ -464,9 +464,17 @@ impl CommandsResponseConfig {
 pub struct DataConnectorCapabilities {
     pub supported_ndc_version: NdcVersion,
     pub supports_explaining_queries: bool,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_explaining_mutations: bool,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_nested_object_filtering: bool,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_nested_object_aggregations: bool,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub supports_nested_array_filtering: bool,
 }
 

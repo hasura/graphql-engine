@@ -16,19 +16,16 @@
                         "Output": {
                           "RelationshipToModel": {
                             "source_type": {
-                              "subgraph": "default",
                               "name": "commandArticle"
                             },
                             "relationship_name": "article",
                             "model_name": {
-                              "subgraph": "default",
                               "name": "Articles"
                             },
                             "target_source": {
                               "model": {
                                 "data_connector": {
                                   "name": {
-                                    "subgraph": "default",
                                     "name": "db"
                                   },
                                   "url": {
@@ -40,16 +37,13 @@
                                   "capabilities": {
                                     "supported_ndc_version": "V01",
                                     "supports_explaining_queries": true,
-                                    "supports_explaining_mutations": false,
-                                    "supports_nested_object_filtering": true,
-                                    "supports_nested_object_aggregations": false,
-                                    "supports_nested_array_filtering": false
+                                    "supports_nested_object_filtering": true
                                   }
                                 },
                                 "collection": "article",
                                 "collection_type": "article",
                                 "type_mappings": {
-                                  "{\"subgraph\":\"default\",\"name\":\"article\"}": {
+                                  "{\"name\":\"article\"}": {
                                     "Object": {
                                       "ndc_object_type_name": "article",
                                       "field_mappings": {
@@ -64,7 +58,6 @@
                                           },
                                           "comparison_operators": {
                                             "equality_operators": ["_eq"],
-                                            "in_operators": [],
                                             "other_operators": [
                                               "_gt",
                                               "_gte",
@@ -72,8 +65,7 @@
                                               "_lte",
                                               "_neq"
                                             ]
-                                          },
-                                          "argument_mappings": {}
+                                          }
                                         },
                                         "author_id": {
                                           "column": "author_id",
@@ -86,7 +78,6 @@
                                           },
                                           "comparison_operators": {
                                             "equality_operators": ["_eq"],
-                                            "in_operators": [],
                                             "other_operators": [
                                               "_gt",
                                               "_gte",
@@ -94,8 +85,7 @@
                                               "_lte",
                                               "_neq"
                                             ]
-                                          },
-                                          "argument_mappings": {}
+                                          }
                                         },
                                         "title": {
                                           "column": "title",
@@ -108,7 +98,6 @@
                                           },
                                           "comparison_operators": {
                                             "equality_operators": ["_eq"],
-                                            "in_operators": [],
                                             "other_operators": [
                                               "_gt",
                                               "_gte",
@@ -130,8 +119,7 @@
                                               "starts_with",
                                               "ts_match_tt"
                                             ]
-                                          },
-                                          "argument_mappings": {}
+                                          }
                                         }
                                       }
                                     }
@@ -148,7 +136,6 @@
                               }
                             },
                             "target_type": {
-                              "subgraph": "default",
                               "name": "article"
                             },
                             "relationship_type": "Object",
@@ -198,19 +185,16 @@
                               "Output": {
                                 "RelationshipToModel": {
                                   "source_type": {
-                                    "subgraph": "default",
                                     "name": "article"
                                   },
                                   "relationship_name": "Author",
                                   "model_name": {
-                                    "subgraph": "default",
                                     "name": "Authors"
                                   },
                                   "target_source": {
                                     "model": {
                                       "data_connector": {
                                         "name": {
-                                          "subgraph": "default",
                                           "name": "db"
                                         },
                                         "url": {
@@ -222,16 +206,13 @@
                                         "capabilities": {
                                           "supported_ndc_version": "V01",
                                           "supports_explaining_queries": true,
-                                          "supports_explaining_mutations": false,
-                                          "supports_nested_object_filtering": true,
-                                          "supports_nested_object_aggregations": false,
-                                          "supports_nested_array_filtering": false
+                                          "supports_nested_object_filtering": true
                                         }
                                       },
                                       "collection": "author",
                                       "collection_type": "author",
                                       "type_mappings": {
-                                        "{\"subgraph\":\"default\",\"name\":\"author\"}": {
+                                        "{\"name\":\"author\"}": {
                                           "Object": {
                                             "ndc_object_type_name": "author",
                                             "field_mappings": {
@@ -246,7 +227,6 @@
                                                 },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
-                                                  "in_operators": [],
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -254,8 +234,7 @@
                                                     "_lte",
                                                     "_neq"
                                                   ]
-                                                },
-                                                "argument_mappings": {}
+                                                }
                                               },
                                               "first_name": {
                                                 "column": "first_name",
@@ -268,7 +247,6 @@
                                                 },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
-                                                  "in_operators": [],
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -290,8 +268,7 @@
                                                     "starts_with",
                                                     "ts_match_tt"
                                                   ]
-                                                },
-                                                "argument_mappings": {}
+                                                }
                                               },
                                               "last_name": {
                                                 "column": "last_name",
@@ -304,7 +281,6 @@
                                                 },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
-                                                  "in_operators": [],
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -326,8 +302,7 @@
                                                     "starts_with",
                                                     "ts_match_tt"
                                                   ]
-                                                },
-                                                "argument_mappings": {}
+                                                }
                                               }
                                             }
                                           }
@@ -344,7 +319,6 @@
                                     }
                                   },
                                   "target_type": {
-                                    "subgraph": "default",
                                     "name": "author"
                                   },
                                   "relationship_type": "Object",
@@ -394,19 +368,16 @@
                                     "Output": {
                                       "RelationshipToModel": {
                                         "source_type": {
-                                          "subgraph": "default",
                                           "name": "author"
                                         },
                                         "relationship_name": "Articles",
                                         "model_name": {
-                                          "subgraph": "default",
                                           "name": "Articles"
                                         },
                                         "target_source": {
                                           "model": {
                                             "data_connector": {
                                               "name": {
-                                                "subgraph": "default",
                                                 "name": "db"
                                               },
                                               "url": {
@@ -418,16 +389,13 @@
                                               "capabilities": {
                                                 "supported_ndc_version": "V01",
                                                 "supports_explaining_queries": true,
-                                                "supports_explaining_mutations": false,
-                                                "supports_nested_object_filtering": true,
-                                                "supports_nested_object_aggregations": false,
-                                                "supports_nested_array_filtering": false
+                                                "supports_nested_object_filtering": true
                                               }
                                             },
                                             "collection": "article",
                                             "collection_type": "article",
                                             "type_mappings": {
-                                              "{\"subgraph\":\"default\",\"name\":\"article\"}": {
+                                              "{\"name\":\"article\"}": {
                                                 "Object": {
                                                   "ndc_object_type_name": "article",
                                                   "field_mappings": {
@@ -444,7 +412,6 @@
                                                         "equality_operators": [
                                                           "_eq"
                                                         ],
-                                                        "in_operators": [],
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -452,8 +419,7 @@
                                                           "_lte",
                                                           "_neq"
                                                         ]
-                                                      },
-                                                      "argument_mappings": {}
+                                                      }
                                                     },
                                                     "author_id": {
                                                       "column": "author_id",
@@ -468,7 +434,6 @@
                                                         "equality_operators": [
                                                           "_eq"
                                                         ],
-                                                        "in_operators": [],
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -476,8 +441,7 @@
                                                           "_lte",
                                                           "_neq"
                                                         ]
-                                                      },
-                                                      "argument_mappings": {}
+                                                      }
                                                     },
                                                     "title": {
                                                       "column": "title",
@@ -492,7 +456,6 @@
                                                         "equality_operators": [
                                                           "_eq"
                                                         ],
-                                                        "in_operators": [],
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -514,8 +477,7 @@
                                                           "starts_with",
                                                           "ts_match_tt"
                                                         ]
-                                                      },
-                                                      "argument_mappings": {}
+                                                      }
                                                     }
                                                   }
                                                 }
@@ -532,7 +494,6 @@
                                           }
                                         },
                                         "target_type": {
-                                          "subgraph": "default",
                                           "name": "article"
                                         },
                                         "relationship_type": "Array",
@@ -619,12 +580,10 @@
                                                   "Named": {
                                                     "Inbuilt": "String"
                                                   }
-                                                },
-                                                "nullable": false
+                                                }
                                               },
                                               "field_base_type_kind": "Scalar",
                                               "parent_type": {
-                                                "subgraph": "default",
                                                 "name": "article"
                                               },
                                               "argument_types": {},
@@ -690,13 +649,11 @@
         "ir": {
           "command_info": {
             "command_name": {
-              "subgraph": "default",
               "name": "get_latest_article"
             },
             "field_name": "getLatestArticle",
             "data_connector": {
               "name": {
-                "subgraph": "default",
                 "name": "db"
               },
               "url": {
@@ -708,10 +665,7 @@
               "capabilities": {
                 "supported_ndc_version": "V01",
                 "supports_explaining_queries": true,
-                "supports_explaining_mutations": false,
-                "supports_nested_object_filtering": true,
-                "supports_nested_object_aggregations": false,
-                "supports_nested_array_filtering": false
+                "supports_nested_object_filtering": true
               }
             },
             "arguments": {},
@@ -723,7 +677,6 @@
                       "query": {
                         "data_connector": {
                           "name": {
-                            "subgraph": "default",
                             "name": "db"
                           },
                           "url": {
@@ -735,10 +688,7 @@
                           "capabilities": {
                             "supported_ndc_version": "V01",
                             "supports_explaining_queries": true,
-                            "supports_explaining_mutations": false,
-                            "supports_nested_object_filtering": true,
-                            "supports_nested_object_aggregations": false,
-                            "supports_nested_array_filtering": false
+                            "supports_nested_object_filtering": true
                           }
                         },
                         "collection": "article",
@@ -761,7 +711,6 @@
                                 "query": {
                                   "data_connector": {
                                     "name": {
-                                      "subgraph": "default",
                                       "name": "db"
                                     },
                                     "url": {
@@ -773,10 +722,7 @@
                                     "capabilities": {
                                       "supported_ndc_version": "V01",
                                       "supports_explaining_queries": true,
-                                      "supports_explaining_mutations": false,
-                                      "supports_nested_object_filtering": true,
-                                      "supports_nested_object_aggregations": false,
-                                      "supports_nested_array_filtering": false
+                                      "supports_nested_object_filtering": true
                                     }
                                   },
                                   "collection": "author",
@@ -799,7 +745,6 @@
                                           "query": {
                                             "data_connector": {
                                               "name": {
-                                                "subgraph": "default",
                                                 "name": "db"
                                               },
                                               "url": {
@@ -811,10 +756,7 @@
                                               "capabilities": {
                                                 "supported_ndc_version": "V01",
                                                 "supports_explaining_queries": true,
-                                                "supports_explaining_mutations": false,
-                                                "supports_nested_object_filtering": true,
-                                                "supports_nested_object_aggregations": false,
-                                                "supports_nested_array_filtering": false
+                                                "supports_nested_object_filtering": true
                                               }
                                             },
                                             "collection": "article",
@@ -855,12 +797,10 @@
                                             "relationship_name": "Articles",
                                             "relationship_type": "Array",
                                             "source_type": {
-                                              "subgraph": "default",
                                               "name": "author"
                                             },
                                             "source_data_connector": {
                                               "name": {
-                                                "subgraph": "default",
                                                 "name": "db"
                                               },
                                               "url": {
@@ -872,14 +812,11 @@
                                               "capabilities": {
                                                 "supported_ndc_version": "V01",
                                                 "supports_explaining_queries": true,
-                                                "supports_explaining_mutations": false,
-                                                "supports_nested_object_filtering": true,
-                                                "supports_nested_object_aggregations": false,
-                                                "supports_nested_array_filtering": false
+                                                "supports_nested_object_filtering": true
                                               }
                                             },
                                             "source_type_mappings": {
-                                              "{\"subgraph\":\"default\",\"name\":\"author\"}": {
+                                              "{\"name\":\"author\"}": {
                                                 "Object": {
                                                   "ndc_object_type_name": "author",
                                                   "field_mappings": {
@@ -896,7 +833,6 @@
                                                         "equality_operators": [
                                                           "_eq"
                                                         ],
-                                                        "in_operators": [],
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -904,8 +840,7 @@
                                                           "_lte",
                                                           "_neq"
                                                         ]
-                                                      },
-                                                      "argument_mappings": {}
+                                                      }
                                                     },
                                                     "first_name": {
                                                       "column": "first_name",
@@ -920,7 +855,6 @@
                                                         "equality_operators": [
                                                           "_eq"
                                                         ],
-                                                        "in_operators": [],
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -942,8 +876,7 @@
                                                           "starts_with",
                                                           "ts_match_tt"
                                                         ]
-                                                      },
-                                                      "argument_mappings": {}
+                                                      }
                                                     },
                                                     "last_name": {
                                                       "column": "last_name",
@@ -958,7 +891,6 @@
                                                         "equality_operators": [
                                                           "_eq"
                                                         ],
-                                                        "in_operators": [],
                                                         "other_operators": [
                                                           "_gt",
                                                           "_gte",
@@ -980,8 +912,7 @@
                                                           "starts_with",
                                                           "ts_match_tt"
                                                         ]
-                                                      },
-                                                      "argument_mappings": {}
+                                                      }
                                                     }
                                                   }
                                                 }
@@ -991,7 +922,6 @@
                                               "model": {
                                                 "data_connector": {
                                                   "name": {
-                                                    "subgraph": "default",
                                                     "name": "db"
                                                   },
                                                   "url": {
@@ -1003,16 +933,13 @@
                                                   "capabilities": {
                                                     "supported_ndc_version": "V01",
                                                     "supports_explaining_queries": true,
-                                                    "supports_explaining_mutations": false,
-                                                    "supports_nested_object_filtering": true,
-                                                    "supports_nested_object_aggregations": false,
-                                                    "supports_nested_array_filtering": false
+                                                    "supports_nested_object_filtering": true
                                                   }
                                                 },
                                                 "collection": "article",
                                                 "collection_type": "article",
                                                 "type_mappings": {
-                                                  "{\"subgraph\":\"default\",\"name\":\"article\"}": {
+                                                  "{\"name\":\"article\"}": {
                                                     "Object": {
                                                       "ndc_object_type_name": "article",
                                                       "field_mappings": {
@@ -1029,7 +956,6 @@
                                                             "equality_operators": [
                                                               "_eq"
                                                             ],
-                                                            "in_operators": [],
                                                             "other_operators": [
                                                               "_gt",
                                                               "_gte",
@@ -1037,8 +963,7 @@
                                                               "_lte",
                                                               "_neq"
                                                             ]
-                                                          },
-                                                          "argument_mappings": {}
+                                                          }
                                                         },
                                                         "author_id": {
                                                           "column": "author_id",
@@ -1053,7 +978,6 @@
                                                             "equality_operators": [
                                                               "_eq"
                                                             ],
-                                                            "in_operators": [],
                                                             "other_operators": [
                                                               "_gt",
                                                               "_gte",
@@ -1061,8 +985,7 @@
                                                               "_lte",
                                                               "_neq"
                                                             ]
-                                                          },
-                                                          "argument_mappings": {}
+                                                          }
                                                         },
                                                         "title": {
                                                           "column": "title",
@@ -1077,7 +1000,6 @@
                                                             "equality_operators": [
                                                               "_eq"
                                                             ],
-                                                            "in_operators": [],
                                                             "other_operators": [
                                                               "_gt",
                                                               "_gte",
@@ -1099,8 +1021,7 @@
                                                               "starts_with",
                                                               "ts_match_tt"
                                                             ]
-                                                          },
-                                                          "argument_mappings": {}
+                                                          }
                                                         }
                                                       }
                                                     }
@@ -1117,7 +1038,6 @@
                                               }
                                             },
                                             "target_type": {
-                                              "subgraph": "default",
                                               "name": "article"
                                             },
                                             "mappings": [
@@ -1146,12 +1066,10 @@
                                   "relationship_name": "Author",
                                   "relationship_type": "Object",
                                   "source_type": {
-                                    "subgraph": "default",
                                     "name": "article"
                                   },
                                   "source_data_connector": {
                                     "name": {
-                                      "subgraph": "default",
                                       "name": "db"
                                     },
                                     "url": {
@@ -1163,14 +1081,11 @@
                                     "capabilities": {
                                       "supported_ndc_version": "V01",
                                       "supports_explaining_queries": true,
-                                      "supports_explaining_mutations": false,
-                                      "supports_nested_object_filtering": true,
-                                      "supports_nested_object_aggregations": false,
-                                      "supports_nested_array_filtering": false
+                                      "supports_nested_object_filtering": true
                                     }
                                   },
                                   "source_type_mappings": {
-                                    "{\"subgraph\":\"default\",\"name\":\"article\"}": {
+                                    "{\"name\":\"article\"}": {
                                       "Object": {
                                         "ndc_object_type_name": "article",
                                         "field_mappings": {
@@ -1185,7 +1100,6 @@
                                             },
                                             "comparison_operators": {
                                               "equality_operators": ["_eq"],
-                                              "in_operators": [],
                                               "other_operators": [
                                                 "_gt",
                                                 "_gte",
@@ -1193,8 +1107,7 @@
                                                 "_lte",
                                                 "_neq"
                                               ]
-                                            },
-                                            "argument_mappings": {}
+                                            }
                                           },
                                           "author_id": {
                                             "column": "author_id",
@@ -1207,7 +1120,6 @@
                                             },
                                             "comparison_operators": {
                                               "equality_operators": ["_eq"],
-                                              "in_operators": [],
                                               "other_operators": [
                                                 "_gt",
                                                 "_gte",
@@ -1215,8 +1127,7 @@
                                                 "_lte",
                                                 "_neq"
                                               ]
-                                            },
-                                            "argument_mappings": {}
+                                            }
                                           },
                                           "title": {
                                             "column": "title",
@@ -1229,7 +1140,6 @@
                                             },
                                             "comparison_operators": {
                                               "equality_operators": ["_eq"],
-                                              "in_operators": [],
                                               "other_operators": [
                                                 "_gt",
                                                 "_gte",
@@ -1251,8 +1161,7 @@
                                                 "starts_with",
                                                 "ts_match_tt"
                                               ]
-                                            },
-                                            "argument_mappings": {}
+                                            }
                                           }
                                         }
                                       }
@@ -1262,7 +1171,6 @@
                                     "model": {
                                       "data_connector": {
                                         "name": {
-                                          "subgraph": "default",
                                           "name": "db"
                                         },
                                         "url": {
@@ -1274,16 +1182,13 @@
                                         "capabilities": {
                                           "supported_ndc_version": "V01",
                                           "supports_explaining_queries": true,
-                                          "supports_explaining_mutations": false,
-                                          "supports_nested_object_filtering": true,
-                                          "supports_nested_object_aggregations": false,
-                                          "supports_nested_array_filtering": false
+                                          "supports_nested_object_filtering": true
                                         }
                                       },
                                       "collection": "author",
                                       "collection_type": "author",
                                       "type_mappings": {
-                                        "{\"subgraph\":\"default\",\"name\":\"author\"}": {
+                                        "{\"name\":\"author\"}": {
                                           "Object": {
                                             "ndc_object_type_name": "author",
                                             "field_mappings": {
@@ -1298,7 +1203,6 @@
                                                 },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
-                                                  "in_operators": [],
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -1306,8 +1210,7 @@
                                                     "_lte",
                                                     "_neq"
                                                   ]
-                                                },
-                                                "argument_mappings": {}
+                                                }
                                               },
                                               "first_name": {
                                                 "column": "first_name",
@@ -1320,7 +1223,6 @@
                                                 },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
-                                                  "in_operators": [],
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -1342,8 +1244,7 @@
                                                     "starts_with",
                                                     "ts_match_tt"
                                                   ]
-                                                },
-                                                "argument_mappings": {}
+                                                }
                                               },
                                               "last_name": {
                                                 "column": "last_name",
@@ -1356,7 +1257,6 @@
                                                 },
                                                 "comparison_operators": {
                                                   "equality_operators": ["_eq"],
-                                                  "in_operators": [],
                                                   "other_operators": [
                                                     "_gt",
                                                     "_gte",
@@ -1378,8 +1278,7 @@
                                                     "starts_with",
                                                     "ts_match_tt"
                                                   ]
-                                                },
-                                                "argument_mappings": {}
+                                                }
                                               }
                                             }
                                           }
@@ -1396,7 +1295,6 @@
                                     }
                                   },
                                   "target_type": {
-                                    "subgraph": "default",
                                     "name": "author"
                                   },
                                   "mappings": [
@@ -1425,12 +1323,10 @@
                         "relationship_name": "article",
                         "relationship_type": "Object",
                         "source_type": {
-                          "subgraph": "default",
                           "name": "commandArticle"
                         },
                         "source_data_connector": {
                           "name": {
-                            "subgraph": "default",
                             "name": "db"
                           },
                           "url": {
@@ -1442,14 +1338,11 @@
                           "capabilities": {
                             "supported_ndc_version": "V01",
                             "supports_explaining_queries": true,
-                            "supports_explaining_mutations": false,
-                            "supports_nested_object_filtering": true,
-                            "supports_nested_object_aggregations": false,
-                            "supports_nested_array_filtering": false
+                            "supports_nested_object_filtering": true
                           }
                         },
                         "source_type_mappings": {
-                          "{\"subgraph\":\"default\",\"name\":\"commandArticle\"}": {
+                          "{\"name\":\"commandArticle\"}": {
                             "Object": {
                               "ndc_object_type_name": "article",
                               "field_mappings": {
@@ -1464,7 +1357,6 @@
                                   },
                                   "comparison_operators": {
                                     "equality_operators": ["_eq"],
-                                    "in_operators": [],
                                     "other_operators": [
                                       "_gt",
                                       "_gte",
@@ -1472,8 +1364,7 @@
                                       "_lte",
                                       "_neq"
                                     ]
-                                  },
-                                  "argument_mappings": {}
+                                  }
                                 },
                                 "author_id": {
                                   "column": "author_id",
@@ -1486,7 +1377,6 @@
                                   },
                                   "comparison_operators": {
                                     "equality_operators": ["_eq"],
-                                    "in_operators": [],
                                     "other_operators": [
                                       "_gt",
                                       "_gte",
@@ -1494,8 +1384,7 @@
                                       "_lte",
                                       "_neq"
                                     ]
-                                  },
-                                  "argument_mappings": {}
+                                  }
                                 },
                                 "title": {
                                   "column": "title",
@@ -1508,7 +1397,6 @@
                                   },
                                   "comparison_operators": {
                                     "equality_operators": ["_eq"],
-                                    "in_operators": [],
                                     "other_operators": [
                                       "_gt",
                                       "_gte",
@@ -1530,8 +1418,7 @@
                                       "starts_with",
                                       "ts_match_tt"
                                     ]
-                                  },
-                                  "argument_mappings": {}
+                                  }
                                 }
                               }
                             }
@@ -1541,7 +1428,6 @@
                           "model": {
                             "data_connector": {
                               "name": {
-                                "subgraph": "default",
                                 "name": "db"
                               },
                               "url": {
@@ -1553,16 +1439,13 @@
                               "capabilities": {
                                 "supported_ndc_version": "V01",
                                 "supports_explaining_queries": true,
-                                "supports_explaining_mutations": false,
-                                "supports_nested_object_filtering": true,
-                                "supports_nested_object_aggregations": false,
-                                "supports_nested_array_filtering": false
+                                "supports_nested_object_filtering": true
                               }
                             },
                             "collection": "article",
                             "collection_type": "article",
                             "type_mappings": {
-                              "{\"subgraph\":\"default\",\"name\":\"article\"}": {
+                              "{\"name\":\"article\"}": {
                                 "Object": {
                                   "ndc_object_type_name": "article",
                                   "field_mappings": {
@@ -1577,7 +1460,6 @@
                                       },
                                       "comparison_operators": {
                                         "equality_operators": ["_eq"],
-                                        "in_operators": [],
                                         "other_operators": [
                                           "_gt",
                                           "_gte",
@@ -1585,8 +1467,7 @@
                                           "_lte",
                                           "_neq"
                                         ]
-                                      },
-                                      "argument_mappings": {}
+                                      }
                                     },
                                     "author_id": {
                                       "column": "author_id",
@@ -1599,7 +1480,6 @@
                                       },
                                       "comparison_operators": {
                                         "equality_operators": ["_eq"],
-                                        "in_operators": [],
                                         "other_operators": [
                                           "_gt",
                                           "_gte",
@@ -1607,8 +1487,7 @@
                                           "_lte",
                                           "_neq"
                                         ]
-                                      },
-                                      "argument_mappings": {}
+                                      }
                                     },
                                     "title": {
                                       "column": "title",
@@ -1621,7 +1500,6 @@
                                       },
                                       "comparison_operators": {
                                         "equality_operators": ["_eq"],
-                                        "in_operators": [],
                                         "other_operators": [
                                           "_gt",
                                           "_gte",
@@ -1643,8 +1521,7 @@
                                           "starts_with",
                                           "ts_match_tt"
                                         ]
-                                      },
-                                      "argument_mappings": {}
+                                      }
                                     }
                                   }
                                 }
@@ -1661,7 +1538,6 @@
                           }
                         },
                         "target_type": {
-                          "subgraph": "default",
                           "name": "article"
                         },
                         "mappings": [
@@ -1694,14 +1570,12 @@
               "models_used": [
                 {
                   "model": {
-                    "subgraph": "default",
                     "name": "Articles"
                   },
                   "count": 2
                 },
                 {
                   "model": {
-                    "subgraph": "default",
                     "name": "Authors"
                   },
                   "count": 1
@@ -1710,7 +1584,6 @@
               "commands_used": [
                 {
                   "command": {
-                    "subgraph": "default",
                     "name": "get_latest_article"
                   },
                   "count": 1

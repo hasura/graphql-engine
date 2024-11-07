@@ -90,7 +90,11 @@ pub struct RelationshipField {
     pub source: Qualified<CustomTypeName>,
     pub target: RelationshipTarget,
     pub target_capabilities: Option<RelationshipCapabilities>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub deprecated: Option<Deprecated>,
 }
 

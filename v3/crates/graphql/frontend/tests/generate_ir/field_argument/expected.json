@@ -20,16 +20,13 @@
                               "underlying_type": {
                                 "Named": {
                                   "Custom": {
-                                    "subgraph": "default",
                                     "name": "int4"
                                   }
                                 }
-                              },
-                              "nullable": false
+                              }
                             },
                             "field_base_type_kind": "Scalar",
                             "parent_type": {
-                              "subgraph": "default",
                               "name": "Artist"
                             },
                             "argument_types": {},
@@ -70,7 +67,6 @@
                               "underlying_type": {
                                 "Named": {
                                   "Custom": {
-                                    "subgraph": "default",
                                     "name": "varchar"
                                   }
                                 }
@@ -79,7 +75,6 @@
                             },
                             "field_base_type_kind": "Scalar",
                             "parent_type": {
-                              "subgraph": "default",
                               "name": "Artist"
                             },
                             "argument_types": {
@@ -87,7 +82,6 @@
                                 "underlying_type": {
                                   "Named": {
                                     "Custom": {
-                                      "subgraph": "default",
                                       "name": "varchar"
                                     }
                                   }
@@ -137,7 +131,6 @@
           "model_selection": {
             "data_connector": {
               "name": {
-                "subgraph": "default",
                 "name": "db"
               },
               "url": {
@@ -149,10 +142,7 @@
               "capabilities": {
                 "supported_ndc_version": "V01",
                 "supports_explaining_queries": true,
-                "supports_explaining_mutations": false,
-                "supports_nested_object_filtering": true,
-                "supports_nested_object_aggregations": false,
-                "supports_nested_array_filtering": false
+                "supports_nested_object_filtering": true
               }
             },
             "collection": "Artist",
@@ -209,7 +199,6 @@
             "models_used": [
               {
                 "model": {
-                  "subgraph": "default",
                   "name": "Artist"
                 },
                 "count": 1

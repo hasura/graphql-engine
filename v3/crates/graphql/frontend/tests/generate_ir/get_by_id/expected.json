@@ -21,12 +21,10 @@
                                 "Named": {
                                   "Inbuilt": "Int"
                                 }
-                              },
-                              "nullable": false
+                              }
                             },
                             "field_base_type_kind": "Scalar",
                             "parent_type": {
-                              "subgraph": "default",
                               "name": "article"
                             },
                             "argument_types": {},
@@ -68,12 +66,10 @@
                                 "Named": {
                                   "Inbuilt": "String"
                                 }
-                              },
-                              "nullable": false
+                              }
                             },
                             "field_base_type_kind": "Scalar",
                             "parent_type": {
-                              "subgraph": "default",
                               "name": "article"
                             },
                             "argument_types": {},
@@ -106,7 +102,6 @@
           "model_selection": {
             "data_connector": {
               "name": {
-                "subgraph": "default",
                 "name": "db"
               },
               "url": {
@@ -118,10 +113,7 @@
               "capabilities": {
                 "supported_ndc_version": "V01",
                 "supports_explaining_queries": true,
-                "supports_explaining_mutations": false,
-                "supports_nested_object_filtering": true,
-                "supports_nested_object_aggregations": false,
-                "supports_nested_array_filtering": false
+                "supports_nested_object_filtering": true
               }
             },
             "collection": "article",
@@ -184,7 +176,6 @@
             "models_used": [
               {
                 "model": {
-                  "subgraph": "default",
                   "name": "Articles"
                 },
                 "count": 1

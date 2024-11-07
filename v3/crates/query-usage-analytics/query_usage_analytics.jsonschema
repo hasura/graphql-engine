@@ -241,8 +241,7 @@
     "Qualified_for_ModelName": {
       "type": "object",
       "required": [
-        "name",
-        "subgraph"
+        "name"
       ],
       "properties": {
         "subgraph": {
@@ -267,8 +266,7 @@
     "Qualified_for_CommandName": {
       "type": "object",
       "required": [
-        "name",
-        "subgraph"
+        "name"
       ],
       "properties": {
         "subgraph": {
@@ -321,8 +319,7 @@
     "Qualified_for_CustomTypeName": {
       "type": "object",
       "required": [
-        "name",
-        "subgraph"
+        "name"
       ],
       "properties": {
         "subgraph": {

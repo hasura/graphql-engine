@@ -30,6 +30,8 @@ pub struct CommandsOutput {
 pub struct CommandGraphQlApi {
     pub root_field_kind: GraphQlRootFieldKind,
     pub root_field_name: ast::Name,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub deprecated: Option<Deprecated>,
 }
 
@@ -58,6 +60,8 @@ pub struct Command {
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub graphql_api: Option<CommandGraphQlApi>,
     pub source: Option<Arc<CommandSource>>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 

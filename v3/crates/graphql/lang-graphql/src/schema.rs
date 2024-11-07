@@ -154,8 +154,19 @@ pub struct NodeInfo<'s, S: SchemaContext> {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Namespaced<S: SchemaContext, C> {
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub namespaced: NamespacedData<S>,
     pub data: C,
+}
+
+impl<S: SchemaContext> serde_ext::HasDefaultForSerde for NamespacedData<S> {
+    fn ser_default() -> Self {
+        NamespacedData::AllowAll
+    }
+    fn is_ser_default(&self) -> bool {
+        matches!(self, NamespacedData::AllowAll)
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -175,6 +186,7 @@ pub trait NamespacedGetter<S: SchemaContext> {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
 pub enum DeprecationStatus {
+    // Don't change this default or serialization breaks
     #[default]
     NotDeprecated,
     Deprecated {
@@ -201,6 +213,15 @@ impl DeprecationStatus {
     }
 }
 
+impl serde_ext::HasDefaultForSerde for DeprecationStatus {
+    fn ser_default() -> Self {
+        DeprecationStatus::default()
+    }
+    fn is_ser_default(&self) -> bool {
+        !self.is_deprecated()
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Directive {
     pub name: ast::Name,
@@ -210,6 +231,8 @@ pub struct Directive {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Object<S: SchemaContext> {
     pub name: ast::TypeName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub fields: BTreeMap<ast::Name, Namespaced<S, Field<S>>>,
     /// The set of interfaces that this object type implements
@@ -265,10 +288,14 @@ impl<S: SchemaContext> Object<S> {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Field<S: SchemaContext> {
     pub name: ast::Name,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub info: S::GenericNodeInfo,
     pub field_type: ast::Type,
     pub arguments: BTreeMap<ast::Name, Namespaced<S, InputField<S>>>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub deprecation_status: DeprecationStatus,
 }
 
@@ -295,6 +322,8 @@ impl<S: SchemaContext> Field<S> {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct InputObject<S: SchemaContext> {
     pub name: ast::TypeName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub fields: BTreeMap<ast::Name, Namespaced<S, InputField<S>>>,
     pub directives: Vec<Directive>,
@@ -325,10 +354,16 @@ impl<S: SchemaContext> InputObject<S> {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct InputField<S: SchemaContext> {
     pub name: ast::Name,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub info: S::GenericNodeInfo,
     pub field_type: ast::Type,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub default_value: Option<gql::ConstValue>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub deprecation_status: DeprecationStatus,
 }
 
@@ -355,6 +390,8 @@ impl<S: SchemaContext> InputField<S> {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Scalar {
     pub name: ast::TypeName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub directives: Vec<Directive>,
 }
@@ -362,7 +399,11 @@ pub struct Scalar {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct EnumValue<S: SchemaContext> {
     pub value: ast::Name,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub deprecation_status: DeprecationStatus,
     pub info: S::GenericNodeInfo,
 }
@@ -370,6 +411,8 @@ pub struct EnumValue<S: SchemaContext> {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Enum<S: SchemaContext> {
     pub name: ast::TypeName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub values: BTreeMap<ast::Name, Namespaced<S, EnumValue<S>>>,
     pub directives: Vec<Directive>,
@@ -378,6 +421,8 @@ pub struct Enum<S: SchemaContext> {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Union<S: SchemaContext> {
     pub name: ast::TypeName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     fields: BTreeMap<ast::Name, Namespaced<S, Field<S>>>,
     pub members: BTreeMap<ast::TypeName, Namespaced<S, ()>>,
@@ -415,6 +460,8 @@ impl<S: SchemaContext> Union<S> {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Interface<S: SchemaContext> {
     pub name: ast::TypeName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub fields: BTreeMap<ast::Name, Namespaced<S, Field<S>>>,
     pub interfaces: BTreeMap<ast::TypeName, Namespaced<S, ()>>,

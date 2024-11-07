@@ -58,6 +58,8 @@ pub struct ObjectOrderByExpression {
     pub orderable_fields: BTreeMap<FieldName, OrderableField>,
     pub orderable_relationships: OrderableRelationships,
     pub graphql: Option<OrderByExpressionGraphqlConfig>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 
@@ -66,6 +68,8 @@ pub struct ScalarOrderByExpression {
     pub identifier: Qualified<OrderByExpressionIdentifier>,
     pub enable_order_by_directions: EnableAllOrSpecific<OrderByDirection>,
     pub graphql: Option<OrderByExpressionGraphqlConfig>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 

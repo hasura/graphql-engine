@@ -96,6 +96,8 @@ pub struct ComparisonExpressionInfo {
     // we reuse this type for ObjectBooleanExpressionType and BooleanExpressionType
     // the former does not use this, hence partial
     // it will be good to get rid of `Option` in future
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub object_type_name: Option<Qualified<CustomTypeName>>,
     pub type_name: ast::TypeName,
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,

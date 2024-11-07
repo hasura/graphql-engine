@@ -44,6 +44,8 @@ pub struct TypeInputPermission {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldPresetInfo {
     pub value: ValueExpressionOrPredicate,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub deprecated: Option<Deprecated>,
 }
 

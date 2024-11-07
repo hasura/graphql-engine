@@ -27,12 +27,16 @@ pub struct AggregateExpression {
     pub count: AggregateCountDefinition,
     pub count_distinct: AggregateCountDefinition,
     pub graphql: Option<AggregateExpressionGraphqlConfig>,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AggregateCountDefinition {
     pub enable: bool,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
 }
 
@@ -46,6 +50,8 @@ pub struct AggregateOperand {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AggregatableFieldInfo {
     pub field_name: FieldName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub aggregate_expression: Qualified<AggregateExpressionName>,
 }
@@ -53,6 +59,8 @@ pub struct AggregatableFieldInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AggregationFunctionInfo {
     pub name: AggregationFunctionName,
+    #[serde(default = "serde_ext::ser_default")]
+    #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub description: Option<String>,
     pub return_type: QualifiedTypeReference,
     pub data_connector_functions: Vec<DataConnectorAggregationFunctionInfo>,

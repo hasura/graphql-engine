@@ -1,0 +1,15 @@
+[package]
+name = "serde-ext"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+# serde = { workspace = true }
+indexmap = { workspace = true }
+
+[lints]
+workspace = true

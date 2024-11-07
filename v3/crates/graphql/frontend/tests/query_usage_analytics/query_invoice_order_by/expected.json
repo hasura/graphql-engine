@@ -17,7 +17,6 @@
                     "field": {
                       "name": "InvoiceDate",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "Invoice"
                       },
                       "deprecated": false,
@@ -37,7 +36,6 @@
                         "field": {
                           "name": "CustomerId",
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "Customer"
                           },
                           "deprecated": false,
@@ -52,17 +50,14 @@
                     "relationship": {
                       "name": "Customer",
                       "source": {
-                        "subgraph": "default",
                         "name": "Invoice"
                       },
                       "target": {
                         "model": {
                           "model_name": {
-                            "subgraph": "default",
                             "name": "Customer"
                           },
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "Customer"
                           },
                           "relationship_type": "Object",
@@ -95,7 +90,6 @@
                 "field": {
                   "name": "InvoiceId",
                   "opendd_type": {
-                    "subgraph": "default",
                     "name": "Invoice"
                   },
                   "deprecated": false,
@@ -119,7 +113,6 @@
                         "field": {
                           "name": "InvoiceId",
                           "opendd_type": {
-                            "subgraph": "default",
                             "name": "InvoiceLine"
                           },
                           "deprecated": false,
@@ -143,7 +136,6 @@
                     "field": {
                       "name": "InvoiceLineId",
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "InvoiceLine"
                       },
                       "deprecated": false,
@@ -158,17 +150,14 @@
                 "relationship": {
                   "name": "InvoiceLines",
                   "source": {
-                    "subgraph": "default",
                     "name": "Invoice"
                   },
                   "target": {
                     "model": {
                       "model_name": {
-                        "subgraph": "default",
                         "name": "InvoiceLine"
                       },
                       "opendd_type": {
-                        "subgraph": "default",
                         "name": "InvoiceLine"
                       },
                       "relationship_type": "Array",
@@ -191,7 +180,6 @@
           {
             "model": {
               "name": {
-                "subgraph": "default",
                 "name": "Invoice"
               }
             }
