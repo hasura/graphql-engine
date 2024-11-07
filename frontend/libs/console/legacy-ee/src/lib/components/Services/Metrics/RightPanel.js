@@ -10,42 +10,16 @@ import { strippedCurrUrl } from './helpers';
 import { ApiLimitsHeader } from './ApiLimits/ApiLimitsHeader';
 import OperationsHeader from './Operations/OperationsHeader';
 import styles from './Metrics.module.scss';
-import { useLDClient } from 'launchdarkly-react-client-sdk';
-import globals from '../../../Globals';
-import { FiArrowUpRight } from 'react-icons/fi';
-
-const useIsTenantMetricsEnabled = () => {
-  const ldClient = useLDClient();
-  const result = ldClient?.variation('v2-cloud-dashboard-tenant-metrics');
-
-  return result ?? '';
-};
 
 const RightPanel = props => {
   const { location, dispatch, projectConfig, metadata, refetchMetadata } =
     props;
   const { pathname } = location;
-  const tenantMetricsEnabled = useIsTenantMetricsEnabled();
   const strippedUrl = strippedCurrUrl(pathname);
 
   const getHeaderName = () => {
     const headerName = urlToPageHeaderMap[strippedUrl];
     if (headerName === 'Overview') {
-      if (tenantMetricsEnabled) {
-        return (
-          <React.Fragment>
-            Overview
-            <a
-              href={`${window.location.protocol}//${window.location.host}/project/${globals.hasuraCloudProjectId}/monitoring`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-sm italic text-base font-thin text-secondary"
-            >
-              View project prometheus metrics <FiArrowUpRight />
-            </a>
-          </React.Fragment>
-        );
-      }
       return 'Overview';
     }
     if (headerName === 'Allow Lists') {
