@@ -16,11 +16,14 @@ use pre_response_plugin::execute::pre_response_plugins_handler;
 use hasura_authn_core::Session;
 use tracing_util::{SpanVisibility, TraceableHttpResponse};
 
+use super::types::RequestType;
+
 /// Middleware to start tracing of the `/graphql` request.
 /// This middleware must be active for the entire duration
 /// of the request i.e. this middleware should be the
 /// entry point and the exit point of the GraphQL request.
 pub async fn graphql_request_tracing_middleware(
+    request_type: RequestType,
     request: Request<Body>,
     next: Next,
 ) -> axum::response::Response {
@@ -36,6 +39,11 @@ pub async fn graphql_request_tracing_middleware(
             &request.headers().clone(),
             || {
                 set_attribute_on_active_span(AttributeVisibility::Internal, "version", VERSION);
+                set_attribute_on_active_span(
+                    AttributeVisibility::Default,
+                    "request.type",
+                    request_type.to_str(),
+                );
                 Box::pin(async move {
                     let mut response = next.run(request).await;
                     get_text_map_propagator(|propagator| {

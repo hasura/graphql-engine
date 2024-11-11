@@ -35,3 +35,20 @@ impl TraceableError for StartupError {
         ErrorVisibility::User
     }
 }
+
+/// The type of request being made to the engine
+pub enum RequestType {
+    Http,
+    WebSocket,
+}
+
+impl RequestType {
+    /// Convert the request type to a string
+    /// Used to set the attribute on the "/graphql" span
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            RequestType::Http => "http",
+            RequestType::WebSocket => "websocket",
+        }
+    }
+}

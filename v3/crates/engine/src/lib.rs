@@ -13,7 +13,7 @@ pub use middleware::{
 };
 pub use routes::EngineRouter;
 pub use state::build_state;
-pub use types::{EngineState, StartupError};
+pub use types::{EngineState, RequestType, StartupError};
 
 // This is set by the build.rs script.
 /// The version of the v3-engine release.

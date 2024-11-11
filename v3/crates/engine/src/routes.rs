@@ -24,6 +24,8 @@ use crate::{
     EngineState, StartupError,
 };
 
+use super::types::RequestType;
+
 const MB: usize = 1_048_576;
 
 /// The main router for the engine.
@@ -46,9 +48,9 @@ impl EngineRouter {
     pub fn new(state: EngineState) -> Self {
         let graphql_ws_route = Router::new()
             .route("/graphql", get(handle_websocket_request))
-            .layer(axum::middleware::from_fn(
-                graphql_request_tracing_middleware,
-            ))
+            .layer(axum::middleware::from_fn(|request, next| {
+                graphql_request_tracing_middleware(RequestType::WebSocket, request, next)
+            }))
             // *PLEASE DO NOT ADD ANY MIDDLEWARE
             // BEFORE THE `graphql_request_tracing_middleware`*
             // Refer to it for more details.
@@ -68,9 +70,9 @@ impl EngineRouter {
                 state.clone(),
                 authentication_middleware,
             ))
-            .layer(axum::middleware::from_fn(
-                graphql_request_tracing_middleware,
-            ))
+            .layer(axum::middleware::from_fn(|request, next| {
+                graphql_request_tracing_middleware(RequestType::Http, request, next)
+            }))
             // *PLEASE DO NOT ADD ANY MIDDLEWARE
             // BEFORE THE `graphql_request_tracing_middleware`*
             // Refer to it for more details.
