@@ -8,6 +8,10 @@
 
 ### Changed
 
+## [v2024.11.11]
+
+### Changed
+
 - Prevent duplicate GraphQL root field names for models; previously, one was
   arbitrarily chosen as the exposed field. This change does not impact existing
   projects, and warnings are emitted while creating a build. Projects created or
@@ -748,7 +752,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.05...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.11...HEAD
+[v2024.11.11]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.11
 [v2024.11.05]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.05
 [v2024.10.30]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.30
 [v2024.10.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.25
