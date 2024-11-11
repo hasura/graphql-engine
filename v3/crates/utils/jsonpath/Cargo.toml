@@ -8,7 +8,7 @@ license.workspace = true
 bench = false
 
 [dependencies]
-serde = { workspace = true, features = ["derive"] }
+serde = { workspace = true }
 serde_path_to_error = { workspace = true }
 
 [lints]

@@ -16,7 +16,7 @@ pre-parse-plugin = { path = "../../plugins/pre-parse-plugin" }
 pre-response-plugin = { path = "../../plugins/pre-response-plugin" }
 tracing-util = { path = "../../utils/tracing-util" }
 
-axum = { workspace = true, features = ["ws"] }
+axum = { workspace = true }
 blake2 = { workspace = true }
 derive_more = { workspace = true }
 futures-util = {workspace = true}
@@ -26,13 +26,13 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 smol_str = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
-uuid = { workspace = true, features = ["v4"] }
+tokio = { workspace = true }
+uuid = { workspace = true }
 
 [dev-dependencies]
 open-dds = { path = "../../open-dds" }
 
-reqwest = { workspace = true, features = ["json", "multipart"] }
+reqwest = { workspace = true }
 tokio-tungstenite = { workspace = true }
 
 [lints]

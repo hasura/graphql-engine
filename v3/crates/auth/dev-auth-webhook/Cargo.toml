@@ -16,10 +16,10 @@ tracing-util = { path = "../../utils/tracing-util" }
 anyhow = { workspace = true }
 axum = { workspace = true }
 axum-core = { workspace = true }
-clap = { workspace = true, features = ["derive", "env"] }
+clap = { workspace = true }
 http = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-tokio = { workspace = true, features = ["full"] }
+tokio = { workspace = true }
 tracing = { workspace = true }
-tower-http = { workspace = true, features = ["trace"] }
+tower-http = { workspace = true }

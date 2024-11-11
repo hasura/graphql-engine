@@ -17,17 +17,17 @@ tracing-util = { path = "../utils/tracing-util" }
 ndc-models = { workspace = true }
 
 async-trait = { workspace = true }
-datafusion = { workspace = true, features = ["serde"] }
+datafusion = { workspace = true }
 futures = { workspace = true }
 indexmap = { workspace = true }
-serde = { workspace = true, features = ["rc"] }
+serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 chrono = { workspace = true }
 reqwest = { workspace = true }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true }
 chrono = { workspace = true }
 
 [lints]

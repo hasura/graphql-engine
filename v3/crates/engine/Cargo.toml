@@ -44,7 +44,7 @@ anyhow = { workspace = true }
 axum = { workspace = true }
 axum-core = { workspace = true }
 base64 = { workspace = true }
-clap = { workspace = true, features = ["derive", "env"] }
+clap = { workspace = true }
 futures-util = {workspace = true}
 http-body-util = { workspace = true }
 indexmap = {workspace = true}
@@ -53,21 +53,21 @@ jsonapi_library = { workspace =  true }
 mimalloc = { workspace = true }
 nonempty = { workspace = true }
 oas3 = { workspace = true }
-reqwest = { workspace = true, features = ["json", "multipart"] }
+reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["macros", "parking_lot", "rt-multi-thread", "signal"] }
+tokio = { workspace = true }
 tower = { workspace = true }
-tower-http = { workspace = true, features = ["trace", "cors", "fs"] }
+tower-http = { workspace = true }
 
 [build-dependencies]
 build-data = { workspace = true }
 
 [dev-dependencies]
-criterion = { workspace = true, features = ["html_reports", "async_tokio"] }
+criterion = { workspace = true }
 goldenfile = { workspace = true }
-insta = { workspace = true, features = ["json"] }
+insta = { workspace = true }
 pretty_assertions = { workspace = true }
 tokio-test = { workspace = true }
 

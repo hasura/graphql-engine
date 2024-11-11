@@ -24,7 +24,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
-insta = { workspace = true, features = ["glob","json"] }
+insta = { workspace = true }
 reqwest = { workspace = true }
 tokio = { workspace = true }
 

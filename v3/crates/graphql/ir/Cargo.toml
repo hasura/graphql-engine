@@ -15,10 +15,10 @@ tracing-util = { path = "../../utils/tracing-util" }
 metadata-resolve = {path = "../../metadata-resolve" }
 
 base64 = { workspace = true }
-indexmap = { workspace = true, features = ["serde"] }
+indexmap = { workspace = true }
 ndc-models = { workspace = true }
 nonempty = { workspace = true }
-reqwest = { workspace = true, features = ["json", "multipart"] }
+reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

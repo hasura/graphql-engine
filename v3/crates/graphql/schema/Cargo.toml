@@ -20,7 +20,7 @@ lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../../open-dds" }
 metadata-resolve = {path = "../../metadata-resolve" }
 
-indexmap = { workspace = true, features = ["serde"] }
+indexmap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 strum_macros = { workspace = true }

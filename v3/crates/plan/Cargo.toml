@@ -17,7 +17,7 @@ open-dds = { path = "../open-dds" }
 plan-types = { path = "../plan-types" }
 
 derive_more = { workspace = true }
-indexmap = { workspace = true, features = ["serde"] }
+indexmap = { workspace = true }
 reqwest = { workspace = true }
 serde_json = { workspace = true }
 

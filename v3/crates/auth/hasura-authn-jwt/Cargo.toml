@@ -17,19 +17,19 @@ axum = { workspace = true }
 cookie = { workspace = true }
 jsonptr = { workspace = true }
 jsonwebtoken = { workspace = true }
-reqwest = { workspace = true,  features = ["json"] }
-schemars = { workspace = true, features = ["url"] }
-serde = { workspace = true, features = ["derive"] }
+reqwest = { workspace = true }
+schemars = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }
-jsonwebkey = { workspace = true, features = ["generate", "jsonwebtoken","pkcs-convert"] }
+jsonwebkey = { workspace = true }
 mockito = { workspace = true }
 openssl = { workspace = true }
-tokio = { workspace = true, features = ["macros"] }
+tokio = { workspace = true }
 
 [lints]
 workspace = true

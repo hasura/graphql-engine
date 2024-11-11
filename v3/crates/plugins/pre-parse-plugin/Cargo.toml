@@ -13,7 +13,7 @@ open-dds = { path = "../../open-dds" }
 
 axum = { workspace = true }
 nonempty = { workspace = true }
-reqwest = { workspace = true,  features = ["json"] }
+reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

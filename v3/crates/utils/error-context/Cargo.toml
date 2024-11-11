@@ -9,7 +9,7 @@ bench = false
 
 [dependencies]
 jsonpath = { path = "../jsonpath" }
-serde = { workspace = true, features = ["derive"] }
+serde = { workspace = true }
 
 [lints]
 workspace = true

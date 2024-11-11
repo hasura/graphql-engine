@@ -29,10 +29,10 @@ serde-ext = { path = "../../utils/serde-ext" }
 
 axum = { workspace = true }
 http = { workspace = true }
-indexmap = { workspace = true, features = ["serde"] }
+indexmap = { workspace = true }
 lexical-core = { workspace = true }
-nonempty = { workspace = true, features = ["serialize"] }
-schemars = { workspace = true, features = ["smol_str"] }
+nonempty = { workspace = true }
+schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_with = { workspace = true }
@@ -47,12 +47,12 @@ apollo-parser = { workspace = true }
 async-graphql-parser = { workspace = true }
 bincode = { workspace = true }
 bson = { workspace = true }
-criterion = { workspace = true, features = ["html_reports"] }
+criterion = { workspace = true }
 diffy = { workspace = true }
 expect-test = { workspace = true }
 graphql-parser = { workspace = true }
 human_bytes = { workspace = true }
-postcard = { workspace = true, features = ["use-std"] }
+postcard = { workspace = true }
 pretty_assertions = { workspace = true }
 rmp-serde = { workspace = true }
 

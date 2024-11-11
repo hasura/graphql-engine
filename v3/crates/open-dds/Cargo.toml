@@ -13,13 +13,13 @@ jsonschema-tidying = { path = "../utils/jsonschema-tidying" }
 opendds-derive = { path = "../utils/opendds-derive" }
 
 derive_more = { workspace = true }
-indexmap = { workspace = true, features = ["serde"] }
+indexmap = { workspace = true }
 ndc-models = { workspace = true }
 ndc-models-v01 = { workspace = true }
 ref-cast = { workspace = true }
-schemars = { workspace = true, features = ["smol_str", "preserve_order"] }
+schemars = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true, features = ["preserve_order"] }
+serde_json = { workspace = true }
 serde_path_to_error = { workspace = true }
 smol_str = { workspace = true }
 strum = { workspace = true }

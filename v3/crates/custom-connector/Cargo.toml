@@ -16,16 +16,16 @@ bench = false
 axum-ext = { path = "../utils/axum-ext" }
 
 anyhow = { workspace = true }
-axum = { workspace = true, features = ["http2"] }
+axum = { workspace = true }
 env_logger = { workspace = true }
 indexmap = { workspace = true }
 ndc-models = { workspace = true }
 regex = { workspace = true }
-serde_json = { workspace = true, features = ["preserve_order"] }
+serde_json = { workspace = true }
 serde = { workspace = true }
 sha2 = { workspace = true }
-tokio = { workspace = true, features = ["full"] }
-uuid = { workspace = true, features = ["v4"] }
+tokio = { workspace = true }
+uuid = { workspace = true }
 
 [lints]
 workspace = true

@@ -13,4 +13,4 @@ bench = false
 open-dds = { path = "../open-dds" }
 
 serde_json = { workspace = true }
-schemars = { workspace = true, features = ["smol_str"] }
+schemars = { workspace = true }

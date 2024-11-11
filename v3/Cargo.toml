@@ -70,7 +70,7 @@ apollo-parser = "0.7"
 async-graphql-parser = "7"
 async-recursion = "1"
 async-trait = "0.1"
-axum = "0.7"
+axum = { version = "0.7", features = ["http2", "ws"] }
 axum-core = "0.4"
 base64 = "0.22"
 bincode = "1"
@@ -79,12 +79,12 @@ bson = "2"
 build-data = "0.2"
 bytes = "1"
 chrono = "0.4"
-clap = "4"
+clap = { version = "4", features = ["derive", "env"] }
 convert_case = "0.6"
 cookie = "0.18"
-criterion = "0.5"
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 darling = "0.20"
-datafusion = "41"
+datafusion = { version = "41", features = ["serde"] }
 derive_more = { version = "1.0", features = ["full"] }
 diffy = "0.4"
 env_logger = "0.11"
@@ -96,18 +96,18 @@ graphql-parser = "0.4"
 http = "1"
 http-body-util = "0.1"
 human_bytes = "0.4"
-indexmap = "2"
-insta = "1"
+indexmap = { version = "2", features = ["serde"] }
+insta = { version = "1", features = ["glob", "json"] }
 json_value_merge = "2"
 jsonapi_library = { package = "jsonapi", git = "https://github.com/hasura/jsonapi-rust.git", rev = "9b5a3a08414e559c7285b539acd4d4fc7b31f3b5" }
 jsonptr = "0.4"
-jsonwebkey = "0.3"
+jsonwebkey = { version = "0.3", features = ["generate", "jsonwebtoken","pkcs-convert"] }
 jsonwebtoken = "8"
 lazy_static = "1.5.0"
 lexical-core = "0.8"
 mimalloc = "0.1"
 mockito = { version = "~1.4", default-features = false } # v1.5+ depends on http v1
-nonempty = "0.10"
+nonempty = { version = "0.10", features = ["serialize"] }
 oas3 = "0.12.1"
 openssl = "0.10"
 opentelemetry = "0.24"
@@ -115,22 +115,22 @@ opentelemetry-contrib = "0.16"
 opentelemetry-http = "0.13"
 opentelemetry-otlp = "0.17"
 opentelemetry-semantic-conventions = "0.16"
-opentelemetry-stdout = { version = "0.5", default-features = false }
+opentelemetry-stdout = { version = "0.5", default-features = false, features = ["trace"] }
 opentelemetry-zipkin = "0.22"
-opentelemetry_sdk = "0.24"
-postcard = "1"
+opentelemetry_sdk = { version = "0.24", features = ["rt-tokio"] }
+postcard = { version = "1", features = ["use-std"] }
 pretty_assertions = "1"
 proc-macro2 = "1"
 quote = "1"
 rand = "0.8"
 ref-cast = "1"
 regex = "1"
-reqwest = "0.12"
+reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
 rmp-serde = "1"
 semver = "1.0"
-schemars = "0.8"
-serde = { version = "1", features = ["rc"] }
-serde_json = "1"
+schemars = { version = "0.8", features = ["preserve_order", "smol_str", "url"] }
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = { version = "1", features = ["preserve_order"] }
 serde_path_to_error = "0.1"
 serde_with = { version = "3", features = ["indexmap_2"] }
 sha2 = "0.10"
@@ -139,13 +139,14 @@ strum = "0.26"
 strum_macros = "0.26"
 syn = "2"
 thiserror = "1"
-tokio = "1"
+tokio = { version = "1", features = ["macros", "parking_lot", "rt-multi-thread", "signal", "time"] }
 tokio-test = "0.4"
 tokio-tungstenite = "0.24.0"
 tower = "0.5"
-tower-http = "0.5"
+# Prefer zstd-encoded request bodies, but also support gzip in case a client can't do that
+tower-http = { version = "0.5", features = ["cors", "fs", "decompression-gzip", "decompression-zstd", "trace" ] }
 tracing = "0.1"
-tracing-subscriber = "0.3"
+tracing-subscriber = { version = "0.3", features = ["json"] }
 transitive = "0.5"
-url = "2"
-uuid = "1"
+url = { version = "2", features = ["serde"] }
+uuid = { version = "1", features = ["v4"] }
