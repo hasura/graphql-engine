@@ -29,8 +29,9 @@ pub use stages::argument_presets::{
 pub use stages::boolean_expressions::{
     BooleanExpressionComparableRelationship, BooleanExpressionError,
     BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,
-    IncludeLogicalOperators, ObjectComparisonExpressionInfo, ObjectComparisonKind,
-    ResolvedObjectBooleanExpressionType,
+    IncludeLogicalOperators, ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo,
+    ObjectComparisonKind, ResolvedObjectBooleanExpressionType,
+    ScalarBooleanExpressionGraphqlConfig,
 };
 pub use stages::data_connectors::{ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset};
 pub use stages::graphql_config::GlobalGraphqlConfig;

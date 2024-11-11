@@ -1539,33 +1539,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     Identifier(
                                         "location",
                                     ),
-                                ): ObjectComparisonExpressionInfo {
+                                ): ObjectBooleanExpressionGraphqlConfig {
                                     graphql_type_name: TypeName(
                                         Name(
                                             "LocationBoolExp",
                                         ),
                                     ),
-                                    object_type_name: Qualified {
-                                        subgraph: SubgraphName(
-                                            "__unknown_namespace",
-                                        ),
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "location_bool_exp",
-                                            ),
-                                        ),
-                                    },
-                                    underlying_object_type_name: Qualified {
-                                        subgraph: SubgraphName(
-                                            "__unknown_namespace",
-                                        ),
-                                        name: CustomTypeName(
-                                            Identifier(
-                                                "location",
-                                            ),
-                                        ),
-                                    },
-                                    field_kind: Object,
                                 },
                             },
                             scalar_fields: {
@@ -1573,37 +1552,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     Identifier(
                                         "id",
                                     ),
-                                ): ComparisonExpressionInfo {
-                                    object_type_name: Some(
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "int_bool_exp",
-                                                ),
-                                            ),
-                                        },
-                                    ),
+                                ): ScalarBooleanExpressionGraphqlConfig {
                                     type_name: TypeName(
                                         Name(
                                             "Int_Comparison_Exp",
                                         ),
                                     ),
-                                    operators: {},
-                                    operator_mapping: {
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: DataConnectorName(
-                                                Identifier(
-                                                    "custom",
-                                                ),
-                                            ),
-                                        }: {},
-                                    },
                                     is_null_operator_name: Some(
                                         Name(
                                             "_is_null",
@@ -1614,37 +1568,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     Identifier(
                                         "name",
                                     ),
-                                ): ComparisonExpressionInfo {
-                                    object_type_name: Some(
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "string_bool_exp",
-                                                ),
-                                            ),
-                                        },
-                                    ),
+                                ): ScalarBooleanExpressionGraphqlConfig {
                                     type_name: TypeName(
                                         Name(
                                             "String_Comparison_Exp",
                                         ),
                                     ),
-                                    operators: {},
-                                    operator_mapping: {
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: DataConnectorName(
-                                                Identifier(
-                                                    "custom",
-                                                ),
-                                            ),
-                                        }: {},
-                                    },
                                     is_null_operator_name: Some(
                                         Name(
                                             "_is_null",
@@ -1652,7 +1581,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     ),
                                 },
                             },
-                            relationship_fields: {},
                             field_config: BooleanExpressionGraphqlFieldConfig {
                                 where_field_name: Name(
                                     "where",
@@ -1669,6 +1597,102 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     ),
+                    fields: ResolvedObjectBooleanExpressionTypeFields {
+                        object_fields: {
+                            FieldName(
+                                Identifier(
+                                    "location",
+                                ),
+                            ): ObjectComparisonExpressionInfo {
+                                object_type_name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "__unknown_namespace",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "location_bool_exp",
+                                        ),
+                                    ),
+                                },
+                                underlying_object_type_name: Qualified {
+                                    subgraph: SubgraphName(
+                                        "__unknown_namespace",
+                                    ),
+                                    name: CustomTypeName(
+                                        Identifier(
+                                            "location",
+                                        ),
+                                    ),
+                                },
+                                field_kind: Object,
+                            },
+                        },
+                        scalar_fields: {
+                            FieldName(
+                                Identifier(
+                                    "id",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                object_type_name: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "int_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {},
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "custom",
+                                            ),
+                                        ),
+                                    }: {},
+                                },
+                            },
+                            FieldName(
+                                Identifier(
+                                    "name",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                object_type_name: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "string_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {},
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "custom",
+                                            ),
+                                        ),
+                                    }: {},
+                                },
+                            },
+                        },
+                        relationship_fields: {},
+                    },
                     include_logical_operators: Yes,
                 },
                 Qualified {
@@ -1714,37 +1738,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     Identifier(
                                         "city",
                                     ),
-                                ): ComparisonExpressionInfo {
-                                    object_type_name: Some(
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "string_bool_exp",
-                                                ),
-                                            ),
-                                        },
-                                    ),
+                                ): ScalarBooleanExpressionGraphqlConfig {
                                     type_name: TypeName(
                                         Name(
                                             "String_Comparison_Exp",
                                         ),
                                     ),
-                                    operators: {},
-                                    operator_mapping: {
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: DataConnectorName(
-                                                Identifier(
-                                                    "custom",
-                                                ),
-                                            ),
-                                        }: {},
-                                    },
                                     is_null_operator_name: Some(
                                         Name(
                                             "_is_null",
@@ -1755,37 +1754,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     Identifier(
                                         "country",
                                     ),
-                                ): ComparisonExpressionInfo {
-                                    object_type_name: Some(
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "string_bool_exp",
-                                                ),
-                                            ),
-                                        },
-                                    ),
+                                ): ScalarBooleanExpressionGraphqlConfig {
                                     type_name: TypeName(
                                         Name(
                                             "String_Comparison_Exp",
                                         ),
                                     ),
-                                    operators: {},
-                                    operator_mapping: {
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: DataConnectorName(
-                                                Identifier(
-                                                    "custom",
-                                                ),
-                                            ),
-                                        }: {},
-                                    },
                                     is_null_operator_name: Some(
                                         Name(
                                             "_is_null",
@@ -1793,7 +1767,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                     ),
                                 },
                             },
-                            relationship_fields: {},
                             field_config: BooleanExpressionGraphqlFieldConfig {
                                 where_field_name: Name(
                                     "where",
@@ -1810,6 +1783,74 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                             },
                         },
                     ),
+                    fields: ResolvedObjectBooleanExpressionTypeFields {
+                        object_fields: {},
+                        scalar_fields: {
+                            FieldName(
+                                Identifier(
+                                    "city",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                object_type_name: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "string_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {},
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "custom",
+                                            ),
+                                        ),
+                                    }: {},
+                                },
+                            },
+                            FieldName(
+                                Identifier(
+                                    "country",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                object_type_name: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "string_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {},
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "custom",
+                                            ),
+                                        ),
+                                    }: {},
+                                },
+                            },
+                        },
+                        relationship_fields: {},
+                    },
                     include_logical_operators: Yes,
                 },
             },

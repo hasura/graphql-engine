@@ -17,8 +17,9 @@ pub use types::{
     BooleanExpressionComparableRelationship, BooleanExpressionGraphqlConfig,
     BooleanExpressionGraphqlFieldConfig, BooleanExpressionIssue, BooleanExpressionTypes,
     BooleanExpressionsOutput, ComparableFieldKind, ComparisonExpressionInfo,
-    IncludeLogicalOperators, ObjectComparisonExpressionInfo, ObjectComparisonKind,
-    ResolvedObjectBooleanExpressionType,
+    IncludeLogicalOperators, ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo,
+    ObjectComparisonKind, ResolvedObjectBooleanExpressionType,
+    ResolvedObjectBooleanExpressionTypeFields, ScalarBooleanExpressionGraphqlConfig,
 };
 
 use super::aggregate_boolean_expressions;
@@ -41,6 +42,7 @@ pub fn resolve(
     graphql_config: &graphql_config::GraphqlConfig,
     object_types: &type_permissions::ObjectTypesWithPermissions,
     relationships: &relationships::Relationships,
+    flags: &open_dds::flags::Flags,
 ) -> Result<BooleanExpressionsOutput, BooleanExpressionError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
     let mut issues = Vec::new();
@@ -80,6 +82,7 @@ pub fn resolve(
                     relationships,
                     graphql_config,
                     &mut graphql_types,
+                    flags,
                 )?;
 
             issues.extend(boolean_expression_issues);

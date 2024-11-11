@@ -36,6 +36,7 @@ pub fn resolve(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    flags: &open_dds::flags::Flags,
 ) -> Result<IndexMap<Qualified<ModelName>, ModelWithPermissions>, Error> {
     let mut models_with_permissions: IndexMap<Qualified<ModelName>, ModelWithPermissions> = models
         .iter()
@@ -69,23 +70,25 @@ pub fn resolve(
             })?;
 
         if model.select_permissions.is_empty() {
-            let boolean_expression_graphql = model
-                .filter_expression_type
-                .as_ref()
-                .and_then(|filter| match filter {
-                    models_graphql::ModelExpressionType::BooleanExpressionType(
-                        boolean_expression_type,
-                    ) => Some(boolean_expression_type),
-                    models_graphql::ModelExpressionType::ObjectBooleanExpressionType(_) => None,
-                })
-                .and_then(|bool_exp| bool_exp.graphql.as_ref());
+            // `boolean_expression_fields` is Some for new `BooleanExpressionType` but None for
+            // old `ObjectBooleanExpressionType`.
+            let boolean_expression_fields =
+                model
+                    .filter_expression_type
+                    .as_ref()
+                    .and_then(|filter| match filter {
+                        models_graphql::ModelExpressionType::BooleanExpressionType(
+                            boolean_expression_type,
+                        ) => boolean_expression_type.get_fields(flags),
+                        models_graphql::ModelExpressionType::ObjectBooleanExpressionType(_) => None,
+                    });
 
             let select_permissions = model_permission::resolve_model_select_permissions(
                 &metadata_accessor.flags,
                 &model.model,
                 subgraph,
                 permissions,
-                boolean_expression_graphql,
+                boolean_expression_fields,
                 data_connectors,
                 data_connector_scalars,
                 object_types,

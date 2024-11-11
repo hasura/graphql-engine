@@ -27,6 +27,7 @@ pub(crate) fn resolve_filter_expression_type(
         object_relationships::ObjectTypeWithRelationships,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
+    flags: &open_dds::flags::Flags,
 ) -> Result<
     (
         ModelExpressionType,
@@ -100,6 +101,7 @@ pub(crate) fn resolve_filter_expression_type(
                         boolean_expression_types,
                         object_types,
                         models,
+    flags
                     )?;
                     Ok((ModelExpressionType::BooleanExpressionType(
                         boolean_expression_object_type.clone(),

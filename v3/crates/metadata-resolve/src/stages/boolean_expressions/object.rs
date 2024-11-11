@@ -3,8 +3,9 @@ use super::graphql;
 use super::helpers;
 use super::BooleanExpressionIssue;
 pub use super::{
-    BooleanExpressionComparableRelationship, ComparableFieldKind,
-    ResolvedObjectBooleanExpressionType,
+    BooleanExpressionComparableRelationship, ComparableFieldKind, ComparisonExpressionInfo,
+    ObjectComparisonExpressionInfo, ObjectComparisonKind, ResolvedObjectBooleanExpressionType,
+    ResolvedObjectBooleanExpressionTypeFields,
 };
 use crate::stages::{
     graphql_config, object_types, relationships, scalar_boolean_expressions, type_permissions,
@@ -19,9 +20,12 @@ use open_dds::{
         BooleanExpressionObjectAggregateOperand, BooleanExpressionObjectOperand,
         BooleanExpressionOperand, BooleanExpressionScalarAggregateOperand,
         BooleanExpressionScalarOperand, BooleanExpressionTypeGraphQlConfiguration,
+        DataConnectorOperatorMapping,
     },
-    types::{CustomTypeName, FieldName, TypeName},
+    data_connector::{DataConnectorName, DataConnectorOperatorName},
+    types::{CustomTypeName, FieldName, OperatorName, TypeName},
 };
+
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) type RawBooleanExpressionTypes<'a> = BTreeMap<
@@ -48,6 +52,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     relationships: &relationships::Relationships,
     graphql_config: &graphql_config::GraphqlConfig,
     graphql_types: &mut BTreeSet<ast::TypeName>,
+    flags: &open_dds::flags::Flags,
 ) -> Result<
     (
         ResolvedObjectBooleanExpressionType,
@@ -74,12 +79,17 @@ pub(crate) fn resolve_object_boolean_expression_type(
     let ComparableFieldsOutput {
         comparable_fields,
         issues,
+        object_fields,
+        scalar_fields,
     } = resolve_comparable_fields(
         &object_boolean_expression_operand.comparable_fields,
         &object_type_representation.object_type,
         boolean_expression_type_name,
         subgraph,
+        scalar_boolean_expression_types,
+        graphql,
         raw_boolean_expression_types,
+        flags,
     )?;
 
     // resolve any comparable relationships
@@ -100,7 +110,6 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 boolean_expression_type_name,
                 object_boolean_graphql_config,
                 &comparable_fields,
-                &comparable_relationships,
                 scalar_boolean_expression_types,
                 raw_boolean_expression_types,
                 graphql_config,
@@ -113,6 +122,11 @@ pub(crate) fn resolve_object_boolean_expression_type(
         ResolvedObjectBooleanExpressionType {
             name: boolean_expression_type_name.clone(),
             include_logical_operators: helpers::resolve_logical_operators(logical_operators),
+            fields: ResolvedObjectBooleanExpressionTypeFields {
+                object_fields,
+                scalar_fields,
+                relationship_fields: comparable_relationships,
+            },
             object_type: qualified_object_type_name.clone(),
             graphql: resolved_graphql,
         },
@@ -189,6 +203,8 @@ fn resolve_comparable_relationships(
 
 pub struct ComparableFieldsOutput {
     comparable_fields: BTreeMap<FieldName, (ComparableFieldKind, Qualified<CustomTypeName>)>,
+    object_fields: BTreeMap<FieldName, ObjectComparisonExpressionInfo>,
+    scalar_fields: BTreeMap<FieldName, ComparisonExpressionInfo>,
     issues: Vec<BooleanExpressionIssue>,
 }
 
@@ -199,10 +215,18 @@ fn resolve_comparable_fields(
     object_type_representation: &object_types::ObjectTypeRepresentation,
     boolean_expression_type_name: &Qualified<CustomTypeName>,
     subgraph: &SubgraphName,
+    scalar_boolean_expression_types: &BTreeMap<
+        Qualified<CustomTypeName>,
+        scalar_boolean_expressions::ResolvedScalarBooleanExpressionType,
+    >,
+    graphql: &Option<BooleanExpressionTypeGraphQlConfiguration>,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
+    flags: &open_dds::flags::Flags,
 ) -> Result<ComparableFieldsOutput, BooleanExpressionError> {
     let mut resolved_comparable_fields = BTreeMap::new();
     let mut issues = Vec::new();
+    let mut object_fields = BTreeMap::new();
+    let mut scalar_fields = BTreeMap::new();
 
     // validate comparable fields all exist in underlying object
     for comparable_field in comparable_fields {
@@ -286,8 +310,97 @@ fn resolve_comparable_fields(
         );
     }
 
+    // doing this validation when there is no graphql configuration is a breaking change, so we
+    // only do it if the flag allows it
+
+    if graphql.is_some() || flags.allow_boolean_expression_fields_without_graphql {
+        for (comparable_field_name, (comparable_field_kind, comparable_field_type_name)) in
+            &resolved_comparable_fields
+        {
+            match comparable_field_kind {
+                ComparableFieldKind::Scalar => {
+                    if let Some(scalar_boolean_expression_type) =
+                        scalar_boolean_expression_types.get(comparable_field_type_name)
+                    {
+                        let operator_mapping = resolve_operator_mapping_for_scalar_type(
+                            &scalar_boolean_expression_type.data_connector_operator_mappings,
+                        );
+
+                        // Register scalar comparison field only if it contains non-zero operators.
+                        if !scalar_boolean_expression_type
+                            .comparison_operators
+                            .is_empty()
+                            || scalar_boolean_expression_type.include_is_null
+                                == scalar_boolean_expressions::IncludeIsNull::Yes
+                        {
+                            scalar_fields.insert(
+                                comparable_field_name.clone(),
+                                ComparisonExpressionInfo {
+                                    object_type_name: Some(comparable_field_type_name.clone()),
+                                    operators: scalar_boolean_expression_type
+                                        .comparison_operators
+                                        .clone(),
+                                    operator_mapping,
+                                },
+                            );
+                        };
+                    }
+                }
+                ComparableFieldKind::Object | ComparableFieldKind::Array => {
+                    // if this field isn't a scalar, let's see if it's an object instead
+                    let (field_subgraph, raw_boolean_expression_type) =
+                        helpers::lookup_raw_boolean_expression(
+                            boolean_expression_type_name,
+                            comparable_field_type_name,
+                            raw_boolean_expression_types,
+                        )?;
+
+                    if let BooleanExpressionOperand::Object(object_operand) =
+                        &raw_boolean_expression_type.operand
+                    {
+                        object_fields.insert(
+                            comparable_field_name.clone(),
+                            ObjectComparisonExpressionInfo {
+                                field_kind: match comparable_field_kind {
+                                    ComparableFieldKind::Array => ObjectComparisonKind::Array,
+                                    ComparableFieldKind::Object => ObjectComparisonKind::Object,
+                                    ComparableFieldKind::Scalar => unreachable!(),
+                                },
+                                object_type_name: comparable_field_type_name.clone(),
+                                underlying_object_type_name: Qualified::new(
+                                    (*field_subgraph).clone(),
+                                    object_operand.r#type.clone(),
+                                ),
+                            },
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     Ok(ComparableFieldsOutput {
+        object_fields,
+        scalar_fields,
         comparable_fields: resolved_comparable_fields,
         issues,
     })
+}
+
+fn resolve_operator_mapping_for_scalar_type(
+    data_connector_operator_mappings: &BTreeMap<
+        Qualified<DataConnectorName>,
+        DataConnectorOperatorMapping,
+    >,
+) -> BTreeMap<Qualified<DataConnectorName>, BTreeMap<OperatorName, DataConnectorOperatorName>> {
+    let mut operator_mapping = BTreeMap::new();
+
+    for (data_connector_name, data_connector_operator_mapping) in data_connector_operator_mappings {
+        operator_mapping.insert(
+            data_connector_name.clone(),
+            data_connector_operator_mapping.operator_mapping.clone(),
+        );
+    }
+
+    operator_mapping
 }

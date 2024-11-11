@@ -44,6 +44,7 @@ pub fn resolve(
     order_by_expressions: &order_by_expressions::OrderByExpressions,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
+    flags: &open_dds::flags::Flags,
 ) -> Result<ModelsWithGraphqlOutput, Error> {
     let mut output = ModelsWithGraphqlOutput {
         models_with_graphql: IndexMap::new(),
@@ -75,6 +76,7 @@ pub fn resolve(
                         boolean_expression_types,
                         object_types,
                         models,
+                        flags,
                     )?;
 
                 output

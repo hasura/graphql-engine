@@ -80,8 +80,31 @@ pub struct ResolvedObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
     pub object_type: Qualified<CustomTypeName>,
     pub graphql: Option<BooleanExpressionGraphqlConfig>,
+    pub fields: ResolvedObjectBooleanExpressionTypeFields,
     // do we allow _and, _or, etc for this type?
     pub include_logical_operators: IncludeLogicalOperators,
+}
+
+impl ResolvedObjectBooleanExpressionType {
+    // we should only return fields if a) `graphql` config is provided
+    // or b) flag is passed that allows us to expose it to other frontends
+    pub fn get_fields(
+        &self,
+        flags: &open_dds::flags::Flags,
+    ) -> Option<&ResolvedObjectBooleanExpressionTypeFields> {
+        if self.graphql.is_some() || flags.allow_boolean_expression_fields_without_graphql {
+            Some(&self.fields)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ResolvedObjectBooleanExpressionTypeFields {
+    pub object_fields: BTreeMap<FieldName, ObjectComparisonExpressionInfo>,
+    pub scalar_fields: BTreeMap<FieldName, ComparisonExpressionInfo>,
+    pub relationship_fields: BTreeMap<FieldName, BooleanExpressionComparableRelationship>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -99,12 +122,10 @@ pub struct ComparisonExpressionInfo {
     #[serde(default = "serde_ext::ser_default")]
     #[serde(skip_serializing_if = "serde_ext::is_ser_default")]
     pub object_type_name: Option<Qualified<CustomTypeName>>,
-    pub type_name: ast::TypeName,
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
     #[serde_as(as = "Vec<(_, _)>")]
     pub operator_mapping:
         BTreeMap<Qualified<DataConnectorName>, BTreeMap<OperatorName, DataConnectorOperatorName>>,
-    pub is_null_operator_name: Option<ast::Name>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -115,7 +136,6 @@ pub enum ObjectComparisonKind {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ObjectComparisonExpressionInfo {
-    pub graphql_type_name: ast::TypeName,
     pub object_type_name: Qualified<CustomTypeName>,
     pub underlying_object_type_name: Qualified<CustomTypeName>,
     pub field_kind: ObjectComparisonKind,
@@ -138,11 +158,22 @@ pub struct BooleanExpressionComparableRelationship {
     /// models, and defaults to the filterExpressionType of the model
     pub boolean_expression_type: Option<Qualified<CustomTypeName>>,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ScalarBooleanExpressionGraphqlConfig {
+    pub type_name: ast::TypeName,
+    pub is_null_operator_name: Option<ast::Name>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ObjectBooleanExpressionGraphqlConfig {
+    pub graphql_type_name: ast::TypeName,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionGraphqlConfig {
     pub type_name: ast::TypeName,
-    pub object_fields: BTreeMap<FieldName, ObjectComparisonExpressionInfo>,
-    pub scalar_fields: BTreeMap<FieldName, ComparisonExpressionInfo>,
-    pub relationship_fields: BTreeMap<FieldName, BooleanExpressionComparableRelationship>,
+    pub object_fields: BTreeMap<FieldName, ObjectBooleanExpressionGraphqlConfig>,
+    pub scalar_fields: BTreeMap<FieldName, ScalarBooleanExpressionGraphqlConfig>,
     pub field_config: BooleanExpressionGraphqlFieldConfig,
 }

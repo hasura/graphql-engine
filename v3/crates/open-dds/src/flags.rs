@@ -41,6 +41,9 @@ pub struct Flags {
         rename = "disallow_array_field_compared_with_scalar_boolean_type"
     )]
     pub disallow_array_field_compared_with_scalar_boolean_type: bool,
+
+    #[opendd(default, rename = "allow_boolean_expression_fields_without_graphql")]
+    pub allow_boolean_expression_fields_without_graphql: bool,
 }
 
 impl Flags {
@@ -57,6 +60,7 @@ impl Flags {
             allow_partial_supergraph: false,
             json_session_variables: false,
             disallow_array_field_compared_with_scalar_boolean_type: false,
+            allow_boolean_expression_fields_without_graphql: false,
         }
     }
 

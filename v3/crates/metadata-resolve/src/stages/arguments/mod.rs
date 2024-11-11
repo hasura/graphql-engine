@@ -33,6 +33,7 @@ pub fn resolve(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
+    flags: &open_dds::flags::Flags,
 ) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
     let mut issues = vec![];
     for command in commands.values() {
@@ -49,6 +50,7 @@ pub fn resolve(
             object_boolean_expression_types,
             boolean_expression_types,
             models,
+            flags,
         )?);
     }
 
@@ -66,6 +68,7 @@ pub fn resolve(
             object_boolean_expression_types,
             boolean_expression_types,
             models,
+            flags,
         )?);
     }
 
@@ -89,6 +92,7 @@ pub fn validate_arguments_with_source(
     >,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
+    flags: &open_dds::flags::Flags,
 ) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
     let mut issues = vec![];
 
@@ -125,6 +129,7 @@ pub fn validate_arguments_with_source(
                         boolean_expression_types,
                         object_types,
                         models,
+                        flags,
                     )?;
                 issues.extend(data_connector_issues);
             }

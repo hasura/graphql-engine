@@ -853,37 +853,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             Identifier(
                                                 "id",
                                             ),
-                                        ): ComparisonExpressionInfo {
-                                            object_type_name: Some(
-                                                Qualified {
-                                                    subgraph: SubgraphName(
-                                                        "__unknown_namespace",
-                                                    ),
-                                                    name: CustomTypeName(
-                                                        Identifier(
-                                                            "int_bool_exp",
-                                                        ),
-                                                    ),
-                                                },
-                                            ),
+                                        ): ScalarBooleanExpressionGraphqlConfig {
                                             type_name: TypeName(
                                                 Name(
                                                     "Int_Comparison_Exp",
                                                 ),
                                             ),
-                                            operators: {},
-                                            operator_mapping: {
-                                                Qualified {
-                                                    subgraph: SubgraphName(
-                                                        "__unknown_namespace",
-                                                    ),
-                                                    name: DataConnectorName(
-                                                        Identifier(
-                                                            "elastic",
-                                                        ),
-                                                    ),
-                                                }: {},
-                                            },
                                             is_null_operator_name: Some(
                                                 Name(
                                                     "_is_null",
@@ -894,57 +869,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             Identifier(
                                                 "rating",
                                             ),
-                                        ): ComparisonExpressionInfo {
-                                            object_type_name: Some(
-                                                Qualified {
-                                                    subgraph: SubgraphName(
-                                                        "__unknown_namespace",
-                                                    ),
-                                                    name: CustomTypeName(
-                                                        Identifier(
-                                                            "int_bool_exp_with_range",
-                                                        ),
-                                                    ),
-                                                },
-                                            ),
+                                        ): ScalarBooleanExpressionGraphqlConfig {
                                             type_name: TypeName(
                                                 Name(
                                                     "Int_Comparison_Exp_With_Range",
                                                 ),
                                             ),
-                                            operators: {
-                                                OperatorName(
-                                                    "range",
-                                                ): QualifiedTypeReference {
-                                                    underlying_type: Named(
-                                                        Custom(
-                                                            Qualified {
-                                                                subgraph: SubgraphName(
-                                                                    "__unknown_namespace",
-                                                                ),
-                                                                name: CustomTypeName(
-                                                                    Identifier(
-                                                                        "int_range",
-                                                                    ),
-                                                                ),
-                                                            },
-                                                        ),
-                                                    ),
-                                                    nullable: true,
-                                                },
-                                            },
-                                            operator_mapping: {
-                                                Qualified {
-                                                    subgraph: SubgraphName(
-                                                        "__unknown_namespace",
-                                                    ),
-                                                    name: DataConnectorName(
-                                                        Identifier(
-                                                            "elastic",
-                                                        ),
-                                                    ),
-                                                }: {},
-                                            },
                                             is_null_operator_name: Some(
                                                 Name(
                                                     "_is_null",
@@ -955,37 +885,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             Identifier(
                                                 "title",
                                             ),
-                                        ): ComparisonExpressionInfo {
-                                            object_type_name: Some(
-                                                Qualified {
-                                                    subgraph: SubgraphName(
-                                                        "__unknown_namespace",
-                                                    ),
-                                                    name: CustomTypeName(
-                                                        Identifier(
-                                                            "string_bool_exp",
-                                                        ),
-                                                    ),
-                                                },
-                                            ),
+                                        ): ScalarBooleanExpressionGraphqlConfig {
                                             type_name: TypeName(
                                                 Name(
                                                     "String_Comparison_Exp",
                                                 ),
                                             ),
-                                            operators: {},
-                                            operator_mapping: {
-                                                Qualified {
-                                                    subgraph: SubgraphName(
-                                                        "__unknown_namespace",
-                                                    ),
-                                                    name: DataConnectorName(
-                                                        Identifier(
-                                                            "elastic",
-                                                        ),
-                                                    ),
-                                                }: {},
-                                            },
                                             is_null_operator_name: Some(
                                                 Name(
                                                     "_is_null",
@@ -993,7 +898,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                             ),
                                         },
                                     },
-                                    relationship_fields: {},
                                     field_config: BooleanExpressionGraphqlFieldConfig {
                                         where_field_name: Name(
                                             "where",
@@ -1010,6 +914,125 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     },
                                 },
                             ),
+                            fields: ResolvedObjectBooleanExpressionTypeFields {
+                                object_fields: {},
+                                scalar_fields: {
+                                    FieldName(
+                                        Identifier(
+                                            "id",
+                                        ),
+                                    ): ComparisonExpressionInfo {
+                                        object_type_name: Some(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "__unknown_namespace",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "int_bool_exp",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                        operators: {},
+                                        operator_mapping: {
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "__unknown_namespace",
+                                                ),
+                                                name: DataConnectorName(
+                                                    Identifier(
+                                                        "elastic",
+                                                    ),
+                                                ),
+                                            }: {},
+                                        },
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "rating",
+                                        ),
+                                    ): ComparisonExpressionInfo {
+                                        object_type_name: Some(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "__unknown_namespace",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "int_bool_exp_with_range",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                        operators: {
+                                            OperatorName(
+                                                "range",
+                                            ): QualifiedTypeReference {
+                                                underlying_type: Named(
+                                                    Custom(
+                                                        Qualified {
+                                                            subgraph: SubgraphName(
+                                                                "__unknown_namespace",
+                                                            ),
+                                                            name: CustomTypeName(
+                                                                Identifier(
+                                                                    "int_range",
+                                                                ),
+                                                            ),
+                                                        },
+                                                    ),
+                                                ),
+                                                nullable: true,
+                                            },
+                                        },
+                                        operator_mapping: {
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "__unknown_namespace",
+                                                ),
+                                                name: DataConnectorName(
+                                                    Identifier(
+                                                        "elastic",
+                                                    ),
+                                                ),
+                                            }: {},
+                                        },
+                                    },
+                                    FieldName(
+                                        Identifier(
+                                            "title",
+                                        ),
+                                    ): ComparisonExpressionInfo {
+                                        object_type_name: Some(
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "__unknown_namespace",
+                                                ),
+                                                name: CustomTypeName(
+                                                    Identifier(
+                                                        "string_bool_exp",
+                                                    ),
+                                                ),
+                                            },
+                                        ),
+                                        operators: {},
+                                        operator_mapping: {
+                                            Qualified {
+                                                subgraph: SubgraphName(
+                                                    "__unknown_namespace",
+                                                ),
+                                                name: DataConnectorName(
+                                                    Identifier(
+                                                        "elastic",
+                                                    ),
+                                                ),
+                                            }: {},
+                                        },
+                                    },
+                                },
+                                relationship_fields: {},
+                            },
                             include_logical_operators: Yes,
                         },
                     ),
@@ -1094,37 +1117,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     Identifier(
                                         "id",
                                     ),
-                                ): ComparisonExpressionInfo {
-                                    object_type_name: Some(
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "int_bool_exp",
-                                                ),
-                                            ),
-                                        },
-                                    ),
+                                ): ScalarBooleanExpressionGraphqlConfig {
                                     type_name: TypeName(
                                         Name(
                                             "Int_Comparison_Exp",
                                         ),
                                     ),
-                                    operators: {},
-                                    operator_mapping: {
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: DataConnectorName(
-                                                Identifier(
-                                                    "elastic",
-                                                ),
-                                            ),
-                                        }: {},
-                                    },
                                     is_null_operator_name: Some(
                                         Name(
                                             "_is_null",
@@ -1135,57 +1133,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     Identifier(
                                         "rating",
                                     ),
-                                ): ComparisonExpressionInfo {
-                                    object_type_name: Some(
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "int_bool_exp_with_range",
-                                                ),
-                                            ),
-                                        },
-                                    ),
+                                ): ScalarBooleanExpressionGraphqlConfig {
                                     type_name: TypeName(
                                         Name(
                                             "Int_Comparison_Exp_With_Range",
                                         ),
                                     ),
-                                    operators: {
-                                        OperatorName(
-                                            "range",
-                                        ): QualifiedTypeReference {
-                                            underlying_type: Named(
-                                                Custom(
-                                                    Qualified {
-                                                        subgraph: SubgraphName(
-                                                            "__unknown_namespace",
-                                                        ),
-                                                        name: CustomTypeName(
-                                                            Identifier(
-                                                                "int_range",
-                                                            ),
-                                                        ),
-                                                    },
-                                                ),
-                                            ),
-                                            nullable: true,
-                                        },
-                                    },
-                                    operator_mapping: {
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: DataConnectorName(
-                                                Identifier(
-                                                    "elastic",
-                                                ),
-                                            ),
-                                        }: {},
-                                    },
                                     is_null_operator_name: Some(
                                         Name(
                                             "_is_null",
@@ -1196,37 +1149,12 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     Identifier(
                                         "title",
                                     ),
-                                ): ComparisonExpressionInfo {
-                                    object_type_name: Some(
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: CustomTypeName(
-                                                Identifier(
-                                                    "string_bool_exp",
-                                                ),
-                                            ),
-                                        },
-                                    ),
+                                ): ScalarBooleanExpressionGraphqlConfig {
                                     type_name: TypeName(
                                         Name(
                                             "String_Comparison_Exp",
                                         ),
                                     ),
-                                    operators: {},
-                                    operator_mapping: {
-                                        Qualified {
-                                            subgraph: SubgraphName(
-                                                "__unknown_namespace",
-                                            ),
-                                            name: DataConnectorName(
-                                                Identifier(
-                                                    "elastic",
-                                                ),
-                                            ),
-                                        }: {},
-                                    },
                                     is_null_operator_name: Some(
                                         Name(
                                             "_is_null",
@@ -1234,7 +1162,6 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                     ),
                                 },
                             },
-                            relationship_fields: {},
                             field_config: BooleanExpressionGraphqlFieldConfig {
                                 where_field_name: Name(
                                     "where",
@@ -1251,6 +1178,125 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                             },
                         },
                     ),
+                    fields: ResolvedObjectBooleanExpressionTypeFields {
+                        object_fields: {},
+                        scalar_fields: {
+                            FieldName(
+                                Identifier(
+                                    "id",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                object_type_name: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "int_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {},
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "elastic",
+                                            ),
+                                        ),
+                                    }: {},
+                                },
+                            },
+                            FieldName(
+                                Identifier(
+                                    "rating",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                object_type_name: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "int_bool_exp_with_range",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {
+                                    OperatorName(
+                                        "range",
+                                    ): QualifiedTypeReference {
+                                        underlying_type: Named(
+                                            Custom(
+                                                Qualified {
+                                                    subgraph: SubgraphName(
+                                                        "__unknown_namespace",
+                                                    ),
+                                                    name: CustomTypeName(
+                                                        Identifier(
+                                                            "int_range",
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        nullable: true,
+                                    },
+                                },
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "elastic",
+                                            ),
+                                        ),
+                                    }: {},
+                                },
+                            },
+                            FieldName(
+                                Identifier(
+                                    "title",
+                                ),
+                            ): ComparisonExpressionInfo {
+                                object_type_name: Some(
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: CustomTypeName(
+                                            Identifier(
+                                                "string_bool_exp",
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                operators: {},
+                                operator_mapping: {
+                                    Qualified {
+                                        subgraph: SubgraphName(
+                                            "__unknown_namespace",
+                                        ),
+                                        name: DataConnectorName(
+                                            Identifier(
+                                                "elastic",
+                                            ),
+                                        ),
+                                    }: {},
+                                },
+                            },
+                        },
+                        relationship_fields: {},
+                    },
                     include_logical_operators: Yes,
                 },
             },

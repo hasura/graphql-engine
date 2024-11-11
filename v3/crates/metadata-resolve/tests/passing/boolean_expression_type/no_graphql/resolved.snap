@@ -274,6 +274,11 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/no_gra
                         ),
                     },
                     graphql: None,
+                    fields: ResolvedObjectBooleanExpressionTypeFields {
+                        object_fields: {},
+                        scalar_fields: {},
+                        relationship_fields: {},
+                    },
                     include_logical_operators: Yes,
                 },
             },

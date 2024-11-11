@@ -300,7 +300,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                 })?;
 
             // lookup the relevant boolean expression type and get the underlying object type
-            let (boolean_expression_graphql, object_type_representation) =
+            let (boolean_expression_fields, object_type_representation) =
                 match object_boolean_expression_types.get(base_type) {
                     Some(object_boolean_expression_type) => Ok((
                         None,
@@ -311,7 +311,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                     )),
                     None => match boolean_expression_types.objects.get(base_type) {
                         Some(boolean_expression_type) => Ok((
-                            boolean_expression_type.graphql.as_ref(),
+                            boolean_expression_type.get_fields(flags),
                             get_object_type_for_boolean_expression(
                                 boolean_expression_type,
                                 object_types,
@@ -375,7 +375,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                 bool_exp,
                 base_type,
                 object_type_representation,
-                boolean_expression_graphql,
+                boolean_expression_fields,
                 data_connector_field_mappings,
                 data_connector_link,
                 subgraph,

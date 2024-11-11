@@ -29,23 +29,26 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
         object_relationships::ObjectTypeWithRelationships,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
+    flags: &open_dds::flags::Flags,
 ) -> Result<Vec<boolean_expressions::BooleanExpressionIssue>, Error> {
     // collect any issues found whilst resolving
     let mut issues = vec![];
 
-    if let Some(graphql_config) = &object_boolean_expression_type.graphql {
-        for (field_name, object_comparison_expression_info) in &graphql_config.object_fields {
+    if let Some(fields) = object_boolean_expression_type.get_fields(flags) {
+        for (field_name, object_comparison_expression_info) in &fields.object_fields {
             // look up the leaf boolean expression type
             let leaf_boolean_expression = boolean_expression_types
                 .objects
                 .get(&object_comparison_expression_info.object_type_name)
                 .ok_or_else(|| {
-                    Error::from(boolean_expressions::BooleanExpressionError::BooleanExpressionCouldNotBeFound {
+                    Error::from(
+                    boolean_expressions::BooleanExpressionError::BooleanExpressionCouldNotBeFound {
                         parent_boolean_expression: object_boolean_expression_type.name.clone(),
                         child_boolean_expression: object_comparison_expression_info
                             .object_type_name
                             .clone(),
-                    })
+                    },
+                )
                 })?;
 
             match object_comparison_expression_info.field_kind {
@@ -79,12 +82,10 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
             }
 
             // This nested object field should not contain any relationship comparisons
-            if leaf_boolean_expression
-                .graphql
-                .as_ref()
-                .is_some_and(|leaf_graphql_config| {
-                    !leaf_graphql_config.relationship_fields.is_empty()
-                })
+            if !leaf_boolean_expression
+                .fields
+                .relationship_fields
+                .is_empty()
             {
                 return Err(Error::from(boolean_expressions::BooleanExpressionError::NestedObjectFieldContainsRelationshipComparison {
                     parent_boolean_expression_type_name: object_boolean_expression_type.name.clone(),
@@ -101,10 +102,13 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                 boolean_expression_types,
                 object_types,
                 models,
+                flags,
             )?);
         }
 
-        for (field_name, comparison_expression_info) in &graphql_config.scalar_fields {
+        for (field_name, comparison_expression_info) in
+            &object_boolean_expression_type.fields.scalar_fields
+        {
             // this is always present with `BooleanExpressionType` but not
             // `ObjectBooleanExpressionType`, remove this partiality in
             // future
@@ -129,7 +133,11 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
             }
         }
 
-        for comparable_relationship in graphql_config.relationship_fields.values() {
+        for comparable_relationship in object_boolean_expression_type
+            .fields
+            .relationship_fields
+            .values()
+        {
             validate_data_connector_with_comparable_relationship(
                 data_connector,
                 source_type_mappings,
@@ -140,7 +148,6 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
             )?;
         }
     }
-
     Ok(issues)
 }
 
