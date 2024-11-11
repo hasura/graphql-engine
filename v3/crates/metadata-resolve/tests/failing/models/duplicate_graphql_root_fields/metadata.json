@@ -1,0 +1,6068 @@
+{
+  "version": "v3",
+  "flags": {
+    "require_unique_model_graphql_names": true
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "definition": {
+            "name": "db",
+            "url": {
+              "singleUrl": {
+                "value": "http://localhost:8080"
+              }
+            },
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "bool": {
+                    "aggregate_functions": {
+                      "bool_and": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "bool"
+                        }
+                      },
+                      "bool_or": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "bool"
+                        }
+                      },
+                      "every": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "bool"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "bool"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "bool"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "bool"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "bool"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "bool"
+                        },
+                        "type": "custom"
+                      }
+                    }
+                  },
+                  "float8": {
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      },
+                      "stddev": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      },
+                      "stddev_pop": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      },
+                      "stddev_samp": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      },
+                      "var_pop": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      },
+                      "var_samp": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      },
+                      "variance": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "float8"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "float8"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "float8"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "float8"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "float8"
+                        },
+                        "type": "custom"
+                      }
+                    }
+                  },
+                  "int4": {
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "bit_and": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "bit_or": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "bit_xor": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "stddev": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "stddev_pop": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "stddev_samp": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "var_pop": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "var_samp": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "variance": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        },
+                        "type": "custom"
+                      }
+                    }
+                  },
+                  "numeric": {
+                    "aggregate_functions": {
+                      "avg": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "stddev": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "stddev_pop": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "stddev_samp": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "sum": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "var_pop": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "var_samp": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      },
+                      "variance": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "numeric"
+                        },
+                        "type": "custom"
+                      }
+                    }
+                  },
+                  "timestamp": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "timestamp"
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "named",
+                          "name": "timestamp"
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "timestamp"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "timestamp"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "timestamp"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "timestamp"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "timestamp"
+                        },
+                        "type": "custom"
+                      }
+                    }
+                  },
+                  "varchar": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_ilike": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_iregex": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_like": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_nilike": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_niregex": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_nlike": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_nregex": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "_regex": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "st_coveredby": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "st_covers": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "st_intersects": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "st_relatematch": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "starts_with": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      },
+                      "ts_match_tt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "varchar"
+                        },
+                        "type": "custom"
+                      }
+                    }
+                  },
+                  "int8": {
+                    "aggregate_functions": {
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int8"
+                          }
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int8"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int8"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int8"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int8"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int8"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int8"
+                        },
+                        "type": "custom"
+                      },
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "update_operators": {}
+                  }
+                },
+                "object_types": {
+                  "article": {
+                    "description": "An article",
+                    "fields": {
+                      "id": {
+                        "description": "The article's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "title": {
+                        "description": "The article's title",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "author_id": {
+                        "description": "The article's author ID",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    }
+                  },
+                  "author": {
+                    "description": "An author",
+                    "fields": {
+                      "last_name": {
+                        "description": "The author's last name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "first_name": {
+                        "description": "The author's first name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "id": {
+                        "description": "The author's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "int8"
+                        }
+                      }
+                    }
+                  },
+                  "Album": {
+                    "description": "The record of all albums",
+                    "fields": {
+                      "AlbumId": {
+                        "description": "The identifier of an album",
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "ArtistId": {
+                        "description": "The id of the artist that authored the album",
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "Title": {
+                        "description": "The title of an album",
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      }
+                    }
+                  },
+                  "Artist": {
+                    "description": "The record of all artists",
+                    "fields": {
+                      "ArtistId": {
+                        "description": "The identifier of an artist",
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "Name": {
+                        "description": "The name of an artist",
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Customer": {
+                    "description": "The record of all customers",
+                    "fields": {
+                      "Address": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "City": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "Company": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "Country": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "CustomerId": {
+                        "description": "The identifier of customer",
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "Email": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "Fax": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "FirstName": {
+                        "description": "The first name of a customer",
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "LastName": {
+                        "description": "The last name of a customer",
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "Phone": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "PostalCode": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "State": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "SupportRepId": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Employee": {
+                    "fields": {
+                      "Address": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "BirthDate": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "timestamp"
+                          }
+                        }
+                      },
+                      "City": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "Country": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "Email": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "EmployeeId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "Fax": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "FirstName": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "HireDate": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "timestamp"
+                          }
+                        }
+                      },
+                      "LastName": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "Phone": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "PostalCode": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "ReportsTo": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "State": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "Title": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Genre": {
+                    "fields": {
+                      "GenreId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "Name": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Invoice": {
+                    "fields": {
+                      "BillingAddress": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "BillingCity": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "BillingCountry": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "BillingPostalCode": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "BillingState": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "CustomerId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "InvoiceDate": {
+                        "type": {
+                          "type": "named",
+                          "name": "timestamp"
+                        }
+                      },
+                      "InvoiceId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "Total": {
+                        "type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      }
+                    }
+                  },
+                  "InvoiceLine": {
+                    "fields": {
+                      "InvoiceId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "InvoiceLineId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "Quantity": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "TrackId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "UnitPrice": {
+                        "type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      }
+                    }
+                  },
+                  "MediaType": {
+                    "fields": {
+                      "MediaTypeId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "Name": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Playlist": {
+                    "fields": {
+                      "Name": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "PlaylistId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    }
+                  },
+                  "PlaylistTrack": {
+                    "fields": {
+                      "PlaylistId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "TrackId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    }
+                  },
+                  "Track": {
+                    "fields": {
+                      "AlbumId": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "Bytes": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "Composer": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "GenreId": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "MediaTypeId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "Milliseconds": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "Name": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "TrackId": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "UnitPrice": {
+                        "type": {
+                          "type": "named",
+                          "name": "numeric"
+                        }
+                      }
+                    }
+                  },
+                  "spatial_ref_sys": {
+                    "fields": {
+                      "auth_name": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "auth_srid": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "proj4text": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      },
+                      "srid": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "srtext": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "varchar"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "topology_layer": {
+                    "fields": {
+                      "child_id": {
+                        "type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "feature_column": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "feature_type": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "layer_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "level": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "schema_name": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "table_name": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "topology_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    }
+                  },
+                  "topology_topology": {
+                    "fields": {
+                      "hasz": {
+                        "type": {
+                          "type": "named",
+                          "name": "bool"
+                        }
+                      },
+                      "id": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      },
+                      "name": {
+                        "type": {
+                          "type": "named",
+                          "name": "varchar"
+                        }
+                      },
+                      "precision": {
+                        "type": {
+                          "type": "named",
+                          "name": "float8"
+                        }
+                      },
+                      "srid": {
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "article",
+                    "description": "A collection of articles",
+                    "arguments": {},
+                    "type": "article",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "ArticleByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "author",
+                    "description": "A collection of authors",
+                    "arguments": {},
+                    "type": "author",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "AuthorByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "Album",
+                    "description": "The record of all albums",
+                    "arguments": {},
+                    "type": "Album",
+                    "uniqueness_constraints": {
+                      "PK_Album": {
+                        "unique_columns": ["AlbumId"]
+                      }
+                    },
+                    "foreign_keys": {
+                      "FK_AlbumArtistId": {
+                        "column_mapping": {
+                          "ArtistId": "ArtistId"
+                        },
+                        "foreign_collection": "Artist"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Artist",
+                    "description": "The record of all artists",
+                    "arguments": {},
+                    "type": "Artist",
+                    "uniqueness_constraints": {
+                      "PK_Artist": {
+                        "unique_columns": ["ArtistId"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "Customer",
+                    "description": "The record of all customers",
+                    "arguments": {},
+                    "type": "Customer",
+                    "uniqueness_constraints": {
+                      "PK_Customer": {
+                        "unique_columns": ["CustomerId"]
+                      }
+                    },
+                    "foreign_keys": {
+                      "FK_CustomerSupportRepId": {
+                        "column_mapping": {
+                          "SupportRepId": "EmployeeId"
+                        },
+                        "foreign_collection": "Employee"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Employee",
+                    "arguments": {},
+                    "type": "Employee",
+                    "uniqueness_constraints": {
+                      "PK_Employee": {
+                        "unique_columns": ["EmployeeId"]
+                      }
+                    },
+                    "foreign_keys": {
+                      "FK_EmployeeReportsTo": {
+                        "column_mapping": {
+                          "ReportsTo": "EmployeeId"
+                        },
+                        "foreign_collection": "Employee"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Genre",
+                    "arguments": {},
+                    "type": "Genre",
+                    "uniqueness_constraints": {
+                      "PK_Genre": {
+                        "unique_columns": ["GenreId"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "Invoice",
+                    "arguments": {},
+                    "type": "Invoice",
+                    "uniqueness_constraints": {
+                      "PK_Invoice": {
+                        "unique_columns": ["InvoiceId"]
+                      }
+                    },
+                    "foreign_keys": {
+                      "FK_InvoiceCustomerId": {
+                        "column_mapping": {
+                          "CustomerId": "CustomerId"
+                        },
+                        "foreign_collection": "Customer"
+                      }
+                    }
+                  },
+                  {
+                    "name": "InvoiceLine",
+                    "arguments": {},
+                    "type": "InvoiceLine",
+                    "uniqueness_constraints": {
+                      "PK_InvoiceLine": {
+                        "unique_columns": ["InvoiceLineId"]
+                      }
+                    },
+                    "foreign_keys": {
+                      "FK_InvoiceLineInvoiceId": {
+                        "column_mapping": {
+                          "InvoiceId": "InvoiceId"
+                        },
+                        "foreign_collection": "Invoice"
+                      },
+                      "FK_InvoiceLineTrackId": {
+                        "column_mapping": {
+                          "TrackId": "TrackId"
+                        },
+                        "foreign_collection": "Track"
+                      }
+                    }
+                  },
+                  {
+                    "name": "MediaType",
+                    "arguments": {},
+                    "type": "MediaType",
+                    "uniqueness_constraints": {
+                      "PK_MediaType": {
+                        "unique_columns": ["MediaTypeId"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "Playlist",
+                    "arguments": {},
+                    "type": "Playlist",
+                    "uniqueness_constraints": {
+                      "PK_Playlist": {
+                        "unique_columns": ["PlaylistId"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "PlaylistTrack",
+                    "arguments": {},
+                    "type": "PlaylistTrack",
+                    "uniqueness_constraints": {
+                      "PK_PlaylistTrack": {
+                        "unique_columns": ["PlaylistId", "TrackId"]
+                      }
+                    },
+                    "foreign_keys": {
+                      "FK_PlaylistTrackPlaylistId": {
+                        "column_mapping": {
+                          "PlaylistId": "PlaylistId"
+                        },
+                        "foreign_collection": "Playlist"
+                      },
+                      "FK_PlaylistTrackTrackId": {
+                        "column_mapping": {
+                          "TrackId": "TrackId"
+                        },
+                        "foreign_collection": "Track"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Track",
+                    "arguments": {},
+                    "type": "Track",
+                    "uniqueness_constraints": {
+                      "PK_Track": {
+                        "unique_columns": ["TrackId"]
+                      }
+                    },
+                    "foreign_keys": {
+                      "FK_TrackAlbumId": {
+                        "column_mapping": {
+                          "AlbumId": "AlbumId"
+                        },
+                        "foreign_collection": "Album"
+                      },
+                      "FK_TrackGenreId": {
+                        "column_mapping": {
+                          "GenreId": "GenreId"
+                        },
+                        "foreign_collection": "Genre"
+                      },
+                      "FK_TrackMediaTypeId": {
+                        "column_mapping": {
+                          "MediaTypeId": "MediaTypeId"
+                        },
+                        "foreign_collection": "MediaType"
+                      }
+                    }
+                  },
+                  {
+                    "name": "spatial_ref_sys",
+                    "arguments": {},
+                    "type": "spatial_ref_sys",
+                    "uniqueness_constraints": {
+                      "spatial_ref_sys_pkey": {
+                        "unique_columns": ["srid"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "topology_layer",
+                    "arguments": {},
+                    "type": "topology_layer",
+                    "uniqueness_constraints": {
+                      "layer_pkey": {
+                        "unique_columns": ["layer_id", "topology_id"]
+                      },
+                      "layer_schema_name_table_name_feature_column_key": {
+                        "unique_columns": [
+                          "feature_column",
+                          "schema_name",
+                          "table_name"
+                        ]
+                      }
+                    },
+                    "foreign_keys": {
+                      "layer_topology_id_fkey": {
+                        "column_mapping": {
+                          "topology_id": "id"
+                        },
+                        "foreign_collection": "topology_topology"
+                      }
+                    }
+                  },
+                  {
+                    "name": "topology_topology",
+                    "arguments": {},
+                    "type": "topology_topology",
+                    "uniqueness_constraints": {
+                      "topology_name_key": {
+                        "unique_columns": ["name"]
+                      },
+                      "topology_pkey": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  }
+                ],
+                "functions": [
+                  {
+                    "name": "latest_article_id",
+                    "description": "Get the ID of the most recent article",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "int4"
+                      }
+                    }
+                  },
+                  {
+                    "name": "latest_article",
+                    "description": "Get the most recent article",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_article_by_id",
+                    "description": "Insert or update an article",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the article to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_author_by_id",
+                    "description": "Get artist based on id",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the artist to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "author"
+                      }
+                    }
+                  }
+                ],
+                "procedures": [
+                  {
+                    "name": "upsert_article",
+                    "description": "Insert or update an article",
+                    "arguments": {
+                      "article": {
+                        "description": "The article to insert or update",
+                        "type": {
+                          "type": "named",
+                          "name": "article"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  },
+                  {
+                    "name": "update_article_title_by_id",
+                    "description": "Update an article title given the ID and new title",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the article to update",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "title": {
+                        "description": "the new title of the article",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  }
+                ]
+              },
+              "capabilities": {
+                "version": "0.1.3",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "explain": {},
+                    "variables": {},
+                    "nested_fields": {
+                      "filter_by": {},
+                      "order_by": {}
+                    }
+                  },
+                  "mutation": {},
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                }
+              }
+            }
+          },
+          "version": "v1",
+          "kind": "DataConnectorLink"
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "int4",
+            "graphql": {
+              "typeName": "int4"
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "varchar",
+            "graphql": {
+              "typeName": "varchar"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "int4",
+            "representation": "int4",
+            "graphql": {
+              "comparisonExpressionTypeName": "int4ComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "varchar",
+            "representation": "varchar",
+            "graphql": {
+              "comparisonExpressionTypeName": "varcharComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Album",
+            "graphql": {
+              "typeName": "album",
+              "inputTypeName": "albumInput"
+            },
+            "fields": [
+              {
+                "name": "AlbumId",
+                "type": "int4!"
+              },
+              {
+                "name": "ArtistId",
+                "type": "int4!"
+              },
+              {
+                "name": "Title",
+                "type": "varchar!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Album",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Title": {
+                    "column": {
+                      "name": "Title"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "artist_bool_exp",
+            "objectType": "Artist",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Artist",
+            "comparableFields": [
+              {
+                "fieldName": "ArtistId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "ArtistBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "album_bool_exp",
+            "objectType": "Album",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Album",
+            "comparableFields": [
+              {
+                "fieldName": "AlbumId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "ArtistId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Title",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "AlbumBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Album",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["AlbumId", "ArtistId", "Title"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "article",
+            "fields": [
+              {
+                "name": "article_id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              },
+              {
+                "name": "author_id",
+                "type": "CustomInt!"
+              }
+            ],
+            "globalIdFields": ["article_id"],
+            "graphql": {
+              "typeName": "Article"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "article",
+                "fieldMapping": {
+                  "article_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "article_bool_exp",
+            "objectType": "article",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "article",
+            "comparableFields": [
+              {
+                "fieldName": "author_id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "article_id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Article_Where_Exp"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "article",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["article_id", "title", "author_id"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["article_id", "author_id"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["article_id", "title"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "author",
+            "description": "author description",
+            "fields": [
+              {
+                "name": "author_id",
+                "type": "CustomInt!",
+                "description": "author_id description"
+              },
+              {
+                "name": "first_name",
+                "type": "String!"
+              },
+              {
+                "name": "last_name",
+                "type": "String!"
+              }
+            ],
+            "globalIdFields": ["author_id"],
+            "graphql": {
+              "typeName": "Author"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "author",
+                "fieldMapping": {
+                  "author_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "author_bool_exp",
+            "objectType": "author",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "author",
+            "comparableFields": [
+              {
+                "fieldName": "author_id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "first_name",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "last_name",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Author_Where_Exp"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "author",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["author_id", "first_name"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Articles",
+            "objectType": "article",
+            "globalIdSource": true,
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "article"
+            },
+            "filterExpressionType": "article_bool_exp",
+            "orderableFields": [
+              {
+                "fieldName": "article_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArticleByID",
+                  "uniqueIdentifier": ["article_id"],
+                  "subscription": {
+                    "rootField": "ArticleByID"
+                  }
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "ArticleByID",
+                "subscription": {
+                  "rootField": "ArticleMany",
+                  "pollingIntervalMs": 3000
+                }
+              },
+              "orderByExpressionType": "Article_Order_By"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Articles",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null,
+                  "allowSubscriptions": true
+                }
+              },
+              {
+                "role": "user_1",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "author_id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "role": "user_2",
+                "select": {
+                  "filter": {
+                    "and": [
+                      {
+                        "fieldComparison": {
+                          "field": "title",
+                          "operator": "_like",
+                          "value": {
+                            "literal": "%Functional%"
+                          }
+                        }
+                      },
+                      {
+                        "not": {
+                          "fieldIsNull": {
+                            "field": "author_id"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Authors",
+            "objectType": "author",
+            "description": "top level Authors model description",
+            "globalIdSource": true,
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "author"
+            },
+            "filterExpressionType": "author_bool_exp",
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "AuthorByID",
+                  "description": "AuthorByID description",
+                  "uniqueIdentifier": ["author_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "AuthorMany"
+              },
+              "orderByExpressionType": "Author_Order_By"
+            },
+            "orderableFields": [
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "first_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "last_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Authors",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null,
+                  "allowSubscriptions": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Album",
+            "objectType": "Album",
+            "orderableFields": [
+              {
+                "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "ArtistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "filterExpressionType": "album_bool_exp",
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "AlbumByID",
+                  "uniqueIdentifier": ["AlbumId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Album"
+              },
+              "orderByExpressionType": "AlbumOrderBy"
+            },
+            "source": {
+              "collection": "Album",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Album",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Artist",
+            "graphql": {
+              "typeName": "artist",
+              "inputTypeName": "artistInput",
+              "apolloFederation": {
+                "keys": [
+                  {
+                    "fields": ["ArtistId"]
+                  }
+                ]
+              }
+            },
+            "fields": [
+              {
+                "name": "ArtistId",
+                "type": "int4!"
+              },
+              {
+                "name": "Name",
+                "type": "varchar"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Artist",
+                "fieldMapping": {
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Artist",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["ArtistId", "Name"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Artist",
+            "objectType": "Artist",
+            "orderableFields": [
+              {
+                "fieldName": "ArtistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "filterExpressionType": "artist_bool_exp",
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArtistByID",
+                  "uniqueIdentifier": ["ArtistId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Artist"
+              },
+              "orderByExpressionType": "ArtistOrderBy",
+              "apolloFederation": {
+                "entitySource": true
+              }
+            },
+            "source": {
+              "collection": "Artist",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Artist",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Customer",
+            "graphql": {
+              "typeName": "customer",
+              "inputTypeName": "customerInput"
+            },
+            "fields": [
+              {
+                "name": "Address",
+                "type": "varchar"
+              },
+              {
+                "name": "City",
+                "type": "varchar"
+              },
+              {
+                "name": "Company",
+                "type": "varchar"
+              },
+              {
+                "name": "Country",
+                "type": "varchar"
+              },
+              {
+                "name": "CustomerId",
+                "type": "int4!"
+              },
+              {
+                "name": "Email",
+                "type": "varchar!"
+              },
+              {
+                "name": "Fax",
+                "type": "varchar"
+              },
+              {
+                "name": "FirstName",
+                "type": "varchar!"
+              },
+              {
+                "name": "LastName",
+                "type": "varchar!"
+              },
+              {
+                "name": "Phone",
+                "type": "varchar"
+              },
+              {
+                "name": "PostalCode",
+                "type": "varchar"
+              },
+              {
+                "name": "State",
+                "type": "varchar"
+              },
+              {
+                "name": "SupportRepId",
+                "type": "int4"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Customer",
+                "fieldMapping": {
+                  "Address": {
+                    "column": {
+                      "name": "Address"
+                    }
+                  },
+                  "City": {
+                    "column": {
+                      "name": "City"
+                    }
+                  },
+                  "Company": {
+                    "column": {
+                      "name": "Company"
+                    }
+                  },
+                  "Country": {
+                    "column": {
+                      "name": "Country"
+                    }
+                  },
+                  "CustomerId": {
+                    "column": {
+                      "name": "CustomerId"
+                    }
+                  },
+                  "Email": {
+                    "column": {
+                      "name": "Email"
+                    }
+                  },
+                  "Fax": {
+                    "column": {
+                      "name": "Fax"
+                    }
+                  },
+                  "FirstName": {
+                    "column": {
+                      "name": "FirstName"
+                    }
+                  },
+                  "LastName": {
+                    "column": {
+                      "name": "LastName"
+                    }
+                  },
+                  "Phone": {
+                    "column": {
+                      "name": "Phone"
+                    }
+                  },
+                  "PostalCode": {
+                    "column": {
+                      "name": "PostalCode"
+                    }
+                  },
+                  "State": {
+                    "column": {
+                      "name": "State"
+                    }
+                  },
+                  "SupportRepId": {
+                    "column": {
+                      "name": "SupportRepId"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Customer",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "Address",
+                    "City",
+                    "Company",
+                    "Country",
+                    "CustomerId",
+                    "Email",
+                    "Fax",
+                    "FirstName",
+                    "LastName",
+                    "Phone",
+                    "PostalCode",
+                    "State",
+                    "SupportRepId"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Customer",
+            "objectType": "Customer",
+            "orderableFields": [
+              {
+                "fieldName": "Address",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "City",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Company",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Country",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "CustomerId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Email",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Fax",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "FirstName",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "LastName",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Phone",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "PostalCode",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "State",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "SupportRepId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "CustomerByID",
+                  "uniqueIdentifier": ["CustomerId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Customer"
+              },
+              "orderByExpressionType": "CustomerOrderBy"
+            },
+            "source": {
+              "collection": "Customer",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Customer",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "timestamp",
+            "graphql": {
+              "typeName": "timestamp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "timestamp",
+            "representation": "timestamp",
+            "graphql": {
+              "comparisonExpressionTypeName": "timestampComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "CustomInt",
+            "description": "customInt description",
+            "graphql": {
+              "typeName": "CustomInt"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "int8",
+            "representation": "CustomInt"
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Employee",
+            "graphql": {
+              "typeName": "employee",
+              "inputTypeName": "employeeInput"
+            },
+            "fields": [
+              {
+                "name": "Address",
+                "type": "varchar"
+              },
+              {
+                "name": "BirthDate",
+                "type": "timestamp"
+              },
+              {
+                "name": "City",
+                "type": "varchar"
+              },
+              {
+                "name": "Country",
+                "type": "varchar"
+              },
+              {
+                "name": "Email",
+                "type": "varchar"
+              },
+              {
+                "name": "EmployeeId",
+                "type": "int4!"
+              },
+              {
+                "name": "Fax",
+                "type": "varchar"
+              },
+              {
+                "name": "FirstName",
+                "type": "varchar!"
+              },
+              {
+                "name": "HireDate",
+                "type": "timestamp"
+              },
+              {
+                "name": "LastName",
+                "type": "varchar!"
+              },
+              {
+                "name": "Phone",
+                "type": "varchar"
+              },
+              {
+                "name": "PostalCode",
+                "type": "varchar"
+              },
+              {
+                "name": "ReportsTo",
+                "type": "int4"
+              },
+              {
+                "name": "State",
+                "type": "varchar"
+              },
+              {
+                "name": "Title",
+                "type": "varchar"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Employee",
+                "fieldMapping": {
+                  "Address": {
+                    "column": {
+                      "name": "Address"
+                    }
+                  },
+                  "BirthDate": {
+                    "column": {
+                      "name": "BirthDate"
+                    }
+                  },
+                  "City": {
+                    "column": {
+                      "name": "City"
+                    }
+                  },
+                  "Country": {
+                    "column": {
+                      "name": "Country"
+                    }
+                  },
+                  "Email": {
+                    "column": {
+                      "name": "Email"
+                    }
+                  },
+                  "EmployeeId": {
+                    "column": {
+                      "name": "EmployeeId"
+                    }
+                  },
+                  "Fax": {
+                    "column": {
+                      "name": "Fax"
+                    }
+                  },
+                  "FirstName": {
+                    "column": {
+                      "name": "FirstName"
+                    }
+                  },
+                  "HireDate": {
+                    "column": {
+                      "name": "HireDate"
+                    }
+                  },
+                  "LastName": {
+                    "column": {
+                      "name": "LastName"
+                    }
+                  },
+                  "Phone": {
+                    "column": {
+                      "name": "Phone"
+                    }
+                  },
+                  "PostalCode": {
+                    "column": {
+                      "name": "PostalCode"
+                    }
+                  },
+                  "ReportsTo": {
+                    "column": {
+                      "name": "ReportsTo"
+                    }
+                  },
+                  "State": {
+                    "column": {
+                      "name": "State"
+                    }
+                  },
+                  "Title": {
+                    "column": {
+                      "name": "Title"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Employee",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "Address",
+                    "BirthDate",
+                    "City",
+                    "Country",
+                    "Email",
+                    "EmployeeId",
+                    "Fax",
+                    "FirstName",
+                    "HireDate",
+                    "LastName",
+                    "Phone",
+                    "PostalCode",
+                    "ReportsTo",
+                    "State",
+                    "Title"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Employee",
+            "objectType": "Employee",
+            "orderableFields": [
+              {
+                "fieldName": "Address",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "BirthDate",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "City",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Country",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Email",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "EmployeeId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Fax",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "FirstName",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "HireDate",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "LastName",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Phone",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "PostalCode",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "ReportsTo",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "State",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "EmployeeByID",
+                  "uniqueIdentifier": ["EmployeeId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Employee"
+              },
+              "orderByExpressionType": "EmployeeOrderBy"
+            },
+            "source": {
+              "collection": "Employee",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Employee",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Genre",
+            "graphql": {
+              "typeName": "genre",
+              "inputTypeName": "genreInput"
+            },
+            "fields": [
+              {
+                "name": "GenreId",
+                "type": "int4!"
+              },
+              {
+                "name": "Name",
+                "type": "varchar"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Genre",
+                "fieldMapping": {
+                  "GenreId": {
+                    "column": {
+                      "name": "GenreId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Genre",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["GenreId", "Name"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Genre",
+            "objectType": "Genre",
+            "orderableFields": [
+              {
+                "fieldName": "GenreId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "GenreByID",
+                  "uniqueIdentifier": ["GenreId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Genre"
+              },
+              "orderByExpressionType": "GenreOrderBy"
+            },
+            "source": {
+              "collection": "Genre",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Genre",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "numeric",
+            "graphql": {
+              "typeName": "numeric"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "numeric",
+            "representation": "numeric",
+            "graphql": {
+              "comparisonExpressionTypeName": "numericComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Invoice",
+            "graphql": {
+              "typeName": "invoice",
+              "inputTypeName": "invoiceInput"
+            },
+            "fields": [
+              {
+                "name": "BillingAddress",
+                "type": "varchar"
+              },
+              {
+                "name": "BillingCity",
+                "type": "varchar"
+              },
+              {
+                "name": "BillingCountry",
+                "type": "varchar"
+              },
+              {
+                "name": "BillingPostalCode",
+                "type": "varchar"
+              },
+              {
+                "name": "BillingState",
+                "type": "varchar"
+              },
+              {
+                "name": "CustomerId",
+                "type": "int4!"
+              },
+              {
+                "name": "InvoiceDate",
+                "type": "timestamp!"
+              },
+              {
+                "name": "InvoiceId",
+                "type": "int4!"
+              },
+              {
+                "name": "Total",
+                "type": "numeric!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Invoice",
+                "fieldMapping": {
+                  "BillingAddress": {
+                    "column": {
+                      "name": "BillingAddress"
+                    }
+                  },
+                  "BillingCity": {
+                    "column": {
+                      "name": "BillingCity"
+                    }
+                  },
+                  "BillingCountry": {
+                    "column": {
+                      "name": "BillingCountry"
+                    }
+                  },
+                  "BillingPostalCode": {
+                    "column": {
+                      "name": "BillingPostalCode"
+                    }
+                  },
+                  "BillingState": {
+                    "column": {
+                      "name": "BillingState"
+                    }
+                  },
+                  "CustomerId": {
+                    "column": {
+                      "name": "CustomerId"
+                    }
+                  },
+                  "InvoiceDate": {
+                    "column": {
+                      "name": "InvoiceDate"
+                    }
+                  },
+                  "InvoiceId": {
+                    "column": {
+                      "name": "InvoiceId"
+                    }
+                  },
+                  "Total": {
+                    "column": {
+                      "name": "Total"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Invoice",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "BillingAddress",
+                    "BillingCity",
+                    "BillingCountry",
+                    "BillingPostalCode",
+                    "BillingState",
+                    "CustomerId",
+                    "InvoiceDate",
+                    "InvoiceId",
+                    "Total"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Invoice",
+            "objectType": "Invoice",
+            "orderableFields": [
+              {
+                "fieldName": "BillingAddress",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "BillingCity",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "BillingCountry",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "BillingPostalCode",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "BillingState",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "CustomerId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "InvoiceDate",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "InvoiceId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Total",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "InvoiceByID",
+                  "uniqueIdentifier": ["InvoiceId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Invoice"
+              },
+              "orderByExpressionType": "InvoiceOrderBy"
+            },
+            "source": {
+              "collection": "Invoice",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Invoice",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "InvoiceLine",
+            "graphql": {
+              "typeName": "invoiceLine",
+              "inputTypeName": "invoiceLineInput"
+            },
+            "fields": [
+              {
+                "name": "InvoiceId",
+                "type": "int4!"
+              },
+              {
+                "name": "InvoiceLineId",
+                "type": "int4!"
+              },
+              {
+                "name": "Quantity",
+                "type": "int4!"
+              },
+              {
+                "name": "TrackId",
+                "type": "int4!"
+              },
+              {
+                "name": "UnitPrice",
+                "type": "numeric!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "InvoiceLine",
+                "fieldMapping": {
+                  "InvoiceId": {
+                    "column": {
+                      "name": "InvoiceId"
+                    }
+                  },
+                  "InvoiceLineId": {
+                    "column": {
+                      "name": "InvoiceLineId"
+                    }
+                  },
+                  "Quantity": {
+                    "column": {
+                      "name": "Quantity"
+                    }
+                  },
+                  "TrackId": {
+                    "column": {
+                      "name": "TrackId"
+                    }
+                  },
+                  "UnitPrice": {
+                    "column": {
+                      "name": "UnitPrice"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "InvoiceLine",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "InvoiceId",
+                    "InvoiceLineId",
+                    "Quantity",
+                    "TrackId",
+                    "UnitPrice"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "InvoiceLine",
+            "objectType": "InvoiceLine",
+            "orderableFields": [
+              {
+                "fieldName": "InvoiceId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "InvoiceLineId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Quantity",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "TrackId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "UnitPrice",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "InvoiceLineByID",
+                  "uniqueIdentifier": ["InvoiceLineId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "InvoiceLine"
+              },
+              "orderByExpressionType": "InvoiceLineOrderBy"
+            },
+            "source": {
+              "collection": "InvoiceLine",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "InvoiceLine",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "MediaType",
+            "graphql": {
+              "typeName": "mediaType",
+              "inputTypeName": "mediaTypeInput"
+            },
+            "fields": [
+              {
+                "name": "MediaTypeId",
+                "type": "int4!"
+              },
+              {
+                "name": "Name",
+                "type": "varchar"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "MediaType",
+                "fieldMapping": {
+                  "MediaTypeId": {
+                    "column": {
+                      "name": "MediaTypeId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "MediaType",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["MediaTypeId", "Name"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "MediaType",
+            "objectType": "MediaType",
+            "orderableFields": [
+              {
+                "fieldName": "MediaTypeId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "MediaTypeByID",
+                  "uniqueIdentifier": ["MediaTypeId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "MediaType"
+              },
+              "orderByExpressionType": "MediaTypeOrderBy"
+            },
+            "source": {
+              "collection": "MediaType",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "MediaType",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Playlist",
+            "graphql": {
+              "typeName": "playlist",
+              "inputTypeName": "playlistInput"
+            },
+            "fields": [
+              {
+                "name": "Name",
+                "type": "varchar"
+              },
+              {
+                "name": "PlaylistId",
+                "type": "int4!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Playlist",
+                "fieldMapping": {
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  },
+                  "PlaylistId": {
+                    "column": {
+                      "name": "PlaylistId"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Playlist",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["Name", "PlaylistId"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Playlist",
+            "objectType": "Playlist",
+            "orderableFields": [
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "PlaylistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "PlaylistByID",
+                  "uniqueIdentifier": ["PlaylistId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Playlist"
+              },
+              "orderByExpressionType": "PlaylistOrderBy"
+            },
+            "source": {
+              "collection": "Playlist",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Playlist",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "PlaylistTrack",
+            "graphql": {
+              "typeName": "playlistTrack",
+              "inputTypeName": "playlistTrackInput"
+            },
+            "fields": [
+              {
+                "name": "PlaylistId",
+                "type": "int4!"
+              },
+              {
+                "name": "TrackId",
+                "type": "int4!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "PlaylistTrack",
+                "fieldMapping": {
+                  "PlaylistId": {
+                    "column": {
+                      "name": "PlaylistId"
+                    }
+                  },
+                  "TrackId": {
+                    "column": {
+                      "name": "TrackId"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "PlaylistTrack",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["PlaylistId", "TrackId"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "PlaylistTrack",
+            "objectType": "PlaylistTrack",
+            "orderableFields": [
+              {
+                "fieldName": "PlaylistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "TrackId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "PlaylistTrackByPK",
+                  "uniqueIdentifier": ["PlaylistId", "TrackId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "PlaylistTrack"
+              },
+              "orderByExpressionType": "PlaylistTrackOrderBy"
+            },
+            "source": {
+              "collection": "PlaylistTrack",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "PlaylistTrack",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Track",
+            "graphql": {
+              "typeName": "track",
+              "inputTypeName": "trackInput"
+            },
+            "fields": [
+              {
+                "name": "AlbumId",
+                "type": "int4"
+              },
+              {
+                "name": "Bytes",
+                "type": "int4"
+              },
+              {
+                "name": "Composer",
+                "type": "varchar"
+              },
+              {
+                "name": "GenreId",
+                "type": "int4"
+              },
+              {
+                "name": "MediaTypeId",
+                "type": "int4!"
+              },
+              {
+                "name": "Milliseconds",
+                "type": "int4!"
+              },
+              {
+                "name": "Name",
+                "type": "varchar!"
+              },
+              {
+                "name": "TrackId",
+                "type": "int4!"
+              },
+              {
+                "name": "UnitPrice",
+                "type": "numeric!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Track",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "Bytes": {
+                    "column": {
+                      "name": "Bytes"
+                    }
+                  },
+                  "Composer": {
+                    "column": {
+                      "name": "Composer"
+                    }
+                  },
+                  "GenreId": {
+                    "column": {
+                      "name": "GenreId"
+                    }
+                  },
+                  "MediaTypeId": {
+                    "column": {
+                      "name": "MediaTypeId"
+                    }
+                  },
+                  "Milliseconds": {
+                    "column": {
+                      "name": "Milliseconds"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  },
+                  "TrackId": {
+                    "column": {
+                      "name": "TrackId"
+                    }
+                  },
+                  "UnitPrice": {
+                    "column": {
+                      "name": "UnitPrice"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Track",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "AlbumId",
+                    "Bytes",
+                    "Composer",
+                    "GenreId",
+                    "MediaTypeId",
+                    "Milliseconds",
+                    "Name",
+                    "TrackId",
+                    "UnitPrice"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Track",
+            "objectType": "Track",
+            "orderableFields": [
+              {
+                "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Bytes",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Composer",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "GenreId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "MediaTypeId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Milliseconds",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "TrackId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "UnitPrice",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "TrackByID",
+                  "uniqueIdentifier": ["TrackId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Track",
+                "subscription": {
+                  "rootField": "Track"
+                }
+              },
+              "orderByExpressionType": "TrackOrderBy"
+            },
+            "source": {
+              "collection": "Track",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Track",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null,
+                  "allowSubscriptions": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "spatial_ref_sys",
+            "graphql": {
+              "typeName": "spatialRefSys",
+              "inputTypeName": "spatialRefSysInput"
+            },
+            "fields": [
+              {
+                "name": "auth_name",
+                "type": "varchar"
+              },
+              {
+                "name": "auth_srid",
+                "type": "int4"
+              },
+              {
+                "name": "proj4text",
+                "type": "varchar"
+              },
+              {
+                "name": "srid",
+                "type": "int4!"
+              },
+              {
+                "name": "srtext",
+                "type": "varchar"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "spatial_ref_sys",
+                "fieldMapping": {
+                  "auth_name": {
+                    "column": {
+                      "name": "auth_name"
+                    }
+                  },
+                  "auth_srid": {
+                    "column": {
+                      "name": "auth_srid"
+                    }
+                  },
+                  "proj4text": {
+                    "column": {
+                      "name": "proj4text"
+                    }
+                  },
+                  "srid": {
+                    "column": {
+                      "name": "srid"
+                    }
+                  },
+                  "srtext": {
+                    "column": {
+                      "name": "srtext"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "spatial_ref_sys",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "auth_name",
+                    "auth_srid",
+                    "proj4text",
+                    "srid",
+                    "srtext"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "spatial_ref_sys",
+            "objectType": "spatial_ref_sys",
+            "orderableFields": [
+              {
+                "fieldName": "auth_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "auth_srid",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "proj4text",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "srid",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "srtext",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "SpatialRefSysSrID",
+                  "uniqueIdentifier": ["srid"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "SpatialRefSys"
+              },
+              "orderByExpressionType": "SpatialRefSysOrderBy"
+            },
+            "source": {
+              "collection": "spatial_ref_sys",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "spatial_ref_sys",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "topology_layer",
+            "graphql": {
+              "typeName": "topologyLayer",
+              "inputTypeName": "topologyLayerInput"
+            },
+            "fields": [
+              {
+                "name": "child_id",
+                "type": "int4"
+              },
+              {
+                "name": "feature_column",
+                "type": "varchar!"
+              },
+              {
+                "name": "feature_type",
+                "type": "int4!"
+              },
+              {
+                "name": "layer_id",
+                "type": "int4!"
+              },
+              {
+                "name": "level",
+                "type": "int4!"
+              },
+              {
+                "name": "schema_name",
+                "type": "varchar!"
+              },
+              {
+                "name": "table_name",
+                "type": "varchar!"
+              },
+              {
+                "name": "topology_id",
+                "type": "int4!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "topology_layer",
+                "fieldMapping": {
+                  "child_id": {
+                    "column": {
+                      "name": "child_id"
+                    }
+                  },
+                  "feature_column": {
+                    "column": {
+                      "name": "feature_column"
+                    }
+                  },
+                  "feature_type": {
+                    "column": {
+                      "name": "feature_type"
+                    }
+                  },
+                  "layer_id": {
+                    "column": {
+                      "name": "layer_id"
+                    }
+                  },
+                  "level": {
+                    "column": {
+                      "name": "level"
+                    }
+                  },
+                  "schema_name": {
+                    "column": {
+                      "name": "schema_name"
+                    }
+                  },
+                  "table_name": {
+                    "column": {
+                      "name": "table_name"
+                    }
+                  },
+                  "topology_id": {
+                    "column": {
+                      "name": "topology_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "topology_layer",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "child_id",
+                    "feature_column",
+                    "feature_type",
+                    "layer_id",
+                    "level",
+                    "schema_name",
+                    "table_name",
+                    "topology_id"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "topology_layer",
+            "objectType": "topology_layer",
+            "orderableFields": [
+              {
+                "fieldName": "child_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "feature_column",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "feature_type",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "layer_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "level",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "schema_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "table_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "topology_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "LayerPkey",
+                  "uniqueIdentifier": ["layer_id", "topology_id"]
+                },
+                {
+                  "queryRootField": "LayerSchemaNameTableNameFeatureColumnKey",
+                  "uniqueIdentifier": [
+                    "feature_column",
+                    "schema_name",
+                    "table_name"
+                  ]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "TopologyLayer"
+              },
+              "orderByExpressionType": "TopologyLayerOrderBy"
+            },
+            "source": {
+              "collection": "topology_layer",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "topology_layer",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "bool",
+            "graphql": {
+              "typeName": "bool"
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "float8",
+            "graphql": {
+              "typeName": "float8"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "bool",
+            "representation": "bool",
+            "graphql": {
+              "comparisonExpressionTypeName": "boolComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "float8",
+            "representation": "float8",
+            "graphql": {
+              "comparisonExpressionTypeName": "float8ComparisonExp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "topology_topology",
+            "graphql": {
+              "typeName": "topologyTopology",
+              "inputTypeName": "topologyTopologyInput"
+            },
+            "fields": [
+              {
+                "name": "hasz",
+                "type": "bool!"
+              },
+              {
+                "name": "id",
+                "type": "int4!"
+              },
+              {
+                "name": "name",
+                "type": "varchar!"
+              },
+              {
+                "name": "precision",
+                "type": "float8!"
+              },
+              {
+                "name": "srid",
+                "type": "int4!"
+              }
+            ],
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "topology_topology",
+                "fieldMapping": {
+                  "hasz": {
+                    "column": {
+                      "name": "hasz"
+                    }
+                  },
+                  "id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "precision": {
+                    "column": {
+                      "name": "precision"
+                    }
+                  },
+                  "srid": {
+                    "column": {
+                      "name": "srid"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "topology_topology",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["hasz", "id", "name", "precision", "srid"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "topology_topology",
+            "objectType": "topology_topology",
+            "orderableFields": [
+              {
+                "fieldName": "hasz",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "precision",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "srid",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "arguments": [],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "TopologyTopologyByName",
+                  "uniqueIdentifier": ["name"]
+                },
+                {
+                  "queryRootField": "TopologyTopologyById",
+                  "uniqueIdentifier": ["id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "TopologyTopology"
+              },
+              "orderByExpressionType": "TopologyTopologyOrderBy"
+            },
+            "source": {
+              "collection": "topology_topology",
+              "dataConnectorName": "db"
+            }
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "topology_topology",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "commandArticle",
+            "description": "commandArticle description",
+            "fields": [
+              {
+                "name": "article_id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              },
+              {
+                "name": "author_id",
+                "type": "Int!"
+              }
+            ],
+            "graphql": {
+              "typeName": "CommandArticle"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "article",
+                "fieldMapping": {
+                  "article_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandArticle",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["article_id", "title", "author_id"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["article_id", "title", "author_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "commandAuthor",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "first_name",
+                "type": "String!"
+              },
+              {
+                "name": "last_name",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "CommandAuthor"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "author",
+                "fieldMapping": {
+                  "id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandAuthor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["id", "first_name", "last_name"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["id", "first_name", "last_name"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_article_by_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_article_by_id",
+            "description": "get_article_by_id description",
+            "arguments": [
+              {
+                "name": "article_id",
+                "type": "Int!",
+                "description": "command argument description"
+              }
+            ],
+            "outputType": "commandArticle",
+            "source": {
+              "dataConnectorName": "db",
+              "dataConnectorCommand": {
+                "function": "get_article_by_id"
+              },
+              "argumentMapping": {
+                "article_id": "id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getArticleById",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_author_by_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_author_by_id",
+            "arguments": [
+              {
+                "name": "author_id",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "commandAuthor",
+            "source": {
+              "dataConnectorName": "db",
+              "dataConnectorCommand": {
+                "function": "get_author_by_id"
+              },
+              "argumentMapping": {
+                "author_id": "id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getAuthorById",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_latest_article",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_latest_article",
+            "arguments": [],
+            "outputType": "commandArticle",
+            "source": {
+              "dataConnectorName": "db",
+              "dataConnectorCommand": {
+                "function": "latest_article"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getLatestArticle",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_latest_article_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_latest_article_id",
+            "arguments": [],
+            "outputType": "Int",
+            "source": {
+              "dataConnectorName": "db",
+              "dataConnectorCommand": {
+                "function": "latest_article_id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getLatestArticleId",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "update_article_title_by_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "update_article_title_by_id",
+            "arguments": [
+              {
+                "name": "article_id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              }
+            ],
+            "outputType": "commandArticle",
+            "source": {
+              "dataConnectorName": "db",
+              "dataConnectorCommand": {
+                "procedure": "update_article_title_by_id"
+              },
+              "argumentMapping": {
+                "article_id": "id",
+                "title": "title"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "updateArticleTitleById",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "commandArticle",
+            "name": "article",
+            "description": "commandArticle - article relationship description",
+            "target": {
+              "model": {
+                "name": "Articles",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "article_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "article_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "definition": {
+            "sourceType": "article",
+            "name": "AuthorFromCommand",
+            "description": "AuthorFromCommand description",
+            "target": {
+              "command": {
+                "name": "get_author_by_id"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "argument": {
+                    "argumentName": "author_id"
+                  }
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "author",
+            "name": "Articles",
+            "deprecated": {
+              "reason": "No more articles anymore"
+            },
+            "target": {
+              "model": {
+                "name": "Articles",
+                "relationshipType": "Array"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "article",
+            "name": "Author",
+            "target": {
+              "model": {
+                "name": "Authors",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Artist",
+            "sourceType": "Album",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "Artist"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "ArtistId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "ArtistId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Albums",
+            "sourceType": "Artist",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "Album"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "ArtistId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "ArtistId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Employee",
+            "sourceType": "Customer",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "Employee"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "SupportRepId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "EmployeeId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Customers",
+            "sourceType": "Employee",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "Customer"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "EmployeeId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "SupportRepId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Employee",
+            "sourceType": "Employee",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "Employee"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "ReportsTo"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "EmployeeId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Employees",
+            "sourceType": "Employee",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "Employee"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "EmployeeId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "ReportsTo"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Customer",
+            "sourceType": "Invoice",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "Customer"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "CustomerId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "CustomerId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Invoices",
+            "sourceType": "Customer",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "Invoice"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "CustomerId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "CustomerId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Invoice",
+            "sourceType": "InvoiceLine",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "Invoice"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "InvoiceId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "InvoiceId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "InvoiceLines",
+            "sourceType": "Invoice",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "InvoiceLine"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "InvoiceId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "InvoiceId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Track",
+            "sourceType": "InvoiceLine",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "Track"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "TrackId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "TrackId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "InvoiceLines",
+            "sourceType": "Track",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "InvoiceLine"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "TrackId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "TrackId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Playlist",
+            "sourceType": "PlaylistTrack",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "Playlist"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "PlaylistId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "PlaylistId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "PlaylistTracks",
+            "sourceType": "Playlist",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "PlaylistTrack"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "PlaylistId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "PlaylistId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Track",
+            "sourceType": "PlaylistTrack",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "Track"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "TrackId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "TrackId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "PlaylistTracks",
+            "sourceType": "Track",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "PlaylistTrack"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "TrackId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "TrackId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Album",
+            "sourceType": "Track",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "Album"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Tracks",
+            "sourceType": "Album",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "Track"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Genre",
+            "sourceType": "Track",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "Genre"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "GenreId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "GenreId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Tracks",
+            "sourceType": "Genre",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "Track"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "GenreId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "GenreId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "MediaType",
+            "sourceType": "Track",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "MediaType"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "MediaTypeId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "MediaTypeId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "Tracks",
+            "sourceType": "MediaType",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "Track"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "MediaTypeId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "MediaTypeId"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "topology_topology",
+            "sourceType": "topology_layer",
+            "target": {
+              "model": {
+                "relationshipType": "Object",
+                "name": "topology_topology"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "topology_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "name": "topology_layers",
+            "sourceType": "topology_topology",
+            "target": {
+              "model": {
+                "relationshipType": "Array",
+                "name": "topology_layer"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "topology_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

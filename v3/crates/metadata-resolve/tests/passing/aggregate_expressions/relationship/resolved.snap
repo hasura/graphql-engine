@@ -3344,7 +3344,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                                 aggregate: Some(
                                     ModelAggregateGraphQlDefinition {
                                         query_root_field: GraphQlFieldName(
-                                            "app_invoice_aggregate",
+                                            "app_invoiceLine_aggregate",
                                         ),
                                         description: None,
                                         deprecated: None,
@@ -3419,7 +3419,7 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_expressions/relation
                     select_aggregate: Some(
                         SelectAggregateGraphQlDefinition {
                             query_root_field: Name(
-                                "app_invoice_aggregate",
+                                "app_invoiceLine_aggregate",
                             ),
                             description: None,
                             deprecated: None,

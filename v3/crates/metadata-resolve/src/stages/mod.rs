@@ -283,6 +283,7 @@ pub fn resolve(
         &boolean_expression_types,
         &order_by_expressions,
         &graphql_types,
+        &mut track_root_fields,
         &graphql_config,
         &metadata_accessor.flags,
     )?;

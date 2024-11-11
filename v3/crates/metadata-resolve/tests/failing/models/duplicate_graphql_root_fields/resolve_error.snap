@@ -1,0 +1,8 @@
+---
+source: crates/metadata-resolve/tests/metadata_golden_tests.rs
+expression: msg
+input_file: crates/metadata-resolve/tests/failing/models/duplicate_graphql_root_fields/metadata.json
+---
+The following issues were raised but disallowed by compatibility configuration:
+
+the model Articles (in subgraph default) has a duplicate root field in the GraphQL schema: Cannot add query root field ArticleByID as it already in use

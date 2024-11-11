@@ -9,6 +9,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use lang_graphql::ast::common as ast;
 use open_dds::{data_connector::DataConnectorName, models::ModelName, types::CustomTypeName};
 
+use crate::helpers::types::TrackGraphQLRootFields;
 use crate::stages::{
     boolean_expressions, data_connector_scalar_types, graphql_config, models,
     object_boolean_expressions, object_relationships,
@@ -43,6 +44,7 @@ pub fn resolve(
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     order_by_expressions: &order_by_expressions::OrderByExpressions,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
+    track_root_fields: &mut TrackGraphQLRootFields,
     graphql_config: &graphql_config::GraphqlConfig,
     flags: &open_dds::flags::Flags,
 ) -> Result<ModelsWithGraphqlOutput, Error> {
@@ -94,6 +96,7 @@ pub fn resolve(
                 model_graphql_definition,
                 &model,
                 &mut existing_graphql_types,
+                track_root_fields,
                 data_connector_scalars,
                 &model.raw.description,
                 &model.aggregate_expression,

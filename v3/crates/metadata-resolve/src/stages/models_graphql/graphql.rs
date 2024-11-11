@@ -11,7 +11,7 @@ use super::types::{
     SelectAggregateGraphQlDefinition, SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
     SubscriptionGraphQlDefinition, UniqueIdentifierField,
 };
-use crate::helpers::types::{mk_name, store_new_graphql_type};
+use crate::helpers::types::{mk_name, store_new_graphql_type, TrackGraphQLRootFields};
 use crate::stages::order_by_expressions::OrderByExpressions;
 use crate::stages::{data_connector_scalar_types, graphql_config, models, object_types};
 use crate::types::error::Error;
@@ -27,6 +27,7 @@ pub(crate) fn resolve_model_graphql_api(
     model_graphql_definition: &ModelGraphQlDefinitionV2,
     model: &models::Model,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
+    track_root_fields: &mut TrackGraphQLRootFields,
     data_connector_scalars: &BTreeMap<
         Qualified<DataConnectorName>,
         data_connector_scalar_types::DataConnectorScalars,
@@ -82,6 +83,15 @@ pub(crate) fn resolve_model_graphql_api(
             }
         }
         let select_unique_field_name = mk_name(select_unique.query_root_field.as_str())?;
+        // Let's track and check if the select_unique field name is already used
+        track_root_fields
+            .track_query_root_field(&select_unique_field_name)
+            .unwrap_or_else(|error| {
+                issues.push(Warning::from(ModelGraphqlIssue::DuplicateRootField {
+                    model_name: model_name.clone(),
+                    error,
+                }));
+            });
         let select_unique_description = if select_unique.description.is_some() {
             select_unique.description.clone()
         } else {
@@ -92,7 +102,7 @@ pub(crate) fn resolve_model_graphql_api(
         let subscription = select_unique
             .subscription
             .as_ref()
-            .map(resolve_subscription_graphql_api)
+            .map(|s| resolve_subscription_graphql_api(s, model_name, track_root_fields, issues))
             .transpose()?;
         graphql_api
             .select_uniques
@@ -169,9 +179,16 @@ pub(crate) fn resolve_model_graphql_api(
             let subscription = gql_definition
                 .subscription
                 .as_ref()
-                .map(resolve_subscription_graphql_api)
+                .map(|s| resolve_subscription_graphql_api(s, model_name, track_root_fields, issues))
                 .transpose()?;
             mk_name(gql_definition.query_root_field.as_str()).map(|f: ast::Name| {
+                // Let's track and check if the select_many field name is already used
+                track_root_fields.track_query_root_field(&f).unwrap_or_else(|error| {
+                    issues.push(Warning::from(ModelGraphqlIssue::DuplicateRootField {
+                        model_name: model_name.clone(),
+                        error,
+                    }));
+                });
                 let select_many_description = if gql_definition.description.is_some() {
                     gql_definition.description.clone()
                 } else {
@@ -240,11 +257,21 @@ pub(crate) fn resolve_model_graphql_api(
             let subscription = graphql_aggregate
                 .subscription
                 .as_ref()
-                .map(resolve_subscription_graphql_api)
+                .map(|s| resolve_subscription_graphql_api(s, model_name, track_root_fields, issues))
                 .transpose()?;
 
+            let aggregate_root_field = mk_name(graphql_aggregate.query_root_field.as_str())?;
+            // Let's track and check if the select_aggregate field name is already used
+            track_root_fields
+                .track_query_root_field(&aggregate_root_field)
+                .unwrap_or_else(|error| {
+                    issues.push(Warning::from(ModelGraphqlIssue::DuplicateRootField {
+                        model_name: model_name.clone(),
+                        error,
+                    }));
+                });
             Some(SelectAggregateGraphQlDefinition {
-                query_root_field: mk_name(graphql_aggregate.query_root_field.as_str())?,
+                query_root_field: aggregate_root_field,
                 description: graphql_aggregate.description.clone(),
                 deprecated: graphql_aggregate.deprecated.clone(),
                 aggregate_expression_name: aggregate_expression_name.clone(),
@@ -334,8 +361,10 @@ fn is_model_used_in_any_aggregate_relationship(
 
 fn resolve_subscription_graphql_api(
     subscription: &open_dds::models::SubscriptionGraphQlDefinition,
+    model_name: &Qualified<ModelName>,
+    track_root_fields: &mut TrackGraphQLRootFields,
+    issues: &mut Vec<Warning>,
 ) -> Result<SubscriptionGraphQlDefinition, Error> {
-    // Subscriptions are currently unstable.
     let open_dds::models::SubscriptionGraphQlDefinition {
         root_field,
         description,
@@ -343,6 +372,15 @@ fn resolve_subscription_graphql_api(
         polling_interval_ms,
     } = subscription;
     let root_field_name = mk_name(root_field.as_str())?;
+    // Let's track and check if the subscription root field name is already used
+    track_root_fields
+        .track_subscription_root_field(&root_field_name)
+        .unwrap_or_else(|error| {
+            issues.push(Warning::from(ModelGraphqlIssue::DuplicateRootField {
+                model_name: model_name.clone(),
+                error,
+            }));
+        });
     Ok(SubscriptionGraphQlDefinition {
         root_field: root_field_name,
         description: description.clone(),

@@ -8,6 +8,13 @@
 
 ### Changed
 
+- Prevent duplicate GraphQL root field names for models; previously, one was
+  arbitrarily chosen as the exposed field. This change does not impact existing
+  projects, and warnings are emitted while creating a build. Projects created or
+  with a
+  [compatibility date](https://hasura.io/docs/3.0/supergraph-modeling/compatibility-config/)
+  after `2024-11-15` are affected.
+
 ## [v2024.11.05]
 
 ### Added

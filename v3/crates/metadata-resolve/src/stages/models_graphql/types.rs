@@ -1,4 +1,4 @@
-use crate::types::warning::Warning;
+use crate::{helpers::types::DuplicateRootFieldError, types::warning::Warning};
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
 use open_dds::{
@@ -10,6 +10,7 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 
 use crate::stages::{boolean_expressions, models, object_boolean_expressions};
+use crate::types::error::ShouldBeAnError;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use crate::{helpers::types::NdcColumnForComparison, OrderByExpressionIdentifier};
 
@@ -141,4 +142,21 @@ pub struct ModelGraphQlApi {
 pub enum ModelGraphqlIssue {
     #[error("the model {model_name} has defined a selectAggregate graphql API, but it will not appear in the GraphQL API unless query.aggregate.filterInputFieldName is also configured in GraphqlConfig")]
     MissingAggregateFilterInputFieldNameInGraphqlConfig { model_name: Qualified<ModelName> },
+
+    #[error("the model {model_name} has a duplicate root field in the GraphQL schema: {error:}")]
+    DuplicateRootField {
+        model_name: Qualified<ModelName>,
+        error: DuplicateRootFieldError,
+    },
+}
+
+impl ShouldBeAnError for ModelGraphqlIssue {
+    fn should_be_an_error(&self, flags: &open_dds::flags::Flags) -> bool {
+        match self {
+            ModelGraphqlIssue::MissingAggregateFilterInputFieldNameInGraphqlConfig { .. } => false,
+            ModelGraphqlIssue::DuplicateRootField { .. } => {
+                flags.require_unique_model_graphql_names
+            }
+        }
+    }
 }
