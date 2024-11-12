@@ -220,6 +220,9 @@ async fn start_websocket_session<M: WebSocketMetrics>(
                         this_span_link,
                     ));
 
+                    // Spawn a task to send keep-alive messages at regular intervals
+                    let keepalive_task = tokio::spawn(tasks::send_keepalive(connection.clone()));
+
                     // Handle the result of the initialization checker
                     match init_checker_task.await {
                         Ok(Ok(())) => {
@@ -256,6 +259,8 @@ async fn start_websocket_session<M: WebSocketMetrics>(
                     if let Some(task) = expiry_task {
                         task.abort();
                     }
+                    // Abort the keepalive task
+                    keepalive_task.abort();
                     // Remove the connection from the active connections map
                     connections.drop(&connection.id).await;
 

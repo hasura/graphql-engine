@@ -14,6 +14,9 @@ pub static GRAPHQL_WS_PROTOCOL: &str = "graphql-transport-ws";
 /// Timeout for the connection initialization process.
 pub static CONNECTION_INIT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);
 
+/// Interval for sending keep-alive messages to the client.
+pub static KEEPALIVE_INTERVAL: std::time::Duration = std::time::Duration::from_secs(5);
+
 /// Handles incoming client messages and dispatches them to appropriate handlers.
 pub async fn handle_graphql_ws_message<M: WebSocketMetrics>(
     connection: ws::Connection<M>,

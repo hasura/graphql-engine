@@ -95,6 +95,11 @@ pub enum ServerMessage {
     #[serde(rename = "complete")]
     Complete { id: OperationId },
 
+    /// Server sends this message to the client to avoid connection idle.
+    /// ref: <https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#ping>
+    #[serde(rename = "ping")]
+    Ping { payload: Option<serde_json::Value> },
+
     /// Server sends a response to a `ping` message.
     /// ref: <https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#pong>
     #[serde(rename = "pong")]

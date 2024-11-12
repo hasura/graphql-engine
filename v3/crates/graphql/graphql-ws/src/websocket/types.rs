@@ -255,6 +255,16 @@ impl Message {
         // The session is expired and the client should try to reconnect.
         Self::close_message(1013, "WebSocket session expired")
     }
+
+    /// Keep alive message
+    pub fn keep_alive() -> Self {
+        let payload = serde_json::json!({
+            "message": "keepalive"
+        });
+        Self::Protocol(Box::new(protocol::ServerMessage::Ping {
+            payload: Some(payload),
+        }))
+    }
 }
 
 /// Creates a close WebSocket message with the specified code and reason.

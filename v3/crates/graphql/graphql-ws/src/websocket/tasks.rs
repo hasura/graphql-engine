@@ -272,3 +272,11 @@ pub(crate) async fn manage_outgoing_messages<M: WebSocketMetrics + Sync>(
         }
     }
 }
+
+/// Sends keepalive messages to the client at regular intervals.
+pub(crate) async fn send_keepalive<M>(connection: types::Connection<M>) {
+    loop {
+        tokio::time::sleep(protocol::KEEPALIVE_INTERVAL).await;
+        connection.send(types::Message::keep_alive()).await;
+    }
+}

@@ -180,12 +180,14 @@ pub(crate) async fn expect_close_message(
 #[allow(dead_code)]
 pub(crate) async fn expect_text_message(
     socket: &mut WebSocketStream<MaybeTlsStream<TcpStream>>,
-) -> tungstenite::Message {
+) -> String {
     let message = socket.next().await.unwrap();
     let message = message.unwrap();
     // Check text message
-    assert!(message.is_text(), "Expected text message");
-    message
+    let tungstenite::Message::Text(text_message) = message else {
+        panic!("Expected text message");
+    };
+    text_message
 }
 
 #[allow(dead_code)]
@@ -256,11 +258,9 @@ pub(crate) async fn graphql_ws_connection_init(
     let message = expect_text_message(socket).await;
 
     // Check for connection_ack message
-    if let tungstenite::Message::Text(message) = message {
-        let message_json: serde_json::Value =
-            serde_json::from_str(message.as_str()).expect("Expected a valid JSON");
-        assert_eq!(message_json, serde_json::json!({"type": "connection_ack"}));
-    }
+    let message_json: serde_json::Value =
+        serde_json::from_str(message.as_str()).expect("Expected a valid JSON");
+    assert_eq!(message_json, serde_json::json!({"type": "connection_ack"}));
 }
 
 #[allow(dead_code)]

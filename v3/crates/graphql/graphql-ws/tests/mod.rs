@@ -170,27 +170,26 @@ async fn test_graphql_ws_subscribe_admin() {
     let message = expect_text_message(&mut socket).await;
 
     // Check message
-    if let tungstenite::Message::Text(message) = message {
-        let message_json: serde_json::Value =
-            serde_json::from_str(message.as_str()).expect("Expected a valid JSON");
-        let expected = serde_json::json!({
-            "type": "next",
-            "id": operation_id,
-            "payload": {
-                "data": {
-                    "ArticleByID": {
-                        "article_id": 1,
-                        "title": "The Next 700 Programming Languages",
-                        "Author": {
-                            "author_id": 1,
-                            "first_name": "Peter"
-                        }
+    let message_json: serde_json::Value =
+        serde_json::from_str(message.as_str()).expect("Expected a valid JSON");
+    let expected = serde_json::json!({
+        "type": "next",
+        "id": operation_id,
+        "payload": {
+            "data": {
+                "ArticleByID": {
+                    "article_id": 1,
+                    "title": "The Next 700 Programming Languages",
+                    "Author": {
+                        "author_id": 1,
+                        "first_name": "Peter"
                     }
                 }
             }
-        });
-        assert_eq!(message_json, expected);
-    }
+        }
+    });
+    assert_eq!(message_json, expected);
+
     // Check operation id
     check_operation_id(operation_id, &connections).await;
 
@@ -257,34 +256,32 @@ async fn test_graphql_ws_subscribe_user_1() {
     let message = expect_text_message(&mut socket).await;
 
     // Check message
-    if let tungstenite::Message::Text(message) = message {
-        let message_json: serde_json::Value =
-            serde_json::from_str(message.as_str()).expect("Expected a valid JSON");
-        // Expects data with author_id = 2
-        let expected = serde_json::json!({
-            "type": "next",
-            "id": operation_id,
-            "payload": {
-                "data": {
-                    "ArticleMany": [
-                        {
-                            "article_id": 2,
-                            "author_id": 2
-                        },
-                        {
-                            "article_id": 3,
-                            "author_id": 2
-                        },
-                        {
-                            "article_id": 5,
-                            "author_id": 2
-                        }
-                    ]
-                }
+    let message_json: serde_json::Value =
+        serde_json::from_str(message.as_str()).expect("Expected a valid JSON");
+    // Expects data with author_id = 2
+    let expected = serde_json::json!({
+        "type": "next",
+        "id": operation_id,
+        "payload": {
+            "data": {
+                "ArticleMany": [
+                    {
+                        "article_id": 2,
+                        "author_id": 2
+                    },
+                    {
+                        "article_id": 3,
+                        "author_id": 2
+                    },
+                    {
+                        "article_id": 5,
+                        "author_id": 2
+                    }
+                ]
             }
-        });
-        assert_eq!(message_json, expected);
-    }
+        }
+    });
+    assert_eq!(message_json, expected);
     // Check operation id
     check_operation_id(operation_id, &connections).await;
 
@@ -355,21 +352,19 @@ async fn test_graphql_ws_subscribe_user_1_validation_error() {
     let message = expect_text_message(&mut socket).await;
 
     // Check message
-    if let tungstenite::Message::Text(message) = message {
-        let message_json: serde_json::Value =
-            serde_json::from_str(message.as_str()).expect("Expected a valid JSON");
-        // Expects data with author_id = 2
-        let expected = serde_json::json!({
-            "type": "error",
-            "id": operation_id,
-            "payload": [
-                {
-                    "message": "validation failed: no such field on type Article: title"
-                }
-            ]
-        });
-        assert_eq!(message_json, expected);
-    }
+    let message_json: serde_json::Value =
+        serde_json::from_str(message.as_str()).expect("Expected a valid JSON");
+    // Expects data with author_id = 2
+    let expected = serde_json::json!({
+        "type": "error",
+        "id": operation_id,
+        "payload": [
+            {
+                "message": "validation failed: no such field on type Article: title"
+            }
+        ]
+    });
+    assert_eq!(message_json, expected);
     // The above operation resulted in an error.
     // Assert zero operations
     assert_zero_operations_timeout(&connections).await;
@@ -406,6 +401,31 @@ async fn test_graphql_ws_connection_expiry() {
         assert_eq!(close_frame.code, close_code);
         assert_eq!(close_frame.reason, "WebSocket session expired");
     }
+    // Assert zero connections
+    assert_zero_connections_timeout(connections).await;
+    server_handle.abort();
+}
+
+#[tokio::test]
+async fn test_graphql_ws_keepalive() {
+    let TestServer {
+        connections,
+        mut socket,
+        server_handle,
+    } = start_websocket_server().await;
+    // Send connection_init and check ack
+    graphql_ws_connection_init(&mut socket, connection_init_admin()).await;
+    // Wait for a text message
+    let message = expect_text_message(&mut socket).await;
+    // Check for a keepalive message
+    let message_json: serde_json::Value =
+        serde_json::from_str(message.as_str()).expect("Expected a valid JSON");
+    assert_eq!(
+        message_json,
+        serde_json::json!({"type": "ping", "payload": {"message": "keepalive"}})
+    );
+    // Close the connection
+    socket.close(None).await.unwrap();
     // Assert zero connections
     assert_zero_connections_timeout(connections).await;
     server_handle.abort();
