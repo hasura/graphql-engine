@@ -324,7 +324,10 @@ pub fn resolve_scalar_fields(
                     }
 
                     let mut operator_mapping = BTreeMap::new();
-                    operator_mapping.insert(data_connector_name.clone(), BTreeMap::new());
+                    operator_mapping.insert(
+                        data_connector_name.clone(),
+                        boolean_expressions::OperatorMapping::new(),
+                    );
 
                     // Register scalar comparison field only if it contains non-zero operators.
                     if !operators.is_empty() {

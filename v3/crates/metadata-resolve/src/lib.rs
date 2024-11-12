@@ -30,7 +30,7 @@ pub use stages::boolean_expressions::{
     BooleanExpressionComparableRelationship, BooleanExpressionError,
     BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,
     IncludeLogicalOperators, ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo,
-    ObjectComparisonKind, ResolvedObjectBooleanExpressionType,
+    ObjectComparisonKind, OperatorMapping, ResolvedObjectBooleanExpressionType,
     ScalarBooleanExpressionGraphqlConfig,
 };
 pub use stages::data_connectors::{ArgumentPresetValue, DataConnectorLink, HttpHeadersPreset};

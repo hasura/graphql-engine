@@ -348,9 +348,7 @@ pub(crate) fn resolve_model_predicate_with_type(
 
                     // lookup ndc operator name in mappings, falling back to using OperatorName
                     // when an override has not been specified
-                    let ndc_operator_name = operator_mappings
-                        .get(operator)
-                        .unwrap_or_else(|| DataConnectorOperatorName::ref_cast(operator.inner()));
+                    let ndc_operator_name = operator_mappings.get(operator);
 
                     // lookup the argument type for this comparison operator
                     let argument_type =

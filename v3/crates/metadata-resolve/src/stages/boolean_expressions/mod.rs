@@ -18,7 +18,7 @@ pub use types::{
     BooleanExpressionGraphqlFieldConfig, BooleanExpressionIssue, BooleanExpressionTypes,
     BooleanExpressionsOutput, ComparableFieldKind, ComparisonExpressionInfo,
     IncludeLogicalOperators, ObjectBooleanExpressionGraphqlConfig, ObjectComparisonExpressionInfo,
-    ObjectComparisonKind, ResolvedObjectBooleanExpressionType,
+    ObjectComparisonKind, OperatorMapping, ResolvedObjectBooleanExpressionType,
     ResolvedObjectBooleanExpressionTypeFields, ScalarBooleanExpressionGraphqlConfig,
 };
 

@@ -404,13 +404,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                                 "postgres_db",
                                             ),
                                         ),
-                                    }: {
-                                        OperatorName(
-                                            "equals",
-                                        ): DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
+                                    }: OperatorMapping(
+                                        {
+                                            OperatorName(
+                                                "equals",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                             FieldName(
@@ -467,13 +469,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                                 "postgres_db",
                                             ),
                                         ),
-                                    }: {
-                                        OperatorName(
-                                            "equals",
-                                        ): DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
+                                    }: OperatorMapping(
+                                        {
+                                            OperatorName(
+                                                "equals",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                             FieldName(
@@ -530,13 +534,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/basic/
                                                 "postgres_db",
                                             ),
                                         ),
-                                    }: {
-                                        OperatorName(
-                                            "equals",
-                                        ): DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
+                                    }: OperatorMapping(
+                                        {
+                                            OperatorName(
+                                                "equals",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                         },

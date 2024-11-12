@@ -23,8 +23,8 @@ use metadata_resolve::{
     self, data_connectors::ArgumentPresetValue, deserialize_non_string_key_btreemap,
     deserialize_qualified_btreemap, serialize_non_string_key_btreemap,
     serialize_qualified_btreemap, ArgumentPresets, DataConnectorLink, FieldPresetInfo,
-    NdcColumnForComparison, OrderByExpressionIdentifier, Qualified, QualifiedTypeReference,
-    TypeMapping,
+    NdcColumnForComparison, OperatorMapping, OrderByExpressionIdentifier, Qualified,
+    QualifiedTypeReference, TypeMapping,
 };
 
 use json_ext::HashMapWithJsonKey;
@@ -398,10 +398,7 @@ pub enum TypeId {
     ScalarTypeComparisonExpression {
         graphql_type_name: ast::TypeName,
         operators: Vec<(ast::Name, QualifiedTypeReference)>,
-        operator_mapping: BTreeMap<
-            Qualified<DataConnectorName>,
-            BTreeMap<types::OperatorName, DataConnectorOperatorName>,
-        >,
+        operator_mapping: BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
         is_null_operator_name: Option<ast::Name>,
     },
     OrderByEnumType {

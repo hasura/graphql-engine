@@ -4,8 +4,8 @@ use super::helpers;
 use super::BooleanExpressionIssue;
 pub use super::{
     BooleanExpressionComparableRelationship, ComparableFieldKind, ComparisonExpressionInfo,
-    ObjectComparisonExpressionInfo, ObjectComparisonKind, ResolvedObjectBooleanExpressionType,
-    ResolvedObjectBooleanExpressionTypeFields,
+    ObjectComparisonExpressionInfo, ObjectComparisonKind, OperatorMapping,
+    ResolvedObjectBooleanExpressionType, ResolvedObjectBooleanExpressionTypeFields,
 };
 use crate::stages::{
     graphql_config, object_types, relationships, scalar_boolean_expressions, type_permissions,
@@ -22,8 +22,8 @@ use open_dds::{
         BooleanExpressionScalarOperand, BooleanExpressionTypeGraphQlConfiguration,
         DataConnectorOperatorMapping,
     },
-    data_connector::{DataConnectorName, DataConnectorOperatorName},
-    types::{CustomTypeName, FieldName, OperatorName, TypeName},
+    data_connector::DataConnectorName,
+    types::{CustomTypeName, FieldName, TypeName},
 };
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -392,13 +392,13 @@ fn resolve_operator_mapping_for_scalar_type(
         Qualified<DataConnectorName>,
         DataConnectorOperatorMapping,
     >,
-) -> BTreeMap<Qualified<DataConnectorName>, BTreeMap<OperatorName, DataConnectorOperatorName>> {
+) -> BTreeMap<Qualified<DataConnectorName>, OperatorMapping> {
     let mut operator_mapping = BTreeMap::new();
 
     for (data_connector_name, data_connector_operator_mapping) in data_connector_operator_mappings {
         operator_mapping.insert(
             data_connector_name.clone(),
-            data_connector_operator_mapping.operator_mapping.clone(),
+            OperatorMapping(data_connector_operator_mapping.operator_mapping.clone()),
         );
     }
 

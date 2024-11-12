@@ -1,14 +1,10 @@
+use super::types::input_type;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema::{self as gql_schema, InputField, Namespaced};
-use open_dds::{
-    data_connector::{DataConnectorName, DataConnectorOperatorName},
-    types::{CustomTypeName, OperatorName},
-};
+use open_dds::{data_connector::DataConnectorName, types::CustomTypeName};
 use std::collections::BTreeMap;
 
-use super::types::input_type;
-
-use metadata_resolve::{Qualified, QualifiedTypeReference};
+use metadata_resolve::{OperatorMapping, Qualified, QualifiedTypeReference};
 
 use crate::types;
 use crate::GDS;
@@ -45,10 +41,7 @@ pub fn build_scalar_comparison_input(
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &ast::TypeName,
     operators: &Vec<(ast::Name, QualifiedTypeReference)>,
-    operator_mapping: &BTreeMap<
-        Qualified<DataConnectorName>,
-        BTreeMap<OperatorName, DataConnectorOperatorName>,
-    >,
+    operator_mapping: &BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
     maybe_is_null_operator_name: &Option<ast::Name>,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
     let mut input_fields: BTreeMap<ast::Name, Namespaced<GDS, InputField<GDS>>> = BTreeMap::new();
@@ -87,24 +80,18 @@ pub fn build_scalar_comparison_input(
 
         // this feels a bit loose, we're depending on the fact the ast::Name and
         // OperatorName should be the same
-        let operator_name = op_name.as_str();
+        let operator_name = open_dds::types::OperatorName::new(op_name.as_str().into());
 
         // for each set of mappings, only return the mapping we actually need
         // default to existing mapping where one is missing
         let this_operator_mapping = operator_mapping
             .iter()
-            .map(
-                |(data_connector_name, mappings)| match mappings.get(operator_name) {
-                    Some(data_connector_operator_name) => (
-                        data_connector_name.clone(),
-                        data_connector_operator_name.clone(),
-                    ),
-                    None => (
-                        data_connector_name.clone(),
-                        DataConnectorOperatorName::from(operator_name),
-                    ),
-                },
-            )
+            .map(|(data_connector_name, mappings)| {
+                (
+                    data_connector_name.clone(),
+                    mappings.get(&operator_name).clone(),
+                )
+            })
             .collect();
 
         input_fields.insert(

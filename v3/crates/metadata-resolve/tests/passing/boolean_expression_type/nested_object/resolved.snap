@@ -1656,7 +1656,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 "custom",
                                             ),
                                         ),
-                                    }: {},
+                                    }: OperatorMapping(
+                                        {},
+                                    ),
                                 },
                             },
                             FieldName(
@@ -1687,7 +1689,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 "custom",
                                             ),
                                         ),
-                                    }: {},
+                                    }: OperatorMapping(
+                                        {},
+                                    ),
                                 },
                             },
                         },
@@ -1814,7 +1818,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 "custom",
                                             ),
                                         ),
-                                    }: {},
+                                    }: OperatorMapping(
+                                        {},
+                                    ),
                                 },
                             },
                             FieldName(
@@ -1845,7 +1851,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/nested
                                                 "custom",
                                             ),
                                         ),
-                                    }: {},
+                                    }: OperatorMapping(
+                                        {},
+                                    ),
                                 },
                             },
                         },

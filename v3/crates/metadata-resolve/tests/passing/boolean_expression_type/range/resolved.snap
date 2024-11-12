@@ -945,7 +945,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                         "elastic",
                                                     ),
                                                 ),
-                                            }: {},
+                                            }: OperatorMapping(
+                                                {},
+                                            ),
                                         },
                                     },
                                     FieldName(
@@ -996,7 +998,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                         "elastic",
                                                     ),
                                                 ),
-                                            }: {},
+                                            }: OperatorMapping(
+                                                {},
+                                            ),
                                         },
                                     },
                                     FieldName(
@@ -1027,7 +1031,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                         "elastic",
                                                     ),
                                                 ),
-                                            }: {},
+                                            }: OperatorMapping(
+                                                {},
+                                            ),
                                         },
                                     },
                                 },
@@ -1209,7 +1215,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 "elastic",
                                             ),
                                         ),
-                                    }: {},
+                                    }: OperatorMapping(
+                                        {},
+                                    ),
                                 },
                             },
                             FieldName(
@@ -1260,7 +1268,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 "elastic",
                                             ),
                                         ),
-                                    }: {},
+                                    }: OperatorMapping(
+                                        {},
+                                    ),
                                 },
                             },
                             FieldName(
@@ -1291,7 +1301,9 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/range/
                                                 "elastic",
                                             ),
                                         ),
-                                    }: {},
+                                    }: OperatorMapping(
+                                        {},
+                                    ),
                                 },
                             },
                         },

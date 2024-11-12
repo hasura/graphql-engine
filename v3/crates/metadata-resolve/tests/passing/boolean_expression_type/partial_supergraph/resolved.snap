@@ -1000,13 +1000,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                         "db",
                                                     ),
                                                 ),
-                                            }: {
-                                                OperatorName(
-                                                    "_eq",
-                                                ): DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            },
+                                            }: OperatorMapping(
+                                                {
+                                                    OperatorName(
+                                                        "_eq",
+                                                    ): DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                },
+                                            ),
                                         },
                                     },
                                     FieldName(
@@ -1048,13 +1050,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                         "db",
                                                     ),
                                                 ),
-                                            }: {
-                                                OperatorName(
-                                                    "_eq",
-                                                ): DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            },
+                                            }: OperatorMapping(
+                                                {
+                                                    OperatorName(
+                                                        "_eq",
+                                                    ): DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                },
+                                            ),
                                         },
                                     },
                                     FieldName(
@@ -1096,13 +1100,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                         "db",
                                                     ),
                                                 ),
-                                            }: {
-                                                OperatorName(
-                                                    "_eq",
-                                                ): DataConnectorOperatorName(
-                                                    "_eq",
-                                                ),
-                                            },
+                                            }: OperatorMapping(
+                                                {
+                                                    OperatorName(
+                                                        "_eq",
+                                                    ): DataConnectorOperatorName(
+                                                        "_eq",
+                                                    ),
+                                                },
+                                            ),
                                         },
                                     },
                                 },
@@ -1295,13 +1301,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 "db",
                                             ),
                                         ),
-                                    }: {
-                                        OperatorName(
-                                            "_eq",
-                                        ): DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
+                                    }: OperatorMapping(
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                             FieldName(
@@ -1343,13 +1351,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 "db",
                                             ),
                                         ),
-                                    }: {
-                                        OperatorName(
-                                            "_eq",
-                                        ): DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
+                                    }: OperatorMapping(
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                             FieldName(
@@ -1391,13 +1401,15 @@ input_file: crates/metadata-resolve/tests/passing/boolean_expression_type/partia
                                                 "db",
                                             ),
                                         ),
-                                    }: {
-                                        OperatorName(
-                                            "_eq",
-                                        ): DataConnectorOperatorName(
-                                            "_eq",
-                                        ),
-                                    },
+                                    }: OperatorMapping(
+                                        {
+                                            OperatorName(
+                                                "_eq",
+                                            ): DataConnectorOperatorName(
+                                                "_eq",
+                                            ),
+                                        },
+                                    ),
                                 },
                             },
                         },

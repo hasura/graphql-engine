@@ -7,6 +7,7 @@ use open_dds::{
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName, OperatorName},
 };
+use ref_cast::RefCast;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::collections::{BTreeMap, BTreeSet};
@@ -113,6 +114,29 @@ pub enum IncludeLogicalOperators {
     No,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, Eq)]
+pub struct OperatorMapping(pub BTreeMap<OperatorName, DataConnectorOperatorName>);
+
+impl OperatorMapping {
+    // if we cannot find an operator name in the look up, we assume it's the same as the operator
+    // name
+    pub fn get<'a>(&'a self, operator_name: &'a OperatorName) -> &'a DataConnectorOperatorName {
+        self.0
+            .get(operator_name)
+            .unwrap_or_else(move || DataConnectorOperatorName::ref_cast(operator_name.inner()))
+    }
+
+    pub fn new() -> Self {
+        OperatorMapping(BTreeMap::new())
+    }
+}
+
+impl Default for OperatorMapping {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[serde_as]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparisonExpressionInfo {
@@ -124,8 +148,7 @@ pub struct ComparisonExpressionInfo {
     pub object_type_name: Option<Qualified<CustomTypeName>>,
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
     #[serde_as(as = "Vec<(_, _)>")]
-    pub operator_mapping:
-        BTreeMap<Qualified<DataConnectorName>, BTreeMap<OperatorName, DataConnectorOperatorName>>,
+    pub operator_mapping: BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
