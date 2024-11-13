@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 
 use super::error as plan_error;
 use super::filter;
+use super::filter::PredicateQueryTrees;
 use super::filter::ResolveFilterExpressionContext;
 use super::relationships;
 use crate::error;
@@ -39,7 +40,11 @@ impl<'s> UnresolvedArgument<'s> {
                 value: value.clone(),
             },
             graphql_ir::Argument::BooleanExpression { predicate } => {
-                let expression = super::filter::plan_expression(predicate, relationships)?;
+                let expression = super::filter::plan_expression(
+                    predicate,
+                    relationships,
+                    &mut PredicateQueryTrees::new(),
+                )?;
                 Argument::BooleanExpression {
                     predicate: expression,
                 }
@@ -92,7 +97,11 @@ impl<'s> UnresolvedMutationArgument<'s> {
                 value: value.clone(),
             },
             graphql_ir::Argument::BooleanExpression { predicate } => {
-                let expression = super::filter::plan_expression(predicate, relationships)?;
+                let expression = super::filter::plan_expression(
+                    predicate,
+                    relationships,
+                    &mut PredicateQueryTrees::new(),
+                )?;
                 MutationArgument::BooleanExpression {
                     predicate: expression,
                 }

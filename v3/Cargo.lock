@@ -1934,6 +1934,7 @@ dependencies = [
  "tokio",
  "tracing-util",
  "transitive",
+ "uuid",
 ]
 
 [[package]]

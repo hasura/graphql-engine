@@ -293,7 +293,7 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
                 mappings,
             };
 
-            Ok(Expression::RelationshipNdcPushdown {
+            Ok(Expression::RelationshipLocalComparison {
                 relationship: ndc_relationship_name,
                 predicate: Box::new(relationship_predicate),
                 info: local_model_relationship_info,
@@ -347,7 +347,7 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
                 });
             }
 
-            Ok(Expression::RelationshipEngineResolved {
+            Ok(Expression::RelationshipRemoteComparison {
                 relationship: relationship_name.clone(),
                 target_model_name,
                 target_model_source: target_source.model.clone(),

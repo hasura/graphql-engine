@@ -285,6 +285,12 @@ fn make_expression(
                 predicate: Some(Box::new(ndc_expression)),
             })
         }
+        // we are generating NDC request for one connector, we can ignore anything remote
+        filter::ResolvedFilterExpression::RemoteRelationshipComparison {
+            remote_predicate_id: _,
+        } => Ok(ndc_models_v01::Expression::And {
+            expressions: vec![],
+        }),
     }
 }
 

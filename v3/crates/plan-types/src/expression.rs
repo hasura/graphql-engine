@@ -19,22 +19,30 @@ pub enum Expression<'s> {
     Not {
         expression: Box<Expression<'s>>,
     },
+    /// Expression using a field for comparison
     LocalField(LocalFieldComparison),
+    /// Expression using a nested array for comparison
     LocalNestedArray {
         column: DataConnectorColumnName,
         field_path: Vec<DataConnectorColumnName>,
         predicate: Box<Expression<'s>>,
     },
-    /// Handles predicate resolution by pushing it down to the NDC (Data Connector).
-    /// For local relationships having the `relation_comparisons` NDC capability.
-    RelationshipNdcPushdown {
+    /// Expression that uses a relationship, and that can be pushed down in the
+    /// same query.
+    /// This is basically, local relationships having the `relation_comparisons`
+    /// NDC capability.
+    RelationshipLocalComparison {
         relationship: NdcRelationshipName,
         predicate: Box<Expression<'s>>,
         info: LocalModelRelationshipInfo<'s>,
     },
-    /// Resolves the predicate within the engine itself.
-    /// For remote relationships and local relationships without the `relation_comparisons` NDC capability.
-    RelationshipEngineResolved {
+    /// Expression that uses a relationship, and that requires a separate
+    /// execution to evaluate.
+    ///
+    /// This is basically,
+    /// 1. remote relationships
+    /// 2. local relationships without the `relation_comparisons` NDC capability
+    RelationshipRemoteComparison {
         relationship: RelationshipName,
         target_model_name: &'s Qualified<ModelName>,
         target_model_source: Arc<metadata_resolve::ModelSource>,

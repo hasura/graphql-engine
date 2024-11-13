@@ -272,6 +272,7 @@ pub fn ndc_query_to_query_execution_plan(
     };
 
     QueryExecutionPlan {
+        remote_predicates: execute::plan::PredicateQueryTrees::new(),
         query_node: QueryNode {
             fields: query_fields,
             aggregates: query_aggregate_fields,

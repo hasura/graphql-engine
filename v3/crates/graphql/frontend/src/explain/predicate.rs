@@ -129,17 +129,17 @@ async fn explain_query_predicate<'s>(
             explain_query_predicate(expose_internal_errors, http_context, expression, steps).await
         }
         plan_types::Expression::LocalField { .. }
-        | plan_types::Expression::RelationshipNdcPushdown { .. }
+        | plan_types::Expression::RelationshipLocalComparison { .. }
         | plan_types::Expression::LocalNestedArray { .. } => Ok(()),
 
-        plan_types::Expression::RelationshipEngineResolved {
+        plan_types::Expression::RelationshipRemoteComparison {
             relationship: _,
             target_model_name,
             target_model_source,
             ndc_column_mapping,
             predicate,
         } => {
-            let (remote_query_node, collection_relationships) =
+            let (remote_query_node, _, collection_relationships) =
                 execute::plan_remote_predicate(ndc_column_mapping, predicate)
                     .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
@@ -159,6 +159,7 @@ async fn explain_query_predicate<'s>(
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             let query_execution_plan = execute::ResolvedQueryExecutionPlan {
+                remote_predicates: plan::PredicateQueryTrees::new(),
                 query_node: resolved_query_node,
                 collection: target_model_source.collection.clone(),
                 arguments: BTreeMap::new(),

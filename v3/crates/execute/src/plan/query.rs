@@ -19,6 +19,7 @@ pub type ResolvedQueryExecutionPlan = QueryExecutionPlan<filter::ResolvedFilterE
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QueryExecutionPlan<TFilterExpression> {
+    pub remote_predicates: filter::PredicateQueryTrees,
     pub query_node: QueryNode<TFilterExpression>,
     /// The name of a collection
     pub collection: CollectionName,
@@ -39,6 +40,7 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
         resolve_context: &ResolveFilterExpressionContext<'_>,
     ) -> Result<ResolvedQueryExecutionPlan, error::FieldError> {
         let QueryExecutionPlan {
+            remote_predicates,
             query_node,
             collection,
             arguments,
@@ -47,6 +49,7 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
             data_connector,
         } = self;
         let query_request = QueryExecutionPlan {
+            remote_predicates,
             query_node: query_node.resolve(resolve_context).await?,
             collection,
             arguments: arguments::resolve_arguments(resolve_context, arguments).await?,

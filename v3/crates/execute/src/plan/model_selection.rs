@@ -52,6 +52,7 @@ pub(crate) fn plan_query_execution<'s>(
     // collection relationships from order_by clause
     relationships::collect_relationships_from_order_by(ir, &mut collection_relationships)?;
     let execution_node = query::UnresolvedQueryExecutionPlan {
+        remote_predicates: filter::PredicateQueryTrees::new(),
         query_node: query,
         collection: ir.collection.clone(),
         arguments: arguments::plan_arguments(&ir.arguments, &mut collection_relationships)?,

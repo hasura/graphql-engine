@@ -17,9 +17,12 @@ async fn resolve_filter_expression(
     relationships: &mut BTreeMap<plan_types::NdcRelationshipName, execute::plan::Relationship>,
     http_context: &HttpContext,
 ) -> Result<ResolvedFilterExpression, PlanError> {
-    let filter_plan = execute::plan::plan_expression(filter_ir, relationships).map_err(|e| {
-        PlanError::Internal(format!("error constructing permission filter plan: {e}"))
-    })?;
+    let filter_plan = execute::plan::plan_expression(
+        filter_ir,
+        relationships,
+        &mut execute::plan::PredicateQueryTrees::new(),
+    )
+    .map_err(|e| PlanError::Internal(format!("error constructing permission filter plan: {e}")))?;
 
     // TODO: this thing has to change, need to be pushed into the
     // execution plan. We shouldn't be running this in the planning phase

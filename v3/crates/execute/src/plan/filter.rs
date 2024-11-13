@@ -2,6 +2,7 @@ use async_recursion::async_recursion;
 use indexmap::{IndexMap, IndexSet};
 use std::collections::BTreeMap;
 use tracing_util::SpanVisibility;
+use uuid::Uuid;
 
 use super::error as plan_error;
 use super::field;
@@ -26,31 +27,76 @@ pub(crate) fn plan_filter_expression<'s>(
     relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
 ) -> Result<Option<plan_types::Expression<'s>>, plan_error::Error> {
     let mut expressions = Vec::new();
+    let mut remote_predicates = PredicateQueryTrees::new();
 
     if let Some(filter) = permission_filter {
-        expressions.push(plan_expression(filter, relationships)?);
+        expressions.push(plan_expression(
+            filter,
+            relationships,
+            &mut remote_predicates,
+        )?);
     }
 
     if let Some(filter) = relationship_join_filter {
-        expressions.push(plan_expression(filter, relationships)?);
+        expressions.push(plan_expression(
+            filter,
+            relationships,
+            &mut remote_predicates,
+        )?);
     }
 
     if let Some(filter) = &query_filter.additional_filter {
-        expressions.push(plan_expression(filter, relationships)?);
+        expressions.push(plan_expression(
+            filter,
+            relationships,
+            &mut remote_predicates,
+        )?);
     }
 
     if let Some(query_where_expression) = &query_filter.where_clause {
-        let planned_expression = plan_expression(query_where_expression, relationships)?;
+        let planned_expression = plan_expression(
+            query_where_expression,
+            relationships,
+            &mut remote_predicates,
+        )?;
         expressions.push(planned_expression);
     }
 
     Ok(plan_types::Expression::mk_and(expressions).remove_always_true_expression())
 }
 
+/// A tree of queries that are used to execute remote predicates
+#[derive(Debug, Clone, PartialEq)]
+pub struct PredicateQueryTree {
+    pub query: query::ResolvedQueryExecutionPlan,
+    pub children: PredicateQueryTrees,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PredicateQueryTrees(pub BTreeMap<Uuid, PredicateQueryTree>);
+
+impl Default for PredicateQueryTrees {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl PredicateQueryTrees {
+    pub fn new() -> Self {
+        Self(BTreeMap::new())
+    }
+    pub fn insert(&mut self, value: PredicateQueryTree) -> Uuid {
+        let key = Uuid::new_v4();
+        self.0.insert(key, value);
+        key
+    }
+}
+
 /// Plan the expression IR type.
 pub fn plan_expression<'s, 'a>(
     expression: &'a plan_types::Expression<'s>,
     relationships: &'a mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
+    _remote_predicates: &'a mut PredicateQueryTrees,
 ) -> Result<plan_types::Expression<'s>, plan_error::Error> {
     match expression {
         plan_types::Expression::And {
@@ -58,7 +104,7 @@ pub fn plan_expression<'s, 'a>(
         } => {
             let mut results = Vec::new();
             for and_expression in and_expressions {
-                let result = plan_expression(and_expression, relationships)?;
+                let result = plan_expression(and_expression, relationships, _remote_predicates)?;
                 results.push(result);
             }
             Ok(plan_types::Expression::mk_and(results))
@@ -68,7 +114,7 @@ pub fn plan_expression<'s, 'a>(
         } => {
             let mut results = Vec::new();
             for or_expression in or_expressions {
-                let result = plan_expression(or_expression, relationships)?;
+                let result = plan_expression(or_expression, relationships, _remote_predicates)?;
                 results.push(result);
             }
             Ok(plan_types::Expression::mk_or(results))
@@ -76,7 +122,7 @@ pub fn plan_expression<'s, 'a>(
         plan_types::Expression::Not {
             expression: not_expression,
         } => {
-            let result = plan_expression(not_expression, relationships)?;
+            let result = plan_expression(not_expression, relationships, _remote_predicates)?;
             Ok(plan_types::Expression::mk_not(result))
         }
         plan_types::Expression::LocalField(local_field_comparison) => Ok(
@@ -87,39 +133,42 @@ pub fn plan_expression<'s, 'a>(
             field_path,
             column,
         } => {
-            let resolved_predicate = plan_expression(predicate, relationships)?;
+            let resolved_predicate = plan_expression(predicate, relationships, _remote_predicates)?;
             Ok(plan_types::Expression::LocalNestedArray {
                 column: column.clone(),
                 field_path: field_path.clone(),
                 predicate: Box::new(resolved_predicate),
             })
         }
-        plan_types::Expression::RelationshipNdcPushdown {
+        plan_types::Expression::RelationshipLocalComparison {
             relationship,
             predicate,
             info,
         } => {
-            let relationship_filter = plan_expression(predicate, relationships)?;
+            let relationship_filter =
+                plan_expression(predicate, relationships, _remote_predicates)?;
             relationships.insert(
                 relationship.clone(),
                 process_model_relationship_definition(info)?,
             );
 
-            Ok(plan_types::Expression::RelationshipNdcPushdown {
+            Ok(plan_types::Expression::RelationshipLocalComparison {
                 relationship: relationship.clone(),
                 predicate: Box::new(relationship_filter),
                 info: info.clone(),
             })
         }
-        plan_types::Expression::RelationshipEngineResolved {
+        plan_types::Expression::RelationshipRemoteComparison {
             relationship,
             target_model_name,
             target_model_source,
             ndc_column_mapping,
             predicate,
         } => {
+            // TODO: Plan the remote relationship comparison expression and populate the remote_predicates
+
             // This needs to be resolved in engine itself, further planning is deferred until it is resolved
-            Ok(plan_types::Expression::RelationshipEngineResolved {
+            Ok(plan_types::Expression::RelationshipRemoteComparison {
                 relationship: relationship.clone(),
                 target_model_name,
                 target_model_source: target_model_source.clone(),
@@ -137,12 +186,14 @@ pub fn plan_remote_predicate<'s, 'a>(
 ) -> Result<
     (
         query::UnresolvedQueryNode<'s>,
+        PredicateQueryTrees,
         BTreeMap<NdcRelationshipName, relationships::Relationship>,
     ),
     plan_error::Error,
 > {
     let mut relationships = BTreeMap::new();
-    let planned_predicate = plan_expression(predicate, &mut relationships)?;
+    let mut remote_predicates = PredicateQueryTrees::new();
+    let planned_predicate = plan_expression(predicate, &mut relationships, &mut remote_predicates)?;
 
     let query_node = query::QueryNode {
         limit: None,
@@ -153,7 +204,7 @@ pub fn plan_remote_predicate<'s, 'a>(
         fields: Some(build_ndc_query_fields(ndc_column_mapping)),
     };
 
-    Ok((query_node, relationships))
+    Ok((query_node, remote_predicates, relationships))
 }
 
 /// Generate the NDC query fields with the mapped NDC columns in a remote relationship.
@@ -197,6 +248,9 @@ pub enum ResolvedFilterExpression {
     LocalRelationshipComparison {
         relationship: NdcRelationshipName,
         predicate: Box<ResolvedFilterExpression>,
+    },
+    RemoteRelationshipComparison {
+        remote_predicate_id: Uuid,
     },
 }
 
@@ -349,7 +403,7 @@ where
         plan_types::Expression::LocalField(local_field_comparison) => Ok(
             ResolvedFilterExpression::LocalFieldComparison(local_field_comparison),
         ),
-        plan_types::Expression::RelationshipNdcPushdown {
+        plan_types::Expression::RelationshipLocalComparison {
             relationship,
             predicate,
             info: _,
@@ -372,7 +426,7 @@ where
                 predicate: Box::new(resolved_expression),
             })
         }
-        plan_types::Expression::RelationshipEngineResolved {
+        plan_types::Expression::RelationshipRemoteComparison {
             relationship,
             target_model_name: _,
             target_model_source,
@@ -397,7 +451,7 @@ where
                     SpanVisibility::User,
                     || {
                         Box::pin(async {
-                            let (remote_query_node, collection_relationships) =
+                            let (remote_query_node, _, collection_relationships) =
                                 super::filter::plan_remote_predicate(
                                     &ndc_column_mapping,
                                     &predicate,
@@ -409,6 +463,7 @@ where
                                 })?;
 
                             let query_execution_plan = query::QueryExecutionPlan {
+                                remote_predicates: PredicateQueryTrees::new(),
                                 query_node: remote_query_node.resolve(resolve_context).await?,
                                 collection: target_model_source.collection.clone(),
                                 arguments: BTreeMap::new(),

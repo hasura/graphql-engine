@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 mod arguments;
@@ -15,7 +16,8 @@ pub(crate) mod selection_set;
 pub use arguments::{Argument, MutationArgument, ResolvedArgument};
 pub use field::{ResolvedField, ResolvedNestedField};
 pub use filter::{
-    plan_expression, resolve_expression, ResolveFilterExpressionContext, ResolvedFilterExpression,
+    plan_expression, resolve_expression, PredicateQueryTrees, ResolveFilterExpressionContext,
+    ResolvedFilterExpression,
 };
 pub use mutation::ResolvedMutationExecutionPlan;
 pub use query::{ResolvedQueryExecutionPlan, ResolvedQueryNode, UnresolvedQueryNode};
@@ -29,6 +31,7 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use serde_json as json;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable};
+use uuid::Uuid;
 
 use super::ndc;
 use super::process_response::process_response;
@@ -908,6 +911,29 @@ async fn resolve_ndc_query_execution<'s, 'ir>(
         response_rowsets,
     )
     .await
+}
+
+/// A tree of predicate query results; whose values are used to fill up the main
+/// query node
+#[derive(Debug, PartialEq, Clone)]
+pub struct PredicateQueryResultTree {
+    pub result: ResolvedFilterExpression,
+    pub children: PredicateQueryResultTrees,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct PredicateQueryResultTrees(pub BTreeMap<Uuid, PredicateQueryResultTree>);
+
+impl Default for PredicateQueryResultTrees {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl PredicateQueryResultTrees {
+    pub fn new() -> Self {
+        Self(BTreeMap::new())
+    }
 }
 
 async fn execute_ndc_query<'s, 'ir>(

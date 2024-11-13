@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 use super::arguments;
 use super::error;
 use super::field;
+use super::filter::PredicateQueryTrees;
 use super::mutation;
 use super::query;
 use super::relationships;
@@ -69,6 +70,7 @@ pub(crate) fn plan_query_execution<'s>(
     let (query_node, jl) = plan_query_node(&ir.command_info, &mut collection_relationships)?;
 
     let query_request = query::UnresolvedQueryExecutionPlan {
+        remote_predicates: PredicateQueryTrees::new(),
         query_node,
         collection: CollectionName::from(ir.function_name.as_str()),
         arguments: arguments.clone(),

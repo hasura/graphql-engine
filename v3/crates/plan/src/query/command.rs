@@ -308,6 +308,7 @@ fn return_type_shape(output_type: &QualifiedTypeReference) -> Option<OutputShape
 
 pub fn execute_plan_from_function(function: &NDCFunction) -> ResolvedQueryExecutionPlan {
     ResolvedQueryExecutionPlan {
+        remote_predicates: execute::plan::PredicateQueryTrees::new(),
         query_node: ResolvedQueryNode {
             fields: Some(
                 function
