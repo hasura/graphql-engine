@@ -420,7 +420,7 @@ fn get_relationship_capabilities(
     let capabilities = &resolved_data_connector.capabilities;
 
     // if relationship is remote, error if `foreach` capability is not available
-    if capabilities.query.variables.is_none()
+    if capabilities.supports_query_variables
         && Some(&data_connector.name) != target_data_connector.as_ref()
     {
         return Err(Error::ObjectRelationshipError {
@@ -432,11 +432,11 @@ fn get_relationship_capabilities(
         });
     };
 
-    let relationships = capabilities.relationships.is_some();
+    let relationships = capabilities.supports_relationships.is_some();
     let relationship_comparison = capabilities
-        .relationships
+        .supports_relationships
         .as_ref()
-        .is_some_and(|r| r.relation_comparisons.is_some());
+        .is_some_and(|r| r.supports_relation_comparisons);
 
     Ok(Some(RelationshipCapabilities {
         foreach: (),

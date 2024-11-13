@@ -179,7 +179,11 @@ fn resolve_aggregate_expression_data_connector_mapping(
         // If our field contains a nested object type
         if let Some(field_object_type_name) = field_object_type_name {
             // Check that the data connector supports aggregation over nested object fields
-            if !data_connector_capabilities.supports_nested_object_aggregations {
+            if !data_connector_capabilities
+                .supports_aggregates
+                .as_ref()
+                .is_some_and(|agg| agg.supports_nested_object_aggregations)
+            {
                 return Err(aggregates::AggregateExpressionError::NestedObjectAggregatesNotSupportedByDataConnector {
                     name: aggregate_expression.name.clone(),
                     data_connector_name: data_connector_name.clone(),

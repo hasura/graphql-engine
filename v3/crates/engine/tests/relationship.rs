@@ -467,6 +467,17 @@ fn test_relationships_permissions_source_type_permission() -> anyhow::Result<()>
     )
 }
 
+#[test]
+fn test_relationships_nested_selection() -> anyhow::Result<()> {
+    let test_path_string = "execute/relationships/nested/selection";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
 // Miscellaneous tests
 
 // What is being tested?

@@ -95,6 +95,7 @@ services:
     ports:
       - 8080:8080
     environment:
+      HASURA_SERVICE_TOKEN_SECRET: super sekret
       CONNECTION_URI: "postgresql://postgres:password@postgres"
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
       OTEL_SERVICE_NAME: "ndc-postgres"

@@ -100,7 +100,15 @@
               "capabilities": {
                 "supported_ndc_version": "V01",
                 "supports_explaining_queries": true,
-                "supports_nested_object_filtering": true
+                "supports_nested_object_filtering": true,
+                "supports_aggregates": {},
+                "supports_query_variables": true,
+                "supports_relationships": {
+                  "supports_relation_comparisons": true,
+                  "supports_nested_relationships": {
+                    "supports_nested_array_selection": true
+                  }
+                }
               }
             },
             "collection": "article",

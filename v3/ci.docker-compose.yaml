@@ -1,3 +1,5 @@
+name: v3-engine-tests
+
 services:
   postgres:
     extends:

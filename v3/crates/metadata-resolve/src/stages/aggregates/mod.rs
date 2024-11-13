@@ -400,7 +400,7 @@ fn resolve_aggregation_function(
                         name: aggregate_expression_name.clone(),
                         data_connector_name: data_connector_name.clone(),
                 })?;
-            if data_connector.capabilities.query.aggregates.is_none() {
+            if data_connector.capabilities.supports_aggregates.is_none() {
                 return Err(AggregateExpressionError::AggregateOperandDataConnectorNotSupported {
                     name: aggregate_expression_name.clone(),
                     data_connector_name: data_connector_name.clone(),
