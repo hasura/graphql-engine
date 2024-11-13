@@ -8,6 +8,10 @@
 
 ### Changed
 
+## [v2024.11.13]
+
+Minor internal refactors
+
 ## [v2024.11.11]
 
 ### Changed
@@ -752,7 +756,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.11...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.13...HEAD
+[v2024.11.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.13
 [v2024.11.11]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.11
 [v2024.11.05]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.05
 [v2024.10.30]: https://github.com/hasura/v3-engine/releases/tag/v2024.10.30
