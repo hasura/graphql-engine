@@ -75,10 +75,7 @@ fn expression_from_jsonapi_filter(
                 nested: None,
             });
 
-            // we add `_` at the start, this is not what we want,
-            // what we really want is to look at the available operators in the
-            // boolean expression
-            let operator = open_dds::types::OperatorName::new(format!("_{operator}").into());
+            let operator = open_dds::types::OperatorName::new(operator.into());
 
             let comparison = BooleanExpression::Comparison {
                 operand: field_operand,

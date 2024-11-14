@@ -3827,7 +3827,16 @@
             "operand": {
               "object": {
                 "type": "MediaType",
-                "comparableFields": [],
+                "comparableFields": [
+                  {
+                    "fieldName": "MediaTypeId",
+                    "booleanExpressionType": "int4_with_fancy_equals_bool_exp"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "booleanExpressionType": "varchar_bool_exp"
+                  }
+                ],
                 "comparableRelationships": []
               }
             },
@@ -6167,7 +6176,11 @@
                 "type": "varchar",
                 "comparisonOperators": [
                   {
-                    "name": "_like",
+                    "name": "eq",
+                    "argumentType": "varchar"
+                  },
+                  {
+                    "name": "like",
                     "argumentType": "varchar"
                   }
                 ],
@@ -6175,12 +6188,18 @@
                   {
                     "dataConnectorName": "custom",
                     "dataConnectorScalarType": "String",
-                    "operatorMapping": {}
+                    "operatorMapping": {
+                      "eq": "_eq",
+                      "like": "_like"
+                    }
                   },
                   {
                     "dataConnectorName": "db",
                     "dataConnectorScalarType": "varchar",
-                    "operatorMapping": {}
+                    "operatorMapping": {
+                      "eq": "_eq",
+                      "like": "_like"
+                    }
                   }
                 ]
               }
@@ -6243,12 +6262,19 @@
             "operand": {
               "scalar": {
                 "type": "int4",
-                "comparisonOperators": [],
+                "comparisonOperators": [
+                  {
+                    "name": "eq",
+                    "argumentType": "int4"
+                  }
+                ],
                 "dataConnectorOperatorMapping": [
                   {
                     "dataConnectorName": "db",
                     "dataConnectorScalarType": "int4",
-                    "operatorMapping": {}
+                    "operatorMapping": {
+                      "eq": "_eq"
+                    }
                   }
                 ]
               }
@@ -6261,6 +6287,49 @@
             },
             "graphql": {
               "typeName": "Int4_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "int4_with_fancy_equals_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "int4",
+                "comparisonOperators": [
+                  {
+                    "name": "equals",
+                    "argumentType": "Int"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "custom",
+                    "dataConnectorScalarType": "Int",
+                    "operatorMapping": {
+                      "equals": "_eq"
+                    }
+                  },
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "int4",
+                    "operatorMapping": {
+                      "equals": "_eq"
+                    }
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "Fancy_Int4_Comparison_Exp"
             }
           }
         },

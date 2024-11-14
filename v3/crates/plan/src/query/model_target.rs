@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 
 use execute::{plan::ResolvedFilterExpression, HttpContext};
 use hasura_authn_core::Session;
-use metadata_resolve::FilterPermission;
+use metadata_resolve::{FilterPermission, ModelExpressionType};
 use open_dds::query::ModelTarget;
 
 // Turn a `plan_types::Expression` into `execute::ResolvedFilterExpression`
@@ -145,19 +145,32 @@ pub async fn model_target_to_ndc_query(
         resolved_arguments.insert(argument_name.clone(), resolved_argument_value.clone());
     }
 
-    let model_filter = model_target
-        .filter
-        .as_ref()
-        .map(|expr| {
-            to_resolved_filter_expr(
+    // if we are going to filter our results, we must have a `BooleanExpressionType` defined for
+    // our model
+    let model_filter = match &model_target.filter {
+        Some(expr) => {
+            let boolean_expression_type = match &model.filter_expression_type {
+                Some(ModelExpressionType::BooleanExpressionType(boolean_expression_type)) => {
+                    Ok(boolean_expression_type)
+                }
+                _ => Err(PlanError::Internal(format!(
+                    "Cannot filter model {} as no boolean expression is defined for it",
+                    model.model.name
+                ))),
+            }?;
+
+            Ok(Some(to_resolved_filter_expr(
                 metadata,
                 &model_source.type_mappings,
                 &model.model.data_type,
                 model_object_type,
+                boolean_expression_type,
                 expr,
-            )
-        })
-        .transpose()?;
+                &model_source.data_connector.name,
+            )?))
+        }
+        _ => Ok(None),
+    }?;
 
     let filter = match (model_filter, permission_filter) {
         (None, filter) | (filter, None) => filter,

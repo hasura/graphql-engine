@@ -611,7 +611,6 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
         let http_context = Arc::new(test_ctx.http_context);
 
         // Execute the test
-
         snapshot_sql(
             &catalog,
             &gds.metadata,
