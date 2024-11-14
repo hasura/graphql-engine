@@ -5,6 +5,12 @@ const path = require('path');
 const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
+const BOT_ROUTES = {
+  development: 'ws://localhost:8000/bot/query',
+  production: 'wss://website-api.hasura.io/docs-services/docs-server/bot/query',
+  staging: 'wss://website-api.stage.hasura.io/docs-services/docs-server/bot/query',
+};
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Hasura GraphQL Docs',
@@ -20,15 +26,19 @@ const config = {
   staticDirectories: ['static', 'public'],
   customFields: {
     docsBotEndpointURL: (() => {
-      switch (process.env.release_mode) {
-        case 'development':
-          return 'ws://localhost:8000/hasura-docs-ai';
-        case 'production':
-          return 'wss://website-api.hasura.io/chat-bot/hasura-docs-ai';
-        case 'staging':
-          return 'wss://website-api.stage.hasura.io/chat-bot/hasura-docs-ai';
-        default:
-          return 'ws://localhost:8000/hasura-docs-ai'; // default to development if no match
+      if (process.env.CF_PAGES === '1') {
+        return BOT_ROUTES.staging; // if we're on CF pages, use the staging environment
+      } else {
+        switch (process.env.release_mode) {
+          case 'development':
+            return BOT_ROUTES.development; // if we're on the development environment, use the local server
+          case 'production':
+            return BOT_ROUTES.production;
+          case 'staging':
+            return BOT_ROUTES.production; // if we're in full staging on GCP and not cloudflare pages, use the production environment
+          default:
+            return BOT_ROUTES.development; // default to development if no match (env var not generally set on local dev)
+        }
       }
     })(),
     hasuraVersion: 2,
