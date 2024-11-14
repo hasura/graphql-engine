@@ -38,6 +38,7 @@ impl ShouldBeAnError for Warning {
         match self {
             Warning::DataConnectorIssue(issue) => issue.should_be_an_error(flags),
             Warning::BooleanExpressionIssue(issue) => issue.should_be_an_error(flags),
+            Warning::ObjectBooleanExpressionIssue(issue) => issue.should_be_an_error(flags),
             Warning::ScalarTypesIssue(issue) => issue.should_be_an_error(flags),
             Warning::ModelGraphqlIssue(issue) => issue.should_be_an_error(flags),
             Warning::CommandIssue(issue) => issue.should_be_an_error(flags),

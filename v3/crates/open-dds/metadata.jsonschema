@@ -3490,6 +3490,10 @@
         "require_unique_model_graphql_names": {
           "default": false,
           "type": "boolean"
+        },
+        "disallow_object_boolean_expression_type": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -3534,7 +3538,8 @@
                 "json_session_variables": false,
                 "disallow_array_field_compared_with_scalar_boolean_type": false,
                 "allow_boolean_expression_fields_without_graphql": false,
-                "require_unique_model_graphql_names": false
+                "require_unique_model_graphql_names": false,
+                "disallow_object_boolean_expression_type": false
               },
               "allOf": [
                 {
@@ -3590,7 +3595,8 @@
                 "json_session_variables": false,
                 "disallow_array_field_compared_with_scalar_boolean_type": false,
                 "allow_boolean_expression_fields_without_graphql": false,
-                "require_unique_model_graphql_names": false
+                "require_unique_model_graphql_names": false,
+                "disallow_object_boolean_expression_type": false
               },
               "allOf": [
                 {
@@ -3636,7 +3642,8 @@
                 "json_session_variables": false,
                 "disallow_array_field_compared_with_scalar_boolean_type": false,
                 "allow_boolean_expression_fields_without_graphql": false,
-                "require_unique_model_graphql_names": false
+                "require_unique_model_graphql_names": false,
+                "disallow_object_boolean_expression_type": false
               },
               "allOf": [
                 {

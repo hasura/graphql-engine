@@ -47,6 +47,9 @@ pub struct Flags {
 
     #[opendd(default, rename = "require_unique_model_graphql_names")]
     pub require_unique_model_graphql_names: bool,
+
+    #[opendd(default, rename = "disallow_object_boolean_expression_type")]
+    pub disallow_object_boolean_expression_type: bool,
 }
 
 impl Flags {
@@ -65,6 +68,7 @@ impl Flags {
             disallow_array_field_compared_with_scalar_boolean_type: false,
             allow_boolean_expression_fields_without_graphql: false,
             require_unique_model_graphql_names: false,
+            disallow_object_boolean_expression_type: false,
         }
     }
 
