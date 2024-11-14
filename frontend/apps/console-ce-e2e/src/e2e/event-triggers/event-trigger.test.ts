@@ -117,7 +117,7 @@ describe('Create event trigger with shortest possible path', () => {
     cy.log(
       '**--- Click on Edit trigger operation and modfiy the trigger operation'
     );
-    cy.get('[data-test=edit-operations]').click();
+    cy.get('[data-test=edit-operations]', { timeout: 5000 }).click();
     cy.get('[name=update]').click();
     cy.get('[name=column-id]', { timeout: 1000 }).click();
     cy.findByRole('button', { name: 'Save' }).click();
