@@ -75,7 +75,7 @@ query MyQuery {
 ```
 
 This will order by the value of the nested field `city` within the `location`
-JSONB column.
+column.
 
 - New metadata item `OrderByExpression`
 
