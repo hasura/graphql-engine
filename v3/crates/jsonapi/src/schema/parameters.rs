@@ -60,7 +60,7 @@ pub fn fields_parameter(model: &Model) -> oas3::spec::Parameter {
     }
 
     oas3::spec::Parameter {
-        name: format!("fields[{}]", model.name.name),
+        name: format!("fields[{}]", model.data_type.name),
         allow_empty_value: None,
         allow_reserved: None,
         content: None,

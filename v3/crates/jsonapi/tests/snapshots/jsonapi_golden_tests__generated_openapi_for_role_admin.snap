@@ -122,7 +122,7 @@ expression: generated_openapi
     },
     "/v1/rest/default/Articles": {
       "get": {
-        "summary": "Fetch article values",
+        "summary": "Fetch Article values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -143,7 +143,7 @@ expression: generated_openapi
             "example": "10"
           },
           {
-            "name": "fields[Articles]",
+            "name": "fields[Article]",
             "in": "query",
             "description": "Optional list of fields from Articles to include in response. If no fields are provided, all fields are returned",
             "schema": {
@@ -199,7 +199,7 @@ expression: generated_openapi
                         "properties": {
                           "_type": {
                             "enum": [
-                              "default_article"
+                              "default_Article"
                             ]
                           },
                           "attributes": {
@@ -336,7 +336,7 @@ expression: generated_openapi
     },
     "/v1/rest/default/Authors": {
       "get": {
-        "summary": "Fetch author values",
+        "summary": "Fetch Author values",
         "description": "top level Authors model description",
         "parameters": [
           {
@@ -358,7 +358,7 @@ expression: generated_openapi
             "example": "10"
           },
           {
-            "name": "fields[Authors]",
+            "name": "fields[Author]",
             "in": "query",
             "description": "Optional list of fields from Authors to include in response. If no fields are provided, all fields are returned",
             "schema": {
@@ -411,7 +411,7 @@ expression: generated_openapi
                         "properties": {
                           "_type": {
                             "enum": [
-                              "default_author"
+                              "default_Author"
                             ]
                           },
                           "attributes": {
@@ -1644,7 +1644,7 @@ expression: generated_openapi
             "example": "10"
           },
           {
-            "name": "fields[institutions]",
+            "name": "fields[institution]",
             "in": "query",
             "description": "Optional list of fields from institutions to include in response. If no fields are provided, all fields are returned",
             "schema": {

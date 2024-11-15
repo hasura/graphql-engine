@@ -5,7 +5,7 @@ use open_dds::{
     identifier,
     identifier::{Identifier, SubgraphName},
     models::ModelName,
-    types::FieldName,
+    types::{CustomTypeName, FieldName},
 };
 use serde::{Deserialize, Serialize};
 mod filter;
@@ -38,7 +38,7 @@ pub fn create_query_ir(
     // create the selection fields; include all fields of the model output type
     let mut selection = IndexMap::new();
     for field_name in model.type_fields.keys() {
-        if include_field(query_string, field_name, &model.name.name) {
+        if include_field(query_string, field_name, &model.data_type.name) {
             let field_name_ident = Identifier::new(field_name.as_str())
                 .map_err(|e| RequestError::BadRequest(e.into()))?;
 
@@ -118,23 +118,23 @@ fn validate_sparse_fields(
     model: &Model,
     query_string: &jsonapi_library::query::Query,
 ) -> Result<(), RequestError> {
-    let model_name_string = model.name.name.to_string();
+    let type_name_string = model.data_type.name.to_string();
     if let Some(fields) = &query_string.fields {
-        for (model_name, model_fields) in fields {
-            if *model_name == model_name_string {
-                for models_field in model_fields {
+        for (type_name, type_fields) in fields {
+            if *type_name == type_name_string {
+                for type_field in type_fields {
                     let string_fields: Vec<_> =
                         model.type_fields.keys().map(ToString::to_string).collect();
 
-                    if !string_fields.contains(models_field) {
+                    if !string_fields.contains(type_field) {
                         return Err(RequestError::BadRequest(format!(
-                            "Unknown field in sparse fields: {models_field}"
+                            "Unknown field in sparse fields: {type_field}"
                         )));
                     }
                 }
             } else {
                 return Err(RequestError::BadRequest(format!(
-                    "Unknown model in sparse fields: {model_name}"
+                    "Unknown type in sparse fields: {type_name}"
                 )));
             }
         }
@@ -143,30 +143,25 @@ fn validate_sparse_fields(
 }
 
 // given the sparse fields for this request, should be include a given field in the query?
-// this does not consider subgraphs at the moment - we match on `ModelName` not
-// `Qualified<ModelName>`.
-// This means that the below field is ambiguous where `Authors` model is defined in multiple
+// this does not consider subgraphs at the moment - we match on `CustomTypeName` not
+// `Qualified<CustomTypeName>`.
+// This means that the below field is ambiguous where `Authors` type is defined in multiple
 // subgraphs
 // fields[Authors]=author_id,first_name
 //
-// two possible solutions:
-// 1. make users qualify the name inline
-//
-// fields[subgraph.Authors]=author_id,first_name&fields[other.Authors]=author_id,last_name
-//
-// 2. much like we make users explicitly give GraphQL names to things, we
-// make them give JSONAPI models an unambiguous name in metadata, and the user provides that:
+// This will need to be solved when we make users give JSONAPI types explicit names
+// like we do in GraphQL
 //
 // fields[subgraphAuthors]=author_id,firstName&fields[otherAuthors]=author_id,last_name
 fn include_field(
     query_string: &jsonapi_library::query::Query,
     field_name: &FieldName,
-    model_name: &ModelName,
+    object_type_name: &CustomTypeName,
 ) -> bool {
     if let Some(fields) = &query_string.fields {
-        if let Some(model_fields) = fields.get(model_name.as_str()) {
-            for model_field in model_fields {
-                if model_field == field_name.as_str() {
+        if let Some(object_fields) = fields.get(object_type_name.0.as_str()) {
+            for object_field in object_fields {
+                if object_field == field_name.as_str() {
                     return true;
                 }
             }

@@ -12,7 +12,7 @@ expression: generated_openapi
   "paths": {
     "/v1/rest/default/Articles": {
       "get": {
-        "summary": "Fetch article values",
+        "summary": "Fetch Article values",
         "parameters": [
           {
             "name": "page[limit]",
@@ -33,7 +33,7 @@ expression: generated_openapi
             "example": "10"
           },
           {
-            "name": "fields[Articles]",
+            "name": "fields[Article]",
             "in": "query",
             "description": "Optional list of fields from Articles to include in response. If no fields are provided, all fields are returned",
             "schema": {
@@ -86,7 +86,7 @@ expression: generated_openapi
                         "properties": {
                           "_type": {
                             "enum": [
-                              "default_article"
+                              "default_Article"
                             ]
                           },
                           "attributes": {

@@ -8,7 +8,7 @@ DocumentData {
         Multiple(
             [
                 Resource {
-                    _type: "default_author",
+                    _type: "default_Author",
                     id: "1",
                     attributes: {
                         "first_name": String("John"),

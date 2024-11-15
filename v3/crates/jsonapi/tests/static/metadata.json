@@ -2057,7 +2057,7 @@
           "kind": "ObjectType",
           "version": "v1",
           "definition": {
-            "name": "article",
+            "name": "Article",
             "fields": [
               {
                 "name": "article_id",
@@ -2108,7 +2108,7 @@
             "name": "article_bool_exp",
             "operand": {
               "object": {
-                "type": "article",
+                "type": "Article",
                 "comparableFields": [
                   {
                     "fieldName": "author_id",
@@ -2141,7 +2141,7 @@
           "kind": "TypePermissions",
           "version": "v1",
           "definition": {
-            "typeName": "article",
+            "typeName": "Article",
             "permissions": [
               {
                 "role": "admin",
@@ -2168,7 +2168,7 @@
           "kind": "ObjectType",
           "version": "v1",
           "definition": {
-            "name": "author",
+            "name": "Author",
             "description": "author description",
             "fields": [
               {
@@ -2221,7 +2221,7 @@
             "name": "author_bool_exp",
             "operand": {
               "object": {
-                "type": "author",
+                "type": "Author",
                 "comparableFields": [
                   {
                     "fieldName": "author_id",
@@ -2254,7 +2254,7 @@
           "kind": "TypePermissions",
           "version": "v1",
           "definition": {
-            "typeName": "author",
+            "typeName": "Author",
             "permissions": [
               {
                 "role": "admin",
@@ -2270,7 +2270,7 @@
           "version": "v1",
           "definition": {
             "name": "Articles",
-            "objectType": "article",
+            "objectType": "Article",
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
@@ -2376,7 +2376,7 @@
           "version": "v1",
           "definition": {
             "name": "Authors",
-            "objectType": "author",
+            "objectType": "Author",
             "description": "top level Authors model description",
             "globalIdSource": true,
             "source": {
@@ -5306,7 +5306,7 @@
         },
         {
           "definition": {
-            "sourceType": "article",
+            "sourceType": "Article",
             "name": "AuthorFromCommand",
             "description": "AuthorFromCommand description",
             "target": {
@@ -5338,8 +5338,8 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "sourceType": "author",
-            "name": "Articles",
+            "sourceType": "Author",
+            "name": "articles",
             "target": {
               "model": {
                 "name": "Articles",
@@ -5370,7 +5370,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "sourceType": "article",
+            "sourceType": "Article",
             "name": "Author",
             "target": {
               "model": {

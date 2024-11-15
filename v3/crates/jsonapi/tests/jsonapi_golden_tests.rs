@@ -24,7 +24,7 @@ fn test_get_succeeding_requests() {
             let TestRequest { query, model_name } = test_request_setup(path);
 
             // always test in `default` subgraph for now
-            let path = format!("/default/{model_name}");
+            let request_path = format!("/default/{model_name}");
 
             let http_context = execute::HttpContext {
                 client: reqwest::Client::new(),
@@ -40,7 +40,7 @@ fn test_get_succeeding_requests() {
                 &jsonapi_catalog,
                 metadata.into(),
                 axum::http::method::Method::GET,
-                axum::http::uri::Uri::from_str(&path).unwrap(),
+                axum::http::uri::Uri::from_str(&request_path).unwrap(),
                 query,
             )
             .await;
@@ -52,7 +52,7 @@ fn test_get_succeeding_requests() {
                         result
                     );
                 }
-                Err(e) => panic!("expected success, instead got {e}"),
+                Err(e) => panic!("expected success for {path:?}, instead got {e}"),
             }
         });
     });
@@ -75,7 +75,7 @@ fn test_get_failing_requests() {
             let TestRequest { query, model_name } = test_request_setup(path);
 
             // always test in `default` subgraph for now
-            let path = format!("/default/{model_name}");
+            let request_path = format!("/default/{model_name}");
 
             let http_context = execute::HttpContext {
                 client: reqwest::Client::new(),
@@ -91,7 +91,7 @@ fn test_get_failing_requests() {
                 &jsonapi_catalog,
                 metadata.into(),
                 axum::http::method::Method::GET,
-                axum::http::uri::Uri::from_str(&path).unwrap(),
+                axum::http::uri::Uri::from_str(&request_path).unwrap(),
                 query,
             )
             .await;
