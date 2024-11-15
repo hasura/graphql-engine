@@ -41,5 +41,13 @@ wait_for_server
 docker run --rm --network container:graphql-engine curlimages/curl -s -f   -d'{"type" : "export_metadata", "args" : {} }' localhost:8080/v1/query | jq -j '.' | diff validation/metadata.json -
 # get list of migrations applied from graphql-engine server
 docker run --rm --network container:graphql-engine curlimages/curl -s -f   -d'{"type" : "run_sql", "args" : {"sql": "select * from hdb_catalog.schema_migrations"} }' localhost:8080/v1/query | jq -j '.' | diff validation/schema_migrations.json -
+
+# stop the graphql-engine container
+docker compose stop graphql-engine
+# overwrite existing metadata with intentionally inconsistent metadata 
+docker cp bad_metadata/tables.yaml graphql-engine:/hasura-metadata/tables.yaml
+
+# TODO: start up the container with inconsistent metadata disallowed, verify that it fails to start
+
 # delete postgres and graphql-engine
 docker compose down -v
