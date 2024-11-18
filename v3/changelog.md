@@ -8,6 +8,41 @@
 
 ### Changed
 
+## [v2024.11.18]
+
+### Added
+
+#### Subscriptions
+
+Adds real-time data capabilities through GraphQL subscriptions. Available for a
+model's select unique, select many, and aggregate queries.
+
+For fresh DDN projects, subscription support is automatically enabled when
+adding models via `ddn model add`. For existing projects, run
+`ddn codemod upgrade-graphqlconfig-subscriptions` to enable.
+
+Configure
+[polling intervals](https://hasura.io/docs/3.0/graphql-api/subscriptions/#polling-interval)
+in your model's metadata (defaults to 1000ms). Use the `allowSubscriptions` flag
+in
+[select permissions](https://hasura.io/docs/3.0/graphql-api/subscriptions/#permissions)
+to control role access.
+
+Example subscription:
+
+```graphql
+subscription UserNotificationSubscription {
+  notifications(where: { user_id: { _eq: 123 } }) {
+    id
+    created_at
+    message
+  }
+}
+```
+
+For more details, see the
+[subscriptions documentation](https://hasura.io/docs/3.0/graphql-api/subscriptions/).
+
 ## [v2024.11.13]
 
 Minor internal refactors
@@ -756,7 +791,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.13...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.18...HEAD
+[v2024.11.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.18
 [v2024.11.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.13
 [v2024.11.11]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.11
 [v2024.11.05]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.05
