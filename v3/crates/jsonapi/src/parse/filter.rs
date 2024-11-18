@@ -1,4 +1,4 @@
-use crate::Model;
+use crate::catalog::Model;
 use indexmap::IndexMap;
 use metadata_resolve::{ModelExpressionType, Qualified};
 use open_dds::query::{BooleanExpression, ObjectFieldOperand, ObjectFieldTarget, Operand, Value};

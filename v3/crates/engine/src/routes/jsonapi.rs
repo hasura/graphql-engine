@@ -67,10 +67,12 @@ async fn handle_rest_schema(
         "Handle schema",
         SpanVisibility::User,
         || match state.jsonapi_catalog.state_per_role.get(&session.role) {
-            Some(jsonapi_state) => {
-                let spec = jsonapi::openapi_schema(jsonapi_state);
-                JsonApiSchemaResponse { spec }
-            }
+            Some(jsonapi_state) => match jsonapi::openapi_schema(jsonapi_state) {
+                Ok(spec) => JsonApiSchemaResponse { spec },
+                Err(_) => JsonApiSchemaResponse {
+                    spec: jsonapi::empty_schema(),
+                },
+            },
             None => JsonApiSchemaResponse {
                 spec: jsonapi::empty_schema(),
             },

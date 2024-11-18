@@ -3,105 +3,211 @@ source: crates/jsonapi/tests/jsonapi_golden_tests.rs
 expression: generated_openapi
 ---
 {
-  "openapi": "3.1.0",
-  "info": {
-    "title": "Hasura JSONAPI (alpha)",
-    "description": "REST API generated to match the JSON:API spec: https://jsonapi.org",
-    "version": "0.1"
-  },
-  "paths": {
-    "/v1/rest/default/Album": {
-      "get": {
-        "summary": "Fetch Album values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
+  "Ok": {
+    "openapi": "3.1.0",
+    "info": {
+      "title": "Hasura JSONAPI (alpha)",
+      "description": "REST API generated to match the JSON:API spec: https://jsonapi.org",
+      "version": "0.1"
+    },
+    "paths": {
+      "/v1/rest/default/Album": {
+        "get": {
+          "summary": "Fetch Album values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
             },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
             },
-            "example": "10"
-          },
-          {
-            "name": "fields[Album]",
-            "in": "query",
-            "description": "Optional list of fields from Album to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "AlbumId",
-                  "Title"
-                ]
-              }
+            {
+              "name": "fields[Album]",
+              "in": "query",
+              "description": "Optional list of fields from Album to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "AlbumId",
+                    "Title"
+                  ]
+                }
+              },
+              "example": "AlbumId,Title"
             },
-            "example": "AlbumId,Title"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Album to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "AlbumId",
-                  "-AlbumId",
-                  "Title",
-                  "-Title"
-                ]
-              }
-            },
-            "example": "AlbumId,-Title"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Album response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Album"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "AlbumId": {
-                                "type": "object"
-                              },
-                              "Title": {
-                                "type": "object"
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Album to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "AlbumId",
+                    "-AlbumId",
+                    "Title",
+                    "-Title"
+                  ]
+                }
+              },
+              "example": "AlbumId,-Title"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Album response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Album"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "AlbumId": {
+                                  "type": "object"
+                                },
+                                "Title": {
+                                  "type": "object"
+                                }
                               }
+                            },
+                            "id": {
+                              "type": "string"
                             }
-                          },
-                          "id": {
-                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/Articles": {
+        "get": {
+          "summary": "Fetch Article values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[Article]",
+              "in": "query",
+              "description": "Optional list of fields from Articles to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "article_id",
+                    "author_id"
+                  ]
+                }
+              },
+              "example": "article_id,author_id"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Articles to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "article_id",
+                    "-article_id",
+                    "author_id",
+                    "-author_id"
+                  ]
+                }
+              },
+              "example": "article_id,-author_id"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Articles response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Article"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "article_id": {
+                                  "type": "integer"
+                                },
+                                "author_id": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
                           }
                         }
                       }
@@ -114,105 +220,55 @@ expression: generated_openapi
         }
       }
     },
-    "/v1/rest/default/Articles": {
-      "get": {
-        "summary": "Fetch Article values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
+    "components": {
+      "schemas": {
+        "default_Album": {
+          "type": "object",
+          "properties": {
+            "AlbumId": {
+              "type": "object"
             },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[Article]",
-            "in": "query",
-            "description": "Optional list of fields from Articles to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "article_id",
-                  "author_id"
-                ]
-              }
-            },
-            "example": "article_id,author_id"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Articles to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "article_id",
-                  "-article_id",
-                  "author_id",
-                  "-author_id"
-                ]
-              }
-            },
-            "example": "article_id,-author_id"
+            "Title": {
+              "type": "object"
+            }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Articles response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Article"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "article_id": {
-                                "type": "integer"
-                              },
-                              "author_id": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+        },
+        "default_Article": {
+          "type": "object",
+          "properties": {
+            "article_id": {
+              "type": "integer"
+            },
+            "author_id": {
+              "type": "object"
+            }
+          }
+        },
+        "default_commandArticle": {
+          "type": "object",
+          "properties": {
+            "article_id": {
+              "type": "integer"
+            },
+            "author_id": {
+              "type": "integer"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        "default_commandAuthor": {
+          "type": "object",
+          "properties": {
+            "first_name": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "last_name": {
+              "type": "string"
             }
           }
         }

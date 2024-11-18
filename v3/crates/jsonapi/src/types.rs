@@ -1,123 +1,8 @@
-use crate::catalog::get_model_fields;
 use crate::parse;
 use hasura_authn_core::Role;
-use indexmap::IndexMap;
-use metadata_resolve::{
-    ModelExpressionType, ModelWithArgumentPresets, ObjectTypeWithRelationships, Qualified,
-    ScalarTypeRepresentation,
-};
-use open_dds::{
-    data_connector::DataConnectorName,
-    identifier::SubgraphName,
-    models::ModelName,
-    types::{CustomTypeName, FieldName},
-};
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use metadata_resolve::Qualified;
+use open_dds::{identifier::SubgraphName, models::ModelName, types::CustomTypeName};
 use tracing_util::{ErrorVisibility, TraceableError};
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Catalog {
-    pub state_per_role: BTreeMap<Role, State>,
-}
-
-impl Catalog {
-    pub fn new(metadata: &metadata_resolve::Metadata) -> (Self, Vec<Warning>) {
-        let mut warnings = vec![];
-
-        let state_per_role = metadata
-            .roles
-            .iter()
-            .map(|role| {
-                let (state, role_warnings) = State::new(metadata, role);
-                warnings.extend(role_warnings.iter().map(|warning| Warning::Role {
-                    role: role.clone(),
-                    warning: warning.clone(),
-                }));
-                (role.clone(), state)
-            })
-            .collect();
-
-        (Self { state_per_role }, warnings)
-    }
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct State {
-    pub routes: BTreeMap<String, Model>,
-}
-
-impl State {
-    pub fn new(metadata: &metadata_resolve::Metadata, role: &Role) -> (Self, Vec<RoleWarning>) {
-        let mut warnings = vec![];
-
-        let routes = metadata
-            .models
-            .iter()
-            .filter_map(|(model_name, model)| {
-                match Model::new(model, role, &metadata.object_types, &metadata.scalar_types) {
-                    Ok(jsonapi_model) => Some((
-                        format!("/{}/{}", model_name.subgraph, model_name.name),
-                        jsonapi_model,
-                    )),
-                    Err(warning) => {
-                        warnings.push(RoleWarning::Model {
-                            model_name: model_name.clone(),
-                            warning,
-                        });
-                        None
-                    }
-                }
-            })
-            .collect::<BTreeMap<_, _>>();
-
-        (Self { routes }, warnings)
-    }
-}
-
-// feel we're going to need to think about object types for nested stuff here too
-#[derive(Debug, Deserialize, Serialize)]
-pub enum FieldType {
-    TypeRepresentation(ndc_models::TypeRepresentation),
-    List(Box<FieldType>),
-    Object(IndexMap<FieldName, FieldType>),
-}
-
-// only the parts of a Model we need to construct a JSONAPI
-// we'll filter out fields a given role can't see
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Model {
-    pub name: Qualified<ModelName>,
-    pub description: Option<String>,
-    pub data_type: Qualified<CustomTypeName>,
-    pub type_fields: IndexMap<FieldName, FieldType>,
-    /// let's consider only making this work with `BooleanExpressionType`
-    /// to simplify implementation and nudge users to upgrade
-    pub filter_expression_type: Option<ModelExpressionType>,
-}
-
-impl Model {
-    pub fn new(
-        model: &ModelWithArgumentPresets,
-        role: &Role,
-        object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>,
-        scalar_types: &BTreeMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
-    ) -> Result<Model, ModelWarning> {
-        let type_fields = get_model_fields(model, role, object_types, scalar_types)?;
-
-        Ok(Model {
-            name: model.model.name.clone(),
-            description: model.model.raw.description.clone(),
-            data_type: model.model.data_type.clone(),
-            type_fields,
-            filter_expression_type: model.filter_expression_type.clone(),
-        })
-    }
-
-    pub fn pretty_typename(&self) -> String {
-        format!("{}_{}", self.data_type.subgraph, self.data_type.name)
-    }
-}
 
 #[derive(Debug, Clone)]
 pub enum Warning {
@@ -130,6 +15,20 @@ pub enum RoleWarning {
         model_name: Qualified<ModelName>,
         warning: ModelWarning,
     },
+    ObjectType {
+        object_type_name: Qualified<CustomTypeName>,
+        warning: ObjectTypeWarning,
+    },
+}
+
+// if we exclude something, let's say why
+#[derive(Debug, Clone)]
+#[allow(clippy::enum_variant_names)]
+pub enum ObjectTypeWarning {
+    NoObjectTypePermission {},
+    NestedObjectNotFound {
+        object_type_name: Qualified<CustomTypeName>,
+    },
 }
 
 // if we exclude something, let's say why
@@ -140,20 +39,7 @@ pub enum ModelWarning {
     NoObjectTypeFound {
         object_type_name: Qualified<CustomTypeName>,
     },
-    NoObjectTypePermission {
-        object_type_name: Qualified<CustomTypeName>,
-    },
-    RecursiveTypeFound {
-        object_type_name: Qualified<CustomTypeName>,
-    },
     NoModelSource,
-    NoTypeRepresentationFound {
-        object_type_name: Qualified<CustomTypeName>,
-    },
-    NoTypeRepresentationFoundForDataConnector {
-        data_connector_name: Qualified<DataConnectorName>,
-        object_type_name: Qualified<CustomTypeName>,
-    },
 }
 
 #[derive(Debug, derive_more::Display)]

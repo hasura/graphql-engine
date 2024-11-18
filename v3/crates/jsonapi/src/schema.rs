@@ -1,19 +1,29 @@
-use crate::{Model, State};
+use crate::catalog::{Model, ObjectType, State};
 use std::collections::BTreeMap;
 mod output;
 mod parameters;
 mod shared;
+use metadata_resolve::Qualified;
+use open_dds::types::CustomTypeName;
+use output::object_schema_for_object_type;
 use shared::{
     array_schema, bool_schema, enum_schema, float_schema, int_schema, json_schema, object_schema,
-    string_schema,
+    pretty_typename, string_schema,
 };
+
+#[derive(Debug, thiserror::Error, serde::Serialize, serde::Deserialize)]
+pub enum SchemaError {
+    #[error("Object {0} not found")]
+    ObjectNotFound(Qualified<CustomTypeName>),
+}
 
 // JSONAPI specifies "application/vnd.api+json"
 // we're going with the more universally supported application/json
 static JSONAPI_MEDIA_TYPE: &str = "application/json";
 
-fn get_response(model: &Model) -> oas3::spec::Response {
-    let schema = oas3::spec::ObjectOrReference::Object(output::jsonapi_document_schema(model));
+fn get_response(model: &Model, object_type: &ObjectType) -> oas3::spec::Response {
+    let schema =
+        oas3::spec::ObjectOrReference::Object(output::jsonapi_document_schema(model, object_type));
 
     let media_type = oas3::spec::MediaType {
         encoding: BTreeMap::new(),
@@ -33,18 +43,18 @@ fn get_response(model: &Model) -> oas3::spec::Response {
     }
 }
 
-fn get_route_for_model(model: &Model) -> oas3::spec::Operation {
+fn get_route_for_model(model: &Model, object_type: &ObjectType) -> oas3::spec::Operation {
     let parameters = vec![
         oas3::spec::ObjectOrReference::Object(parameters::page_limit_parameter()),
         oas3::spec::ObjectOrReference::Object(parameters::page_offset_parameter()),
-        oas3::spec::ObjectOrReference::Object(parameters::fields_parameter(model)),
-        oas3::spec::ObjectOrReference::Object(parameters::ordering_parameter(model)),
+        oas3::spec::ObjectOrReference::Object(parameters::fields_parameter(model, object_type)),
+        oas3::spec::ObjectOrReference::Object(parameters::ordering_parameter(model, object_type)),
     ];
 
     let mut responses = BTreeMap::new();
     responses.insert(
         "200".into(),
-        oas3::spec::ObjectOrReference::Object(get_response(model)),
+        oas3::spec::ObjectOrReference::Object(get_response(model, object_type)),
     );
 
     oas3::spec::Operation {
@@ -87,7 +97,8 @@ pub fn empty_schema() -> oas3::Spec {
         extensions: BTreeMap::new(),
     }
 }
-pub fn openapi_schema(state: &State) -> oas3::Spec {
+
+pub fn openapi_schema(state: &State) -> Result<oas3::Spec, SchemaError> {
     let info = oas3::spec::Info {
         title: "Hasura JSONAPI (alpha)".into(),
         summary: None,
@@ -100,9 +111,15 @@ pub fn openapi_schema(state: &State) -> oas3::Spec {
         license: None,
         extensions: BTreeMap::new(),
     };
+
     let mut paths = BTreeMap::new();
-    for (route_name, route) in &state.routes {
-        let get = get_route_for_model(route);
+    for (route_name, model) in &state.routes {
+        let object_type = state
+            .object_types
+            .get(&model.data_type)
+            .ok_or_else(|| SchemaError::ObjectNotFound(model.data_type.clone()))?;
+
+        let get = get_route_for_model(model, object_type);
 
         let full_route_path = format!("/v1/rest{route_name}");
 
@@ -125,15 +142,43 @@ pub fn openapi_schema(state: &State) -> oas3::Spec {
 
         paths.insert(full_route_path, path_item);
     }
-    oas3::Spec {
+
+    // we'll need to generate a named object for each object type that we can reference in our
+    // models etc
+    let components = oas3::spec::Components {
+        callbacks: BTreeMap::new(),
+        examples: BTreeMap::new(),
+        extensions: BTreeMap::new(),
+        headers: BTreeMap::new(),
+        links: BTreeMap::new(),
+        parameters: BTreeMap::new(),
+        path_items: BTreeMap::new(),
+        request_bodies: BTreeMap::new(),
+        responses: BTreeMap::new(),
+        schemas: state
+            .object_types
+            .iter()
+            .map(|(object_type_name, object_type)| {
+                (
+                    pretty_typename(object_type_name),
+                    oas3::spec::ObjectOrReference::Object(object_schema_for_object_type(
+                        object_type,
+                    )),
+                )
+            })
+            .collect(),
+        security_schemes: BTreeMap::new(),
+    };
+
+    Ok(oas3::Spec {
         openapi: "3.1.0".into(),
         info,
         servers: vec![],
         paths: Some(paths),
-        components: None,
+        components: Some(components),
         tags: vec![],
         webhooks: BTreeMap::new(),
         external_docs: None,
         extensions: BTreeMap::new(),
-    }
+    })
 }

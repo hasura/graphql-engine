@@ -3,111 +3,113 @@ source: crates/jsonapi/tests/jsonapi_golden_tests.rs
 expression: generated_openapi
 ---
 {
-  "openapi": "3.1.0",
-  "info": {
-    "title": "Hasura JSONAPI (alpha)",
-    "description": "REST API generated to match the JSON:API spec: https://jsonapi.org",
-    "version": "0.1"
-  },
-  "paths": {
-    "/v1/rest/default/Album": {
-      "get": {
-        "summary": "Fetch Album values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
+  "Ok": {
+    "openapi": "3.1.0",
+    "info": {
+      "title": "Hasura JSONAPI (alpha)",
+      "description": "REST API generated to match the JSON:API spec: https://jsonapi.org",
+      "version": "0.1"
+    },
+    "paths": {
+      "/v1/rest/default/Album": {
+        "get": {
+          "summary": "Fetch Album values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
             },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
             },
-            "example": "10"
-          },
-          {
-            "name": "fields[Album]",
-            "in": "query",
-            "description": "Optional list of fields from Album to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "AlbumId",
-                  "ArtistId",
-                  "Title"
-                ]
-              }
+            {
+              "name": "fields[Album]",
+              "in": "query",
+              "description": "Optional list of fields from Album to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "AlbumId",
+                    "ArtistId",
+                    "Title"
+                  ]
+                }
+              },
+              "example": "AlbumId,ArtistId,Title"
             },
-            "example": "AlbumId,ArtistId,Title"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Album to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "AlbumId",
-                  "-AlbumId",
-                  "ArtistId",
-                  "-ArtistId",
-                  "Title",
-                  "-Title"
-                ]
-              }
-            },
-            "example": "AlbumId,-ArtistId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Album response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Album"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "AlbumId": {
-                                "type": "object"
-                              },
-                              "ArtistId": {
-                                "type": "object"
-                              },
-                              "Title": {
-                                "type": "object"
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Album to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "AlbumId",
+                    "-AlbumId",
+                    "ArtistId",
+                    "-ArtistId",
+                    "Title",
+                    "-Title"
+                  ]
+                }
+              },
+              "example": "AlbumId,-ArtistId"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Album response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Album"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "AlbumId": {
+                                  "type": "object"
+                                },
+                                "ArtistId": {
+                                  "type": "object"
+                                },
+                                "Title": {
+                                  "type": "object"
+                                }
                               }
+                            },
+                            "id": {
+                              "type": "string"
                             }
-                          },
-                          "id": {
-                            "type": "string"
                           }
                         }
                       }
@@ -118,1653 +120,2009 @@ expression: generated_openapi
             }
           }
         }
-      }
-    },
-    "/v1/rest/default/Articles": {
-      "get": {
-        "summary": "Fetch Article values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
+      },
+      "/v1/rest/default/Articles": {
+        "get": {
+          "summary": "Fetch Article values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
             },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
             },
-            "example": "10"
-          },
-          {
-            "name": "fields[Article]",
-            "in": "query",
-            "description": "Optional list of fields from Articles to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "article_id",
-                  "title",
-                  "author_id"
-                ]
-              }
-            },
-            "example": "article_id,title,author_id"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Articles to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "article_id",
-                  "-article_id",
-                  "title",
-                  "-title",
-                  "author_id",
-                  "-author_id"
-                ]
-              }
-            },
-            "example": "article_id,-title"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Articles response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Article"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "article_id": {
-                                "type": "integer"
-                              },
-                              "author_id": {
-                                "type": "object"
-                              },
-                              "title": {
-                                "type": "string"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
+            {
+              "name": "fields[Article]",
+              "in": "query",
+              "description": "Optional list of fields from Articles to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "article_id",
+                    "title",
+                    "author_id"
+                  ]
                 }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/Artist": {
-      "get": {
-        "summary": "Fetch Artist values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
+              },
+              "example": "article_id,title,author_id"
             },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[Artist]",
-            "in": "query",
-            "description": "Optional list of fields from Artist to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "ArtistId",
-                  "Name"
-                ]
-              }
-            },
-            "example": "ArtistId,Name"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Artist to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "ArtistId",
-                  "-ArtistId",
-                  "Name",
-                  "-Name"
-                ]
-              }
-            },
-            "example": "ArtistId,-Name"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Artist response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Artist"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "ArtistId": {
-                                "type": "object"
-                              },
-                              "Name": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Articles to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "article_id",
+                    "-article_id",
+                    "title",
+                    "-title",
+                    "author_id",
+                    "-author_id"
+                  ]
                 }
-              }
+              },
+              "example": "article_id,-title"
             }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/Authors": {
-      "get": {
-        "summary": "Fetch Author values",
-        "description": "top level Authors model description",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[Author]",
-            "in": "query",
-            "description": "Optional list of fields from Authors to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "author_id",
-                  "first_name"
-                ]
-              }
-            },
-            "example": "author_id,first_name"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Authors to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "author_id",
-                  "-author_id",
-                  "first_name",
-                  "-first_name"
-                ]
-              }
-            },
-            "example": "author_id,-first_name"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Authors response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Author"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "author_id": {
-                                "type": "object"
-                              },
-                              "first_name": {
-                                "type": "string"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/Customer": {
-      "get": {
-        "summary": "Fetch Customer values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[Customer]",
-            "in": "query",
-            "description": "Optional list of fields from Customer to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "Address",
-                  "City",
-                  "Company",
-                  "Country",
-                  "CustomerId",
-                  "Email",
-                  "Fax",
-                  "FirstName",
-                  "LastName",
-                  "Phone",
-                  "PostalCode",
-                  "State",
-                  "SupportRepId"
-                ]
-              }
-            },
-            "example": "Address,City,Company,Country,CustomerId,Email,Fax,FirstName,LastName,Phone,PostalCode,State,SupportRepId"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Customer to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "Address",
-                  "-Address",
-                  "City",
-                  "-City",
-                  "Company",
-                  "-Company",
-                  "Country",
-                  "-Country",
-                  "CustomerId",
-                  "-CustomerId",
-                  "Email",
-                  "-Email",
-                  "Fax",
-                  "-Fax",
-                  "FirstName",
-                  "-FirstName",
-                  "LastName",
-                  "-LastName",
-                  "Phone",
-                  "-Phone",
-                  "PostalCode",
-                  "-PostalCode",
-                  "State",
-                  "-State",
-                  "SupportRepId",
-                  "-SupportRepId"
-                ]
-              }
-            },
-            "example": "Address,-City,Country,-CustomerId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Customer response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Customer"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "Address": {
-                                "type": "object"
-                              },
-                              "City": {
-                                "type": "object"
-                              },
-                              "Company": {
-                                "type": "object"
-                              },
-                              "Country": {
-                                "type": "object"
-                              },
-                              "CustomerId": {
-                                "type": "object"
-                              },
-                              "Email": {
-                                "type": "object"
-                              },
-                              "Fax": {
-                                "type": "object"
-                              },
-                              "FirstName": {
-                                "type": "object"
-                              },
-                              "LastName": {
-                                "type": "object"
-                              },
-                              "Phone": {
-                                "type": "object"
-                              },
-                              "PostalCode": {
-                                "type": "object"
-                              },
-                              "State": {
-                                "type": "object"
-                              },
-                              "SupportRepId": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/Employee": {
-      "get": {
-        "summary": "Fetch Employee values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[Employee]",
-            "in": "query",
-            "description": "Optional list of fields from Employee to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "Address",
-                  "BirthDate",
-                  "City",
-                  "Country",
-                  "Email",
-                  "EmployeeId",
-                  "Fax",
-                  "FirstName",
-                  "HireDate",
-                  "LastName",
-                  "Phone",
-                  "PostalCode",
-                  "ReportsTo",
-                  "State",
-                  "Title"
-                ]
-              }
-            },
-            "example": "Address,BirthDate,City,Country,Email,EmployeeId,Fax,FirstName,HireDate,LastName,Phone,PostalCode,ReportsTo,State,Title"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Employee to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "Address",
-                  "-Address",
-                  "BirthDate",
-                  "-BirthDate",
-                  "City",
-                  "-City",
-                  "Country",
-                  "-Country",
-                  "Email",
-                  "-Email",
-                  "EmployeeId",
-                  "-EmployeeId",
-                  "Fax",
-                  "-Fax",
-                  "FirstName",
-                  "-FirstName",
-                  "HireDate",
-                  "-HireDate",
-                  "LastName",
-                  "-LastName",
-                  "Phone",
-                  "-Phone",
-                  "PostalCode",
-                  "-PostalCode",
-                  "ReportsTo",
-                  "-ReportsTo",
-                  "State",
-                  "-State",
-                  "Title",
-                  "-Title"
-                ]
-              }
-            },
-            "example": "Address,-BirthDate,Country,-Email"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Employee response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Employee"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "Address": {
-                                "type": "object"
-                              },
-                              "BirthDate": {
-                                "type": "object"
-                              },
-                              "City": {
-                                "type": "object"
-                              },
-                              "Country": {
-                                "type": "object"
-                              },
-                              "Email": {
-                                "type": "object"
-                              },
-                              "EmployeeId": {
-                                "type": "object"
-                              },
-                              "Fax": {
-                                "type": "object"
-                              },
-                              "FirstName": {
-                                "type": "object"
-                              },
-                              "HireDate": {
-                                "type": "object"
-                              },
-                              "LastName": {
-                                "type": "object"
-                              },
-                              "Phone": {
-                                "type": "object"
-                              },
-                              "PostalCode": {
-                                "type": "object"
-                              },
-                              "ReportsTo": {
-                                "type": "object"
-                              },
-                              "State": {
-                                "type": "object"
-                              },
-                              "Title": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/Genre": {
-      "get": {
-        "summary": "Fetch Genre values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[Genre]",
-            "in": "query",
-            "description": "Optional list of fields from Genre to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "GenreId",
-                  "Name"
-                ]
-              }
-            },
-            "example": "GenreId,Name"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Genre to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "GenreId",
-                  "-GenreId",
-                  "Name",
-                  "-Name"
-                ]
-              }
-            },
-            "example": "GenreId,-Name"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Genre response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Genre"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "GenreId": {
-                                "type": "object"
-                              },
-                              "Name": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/Invoice": {
-      "get": {
-        "summary": "Fetch Invoice values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[Invoice]",
-            "in": "query",
-            "description": "Optional list of fields from Invoice to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "BillingAddress",
-                  "BillingCity",
-                  "BillingCountry",
-                  "BillingPostalCode",
-                  "BillingState",
-                  "CustomerId",
-                  "InvoiceDate",
-                  "InvoiceId",
-                  "Total"
-                ]
-              }
-            },
-            "example": "BillingAddress,BillingCity,BillingCountry,BillingPostalCode,BillingState,CustomerId,InvoiceDate,InvoiceId,Total"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Invoice to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "BillingAddress",
-                  "-BillingAddress",
-                  "BillingCity",
-                  "-BillingCity",
-                  "BillingCountry",
-                  "-BillingCountry",
-                  "BillingPostalCode",
-                  "-BillingPostalCode",
-                  "BillingState",
-                  "-BillingState",
-                  "CustomerId",
-                  "-CustomerId",
-                  "InvoiceDate",
-                  "-InvoiceDate",
-                  "InvoiceId",
-                  "-InvoiceId",
-                  "Total",
-                  "-Total"
-                ]
-              }
-            },
-            "example": "BillingAddress,-BillingCity,BillingPostalCode,-BillingState"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Invoice response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Invoice"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "BillingAddress": {
-                                "type": "object"
-                              },
-                              "BillingCity": {
-                                "type": "object"
-                              },
-                              "BillingCountry": {
-                                "type": "object"
-                              },
-                              "BillingPostalCode": {
-                                "type": "object"
-                              },
-                              "BillingState": {
-                                "type": "object"
-                              },
-                              "CustomerId": {
-                                "type": "object"
-                              },
-                              "InvoiceDate": {
-                                "type": "object"
-                              },
-                              "InvoiceId": {
-                                "type": "object"
-                              },
-                              "Total": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/InvoiceLine": {
-      "get": {
-        "summary": "Fetch InvoiceLine values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[InvoiceLine]",
-            "in": "query",
-            "description": "Optional list of fields from InvoiceLine to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "InvoiceId",
-                  "InvoiceLineId",
-                  "Quantity",
-                  "TrackId",
-                  "UnitPrice"
-                ]
-              }
-            },
-            "example": "InvoiceId,InvoiceLineId,Quantity,TrackId,UnitPrice"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from InvoiceLine to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "InvoiceId",
-                  "-InvoiceId",
-                  "InvoiceLineId",
-                  "-InvoiceLineId",
-                  "Quantity",
-                  "-Quantity",
-                  "TrackId",
-                  "-TrackId",
-                  "UnitPrice",
-                  "-UnitPrice"
-                ]
-              }
-            },
-            "example": "InvoiceId,-InvoiceLineId,TrackId,-UnitPrice"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful InvoiceLine response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_InvoiceLine"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "InvoiceId": {
-                                "type": "object"
-                              },
-                              "InvoiceLineId": {
-                                "type": "object"
-                              },
-                              "Quantity": {
-                                "type": "object"
-                              },
-                              "TrackId": {
-                                "type": "object"
-                              },
-                              "UnitPrice": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/MediaType": {
-      "get": {
-        "summary": "Fetch MediaType values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[MediaType]",
-            "in": "query",
-            "description": "Optional list of fields from MediaType to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "MediaTypeId",
-                  "Name"
-                ]
-              }
-            },
-            "example": "MediaTypeId,Name"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from MediaType to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "MediaTypeId",
-                  "-MediaTypeId",
-                  "Name",
-                  "-Name"
-                ]
-              }
-            },
-            "example": "MediaTypeId,-Name"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful MediaType response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_MediaType"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "MediaTypeId": {
-                                "type": "object"
-                              },
-                              "Name": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/Playlist": {
-      "get": {
-        "summary": "Fetch Playlist values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[Playlist]",
-            "in": "query",
-            "description": "Optional list of fields from Playlist to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "Name",
-                  "PlaylistId"
-                ]
-              }
-            },
-            "example": "Name,PlaylistId"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Playlist to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "Name",
-                  "-Name",
-                  "PlaylistId",
-                  "-PlaylistId"
-                ]
-              }
-            },
-            "example": "Name,-PlaylistId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Playlist response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Playlist"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "Name": {
-                                "type": "object"
-                              },
-                              "PlaylistId": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/PlaylistTrack": {
-      "get": {
-        "summary": "Fetch PlaylistTrack values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[PlaylistTrack]",
-            "in": "query",
-            "description": "Optional list of fields from PlaylistTrack to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "PlaylistId",
-                  "TrackId"
-                ]
-              }
-            },
-            "example": "PlaylistId,TrackId"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from PlaylistTrack to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "PlaylistId",
-                  "-PlaylistId",
-                  "TrackId",
-                  "-TrackId"
-                ]
-              }
-            },
-            "example": "PlaylistId,-TrackId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful PlaylistTrack response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_PlaylistTrack"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "PlaylistId": {
-                                "type": "object"
-                              },
-                              "TrackId": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/Track": {
-      "get": {
-        "summary": "Fetch Track values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[Track]",
-            "in": "query",
-            "description": "Optional list of fields from Track to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "AlbumId",
-                  "Bytes",
-                  "Composer",
-                  "GenreId",
-                  "MediaTypeId",
-                  "Milliseconds",
-                  "Name",
-                  "TrackId",
-                  "UnitPrice"
-                ]
-              }
-            },
-            "example": "AlbumId,Bytes,Composer,GenreId,MediaTypeId,Milliseconds,Name,TrackId,UnitPrice"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from Track to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "AlbumId",
-                  "-AlbumId",
-                  "Bytes",
-                  "-Bytes",
-                  "Composer",
-                  "-Composer",
-                  "GenreId",
-                  "-GenreId",
-                  "MediaTypeId",
-                  "-MediaTypeId",
-                  "Milliseconds",
-                  "-Milliseconds",
-                  "Name",
-                  "-Name",
-                  "TrackId",
-                  "-TrackId",
-                  "UnitPrice",
-                  "-UnitPrice"
-                ]
-              }
-            },
-            "example": "AlbumId,-Bytes,GenreId,-MediaTypeId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Track response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_Track"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "AlbumId": {
-                                "type": "object"
-                              },
-                              "Bytes": {
-                                "type": "object"
-                              },
-                              "Composer": {
-                                "type": "object"
-                              },
-                              "GenreId": {
-                                "type": "object"
-                              },
-                              "MediaTypeId": {
-                                "type": "object"
-                              },
-                              "Milliseconds": {
-                                "type": "object"
-                              },
-                              "Name": {
-                                "type": "object"
-                              },
-                              "TrackId": {
-                                "type": "object"
-                              },
-                              "UnitPrice": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/rest/default/institutions": {
-      "get": {
-        "summary": "Fetch institution values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[institution]",
-            "in": "query",
-            "description": "Optional list of fields from institutions to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "id",
-                  "name",
-                  "location",
-                  "staff",
-                  "departments"
-                ]
-              }
-            },
-            "example": "id,name,location,staff,departments"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from institutions to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "id",
-                  "-id",
-                  "name",
-                  "-name",
-                  "location",
-                  "-location",
-                  "staff",
-                  "-staff",
-                  "departments",
-                  "-departments"
-                ]
-              }
-            },
-            "example": "id,-name,staff,-departments"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful institutions response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_institution"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "departments": {
-                                "type": "array",
-                                "items": {
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Articles response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Article"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "article_id": {
+                                  "type": "integer"
+                                },
+                                "author_id": {
+                                  "type": "object"
+                                },
+                                "title": {
                                   "type": "string"
                                 }
-                              },
-                              "id": {
-                                "type": "integer"
-                              },
-                              "location": {
-                                "type": "object",
-                                "properties": {
-                                  "campuses": {
-                                    "type": "array",
-                                    "items": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "city": {
-                                    "type": "string"
-                                  },
-                                  "country": {
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/Artist": {
+        "get": {
+          "summary": "Fetch Artist values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[Artist]",
+              "in": "query",
+              "description": "Optional list of fields from Artist to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "ArtistId",
+                    "Name"
+                  ]
+                }
+              },
+              "example": "ArtistId,Name"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Artist to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "ArtistId",
+                    "-ArtistId",
+                    "Name",
+                    "-Name"
+                  ]
+                }
+              },
+              "example": "ArtistId,-Name"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Artist response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Artist"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "ArtistId": {
+                                  "type": "object"
+                                },
+                                "Name": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/Authors": {
+        "get": {
+          "summary": "Fetch Author values",
+          "description": "top level Authors model description",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[Author]",
+              "in": "query",
+              "description": "Optional list of fields from Authors to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "author_id",
+                    "first_name"
+                  ]
+                }
+              },
+              "example": "author_id,first_name"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Authors to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "author_id",
+                    "-author_id",
+                    "first_name",
+                    "-first_name"
+                  ]
+                }
+              },
+              "example": "author_id,-first_name"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Authors response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Author"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "author_id": {
+                                  "type": "object"
+                                },
+                                "first_name": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/Customer": {
+        "get": {
+          "summary": "Fetch Customer values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[Customer]",
+              "in": "query",
+              "description": "Optional list of fields from Customer to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "Address",
+                    "City",
+                    "Company",
+                    "Country",
+                    "CustomerId",
+                    "Email",
+                    "Fax",
+                    "FirstName",
+                    "LastName",
+                    "Phone",
+                    "PostalCode",
+                    "State",
+                    "SupportRepId"
+                  ]
+                }
+              },
+              "example": "Address,City,Company,Country,CustomerId,Email,Fax,FirstName,LastName,Phone,PostalCode,State,SupportRepId"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Customer to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "Address",
+                    "-Address",
+                    "City",
+                    "-City",
+                    "Company",
+                    "-Company",
+                    "Country",
+                    "-Country",
+                    "CustomerId",
+                    "-CustomerId",
+                    "Email",
+                    "-Email",
+                    "Fax",
+                    "-Fax",
+                    "FirstName",
+                    "-FirstName",
+                    "LastName",
+                    "-LastName",
+                    "Phone",
+                    "-Phone",
+                    "PostalCode",
+                    "-PostalCode",
+                    "State",
+                    "-State",
+                    "SupportRepId",
+                    "-SupportRepId"
+                  ]
+                }
+              },
+              "example": "Address,-City,Country,-CustomerId"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Customer response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Customer"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "Address": {
+                                  "type": "object"
+                                },
+                                "City": {
+                                  "type": "object"
+                                },
+                                "Company": {
+                                  "type": "object"
+                                },
+                                "Country": {
+                                  "type": "object"
+                                },
+                                "CustomerId": {
+                                  "type": "object"
+                                },
+                                "Email": {
+                                  "type": "object"
+                                },
+                                "Fax": {
+                                  "type": "object"
+                                },
+                                "FirstName": {
+                                  "type": "object"
+                                },
+                                "LastName": {
+                                  "type": "object"
+                                },
+                                "Phone": {
+                                  "type": "object"
+                                },
+                                "PostalCode": {
+                                  "type": "object"
+                                },
+                                "State": {
+                                  "type": "object"
+                                },
+                                "SupportRepId": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/Employee": {
+        "get": {
+          "summary": "Fetch Employee values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[Employee]",
+              "in": "query",
+              "description": "Optional list of fields from Employee to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "Address",
+                    "BirthDate",
+                    "City",
+                    "Country",
+                    "Email",
+                    "EmployeeId",
+                    "Fax",
+                    "FirstName",
+                    "HireDate",
+                    "LastName",
+                    "Phone",
+                    "PostalCode",
+                    "ReportsTo",
+                    "State",
+                    "Title"
+                  ]
+                }
+              },
+              "example": "Address,BirthDate,City,Country,Email,EmployeeId,Fax,FirstName,HireDate,LastName,Phone,PostalCode,ReportsTo,State,Title"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Employee to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "Address",
+                    "-Address",
+                    "BirthDate",
+                    "-BirthDate",
+                    "City",
+                    "-City",
+                    "Country",
+                    "-Country",
+                    "Email",
+                    "-Email",
+                    "EmployeeId",
+                    "-EmployeeId",
+                    "Fax",
+                    "-Fax",
+                    "FirstName",
+                    "-FirstName",
+                    "HireDate",
+                    "-HireDate",
+                    "LastName",
+                    "-LastName",
+                    "Phone",
+                    "-Phone",
+                    "PostalCode",
+                    "-PostalCode",
+                    "ReportsTo",
+                    "-ReportsTo",
+                    "State",
+                    "-State",
+                    "Title",
+                    "-Title"
+                  ]
+                }
+              },
+              "example": "Address,-BirthDate,Country,-Email"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Employee response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Employee"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "Address": {
+                                  "type": "object"
+                                },
+                                "BirthDate": {
+                                  "type": "object"
+                                },
+                                "City": {
+                                  "type": "object"
+                                },
+                                "Country": {
+                                  "type": "object"
+                                },
+                                "Email": {
+                                  "type": "object"
+                                },
+                                "EmployeeId": {
+                                  "type": "object"
+                                },
+                                "Fax": {
+                                  "type": "object"
+                                },
+                                "FirstName": {
+                                  "type": "object"
+                                },
+                                "HireDate": {
+                                  "type": "object"
+                                },
+                                "LastName": {
+                                  "type": "object"
+                                },
+                                "Phone": {
+                                  "type": "object"
+                                },
+                                "PostalCode": {
+                                  "type": "object"
+                                },
+                                "ReportsTo": {
+                                  "type": "object"
+                                },
+                                "State": {
+                                  "type": "object"
+                                },
+                                "Title": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/Genre": {
+        "get": {
+          "summary": "Fetch Genre values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[Genre]",
+              "in": "query",
+              "description": "Optional list of fields from Genre to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "GenreId",
+                    "Name"
+                  ]
+                }
+              },
+              "example": "GenreId,Name"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Genre to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "GenreId",
+                    "-GenreId",
+                    "Name",
+                    "-Name"
+                  ]
+                }
+              },
+              "example": "GenreId,-Name"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Genre response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Genre"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "GenreId": {
+                                  "type": "object"
+                                },
+                                "Name": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/Invoice": {
+        "get": {
+          "summary": "Fetch Invoice values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[Invoice]",
+              "in": "query",
+              "description": "Optional list of fields from Invoice to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "BillingAddress",
+                    "BillingCity",
+                    "BillingCountry",
+                    "BillingPostalCode",
+                    "BillingState",
+                    "CustomerId",
+                    "InvoiceDate",
+                    "InvoiceId",
+                    "Total"
+                  ]
+                }
+              },
+              "example": "BillingAddress,BillingCity,BillingCountry,BillingPostalCode,BillingState,CustomerId,InvoiceDate,InvoiceId,Total"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Invoice to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "BillingAddress",
+                    "-BillingAddress",
+                    "BillingCity",
+                    "-BillingCity",
+                    "BillingCountry",
+                    "-BillingCountry",
+                    "BillingPostalCode",
+                    "-BillingPostalCode",
+                    "BillingState",
+                    "-BillingState",
+                    "CustomerId",
+                    "-CustomerId",
+                    "InvoiceDate",
+                    "-InvoiceDate",
+                    "InvoiceId",
+                    "-InvoiceId",
+                    "Total",
+                    "-Total"
+                  ]
+                }
+              },
+              "example": "BillingAddress,-BillingCity,BillingPostalCode,-BillingState"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Invoice response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Invoice"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "BillingAddress": {
+                                  "type": "object"
+                                },
+                                "BillingCity": {
+                                  "type": "object"
+                                },
+                                "BillingCountry": {
+                                  "type": "object"
+                                },
+                                "BillingPostalCode": {
+                                  "type": "object"
+                                },
+                                "BillingState": {
+                                  "type": "object"
+                                },
+                                "CustomerId": {
+                                  "type": "object"
+                                },
+                                "InvoiceDate": {
+                                  "type": "object"
+                                },
+                                "InvoiceId": {
+                                  "type": "object"
+                                },
+                                "Total": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/InvoiceLine": {
+        "get": {
+          "summary": "Fetch InvoiceLine values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[InvoiceLine]",
+              "in": "query",
+              "description": "Optional list of fields from InvoiceLine to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "InvoiceId",
+                    "InvoiceLineId",
+                    "Quantity",
+                    "TrackId",
+                    "UnitPrice"
+                  ]
+                }
+              },
+              "example": "InvoiceId,InvoiceLineId,Quantity,TrackId,UnitPrice"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from InvoiceLine to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "InvoiceId",
+                    "-InvoiceId",
+                    "InvoiceLineId",
+                    "-InvoiceLineId",
+                    "Quantity",
+                    "-Quantity",
+                    "TrackId",
+                    "-TrackId",
+                    "UnitPrice",
+                    "-UnitPrice"
+                  ]
+                }
+              },
+              "example": "InvoiceId,-InvoiceLineId,TrackId,-UnitPrice"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful InvoiceLine response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_InvoiceLine"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "InvoiceId": {
+                                  "type": "object"
+                                },
+                                "InvoiceLineId": {
+                                  "type": "object"
+                                },
+                                "Quantity": {
+                                  "type": "object"
+                                },
+                                "TrackId": {
+                                  "type": "object"
+                                },
+                                "UnitPrice": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/MediaType": {
+        "get": {
+          "summary": "Fetch MediaType values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[MediaType]",
+              "in": "query",
+              "description": "Optional list of fields from MediaType to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "MediaTypeId",
+                    "Name"
+                  ]
+                }
+              },
+              "example": "MediaTypeId,Name"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from MediaType to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "MediaTypeId",
+                    "-MediaTypeId",
+                    "Name",
+                    "-Name"
+                  ]
+                }
+              },
+              "example": "MediaTypeId,-Name"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful MediaType response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_MediaType"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "MediaTypeId": {
+                                  "type": "object"
+                                },
+                                "Name": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/Playlist": {
+        "get": {
+          "summary": "Fetch Playlist values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[Playlist]",
+              "in": "query",
+              "description": "Optional list of fields from Playlist to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "Name",
+                    "PlaylistId"
+                  ]
+                }
+              },
+              "example": "Name,PlaylistId"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Playlist to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "Name",
+                    "-Name",
+                    "PlaylistId",
+                    "-PlaylistId"
+                  ]
+                }
+              },
+              "example": "Name,-PlaylistId"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Playlist response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Playlist"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "Name": {
+                                  "type": "object"
+                                },
+                                "PlaylistId": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/PlaylistTrack": {
+        "get": {
+          "summary": "Fetch PlaylistTrack values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[PlaylistTrack]",
+              "in": "query",
+              "description": "Optional list of fields from PlaylistTrack to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "PlaylistId",
+                    "TrackId"
+                  ]
+                }
+              },
+              "example": "PlaylistId,TrackId"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from PlaylistTrack to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "PlaylistId",
+                    "-PlaylistId",
+                    "TrackId",
+                    "-TrackId"
+                  ]
+                }
+              },
+              "example": "PlaylistId,-TrackId"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful PlaylistTrack response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_PlaylistTrack"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "PlaylistId": {
+                                  "type": "object"
+                                },
+                                "TrackId": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/Track": {
+        "get": {
+          "summary": "Fetch Track values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[Track]",
+              "in": "query",
+              "description": "Optional list of fields from Track to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "AlbumId",
+                    "Bytes",
+                    "Composer",
+                    "GenreId",
+                    "MediaTypeId",
+                    "Milliseconds",
+                    "Name",
+                    "TrackId",
+                    "UnitPrice"
+                  ]
+                }
+              },
+              "example": "AlbumId,Bytes,Composer,GenreId,MediaTypeId,Milliseconds,Name,TrackId,UnitPrice"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from Track to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "AlbumId",
+                    "-AlbumId",
+                    "Bytes",
+                    "-Bytes",
+                    "Composer",
+                    "-Composer",
+                    "GenreId",
+                    "-GenreId",
+                    "MediaTypeId",
+                    "-MediaTypeId",
+                    "Milliseconds",
+                    "-Milliseconds",
+                    "Name",
+                    "-Name",
+                    "TrackId",
+                    "-TrackId",
+                    "UnitPrice",
+                    "-UnitPrice"
+                  ]
+                }
+              },
+              "example": "AlbumId,-Bytes,GenreId,-MediaTypeId"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Track response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_Track"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "AlbumId": {
+                                  "type": "object"
+                                },
+                                "Bytes": {
+                                  "type": "object"
+                                },
+                                "Composer": {
+                                  "type": "object"
+                                },
+                                "GenreId": {
+                                  "type": "object"
+                                },
+                                "MediaTypeId": {
+                                  "type": "object"
+                                },
+                                "Milliseconds": {
+                                  "type": "object"
+                                },
+                                "Name": {
+                                  "type": "object"
+                                },
+                                "TrackId": {
+                                  "type": "object"
+                                },
+                                "UnitPrice": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/institutions": {
+        "get": {
+          "summary": "Fetch institution values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[institution]",
+              "in": "query",
+              "description": "Optional list of fields from institutions to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "id",
+                    "name",
+                    "location",
+                    "staff",
+                    "departments"
+                  ]
+                }
+              },
+              "example": "id,name,location,staff,departments"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from institutions to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "id",
+                    "-id",
+                    "name",
+                    "-name",
+                    "location",
+                    "-location",
+                    "staff",
+                    "-staff",
+                    "departments",
+                    "-departments"
+                  ]
+                }
+              },
+              "example": "id,-name,staff,-departments"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful institutions response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_institution"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "departments": {
+                                  "type": "array",
+                                  "items": {
                                     "type": "string"
                                   }
-                                }
-                              },
-                              "name": {
-                                "type": "string"
-                              },
-                              "staff": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "first_name": {
-                                      "type": "string"
-                                    },
-                                    "last_name": {
-                                      "type": "string"
-                                    },
-                                    "specialities": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "string"
-                                      }
-                                    }
+                                },
+                                "id": {
+                                  "type": "integer"
+                                },
+                                "location": {
+                                  "$ref": "default_location"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "staff": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "default_staff_member"
                                   }
                                 }
                               }
+                            },
+                            "id": {
+                              "type": "string"
                             }
-                          },
-                          "id": {
-                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/spatial_ref_sys": {
+        "get": {
+          "summary": "Fetch spatial_ref_sys values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[spatial_ref_sys]",
+              "in": "query",
+              "description": "Optional list of fields from spatial_ref_sys to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "auth_name",
+                    "auth_srid",
+                    "proj4text",
+                    "srid",
+                    "srtext"
+                  ]
+                }
+              },
+              "example": "auth_name,auth_srid,proj4text,srid,srtext"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from spatial_ref_sys to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "auth_name",
+                    "-auth_name",
+                    "auth_srid",
+                    "-auth_srid",
+                    "proj4text",
+                    "-proj4text",
+                    "srid",
+                    "-srid",
+                    "srtext",
+                    "-srtext"
+                  ]
+                }
+              },
+              "example": "auth_name,-auth_srid,srid,-srtext"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful spatial_ref_sys response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_spatial_ref_sys"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "auth_name": {
+                                  "type": "object"
+                                },
+                                "auth_srid": {
+                                  "type": "object"
+                                },
+                                "proj4text": {
+                                  "type": "object"
+                                },
+                                "srid": {
+                                  "type": "object"
+                                },
+                                "srtext": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/topology_layer": {
+        "get": {
+          "summary": "Fetch topology_layer values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[topology_layer]",
+              "in": "query",
+              "description": "Optional list of fields from topology_layer to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "child_id",
+                    "feature_column",
+                    "feature_type",
+                    "layer_id",
+                    "level",
+                    "schema_name",
+                    "table_name",
+                    "topology_id"
+                  ]
+                }
+              },
+              "example": "child_id,feature_column,feature_type,layer_id,level,schema_name,table_name,topology_id"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from topology_layer to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "child_id",
+                    "-child_id",
+                    "feature_column",
+                    "-feature_column",
+                    "feature_type",
+                    "-feature_type",
+                    "layer_id",
+                    "-layer_id",
+                    "level",
+                    "-level",
+                    "schema_name",
+                    "-schema_name",
+                    "table_name",
+                    "-table_name",
+                    "topology_id",
+                    "-topology_id"
+                  ]
+                }
+              },
+              "example": "child_id,-feature_column,layer_id,-level"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful topology_layer response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_topology_layer"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "child_id": {
+                                  "type": "object"
+                                },
+                                "feature_column": {
+                                  "type": "object"
+                                },
+                                "feature_type": {
+                                  "type": "object"
+                                },
+                                "layer_id": {
+                                  "type": "object"
+                                },
+                                "level": {
+                                  "type": "object"
+                                },
+                                "schema_name": {
+                                  "type": "object"
+                                },
+                                "table_name": {
+                                  "type": "object"
+                                },
+                                "topology_id": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/rest/default/topology_topology": {
+        "get": {
+          "summary": "Fetch topology_topology values",
+          "parameters": [
+            {
+              "name": "page[limit]",
+              "in": "query",
+              "description": "Optional limit for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "5"
+            },
+            {
+              "name": "page[offset]",
+              "in": "query",
+              "description": "Optional offset for fetched items",
+              "schema": {
+                "type": "integer"
+              },
+              "example": "10"
+            },
+            {
+              "name": "fields[topology_topology]",
+              "in": "query",
+              "description": "Optional list of fields from topology_topology to include in response. If no fields are provided, all fields are returned",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "hasz",
+                    "id",
+                    "name",
+                    "precision",
+                    "srid"
+                  ]
+                }
+              },
+              "example": "hasz,id,name,precision,srid"
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Optional list of fields from topology_topology to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
+              "schema": {
+                "items": {
+                  "enum": [
+                    "hasz",
+                    "-hasz",
+                    "id",
+                    "-id",
+                    "name",
+                    "-name",
+                    "precision",
+                    "-precision",
+                    "srid",
+                    "-srid"
+                  ]
+                }
+              },
+              "example": "hasz,-id,precision,-srid"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful topology_topology response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "data"
+                    ],
+                    "properties": {
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "_type",
+                            "attributes"
+                          ],
+                          "properties": {
+                            "_type": {
+                              "enum": [
+                                "default_topology_topology"
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "hasz": {
+                                  "type": "object"
+                                },
+                                "id": {
+                                  "type": "object"
+                                },
+                                "name": {
+                                  "type": "object"
+                                },
+                                "precision": {
+                                  "type": "object"
+                                },
+                                "srid": {
+                                  "type": "object"
+                                }
+                              }
+                            },
+                            "id": {
+                              "type": "string"
+                            }
                           }
                         }
                       }
@@ -1777,385 +2135,434 @@ expression: generated_openapi
         }
       }
     },
-    "/v1/rest/default/spatial_ref_sys": {
-      "get": {
-        "summary": "Fetch spatial_ref_sys values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
+    "components": {
+      "schemas": {
+        "default_Album": {
+          "type": "object",
+          "properties": {
+            "AlbumId": {
+              "type": "object"
             },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
+            "ArtistId": {
+              "type": "object"
             },
-            "example": "10"
-          },
-          {
-            "name": "fields[spatial_ref_sys]",
-            "in": "query",
-            "description": "Optional list of fields from spatial_ref_sys to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "auth_name",
-                  "auth_srid",
-                  "proj4text",
-                  "srid",
-                  "srtext"
-                ]
-              }
-            },
-            "example": "auth_name,auth_srid,proj4text,srid,srtext"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from spatial_ref_sys to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "auth_name",
-                  "-auth_name",
-                  "auth_srid",
-                  "-auth_srid",
-                  "proj4text",
-                  "-proj4text",
-                  "srid",
-                  "-srid",
-                  "srtext",
-                  "-srtext"
-                ]
-              }
-            },
-            "example": "auth_name,-auth_srid,srid,-srtext"
+            "Title": {
+              "type": "object"
+            }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful spatial_ref_sys response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_spatial_ref_sys"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "auth_name": {
-                                "type": "object"
-                              },
-                              "auth_srid": {
-                                "type": "object"
-                              },
-                              "proj4text": {
-                                "type": "object"
-                              },
-                              "srid": {
-                                "type": "object"
-                              },
-                              "srtext": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
+        },
+        "default_Article": {
+          "type": "object",
+          "properties": {
+            "article_id": {
+              "type": "integer"
+            },
+            "author_id": {
+              "type": "object"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        "default_Artist": {
+          "type": "object",
+          "properties": {
+            "ArtistId": {
+              "type": "object"
+            },
+            "Name": {
+              "type": "object"
+            }
+          }
+        },
+        "default_Author": {
+          "type": "object",
+          "properties": {
+            "author_id": {
+              "type": "object"
+            },
+            "first_name": {
+              "type": "string"
+            }
+          }
+        },
+        "default_Customer": {
+          "type": "object",
+          "properties": {
+            "Address": {
+              "type": "object"
+            },
+            "City": {
+              "type": "object"
+            },
+            "Company": {
+              "type": "object"
+            },
+            "Country": {
+              "type": "object"
+            },
+            "CustomerId": {
+              "type": "object"
+            },
+            "Email": {
+              "type": "object"
+            },
+            "Fax": {
+              "type": "object"
+            },
+            "FirstName": {
+              "type": "object"
+            },
+            "LastName": {
+              "type": "object"
+            },
+            "Phone": {
+              "type": "object"
+            },
+            "PostalCode": {
+              "type": "object"
+            },
+            "State": {
+              "type": "object"
+            },
+            "SupportRepId": {
+              "type": "object"
+            }
+          }
+        },
+        "default_Employee": {
+          "type": "object",
+          "properties": {
+            "Address": {
+              "type": "object"
+            },
+            "BirthDate": {
+              "type": "object"
+            },
+            "City": {
+              "type": "object"
+            },
+            "Country": {
+              "type": "object"
+            },
+            "Email": {
+              "type": "object"
+            },
+            "EmployeeId": {
+              "type": "object"
+            },
+            "Fax": {
+              "type": "object"
+            },
+            "FirstName": {
+              "type": "object"
+            },
+            "HireDate": {
+              "type": "object"
+            },
+            "LastName": {
+              "type": "object"
+            },
+            "Phone": {
+              "type": "object"
+            },
+            "PostalCode": {
+              "type": "object"
+            },
+            "ReportsTo": {
+              "type": "object"
+            },
+            "State": {
+              "type": "object"
+            },
+            "Title": {
+              "type": "object"
+            }
+          }
+        },
+        "default_Genre": {
+          "type": "object",
+          "properties": {
+            "GenreId": {
+              "type": "object"
+            },
+            "Name": {
+              "type": "object"
+            }
+          }
+        },
+        "default_Invoice": {
+          "type": "object",
+          "properties": {
+            "BillingAddress": {
+              "type": "object"
+            },
+            "BillingCity": {
+              "type": "object"
+            },
+            "BillingCountry": {
+              "type": "object"
+            },
+            "BillingPostalCode": {
+              "type": "object"
+            },
+            "BillingState": {
+              "type": "object"
+            },
+            "CustomerId": {
+              "type": "object"
+            },
+            "InvoiceDate": {
+              "type": "object"
+            },
+            "InvoiceId": {
+              "type": "object"
+            },
+            "Total": {
+              "type": "object"
+            }
+          }
+        },
+        "default_InvoiceLine": {
+          "type": "object",
+          "properties": {
+            "InvoiceId": {
+              "type": "object"
+            },
+            "InvoiceLineId": {
+              "type": "object"
+            },
+            "Quantity": {
+              "type": "object"
+            },
+            "TrackId": {
+              "type": "object"
+            },
+            "UnitPrice": {
+              "type": "object"
+            }
+          }
+        },
+        "default_MediaType": {
+          "type": "object",
+          "properties": {
+            "MediaTypeId": {
+              "type": "object"
+            },
+            "Name": {
+              "type": "object"
+            }
+          }
+        },
+        "default_Playlist": {
+          "type": "object",
+          "properties": {
+            "Name": {
+              "type": "object"
+            },
+            "PlaylistId": {
+              "type": "object"
+            }
+          }
+        },
+        "default_PlaylistTrack": {
+          "type": "object",
+          "properties": {
+            "PlaylistId": {
+              "type": "object"
+            },
+            "TrackId": {
+              "type": "object"
+            }
+          }
+        },
+        "default_Track": {
+          "type": "object",
+          "properties": {
+            "AlbumId": {
+              "type": "object"
+            },
+            "Bytes": {
+              "type": "object"
+            },
+            "Composer": {
+              "type": "object"
+            },
+            "GenreId": {
+              "type": "object"
+            },
+            "MediaTypeId": {
+              "type": "object"
+            },
+            "Milliseconds": {
+              "type": "object"
+            },
+            "Name": {
+              "type": "object"
+            },
+            "TrackId": {
+              "type": "object"
+            },
+            "UnitPrice": {
+              "type": "object"
+            }
+          }
+        },
+        "default_commandArticle": {
+          "type": "object",
+          "properties": {
+            "article_id": {
+              "type": "integer"
+            },
+            "author_id": {
+              "type": "integer"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        "default_commandAuthor": {
+          "type": "object",
+          "properties": {
+            "first_name": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "last_name": {
+              "type": "string"
+            }
+          }
+        },
+        "default_institution": {
+          "type": "object",
+          "properties": {
+            "departments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "id": {
+              "type": "integer"
+            },
+            "location": {
+              "$ref": "default_location"
+            },
+            "name": {
+              "type": "string"
+            },
+            "staff": {
+              "type": "array",
+              "items": {
+                "$ref": "default_staff_member"
               }
             }
           }
-        }
-      }
-    },
-    "/v1/rest/default/topology_layer": {
-      "get": {
-        "summary": "Fetch topology_layer values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
-            },
-            "example": "10"
-          },
-          {
-            "name": "fields[topology_layer]",
-            "in": "query",
-            "description": "Optional list of fields from topology_layer to include in response. If no fields are provided, all fields are returned",
-            "schema": {
+        },
+        "default_location": {
+          "type": "object",
+          "properties": {
+            "campuses": {
+              "type": "array",
               "items": {
-                "enum": [
-                  "child_id",
-                  "feature_column",
-                  "feature_type",
-                  "layer_id",
-                  "level",
-                  "schema_name",
-                  "table_name",
-                  "topology_id"
-                ]
+                "type": "string"
               }
             },
-            "example": "child_id,feature_column,feature_type,layer_id,level,schema_name,table_name,topology_id"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from topology_layer to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "child_id",
-                  "-child_id",
-                  "feature_column",
-                  "-feature_column",
-                  "feature_type",
-                  "-feature_type",
-                  "layer_id",
-                  "-layer_id",
-                  "level",
-                  "-level",
-                  "schema_name",
-                  "-schema_name",
-                  "table_name",
-                  "-table_name",
-                  "topology_id",
-                  "-topology_id"
-                ]
-              }
+            "city": {
+              "type": "string"
             },
-            "example": "child_id,-feature_column,layer_id,-level"
+            "country": {
+              "type": "string"
+            }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful topology_layer response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_topology_layer"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "child_id": {
-                                "type": "object"
-                              },
-                              "feature_column": {
-                                "type": "object"
-                              },
-                              "feature_type": {
-                                "type": "object"
-                              },
-                              "layer_id": {
-                                "type": "object"
-                              },
-                              "level": {
-                                "type": "object"
-                              },
-                              "schema_name": {
-                                "type": "object"
-                              },
-                              "table_name": {
-                                "type": "object"
-                              },
-                              "topology_id": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
+        },
+        "default_spatial_ref_sys": {
+          "type": "object",
+          "properties": {
+            "auth_name": {
+              "type": "object"
+            },
+            "auth_srid": {
+              "type": "object"
+            },
+            "proj4text": {
+              "type": "object"
+            },
+            "srid": {
+              "type": "object"
+            },
+            "srtext": {
+              "type": "object"
+            }
+          }
+        },
+        "default_staff_member": {
+          "type": "object",
+          "properties": {
+            "first_name": {
+              "type": "string"
+            },
+            "last_name": {
+              "type": "string"
+            },
+            "specialities": {
+              "type": "array",
+              "items": {
+                "type": "string"
               }
             }
           }
-        }
-      }
-    },
-    "/v1/rest/default/topology_topology": {
-      "get": {
-        "summary": "Fetch topology_topology values",
-        "parameters": [
-          {
-            "name": "page[limit]",
-            "in": "query",
-            "description": "Optional limit for fetched items",
-            "schema": {
-              "type": "integer"
+        },
+        "default_topology_layer": {
+          "type": "object",
+          "properties": {
+            "child_id": {
+              "type": "object"
             },
-            "example": "5"
-          },
-          {
-            "name": "page[offset]",
-            "in": "query",
-            "description": "Optional offset for fetched items",
-            "schema": {
-              "type": "integer"
+            "feature_column": {
+              "type": "object"
             },
-            "example": "10"
-          },
-          {
-            "name": "fields[topology_topology]",
-            "in": "query",
-            "description": "Optional list of fields from topology_topology to include in response. If no fields are provided, all fields are returned",
-            "schema": {
-              "items": {
-                "enum": [
-                  "hasz",
-                  "id",
-                  "name",
-                  "precision",
-                  "srid"
-                ]
-              }
+            "feature_type": {
+              "type": "object"
             },
-            "example": "hasz,id,name,precision,srid"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Optional list of fields from topology_topology to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",
-            "schema": {
-              "items": {
-                "enum": [
-                  "hasz",
-                  "-hasz",
-                  "id",
-                  "-id",
-                  "name",
-                  "-name",
-                  "precision",
-                  "-precision",
-                  "srid",
-                  "-srid"
-                ]
-              }
+            "layer_id": {
+              "type": "object"
             },
-            "example": "hasz,-id,precision,-srid"
+            "level": {
+              "type": "object"
+            },
+            "schema_name": {
+              "type": "object"
+            },
+            "table_name": {
+              "type": "object"
+            },
+            "topology_id": {
+              "type": "object"
+            }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful topology_topology response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "required": [
-                          "id",
-                          "_type",
-                          "attributes"
-                        ],
-                        "properties": {
-                          "_type": {
-                            "enum": [
-                              "default_topology_topology"
-                            ]
-                          },
-                          "attributes": {
-                            "type": "object",
-                            "properties": {
-                              "hasz": {
-                                "type": "object"
-                              },
-                              "id": {
-                                "type": "object"
-                              },
-                              "name": {
-                                "type": "object"
-                              },
-                              "precision": {
-                                "type": "object"
-                              },
-                              "srid": {
-                                "type": "object"
-                              }
-                            }
-                          },
-                          "id": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+        },
+        "default_topology_topology": {
+          "type": "object",
+          "properties": {
+            "hasz": {
+              "type": "object"
+            },
+            "id": {
+              "type": "object"
+            },
+            "name": {
+              "type": "object"
+            },
+            "precision": {
+              "type": "object"
+            },
+            "srid": {
+              "type": "object"
             }
           }
         }

@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use super::parse;
 use super::process_response;
-use super::types::{Catalog, Model, QueryResult, RequestError, State};
+use super::types::{QueryResult, RequestError};
+use crate::catalog::{Catalog, Model, State};
 use axum::http::{HeaderMap, Method, Uri};
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
@@ -35,7 +36,15 @@ pub async fn handler_internal<'metadata>(
                 "create_query_ir",
                 "Create query IR",
                 SpanVisibility::User,
-                || parse::create_query_ir(model, &http_method, &uri, &query_string),
+                || {
+                    parse::create_query_ir(
+                        model,
+                        &state.object_types,
+                        &http_method,
+                        &uri,
+                        &query_string,
+                    )
+                },
             )?;
 
             // execute the query with the query-engine

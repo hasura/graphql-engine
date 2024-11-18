@@ -1,4 +1,4 @@
-use super::types::{Model, ModelInfo, RequestError};
+use super::types::{ModelInfo, RequestError};
 use axum::http::{Method, Uri};
 use indexmap::IndexMap;
 use open_dds::{
@@ -9,6 +9,9 @@ use open_dds::{
 };
 use serde::{Deserialize, Serialize};
 mod filter;
+use crate::catalog::{Model, ObjectType};
+use metadata_resolve::Qualified;
+use std::collections::BTreeMap;
 
 #[derive(Debug, derive_more::Display, Serialize, Deserialize)]
 pub enum ParseError {
@@ -17,10 +20,21 @@ pub enum ParseError {
     InvalidModelName(String),
     InvalidSubgraph(String),
     PathLengthMustBeAtLeastTwo,
+    CannotFindObjectType(Qualified<CustomTypeName>),
+}
+
+fn get_object_type<'a>(
+    object_types: &'a BTreeMap<Qualified<CustomTypeName>, ObjectType>,
+    object_type_name: &Qualified<CustomTypeName>,
+) -> Result<&'a ObjectType, ParseError> {
+    object_types
+        .get(object_type_name)
+        .ok_or_else(|| ParseError::CannotFindObjectType(object_type_name.clone()))
 }
 
 pub fn create_query_ir(
     model: &Model,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
     _http_method: &Method,
     uri: &Uri,
     query_string: &jsonapi_library::query::Query,
@@ -33,11 +47,14 @@ pub fn create_query_ir(
         relationship: _,
     } = parse_url(uri).map_err(RequestError::ParseError)?;
 
-    validate_sparse_fields(model, query_string)?;
+    let object_type =
+        get_object_type(object_types, &model.data_type).map_err(RequestError::ParseError)?;
+
+    validate_sparse_fields(&model.data_type, object_type, query_string)?;
 
     // create the selection fields; include all fields of the model output type
     let mut selection = IndexMap::new();
-    for field_name in model.type_fields.keys() {
+    for field_name in object_type.0.keys() {
         if include_field(query_string, field_name, &model.data_type.name) {
             let field_name_ident = Identifier::new(field_name.as_str())
                 .map_err(|e| RequestError::BadRequest(e.into()))?;
@@ -115,16 +132,17 @@ pub fn create_query_ir(
 // check all fields in sparse fields are accessible, explode if not
 // this will disallow relationship or nested fields
 fn validate_sparse_fields(
-    model: &Model,
+    object_type_name: &Qualified<CustomTypeName>,
+    object_type: &ObjectType,
     query_string: &jsonapi_library::query::Query,
 ) -> Result<(), RequestError> {
-    let type_name_string = model.data_type.name.to_string();
+    let type_name_string = object_type_name.name.to_string();
     if let Some(fields) = &query_string.fields {
         for (type_name, type_fields) in fields {
             if *type_name == type_name_string {
                 for type_field in type_fields {
                     let string_fields: Vec<_> =
-                        model.type_fields.keys().map(ToString::to_string).collect();
+                        object_type.0.keys().map(ToString::to_string).collect();
 
                     if !string_fields.contains(type_field) {
                         return Err(RequestError::BadRequest(format!(

@@ -1,9 +1,9 @@
+use super::shared::pretty_typename;
+use crate::catalog::{Model, ObjectType, Type};
 use crate::schema::{
     array_schema, bool_schema, enum_schema, float_schema, int_schema, json_schema, object_schema,
     string_schema,
 };
-use crate::{FieldType, Model};
-
 use oas3::spec::{ObjectOrReference, ObjectSchema};
 use std::collections::BTreeMap;
 
@@ -20,23 +20,44 @@ use std::collections::BTreeMap;
 // ]}%
 
 // an OpenDD type represented in OpenAPI
-fn type_schema(field_type: &FieldType) -> ObjectSchema {
-    match field_type {
-        FieldType::TypeRepresentation(type_representation) => {
-            from_type_representation(type_representation)
+fn type_schema(ty: &Type) -> ObjectOrReference<ObjectSchema> {
+    match ty {
+        Type::ScalarForDataConnector(set_of_types) => {
+            // if there is only one, use it, otherwise, JSON
+            match set_of_types.type_representations.first() {
+                Some(ty) => {
+                    if set_of_types.type_representations.len() == 1 {
+                        ObjectOrReference::Object(from_type_representation(ty))
+                    } else {
+                        ObjectOrReference::Object(from_type_representation(
+                            &ndc_models::TypeRepresentation::JSON,
+                        ))
+                    }
+                }
+                None => ObjectOrReference::Object(from_type_representation(
+                    &ndc_models::TypeRepresentation::JSON,
+                )),
+            }
         }
-        FieldType::List(field_type) => {
-            let inner = type_schema(field_type);
-            array_schema(ObjectOrReference::Object(inner))
+        Type::Scalar(type_representation) => {
+            ObjectOrReference::Object(from_type_representation(type_representation))
         }
-        FieldType::Object(fields) => object_schema(
-            fields
-                .iter()
-                .map(|(k, v)| (k.to_string(), ObjectOrReference::Object(type_schema(v))))
-                .collect(),
-            vec![],
-        ),
+        Type::List(field_type) => ObjectOrReference::Object(array_schema(type_schema(field_type))),
+        Type::Object(object_type_name) => ObjectOrReference::Ref {
+            ref_path: pretty_typename(object_type_name),
+        },
     }
+}
+
+// what we output for each type
+pub fn object_schema_for_object_type(object_type: &ObjectType) -> ObjectSchema {
+    let mut fields = BTreeMap::new();
+    for (name, ty) in &object_type.0 {
+        fields.insert(name.to_string(), type_schema(ty));
+    }
+    let required = vec![]; // these are used as output types for the moment so everything is
+                           // nullable
+    object_schema(fields, required)
 }
 
 #[allow(deprecated)]
@@ -68,13 +89,10 @@ fn from_type_representation(type_representation: &ndc_models::TypeRepresentation
 // a single 'data' item. we'll need to pass in types so we can
 // have nice types for the `attributes` and `type`, for now let's make
 // them stringy
-fn jsonapi_data_schema(model: &Model) -> ObjectSchema {
+fn jsonapi_data_schema(model: &Model, object_type: &ObjectType) -> ObjectSchema {
     let mut attributes = BTreeMap::new();
-    for (field_name, field_type) in &model.type_fields {
-        attributes.insert(
-            field_name.to_string(),
-            ObjectOrReference::Object(type_schema(field_type)),
-        );
+    for (field_name, field_type) in &object_type.0 {
+        attributes.insert(field_name.to_string(), type_schema(field_type));
     }
 
     let mut properties = BTreeMap::new();
@@ -83,7 +101,7 @@ fn jsonapi_data_schema(model: &Model) -> ObjectSchema {
 
     properties.insert(
         "_type".into(),
-        ObjectOrReference::Object(enum_schema(vec![model.pretty_typename()])),
+        ObjectOrReference::Object(enum_schema(vec![pretty_typename(&model.data_type)])),
     );
 
     properties.insert(
@@ -98,13 +116,13 @@ fn jsonapi_data_schema(model: &Model) -> ObjectSchema {
 }
 
 // top level jsonapi document
-pub fn jsonapi_document_schema(model: &Model) -> ObjectSchema {
+pub fn jsonapi_document_schema(model: &Model, object_type: &ObjectType) -> ObjectSchema {
     let mut properties = BTreeMap::new();
 
     properties.insert(
         "data".into(),
         ObjectOrReference::Object(array_schema(ObjectOrReference::Object(
-            jsonapi_data_schema(model),
+            jsonapi_data_schema(model, object_type),
         ))),
     );
 

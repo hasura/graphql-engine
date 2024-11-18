@@ -22,6 +22,7 @@ ndc-models = { workspace = true }
 oas3 = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
 insta = { workspace = true }
@@ -32,4 +33,4 @@ tokio = { workspace = true }
 workspace = true
 
 [package.metadata.cargo-machete]
-ignored = ["error_chain", "log", "queryst", "serde", "serde_derive" ]
+ignored = ["error_chain", "log", "queryst", "serde_derive" ]

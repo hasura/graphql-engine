@@ -1,5 +1,11 @@
+use metadata_resolve::Qualified;
 use oas3::spec::{ObjectOrReference, ObjectSchema, SchemaType, SchemaTypeSet};
+use open_dds::types::CustomTypeName;
 use std::collections::BTreeMap;
+
+pub fn pretty_typename(custom_type_name: &Qualified<CustomTypeName>) -> String {
+    format!("{}_{}", custom_type_name.subgraph, custom_type_name.name)
+}
 
 pub fn bool_schema() -> ObjectSchema {
     ObjectSchema {

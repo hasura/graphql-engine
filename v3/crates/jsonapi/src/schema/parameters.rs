@@ -1,5 +1,5 @@
 use super::shared::{enum_schema, int_schema};
-use crate::Model;
+use crate::catalog::{Model, ObjectType};
 use std::collections::BTreeMap;
 use std::string::ToString;
 
@@ -43,17 +43,17 @@ pub fn page_limit_parameter() -> oas3::spec::Parameter {
     }
 }
 
-pub fn fields_parameter(model: &Model) -> oas3::spec::Parameter {
+pub fn fields_parameter(model: &Model, object_type: &ObjectType) -> oas3::spec::Parameter {
     let schema = oas3::spec::ObjectOrReference::Object(oas3::spec::ObjectSchema {
         items: Some(Box::new(oas3::spec::ObjectOrReference::Object(
-            enum_schema(model.type_fields.keys().map(ToString::to_string).collect()),
+            enum_schema(object_type.0.keys().map(ToString::to_string).collect()),
         ))),
         ..oas3::spec::ObjectSchema::default()
     });
 
     let mut example = String::new();
-    for (i, field) in model.type_fields.keys().enumerate() {
-        if i > 0 && i < model.type_fields.len() {
+    for (i, field) in object_type.0.keys().enumerate() {
+        if i > 0 && i < object_type.0.len() {
             example.push(',');
         }
         example.push_str(&field.to_string());
@@ -77,11 +77,11 @@ pub fn fields_parameter(model: &Model) -> oas3::spec::Parameter {
     }
 }
 
-pub fn ordering_parameter(model: &Model) -> oas3::spec::Parameter {
+pub fn ordering_parameter(model: &Model, object_type: &ObjectType) -> oas3::spec::Parameter {
     // each field can be `thing` (sort ascending by 'thing') or `-thing` (sort descending by
     // 'thing')
     let mut sort_keys = Vec::new();
-    for type_field in model.type_fields.keys() {
+    for type_field in object_type.0.keys() {
         sort_keys.push(format!("{type_field}"));
         sort_keys.push(format!("-{type_field}"));
     }
