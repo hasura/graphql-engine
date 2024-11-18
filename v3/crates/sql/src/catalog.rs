@@ -1,5 +1,6 @@
 use std::{any::Any, sync::Arc};
 
+use crate::catalog::subgraph::Subgraph;
 use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use metadata_resolve::{self as resolved};
@@ -25,13 +26,44 @@ pub mod model;
 pub mod subgraph;
 pub mod types;
 
-/// The context in which to compile and execute SQL queries.
+/// [`Catalog`] but parameterized, so that `subgraph` can be `SubgraphSerializable` for
+/// serialization.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct Catalog {
-    pub(crate) subgraphs: IndexMap<String, Arc<subgraph::Subgraph>>,
+pub struct CatalogSer<SG> {
+    pub(crate) subgraphs: IndexMap<String, SG>,
     pub(crate) table_valued_functions: IndexMap<String, Arc<command::Command>>,
     pub(crate) introspection: Arc<introspection::IntrospectionSchemaProvider>,
     pub(crate) default_schema: Option<String>,
+}
+
+/// The context in which to compile and execute SQL queries.
+pub type Catalog = CatalogSer<subgraph::Subgraph>;
+
+pub type CatalogSerializable = CatalogSer<subgraph::SubgraphSerializable>;
+
+impl CatalogSerializable {
+    pub fn from_serializable(self, metadata: &Arc<resolved::Metadata>) -> Catalog {
+        let subgraphs = self
+            .subgraphs
+            .into_iter()
+            .map(|(name, tables)| {
+                (
+                    name,
+                    Subgraph {
+                        metadata: metadata.clone(),
+                        tables,
+                    },
+                )
+            })
+            .collect();
+
+        CatalogSer {
+            subgraphs,
+            table_valued_functions: self.table_valued_functions,
+            introspection: self.introspection,
+            default_schema: self.default_schema,
+        }
+    }
 }
 
 impl Catalog {
@@ -46,6 +78,23 @@ impl Catalog {
             default_schema: None,
         }
     }
+
+    /// prepare a Catalog for serializing by stripping redundant artifacts
+    pub fn to_serializable(self) -> CatalogSer<subgraph::SubgraphSerializable> {
+        let serialized_subgraphs = self
+            .subgraphs
+            .into_iter()
+            .map(|(name, subgraph)| (name, subgraph.tables))
+            .collect();
+
+        CatalogSer {
+            subgraphs: serialized_subgraphs,
+            table_valued_functions: self.table_valued_functions,
+            introspection: self.introspection,
+            default_schema: self.default_schema,
+        }
+    }
+
     /// Derive a SQL Context from resolved Open DDS metadata.
     pub fn from_metadata(metadata: &Arc<resolved::Metadata>) -> Self {
         let type_registry = TypeRegistry::build_type_registry(metadata);
@@ -109,10 +158,7 @@ impl Catalog {
         );
 
         Catalog {
-            subgraphs: subgraphs
-                .into_iter()
-                .map(|(k, v)| (k, Arc::new(v)))
-                .collect(),
+            subgraphs,
             table_valued_functions,
             introspection: Arc::new(introspection),
             default_schema,
@@ -134,7 +180,7 @@ impl datafusion::CatalogProvider for model::WithSession<Catalog> {
     fn schema(&self, name: &str) -> Option<Arc<dyn datafusion::SchemaProvider>> {
         let subgraph_provider = self.value.subgraphs.get(name).cloned().map(|schema| {
             Arc::new(model::WithSession {
-                value: schema,
+                value: schema.into(),
                 session: self.session.clone(),
             }) as Arc<dyn datafusion::SchemaProvider>
         });

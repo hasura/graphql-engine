@@ -3,7 +3,6 @@ use metadata_resolve::Metadata;
 use std::{any::Any, sync::Arc};
 
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
 
 mod datafusion {
     pub(super) use datafusion::error::Result;
@@ -14,11 +13,21 @@ use crate::catalog;
 
 use super::model;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct Subgraph {
-    pub metadata: Arc<Metadata>,
-    pub tables: IndexMap<String, Arc<catalog::model::Model>>,
+/// TODO document
+///
+/// This is intentionally not `Serialize`/`Deserialize`, and constructed from a
+/// [`SubgraphSerializable`].
+#[derive(Clone, Debug, PartialEq)]
+pub struct Subgraph {
+    pub(crate) metadata: Arc<Metadata>,
+    pub(crate) tables: IndexMap<String, Arc<catalog::model::Model>>,
 }
+
+/// This is [`Subgraph`] but with `metadata` removed (to avoid redundancy in artifact creation, and
+/// to avoid the confusion of multiple copies of the same thing expected to be identical but
+/// perhaps not, or perhaps no one knows...). It is reconstituted as `Subgraph` at some point after
+/// deserializing.
+pub type SubgraphSerializable = IndexMap<String, Arc<catalog::model::Model>>;
 
 #[async_trait]
 impl datafusion::SchemaProvider for catalog::model::WithSession<Subgraph> {

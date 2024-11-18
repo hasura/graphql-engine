@@ -14,7 +14,7 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Catalog {
     pub state_per_role: BTreeMap<Role, State>,
 }
@@ -40,7 +40,7 @@ impl Catalog {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct State {
     pub routes: BTreeMap<String, Model>,
     #[serde(
@@ -50,7 +50,7 @@ pub struct State {
     pub object_types: BTreeMap<Qualified<CustomTypeName>, ObjectType>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct ObjectType(pub IndexMap<FieldName, Type>);
 
 impl State {
@@ -125,7 +125,7 @@ impl State {
 //
 // for now we'll try d) but we should check we're happy with this before general release
 // of the feature
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum Type {
     Scalar(ndc_models::TypeRepresentation),
     ScalarForDataConnector(ScalarTypeForDataConnector),
@@ -133,14 +133,14 @@ pub enum Type {
     Object(Qualified<CustomTypeName>),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct ScalarTypeForDataConnector {
     pub type_representations: BTreeSet<ndc_models::TypeRepresentation>,
 }
 
 // only the parts of a Model we need to construct a JSONAPI
 // we'll filter out fields a given role can't see
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Model {
     pub name: Qualified<ModelName>,
     pub description: Option<String>,

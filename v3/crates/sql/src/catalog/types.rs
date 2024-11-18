@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeSet, HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet},
     fmt::{Debug, Display},
     sync::Arc,
 };
@@ -29,7 +29,7 @@ type SupportedScalar = (NormalizedType, datafusion::DataType);
 #[derive(Error, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum UnsupportedScalar {
     #[error("Multiple NDC type representations found for scalar type '{0}'")]
-    MultipleNdcTypeRepresentations(CustomTypeName, HashSet<ndc_models::TypeRepresentation>),
+    MultipleNdcTypeRepresentations(CustomTypeName, BTreeSet<ndc_models::TypeRepresentation>),
     #[error("No NDC representation found for scalar type '{0}'")]
     NoNdcRepresentation(CustomTypeName),
     #[error("Unsupported NDC type representation for scalar type '{0}': {1:?}")]
@@ -42,7 +42,7 @@ pub fn resolve_scalar_type(
     scalar_type_name: &Qualified<CustomTypeName>,
     representation: &ScalarTypeRepresentation,
 ) -> Scalar {
-    let representations: HashSet<ndc_models::TypeRepresentation> =
+    let representations: BTreeSet<ndc_models::TypeRepresentation> =
         representation.representations.values().cloned().collect();
     let mut iter = representations.into_iter();
     let ndc_representation = match iter.next() {
@@ -83,8 +83,8 @@ pub fn resolve_scalar_type(
 
 pub fn resolve_scalar_types(
     metadata: &resolved::Metadata,
-) -> HashMap<Qualified<CustomTypeName>, Scalar> {
-    let mut custom_scalars: HashMap<Qualified<CustomTypeName>, Scalar> = HashMap::new();
+) -> BTreeMap<Qualified<CustomTypeName>, Scalar> {
+    let mut custom_scalars: BTreeMap<Qualified<CustomTypeName>, Scalar> = BTreeMap::new();
     for (scalar_type_name, representation) in &metadata.scalar_types {
         let scalar = resolve_scalar_type(scalar_type_name, representation);
         custom_scalars.insert(scalar_type_name.clone(), scalar);
@@ -93,8 +93,8 @@ pub fn resolve_scalar_types(
 }
 
 pub struct TypeRegistry {
-    custom_scalars: HashMap<Qualified<CustomTypeName>, Scalar>,
-    struct_types: HashMap<Qualified<CustomTypeName>, Struct>,
+    custom_scalars: BTreeMap<Qualified<CustomTypeName>, Scalar>,
+    struct_types: BTreeMap<Qualified<CustomTypeName>, Struct>,
     default_schema: Option<SubgraphName>,
 }
 
@@ -113,7 +113,7 @@ impl TypeRegistry {
         // build a default schema by checking if the object types are spread across more than one
         // subgraph
         let default_schema = {
-            let subgraphs: HashSet<_> = metadata
+            let subgraphs: BTreeSet<_> = metadata
                 .object_types
                 .keys()
                 .map(|object_type_name| &object_type_name.subgraph)
@@ -127,7 +127,7 @@ impl TypeRegistry {
 
         let custom_scalars = resolve_scalar_types(metadata);
 
-        let mut struct_types: HashMap<Qualified<CustomTypeName>, Struct> = HashMap::new();
+        let mut struct_types: BTreeMap<Qualified<CustomTypeName>, Struct> = BTreeMap::new();
 
         for (object_type_name, object_type) in &metadata.object_types {
             let struct_type = struct_type(
@@ -206,7 +206,7 @@ impl TypeRegistry {
         // }
     }
 
-    pub(crate) fn struct_types(&self) -> &HashMap<Qualified<CustomTypeName>, Struct> {
+    pub(crate) fn struct_types(&self) -> &BTreeMap<Qualified<CustomTypeName>, Struct> {
         &self.struct_types
     }
 
@@ -214,7 +214,7 @@ impl TypeRegistry {
         self.default_schema.as_ref()
     }
 
-    pub fn custom_scalars(&self) -> &HashMap<Qualified<CustomTypeName>, Scalar> {
+    pub fn custom_scalars(&self) -> &BTreeMap<Qualified<CustomTypeName>, Scalar> {
         &self.custom_scalars
     }
 }
@@ -338,7 +338,7 @@ type Struct = Result<StructType, UnsupportedObject>;
 fn struct_type(
     default_schema: &Option<SubgraphName>,
     metadata: &resolved::Metadata,
-    custom_scalars: &HashMap<Qualified<CustomTypeName>, Scalar>,
+    custom_scalars: &BTreeMap<Qualified<CustomTypeName>, Scalar>,
     object_type_name: &Qualified<CustomTypeName>,
     object_type: &resolved::ObjectTypeWithRelationships,
     disallowed_object_types: &BTreeSet<Qualified<CustomTypeName>>,
@@ -491,7 +491,7 @@ fn ndc_representation_to_datatype(
 fn to_arrow_type(
     default_schema: &Option<SubgraphName>,
     metadata: &resolved::Metadata,
-    custom_scalars: &HashMap<Qualified<CustomTypeName>, Scalar>,
+    custom_scalars: &BTreeMap<Qualified<CustomTypeName>, Scalar>,
     ty: &resolved::QualifiedBaseType,
     disallowed_object_types: &BTreeSet<Qualified<CustomTypeName>>,
     // ) -> GeneratedArrowType {

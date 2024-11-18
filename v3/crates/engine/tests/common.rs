@@ -12,6 +12,7 @@ use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
 use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
 use pretty_assertions::assert_eq;
 use serde_json as json;
+use sql::catalog::CatalogSerializable;
 use sql::execute::SqlRequest;
 use std::collections::BTreeMap;
 use std::iter;
@@ -261,9 +262,12 @@ pub fn test_execution_expectation_for_multiple_ndc_versions(
 
             // Ensure sql_context can be serialized and deserialized
             let sql_context = sql::catalog::Catalog::from_metadata(&gds.metadata);
-            let sql_context_str = serde_json::to_string(&sql_context)?;
-            let sql_context_parsed = serde_json::from_str(&sql_context_str)?;
-            assert_eq!(sql_context, sql_context_parsed);
+            let sql_context_str = serde_json::to_string(&sql_context.clone().to_serializable())?;
+            let sql_context_parsed: CatalogSerializable = serde_json::from_str(&sql_context_str)?;
+            assert_eq!(
+                sql_context,
+                sql_context_parsed.from_serializable(&gds.metadata)
+            );
             assert_eq!(
                 schema, deserialized_metadata,
                 "initial built metadata does not match deserialized metadata"
@@ -577,9 +581,12 @@ pub(crate) fn test_sql(test_path_string: &str) -> anyhow::Result<()> {
 
         // Ensure sql_context can be serialized and deserialized
         let sql_context = sql::catalog::Catalog::from_metadata(&gds.metadata);
-        let sql_context_str = serde_json::to_string(&sql_context)?;
-        let sql_context_parsed = serde_json::from_str(&sql_context_str)?;
-        assert_eq!(sql_context, sql_context_parsed);
+        let sql_context_str = serde_json::to_string(&sql_context.clone().to_serializable())?;
+        let sql_context_parsed: CatalogSerializable = serde_json::from_str(&sql_context_str)?;
+        assert_eq!(
+            sql_context,
+            sql_context_parsed.from_serializable(&gds.metadata)
+        );
 
         let request = if let Ok(content) = read_to_string(&request_path) {
             SqlRequest::new(content)

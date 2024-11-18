@@ -17,7 +17,7 @@ use datafusion::{
     error::DataFusionError,
     scalar::ScalarValue,
 };
-use std::{collections::HashSet, sync::Arc};
+use std::{collections::BTreeSet, sync::Arc};
 
 /// Parses a datafusion literal into a json value, supports most types (including structs and arrays).
 pub(crate) fn parse_datafusion_literal(
@@ -197,7 +197,7 @@ pub(crate) fn parse_struct_literal(
         }
     } else {
         // Create a map of expected fields
-        let expected_field_set: HashSet<_> =
+        let expected_field_set: BTreeSet<_> =
             expected_fields.iter().map(|field| field.name()).collect();
 
         // Check for extra fields in the struct that aren't expected
@@ -216,7 +216,7 @@ pub(crate) fn parse_struct_literal(
         }
     }
 
-    let field_name_to_index: std::collections::HashMap<_, _> = struct_array
+    let field_name_to_index: std::collections::BTreeMap<_, _> = struct_array
         .fields()
         .iter()
         .enumerate()

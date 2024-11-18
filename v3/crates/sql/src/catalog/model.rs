@@ -55,23 +55,23 @@ pub enum UnsupportedModel {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub(crate) struct Model {
-    pub subgraph: SubgraphName,
-    pub name: ModelName,
+pub struct Model {
+    pub(crate) subgraph: SubgraphName,
+    pub(crate) name: ModelName,
 
-    pub description: Option<String>,
+    pub(crate) description: Option<String>,
 
-    pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
+    pub(crate) arguments: IndexMap<ArgumentName, ArgumentInfo>,
 
     // The struct type of the model's object type
-    pub struct_type: StructTypeName,
+    pub(crate) struct_type: StructTypeName,
 
     // Datafusion table schema
-    pub schema: datafusion::SchemaRef,
+    pub(crate) schema: datafusion::SchemaRef,
 
     // This is the entry point for the type mappings stored
     // in ModelSource
-    pub data_type: Qualified<CustomTypeName>,
+    pub(crate) data_type: Qualified<CustomTypeName>,
 }
 
 impl Model {
