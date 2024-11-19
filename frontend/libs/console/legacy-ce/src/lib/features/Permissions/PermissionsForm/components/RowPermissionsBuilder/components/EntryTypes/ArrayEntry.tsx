@@ -24,7 +24,7 @@ export function ArrayEntry({
           !isComparator(k) ? `border-dashed border-l border-gray-200` : ''
         }
       >
-        <div className="p-2 ml-6">
+        <div className="p-2 ml-6 flex items-center">
           {array.map((entry, i) => {
             return (
               <ValueInput
@@ -38,6 +38,7 @@ export function ArrayEntry({
           <Button
             onClick={() => setValue([...path, String(array.length)], '')}
             mode="default"
+            size="sm"
           >
             Add input
           </Button>

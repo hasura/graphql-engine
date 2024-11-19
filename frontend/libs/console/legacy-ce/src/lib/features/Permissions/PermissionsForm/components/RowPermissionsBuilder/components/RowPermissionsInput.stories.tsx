@@ -703,6 +703,36 @@ export const NumericIntValue: StoryObj<typeof RowPermissionsInput> = {
   ),
 };
 
+export const ArrayValueWithInput: StoryObj<typeof RowPermissionsInput> = {
+  render: args => (
+    <RowPermissionsInput
+      onPermissionsChange={action('onPermissionsChange')}
+      table={['Album']}
+      tables={tables}
+      comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
+      permissions={{ id: { _in: [''] } }}
+    />
+  ),
+};
+
+export const ArrayValueWithSessionVariable: StoryObj<
+  typeof RowPermissionsInput
+> = {
+  render: args => (
+    <RowPermissionsInput
+      onPermissionsChange={action('onPermissionsChange')}
+      table={['Album']}
+      tables={tables}
+      comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
+      permissions={{ id: { _in: 'X-Hasura-Allowed-Ids' } }}
+    />
+  ),
+};
+
 export const NumericFloatValue: StoryObj<typeof RowPermissionsInput> = {
   render: args => (
     <RowPermissionsInput
