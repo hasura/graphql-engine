@@ -724,5 +724,5 @@ fn include_relationship_field(
     // Include relationship if bypassing  relation_comparison NDC capability is set to true
     global_graphql_config.bypass_relation_comparisons_ndc_capability
         // Else, check for NDC capability
-        || target_capabilities.is_some_and(|capabilities| capabilities.relationship_comparison)
+        || target_capabilities.is_some_and(|capabilities| capabilities.supports_relationships.as_ref().is_some_and(|r| r.supports_relation_comparisons))
 }

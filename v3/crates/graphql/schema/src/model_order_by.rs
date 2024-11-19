@@ -3,7 +3,7 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use open_dds::models::ModelName;
 use open_dds::relationships::{RelationshipName, RelationshipType};
-use open_dds::types::Deprecated;
+use open_dds::types::{CustomTypeName, Deprecated};
 use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::relationship::OrderByRelationshipAnnotation;
@@ -261,12 +261,20 @@ pub fn build_model_order_by_input_schema(
                 &mut fields,
                 builder,
                 model,
+                &order_by_expression.ordered_type,
                 object_type_representation,
                 orderable_relationships,
             )?;
         }
         OrderableRelationships::ModelV1AllowAll => {
-            build_all_relationships(gds, &mut fields, builder, model, object_type_representation)?;
+            build_all_relationships(
+                gds,
+                &mut fields,
+                builder,
+                model,
+                &order_by_expression.ordered_type,
+                object_type_representation,
+            )?;
         }
     }
 
@@ -283,6 +291,7 @@ fn build_all_relationships(
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
     model: &ModelWithArgumentPresets,
+    object_type_name: &Qualified<CustomTypeName>,
     object_type_representation: &ObjectTypeWithRelationships,
 ) -> Result<(), Error> {
     for (rel_name, relationship) in &object_type_representation.relationship_fields {
@@ -316,9 +325,16 @@ fn build_all_relationships(
                 .map_err(metadata_resolve::Error::from)
                 .map_err(metadata_resolve::WithContext::from)?;
 
+                let relationship_field_nestedness = if model.model.data_type == *object_type_name {
+                    metadata_resolve::FieldNestedness::NotNested
+                } else {
+                    metadata_resolve::FieldNestedness::ObjectNested
+                };
+
                 // order_by expression with relationships is currently only supported for local relationships
                 if let metadata_resolve::RelationshipExecutionCategory::Local =
                     metadata_resolve::relationship_execution_category(
+                        relationship_field_nestedness,
                         &model_source.data_connector,
                         &target_source.data_connector,
                         &target_model_source.capabilities,
@@ -388,6 +404,7 @@ fn build_orderable_relationships(
     fields: &mut BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     builder: &mut gql_schema::Builder<GDS>,
     model: &ModelWithArgumentPresets,
+    object_type_name: &Qualified<CustomTypeName>,
     object_type_representation: &ObjectTypeWithRelationships,
     orderable_relationships: &BTreeMap<RelationshipName, OrderableRelationship>,
 ) -> Result<(), Error> {
@@ -434,9 +451,16 @@ fn build_orderable_relationships(
                 .map_err(metadata_resolve::Error::from)
                 .map_err(metadata_resolve::WithContext::from)?;
 
+                let relationship_field_nestedness = if model.model.data_type == *object_type_name {
+                    metadata_resolve::FieldNestedness::NotNested
+                } else {
+                    metadata_resolve::FieldNestedness::ObjectNested
+                };
+
                 // order_by expression with relationships is currently only supported for local relationships
                 if let metadata_resolve::RelationshipExecutionCategory::Local =
                     metadata_resolve::relationship_execution_category(
+                        relationship_field_nestedness,
                         &model_source.data_connector,
                         &target_source.data_connector,
                         &target_model_source.capabilities,

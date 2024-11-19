@@ -50,6 +50,14 @@ pub(crate) fn definition() -> ndc_models::ObjectType {
                     arguments: BTreeMap::new(),
                 },
             ),
+            (
+                "favourite_movie_id".into(),
+                ndc_models::ObjectField {
+                    description: Some("The movie_id of the staff member's favourite movie".into()),
+                    r#type: ndc_models::Type::Named { name: "Int".into() },
+                    arguments: BTreeMap::new(),
+                },
+            ),
         ]),
         foreign_keys: BTreeMap::new(),
     }

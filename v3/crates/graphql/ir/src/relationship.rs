@@ -64,6 +64,7 @@ pub type TargetField = (FieldName, metadata_resolve::NdcColumnForComparison);
 pub fn generate_model_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     relationship_annotation: &'s ModelRelationshipAnnotation,
+    relationship_field_nestedness: metadata_resolve::FieldNestedness,
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
     source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     session_variables: &SessionVariables,
@@ -168,6 +169,7 @@ pub fn generate_model_relationship_ir<'s>(
     )?;
 
     match metadata_resolve::relationship_execution_category(
+        relationship_field_nestedness,
         source_data_connector,
         &target_source.model.data_connector,
         &target_source.capabilities,
@@ -200,6 +202,7 @@ pub fn generate_model_relationship_ir<'s>(
 pub fn generate_model_aggregate_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     relationship_annotation: &'s ModelAggregateRelationshipAnnotation,
+    relationship_field_nestedness: metadata_resolve::FieldNestedness,
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
     source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     session_variables: &SessionVariables,
@@ -234,6 +237,7 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
     )?;
 
     match metadata_resolve::relationship_execution_category(
+        relationship_field_nestedness,
         source_data_connector,
         &target_source.model.data_connector,
         &target_source.capabilities,
@@ -266,6 +270,7 @@ pub fn generate_model_aggregate_relationship_ir<'s>(
 pub fn generate_command_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
+    relationship_field_nestedness: metadata_resolve::FieldNestedness,
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     session_variables: &SessionVariables,
@@ -290,6 +295,7 @@ pub fn generate_command_relationship_ir<'s>(
             })?;
 
     match metadata_resolve::relationship_execution_category(
+        relationship_field_nestedness,
         source_data_connector,
         &target_source.details.data_connector,
         &target_source.capabilities,

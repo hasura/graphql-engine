@@ -696,6 +696,16 @@ fn eval_path(
     let mut result: Vec<Row> = vec![item.clone()];
 
     for path_element in path {
+        if !state.enable_relationship_support {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: "Relationships are not supported".into(),
+                    details: serde_json::Value::Null,
+                }),
+            ));
+        }
+
         let relationship_name = path_element.relationship.as_str();
         let relationship = collection_relationships.get(relationship_name).ok_or((
             StatusCode::BAD_REQUEST,
@@ -1022,6 +1032,16 @@ fn eval_in_collection(
             field_path: _,
             arguments,
         } => {
+            if !state.enable_relationship_support {
+                return Err((
+                    StatusCode::BAD_REQUEST,
+                    Json(ndc_models::ErrorResponse {
+                        message: "Relationships are not supported".into(),
+                        details: serde_json::Value::Null,
+                    }),
+                ));
+            }
+
             let relationship = collection_relationships.get(relationship.as_str()).ok_or((
                 StatusCode::BAD_REQUEST,
                 Json(ndc_models::ErrorResponse {
@@ -1270,13 +1290,27 @@ fn eval_field(
             arguments,
             query,
         } => {
-            let relationship = collection_relationships.get(relationship.as_str()).ok_or((
-                StatusCode::BAD_REQUEST,
-                Json(ndc_models::ErrorResponse {
-                    message: " ".into(),
-                    details: serde_json::Value::Null,
-                }),
-            ))?;
+            if !state.enable_relationship_support {
+                return Err((
+                    StatusCode::BAD_REQUEST,
+                    Json(ndc_models::ErrorResponse {
+                        message: "Relationships are not supported".into(),
+                        details: serde_json::Value::Null,
+                    }),
+                ));
+            }
+
+            let relationship = collection_relationships
+                .get(relationship.as_str())
+                .ok_or_else(|| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        Json(ndc_models::ErrorResponse {
+                            message: format!("Unknown relationship {relationship}"),
+                            details: serde_json::Value::Null,
+                        }),
+                    )
+                })?;
             let source = vec![item.clone()];
             let collection = eval_path_element(
                 collection_relationships,

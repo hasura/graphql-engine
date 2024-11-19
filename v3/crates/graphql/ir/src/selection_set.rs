@@ -111,9 +111,20 @@ fn build_global_id_fields(
     Ok(())
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum NestedSelectionType {
+    /// The nested selection is selecting the root of a command.
+    CommandRootSelection,
+
+    /// Any other nested selection
+    NestedSelection,
+}
+
 pub fn generate_nested_selection<'s>(
     qualified_type_reference: &metadata_resolve::QualifiedTypeReference,
     field_base_type_kind: TypeKind,
+    selection_set_field_nestedness: metadata_resolve::FieldNestedness,
+    nested_selection_type: NestedSelectionType,
     field: &normalized_ast::Field<'s, GDS>,
     data_connector: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<
@@ -126,9 +137,22 @@ pub fn generate_nested_selection<'s>(
 ) -> Result<Option<NestedSelection<'s>>, error::Error> {
     match &qualified_type_reference.underlying_type {
         metadata_resolve::QualifiedBaseType::List(element_type) => {
+            // If we're selecting the root of a command, then we don't regard this as a "nested field" as such
+            // until we nest past the return type of the command.
+            // Commands use nested selections for their root because they are either embedded in a '__value'
+            // field in a single row for queries or use nested selection types at their root for mutations.
+            // However, we don't consider these to be truly nested until they nest past their return type.
+            let new_nestedness = match nested_selection_type {
+                NestedSelectionType::CommandRootSelection => selection_set_field_nestedness,
+                NestedSelectionType::NestedSelection => selection_set_field_nestedness
+                    .max(metadata_resolve::FieldNestedness::ArrayNested),
+            };
+
             let array_selection = generate_nested_selection(
                 element_type,
                 field_base_type_kind,
+                new_nestedness,
+                NestedSelectionType::NestedSelection,
                 field,
                 data_connector,
                 type_mappings,
@@ -155,6 +179,7 @@ pub fn generate_nested_selection<'s>(
                                 )?;
                             let nested_selection = generate_selection_set_ir(
                                 &field.selection_set,
+                                selection_set_field_nestedness,
                                 data_connector,
                                 type_mappings,
                                 field_mappings,
@@ -177,6 +202,7 @@ pub fn generate_nested_selection<'s>(
 /// sources depending on the model being queried.
 pub fn generate_selection_set_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
+    selection_set_field_nestedness: metadata_resolve::FieldNestedness,
     data_connector: &'s metadata_resolve::DataConnectorLink,
     type_mappings: &'s BTreeMap<
         metadata_resolve::Qualified<CustomTypeName>,
@@ -207,6 +233,9 @@ pub fn generate_selection_set_ir<'s>(
                     let nested_selection = generate_nested_selection(
                         field_type,
                         *field_base_type_kind,
+                        selection_set_field_nestedness
+                            .max(metadata_resolve::FieldNestedness::ObjectNested),
+                        NestedSelectionType::NestedSelection,
                         field,
                         data_connector,
                         type_mappings,
@@ -301,6 +330,7 @@ pub fn generate_selection_set_ir<'s>(
                         relationship::generate_model_relationship_ir(
                             field,
                             relationship_annotation,
+                            selection_set_field_nestedness,
                             data_connector,
                             type_mappings,
                             session_variables,
@@ -315,6 +345,7 @@ pub fn generate_selection_set_ir<'s>(
                         relationship::generate_model_aggregate_relationship_ir(
                             field,
                             relationship_annotation,
+                            selection_set_field_nestedness,
                             data_connector,
                             type_mappings,
                             session_variables,
@@ -329,6 +360,7 @@ pub fn generate_selection_set_ir<'s>(
                         relationship::generate_command_relationship_ir(
                             field,
                             relationship_annotation,
+                            selection_set_field_nestedness,
                             data_connector,
                             type_mappings,
                             session_variables,

@@ -139,8 +139,12 @@
                               },
                               "capabilities": {
                                 "foreach": null,
-                                "relationships": true,
-                                "relationship_comparison": true
+                                "supports_relationships": {
+                                  "supports_relation_comparisons": true,
+                                  "supports_nested_relationships": {
+                                    "supports_nested_array_selection": true
+                                  }
+                                }
                               }
                             },
                             "target_type": {
@@ -330,8 +334,12 @@
                                     },
                                     "capabilities": {
                                       "foreach": null,
-                                      "relationships": true,
-                                      "relationship_comparison": true
+                                      "supports_relationships": {
+                                        "supports_relation_comparisons": true,
+                                        "supports_nested_relationships": {
+                                          "supports_nested_array_selection": true
+                                        }
+                                      }
                                     }
                                   },
                                   "target_type": {
@@ -513,8 +521,12 @@
                                           },
                                           "capabilities": {
                                             "foreach": null,
-                                            "relationships": true,
-                                            "relationship_comparison": true
+                                            "supports_relationships": {
+                                              "supports_relation_comparisons": true,
+                                              "supports_nested_relationships": {
+                                                "supports_nested_array_selection": true
+                                              }
+                                            }
                                           }
                                         },
                                         "target_type": {
@@ -1105,8 +1117,12 @@
                                               },
                                               "capabilities": {
                                                 "foreach": null,
-                                                "relationships": true,
-                                                "relationship_comparison": true
+                                                "supports_relationships": {
+                                                  "supports_relation_comparisons": true,
+                                                  "supports_nested_relationships": {
+                                                    "supports_nested_array_selection": true
+                                                  }
+                                                }
                                               }
                                             },
                                             "target_type": {
@@ -1378,8 +1394,12 @@
                                     },
                                     "capabilities": {
                                       "foreach": null,
-                                      "relationships": true,
-                                      "relationship_comparison": true
+                                      "supports_relationships": {
+                                        "supports_relation_comparisons": true,
+                                        "supports_nested_relationships": {
+                                          "supports_nested_array_selection": true
+                                        }
+                                      }
                                     }
                                   },
                                   "target_type": {
@@ -1637,8 +1657,12 @@
                           },
                           "capabilities": {
                             "foreach": null,
-                            "relationships": true,
-                            "relationship_comparison": true
+                            "supports_relationships": {
+                              "supports_relation_comparisons": true,
+                              "supports_nested_relationships": {
+                                "supports_nested_array_selection": true
+                              }
+                            }
                           }
                         },
                         "target_type": {

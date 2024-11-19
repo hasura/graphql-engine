@@ -44,7 +44,7 @@ run-local-with-shell:
 # start all the docker deps for running tests (not engine)
 start-docker-test-deps:
     # start connectors and wait for health
-    docker compose -f ci.docker-compose.yaml up --wait postgres postgres_connector custom_connector custom_connector_ndc_v01
+    docker compose -f ci.docker-compose.yaml up --wait auth_hook postgres postgres_connector custom_connector custom_connector_no_relationships custom_connector_ndc_v01
 
 # start all the docker run time deps for the engine
 start-docker-run-deps:
@@ -102,14 +102,19 @@ update-golden-files: start-docker-test-deps
     just fix-format
 
 update-custom-connector-schema-in-test-metadata:
-    docker compose -f ci.docker-compose.yaml up --build --wait custom_connector
+    docker compose -f ci.docker-compose.yaml up --build --wait custom_connector custom_connector_no_relationships
 
     just update-schema-in-test-metadata "8102" "v0.2"
+    just update-schema-in-test-metadata "8103" "v0.2"
+
+    docker compose -f ci.docker-compose.yaml down
 
 update-postgres-schema-in-test-metadata:
     docker compose -f ci.docker-compose.yaml up --build --wait postgres postgres_connector
 
     just update-schema-in-test-metadata "8080" "v0.1"
+
+    docker compose -f ci.docker-compose.yaml down
 
 update-schema-in-test-metadata PORT NDC_VERSION: && fix-format
     #!/usr/bin/env bash
@@ -141,8 +146,6 @@ update-schema-in-test-metadata PORT NDC_VERSION: && fix-format
         echo "Skipping $file: Does not appear to be a metadata file with a matching connector"
       fi
     done
-
-    docker compose -f ci.docker-compose.yaml down
 
 # ensures metadata objects in test json have their properties ordered as kind, version, then definition
 reorder-json-in-test-metadata: && fix-format

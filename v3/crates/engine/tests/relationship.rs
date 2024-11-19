@@ -478,6 +478,18 @@ fn test_relationships_nested_selection() -> anyhow::Result<()> {
     )
 }
 
+#[test]
+fn test_relationships_nested_selection_no_nested_capability() -> anyhow::Result<()> {
+    let test_path_string = "execute/relationships/nested/selection_no_nested_capability";
+    let common_metadata_path_string =
+        "execute/common_metadata/custom_connector_v02_no_relationships_schema.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string],
+        common::TestOpenDDPipeline::Skip,
+    )
+}
+
 // Miscellaneous tests
 
 // What is being tested?

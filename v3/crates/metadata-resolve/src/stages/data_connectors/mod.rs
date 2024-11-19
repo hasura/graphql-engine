@@ -8,8 +8,10 @@ pub use error::{
 };
 use std::collections::BTreeMap;
 pub use types::{
-    ArgumentPreset, ArgumentPresetValue, CommandsResponseConfig, DataConnectorCapabilities,
-    DataConnectorContext, DataConnectorLink, DataConnectorSchema, DataConnectors,
+    ArgumentPreset, ArgumentPresetValue, CommandsResponseConfig,
+    DataConnectorAggregateCapabilities, DataConnectorCapabilities, DataConnectorContext,
+    DataConnectorLink, DataConnectorNestedRelationshipCapabilities,
+    DataConnectorRelationshipCapabilities, DataConnectorSchema, DataConnectors,
     DataConnectorsOutput, HttpHeadersPreset, NdcVersion,
 };
 

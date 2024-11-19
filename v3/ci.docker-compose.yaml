@@ -33,6 +33,24 @@ services:
       - "8102:8102"
     environment:
       RUST_LOG: info
+      ENABLE_RELATIONSHIP_SUPPORT: "1" # Enabled
+    healthcheck:
+      test: curl -fsS http://localhost:8102/schema
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  custom_connector_no_relationships:
+    build:
+      dockerfile: custom-connector.Dockerfile
+    entrypoint:
+      - ./bin/custom-connector
+    ports:
+      - "8103:8102"
+    environment:
+      RUST_LOG: info
+      ENABLE_RELATIONSHIP_SUPPORT: "0" # Disabled
     healthcheck:
       test: curl -fsS http://localhost:8102/schema
       start_period: 5s

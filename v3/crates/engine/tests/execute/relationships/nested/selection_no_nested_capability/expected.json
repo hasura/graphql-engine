@@ -1,0 +1,49 @@
+[
+  {
+    "data": {
+      "InstitutionMany": [
+        {
+          "id": 1,
+          "staff": [
+            {
+              "first_name": "Peter",
+              "last_name": "Landin",
+              "favourite_movie_id": 5,
+              "favourite_movie": {
+                "movie_id": 5,
+                "title": "Schindler's List"
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "staff": [
+            {
+              "first_name": "John",
+              "last_name": "Hughes",
+              "favourite_movie_id": 4,
+              "favourite_movie": {
+                "movie_id": 4,
+                "title": "Shawshank Redemption"
+              }
+            },
+            {
+              "first_name": "Koen",
+              "last_name": "Claessen",
+              "favourite_movie_id": 3,
+              "favourite_movie": {
+                "movie_id": 3,
+                "title": "Godfather"
+              }
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "staff": null
+        }
+      ]
+    }
+  }
+]

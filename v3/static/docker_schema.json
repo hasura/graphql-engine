@@ -1,5 +1,4 @@
 {
-  "$schema": "../crates/open-dds/metadata.jsonschema",
   "version": "v3",
   "subgraphs": [
     {
@@ -10869,6 +10868,64 @@
           "kind": "BooleanExpressionType",
           "version": "v1",
           "definition": {
+            "name": "numeric_bool_exp",
+            "operand": {
+              "scalar": {
+                "type": "numeric",
+                "comparisonOperators": [
+                  {
+                    "name": "_eq",
+                    "argumentType": "numeric!"
+                  },
+                  {
+                    "name": "_gt",
+                    "argumentType": "numeric!"
+                  },
+                  {
+                    "name": "_gte",
+                    "argumentType": "numeric!"
+                  },
+                  {
+                    "name": "_in",
+                    "argumentType": "[numeric!]!"
+                  },
+                  {
+                    "name": "_lt",
+                    "argumentType": "numeric!"
+                  },
+                  {
+                    "name": "_lte",
+                    "argumentType": "numeric!"
+                  },
+                  {
+                    "name": "_neq",
+                    "argumentType": "numeric!"
+                  }
+                ],
+                "dataConnectorOperatorMapping": [
+                  {
+                    "dataConnectorName": "db",
+                    "dataConnectorScalarType": "numeric",
+                    "operatorMapping": {}
+                  }
+                ]
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": true
+            },
+            "graphql": {
+              "typeName": "numeric_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
             "name": "CustomInt_bool_exp",
             "operand": {
               "scalar": {
@@ -13151,11 +13208,72 @@
           }
         },
         {
+          "kind": "BooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "Track_bool_exp",
+            "operand": {
+              "object": {
+                "type": "Track",
+                "comparableFields": [
+                  {
+                    "fieldName": "AlbumId",
+                    "booleanExpressionType": "int4_bool_exp"
+                  },
+                  {
+                    "fieldName": "Bytes",
+                    "booleanExpressionType": "int4_bool_exp"
+                  },
+                  {
+                    "fieldName": "Composer",
+                    "booleanExpressionType": "varchar_bool_exp"
+                  },
+                  {
+                    "fieldName": "GenreId",
+                    "booleanExpressionType": "int4_bool_exp"
+                  },
+                  {
+                    "fieldName": "MediaTypeId",
+                    "booleanExpressionType": "int4_bool_exp"
+                  },
+                  {
+                    "fieldName": "Milliseconds",
+                    "booleanExpressionType": "int4_bool_exp"
+                  },
+                  {
+                    "fieldName": "Name",
+                    "booleanExpressionType": "varchar_bool_exp"
+                  },
+                  {
+                    "fieldName": "TrackId",
+                    "booleanExpressionType": "int4_bool_exp"
+                  },
+                  {
+                    "fieldName": "UnitPrice",
+                    "booleanExpressionType": "numeric_bool_exp"
+                  }
+                ],
+                "comparableRelationships": []
+              }
+            },
+            "logicalOperators": {
+              "enable": true
+            },
+            "isNull": {
+              "enable": false
+            },
+            "graphql": {
+              "typeName": "Track_bool_exp"
+            }
+          }
+        },
+        {
           "kind": "Model",
           "version": "v1",
           "definition": {
             "name": "Track",
             "objectType": "Track",
+            "filterExpressionType": "Track_bool_exp",
             "orderableFields": [
               {
                 "fieldName": "AlbumId",

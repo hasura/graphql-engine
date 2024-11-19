@@ -670,6 +670,13 @@
                           "name": "Int"
                         }
                       },
+                      "favourite_movie_id": {
+                        "description": "The movie_id of the staff member's favourite movie",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
                       "first_name": {
                         "description": "The staff member's first name",
                         "type": {

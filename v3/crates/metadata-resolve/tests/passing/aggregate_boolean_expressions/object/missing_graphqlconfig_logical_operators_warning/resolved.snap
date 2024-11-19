@@ -162,8 +162,18 @@ input_file: crates/metadata-resolve/tests/passing/aggregate_boolean_expressions/
                         target_capabilities: Some(
                             RelationshipCapabilities {
                                 foreach: (),
-                                relationships: true,
-                                relationship_comparison: false,
+                                supports_relationships: Some(
+                                    DataConnectorRelationshipCapabilities {
+                                        supports_relation_comparisons: false,
+                                        supports_nested_relationships: Some(
+                                            DataConnectorNestedRelationshipCapabilities {
+                                                supports_nested_array_selection: true,
+                                                supports_nested_in_filtering: false,
+                                                supports_nested_in_ordering: false,
+                                            },
+                                        ),
+                                    },
+                                ),
                             },
                         ),
                         description: None,

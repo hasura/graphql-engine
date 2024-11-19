@@ -248,7 +248,10 @@ fn get_relationship_predicate_execution_strategy(
     // It's a local relationship if the source and target connectors are the same and
     // the connector supports relationships.
     if target_connector.name == source_connector.name
-        && target_source_relationship_capabilities.relationship_comparison
+        && target_source_relationship_capabilities
+            .supports_relationships
+            .as_ref()
+            .is_some_and(|r| r.supports_relation_comparisons)
     {
         RelationshipPredicateExecutionStrategy::NDCPushdown
     } else {

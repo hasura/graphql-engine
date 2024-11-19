@@ -102,6 +102,7 @@ pub fn model_selection_ir<'s>(
     let field_mappings = get_field_mappings_for_object_type(model_source, data_type)?;
     let selection = selection_set::generate_selection_set_ir(
         selection_set,
+        metadata_resolve::FieldNestedness::NotNested,
         &model_source.data_connector,
         &model_source.type_mappings,
         field_mappings,

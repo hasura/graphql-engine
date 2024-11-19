@@ -44,8 +44,10 @@ async fn get_healthz() -> StatusCode {
     StatusCode::NO_CONTENT
 }
 
-async fn get_capabilities() -> Json<ndc_models::CapabilitiesResponse> {
-    Json(custom_connector::schema::get_capabilities())
+async fn get_capabilities(
+    State(state): State<Arc<AppState>>,
+) -> Json<ndc_models::CapabilitiesResponse> {
+    Json(custom_connector::schema::get_capabilities(state.borrow()))
 }
 
 async fn get_schema() -> Json<ndc_models::SchemaResponse> {

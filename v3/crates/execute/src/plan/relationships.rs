@@ -48,7 +48,7 @@ pub fn process_model_relationship_definition(
         relationship_name,
         relationship_type,
         source_type,
-        source_data_connector,
+        source_data_connector: _,
         source_type_mappings,
         target_source,
         target_type: _,
@@ -62,43 +62,33 @@ pub fn process_model_relationship_definition(
         target_ndc_column,
     } in mappings
     {
-        if matches!(
-            metadata_resolve::relationship_execution_category(
-                source_data_connector,
-                &target_source.model.data_connector,
-                &target_source.capabilities
-            ),
-            metadata_resolve::RelationshipExecutionCategory::Local
-        ) {
-            let target_column = target_ndc_column.as_ref().ok_or_else(|| {
-                error::InternalError::InternalGeneric {
+        let target_column =
+            target_ndc_column
+                .as_ref()
+                .ok_or_else(|| error::InternalError::InternalGeneric {
                     description: format!(
                         "No column mapping for relationship {relationship_name} on {source_type}"
                     ),
-                }
-            })?;
-
-            let source_column = metadata_resolve::get_field_mapping_of_field_name(
-                source_type_mappings,
-                source_type,
-                relationship_name,
-                &source_field_path.field_name,
-            )
-            .map_err(|e| error::InternalError::InternalGeneric {
-                description: e.to_string(),
-            })?;
-
-            if column_mapping
-                .insert(source_column.column, target_column.column.clone())
-                .is_some()
-            {
-                Err(error::InternalError::MappingExistsInRelationship {
-                    source_column: source_field_path.field_name.clone(),
-                    relationship_name: relationship_name.clone(),
                 })?;
-            }
-        } else {
-            Err(error::InternalError::RemoteRelationshipsAreNotSupported)?;
+
+        let source_column = metadata_resolve::get_field_mapping_of_field_name(
+            source_type_mappings,
+            source_type,
+            relationship_name,
+            &source_field_path.field_name,
+        )
+        .map_err(|e| error::InternalError::InternalGeneric {
+            description: e.to_string(),
+        })?;
+
+        if column_mapping
+            .insert(source_column.column, target_column.column.clone())
+            .is_some()
+        {
+            Err(error::InternalError::MappingExistsInRelationship {
+                source_column: source_field_path.field_name.clone(),
+                relationship_name: relationship_name.clone(),
+            })?;
         }
     }
     let relationship = Relationship {
@@ -115,7 +105,7 @@ pub(crate) fn process_command_relationship_definition(
 ) -> Result<Relationship, error::Error> {
     let &LocalCommandRelationshipInfo {
         annotation,
-        source_data_connector,
+        source_data_connector: _,
         source_type_mappings,
         target_source,
     } = relationship_info;
@@ -126,57 +116,46 @@ pub(crate) fn process_command_relationship_definition(
         argument_name: target_argument,
     } in &annotation.mappings
     {
-        if matches!(
-            metadata_resolve::relationship_execution_category(
-                source_data_connector,
-                &target_source.details.data_connector,
-                &target_source.capabilities
-            ),
-            metadata_resolve::RelationshipExecutionCategory::Local
-        ) {
-            let source_column = metadata_resolve::get_field_mapping_of_field_name(
-                source_type_mappings,
-                &annotation.source_type,
-                &annotation.relationship_name,
-                &source_field_path.field_name,
-            )
-            .map_err(|e| error::InternalError::InternalGeneric {
-                description: e.to_string(),
+        let source_column = metadata_resolve::get_field_mapping_of_field_name(
+            source_type_mappings,
+            &annotation.source_type,
+            &annotation.relationship_name,
+            &source_field_path.field_name,
+        )
+        .map_err(|e| error::InternalError::InternalGeneric {
+            description: e.to_string(),
+        })?;
+
+        let relationship_argument = RelationshipArgument::Column {
+            name: source_column.column,
+        };
+
+        let connector_argument_name = target_source
+            .details
+            .argument_mappings
+            .get(target_argument)
+            .ok_or_else(|| {
+                error::Error::Internal(
+                    error::InternalError::MissingArgumentMappingInCommandRelationship {
+                        source_type: annotation.source_type.clone(),
+                        relationship_name: annotation.relationship_name.clone(),
+                        command_name: annotation.command_name.clone(),
+                        argument_name: target_argument.clone(),
+                    },
+                )
             })?;
 
-            let relationship_argument = RelationshipArgument::Column {
-                name: source_column.column,
-            };
-
-            let connector_argument_name = target_source
-                .details
-                .argument_mappings
-                .get(target_argument)
-                .ok_or_else(|| {
-                    error::Error::Internal(
-                        error::InternalError::MissingArgumentMappingInCommandRelationship {
-                            source_type: annotation.source_type.clone(),
-                            relationship_name: annotation.relationship_name.clone(),
-                            command_name: annotation.command_name.clone(),
-                            argument_name: target_argument.clone(),
-                        },
-                    )
-                })?;
-
-            if arguments
-                .insert(
-                    DataConnectorArgumentName::from(connector_argument_name.as_str()),
-                    relationship_argument,
-                )
-                .is_some()
-            {
-                Err(error::InternalError::MappingExistsInRelationship {
-                    source_column: source_field_path.field_name.clone(),
-                    relationship_name: annotation.relationship_name.clone(),
-                })?;
-            }
-        } else {
-            Err(error::InternalError::RemoteRelationshipsAreNotSupported)?;
+        if arguments
+            .insert(
+                DataConnectorArgumentName::from(connector_argument_name.as_str()),
+                relationship_argument,
+            )
+            .is_some()
+        {
+            Err(error::InternalError::MappingExistsInRelationship {
+                source_column: source_field_path.field_name.clone(),
+                relationship_name: annotation.relationship_name.clone(),
+            })?;
         }
     }
 

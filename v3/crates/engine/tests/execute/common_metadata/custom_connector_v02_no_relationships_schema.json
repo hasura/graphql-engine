@@ -8,10 +8,10 @@
           "kind": "DataConnectorLink",
           "version": "v1",
           "definition": {
-            "name": "custom",
+            "name": "custom_no_relationships",
             "url": {
               "singleUrl": {
-                "value": "http://localhost:8102"
+                "value": "http://localhost:8103"
               }
             },
             "headers": {},
@@ -1298,11 +1298,7 @@
                       "unrelated": {}
                     }
                   },
-                  "mutation": {},
-                  "relationships": {
-                    "relation_comparisons": {},
-                    "order_by_aggregate": {}
-                  }
+                  "mutation": {}
                 }
               }
             }

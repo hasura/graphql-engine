@@ -22,10 +22,10 @@ use crate::types::error::{Error, RelationshipError};
 use crate::types::subgraph::Qualified;
 
 pub use types::{
-    CommandRelationshipTarget, ModelAggregateRelationshipTarget, ModelRelationshipTarget,
-    ObjectTypeWithRelationships, RelationshipCapabilities, RelationshipCommandMapping,
-    RelationshipExecutionCategory, RelationshipField, RelationshipModelMapping, RelationshipTarget,
-    RelationshipTargetName,
+    CommandRelationshipTarget, FieldNestedness, ModelAggregateRelationshipTarget,
+    ModelRelationshipTarget, ObjectTypeWithRelationships, RelationshipCapabilities,
+    RelationshipCommandMapping, RelationshipExecutionCategory, RelationshipField,
+    RelationshipModelMapping, RelationshipTarget, RelationshipTargetName,
 };
 
 /// resolve relationships
@@ -127,21 +127,45 @@ pub fn resolve(
 
 #[allow(clippy::match_single_binding)]
 pub fn relationship_execution_category(
+    relationship_field_nestedness: FieldNestedness,
     source_connector: &data_connectors::DataConnectorLink,
     target_connector: &data_connectors::DataConnectorLink,
     target_source_relationship_capabilities: &RelationshipCapabilities,
 ) -> RelationshipExecutionCategory {
     // It's a local relationship if the source and target connectors are the same and
     // the connector supports relationships.
-    if target_connector.name == source_connector.name
-        && target_source_relationship_capabilities.relationships
-    {
-        RelationshipExecutionCategory::Local
-    } else {
-        match target_source_relationship_capabilities.foreach {
-            // TODO: When we support naive relationships for connectors not implementing foreach,
-            // add another match arm / return enum variant
-            () => RelationshipExecutionCategory::RemoteForEach,
+    match &target_source_relationship_capabilities.supports_relationships {
+        Some(supports_relationships) if target_connector.name == source_connector.name => {
+            match relationship_field_nestedness {
+                // If the relationship is not nested, we support it ...
+                FieldNestedness::NotNested => RelationshipExecutionCategory::Local,
+                // ... but we only support relationships nested inside objects if the connector declares it does ...
+                FieldNestedness::ObjectNested
+                    if supports_relationships
+                        .supports_nested_relationships
+                        .is_some() =>
+                {
+                    RelationshipExecutionCategory::Local
+                }
+                // ... and we only support relationships nested inside arrays if the connector declares it does ...
+                FieldNestedness::ArrayNested
+                    if supports_relationships
+                        .supports_nested_relationships
+                        .as_ref()
+                        .is_some_and(|n| n.supports_nested_array_selection) =>
+                {
+                    RelationshipExecutionCategory::Local
+                }
+                // ... otherwise we fall back to remote joins
+                _ => RelationshipExecutionCategory::RemoteForEach,
+            }
+        }
+        _ => {
+            match target_source_relationship_capabilities.foreach {
+                // TODO: When we support naive relationships for connectors not implementing foreach,
+                // add another match arm / return enum variant
+                () => RelationshipExecutionCategory::RemoteForEach,
+            }
         }
     }
 }
@@ -432,16 +456,9 @@ fn get_relationship_capabilities(
         });
     };
 
-    let relationships = capabilities.supports_relationships.is_some();
-    let relationship_comparison = capabilities
-        .supports_relationships
-        .as_ref()
-        .is_some_and(|r| r.supports_relation_comparisons);
-
     Ok(Some(RelationshipCapabilities {
         foreach: (),
-        relationships,
-        relationship_comparison,
+        supports_relationships: capabilities.supports_relationships.clone(),
     }))
 }
 

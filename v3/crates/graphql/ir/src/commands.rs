@@ -129,6 +129,8 @@ pub fn generate_command_info<'n, 's>(
     let selection = selection_set::generate_nested_selection(
         result_type,
         result_base_type_kind,
+        metadata_resolve::FieldNestedness::NotNested,
+        selection_set::NestedSelectionType::CommandRootSelection,
         field,
         &command_source.data_connector,
         &command_source.type_mappings,
