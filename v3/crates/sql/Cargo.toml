@@ -7,7 +7,6 @@ license.workspace = true
 [dependencies]
 execute = { path = "../execute" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
-graphql-ir = { path = "../graphql/ir" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }
 plan = { path = "../plan" }

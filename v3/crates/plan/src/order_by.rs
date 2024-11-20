@@ -1,10 +1,9 @@
 use std::collections::BTreeMap;
 
-use metadata_resolve::{Qualified, TypeMapping};
-use open_dds::{query::OrderByElement, types::CustomTypeName};
-
 use super::column::{to_resolved_column, ResolvedColumn};
 use super::types::PlanError;
+use metadata_resolve::{Qualified, TypeMapping};
+use open_dds::{query::OrderByElement, types::CustomTypeName};
 
 pub fn to_resolved_order_by_element(
     metadata: &metadata_resolve::Metadata,
@@ -12,7 +11,7 @@ pub fn to_resolved_order_by_element(
     type_name: &Qualified<CustomTypeName>,
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
     element: &OrderByElement,
-) -> Result<graphql_ir::OrderByElement, PlanError> {
+) -> Result<plan_types::OrderByElement, PlanError> {
     match &element.operand {
         open_dds::query::Operand::Field(operand) => {
             let ResolvedColumn {
@@ -27,7 +26,7 @@ pub fn to_resolved_order_by_element(
                 operand,
             )?;
 
-            let target = graphql_ir::OrderByTarget::Column {
+            let target = plan_types::OrderByTarget::Column {
                 name: column_name,
                 field_path: if field_path.is_empty() {
                     None
@@ -37,14 +36,10 @@ pub fn to_resolved_order_by_element(
                 relationship_path: vec![],
             };
 
-            Ok(graphql_ir::OrderByElement {
+            Ok(plan_types::OrderByElement {
                 order_direction: match element.direction {
-                    open_dds::models::OrderByDirection::Asc => {
-                        graphql_schema::ModelOrderByDirection::Asc
-                    }
-                    open_dds::models::OrderByDirection::Desc => {
-                        graphql_schema::ModelOrderByDirection::Desc
-                    }
+                    open_dds::models::OrderByDirection::Asc => plan_types::OrderByDirection::Asc,
+                    open_dds::models::OrderByDirection::Desc => plan_types::OrderByDirection::Desc,
                 },
                 target,
             })

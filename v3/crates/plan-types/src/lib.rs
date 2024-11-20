@@ -1,3 +1,4 @@
+mod execution_plan;
 mod expression;
 mod ndc_field_alias;
 mod ndc_relationship_name;
@@ -5,6 +6,10 @@ mod relationships;
 mod usage_counts;
 mod variable_name;
 
+pub use execution_plan::{
+    AggregateFieldSelection, AggregateSelectionSet, OrderByDirection, OrderByElement,
+    OrderByTarget, QueryExecutionPlan,
+};
 pub use expression::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,
     SourceNdcColumn,

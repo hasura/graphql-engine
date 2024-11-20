@@ -4132,7 +4132,6 @@ dependencies = [
  "derive_more",
  "execute",
  "graphql-ir",
- "graphql-schema",
  "hasura-authn-core",
  "indexmap 2.6.0",
  "metadata-resolve",
@@ -4147,12 +4146,15 @@ name = "plan-types"
 version = "3.0.0"
 dependencies = [
  "derive_more",
+ "indexmap 2.6.0",
  "metadata-resolve",
+ "nonempty",
  "open-dds",
  "schemars",
  "serde",
  "serde_json",
  "smol_str",
+ "uuid",
 ]
 
 [[package]]
@@ -5062,7 +5064,6 @@ dependencies = [
  "datafusion",
  "execute",
  "futures",
- "graphql-ir",
  "hasura-authn-core",
  "indexmap 2.6.0",
  "metadata-resolve",

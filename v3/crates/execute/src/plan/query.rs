@@ -2,10 +2,11 @@ use std::sync::Arc;
 
 use crate::error;
 use async_recursion::async_recursion;
-use graphql_ir::{AggregateSelectionSet, OrderByElement};
 use indexmap::IndexMap;
 use open_dds::{data_connector::CollectionName, types::DataConnectorArgumentName};
-use plan_types::{NdcFieldAlias, NdcRelationshipName, VariableName};
+use plan_types::{
+    AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, VariableName,
+};
 use std::collections::BTreeMap;
 
 use super::arguments;

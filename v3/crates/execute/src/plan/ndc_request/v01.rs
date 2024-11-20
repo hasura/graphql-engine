@@ -11,7 +11,10 @@ use super::super::mutation;
 use super::super::query;
 use super::super::relationships;
 use crate::error::{FieldError, FieldInternalError};
-use plan_types::VariableName;
+use plan_types::{
+    AggregateFieldSelection, AggregateSelectionSet, OrderByDirection, OrderByElement,
+    OrderByTarget, VariableName,
+};
 
 pub fn make_query_request(
     query_execution_plan: query::ResolvedQueryExecutionPlan,
@@ -444,18 +447,14 @@ fn make_relationship(relationship: relationships::Relationship) -> ndc_models_v0
     }
 }
 
-fn make_order_by(order_by_elements: Vec<graphql_ir::OrderByElement>) -> ndc_models_v01::OrderBy {
+fn make_order_by(order_by_elements: Vec<OrderByElement>) -> ndc_models_v01::OrderBy {
     ndc_models_v01::OrderBy {
         elements: order_by_elements
             .into_iter()
             .map(|element| ndc_models_v01::OrderByElement {
                 order_direction: match element.order_direction {
-                    graphql_schema::ModelOrderByDirection::Asc => {
-                        ndc_models_v01::OrderDirection::Asc
-                    }
-                    graphql_schema::ModelOrderByDirection::Desc => {
-                        ndc_models_v01::OrderDirection::Desc
-                    }
+                    OrderByDirection::Asc => ndc_models_v01::OrderDirection::Asc,
+                    OrderByDirection::Desc => ndc_models_v01::OrderDirection::Desc,
                 },
                 target: make_order_by_target(element.target),
             })
@@ -463,9 +462,9 @@ fn make_order_by(order_by_elements: Vec<graphql_ir::OrderByElement>) -> ndc_mode
     }
 }
 
-fn make_order_by_target(target: graphql_ir::OrderByTarget) -> ndc_models_v01::OrderByTarget {
+fn make_order_by_target(target: OrderByTarget) -> ndc_models_v01::OrderByTarget {
     match target {
-        graphql_ir::OrderByTarget::Column {
+        OrderByTarget::Column {
             name,
             field_path,
             relationship_path,
@@ -521,20 +520,20 @@ fn make_order_by_target(target: graphql_ir::OrderByTarget) -> ndc_models_v01::Or
 
 /// Translates the internal IR 'AggregateSelectionSet' into an NDC query aggregates selection
 fn make_aggregates(
-    aggregate_selection_set: graphql_ir::AggregateSelectionSet,
+    aggregate_selection_set: AggregateSelectionSet,
 ) -> IndexMap<ndc_models_v01::FieldName, ndc_models_v01::Aggregate> {
     aggregate_selection_set
         .fields
         .into_iter()
         .map(|(field_name, aggregate_selection)| {
             let aggregate = match aggregate_selection {
-                graphql_ir::AggregateFieldSelection::Count { column_path, .. } => {
+                AggregateFieldSelection::Count { column_path, .. } => {
                     make_count_aggregate(column_path, false)
                 }
-                graphql_ir::AggregateFieldSelection::CountDistinct { column_path, .. } => {
+                AggregateFieldSelection::CountDistinct { column_path, .. } => {
                     make_count_aggregate(column_path, true)
                 }
-                graphql_ir::AggregateFieldSelection::AggregationFunction {
+                AggregateFieldSelection::AggregationFunction {
                     function_name,
                     column_path,
                 } => {

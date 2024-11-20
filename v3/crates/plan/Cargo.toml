@@ -10,7 +10,6 @@ bench = false
 [dependencies]
 execute = { path = "../execute" }
 graphql-ir = { path = "../graphql/ir" }
-graphql-schema = { path = "../graphql/schema" }
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 metadata-resolve = {path = "../metadata-resolve" }
 open-dds = { path = "../open-dds" }

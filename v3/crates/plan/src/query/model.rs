@@ -11,14 +11,13 @@ use execute::{
     plan::{field::Field, ResolvedFilterExpression},
     QueryExecutionPlan, QueryNode,
 };
-use graphql_ir::AggregateFieldSelection;
 use hasura_authn_core::Session;
 use metadata_resolve::{Metadata, Qualified};
 use open_dds::query::{
     Aggregate, AggregationFunction, ModelSelection, ModelTarget, ObjectSubSelection, Operand,
 };
 use open_dds::types::CustomTypeName;
-use plan_types::NdcFieldAlias;
+use plan_types::{AggregateFieldSelection, AggregateSelectionSet, NdcFieldAlias};
 
 pub async fn from_model_aggregate_selection(
     model_target: &ModelTarget,
@@ -259,7 +258,7 @@ pub fn ndc_query_to_query_execution_plan(
     let query_aggregate_fields = if aggregate_fields.is_empty() {
         None
     } else {
-        Some(graphql_ir::AggregateSelectionSet {
+        Some(AggregateSelectionSet {
             fields: aggregate_fields.clone(),
         })
     };

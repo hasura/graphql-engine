@@ -5,7 +5,10 @@ use graphql_schema::OrderByRelationshipAnnotation;
 use graphql_schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField};
 use open_dds::data_connector::DataConnectorColumnName;
-use plan_types::{LocalModelRelationshipInfo, NdcRelationshipName, UsagesCounts};
+use plan_types::{
+    LocalModelRelationshipInfo, NdcRelationshipName, OrderByDirection, OrderByElement,
+    OrderByTarget, UsagesCounts,
+};
 use serde::Serialize;
 
 use crate::error;
@@ -17,21 +20,6 @@ pub struct ResolvedOrderBy<'s> {
     // relationships that were used in the order_by expression. This is helpful
     // for collecting relatinships and sending collection_relationships
     pub relationships: BTreeMap<NdcRelationshipName, LocalModelRelationshipInfo<'s>>,
-}
-
-#[derive(Debug, Serialize, Clone, PartialEq)]
-pub struct OrderByElement {
-    pub order_direction: graphql_schema::ModelOrderByDirection,
-    pub target: OrderByTarget,
-}
-
-#[derive(Debug, Serialize, Clone, PartialEq)]
-pub enum OrderByTarget {
-    Column {
-        name: DataConnectorColumnName,
-        field_path: Option<Vec<DataConnectorColumnName>>,
-        relationship_path: Vec<NdcRelationshipName>,
-    },
 }
 
 pub fn build_ndc_order_by<'s>(
@@ -149,7 +137,10 @@ pub fn build_ndc_order_by_element<'s>(
             };
 
             let order_element = OrderByElement {
-                order_direction: order_direction.clone(),
+                order_direction: match order_direction {
+                    graphql_schema::ModelOrderByDirection::Asc => OrderByDirection::Asc,
+                    graphql_schema::ModelOrderByDirection::Desc => OrderByDirection::Desc,
+                },
                 // TODO(naveen): When aggregates are supported, extend this to support other ndc_models::OrderByTarget
                 target: OrderByTarget::Column {
                     name,

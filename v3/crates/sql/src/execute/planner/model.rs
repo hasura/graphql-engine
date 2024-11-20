@@ -37,8 +37,7 @@ use tracing_util::{FutureExt, SpanVisibility, TraceableError};
 use super::common::from_plan_error;
 use crate::catalog::model::filter;
 use execute::{ndc::NdcQueryResponse, plan::ResolvedField, HttpContext};
-use graphql_ir::AggregateFieldSelection;
-use plan_types::NdcFieldAlias;
+use plan_types::{AggregateFieldSelection, NdcFieldAlias};
 
 use plan::{
     from_model_aggregate_selection, from_model_selection, ndc_query_to_query_execution_plan,

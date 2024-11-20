@@ -7,38 +7,13 @@ use indexmap::IndexMap;
 use lang_graphql::{ast::common::Alias, normalized_ast};
 use metadata_resolve::{Qualified, QualifiedTypeName, TypeMapping};
 use open_dds::{
-    aggregates::DataConnectorAggregationFunctionName,
-    data_connector::{DataConnectorColumnName, DataConnectorName},
+    data_connector::DataConnectorName,
     types::{CustomTypeName, FieldName},
 };
-use serde::Serialize;
 
 use crate::error;
 
-use plan_types::NdcFieldAlias;
-
-/// IR that represents the selected fields of an output type.
-#[derive(Debug, Serialize, Default, PartialEq, Clone)]
-pub struct AggregateSelectionSet {
-    // The fields in the selection set. They are stored in the form that would
-    // be converted and sent over the wire. Serialized the map as ordered to
-    // produce deterministic golden files.
-    pub fields: IndexMap<NdcFieldAlias, AggregateFieldSelection>,
-}
-
-#[derive(Debug, Serialize, PartialEq, Clone)]
-pub enum AggregateFieldSelection {
-    Count {
-        column_path: Vec<DataConnectorColumnName>,
-    },
-    CountDistinct {
-        column_path: Vec<DataConnectorColumnName>,
-    },
-    AggregationFunction {
-        function_name: DataConnectorAggregationFunctionName,
-        column_path: nonempty::NonEmpty<DataConnectorColumnName>,
-    },
-}
+use plan_types::{AggregateFieldSelection, AggregateSelectionSet, NdcFieldAlias};
 
 pub fn generate_aggregate_selection_set_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
