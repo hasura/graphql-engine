@@ -16,7 +16,7 @@ pub fn to_opendd_ir(operation: &Operation<GDS>) -> QueryRequest {
     }
 
     let mut queries = IndexMap::new();
-    for query in operation.selection_set.fields.values() {
+    for (query_alias, query) in &operation.selection_set.fields {
         for field_call in query.field_calls.values() {
             match field_call.info.generic {
                 graphql_schema::Annotation::Output(
@@ -29,8 +29,7 @@ pub fn to_opendd_ir(operation: &Operation<GDS>) -> QueryRequest {
                         },
                     ),
                 ) => {
-                    let opendd_alias =
-                        Alias::new(Identifier::new(field_call.name.as_str()).unwrap());
+                    let opendd_alias = Alias::new(Identifier::new(query_alias.0.as_str()).unwrap());
 
                     let selection = to_model_selection(&query.selection_set.fields);
 
@@ -60,8 +59,7 @@ pub fn to_opendd_ir(operation: &Operation<GDS>) -> QueryRequest {
                         graphql_schema::RootFieldAnnotation::FunctionCommand { name, .. },
                     ),
                 ) => {
-                    let opendd_alias =
-                        Alias::new(Identifier::new(field_call.name.as_str()).unwrap());
+                    let opendd_alias = Alias::new(Identifier::new(query_alias.0.as_str()).unwrap());
 
                     let selection = to_model_selection(&query.selection_set.fields);
 
@@ -102,8 +100,8 @@ fn to_model_arguments(
     let mut model_limit = None;
 
     for (name, argument) in arguments {
-        // currently we are magically matching on strings, really we should be looking up the correct names
-        // for each thing in `graphql_config` in resolved metadata
+        // currently we are magically matching on strings, really we should be using the graphql field annotations
+        // to determine the role of each field
         match name.as_str() {
             "offset" => {
                 if let Some(offset_value) = match &argument.value {

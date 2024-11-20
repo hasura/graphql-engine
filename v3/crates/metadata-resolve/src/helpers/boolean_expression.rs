@@ -66,7 +66,7 @@ pub(crate) fn validate_data_connector_with_object_boolean_expression_type(
                         }));
                     }
                 }
-                boolean_expressions::ObjectComparisonKind::Array => {
+                boolean_expressions::ObjectComparisonKind::ObjectArray => {
                     // raise a warning if our data connector does not support filtering nested arrays
                     if !data_connector.capabilities.supports_nested_array_filtering {
                         issues.push(

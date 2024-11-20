@@ -269,7 +269,7 @@ fn resolve_comparable_fields(
                 BooleanExpressionObjectAggregateOperand { r#type, .. },
             ) => {
                 let field_kind = match field.field_type.underlying_type {
-                    QualifiedBaseType::List(_) => ComparableFieldKind::Array,
+                    QualifiedBaseType::List(_) => ComparableFieldKind::ObjectArray,
                     QualifiedBaseType::Named(_) => ComparableFieldKind::Object,
                 };
                 (field_kind, TypeName::Custom(r#type.clone()))
@@ -346,7 +346,7 @@ fn resolve_comparable_fields(
                         };
                     }
                 }
-                ComparableFieldKind::Object | ComparableFieldKind::Array => {
+                ComparableFieldKind::Object | ComparableFieldKind::ObjectArray => {
                     // if this field isn't a scalar, let's see if it's an object instead
                     let (field_subgraph, raw_boolean_expression_type) =
                         helpers::lookup_raw_boolean_expression(
@@ -362,7 +362,9 @@ fn resolve_comparable_fields(
                             comparable_field_name.clone(),
                             ObjectComparisonExpressionInfo {
                                 field_kind: match comparable_field_kind {
-                                    ComparableFieldKind::Array => ObjectComparisonKind::Array,
+                                    ComparableFieldKind::ObjectArray => {
+                                        ObjectComparisonKind::ObjectArray
+                                    }
                                     ComparableFieldKind::Object => ObjectComparisonKind::Object,
                                     ComparableFieldKind::Scalar => unreachable!(),
                                 },

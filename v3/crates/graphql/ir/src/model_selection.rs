@@ -339,7 +339,7 @@ fn read_filter_input_arguments<'s>(
 
                 // Where argument
                 Annotation::Input(InputAnnotation::BooleanExpression(
-                    BooleanExpressionAnnotation::BooleanExpression,
+                    BooleanExpressionAnnotation::BooleanExpressionRootField,
                 )) => {
                     if filter_clause.is_some() {
                         return Err(error::InternalEngineError::UnexpectedAnnotation {

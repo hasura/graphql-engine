@@ -28,19 +28,15 @@ V1(
                             ): Literal(
                                 Array [
                                     Object {
-                                        "first_name": String("Desc"),
+                                        "first_name": String("Asc"),
                                     },
                                 ],
                             ),
                         },
                         filter: None,
                         order_by: [],
-                        limit: Some(
-                            1,
-                        ),
-                        offset: Some(
-                            1,
-                        ),
+                        limit: None,
+                        offset: None,
                     },
                     selection: {
                         Alias(
@@ -131,6 +127,81 @@ V1(
                                     field_name: FieldName(
                                         Identifier(
                                             "article_id",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                    },
+                },
+            ),
+            Alias(
+                Identifier(
+                    "a1",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "Authors",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "order_by",
+                                ),
+                            ): Literal(
+                                Array [
+                                    Object {
+                                        "first_name": String("Desc"),
+                                    },
+                                ],
+                            ),
+                        },
+                        filter: None,
+                        order_by: [],
+                        limit: Some(
+                            1,
+                        ),
+                        offset: Some(
+                            1,
+                        ),
+                    },
+                    selection: {
+                        Alias(
+                            Identifier(
+                                "author_id",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "author_id",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "first_name",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "first_name",
                                         ),
                                     ),
                                     arguments: {},

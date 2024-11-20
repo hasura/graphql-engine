@@ -1,6 +1,7 @@
 use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema::{self as gql_schema};
+use open_dds::data_connector::DataConnectorName;
 use open_dds::types::Deprecated;
 use open_dds::{
     relationships::RelationshipType,
@@ -9,6 +10,7 @@ use open_dds::{
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
+use super::types::input_type;
 use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::FilterRelationshipAnnotation;
 use super::types::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind, TypeId};
@@ -16,9 +18,10 @@ use metadata_resolve::{
     mk_name, BooleanExpressionComparableRelationship, ComparisonExpressionInfo,
     GlobalGraphqlConfig, IncludeLogicalOperators, ModelExpressionType, ModelWithArgumentPresets,
     ObjectBooleanExpressionGraphqlConfig, ObjectBooleanExpressionType,
-    ObjectComparisonExpressionInfo, ObjectComparisonKind, ObjectTypeWithRelationships, Qualified,
-    RelationshipCapabilities, RelationshipField, RelationshipModelMapping,
-    ResolvedObjectBooleanExpressionType, ScalarBooleanExpressionGraphqlConfig,
+    ObjectComparisonExpressionInfo, ObjectComparisonKind, ObjectTypeWithRelationships,
+    OperatorMapping, Qualified, QualifiedTypeReference, RelationshipCapabilities,
+    RelationshipField, RelationshipModelMapping, ResolvedObjectBooleanExpressionType,
+    ScalarBooleanExpressionGraphqlConfig,
 };
 
 use crate::mk_deprecation_status;
@@ -86,9 +89,9 @@ fn build_builtin_operator_schema(
             not_field_name.clone(),
             None,
             types::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::BooleanExpressionArgument {
-                    field: types::ModelFilterArgument::NotOp,
-                },
+                BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+                    types::ObjectBooleanExpressionField::NotOp,
+                ),
             )),
             ast::TypeContainer::named_null(gql_schema::RegisteredTypeName::new(
                 type_name.0.clone(),
@@ -106,9 +109,9 @@ fn build_builtin_operator_schema(
             and_field_name.clone(),
             None,
             types::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::BooleanExpressionArgument {
-                    field: types::ModelFilterArgument::AndOp,
-                },
+                BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+                    types::ObjectBooleanExpressionField::AndOp,
+                ),
             )),
             ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
                 gql_schema::RegisteredTypeName::new(type_name.0.clone()),
@@ -125,9 +128,9 @@ fn build_builtin_operator_schema(
             or_field_name.clone(),
             None,
             types::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::BooleanExpressionArgument {
-                    field: types::ModelFilterArgument::OrOp,
-                },
+                BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+                    types::ObjectBooleanExpressionField::OrOp,
+                ),
             )),
             ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
                 gql_schema::RegisteredTypeName::new(type_name.0.clone()),
@@ -160,7 +163,7 @@ fn build_comparable_fields_schema(
             .map_err(metadata_resolve::WithContext::from)?;
 
         if let Some(scalar_boolean_expression_graphql) = scalar_fields_graphql.get(field_name) {
-            let registered_type_name = get_scalar_comparison_input_type(
+            let registered_type_name = get_scalar_boolean_expression_type(
                 builder,
                 comparison_expression,
                 scalar_boolean_expression_graphql,
@@ -179,14 +182,14 @@ fn build_comparable_fields_schema(
 
             // create Field annotation for this field
             let annotation = types::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::BooleanExpressionArgument {
-                    field: types::ModelFilterArgument::Field {
+                BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+                    types::ObjectBooleanExpressionField::Field {
                         field_name: field_name.clone(),
                         object_field_kind: ObjectFieldKind::Scalar,
                         object_type: object_type_name.clone(),
                         deprecated: field_definition.deprecated.clone(),
                     },
-                },
+                ),
             ));
 
             // calculate permissions
@@ -253,17 +256,17 @@ fn build_comparable_fields_schema(
 
             // create Field annotation for field
             let annotation = types::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::BooleanExpressionArgument {
-                    field: types::ModelFilterArgument::Field {
+                BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+                    types::ObjectBooleanExpressionField::Field {
                         field_name: field_name.clone(),
                         object_field_kind: match object_comparison_expression.field_kind {
                             ObjectComparisonKind::Object => ObjectFieldKind::Object,
-                            ObjectComparisonKind::Array => ObjectFieldKind::Array,
+                            ObjectComparisonKind::ObjectArray => ObjectFieldKind::ObjectArray,
                         },
                         object_type: object_type_name.clone(),
                         deprecated: field_definition.deprecated.clone(),
                     },
-                },
+                ),
             ));
 
             // calculate permissions
@@ -564,9 +567,9 @@ fn build_model_relationship_schema(
                 relationship.field_name.clone(),
                 None,
                 types::Annotation::Input(InputAnnotation::BooleanExpression(
-                    BooleanExpressionAnnotation::BooleanExpressionArgument {
-                        field: types::ModelFilterArgument::RelationshipField(annotation),
-                    },
+                    BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+                        types::ObjectBooleanExpressionField::RelationshipField(annotation),
+                    ),
                 )),
                 ast::TypeContainer::named_null(gql_schema::RegisteredTypeName::new(
                     target_filter_expression_graphql_type.0.clone(),
@@ -691,7 +694,7 @@ fn build_schema_with_boolean_expression_type(
     }
 }
 
-fn get_scalar_comparison_input_type(
+fn get_scalar_boolean_expression_type(
     builder: &mut gql_schema::Builder<GDS>,
     comparison_expression: &metadata_resolve::ComparisonExpressionInfo,
     scalar_boolean_expression_graphql: &metadata_resolve::ScalarBooleanExpressionGraphqlConfig,
@@ -706,7 +709,7 @@ fn get_scalar_comparison_input_type(
         operators.push((op_name, input_type.clone()));
     }
     Ok(
-        builder.register_type(TypeId::ScalarTypeComparisonExpression {
+        builder.register_type(TypeId::InputScalarBooleanExpressionType {
             graphql_type_name,
             operators,
             operator_mapping: comparison_expression.operator_mapping.clone(),
@@ -725,4 +728,91 @@ fn include_relationship_field(
     global_graphql_config.bypass_relation_comparisons_ndc_capability
         // Else, check for NDC capability
         || target_capabilities.is_some_and(|capabilities| capabilities.supports_relationships.as_ref().is_some_and(|r| r.supports_relation_comparisons))
+}
+
+pub fn build_scalar_boolean_expression_input(
+    gds: &GDS,
+    builder: &mut gql_schema::Builder<GDS>,
+    type_name: &ast::TypeName,
+    operators: &Vec<(ast::Name, QualifiedTypeReference)>,
+    operator_mapping: &BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
+    maybe_is_null_operator_name: &Option<ast::Name>,
+) -> Result<gql_schema::TypeInfo<GDS>, Error> {
+    let mut input_fields: BTreeMap<
+        ast::Name,
+        gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>,
+    > = BTreeMap::new();
+
+    if let Some(is_null_operator_name) = maybe_is_null_operator_name {
+        // Add is_null field
+        let is_null_input_type = ast::TypeContainer {
+            base: ast::BaseTypeContainer::Named(gql_schema::RegisteredTypeName::boolean()),
+            nullable: true,
+        };
+
+        input_fields.insert(
+            is_null_operator_name.clone(),
+            builder.allow_all_namespaced(gql_schema::InputField::new(
+                is_null_operator_name.clone(),
+                None,
+                types::Annotation::Input(types::InputAnnotation::BooleanExpression(
+                    types::BooleanExpressionAnnotation::ScalarBooleanExpressionField(
+                        types::ScalarBooleanExpressionField::IsNullOperation,
+                    ),
+                )),
+                is_null_input_type,
+                None,
+                gql_schema::DeprecationStatus::NotDeprecated,
+            )),
+        );
+    }
+
+    for (op_name, input_type) in operators {
+        // comparison_operator: input_type
+        let input_type = input_type::get_input_type(gds, builder, input_type)?;
+        // Presence of all scalar fields in the comparison expression is not compulsory. Users can filter rows based on
+        // scalar fields of their choice. Hence, the input type of each scalar field is nullable.
+        let nullable_input_type = ast::TypeContainer {
+            base: input_type.base,
+            nullable: true,
+        };
+
+        // this feels a bit loose, we're depending on the fact the ast::Name and
+        // OperatorName should be the same
+        let operator_name = open_dds::types::OperatorName::new(op_name.as_str().into());
+
+        // for each set of mappings, only return the mapping we actually need
+        // default to existing mapping where one is missing
+        let this_operator_mapping = operator_mapping
+            .iter()
+            .map(|(data_connector_name, mappings)| {
+                (
+                    data_connector_name.clone(),
+                    mappings.get(&operator_name).clone(),
+                )
+            })
+            .collect();
+
+        input_fields.insert(
+            op_name.clone(),
+            builder.allow_all_namespaced(gql_schema::InputField::new(
+                op_name.clone(),
+                None,
+                types::Annotation::Input(types::InputAnnotation::BooleanExpression(
+                    types::BooleanExpressionAnnotation::ScalarBooleanExpressionField(
+                        types::ScalarBooleanExpressionField::ComparisonOperation {
+                            operator_mapping: this_operator_mapping,
+                        },
+                    ),
+                )),
+                nullable_input_type,
+                None,
+                gql_schema::DeprecationStatus::NotDeprecated,
+            )),
+        );
+    }
+
+    Ok(gql_schema::TypeInfo::InputObject(
+        gql_schema::InputObject::new(type_name.clone(), None, input_fields, Vec::new()),
+    ))
 }

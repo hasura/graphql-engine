@@ -110,7 +110,7 @@ pub fn select_many_generate_ir<'n, 's>(
             },
 
             Annotation::Input(graphql_schema::InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::BooleanExpression,
+                BooleanExpressionAnnotation::BooleanExpressionRootField,
             )) => {
                 where_clause = Some(filter::resolve_filter_expression(
                     argument.value.as_object()?,

@@ -5,7 +5,16 @@ expression: rowsets
 {
   "Ok": [
     {
-      "rows": []
+      "rows": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        },
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ]
     }
   ]
 }

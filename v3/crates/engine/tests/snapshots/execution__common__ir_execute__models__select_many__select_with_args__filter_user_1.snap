@@ -7,7 +7,7 @@ V1(
         queries: {
             Alias(
                 Identifier(
-                    "ArticlesByAuthorMany",
+                    "article_author_match",
                 ),
             ): Model(
                 ModelSelection {

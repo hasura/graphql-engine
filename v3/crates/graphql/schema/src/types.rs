@@ -84,22 +84,7 @@ pub enum RootFieldKind {
 pub enum ObjectFieldKind {
     Scalar,
     Object,
-    Array,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum ModelFilterArgument {
-    AndOp,
-    OrOp,
-    NotOp,
-    Field {
-        field_name: types::FieldName,
-        object_type: Qualified<types::CustomTypeName>,
-        object_field_kind: ObjectFieldKind,
-        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
-        deprecated: Option<Deprecated>,
-    },
-    RelationshipField(FilterRelationshipAnnotation),
+    ObjectArray,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -230,14 +215,6 @@ pub enum ModelInputAnnotation {
         argument_kind: metadata_resolve::ArgumentKind,
         ndc_table_argument: Option<DataConnectorArgumentName>,
     },
-    ComparisonOperation {
-        #[serde(
-            serialize_with = "serialize_non_string_key_btreemap",
-            deserialize_with = "deserialize_non_string_key_btreemap"
-        )]
-        operator_mapping: BTreeMap<Qualified<DataConnectorName>, DataConnectorOperatorName>,
-    },
-    IsNullOperation,
     ModelOrderByExpression,
     ModelOrderByNestedExpression {
         ndc_column: DataConnectorColumnName,
@@ -268,8 +245,41 @@ pub enum ModelInputAnnotation {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 /// Annotations of the input types/fields related to boolean expressions.
 pub enum BooleanExpressionAnnotation {
-    BooleanExpression,
-    BooleanExpressionArgument { field: ModelFilterArgument },
+    /// Marks the field that contains the root of the boolean expression. eg. a "where" field
+    BooleanExpressionRootField,
+
+    /// Marks a field inside an object boolean expression
+    ObjectBooleanExpressionField(ObjectBooleanExpressionField),
+
+    /// Marks a field inside an scalar boolean expression
+    ScalarBooleanExpressionField(ScalarBooleanExpressionField),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum ObjectBooleanExpressionField {
+    AndOp,
+    OrOp,
+    NotOp,
+    Field {
+        field_name: types::FieldName,
+        object_type: Qualified<types::CustomTypeName>,
+        object_field_kind: ObjectFieldKind,
+        /// To mark a field as deprecated in the field usage while reporting query usage analytics.
+        deprecated: Option<Deprecated>,
+    },
+    RelationshipField(FilterRelationshipAnnotation),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum ScalarBooleanExpressionField {
+    ComparisonOperation {
+        #[serde(
+            serialize_with = "serialize_non_string_key_btreemap",
+            deserialize_with = "deserialize_non_string_key_btreemap"
+        )]
+        operator_mapping: BTreeMap<Qualified<DataConnectorName>, DataConnectorOperatorName>,
+    },
+    IsNullOperation,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
@@ -385,6 +395,12 @@ pub enum TypeId {
         gds_type_name: Qualified<types::CustomTypeName>,
         graphql_type_name: ast::TypeName,
     },
+    InputScalarBooleanExpressionType {
+        graphql_type_name: ast::TypeName,
+        operators: Vec<(ast::Name, QualifiedTypeReference)>,
+        operator_mapping: BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
+        is_null_operator_name: Option<ast::Name>,
+    },
     NodeRoot,
     ModelArgumentsInput {
         model_name: Qualified<models::ModelName>,
@@ -394,12 +410,6 @@ pub enum TypeId {
         model_name: Qualified<models::ModelName>,
         order_by_expression_identifier: Qualified<OrderByExpressionIdentifier>,
         graphql_type_name: ast::TypeName,
-    },
-    ScalarTypeComparisonExpression {
-        graphql_type_name: ast::TypeName,
-        operators: Vec<(ast::Name, QualifiedTypeReference)>,
-        operator_mapping: BTreeMap<Qualified<DataConnectorName>, OperatorMapping>,
-        is_null_operator_name: Option<ast::Name>,
     },
     OrderByEnumType {
         graphql_type_name: ast::TypeName,
@@ -447,7 +457,7 @@ impl TypeId {
             | TypeId::InputObjectBooleanExpressionType {
                 graphql_type_name, ..
             }
-            | TypeId::ScalarTypeComparisonExpression {
+            | TypeId::InputScalarBooleanExpressionType {
                 graphql_type_name, ..
             }
             | TypeId::ModelOrderByExpression {

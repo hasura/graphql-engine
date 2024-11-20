@@ -5,15 +5,17 @@ use metadata_resolve::{DataConnectorLink, FieldMapping, Qualified};
 use open_dds::models::ModelName;
 use open_dds::relationships::{RelationshipName, RelationshipType};
 use serde::Serialize;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
+use std::ops::Deref;
 
 use crate::error;
 use crate::model_tracking::count_model;
-use graphql_schema::FilterRelationshipAnnotation;
 use graphql_schema::GDS;
 use graphql_schema::{self};
+use graphql_schema::{BooleanExpressionAnnotation, InputAnnotation, ObjectFieldKind};
 use graphql_schema::{
-    BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation, ObjectFieldKind,
+    FilterRelationshipAnnotation, ObjectBooleanExpressionField, ScalarBooleanExpressionField,
 };
 use open_dds::{
     data_connector::{DataConnectorColumnName, DataConnectorOperatorName},
@@ -52,125 +54,137 @@ pub fn resolve_filter_expression<'s>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'s>, error::Error> {
-    let mut expressions = Vec::new();
-    for field in fields.values() {
-        let field_filter_expression =
-            build_filter_expression(field, data_connector_link, type_mappings, usage_counts)?;
-        expressions.push(field_filter_expression);
-    }
-    Ok(Expression::mk_and(expressions))
-}
-
-fn build_filter_expression<'s>(
-    field: &normalized_ast::InputField<'s, GDS>,
-    data_connector_link: &'s DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    usage_counts: &mut UsagesCounts,
-) -> Result<Expression<'s>, error::Error> {
-    let boolean_expression_annotation = get_boolean_expression_annotation(field.info.generic)?;
-    build_filter_expression_from_boolean_expression(
-        boolean_expression_annotation,
-        field,
+    resolve_object_boolean_expression(
+        fields,
         data_connector_link,
         type_mappings,
-        &mut vec![],
+        &[],
         usage_counts,
     )
 }
 
-fn build_filter_expression_from_boolean_expression<'s>(
-    boolean_expression_annotation: &'s BooleanExpressionAnnotation,
-    field: &normalized_ast::InputField<'s, GDS>,
+fn resolve_object_boolean_expression<'s>(
+    fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
     data_connector_link: &'s DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    field_path: &mut Vec<DataConnectorColumnName>,
+    column_path: &[&'s DataConnectorColumnName],
     usage_counts: &mut UsagesCounts,
 ) -> Result<Expression<'s>, error::Error> {
-    match boolean_expression_annotation {
-        // "_and"
-        BooleanExpressionAnnotation::BooleanExpressionArgument {
-            field: graphql_schema::ModelFilterArgument::AndOp,
-        } => {
-            // The "_and" field value should be a list
-            let and_values = field.value.as_list()?;
+    let field_expressions = fields
+        .values()
+        .map(|field| {
+            let field_annotation =
+                extract_object_boolean_expression_field_annotation(field.info.generic)?;
 
-            let and_expressions = and_values
-                .iter()
-                .map(|value| {
-                    let value_object = value.as_object()?;
-                    resolve_filter_object(
-                        value_object,
+            let field_expression = match field_annotation {
+                // "_and" field
+                ObjectBooleanExpressionField::AndOp => {
+                    // The "_and" field value should be a list
+                    let and_values = field.value.as_list()?;
+
+                    let and_expressions = and_values
+                        .iter()
+                        .map(|value| {
+                            let value_object = value.as_object()?;
+                            resolve_object_boolean_expression(
+                                value_object,
+                                data_connector_link,
+                                type_mappings,
+                                column_path,
+                                usage_counts,
+                            )
+                        })
+                        .collect::<Result<Vec<_>, _>>()?;
+
+                    Expression::mk_and(and_expressions)
+                }
+                // "_or" field
+                ObjectBooleanExpressionField::OrOp => {
+                    // The "_or" field value should be a list
+                    let or_values = field.value.as_list()?;
+
+                    let or_expressions = or_values
+                        .iter()
+                        .map(|value| {
+                            let value_object = value.as_object()?;
+                            resolve_object_boolean_expression(
+                                value_object,
+                                data_connector_link,
+                                type_mappings,
+                                column_path,
+                                usage_counts,
+                            )
+                        })
+                        .collect::<Result<Vec<_>, _>>()?;
+
+                    Expression::mk_or(or_expressions)
+                }
+                // "_not" field
+                ObjectBooleanExpressionField::NotOp => {
+                    // The "_not" field value should be an object
+                    let not_value = field.value.as_object()?;
+
+                    let not_filter_expression = resolve_object_boolean_expression(
+                        not_value,
                         data_connector_link,
                         type_mappings,
+                        column_path,
                         usage_counts,
-                    )
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-
-            Ok(Expression::mk_and(and_expressions))
-        }
-        // "_or"
-        BooleanExpressionAnnotation::BooleanExpressionArgument {
-            field: graphql_schema::ModelFilterArgument::OrOp,
-        } => {
-            // The "_or" field value should be a list
-            let or_values = field.value.as_list()?;
-
-            let or_expressions = or_values
-                .iter()
-                .map(|value| {
-                    let value_object = value.as_object()?;
-                    resolve_filter_object(
-                        value_object,
-                        data_connector_link,
-                        type_mappings,
-                        usage_counts,
-                    )
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-
-            Ok(Expression::mk_or(or_expressions))
-        }
-        // "_not"
-        BooleanExpressionAnnotation::BooleanExpressionArgument {
-            field: graphql_schema::ModelFilterArgument::NotOp,
-        } => {
-            // The "_not" field value should be an object
-            let not_value = field.value.as_object()?;
-
-            let not_filter_expression =
-                resolve_filter_object(not_value, data_connector_link, type_mappings, usage_counts)?;
-            Ok(Expression::mk_not(not_filter_expression))
-        }
-        // The column that we want to use for filtering.
-        BooleanExpressionAnnotation::BooleanExpressionArgument {
-            field:
-                graphql_schema::ModelFilterArgument::Field {
+                    )?;
+                    Expression::mk_not(not_filter_expression)
+                }
+                // comparableField field
+                ObjectBooleanExpressionField::Field {
                     field_name,
                     object_type,
                     object_field_kind,
-                    ..
-                },
-        } => {
-            let FieldMapping { column, .. } =
-                get_field_mapping_of_field_name(type_mappings, object_type, field_name)?;
+                    deprecated: _,
+                } => {
+                    let FieldMapping { column, .. } =
+                        get_field_mapping_of_field_name(type_mappings, object_type, field_name)?;
 
-            let inner_is_array_field = matches!(object_field_kind, ObjectFieldKind::Array);
+                    let field_value = field.value.as_object()?;
 
-            build_comparison_expression(
-                field,
-                field_path,
-                inner_is_array_field,
-                &column,
-                data_connector_link,
-                type_mappings,
-            )
-        }
-        // Relationship field used for filtering.
-        // This relationship can either point to another relationship or a column.
-        BooleanExpressionAnnotation::BooleanExpressionArgument {
-            field:
-                graphql_schema::ModelFilterArgument::RelationshipField(FilterRelationshipAnnotation {
+                    match object_field_kind {
+                        ObjectFieldKind::Object => {
+                            // Append the current column to the column_path before descending into the nested object expression
+                            let field_path = column_path
+                                .iter()
+                                .copied()
+                                .chain([column])
+                                .collect::<Vec<_>>();
+                            resolve_object_boolean_expression(
+                                field_value,
+                                data_connector_link,
+                                type_mappings,
+                                &field_path,
+                                usage_counts,
+                            )?
+                        }
+                        ObjectFieldKind::ObjectArray => {
+                            let inner_expression = resolve_object_boolean_expression(
+                                field_value,
+                                data_connector_link,
+                                type_mappings,
+                                &[], // Reset the column path because we're nesting the expression inside an exists that itself captures the field path
+                                usage_counts,
+                            )?;
+
+                            Expression::LocalNestedArray {
+                                column: column.clone(),
+                                field_path: column_path.iter().copied().cloned().collect(),
+                                predicate: Box::new(inner_expression),
+                            }
+                        }
+                        ObjectFieldKind::Scalar => resolve_scalar_boolean_expression(
+                            field_value,
+                            data_connector_link,
+                            column_path,
+                            column,
+                        )?,
+                    }
+                }
+                ObjectBooleanExpressionField::RelationshipField(FilterRelationshipAnnotation {
                     relationship_name,
                     relationship_type,
                     source_type,
@@ -179,49 +193,115 @@ fn build_filter_expression_from_boolean_expression<'s>(
                     target_model_name,
                     mappings,
                     deprecated: _,
-                }),
-        } => {
-            // Add the target model being used in the usage counts
-            count_model(target_model_name, usage_counts);
+                }) => {
+                    // Add the target model being used in the usage counts
+                    count_model(target_model_name, usage_counts);
 
-            // This map contains the relationships or the columns of the
-            // relationship that needs to be used for ordering.
-            let filter_object = field.value.as_object()?;
+                    // This map contains the relationships or the columns of the
+                    // relationship that needs to be used for ordering.
+                    let filter_object = field.value.as_object()?;
 
-            let mut expressions = Vec::new();
+                    let relationship_predicate = resolve_object_boolean_expression(
+                        filter_object,
+                        &target_source.model.data_connector,
+                        &target_source.model.type_mappings,
+                        &[], // We're traversing across the relationship, so we reset the field path
+                        usage_counts,
+                    )?;
 
-            for field in filter_object.values() {
-                let field_filter_expression = build_filter_expression(
-                    field,
-                    &target_source.model.data_connector,
-                    &target_source.model.type_mappings,
-                    usage_counts,
-                )?;
-                expressions.push(field_filter_expression);
-            }
+                    // build and return relationshp comparison expression
+                    build_relationship_comparison_expression(
+                        type_mappings,
+                        column_path,
+                        data_connector_link,
+                        relationship_name,
+                        relationship_type,
+                        source_type,
+                        target_model_name,
+                        target_source,
+                        target_type,
+                        mappings,
+                        relationship_predicate,
+                    )?
+                }
+            };
 
-            let relationship_predicate = Expression::mk_and(expressions);
+            Ok(field_expression)
+        })
+        .collect::<Result<Vec<Expression>, error::Error>>()?;
 
-            // build and return relationshp comparison expression
-            build_relationship_comparison_expression(
-                type_mappings,
-                field_path,
-                data_connector_link,
-                relationship_name,
-                relationship_type,
-                source_type,
-                target_model_name,
-                target_source,
-                target_type,
-                mappings,
-                relationship_predicate,
-            )
+    Ok(Expression::mk_and(field_expressions))
+}
+
+fn extract_object_boolean_expression_field_annotation(
+    annotation: &graphql_schema::Annotation,
+) -> Result<&ObjectBooleanExpressionField, error::Error> {
+    match annotation {
+        graphql_schema::Annotation::Input(InputAnnotation::BooleanExpression(
+            BooleanExpressionAnnotation::ObjectBooleanExpressionField(
+                object_boolean_expression_field,
+            ),
+        )) => Ok(object_boolean_expression_field),
+        _ => Err(error::InternalEngineError::UnexpectedAnnotation {
+            annotation: annotation.clone(),
         }
-        other_boolean_annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
-            annotation: graphql_schema::Annotation::Input(InputAnnotation::BooleanExpression(
-                other_boolean_annotation.clone(),
-            )),
-        })?,
+        .into()),
+    }
+}
+
+fn resolve_scalar_boolean_expression<'s>(
+    fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
+    data_connector_link: &'s DataConnectorLink,
+    column_path: &[&'s DataConnectorColumnName],
+    column: &DataConnectorColumnName,
+) -> Result<Expression<'s>, error::Error> {
+    let field_expressions = fields
+        .values()
+        .map(|field| {
+            let field_annotation =
+                extract_scalar_boolean_expression_field_annotation(field.info.generic)?;
+
+            let field_expression = match field_annotation {
+                ScalarBooleanExpressionField::IsNullOperation => {
+                    build_is_null_expression(column_path, column, &field.value)?
+                }
+                ScalarBooleanExpressionField::ComparisonOperation { operator_mapping } => {
+                    let operator =
+                        operator_mapping
+                            .get(&data_connector_link.name)
+                            .ok_or_else(|| {
+                                error::InternalEngineError::OperatorMappingError(
+                                    error::OperatorMappingError::MissingEntryForDataConnector {
+                                        column_name: column.clone(),
+                                        data_connector_name: data_connector_link.name.clone(),
+                                    },
+                                )
+                            })?;
+
+                    build_binary_comparison_expression(operator, column_path, column, &field.value)
+                }
+            };
+
+            Ok(field_expression)
+        })
+        .collect::<Result<Vec<Expression>, error::Error>>()?;
+
+    Ok(Expression::mk_and(field_expressions))
+}
+
+fn extract_scalar_boolean_expression_field_annotation(
+    annotation: &graphql_schema::Annotation,
+) -> Result<&ScalarBooleanExpressionField, error::Error> {
+    match annotation {
+        graphql_schema::Annotation::Input(InputAnnotation::BooleanExpression(
+            BooleanExpressionAnnotation::ScalarBooleanExpressionField(
+                scalar_boolean_expression_field,
+            ),
+        )) => Ok(scalar_boolean_expression_field),
+        _ => Err(error::InternalEngineError::UnexpectedAnnotation {
+            annotation: annotation.clone(),
+        }
+        .into()),
     }
 }
 
@@ -265,7 +345,7 @@ fn get_relationship_predicate_execution_strategy(
 /// and passed as `relationship_predicate`.
 pub(crate) fn build_relationship_comparison_expression<'s>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    field_path: &[DataConnectorColumnName],
+    column_path: &[&'s DataConnectorColumnName],
     data_connector_link: &'s DataConnectorLink,
     relationship_name: &'s RelationshipName,
     relationship_type: &'s RelationshipType,
@@ -276,7 +356,16 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
     mappings: &'s Vec<metadata_resolve::RelationshipModelMapping>,
     relationship_predicate: Expression<'s>,
 ) -> Result<Expression<'s>, error::Error> {
-    // Determinde whether the relationship is local or remote
+    if !column_path.is_empty() {
+        return Err(
+            error::InternalDeveloperError::NestedObjectRelationshipInPredicate {
+                relationship_name: relationship_name.clone(),
+            }
+            .into(),
+        );
+    }
+
+    // Determine whether the relationship is local or remote
     match get_relationship_predicate_execution_strategy(
         data_connector_link,
         &target_source.model.data_connector,
@@ -317,7 +406,8 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
                 } = get_field_mapping_of_field_name(type_mappings, source_type, source_field)?;
 
                 let equal_operators = comparison_operators
-                    .map(|ops| ops.equality_operators)
+                    .as_ref()
+                    .map(|ops| Cow::Borrowed(&ops.equality_operators))
                     .unwrap_or_default();
 
                 let eq_operator = equal_operators.first().ok_or_else(|| {
@@ -331,8 +421,8 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
                 })?;
 
                 let source_ndc_column = SourceNdcColumn {
-                    column: source_column,
-                    field_path: field_path.to_owned(),
+                    column: source_column.clone(),
+                    field_path: column_path.iter().copied().cloned().collect(),
                     eq_operator: eq_operator.clone(),
                 };
 
@@ -361,144 +451,26 @@ pub(crate) fn build_relationship_comparison_expression<'s>(
     }
 }
 
-fn build_comparison_expression<'s>(
-    field: &normalized_ast::InputField<'s, GDS>,
-    field_path: &mut Vec<DataConnectorColumnName>,
-    is_array_field: bool,
-    column: &DataConnectorColumnName,
-    data_connector_link: &'s DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-) -> Result<Expression<'s>, error::Error> {
-    let mut expressions = Vec::new();
-
-    for (_op_name, op_value) in field.value.as_object()? {
-        match op_value.info.generic {
-            graphql_schema::Annotation::Input(InputAnnotation::Model(
-                ModelInputAnnotation::IsNullOperation,
-            )) => {
-                let expression =
-                    build_is_null_expression(column, &op_value.value, field_path.clone())?;
-                expressions.push(expression);
-            }
-            graphql_schema::Annotation::Input(InputAnnotation::Model(
-                ModelInputAnnotation::ComparisonOperation { operator_mapping },
-            )) => {
-                let operator =
-                    operator_mapping
-                        .get(&data_connector_link.name)
-                        .ok_or_else(|| {
-                            error::InternalEngineError::OperatorMappingError(
-                                error::OperatorMappingError::MissingEntryForDataConnector {
-                                    column_name: column.clone(),
-                                    data_connector_name: data_connector_link.name.clone(),
-                                },
-                            )
-                        })?;
-
-                let expression = build_binary_comparison_expression(
-                    operator,
-                    column,
-                    &op_value.value,
-                    field_path,
-                );
-                expressions.push(expression);
-            }
-            // Nested field comparison
-            graphql_schema::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::BooleanExpressionArgument {
-                    field:
-                        graphql_schema::ModelFilterArgument::Field {
-                            field_name: inner_field_name,
-                            object_field_kind,
-                            object_type: inner_object_type,
-                            ..
-                        },
-                },
-            )) => {
-                // get correct inner column name
-                let FieldMapping {
-                    column: inner_column,
-                    ..
-                } = get_field_mapping_of_field_name(
-                    type_mappings,
-                    inner_object_type,
-                    inner_field_name,
-                )?;
-
-                let inner_is_array_field = matches!(object_field_kind, ObjectFieldKind::Array);
-
-                if is_array_field {
-                    // if we're matching in an array field, we look for the inner column directly
-                    let inner_expression = build_comparison_expression(
-                        op_value,
-                        field_path,
-                        inner_is_array_field,
-                        &inner_column,
-                        data_connector_link,
-                        type_mappings,
-                    )?;
-
-                    // and then wrap it in an `exists`
-                    let exists_wrapper = Expression::LocalNestedArray {
-                        column: column.clone(),
-                        field_path: field_path.clone(),
-                        predicate: Box::new(inner_expression),
-                    };
-
-                    expressions.push(exists_wrapper);
-                } else {
-                    // otherwise we add to the field path
-                    field_path.push(inner_column.clone());
-
-                    // and look for the main column inside
-                    let inner_expression = build_comparison_expression(
-                        op_value,
-                        field_path,
-                        inner_is_array_field,
-                        column,
-                        data_connector_link,
-                        type_mappings,
-                    )?;
-
-                    expressions.push(inner_expression);
-                }
-            }
-            // Nested relationship comparison
-            graphql_schema::Annotation::Input(InputAnnotation::BooleanExpression(
-                BooleanExpressionAnnotation::BooleanExpressionArgument {
-                    field:
-                        graphql_schema::ModelFilterArgument::RelationshipField(
-                            FilterRelationshipAnnotation {
-                                relationship_name, ..
-                            },
-                        ),
-                },
-            )) => Err(
-                error::InternalDeveloperError::NestedObjectRelationshipInPredicate {
-                    relationship_name: relationship_name.clone(),
-                },
-            )?,
-
-            annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
-                annotation: annotation.clone(),
-            })?,
-        }
-    }
-    Ok(Expression::mk_and(expressions))
-}
-
 /// Resolve `_is_null` GraphQL boolean operator
 fn build_is_null_expression<'s>(
+    column_path: &[&DataConnectorColumnName],
     column: &DataConnectorColumnName,
     value: &normalized_ast::Value<'s, GDS>,
-    field_path: Vec<DataConnectorColumnName>,
 ) -> Result<Expression<'s>, error::Error> {
     // Build an 'IsNull' unary comparison expression
     let unary_comparison_expression =
         Expression::LocalField(LocalFieldComparison::UnaryComparison {
             column: ComparisonTarget::Column {
-                name: column.clone(),
-                field_path,
+                // The column name is the root column
+                name: column_path.first().map_or(column, Deref::deref).clone(),
+                // The field path is the nesting path inside the root column, if any
+                field_path: column_path
+                    .iter()
+                    .copied()
+                    .chain([column])
+                    .skip(1)
+                    .cloned()
+                    .collect(),
             },
             operator: metadata_resolve::UnaryComparisonOperator::IsNull,
         });
@@ -516,14 +488,22 @@ fn build_is_null_expression<'s>(
 /// Generate a binary comparison operator
 fn build_binary_comparison_expression<'s>(
     operator: &DataConnectorOperatorName,
+    column_path: &[&DataConnectorColumnName],
     column: &DataConnectorColumnName,
     value: &normalized_ast::Value<'s, GDS>,
-    field_path: &[DataConnectorColumnName],
 ) -> Expression<'s> {
     Expression::LocalField(LocalFieldComparison::BinaryComparison {
         column: ComparisonTarget::Column {
-            name: column.clone(),
-            field_path: field_path.to_vec(),
+            // The column name is the root column
+            name: column_path.first().map_or(column, Deref::deref).clone(),
+            // The field path is the nesting path inside the root column, if any
+            field_path: column_path
+                .iter()
+                .copied()
+                .chain([column])
+                .skip(1)
+                .cloned()
+                .collect(),
         },
         operator: operator.clone(),
         value: ComparisonValue::Scalar {
@@ -532,45 +512,12 @@ fn build_binary_comparison_expression<'s>(
     })
 }
 
-fn resolve_filter_object<'s>(
-    fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
-    data_connector_link: &'s DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
-    usage_counts: &mut UsagesCounts,
-) -> Result<Expression<'s>, error::Error> {
-    let mut expressions = Vec::new();
-
-    for field in fields.values() {
-        expressions.push(build_filter_expression(
-            field,
-            data_connector_link,
-            type_mappings,
-            usage_counts,
-        )?);
-    }
-    Ok(Expression::mk_and(expressions))
-}
-
-fn get_boolean_expression_annotation(
-    annotation: &graphql_schema::Annotation,
-) -> Result<&BooleanExpressionAnnotation, error::Error> {
-    match annotation {
-        graphql_schema::Annotation::Input(InputAnnotation::BooleanExpression(
-            boolean_expression_annotation,
-        )) => Ok(boolean_expression_annotation),
-        _ => Err(error::InternalEngineError::UnexpectedAnnotation {
-            annotation: annotation.clone(),
-        }
-        .into()),
-    }
-}
-
 /// get column name for field name
-fn get_field_mapping_of_field_name(
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+fn get_field_mapping_of_field_name<'a>(
+    type_mappings: &'a BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
     field_name: &FieldName,
-) -> Result<metadata_resolve::FieldMapping, error::Error> {
+) -> Result<&'a metadata_resolve::FieldMapping, error::Error> {
     let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
         error::InternalDeveloperError::TypeMappingNotFound {
             type_name: type_name.clone(),
@@ -582,7 +529,6 @@ fn get_field_mapping_of_field_name(
             .ok_or_else(|| error::InternalDeveloperError::FieldMappingNotFound {
                 type_name: type_name.clone(),
                 field_name: field_name.clone(),
-            })?
-            .clone()),
+            })?),
     }
 }

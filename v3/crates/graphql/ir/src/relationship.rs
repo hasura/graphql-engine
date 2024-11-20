@@ -107,7 +107,7 @@ pub fn generate_model_relationship_ir<'s>(
                         }
                     }
                     InputAnnotation::BooleanExpression(
-                        BooleanExpressionAnnotation::BooleanExpression,
+                        BooleanExpressionAnnotation::BooleanExpressionRootField,
                     ) => {
                         if let Some(model_source) = &relationship_annotation.target_source {
                             where_clause = Some(filter::resolve_filter_expression(

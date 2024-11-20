@@ -7,7 +7,155 @@ V1(
         queries: {
             Alias(
                 Identifier(
-                    "AuthorMany",
+                    "AuthorManyNot",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "Authors",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "where_custom",
+                                ),
+                            ): Literal(
+                                Object {
+                                    "_not_custom": Object {
+                                        "first_name": Object {
+                                            "_is_null_custom": Bool(true),
+                                        },
+                                    },
+                                },
+                            ),
+                        },
+                        filter: None,
+                        order_by: [],
+                        limit: None,
+                        offset: None,
+                    },
+                    selection: {
+                        Alias(
+                            Identifier(
+                                "author_id",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "author_id",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "first_name",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "first_name",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                    },
+                },
+            ),
+            Alias(
+                Identifier(
+                    "AuthorManyOr",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "Authors",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "where_custom",
+                                ),
+                            ): Literal(
+                                Object {
+                                    "_or_custom": Array [
+                                        Object {
+                                            "first_name": Object {
+                                                "_like": String("Pet%"),
+                                            },
+                                        },
+                                    ],
+                                },
+                            ),
+                        },
+                        filter: None,
+                        order_by: [],
+                        limit: None,
+                        offset: None,
+                    },
+                    selection: {
+                        Alias(
+                            Identifier(
+                                "author_id",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "author_id",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "first_name",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "first_name",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                    },
+                },
+            ),
+            Alias(
+                Identifier(
+                    "AuthorManyAnd",
                 ),
             ): Model(
                 ModelSelection {

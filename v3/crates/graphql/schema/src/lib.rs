@@ -40,9 +40,10 @@ pub use types::output_type::relationship::{
 };
 pub use types::{
     Annotation, ApolloFederationRootFields, BooleanExpressionAnnotation, CommandSourceDetail,
-    EntityFieldTypeNameMapping, GlobalID, InputAnnotation, ModelFilterArgument,
-    ModelInputAnnotation, ModelOrderByDirection, NamespaceAnnotation, NodeFieldTypeNameMapping,
-    ObjectFieldKind, OutputAnnotation, RootFieldAnnotation, RootFieldKind, TypeKind,
+    EntityFieldTypeNameMapping, GlobalID, InputAnnotation, ModelInputAnnotation,
+    ModelOrderByDirection, NamespaceAnnotation, NodeFieldTypeNameMapping,
+    ObjectBooleanExpressionField, ObjectFieldKind, OutputAnnotation, RootFieldAnnotation,
+    RootFieldKind, ScalarBooleanExpressionField, TypeKind,
 };
 
 /// This 'NamespacedGetter' looks up 'NamespacedNodeInfo's according to actual roles.
@@ -190,12 +191,12 @@ impl gql_schema::SchemaContext for GDS {
             } => model_arguments::build_model_arguments_input_schema(
                 self, builder, type_name, model_name,
             ),
-            types::TypeId::ScalarTypeComparisonExpression {
+            types::TypeId::InputScalarBooleanExpressionType {
                 graphql_type_name,
                 operators,
                 operator_mapping,
                 is_null_operator_name,
-            } => model_filter::build_scalar_comparison_input(
+            } => boolean_expression::build_scalar_boolean_expression_input(
                 self,
                 builder,
                 graphql_type_name,

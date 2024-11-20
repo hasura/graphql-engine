@@ -83,7 +83,7 @@ pub(crate) fn resolve_object_boolean_graphql(
                     }
                 }
             }
-            ComparableFieldKind::Object | ComparableFieldKind::Array => {
+            ComparableFieldKind::Object | ComparableFieldKind::ObjectArray => {
                 // if this field isn't a scalar, let's see if it's an object instead
                 let (_field_subgraph, raw_boolean_expression_type) =
                     helpers::lookup_raw_boolean_expression(

@@ -135,9 +135,9 @@ fn analyze_input_annotation(annotation: &graphql_schema::InputAnnotation) -> Vec
             }));
         }
         graphql_schema::InputAnnotation::BooleanExpression(
-            graphql_schema::BooleanExpressionAnnotation::BooleanExpressionArgument { field },
+            graphql_schema::BooleanExpressionAnnotation::ObjectBooleanExpressionField(field),
         ) => match field {
-            graphql_schema::ModelFilterArgument::Field {
+            graphql_schema::ObjectBooleanExpressionField::Field {
                 field_name,
                 object_type,
                 deprecated,
@@ -154,7 +154,9 @@ fn analyze_input_annotation(annotation: &graphql_schema::InputAnnotation) -> Vec
                     deprecated_reason: reason,
                 }));
             }
-            graphql_schema::ModelFilterArgument::RelationshipField(relationship_annotation) => {
+            graphql_schema::ObjectBooleanExpressionField::RelationshipField(
+                relationship_annotation,
+            ) => {
                 let DeprecatedDetails {
                     is_deprecated,
                     reason,
@@ -172,12 +174,13 @@ fn analyze_input_annotation(annotation: &graphql_schema::InputAnnotation) -> Vec
                     deprecated_reason: reason,
                 }));
             }
-            graphql_schema::ModelFilterArgument::AndOp
-            | graphql_schema::ModelFilterArgument::OrOp
-            | graphql_schema::ModelFilterArgument::NotOp => {}
+            graphql_schema::ObjectBooleanExpressionField::AndOp
+            | graphql_schema::ObjectBooleanExpressionField::OrOp
+            | graphql_schema::ObjectBooleanExpressionField::NotOp => {}
         },
         graphql_schema::InputAnnotation::BooleanExpression(
-            graphql_schema::BooleanExpressionAnnotation::BooleanExpression,
+            graphql_schema::BooleanExpressionAnnotation::BooleanExpressionRootField
+            | graphql_schema::BooleanExpressionAnnotation::ScalarBooleanExpressionField(_),
         )
         | graphql_schema::InputAnnotation::CommandArgument { .. }
         | graphql_schema::InputAnnotation::Relay(_)
@@ -231,8 +234,6 @@ fn analyze_model_input_annotation(
         }
         graphql_schema::ModelInputAnnotation::ModelArgumentsExpression
         | graphql_schema::ModelInputAnnotation::ModelArgument { .. }
-        | graphql_schema::ModelInputAnnotation::ComparisonOperation { .. }
-        | graphql_schema::ModelInputAnnotation::IsNullOperation
         | graphql_schema::ModelInputAnnotation::ModelOrderByExpression
         | graphql_schema::ModelInputAnnotation::ModelOrderByNestedExpression { .. }
         | graphql_schema::ModelInputAnnotation::ModelOrderByDirection { .. }

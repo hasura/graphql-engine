@@ -7,7 +7,273 @@ V1(
         queries: {
             Alias(
                 Identifier(
-                    "Track",
+                    "TrackNameEq",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "Tracks",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "where",
+                                ),
+                            ): Literal(
+                                Object {
+                                    "TrackId": Object {
+                                        "_eq": Number(1),
+                                    },
+                                },
+                            ),
+                        },
+                        filter: None,
+                        order_by: [],
+                        limit: None,
+                        offset: None,
+                    },
+                    selection: {
+                        Alias(
+                            Identifier(
+                                "AlbumId",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "AlbumId",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "Name",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "Name",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "TrackId",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "TrackId",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                    },
+                },
+            ),
+            Alias(
+                Identifier(
+                    "TrackGtAndLt",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "Tracks",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "where",
+                                ),
+                            ): Literal(
+                                Object {
+                                    "TrackId": Object {
+                                        "_gt": Number(1),
+                                        "_lt": Number(3),
+                                    },
+                                },
+                            ),
+                        },
+                        filter: None,
+                        order_by: [],
+                        limit: None,
+                        offset: None,
+                    },
+                    selection: {
+                        Alias(
+                            Identifier(
+                                "AlbumId",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "AlbumId",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "Name",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "Name",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "TrackId",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "TrackId",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                    },
+                },
+            ),
+            Alias(
+                Identifier(
+                    "TrackGteAndLte",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "Tracks",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "where",
+                                ),
+                            ): Literal(
+                                Object {
+                                    "TrackId": Object {
+                                        "_gte": Number(1),
+                                        "_lte": Number(3),
+                                    },
+                                },
+                            ),
+                        },
+                        filter: None,
+                        order_by: [],
+                        limit: None,
+                        offset: None,
+                    },
+                    selection: {
+                        Alias(
+                            Identifier(
+                                "AlbumId",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "AlbumId",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "Name",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "Name",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "TrackId",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "TrackId",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                    },
+                },
+            ),
+            Alias(
+                Identifier(
+                    "TrackGteAndLteAndNeq",
                 ),
             ): Model(
                 ModelSelection {

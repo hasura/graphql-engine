@@ -6,6 +6,11 @@
 
 ### Fixed
 
+- Fixed an error that occurred when filtering by more than one nested field at a
+  time.
+- Fixed an error that occurred when filtering using logical operators (eg
+  `_and`) from inside a nested field.
+
 ### Changed
 
 ## [v2024.11.18]

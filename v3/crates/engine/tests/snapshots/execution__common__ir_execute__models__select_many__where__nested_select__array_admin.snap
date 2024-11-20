@@ -7,7 +7,80 @@ V1(
         queries: {
             Alias(
                 Identifier(
-                    "InstitutionMany",
+                    "where_does_john_hughes_work",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "institutions",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "where",
+                                ),
+                            ): Literal(
+                                Object {
+                                    "staff": Object {
+                                        "last_name": Object {
+                                            "_eq": String("Hughes"),
+                                        },
+                                    },
+                                },
+                            ),
+                        },
+                        filter: None,
+                        order_by: [],
+                        limit: None,
+                        offset: None,
+                    },
+                    selection: {
+                        Alias(
+                            Identifier(
+                                "id",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "id",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "location",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "location",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                    },
+                },
+            ),
+            Alias(
+                Identifier(
+                    "where_has_staff_with_a_dog",
                 ),
             ): Model(
                 ModelSelection {

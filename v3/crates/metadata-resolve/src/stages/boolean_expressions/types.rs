@@ -73,7 +73,7 @@ pub struct BooleanExpressionsOutput {
 pub enum ComparableFieldKind {
     Scalar,
     Object,
-    Array,
+    ObjectArray,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -154,7 +154,7 @@ pub struct ComparisonExpressionInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum ObjectComparisonKind {
     Object,
-    Array,
+    ObjectArray,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

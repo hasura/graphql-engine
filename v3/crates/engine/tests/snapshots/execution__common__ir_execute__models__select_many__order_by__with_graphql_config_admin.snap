@@ -23,26 +23,12 @@ V1(
                         arguments: {
                             ArgumentName(
                                 Identifier(
-                                    "limit_custom",
-                                ),
-                            ): Literal(
-                                Number(1),
-                            ),
-                            ArgumentName(
-                                Identifier(
-                                    "offset_custom",
-                                ),
-                            ): Literal(
-                                Number(1),
-                            ),
-                            ArgumentName(
-                                Identifier(
                                     "order_by_custom",
                                 ),
                             ): Literal(
                                 Array [
                                     Object {
-                                        "first_name": String("Desc_custom"),
+                                        "first_name": String("Asc_custom"),
                                     },
                                 ],
                             ),
@@ -143,6 +129,91 @@ V1(
                                     field_name: FieldName(
                                         Identifier(
                                             "article_id",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                    },
+                },
+            ),
+            Alias(
+                Identifier(
+                    "a1",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "Authors",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "limit_custom",
+                                ),
+                            ): Literal(
+                                Number(1),
+                            ),
+                            ArgumentName(
+                                Identifier(
+                                    "offset_custom",
+                                ),
+                            ): Literal(
+                                Number(1),
+                            ),
+                            ArgumentName(
+                                Identifier(
+                                    "order_by_custom",
+                                ),
+                            ): Literal(
+                                Array [
+                                    Object {
+                                        "first_name": String("Desc_custom"),
+                                    },
+                                ],
+                            ),
+                        },
+                        filter: None,
+                        order_by: [],
+                        limit: None,
+                        offset: None,
+                    },
+                    selection: {
+                        Alias(
+                            Identifier(
+                                "author_id",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "author_id",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "first_name",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "first_name",
                                         ),
                                     ),
                                     arguments: {},

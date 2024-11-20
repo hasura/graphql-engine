@@ -7,7 +7,74 @@ V1(
         queries: {
             Alias(
                 Identifier(
-                    "ArticlesByAuthorMany",
+                    "article_author_match",
+                ),
+            ): Model(
+                ModelSelection {
+                    target: ModelTarget {
+                        subgraph: SubgraphName(
+                            "default",
+                        ),
+                        model_name: ModelName(
+                            Identifier(
+                                "ArticlesByAuthor",
+                            ),
+                        ),
+                        arguments: {
+                            ArgumentName(
+                                Identifier(
+                                    "author_id",
+                                ),
+                            ): Literal(
+                                Number(2),
+                            ),
+                        },
+                        filter: None,
+                        order_by: [],
+                        limit: None,
+                        offset: None,
+                    },
+                    selection: {
+                        Alias(
+                            Identifier(
+                                "article_id",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "article_id",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                        Alias(
+                            Identifier(
+                                "title",
+                            ),
+                        ): Field(
+                            ObjectFieldSelection {
+                                target: ObjectFieldTarget {
+                                    field_name: FieldName(
+                                        Identifier(
+                                            "title",
+                                        ),
+                                    ),
+                                    arguments: {},
+                                },
+                                selection: None,
+                            },
+                        ),
+                    },
+                },
+            ),
+            Alias(
+                Identifier(
+                    "article_author_mismatch",
                 ),
             ): Model(
                 ModelSelection {
