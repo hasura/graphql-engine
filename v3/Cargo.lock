@@ -4130,6 +4130,7 @@ checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
 name = "plan"
 version = "3.0.0"
 dependencies = [
+ "async-recursion",
  "derive_more",
  "execute",
  "graphql-ir",

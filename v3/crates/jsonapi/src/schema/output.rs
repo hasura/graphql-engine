@@ -52,7 +52,7 @@ fn type_schema(ty: &Type) -> ObjectOrReference<ObjectSchema> {
 // what we output for each type
 pub fn object_schema_for_object_type(object_type: &ObjectType) -> ObjectSchema {
     let mut fields = BTreeMap::new();
-    for (name, ty) in &object_type.0 {
+    for (name, ty) in &object_type.type_fields {
         fields.insert(name.to_string(), type_schema(ty));
     }
     let required = vec![]; // these are used as output types for the moment so everything is
@@ -91,7 +91,7 @@ fn from_type_representation(type_representation: &ndc_models::TypeRepresentation
 // them stringy
 fn jsonapi_data_schema(model: &Model, object_type: &ObjectType) -> ObjectSchema {
     let mut attributes = BTreeMap::new();
-    for (field_name, field_type) in &object_type.0 {
+    for (field_name, field_type) in &object_type.type_fields {
         attributes.insert(field_name.to_string(), type_schema(field_type));
     }
 

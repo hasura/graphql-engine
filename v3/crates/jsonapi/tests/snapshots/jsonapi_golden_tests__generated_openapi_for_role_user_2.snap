@@ -62,6 +62,18 @@ expression: generated_openapi
                 }
               },
               "example": "article_id,-title"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Articles to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Author,AuthorFromCommand"
             }
           ],
           "responses": {

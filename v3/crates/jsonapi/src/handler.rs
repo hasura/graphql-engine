@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use super::parse;
 use super::process_response;
-use super::types::{QueryResult, RequestError};
+use super::types::{QueryResult, RelationshipTree, RequestError};
 use crate::catalog::{Catalog, Model, State};
 use axum::http::{HeaderMap, Method, Uri};
 use hasura_authn_core::Session;
@@ -27,6 +27,9 @@ pub async fn handler_internal<'metadata>(
         .get(&session.role)
         .ok_or_else(|| RequestError::NotFound)?;
 
+    // relationship tree for processing the response
+    let mut relationship_tree = RelationshipTree::default();
+
     // route matching/validation
     match validate_route(state, &uri) {
         None => Err(RequestError::NotFound),
@@ -42,6 +45,7 @@ pub async fn handler_internal<'metadata>(
                         &state.object_types,
                         &http_method,
                         &uri,
+                        &mut relationship_tree,
                         &query_string,
                     )
                 },
@@ -70,7 +74,7 @@ pub async fn handler_internal<'metadata>(
                 "process_response",
                 "Process response",
                 SpanVisibility::User,
-                || Ok(process_response::process_result(result)),
+                || Ok(process_response::process_result(result, &relationship_tree)),
             )
         }
     }

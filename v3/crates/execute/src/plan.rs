@@ -21,7 +21,7 @@ pub use filter::{
 };
 pub use mutation::ResolvedMutationExecutionPlan;
 pub use query::{ResolvedQueryExecutionPlan, ResolvedQueryNode, UnresolvedQueryNode};
-pub use relationships::Relationship;
+pub use relationships::{process_model_relationship_definition, Relationship};
 
 use gql::normalized_ast;
 use gql::schema::NamespacedGetter;

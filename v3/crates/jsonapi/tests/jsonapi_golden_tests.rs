@@ -1,8 +1,9 @@
 //! Tests that run JSONAPI to see if it works
 
 use hasura_authn_core::{Identity, Role};
+use jsonapi_library::api::{DocumentData, IdentifierData, PrimaryData};
 use reqwest::header::HeaderMap;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -47,6 +48,10 @@ fn test_get_succeeding_requests() {
 
             match result {
                 Ok(result) => {
+                    // Assert uniqueness of resources in the response
+                    validate_resource_uniqueness(&result).unwrap();
+                    // Assert all relationships have corresponding included resources
+                    validate_relationships_in_included(&result).unwrap();
                     insta::assert_debug_snapshot!(
                         format!("result_for_role_{}", session.role),
                         result
@@ -210,4 +215,124 @@ fn get_metadata_resolve_configuration() -> metadata_resolve::configuration::Conf
     };
 
     metadata_resolve::configuration::Configuration { unstable_features }
+}
+
+/// A Result indicating whether resources are unique, with details of duplicates if not
+fn validate_resource_uniqueness(
+    document_data: &DocumentData,
+) -> Result<(), Vec<(String, String, String)>> {
+    // Collect all resources including primary and included
+    let mut all_resources = Vec::new();
+
+    // Add primary data resources
+    match &document_data.data {
+        Some(PrimaryData::Single(resource)) => all_resources.push(resource.as_ref()),
+        Some(PrimaryData::Multiple(resources)) => all_resources.extend(resources),
+        _ => {}
+    }
+
+    // Add included resources if present
+    if let Some(included) = &document_data.included {
+        all_resources.extend(included);
+    }
+
+    // Check uniqueness
+    let mut seen = HashSet::new();
+    let duplicates: Vec<_> = all_resources
+        .iter()
+        .filter(|r| !seen.insert((r._type.clone(), r.id.clone())))
+        .map(|r| {
+            (
+                r._type.clone(),
+                r.id.clone(),
+                "Duplicate resource".to_string(),
+            )
+        })
+        .collect();
+
+    if duplicates.is_empty() {
+        Ok(())
+    } else {
+        Err(duplicates)
+    }
+}
+
+/// A Result indicating whether all relationships have corresponding included resources
+fn validate_relationships_in_included(document_data: &DocumentData) -> Result<(), Vec<String>> {
+    // Extract all resources to check
+    let mut all_resources = Vec::new();
+    match &document_data.data {
+        Some(PrimaryData::Single(resource)) => all_resources.push(resource.as_ref()),
+        Some(PrimaryData::Multiple(resources)) => all_resources.extend(resources),
+        _ => return Ok(()),
+    }
+
+    // If no included resources, but relationships exist
+    if document_data.included.is_none() {
+        let resources_with_relationships: Vec<String> = all_resources
+            .iter()
+            .filter(|r| r.relationships.is_some())
+            .map(|r| r._type.to_string())
+            .collect();
+
+        return if resources_with_relationships.is_empty() {
+            Ok(())
+        } else {
+            Err(resources_with_relationships)
+        };
+    }
+
+    // Get included resources as a lookup set
+    let included_resources: HashSet<_> = document_data
+        .included
+        .as_ref()
+        .unwrap()
+        .iter()
+        .map(|r| (&r._type, &r.id))
+        .collect();
+
+    // Check each resource's relationships
+    let mut missing_relationships = Vec::new();
+
+    for resource in &all_resources {
+        if let Some(relationships) = &resource.relationships {
+            for (rel_name, relationship) in relationships {
+                match &relationship.data {
+                    Some(IdentifierData::Single(identifier)) => {
+                        if !included_resources.contains(&(&identifier._type, &identifier.id)) {
+                            missing_relationships.push(format!(
+                                "Resource type: {}, ID: {}, Missing relationship: {} (type: {}, id: {})",
+                                resource._type,
+                                resource.id,
+                                rel_name,
+                                identifier._type,
+                                identifier.id
+                            ));
+                        }
+                    }
+                    Some(IdentifierData::Multiple(identifiers)) => {
+                        for identifier in identifiers {
+                            if !included_resources.contains(&(&identifier._type, &identifier.id)) {
+                                missing_relationships.push(format!(
+                                    "Resource type: {}, ID: {}, Missing relationship: {} (type: {}, id: {})",
+                                    resource._type,
+                                    resource.id,
+                                    rel_name,
+                                    identifier._type,
+                                    identifier.id
+                                ));
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    if missing_relationships.is_empty() {
+        Ok(())
+    } else {
+        Err(missing_relationships)
+    }
 }

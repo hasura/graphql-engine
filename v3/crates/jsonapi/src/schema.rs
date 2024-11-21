@@ -49,6 +49,7 @@ fn get_route_for_model(model: &Model, object_type: &ObjectType) -> oas3::spec::O
         oas3::spec::ObjectOrReference::Object(parameters::page_offset_parameter()),
         oas3::spec::ObjectOrReference::Object(parameters::fields_parameter(model, object_type)),
         oas3::spec::ObjectOrReference::Object(parameters::ordering_parameter(model, object_type)),
+        oas3::spec::ObjectOrReference::Object(parameters::include_parameter(model, object_type)),
     ];
 
     let mut responses = BTreeMap::new();

@@ -1,7 +1,11 @@
 use crate::parse;
 use hasura_authn_core::Role;
 use metadata_resolve::Qualified;
-use open_dds::{identifier::SubgraphName, models::ModelName, types::CustomTypeName};
+use open_dds::{
+    identifier::SubgraphName, models::ModelName, relationships::RelationshipType,
+    types::CustomTypeName,
+};
+use std::collections::BTreeMap;
 use tracing_util::{ErrorVisibility, TraceableError};
 
 #[derive(Debug, Clone)]
@@ -63,7 +67,9 @@ impl RequestError {
             RequestError::InternalError(InternalError::EmptyQuerySet) => {
                 serde_json::json!({"error": "Internal error"})
             }
-            RequestError::PlanError(plan::PlanError::Internal(msg)) => {
+            RequestError::PlanError(
+                plan::PlanError::Internal(msg) | plan::PlanError::Relationship(msg),
+            ) => {
                 serde_json::json!({"error": msg })
             }
             RequestError::PlanError(plan::PlanError::External(_err)) => {
@@ -106,4 +112,16 @@ pub struct ModelInfo {
 pub struct QueryResult {
     pub type_name: Qualified<CustomTypeName>,
     pub rowsets: Vec<ndc_models::RowSet>,
+}
+
+/// A tree of relationships, used in processing of relationships in the JSON:API response creation
+#[derive(Default)]
+pub struct RelationshipTree {
+    pub relationships: BTreeMap<String, RelationshipNode>,
+}
+
+pub struct RelationshipNode {
+    pub object_type: Qualified<CustomTypeName>,
+    pub relationship_type: RelationshipType,
+    pub nested: RelationshipTree,
 }

@@ -1,15 +1,21 @@
-use super::types::{ModelInfo, RequestError};
+use super::types::{ModelInfo, RelationshipNode, RelationshipTree, RequestError};
 use axum::http::{Method, Uri};
 use indexmap::IndexMap;
 use open_dds::{
     identifier,
     identifier::{Identifier, SubgraphName},
     models::ModelName,
+    query::{
+        Alias, ObjectSubSelection, RelationshipSelection,
+        RelationshipTarget as OpenDdRelationshipTarget,
+    },
+    relationships::{RelationshipName, RelationshipType},
     types::{CustomTypeName, FieldName},
 };
 use serde::{Deserialize, Serialize};
 mod filter;
-use crate::catalog::{Model, ObjectType};
+mod include;
+use crate::catalog::{Model, ObjectType, RelationshipTarget};
 use metadata_resolve::Qualified;
 use std::collections::BTreeMap;
 
@@ -37,6 +43,7 @@ pub fn create_query_ir(
     object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
     _http_method: &Method,
     uri: &Uri,
+    relationship_tree: &mut RelationshipTree,
     query_string: &jsonapi_library::query::Query,
 ) -> Result<open_dds::query::QueryRequest, RequestError> {
     // get model info from parsing URI
@@ -47,31 +54,22 @@ pub fn create_query_ir(
         relationship: _,
     } = parse_url(uri).map_err(RequestError::ParseError)?;
 
-    let object_type =
-        get_object_type(object_types, &model.data_type).map_err(RequestError::ParseError)?;
+    // validate the sparse fields in the query string
+    validate_sparse_fields(object_types, query_string)?;
 
-    validate_sparse_fields(&model.data_type, object_type, query_string)?;
+    // Parse the include relationships
+    let include_relationships = query_string
+        .include
+        .as_ref()
+        .map(|include| include::IncludeRelationships::parse(include));
 
-    // create the selection fields; include all fields of the model output type
-    let mut selection = IndexMap::new();
-    for field_name in object_type.0.keys() {
-        if include_field(query_string, field_name, &model.data_type.name) {
-            let field_name_ident = Identifier::new(field_name.as_str())
-                .map_err(|e| RequestError::BadRequest(e.into()))?;
-
-            let field_name = open_dds::types::FieldName::new(field_name_ident.clone());
-            let field_alias = open_dds::query::Alias::new(field_name_ident);
-            let sub_sel =
-                open_dds::query::ObjectSubSelection::Field(open_dds::query::ObjectFieldSelection {
-                    target: open_dds::query::ObjectFieldTarget {
-                        arguments: IndexMap::new(),
-                        field_name,
-                    },
-                    selection: None,
-                });
-            selection.insert(field_alias, sub_sel);
-        }
-    }
+    let field_selection = resolve_field_selection(
+        object_types,
+        &model.data_type,
+        relationship_tree,
+        query_string,
+        include_relationships.as_ref(),
+    )?;
 
     // create filters
     let filter_query = match &query_string.filter {
@@ -108,7 +106,7 @@ pub fn create_query_ir(
 
     // form the model selection
     let model_selection = open_dds::query::ModelSelection {
-        selection,
+        selection: field_selection,
         target: open_dds::query::ModelTarget {
             arguments: IndexMap::new(),
             filter: filter_query,
@@ -129,35 +127,153 @@ pub fn create_query_ir(
     ))
 }
 
-// check all fields in sparse fields are accessible, explode if not
-// this will disallow relationship or nested fields
-fn validate_sparse_fields(
+fn resolve_field_selection(
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
     object_type_name: &Qualified<CustomTypeName>,
-    object_type: &ObjectType,
+    relationship_tree: &mut RelationshipTree,
+    query_string: &jsonapi_library::query::Query,
+    include_relationships: Option<&include::IncludeRelationships>,
+) -> Result<IndexMap<Alias, ObjectSubSelection>, RequestError> {
+    let object_type =
+        get_object_type(object_types, object_type_name).map_err(RequestError::ParseError)?;
+
+    // create the selection fields; include all fields of the model output type
+    let mut selection = IndexMap::new();
+    for field_name in object_type.type_fields.keys() {
+        if include_field(query_string, field_name, &object_type_name.name) {
+            let field_name_ident = Identifier::new(field_name.as_str())
+                .map_err(|e| RequestError::BadRequest(e.into()))?;
+
+            let field_name = open_dds::types::FieldName::new(field_name_ident.clone());
+            let field_alias = open_dds::query::Alias::new(field_name_ident);
+            let sub_sel =
+                open_dds::query::ObjectSubSelection::Field(open_dds::query::ObjectFieldSelection {
+                    target: open_dds::query::ObjectFieldTarget {
+                        arguments: IndexMap::new(),
+                        field_name,
+                    },
+                    selection: None,
+                });
+            selection.insert(field_alias, sub_sel);
+        }
+    }
+    // resolve include relationships
+    let mut relationship_fields = resolve_include_relationships(
+        object_type,
+        object_types,
+        relationship_tree,
+        query_string,
+        include_relationships,
+    )?;
+    selection.append(&mut relationship_fields);
+    Ok(selection)
+}
+
+// check all types in sparse fields are accessible,
+// for each type check all fields in sparse fields are accessible, explode if not
+fn validate_sparse_fields(
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
     query_string: &jsonapi_library::query::Query,
 ) -> Result<(), RequestError> {
-    let type_name_string = object_type_name.name.to_string();
-    if let Some(fields) = &query_string.fields {
-        for (type_name, type_fields) in fields {
-            if *type_name == type_name_string {
-                for type_field in type_fields {
-                    let string_fields: Vec<_> =
-                        object_type.0.keys().map(ToString::to_string).collect();
+    if let Some(types) = &query_string.fields {
+        for (type_name, type_fields) in types {
+            let (_, object_type) = object_types
+                .iter()
+                .find(|(object_type_name, _)| object_type_name.name.0.as_str() == type_name)
+                .ok_or_else(|| {
+                    RequestError::BadRequest(format!("Unknown type in sparse fields: {type_name}"))
+                })?;
 
-                    if !string_fields.contains(type_field) {
-                        return Err(RequestError::BadRequest(format!(
-                            "Unknown field in sparse fields: {type_field}"
-                        )));
-                    }
+            for type_field in type_fields {
+                let string_fields: Vec<_> = object_type
+                    .type_fields
+                    .keys()
+                    .map(ToString::to_string)
+                    .collect();
+
+                if !string_fields.contains(type_field) {
+                    return Err(RequestError::BadRequest(format!(
+                        "Unknown field in sparse fields: {type_field} in {type_name}"
+                    )));
                 }
-            } else {
-                return Err(RequestError::BadRequest(format!(
-                    "Unknown type in sparse fields: {type_name}"
-                )));
             }
         }
     }
     Ok(())
+}
+
+fn resolve_include_relationships(
+    object_type: &ObjectType,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
+    relationship_tree: &mut RelationshipTree,
+    query_string: &jsonapi_library::query::Query,
+    include_relationships: Option<&include::IncludeRelationships>,
+) -> Result<IndexMap<Alias, ObjectSubSelection>, RequestError> {
+    let mut fields = IndexMap::new();
+    if let Some(include_relationships) = include_relationships {
+        for (relationship, nested_include) in &include_relationships.include {
+            // Check the presence of the relationship
+            let Some((relationship_name, target)) = object_type
+                .type_relationships
+                .iter()
+                .find(|&(relationship_name, _)| relationship_name.as_str() == relationship)
+            else {
+                return Err(RequestError::BadRequest(format!(
+                    "Relationship {relationship} not found"
+                )));
+            };
+            let field_name_ident = Identifier::new(relationship)
+                .map_err(|e| RequestError::BadRequest(format!("Invalid relationship name: {e}")))?;
+            let (target_type, relationship_type) = match &target {
+                RelationshipTarget::Model {
+                    object_type,
+                    relationship_type,
+                } => (object_type, relationship_type.clone()),
+                RelationshipTarget::ModelAggregate(model_type) => {
+                    (model_type, RelationshipType::Object)
+                }
+                RelationshipTarget::Command => {
+                    return Err(RequestError::BadRequest(
+                        "Command relationship is not supported".to_string(),
+                    ));
+                }
+            };
+            let mut nested_relationships = RelationshipTree::default();
+            let selection = resolve_field_selection(
+                object_types,
+                target_type,
+                &mut nested_relationships,
+                query_string,
+                nested_include.as_ref(),
+            )?;
+            let relationship_node = RelationshipNode {
+                object_type: target_type.clone(),
+                relationship_type: relationship_type.clone(),
+                nested: nested_relationships,
+            };
+            relationship_tree
+                .relationships
+                .insert(relationship.to_string(), relationship_node);
+            let sub_selection = ObjectSubSelection::Relationship(RelationshipSelection {
+                target: build_relationship_target(relationship_name.clone()),
+                selection: Some(selection),
+            });
+            let field_alias = open_dds::query::Alias::new(field_name_ident);
+            fields.insert(field_alias, sub_selection);
+        }
+    }
+    Ok(fields)
+}
+
+fn build_relationship_target(relationship_name: RelationshipName) -> OpenDdRelationshipTarget {
+    OpenDdRelationshipTarget {
+        relationship_name,
+        arguments: IndexMap::new(),
+        filter: None,
+        order_by: Vec::new(),
+        limit: None,
+        offset: None,
+    }
 }
 
 // given the sparse fields for this request, should be include a given field in the query?

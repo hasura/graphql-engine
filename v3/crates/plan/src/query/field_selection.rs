@@ -1,14 +1,77 @@
 use crate::types::PlanError;
+use hasura_authn_core::Session;
 use indexmap::IndexMap;
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use execute::plan::{
     field::{Field, NestedArray, NestedField},
     ResolvedFilterExpression,
 };
 use metadata_resolve::{Metadata, Qualified, QualifiedTypeReference, TypeMapping};
-use open_dds::types::CustomTypeName;
+use open_dds::{
+    models::ModelName,
+    permissions::TypeOutputPermission,
+    query::ObjectFieldSelection,
+    types::{CustomTypeName, FieldName},
+};
 use plan_types::NdcFieldAlias;
+
+pub fn from_field_selection(
+    field_selection: &ObjectFieldSelection,
+    session: &Arc<Session>,
+    metadata: &Metadata,
+    qualified_model_name: &Qualified<ModelName>,
+    model: &metadata_resolve::ModelWithArgumentPresets,
+    model_source: &Arc<metadata_resolve::ModelSource>,
+    model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
+    field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
+    type_permissions: &TypeOutputPermission,
+) -> Result<Field<ResolvedFilterExpression>, PlanError> {
+    if !type_permissions
+        .allowed_fields
+        .contains(&field_selection.target.field_name)
+    {
+        return Err(PlanError::Permission(format!(
+            "role {} does not have permission to select the field {} from type {} of model {}",
+            session.role,
+            field_selection.target.field_name,
+            model.model.data_type,
+            qualified_model_name
+        )));
+    }
+
+    let field_mapping = field_mappings
+        .get(&field_selection.target.field_name)
+        // .map(|field_mapping| field_mapping.column.clone())
+        .ok_or_else(|| {
+            PlanError::Internal(format!(
+                "couldn't fetch field mapping of field {} in type {} for model {}",
+                field_selection.target.field_name, model.model.data_type, qualified_model_name
+            ))
+        })?;
+
+    let field_type = &model_object_type
+        .object_type
+        .fields
+        .get(&field_selection.target.field_name)
+        .ok_or_else(|| {
+            PlanError::Internal(format!(
+                "could not look up type of field {}",
+                field_selection.target.field_name
+            ))
+        })?
+        .field_type;
+
+    let fields = ndc_nested_field_selection_for(metadata, field_type, &model_source.type_mappings)?;
+
+    let ndc_field = Field::Column {
+        column: field_mapping.column.clone(),
+        fields,
+        arguments: BTreeMap::new(),
+    };
+    Ok(ndc_field)
+}
 
 pub fn ndc_nested_field_selection_for(
     metadata: &Metadata,

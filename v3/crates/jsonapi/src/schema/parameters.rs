@@ -1,4 +1,4 @@
-use super::shared::{enum_schema, int_schema};
+use super::shared::{array_schema, enum_schema, int_schema, string_schema};
 use crate::catalog::{Model, ObjectType};
 use std::collections::BTreeMap;
 use std::string::ToString;
@@ -46,14 +46,20 @@ pub fn page_limit_parameter() -> oas3::spec::Parameter {
 pub fn fields_parameter(model: &Model, object_type: &ObjectType) -> oas3::spec::Parameter {
     let schema = oas3::spec::ObjectOrReference::Object(oas3::spec::ObjectSchema {
         items: Some(Box::new(oas3::spec::ObjectOrReference::Object(
-            enum_schema(object_type.0.keys().map(ToString::to_string).collect()),
+            enum_schema(
+                object_type
+                    .type_fields
+                    .keys()
+                    .map(ToString::to_string)
+                    .collect(),
+            ),
         ))),
         ..oas3::spec::ObjectSchema::default()
     });
 
     let mut example = String::new();
-    for (i, field) in object_type.0.keys().enumerate() {
-        if i > 0 && i < object_type.0.len() {
+    for (i, field) in object_type.type_fields.keys().enumerate() {
+        if i > 0 && i < object_type.type_fields.len() {
             example.push(',');
         }
         example.push_str(&field.to_string());
@@ -81,7 +87,7 @@ pub fn ordering_parameter(model: &Model, object_type: &ObjectType) -> oas3::spec
     // each field can be `thing` (sort ascending by 'thing') or `-thing` (sort descending by
     // 'thing')
     let mut sort_keys = Vec::new();
-    for type_field in object_type.0.keys() {
+    for type_field in object_type.type_fields.keys() {
         sort_keys.push(format!("{type_field}"));
         sort_keys.push(format!("-{type_field}"));
     }
@@ -111,6 +117,39 @@ pub fn ordering_parameter(model: &Model, object_type: &ObjectType) -> oas3::spec
         content: None,
         deprecated: None,
         description: Some(format!("Optional list of fields from {} to use in sorting response. 'field' will sort in ascending order, whilst '-field' will sort descending.",model.name.name)),
+        example: Some(example.into()),
+        explode: None,
+        examples: BTreeMap::new(),
+        extensions: BTreeMap::new(),
+        location: oas3::spec::ParameterIn::Query,
+        schema: Some(schema),
+        style: None,
+        required: None,
+    }
+}
+
+pub fn include_parameter(model: &Model, object_type: &ObjectType) -> oas3::spec::Parameter {
+    let schema = oas3::spec::ObjectOrReference::Object(array_schema(
+        oas3::spec::ObjectOrReference::Object(string_schema(None)),
+    ));
+    let example = object_type
+        .type_relationships
+        .keys()
+        .map(ToString::to_string)
+        .collect::<Vec<String>>()
+        .join(",");
+    let description = format!(
+        "Optional list of relationships from {} to include in the response. \
+         Use dot-separated names to include nested relationships.",
+        model.name.name
+    );
+    oas3::spec::Parameter {
+        name: "include".into(),
+        allow_empty_value: None,
+        allow_reserved: None,
+        content: None,
+        deprecated: None,
+        description: Some(description),
         example: Some(example.into()),
         explode: None,
         examples: BTreeMap::new(),

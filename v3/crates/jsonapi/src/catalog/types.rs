@@ -9,6 +9,7 @@ use metadata_resolve::{
 use open_dds::{
     data_connector::DataConnectorName,
     models::ModelName,
+    relationships::{RelationshipName, RelationshipType},
     types::{CustomTypeName, FieldName},
 };
 use serde::{Deserialize, Serialize};
@@ -51,7 +52,20 @@ pub struct State {
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct ObjectType(pub IndexMap<FieldName, Type>);
+pub struct ObjectType {
+    pub type_fields: IndexMap<FieldName, Type>,
+    pub type_relationships: IndexMap<RelationshipName, RelationshipTarget>,
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub enum RelationshipTarget {
+    Model {
+        object_type: Qualified<CustomTypeName>,
+        relationship_type: RelationshipType,
+    },
+    ModelAggregate(Qualified<CustomTypeName>),
+    Command, // command targets are not supported for now
+}
 
 impl State {
     pub fn new(metadata: &metadata_resolve::Metadata, role: &Role) -> (Self, Vec<RoleWarning>) {

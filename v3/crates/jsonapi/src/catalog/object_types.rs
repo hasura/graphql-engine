@@ -1,4 +1,4 @@
-use super::types::{ObjectType, ScalarTypeForDataConnector, Type};
+use super::types::{ObjectType, RelationshipTarget, ScalarTypeForDataConnector, Type};
 use crate::types::ObjectTypeWarning;
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
@@ -43,7 +43,27 @@ pub fn build_object_type(
         type_fields.insert(field_name.clone(), field_type);
     }
 
-    Ok(ObjectType(type_fields))
+    // Relationships
+    let mut type_relationships = IndexMap::new();
+    for (_, relationship_field) in &object_type.relationship_fields {
+        let target = match &relationship_field.target {
+            metadata_resolve::RelationshipTarget::Model(model) => RelationshipTarget::Model {
+                object_type: model.target_typename.clone(),
+                relationship_type: model.relationship_type.clone(),
+            },
+            metadata_resolve::RelationshipTarget::ModelAggregate(model_aggregate) => {
+                let target_type = model_aggregate.target_typename.clone();
+                RelationshipTarget::ModelAggregate(target_type)
+            }
+            metadata_resolve::RelationshipTarget::Command(_) => RelationshipTarget::Command,
+        };
+        type_relationships.insert(relationship_field.relationship_name.clone(), target);
+    }
+
+    Ok(ObjectType {
+        type_fields,
+        type_relationships,
+    })
 }
 
 // turn an OpenDD type into a type representation

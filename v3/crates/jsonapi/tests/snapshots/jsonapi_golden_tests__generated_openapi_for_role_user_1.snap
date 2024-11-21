@@ -62,6 +62,18 @@ expression: generated_openapi
                 }
               },
               "example": "AlbumId,-Title"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Album to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Artist,Tracks"
             }
           ],
           "responses": {
@@ -166,6 +178,18 @@ expression: generated_openapi
                 }
               },
               "example": "article_id,-author_id"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Articles to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Author,AuthorFromCommand"
             }
           ],
           "responses": {

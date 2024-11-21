@@ -65,6 +65,18 @@ expression: generated_openapi
                 }
               },
               "example": "AlbumId,-ArtistId"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Album to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Artist,Tracks"
             }
           ],
           "responses": {
@@ -175,6 +187,18 @@ expression: generated_openapi
                 }
               },
               "example": "article_id,-title"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Articles to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Author,AuthorFromCommand"
             }
           ],
           "responses": {
@@ -282,6 +306,18 @@ expression: generated_openapi
                 }
               },
               "example": "ArtistId,-Name"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Artist to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Albums"
             }
           ],
           "responses": {
@@ -387,6 +423,18 @@ expression: generated_openapi
                 }
               },
               "example": "author_id,-first_name"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Authors to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "articles"
             }
           ],
           "responses": {
@@ -524,6 +572,18 @@ expression: generated_openapi
                 }
               },
               "example": "Address,-City,Country,-CustomerId"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Customer to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Employee,Invoices"
             }
           ],
           "responses": {
@@ -700,6 +760,18 @@ expression: generated_openapi
                 }
               },
               "example": "Address,-BirthDate,Country,-Email"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Employee to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Customers,Employee,Employees"
             }
           ],
           "responses": {
@@ -843,6 +915,18 @@ expression: generated_openapi
                 }
               },
               "example": "GenreId,-Name"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Genre to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Tracks"
             }
           ],
           "responses": {
@@ -968,6 +1052,18 @@ expression: generated_openapi
                 }
               },
               "example": "BillingAddress,-BillingCity,BillingPostalCode,-BillingState"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Invoice to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Customer,InvoiceLines"
             }
           ],
           "responses": {
@@ -1102,6 +1198,18 @@ expression: generated_openapi
                 }
               },
               "example": "InvoiceId,-InvoiceLineId,TrackId,-UnitPrice"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from InvoiceLine to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Invoice,Track"
             }
           ],
           "responses": {
@@ -1215,6 +1323,18 @@ expression: generated_openapi
                 }
               },
               "example": "MediaTypeId,-Name"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from MediaType to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Tracks"
             }
           ],
           "responses": {
@@ -1319,6 +1439,18 @@ expression: generated_openapi
                 }
               },
               "example": "Name,-PlaylistId"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Playlist to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "PlaylistTracks"
             }
           ],
           "responses": {
@@ -1423,6 +1555,18 @@ expression: generated_openapi
                 }
               },
               "example": "PlaylistId,-TrackId"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from PlaylistTrack to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Playlist,Track"
             }
           ],
           "responses": {
@@ -1548,6 +1692,18 @@ expression: generated_openapi
                 }
               },
               "example": "AlbumId,-Bytes,GenreId,-MediaTypeId"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from Track to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "Album,Genre,InvoiceLines,MediaType,PlaylistTracks"
             }
           ],
           "responses": {
@@ -1682,6 +1838,18 @@ expression: generated_openapi
                 }
               },
               "example": "id,-name,staff,-departments"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from institutions to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": ""
             }
           ],
           "responses": {
@@ -1810,6 +1978,18 @@ expression: generated_openapi
                 }
               },
               "example": "auth_name,-auth_srid,srid,-srtext"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from spatial_ref_sys to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": ""
             }
           ],
           "responses": {
@@ -1941,6 +2121,18 @@ expression: generated_openapi
                 }
               },
               "example": "child_id,-feature_column,layer_id,-level"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from topology_layer to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "topology_topology"
             }
           ],
           "responses": {
@@ -2072,6 +2264,18 @@ expression: generated_openapi
                 }
               },
               "example": "hasz,-id,precision,-srid"
+            },
+            {
+              "name": "include",
+              "in": "query",
+              "description": "Optional list of relationships from topology_topology to include in the response. Use dot-separated names to include nested relationships.",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": "topology_layers"
             }
           ],
           "responses": {
