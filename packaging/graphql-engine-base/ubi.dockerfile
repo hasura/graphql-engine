@@ -1,7 +1,7 @@
-# DATE VERSION: 2024-09-17
+# DATE VERSION: 2024-11-20
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 
-FROM registry.access.redhat.com/ubi9-minimal:9.4-1227.1725849298 as pg_dump_source
+FROM registry.access.redhat.com/ubi9-minimal:9.5-1731604394 as pg_dump_source
 
 ARG TARGETPLATFORM
 
@@ -13,7 +13,7 @@ RUN set -ex; \
     fi; \
     microdnf install -y postgresql16-server
 
-FROM registry.access.redhat.com/ubi9-minimal:9.4-1227.1725849298
+FROM registry.access.redhat.com/ubi9-minimal:9.5-1731604394
 
 ARG TARGETPLATFORM
 
@@ -36,7 +36,7 @@ RUN ln -s /usr/lib64/libpcre.so.1 /usr/lib64/libpcre.so.3
 
 RUN set -ex; \
     # deps needed for graphql-engine
-    microdnf install -y krb5-libs libpq-13.11-1.el9 numactl-libs; \
+    microdnf install -y krb5-libs libpq-13.15-1.el9 numactl-libs; \
     # deps for cli-migrations
     microdnf install -y nc
 
