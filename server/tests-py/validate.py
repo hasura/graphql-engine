@@ -302,17 +302,13 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
     else:
         ws_client = hge_ctx.ws_client
     print(ws_client.ws_url)
+
     if not headers or len(headers) == 0:
-        ws_client.init({})
+        ws_client.init_as_admin()
+    else:
+        ws_client.init(headers)
 
-    if ws_client.remote_closed or ws_client.is_closing:
-        ws_client.create_conn()
-        if not headers or len(headers) == 0 or hge_ctx.hge_key is None:
-            ws_client.init()
-        else:
-            ws_client.init_as_admin()
-
-    query_resp = ws_client.send_query(query, query_id='hge_test', headers=headers, timeout=15)
+    query_resp = ws_client.send_query(query, query_id='hge_test', timeout=15)
     resp = next(query_resp)
     print('websocket resp: ', resp)
 
@@ -320,7 +316,7 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
         if retry:
             #Got query complete before payload. Retry once more
             print("Got query complete before getting query response payload. Retrying")
-            ws_client.recreate_conn()
+            ws_client.tear_down()
             return validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, False)
         else:
             assert resp['type'] in ['data', 'error', 'next'], resp

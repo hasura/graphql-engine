@@ -1237,7 +1237,8 @@ onConnInit logger manager wsConn getAuthMode connParamsM onConnInitErrAction kee
           liftIO $ do
             $assertNFHere csInit -- so we don't write thunks to mutable vars
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) csInit
-
+          -- mark the connection as initialised in the connection
+          liftIO $ WS.setConnInitialized wsConn
           sendMsg wsConn SMConnAck
           liftIO $ keepAliveMessageAction wsConn
   where
