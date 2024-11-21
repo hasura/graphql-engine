@@ -43,7 +43,7 @@ use crate::process_response::{process_mutation_response, ProcessedResponse};
 use graphql_ir::ModelSelection;
 use graphql_schema::GDSRoleNamespaceGetter;
 use graphql_schema::GDS;
-
+use plan_types::ProcessResponseAs;
 pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir>>;
 
 /// Unlike a query, the root nodes of a mutation aren't necessarily independent. Specifically, the
@@ -149,34 +149,6 @@ pub struct NDCMutationExecution<'n, 's> {
 pub struct ExecutionTree<'s> {
     pub query_execution_plan: query::UnresolvedQueryExecutionPlan<'s>,
     pub remote_join_executions: JoinLocations<'s>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum ProcessResponseAs {
-    Object {
-        is_nullable: bool,
-    },
-    Array {
-        is_nullable: bool,
-    },
-    CommandResponse {
-        command_name: Arc<metadata_resolve::Qualified<open_dds::commands::CommandName>>,
-        type_container: ast::TypeContainer<ast::TypeName>,
-        // how to process a command response
-        response_config: Option<Arc<metadata_resolve::data_connectors::CommandsResponseConfig>>,
-    },
-    Aggregates,
-}
-
-impl ProcessResponseAs {
-    pub fn is_nullable(&self) -> bool {
-        match self {
-            ProcessResponseAs::Object { is_nullable }
-            | ProcessResponseAs::Array { is_nullable } => *is_nullable,
-            ProcessResponseAs::CommandResponse { type_container, .. } => type_container.nullable,
-            ProcessResponseAs::Aggregates { .. } => false,
-        }
-    }
 }
 
 /// Build a plan to handle a given request. This plan will either be a mutation plan or a query

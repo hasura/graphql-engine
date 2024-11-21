@@ -7,8 +7,11 @@ mod usage_counts;
 mod variable_name;
 
 pub use execution_plan::{
-    AggregateFieldSelection, AggregateSelectionSet, OrderByDirection, OrderByElement,
-    OrderByTarget, QueryExecutionPlan,
+    AggregateFieldSelection, AggregateSelectionSet, Argument, ExecutionTree, Field, JoinLocations,
+    JoinNode, LocationKind, NDCQueryExecution, NestedArray, NestedField, NestedObject,
+    OrderByDirection, OrderByElement, OrderByTarget, ProcessResponseAs, QueryExecutionPlan,
+    QueryNodeNew, Relationship, RelationshipArgument, RemoteJoin, RemoteJoinArgument,
+    ResolvedFilterExpression, SourceFieldAlias, TargetField,
 };
 pub use expression::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,

@@ -1,4 +1,5 @@
 mod error;
+mod execute;
 pub mod ndc;
 pub mod plan;
 mod process_response;
@@ -8,6 +9,7 @@ mod types;
 
 // we explicitly export things used by other crates
 pub use error::{FieldError, QueryUsageAnalyzeError, RequestError};
+pub use execute::resolve_ndc_query_execution;
 pub use ndc::fetch_from_data_connector;
 pub use plan::error::Error as PlanError;
 pub use plan::filter::plan_remote_predicate;

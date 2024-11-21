@@ -44,7 +44,7 @@ run-local-with-shell:
 # start all the docker deps for running tests (not engine)
 start-docker-test-deps:
     # start connectors and wait for health
-    docker compose -f ci.docker-compose.yaml up --wait auth_hook postgres postgres_connector custom_connector custom_connector_no_relationships custom_connector_ndc_v01
+    docker compose -f ci.docker-compose.yaml up --wait postgres postgres_connector custom_connector custom_connector_no_relationships custom_connector_ndc_v01
 
 # start all the docker run time deps for the engine
 start-docker-run-deps:

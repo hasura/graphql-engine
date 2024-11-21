@@ -7,8 +7,7 @@ use std::borrow::Cow;
 use async_recursion::async_recursion;
 use execute::ndc::client as ndc_client;
 use execute::plan::{
-    self, ApolloFederationSelect, NDCQueryExecution, NodeQueryPlan, ProcessResponseAs,
-    ResolveFilterExpressionContext,
+    self, ApolloFederationSelect, NDCQueryExecution, NodeQueryPlan, ResolveFilterExpressionContext,
 };
 use execute::HttpContext;
 use execute::{JoinLocations, JoinNode, RemoteJoinType};
@@ -18,6 +17,7 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use nonempty::NonEmpty;
+use plan_types::ProcessResponseAs;
 use tracing_util::{AttributeVisibility, SpanVisibility};
 
 pub async fn execute_explain(

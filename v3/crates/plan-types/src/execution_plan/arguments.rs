@@ -1,9 +1,10 @@
 use super::filter::ResolvedFilterExpression;
 
 use crate::VariableName;
+use std::hash::Hash;
 
 /// Argument plan to express various kinds of arguments
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Hash, Clone, PartialEq, Eq)]
 pub enum Argument {
     /// The argument is provided as a literal value
     Literal {

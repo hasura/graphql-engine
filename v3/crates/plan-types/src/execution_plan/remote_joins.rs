@@ -1,25 +1,24 @@
 //! Join tree and related types for remote joins.
 //!
+use super::{query, ProcessResponseAs};
 use indexmap::IndexMap;
-use std::collections::{BTreeMap, HashMap};
-use std::sync::Arc;
-
 use json_ext::ValueExt;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;
-
-use crate::plan::{self};
+use std::collections::BTreeMap;
+use std::collections::HashMap;
+use std::sync::Arc;
 
 /// This tree structure captures all the locations (in the selection set IR) where
 /// remote joins are found.
 ///
 /// It also includes other info, like field mapping etc., for the join
 #[derive(Debug, Clone)]
-pub struct JoinLocations<'s> {
-    pub locations: IndexMap<String, Location<'s>>,
+pub struct JoinLocations {
+    pub locations: IndexMap<String, Location>,
 }
 
-impl<'s> JoinLocations<'s> {
+impl JoinLocations {
     pub fn new() -> Self {
         JoinLocations::default()
     }
@@ -29,7 +28,7 @@ impl<'s> JoinLocations<'s> {
     }
 }
 
-impl<'s> Default for JoinLocations<'s> {
+impl Default for JoinLocations {
     fn default() -> Self {
         JoinLocations {
             locations: IndexMap::new(),
@@ -44,9 +43,9 @@ pub enum LocationKind {
 }
 
 #[derive(Debug, Clone)]
-pub enum JoinNode<'s> {
+pub enum JoinNode {
     Local(LocationKind),
-    Remote(RemoteJoin<'s>),
+    Remote(RemoteJoin),
 }
 
 /// Location indicates if the current node/field is a join node.
@@ -102,18 +101,18 @@ pub enum JoinNode<'s> {
 /// Note: `join_node` and `rest` both cannot be empty; it is an invalid/illegal
 /// state.
 #[derive(Debug, Clone)]
-pub struct Location<'s> {
-    pub join_node: JoinNode<'s>,
-    pub rest: JoinLocations<'s>,
+pub struct Location {
+    pub join_node: JoinNode,
+    pub rest: JoinLocations,
 }
 
 /// Contains information to be captured for a join node
 #[derive(Debug, Clone, PartialEq)]
-pub struct RemoteJoin<'s> {
+pub struct RemoteJoin {
     /// target data connector to execute query on
     pub target_data_connector: Arc<metadata_resolve::DataConnectorLink>,
     /// NDC node to execute on a data connector
-    pub target_ndc_execution: plan::query::UnresolvedQueryExecutionPlan<'s>,
+    pub target_ndc_execution: query::QueryExecutionPlan,
     /// Mapping of the fields in source to fields in target.
     /// The HashMap has the following info -
     ///   - key: is the field name in the source
@@ -125,7 +124,7 @@ pub struct RemoteJoin<'s> {
     ///     field or an argument name.
     pub join_mapping: HashMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
     /// Represents how to process the join response.
-    pub process_response_as: plan_types::ProcessResponseAs,
+    pub process_response_as: ProcessResponseAs,
     /// Represents the type of the remote join
     pub remote_join_type: RemoteJoinType,
 }
@@ -154,4 +153,4 @@ pub enum RemoteJoinType {
 
 /// An 'Argument' is a map of variable name to it's value.
 /// For example, `{"first_name": "John", "last_name": "Doe"}`
-pub type Argument = BTreeMap<plan_types::VariableName, ValueExt>;
+pub type RemoteJoinArgument = BTreeMap<crate::VariableName, ValueExt>;

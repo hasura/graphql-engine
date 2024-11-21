@@ -49,7 +49,6 @@
 //!
 //! ## Join Tree generation
 //! - The join tree is generated as part of query plan. See [plan_selection_set] function.
-//! - To know about the types for remote joins, see the [types] module.
 //!
 //! ## Execution
 //! Following is the high-level algorithm how remote joins execution is performed.
@@ -76,35 +75,32 @@
 //! [build_remote_relationship]: graphql_ir::build_remote_relationship
 //! [build_remote_command_relationship]: graphql_ir::build_remote_command_relationship
 
-use async_recursion::async_recursion;
-
 use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;
 
-use crate::plan;
-use crate::plan::filter::ResolveFilterExpressionContext;
 use plan_types::ProcessResponseAs;
 
-use super::ndc::execute_ndc_query;
-use super::{error, HttpContext, ProjectId};
+use crate::ndc::execute_ndc_query;
+use crate::{error, HttpContext, ProjectId};
 
-use self::collect::ExecutableJoinNode;
-use types::{Argument, JoinLocations};
+use collect::ExecutableJoinNode;
+use plan_types::{JoinLocations, RemoteJoinArgument};
+mod collect;
+mod join;
 
-pub(crate) mod collect;
-pub(crate) mod join;
-pub(crate) mod types;
+use async_recursion::async_recursion;
 
 /// Execute remote joins. As an entry-point it assumes the response is available
 /// for the top-level query, and executes further remote joins recursively.
+
 #[async_recursion]
-pub(crate) async fn execute_join_locations(
+pub async fn execute_join_locations(
     http_context: &HttpContext,
     execution_span_attribute: &'static str,
     lhs_response: &mut Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
-    join_locations: &JoinLocations<'async_recursion>,
+    join_locations: &JoinLocations,
     project_id: Option<&ProjectId>,
 ) -> Result<(), error::FieldError> {
     let tracer = tracing_util::global_tracer();
@@ -147,11 +143,8 @@ pub(crate) async fn execute_join_locations(
 
         join_node.target_ndc_execution.variables = Some(foreach_variables);
 
-        let execution_node = join_node.target_ndc_execution.clone();
-        let resolve_context =
-            ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
-        let resolved_execution_plan = execution_node.resolve(&resolve_context).await?;
-        let ndc_query = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)?;
+        let ndc_query =
+            super::ndc_request::make_ndc_query_request(join_node.target_ndc_execution.clone())?;
 
         // execute the remote query
         let mut target_response = tracer
@@ -192,7 +185,7 @@ pub(crate) async fn execute_join_locations(
             SpanVisibility::Internal,
             || {
                 // from `Vec<RowSet>` create `HashMap<Argument, RowSet>`
-                let rhs_response: HashMap<Argument, ndc_models::RowSet> =
+                let rhs_response: HashMap<RemoteJoinArgument, ndc_models::RowSet> =
                     arguments.into_iter().zip(target_response).collect();
 
                 join::join_responses(
