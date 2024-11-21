@@ -96,10 +96,6 @@ class TestWebhookMetadataInPOSTModeWithTLS(AbstractTestWebhookMetadata): pass
 class TestWebhookSubscriptionExpiry(object):
     EXPIRE_TIME_FORMAT = '%a, %d %b %Y %T GMT'
 
-    @pytest.fixture(scope='function', autouse=True)
-    def ws_conn_recreate(self, ws_client):
-        ws_client.recreate_conn()
-
     def test_expiry_with_no_header(self, ws_client):
         # no expiry time => the connextion will remain alive
         self.connect_with(ws_client, {})
