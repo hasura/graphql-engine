@@ -132,6 +132,7 @@ class TestV1Alpha1GraphQLErrors:
 
     def test_v1alpha1_ws_start_error(self, hge_ctx):
         ws_client = GQLWsClient(hge_ctx, '/v1alpha1/graphql')
+        ws_client.create_conn()
         query = {'query': '{ author { name } }'}
         frame = {
             'id': '1',
