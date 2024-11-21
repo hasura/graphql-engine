@@ -62,6 +62,7 @@ pub(crate) fn resolve_model_source(
             context: error_context::Context(vec![error_context::Step {
                 message: "Data connector name given here".to_string(),
                 path: model_source.data_connector_name.path.clone(),
+                subgraph: Some(subgraph.clone()),
             }]),
         })?;
 
@@ -78,6 +79,7 @@ pub(crate) fn resolve_model_source(
             context: error_context::Context(vec![error_context::Step {
                 message: "Collection name given here".to_string(),
                 path: model_source.collection.path.clone(),
+                subgraph: Some(subgraph.clone()),
             }]),
         })?;
     let source_collection_type =

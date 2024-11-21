@@ -13,6 +13,9 @@
 
 ### Changed
 
+- MBS error contexts now contain explicit subgraphs where appropriate for each
+  individual error step.
+
 ## [v2024.11.18]
 
 ### Added

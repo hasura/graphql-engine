@@ -1899,6 +1899,7 @@ name = "error-context"
 version = "3.0.0"
 dependencies = [
  "jsonpath",
+ "open-dds",
  "serde",
 ]
 

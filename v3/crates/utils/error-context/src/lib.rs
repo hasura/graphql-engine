@@ -1,3 +1,4 @@
+use open_dds::identifier::SubgraphName;
 use serde::{Deserialize, Serialize};
 
 /// An error context is more comprehensive than a path as we can refer to multiple places in the
@@ -11,4 +12,5 @@ pub struct Context(pub Vec<Step>);
 pub struct Step {
     pub message: String,
     pub path: jsonpath::JSONPath,
+    pub subgraph: Option<SubgraphName>,
 }
