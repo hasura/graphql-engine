@@ -167,10 +167,8 @@ impl ExecutionPlan for NDCProcedurePushDown {
 
         let execution_plan = plan::execute_plan_from_procedure(&self.procedure);
 
-        let query_request = execute::plan::ndc_request::make_ndc_mutation_request(execution_plan)
-            .map_err(|e| {
-            DataFusionError::Internal(format!("error creating ndc request: {e}"))
-        })?;
+        let query_request = execute::make_ndc_mutation_request(execution_plan)
+            .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;
 
         let fut = fetch_from_data_connector(
             self.projected_schema.clone(),

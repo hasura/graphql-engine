@@ -10,13 +10,13 @@ use super::relationships;
 use super::selection_set;
 use crate::remote_joins::types::JoinLocations;
 use graphql_ir::ModelSelection;
-use plan_types::NdcRelationshipName;
+use plan_types::{NdcRelationshipName, PredicateQueryTrees, Relationship};
 
 /// Create an NDC `Query` based on the internal IR `ModelSelection` settings
 // #[async_recursion]
 pub(crate) fn plan_query_node<'s>(
     ir: &ModelSelection<'s>,
-    relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
+    relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
 ) -> Result<(query::UnresolvedQueryNode<'s>, JoinLocations<'s>), error::Error> {
     let mut query_fields = None;
     let mut join_locations = JoinLocations::new();
@@ -52,7 +52,7 @@ pub(crate) fn plan_query_execution<'s>(
     // collection relationships from order_by clause
     relationships::collect_relationships_from_order_by(ir, &mut collection_relationships)?;
     let execution_node = query::UnresolvedQueryExecutionPlan {
-        remote_predicates: filter::PredicateQueryTrees::new(),
+        remote_predicates: PredicateQueryTrees::new(),
         query_node: query,
         collection: ir.collection.clone(),
         arguments: arguments::plan_arguments(&ir.arguments, &mut collection_relationships)?,

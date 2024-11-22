@@ -1,6 +1,6 @@
 //! NDC query generation from 'ModelSelection' IR for relationships.
 
-use open_dds::data_connector::{CollectionName, DataConnectorColumnName};
+use open_dds::data_connector::CollectionName;
 use open_dds::relationships::RelationshipType;
 use open_dds::types::DataConnectorArgumentName;
 use std::collections::BTreeMap;
@@ -8,23 +8,9 @@ use std::collections::BTreeMap;
 use crate::plan::error;
 use graphql_ir::LocalCommandRelationshipInfo;
 use graphql_ir::ModelSelection;
-use plan_types::{LocalModelRelationshipInfo, NdcRelationshipName};
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Relationship {
-    /// A mapping between columns on the source collection to columns on the target collection
-    pub column_mapping: BTreeMap<DataConnectorColumnName, DataConnectorColumnName>,
-    pub relationship_type: RelationshipType,
-    /// The name of a collection
-    pub target_collection: CollectionName,
-    /// Values to be provided to any collection arguments
-    pub arguments: BTreeMap<DataConnectorArgumentName, RelationshipArgument>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum RelationshipArgument {
-    Column { name: DataConnectorColumnName },
-}
+use plan_types::{
+    LocalModelRelationshipInfo, NdcRelationshipName, Relationship, RelationshipArgument,
+};
 
 /// collect relationships from OrderBy IR component containing relationships.
 pub(crate) fn collect_relationships_from_order_by(

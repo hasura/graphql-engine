@@ -5,22 +5,23 @@ use crate::order_by::to_resolved_order_by_element;
 use crate::types::PlanError;
 use std::collections::BTreeMap;
 
-use execute::{plan::ResolvedFilterExpression, HttpContext};
+use execute::HttpContext;
 use hasura_authn_core::Session;
 use metadata_resolve::{FilterPermission, ModelExpressionType};
 use open_dds::query::ModelTarget;
+use plan_types::{Argument, Relationship, ResolvedFilterExpression};
 
 // Turn a `plan_types::Expression` into `execute::ResolvedFilterExpression`
 // Currently this works by running all the remote predicates, soon it won't need to
 async fn resolve_filter_expression(
     filter_ir: &plan_types::Expression<'_>,
-    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, execute::plan::Relationship>,
+    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
     http_context: &HttpContext,
 ) -> Result<ResolvedFilterExpression, PlanError> {
     let filter_plan = execute::plan::plan_expression(
         filter_ir,
         relationships,
-        &mut execute::plan::PredicateQueryTrees::new(),
+        &mut plan_types::PredicateQueryTrees::new(),
     )
     .map_err(|e| PlanError::Internal(format!("error constructing permission filter plan: {e}")))?;
 
@@ -62,7 +63,7 @@ pub async fn model_target_to_ndc_query(
     })?;
 
     let mut usage_counts = plan_types::UsagesCounts::default();
-    let mut relationships: BTreeMap<plan_types::NdcRelationshipName, execute::plan::Relationship> =
+    let mut relationships: BTreeMap<plan_types::NdcRelationshipName, Relationship> =
         BTreeMap::new();
 
     let permission_filter = match &model_select_permission.filter {
@@ -134,11 +135,11 @@ pub async fn model_target_to_ndc_query(
                 let resolved_filter_expression =
                     resolve_filter_expression(predicate, &mut relationships, http_context).await?;
 
-                execute::plan::Argument::BooleanExpression {
+                Argument::BooleanExpression {
                     predicate: resolved_filter_expression,
                 }
             }
-            graphql_ir::Argument::Literal { value } => execute::plan::Argument::Literal {
+            graphql_ir::Argument::Literal { value } => Argument::Literal {
                 value: value.clone(),
             },
         };

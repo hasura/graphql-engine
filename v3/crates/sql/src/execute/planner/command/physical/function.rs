@@ -150,10 +150,8 @@ impl ExecutionPlan for NDCFunctionPushDown {
 
         let query_execution_plan = plan::execute_plan_from_function(&self.function);
 
-        let query_request = execute::plan::ndc_request::make_ndc_query_request(
-            query_execution_plan,
-        )
-        .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;
+        let query_request = execute::make_ndc_query_request(query_execution_plan)
+            .map_err(|e| DataFusionError::Internal(format!("error creating ndc request: {e}")))?;
 
         let fut = fetch_from_data_connector(
             self.projected_schema.clone(),

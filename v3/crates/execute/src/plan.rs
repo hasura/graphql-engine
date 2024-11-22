@@ -15,13 +15,10 @@ pub(crate) mod selection_set;
 
 pub use arguments::{Argument, MutationArgument, ResolvedArgument};
 pub use field::{ResolvedField, ResolvedNestedField};
-pub use filter::{
-    plan_expression, resolve_expression, PredicateQueryTrees, ResolveFilterExpressionContext,
-    ResolvedFilterExpression,
-};
+pub use filter::{plan_expression, resolve_expression, ResolveFilterExpressionContext};
 pub use mutation::ResolvedMutationExecutionPlan;
 pub use query::{ResolvedQueryExecutionPlan, ResolvedQueryNode, UnresolvedQueryNode};
-pub use relationships::{process_model_relationship_definition, Relationship};
+pub use relationships::process_model_relationship_definition;
 
 use gql::normalized_ast;
 use gql::schema::NamespacedGetter;
@@ -43,7 +40,8 @@ use crate::process_response::{process_mutation_response, ProcessedResponse};
 use graphql_ir::ModelSelection;
 use graphql_schema::GDSRoleNamespaceGetter;
 use graphql_schema::GDS;
-use plan_types::ProcessResponseAs;
+use plan_types::{ProcessResponseAs, ResolvedFilterExpression};
+
 pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir>>;
 
 /// Unlike a query, the root nodes of a mutation aren't necessarily independent. Specifically, the

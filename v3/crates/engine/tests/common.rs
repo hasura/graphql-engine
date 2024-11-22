@@ -6,10 +6,12 @@ use graphql_schema::GDS;
 use hasura_authn_core::{
     Identity, JsonSessionVariableValue, Role, Session, SessionError, SessionVariableValue,
 };
+use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use metadata_resolve::{data_connectors::NdcVersion, LifecyclePluginConfigs};
 use open_dds::session_variables::{SessionVariableName, SESSION_VARIABLE_ROLE};
+use plan_types::{ExecutionTree, JoinLocations, NDCQueryExecution, ProcessResponseAs};
 use pretty_assertions::assert_eq;
 use serde_json as json;
 use sql::catalog::CatalogSerializable;
@@ -24,7 +26,6 @@ use std::{
     path::Path,
     path::PathBuf,
 };
-
 extern crate json_value_merge;
 use json_value_merge::Merge;
 use serde_json::Value;
@@ -882,7 +883,7 @@ pub async fn open_dd_pipeline_test(
                 );
 
                 // create a query execution plan for a single node with the new pipeline
-                let (query_execution_plan, _) = plan::plan_query_request(
+                let (execution_plan, _) = plan::plan_query_request(
                     &query_ir,
                     metadata,
                     &Arc::new(session.clone()),
@@ -892,16 +893,29 @@ pub async fn open_dd_pipeline_test(
                 .await
                 .unwrap();
 
-                match query_execution_plan {
+                match execution_plan {
                     plan::SingleNodeExecutionPlan::Mutation(_) => {
                         todo!("Executing mutations in OpenDD IR pipeline tests not implemented yet")
                     }
-                    plan::SingleNodeExecutionPlan::Query(plan) => {
-                        // run the pipeline using functions from GraphQL frontend
-                        let rowsets =
-                            graphql_frontend::resolve_ndc_query_execution(http_context, plan)
-                                .await
-                                .map_err(|e| e.to_string());
+                    plan::SingleNodeExecutionPlan::Query(query_execution_plan) => {
+                        let ndc_query_execution = NDCQueryExecution {
+                            execution_span_attribute: "Engine GraphQL OpenDD pipeline tests",
+                            execution_tree: ExecutionTree {
+                                query_execution_plan,
+                                remote_join_executions: JoinLocations {
+                                    locations: IndexMap::new(),
+                                },
+                            },
+                            field_span_attribute: "Engine GraphQL OpenDD pipeline tests".into(),
+                            process_response_as: ProcessResponseAs::Array { is_nullable: false },
+                        };
+                        let rowsets = execute::resolve_ndc_query_execution(
+                            http_context,
+                            ndc_query_execution,
+                            None,
+                        )
+                        .await
+                        .map_err(|e| e.to_string());
 
                         insta::assert_json_snapshot!(
                             format!("rowsets_{test_path_string}_{}", session.role),

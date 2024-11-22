@@ -3,6 +3,7 @@ mod aggregates;
 mod arguments;
 mod field;
 mod filter;
+mod mutation;
 mod order_by;
 mod query;
 mod relationships;
@@ -11,11 +12,12 @@ use lang_graphql::ast::common as ast;
 use std::sync::Arc;
 
 pub use aggregates::{AggregateFieldSelection, AggregateSelectionSet};
-pub use arguments::Argument;
+pub use arguments::{Argument, MutationArgument};
 pub use field::{Field, NestedArray, NestedField, NestedObject};
 pub use filter::ResolvedFilterExpression;
+pub use mutation::MutationExecutionPlan;
 pub use order_by::{OrderByDirection, OrderByElement, OrderByTarget};
-pub use query::{QueryExecutionPlan, QueryNodeNew};
+pub use query::{FieldsSelection, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew};
 pub use relationships::{Relationship, RelationshipArgument};
 pub use remote_joins::{
     JoinLocations, JoinNode, LocationKind, RemoteJoin, RemoteJoinArgument, SourceFieldAlias,
@@ -30,6 +32,18 @@ pub struct NDCQueryExecution {
     pub execution_span_attribute: &'static str,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs,
+}
+
+#[derive(Debug)]
+pub struct NDCMutationExecution {
+    pub execution_node: mutation::MutationExecutionPlan,
+    pub join_locations: JoinLocations,
+    pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
+    pub execution_span_attribute: String,
+    pub field_span_attribute: String,
+    pub process_response_as: ProcessResponseAs,
+    // leaving this out for now as it's GraphQL specific stuff
+    // pub selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
 }
 
 #[derive(Debug)]

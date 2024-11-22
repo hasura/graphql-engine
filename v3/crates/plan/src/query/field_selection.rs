@@ -4,10 +4,6 @@ use indexmap::IndexMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use execute::plan::{
-    field::{Field, NestedArray, NestedField},
-    ResolvedFilterExpression,
-};
 use metadata_resolve::{Metadata, Qualified, QualifiedTypeReference, TypeMapping};
 use open_dds::{
     models::ModelName,
@@ -15,7 +11,7 @@ use open_dds::{
     query::ObjectFieldSelection,
     types::{CustomTypeName, FieldName},
 };
-use plan_types::NdcFieldAlias;
+use plan_types::{Field, NdcFieldAlias, NestedArray, NestedField, NestedObject};
 
 pub fn from_field_selection(
     field_selection: &ObjectFieldSelection,
@@ -27,7 +23,7 @@ pub fn from_field_selection(
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
     field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     type_permissions: &TypeOutputPermission,
-) -> Result<Field<ResolvedFilterExpression>, PlanError> {
+) -> Result<Field, PlanError> {
     if !type_permissions
         .allowed_fields
         .contains(&field_selection.target.field_name)
@@ -77,7 +73,7 @@ pub fn ndc_nested_field_selection_for(
     metadata: &Metadata,
     column_type: &QualifiedTypeReference,
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-) -> Result<Option<NestedField<ResolvedFilterExpression>>, PlanError> {
+) -> Result<Option<NestedField>, PlanError> {
     match &column_type.underlying_type {
         metadata_resolve::QualifiedBaseType::Named(name) => match name {
             metadata_resolve::QualifiedTypeName::Custom(name) => {
@@ -98,12 +94,11 @@ pub fn ndc_nested_field_selection_for(
                         let field_def = object_type.object_type.fields.get(field_name).ok_or_else(|| PlanError::Internal(format!(
                             "can't find object field definition for field {field_name} in type: {name}"
                         )))?;
-                        let nested_fields: Option<NestedField<ResolvedFilterExpression>> =
-                            ndc_nested_field_selection_for(
-                                metadata,
-                                &field_def.field_type,
-                                type_mappings,
-                            )?;
+                        let nested_fields: Option<NestedField> = ndc_nested_field_selection_for(
+                            metadata,
+                            &field_def.field_type,
+                            type_mappings,
+                        )?;
                         fields.insert(
                             NdcFieldAlias::from(field_name.as_str()),
                             Field::Column {
@@ -114,9 +109,7 @@ pub fn ndc_nested_field_selection_for(
                         );
                     }
 
-                    return Ok(Some(NestedField::Object(
-                        execute::plan::field::NestedObject { fields },
-                    )));
+                    return Ok(Some(NestedField::Object(NestedObject { fields })));
                 }
 
                 Err(PlanError::Internal(format!(

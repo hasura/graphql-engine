@@ -8,10 +8,6 @@ use indexmap::IndexMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use execute::{
-    plan::{field::Field, ResolvedFilterExpression},
-    QueryExecutionPlan, QueryNode,
-};
 use hasura_authn_core::Session;
 use metadata_resolve::{Metadata, Qualified};
 use open_dds::query::{
@@ -20,7 +16,8 @@ use open_dds::query::{
 };
 use open_dds::types::CustomTypeName;
 use plan_types::{
-    AggregateFieldSelection, AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName,
+    AggregateFieldSelection, AggregateSelectionSet, Field, FieldsSelection, NdcFieldAlias,
+    NdcRelationshipName, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew, Relationship,
 };
 
 pub async fn from_model_aggregate_selection(
@@ -116,14 +113,7 @@ pub async fn from_model_selection(
     session: &Arc<Session>,
     http_context: &Arc<execute::HttpContext>,
     request_headers: &reqwest::header::HeaderMap,
-) -> Result<
-    (
-        Qualified<CustomTypeName>,
-        NDCQuery,
-        IndexMap<NdcFieldAlias, Field<ResolvedFilterExpression>>,
-    ),
-    PlanError,
-> {
+) -> Result<(Qualified<CustomTypeName>, NDCQuery, FieldsSelection), PlanError> {
     let model_target = &model_selection.target;
     let qualified_model_name = metadata_resolve::Qualified::new(
         model_target.subgraph.clone(),
@@ -223,7 +213,11 @@ pub async fn from_model_selection(
     // collect relationships accummulated in this scope.
     query.collection_relationships.append(&mut relationships);
 
-    Ok((model.model.data_type.clone(), query, ndc_fields))
+    Ok((
+        model.model.data_type.clone(),
+        query,
+        FieldsSelection { fields: ndc_fields },
+    ))
 }
 
 pub async fn from_relationship_selection(
@@ -235,8 +229,8 @@ pub async fn from_relationship_selection(
     model: &metadata_resolve::ModelWithArgumentPresets,
     model_source: &Arc<metadata_resolve::ModelSource>,
     model_object_type: &metadata_resolve::ObjectTypeWithRelationships,
-    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, execute::plan::Relationship>,
-) -> Result<Field<ResolvedFilterExpression>, PlanError> {
+    relationships: &mut BTreeMap<plan_types::NdcRelationshipName, Relationship>,
+) -> Result<Field, PlanError> {
     let RelationshipSelection { target, selection } = relationship_selection;
     let (_, relationship_field) = model_object_type
         .relationship_fields
@@ -360,18 +354,13 @@ pub async fn from_relationship_selection(
 // take NDCQuery and fields and make a sweet execution plan
 pub fn ndc_query_to_query_execution_plan(
     query: &NDCQuery,
-    fields: &IndexMap<NdcFieldAlias, Field<ResolvedFilterExpression>>,
+    fields: &FieldsSelection,
     aggregate_fields: &IndexMap<NdcFieldAlias, AggregateFieldSelection>,
-) -> QueryExecutionPlan<ResolvedFilterExpression> {
-    let query_fields: Option<IndexMap<_, _>> = if fields.is_empty() {
+) -> QueryExecutionPlan {
+    let query_fields: Option<FieldsSelection> = if fields.fields.is_empty() {
         None
     } else {
-        Some(
-            fields
-                .iter()
-                .map(|(field_name, field)| (field_name.clone(), field.clone()))
-                .collect(),
-        )
+        Some(fields.clone())
     };
 
     let query_aggregate_fields = if aggregate_fields.is_empty() {
@@ -390,8 +379,8 @@ pub fn ndc_query_to_query_execution_plan(
     };
 
     QueryExecutionPlan {
-        remote_predicates: execute::plan::PredicateQueryTrees::new(),
-        query_node: QueryNode {
+        remote_predicates: PredicateQueryTrees::new(),
+        query_node: QueryNodeNew {
             fields: query_fields,
             aggregates: query_aggregate_fields,
             limit: query.limit,

@@ -7,11 +7,12 @@ mod usage_counts;
 mod variable_name;
 
 pub use execution_plan::{
-    AggregateFieldSelection, AggregateSelectionSet, Argument, ExecutionTree, Field, JoinLocations,
-    JoinNode, LocationKind, NDCQueryExecution, NestedArray, NestedField, NestedObject,
-    OrderByDirection, OrderByElement, OrderByTarget, ProcessResponseAs, QueryExecutionPlan,
-    QueryNodeNew, Relationship, RelationshipArgument, RemoteJoin, RemoteJoinArgument,
-    ResolvedFilterExpression, SourceFieldAlias, TargetField,
+    AggregateFieldSelection, AggregateSelectionSet, Argument, ExecutionTree, Field,
+    FieldsSelection, JoinLocations, JoinNode, LocationKind, MutationArgument,
+    MutationExecutionPlan, NDCMutationExecution, NDCQueryExecution, NestedArray, NestedField,
+    NestedObject, OrderByDirection, OrderByElement, OrderByTarget, PredicateQueryTrees,
+    ProcessResponseAs, QueryExecutionPlan, QueryNodeNew, Relationship, RelationshipArgument,
+    RemoteJoin, RemoteJoinArgument, ResolvedFilterExpression, SourceFieldAlias, TargetField,
 };
 pub use expression::{
     ComparisonTarget, ComparisonValue, Expression, LocalFieldComparison, RelationshipColumnMapping,

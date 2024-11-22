@@ -18,11 +18,12 @@ pub use types::{NDCFunction, NDCProcedure, NDCQuery, QueryContext};
 use hasura_authn_core::Session;
 use metadata_resolve::Metadata;
 use open_dds::query::{Query, QueryRequest};
+use plan_types::FieldsSelection;
 
 // temporary type, we assume only one node atm
 pub enum SingleNodeExecutionPlan {
-    Query(execute::plan::ResolvedQueryExecutionPlan),
-    Mutation(execute::plan::ResolvedMutationExecutionPlan),
+    Query(plan_types::QueryExecutionPlan),
+    Mutation(plan_types::MutationExecutionPlan),
 }
 
 // make a query execution plan, assuming an OpenDD IR with a single model request
@@ -96,7 +97,9 @@ where
 
             let query_execution_plan = model::ndc_query_to_query_execution_plan(
                 &ndc_query,
-                &IndexMap::new(),
+                &FieldsSelection {
+                    fields: IndexMap::new(),
+                },
                 &aggregate_fields,
             );
             let query_context = QueryContext { type_name };

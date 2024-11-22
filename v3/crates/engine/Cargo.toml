@@ -65,6 +65,8 @@ tower-http = { workspace = true }
 build-data = { workspace = true }
 
 [dev-dependencies]
+plan-types = { path = "../plan-types" }
+
 criterion = { workspace = true }
 goldenfile = { workspace = true }
 insta = { workspace = true }

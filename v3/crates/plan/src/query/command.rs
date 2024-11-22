@@ -6,11 +6,6 @@ use super::field_selection;
 use crate::PlanError;
 use crate::{NDCFunction, NDCProcedure};
 use execute::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
-use execute::plan::{
-    field::{NestedArray, NestedField, ResolvedField, ResolvedNestedField},
-    Argument, MutationArgument, ResolvedMutationExecutionPlan, ResolvedQueryExecutionPlan,
-    ResolvedQueryNode,
-};
 use hasura_authn_core::Session;
 use metadata_resolve::{
     unwrap_custom_type_name, Metadata, Qualified, QualifiedBaseType, QualifiedTypeName,
@@ -22,7 +17,10 @@ use open_dds::{
     data_connector::{CollectionName, DataConnectorColumnName},
     types::CustomTypeName,
 };
-use plan_types::NdcFieldAlias;
+use plan_types::{
+    Argument, Field, MutationArgument, MutationExecutionPlan, NdcFieldAlias, NestedArray,
+    NestedField, NestedObject, PredicateQueryTrees, QueryExecutionPlan, QueryNodeNew,
+};
 
 #[derive(Debug)]
 pub enum CommandPlan {
@@ -142,7 +140,7 @@ pub fn from_command(
             &command_source.type_mappings,
         )?;
 
-        let ndc_field = ResolvedField::Column {
+        let ndc_field = Field::Column {
             column: field_mapping.column.clone(),
             fields,
             arguments: BTreeMap::new(),
@@ -158,11 +156,9 @@ pub fn from_command(
         // response headers in the SQL layer yet
         Some(response_config) if !command_source.ndc_type_opendd_type_same => {
             let result_field_name = NdcFieldAlias::from(response_config.result_field.as_str());
-            let result_field = ResolvedField::Column {
+            let result_field = Field::Column {
                 column: response_config.result_field.clone(),
-                fields: Some(execute::plan::field::NestedField::Object(
-                    execute::plan::field::NestedObject { fields: ndc_fields },
-                )),
+                fields: Some(NestedField::Object(NestedObject { fields: ndc_fields })),
                 arguments: BTreeMap::new(),
             };
             let fields = IndexMap::from_iter([(result_field_name, result_field)]);
@@ -237,15 +233,12 @@ pub fn from_command(
 
 fn wrap_procedure_ndc_fields(
     output_shape: &OutputShape,
-    ndc_fields: IndexMap<NdcFieldAlias, ResolvedField>,
-) -> ResolvedNestedField {
+    ndc_fields: IndexMap<NdcFieldAlias, Field>,
+) -> NestedField {
     match output_shape {
-        OutputShape::Object => {
-            NestedField::Object(execute::plan::field::NestedObject { fields: ndc_fields })
-        }
+        OutputShape::Object => NestedField::Object(NestedObject { fields: ndc_fields }),
         OutputShape::ListOfObjects => {
-            let nested_fields =
-                NestedField::Object(execute::plan::field::NestedObject { fields: ndc_fields });
+            let nested_fields = NestedField::Object(NestedObject { fields: ndc_fields });
             NestedField::Array(NestedArray {
                 fields: Box::new(nested_fields),
             })
@@ -261,15 +254,12 @@ enum OutputShape {
 
 fn wrap_function_ndc_fields(
     output_shape: &OutputShape,
-    ndc_fields: IndexMap<NdcFieldAlias, ResolvedField>,
-) -> IndexMap<NdcFieldAlias, ResolvedField> {
+    ndc_fields: IndexMap<NdcFieldAlias, Field>,
+) -> IndexMap<NdcFieldAlias, Field> {
     let value_field = match output_shape {
-        OutputShape::Object => {
-            NestedField::Object(execute::plan::field::NestedObject { fields: ndc_fields })
-        }
+        OutputShape::Object => NestedField::Object(NestedObject { fields: ndc_fields }),
         OutputShape::ListOfObjects => {
-            let nested_fields =
-                NestedField::Object(execute::plan::field::NestedObject { fields: ndc_fields });
+            let nested_fields = NestedField::Object(NestedObject { fields: ndc_fields });
             NestedField::Array(NestedArray {
                 fields: Box::new(nested_fields),
             })
@@ -277,7 +267,7 @@ fn wrap_function_ndc_fields(
     };
     IndexMap::from([(
         NdcFieldAlias::from(FUNCTION_IR_VALUE_COLUMN_NAME),
-        execute::plan::field::Field::Column {
+        Field::Column {
             column: open_dds::data_connector::DataConnectorColumnName::from(
                 FUNCTION_IR_VALUE_COLUMN_NAME,
             ),
@@ -306,17 +296,13 @@ fn return_type_shape(output_type: &QualifiedTypeReference) -> Option<OutputShape
     }
 }
 
-pub fn execute_plan_from_function(function: &NDCFunction) -> ResolvedQueryExecutionPlan {
-    ResolvedQueryExecutionPlan {
-        remote_predicates: execute::plan::PredicateQueryTrees::new(),
-        query_node: ResolvedQueryNode {
-            fields: Some(
-                function
-                    .fields
-                    .iter()
-                    .map(|(field_name, field)| (field_name.clone(), field.clone()))
-                    .collect(),
-            ),
+pub fn execute_plan_from_function(function: &NDCFunction) -> QueryExecutionPlan {
+    QueryExecutionPlan {
+        remote_predicates: PredicateQueryTrees::new(),
+        query_node: QueryNodeNew {
+            fields: Some(plan_types::FieldsSelection {
+                fields: function.fields.clone(),
+            }),
             aggregates: None,
             limit: None,
             offset: None,
@@ -342,8 +328,8 @@ pub fn execute_plan_from_function(function: &NDCFunction) -> ResolvedQueryExecut
     }
 }
 
-pub fn execute_plan_from_procedure(procedure: &NDCProcedure) -> ResolvedMutationExecutionPlan {
-    ResolvedMutationExecutionPlan {
+pub fn execute_plan_from_procedure(procedure: &NDCProcedure) -> MutationExecutionPlan {
+    MutationExecutionPlan {
         procedure_name: procedure.procedure_name.clone(),
         procedure_arguments: procedure
             .arguments

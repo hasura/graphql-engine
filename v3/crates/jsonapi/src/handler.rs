@@ -6,7 +6,9 @@ use super::types::{QueryResult, RelationshipTree, RequestError};
 use crate::catalog::{Catalog, Model, State};
 use axum::http::{HeaderMap, Method, Uri};
 use hasura_authn_core::Session;
+use indexmap::IndexMap;
 use metadata_resolve::Metadata;
+use plan_types::{ExecutionTree, JoinLocations, NDCQueryExecution, ProcessResponseAs};
 use tracing_util::SpanVisibility;
 
 #[allow(clippy::unused_async)]
@@ -103,10 +105,22 @@ async fn query_engine_execute(
             .await
             .map_err(RequestError::PlanError)?;
     match query_execution_plan {
-        plan::SingleNodeExecutionPlan::Query(plan) => {
-            let rowsets = resolve_ndc_query_execution(http_context, plan)
-                .await
-                .map_err(RequestError::ExecuteError)?;
+        plan::SingleNodeExecutionPlan::Query(query_execution_plan) => {
+            let ndc_query_execution = NDCQueryExecution {
+                execution_span_attribute: "REST",
+                execution_tree: ExecutionTree {
+                    query_execution_plan,
+                    remote_join_executions: JoinLocations {
+                        locations: IndexMap::new(),
+                    },
+                },
+                field_span_attribute: "REST".into(),
+                process_response_as: ProcessResponseAs::Array { is_nullable: false },
+            };
+            let rowsets =
+                execute::resolve_ndc_query_execution(http_context, ndc_query_execution, None)
+                    .await
+                    .map_err(RequestError::ExecuteError)?;
 
             Ok(QueryResult {
                 rowsets,
@@ -117,25 +131,4 @@ async fn query_engine_execute(
             todo!("Executing mutations not implemented in JSONAPI yet")
         }
     }
-}
-
-// run ndc query, do any joins, and process result
-async fn resolve_ndc_query_execution<'ir>(
-    http_context: &execute::HttpContext,
-    query_execution_plan: execute::ResolvedQueryExecutionPlan,
-) -> Result<Vec<ndc_models::RowSet>, execute::FieldError> {
-    let data_connector = query_execution_plan.data_connector.clone();
-    let query_request = execute::plan::ndc_request::make_ndc_query_request(query_execution_plan)?;
-
-    let response = execute::ndc::execute_ndc_query(
-        http_context,
-        &query_request,
-        &data_connector,
-        "jsonapi",
-        "jsonapi".to_owned(),
-        None, // TODO: plumb in project id
-    )
-    .await?;
-
-    Ok(response.as_latest_rowsets())
 }

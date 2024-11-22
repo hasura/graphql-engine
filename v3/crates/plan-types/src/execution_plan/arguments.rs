@@ -18,3 +18,15 @@ pub enum Argument {
         predicate: ResolvedFilterExpression,
     },
 }
+
+/// Argument plan to express various kinds of arguments
+#[derive(Debug, Clone, PartialEq)]
+pub enum MutationArgument {
+    /// The argument is provided as a literal value
+    Literal {
+        value: serde_json::Value,
+    },
+    BooleanExpression {
+        predicate: ResolvedFilterExpression,
+    },
+}

@@ -7,14 +7,12 @@ use open_dds::types::DataConnectorArgumentName;
 
 use super::super::arguments;
 use super::super::field;
-use super::super::filter;
 use super::super::mutation;
 use super::super::query;
-use super::super::relationships;
 use crate::error::{FieldError, FieldInternalError};
 use plan_types::{
     AggregateFieldSelection, AggregateSelectionSet, OrderByDirection, OrderByElement,
-    OrderByTarget, VariableName,
+    OrderByTarget, Relationship, RelationshipArgument, ResolvedFilterExpression, VariableName,
 };
 
 pub fn make_query_request(
@@ -153,7 +151,7 @@ fn make_relationship_argument_from_argument(
 }
 
 fn make_relationship_arguments(
-    arguments: BTreeMap<DataConnectorArgumentName, relationships::RelationshipArgument>,
+    arguments: BTreeMap<DataConnectorArgumentName, RelationshipArgument>,
 ) -> BTreeMap<ndc_models_v02::ArgumentName, ndc_models_v02::RelationshipArgument> {
     arguments
         .into_iter()
@@ -167,14 +165,12 @@ fn make_relationship_arguments(
 }
 
 fn make_relationship_argument(
-    argument: relationships::RelationshipArgument,
+    argument: RelationshipArgument,
 ) -> ndc_models_v02::RelationshipArgument {
     match argument {
-        relationships::RelationshipArgument::Column { name } => {
-            ndc_models_v02::RelationshipArgument::Column {
-                name: ndc_models_v02::FieldName::new(name.into_inner()),
-            }
-        }
+        RelationshipArgument::Column { name } => ndc_models_v02::RelationshipArgument::Column {
+            name: ndc_models_v02::FieldName::new(name.into_inner()),
+        },
     }
 }
 
@@ -207,10 +203,10 @@ fn make_mutation_argument(
 }
 
 pub fn make_expression(
-    predicate: filter::ResolvedFilterExpression,
+    predicate: ResolvedFilterExpression,
 ) -> Result<ndc_models_v02::Expression, FieldError> {
     match predicate {
-        filter::ResolvedFilterExpression::And { expressions } => {
+        ResolvedFilterExpression::And { expressions } => {
             let mut ndc_expressions = Vec::new();
 
             for expression in expressions {
@@ -222,7 +218,7 @@ pub fn make_expression(
                 expressions: ndc_expressions,
             })
         }
-        filter::ResolvedFilterExpression::Or { expressions } => {
+        ResolvedFilterExpression::Or { expressions } => {
             let mut ndc_expressions = Vec::new();
 
             for expression in expressions {
@@ -234,14 +230,14 @@ pub fn make_expression(
                 expressions: ndc_expressions,
             })
         }
-        filter::ResolvedFilterExpression::Not { expression } => {
+        ResolvedFilterExpression::Not { expression } => {
             let ndc_expression = make_expression(*expression)?;
 
             Ok(ndc_models_v02::Expression::Not {
                 expression: Box::new(ndc_expression),
             })
         }
-        filter::ResolvedFilterExpression::LocalFieldComparison(
+        ResolvedFilterExpression::LocalFieldComparison(
             plan_types::LocalFieldComparison::BinaryComparison {
                 column,
                 operator,
@@ -253,7 +249,7 @@ pub fn make_expression(
             value: make_comparison_value(value),
         }),
 
-        filter::ResolvedFilterExpression::LocalNestedArray {
+        ResolvedFilterExpression::LocalNestedArray {
             column,
             field_path,
             predicate,
@@ -273,7 +269,7 @@ pub fn make_expression(
                 predicate: Some(Box::new(ndc_expression)),
             })
         }
-        filter::ResolvedFilterExpression::LocalFieldComparison(
+        ResolvedFilterExpression::LocalFieldComparison(
             plan_types::LocalFieldComparison::UnaryComparison { column, operator },
         ) => Ok(ndc_models_v02::Expression::UnaryComparisonOperator {
             column: make_comparison_target(column),
@@ -283,7 +279,7 @@ pub fn make_expression(
                 }
             },
         }),
-        filter::ResolvedFilterExpression::LocalRelationshipComparison {
+        ResolvedFilterExpression::LocalRelationshipComparison {
             relationship,
             predicate,
         } => {
@@ -298,7 +294,7 @@ pub fn make_expression(
             })
         }
         // we are generating NDC request for one connector, we can ignore anything remote
-        filter::ResolvedFilterExpression::RemoteRelationshipComparison {
+        ResolvedFilterExpression::RemoteRelationshipComparison {
             remote_predicate_id: _,
         } => Ok(ndc_models_v02::Expression::And {
             expressions: vec![],
@@ -413,10 +409,7 @@ fn make_nested_array(
 }
 
 pub fn make_collection_relationships(
-    collection_relationships: BTreeMap<
-        plan_types::NdcRelationshipName,
-        relationships::Relationship,
-    >,
+    collection_relationships: BTreeMap<plan_types::NdcRelationshipName, Relationship>,
 ) -> BTreeMap<ndc_models_v02::RelationshipName, ndc_models_v02::Relationship> {
     collection_relationships
         .into_iter()
@@ -429,7 +422,7 @@ pub fn make_collection_relationships(
         .collect::<BTreeMap<_, _>>()
 }
 
-fn make_relationship(relationship: relationships::Relationship) -> ndc_models_v02::Relationship {
+fn make_relationship(relationship: Relationship) -> ndc_models_v02::Relationship {
     ndc_models_v02::Relationship {
         column_mapping: relationship
             .column_mapping

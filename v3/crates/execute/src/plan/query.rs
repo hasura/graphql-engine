@@ -5,7 +5,8 @@ use async_recursion::async_recursion;
 use indexmap::IndexMap;
 use open_dds::{data_connector::CollectionName, types::DataConnectorArgumentName};
 use plan_types::{
-    AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, VariableName,
+    AggregateSelectionSet, NdcFieldAlias, NdcRelationshipName, OrderByElement, PredicateQueryTrees,
+    Relationship, VariableName,
 };
 use std::collections::BTreeMap;
 
@@ -13,21 +14,20 @@ use super::arguments;
 use super::field;
 use super::filter;
 use super::filter::ResolveFilterExpressionContext;
-use super::relationships;
 
 pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<plan_types::Expression<'s>>;
-pub type ResolvedQueryExecutionPlan = QueryExecutionPlan<filter::ResolvedFilterExpression>;
+pub type ResolvedQueryExecutionPlan = QueryExecutionPlan<plan_types::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct QueryExecutionPlan<TFilterExpression> {
-    pub remote_predicates: filter::PredicateQueryTrees,
+    pub remote_predicates: PredicateQueryTrees,
     pub query_node: QueryNode<TFilterExpression>,
     /// The name of a collection
     pub collection: CollectionName,
     /// Values to be provided to any collection arguments
     pub arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<TFilterExpression>>,
     /// Any relationships between collections involved in the query request
-    pub collection_relationships: BTreeMap<NdcRelationshipName, relationships::Relationship>,
+    pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     /// One set of named variables for each rowset to fetch. Each variable set
     /// should be subtituted in turn, and a fresh set of rows returned.
     pub variables: Option<Vec<BTreeMap<VariableName, serde_json::Value>>>,
@@ -63,7 +63,7 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
 }
 
 pub type UnresolvedQueryNode<'s> = QueryNode<plan_types::Expression<'s>>;
-pub type ResolvedQueryNode = QueryNode<filter::ResolvedFilterExpression>;
+pub type ResolvedQueryNode = QueryNode<plan_types::ResolvedFilterExpression>;
 
 /// Query plan for fetching data
 #[derive(Debug, Clone, PartialEq)]

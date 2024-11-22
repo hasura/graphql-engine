@@ -3,23 +3,19 @@
 // frontend
 mod ndc_request;
 mod remote_joins;
-use super::ndc;
-use super::process_response::process_response;
 use super::{HttpContext, ProjectId};
 use crate::error::FieldError;
-use crate::process_response::ProcessedResponse;
-use gql::normalized_ast;
-use graphql_schema::GDS;
-use lang_graphql as gql;
-use plan_types::{JoinLocations, NDCQueryExecution, ProcessResponseAs, QueryExecutionPlan};
-
+use crate::ndc;
+pub use ndc_request::{make_ndc_mutation_request, make_ndc_query_request};
+use plan_types::{
+    JoinLocations, NDCMutationExecution, NDCQueryExecution, ProcessResponseAs, QueryExecutionPlan,
+};
 // run ndc query, do any joins, and process result
-pub async fn resolve_ndc_query_execution<'ir>(
+pub async fn resolve_ndc_query_execution(
     http_context: &HttpContext,
     ndc_query: NDCQueryExecution,
-    selection_set: &normalized_ast::SelectionSet<'ir, GDS>,
     project_id: Option<&ProjectId>,
-) -> Result<ProcessedResponse, FieldError> {
+) -> Result<Vec<ndc_models::RowSet>, FieldError> {
     let NDCQueryExecution {
         execution_tree,
         execution_span_attribute,
@@ -40,7 +36,6 @@ pub async fn resolve_ndc_query_execution<'ir>(
         http_context,
         execution_tree.remote_join_executions,
         execution_span_attribute,
-        selection_set,
         process_response_as,
         project_id,
         response_rowsets,
@@ -48,7 +43,7 @@ pub async fn resolve_ndc_query_execution<'ir>(
     .await
 }
 
-async fn execute_ndc_query<'s, 'ir>(
+async fn execute_ndc_query<'s>(
     http_context: &HttpContext,
     query_execution_plan: QueryExecutionPlan,
     field_span_attribute: &str,
@@ -76,11 +71,10 @@ async fn process_ndc_query_response<'s, 'ir>(
     http_context: &HttpContext,
     remote_join_executions: JoinLocations,
     execution_span_attribute: &'static str,
-    selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
     process_response_as: ProcessResponseAs,
     project_id: Option<&ProjectId>,
     mut response_rowsets: Vec<ndc_models::RowSet>,
-) -> Result<ProcessedResponse, FieldError> {
+) -> Result<Vec<ndc_models::RowSet>, FieldError> {
     // TODO: Failures in remote joins should result in partial response
     // https://github.com/hasura/v3-engine/issues/229
     remote_joins::execute_join_locations(
@@ -93,6 +87,36 @@ async fn process_ndc_query_response<'s, 'ir>(
     )
     .await?;
 
-    // this ties all of this to GraphQL, let's not do this
-    process_response(selection_set, response_rowsets, &process_response_as)
+    Ok(response_rowsets)
+}
+
+pub async fn resolve_ndc_mutation_execution(
+    http_context: &HttpContext,
+    ndc_mutation_execution: NDCMutationExecution,
+    project_id: Option<&ProjectId>,
+) -> Result<ndc_models::MutationResponse, FieldError> {
+    let NDCMutationExecution {
+        execution_node,
+        data_connector,
+        execution_span_attribute,
+        field_span_attribute,
+        process_response_as: _,
+        // TODO: remote joins are not handled for mutations
+        join_locations: _,
+    } = ndc_mutation_execution;
+
+    let mutation_request = ndc_request::make_ndc_mutation_request(execution_node)?;
+
+    let mutation_response = ndc::execute_ndc_mutation(
+        http_context,
+        &mutation_request,
+        &data_connector,
+        execution_span_attribute,
+        field_span_attribute,
+        project_id,
+    )
+    .await?
+    .as_latest();
+
+    Ok(mutation_response)
 }

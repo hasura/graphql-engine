@@ -1,17 +1,16 @@
 use crate::error;
 use open_dds::{commands::ProcedureName, types::DataConnectorArgumentName};
-use plan_types::NdcRelationshipName;
+use plan_types::{NdcRelationshipName, Relationship};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use super::arguments;
 use super::field;
-use super::filter;
 use super::filter::ResolveFilterExpressionContext;
-use super::relationships;
 
 pub type UnresolvedMutationExecutionPlan<'s> = MutationExecutionPlan<plan_types::Expression<'s>>;
-pub type ResolvedMutationExecutionPlan = MutationExecutionPlan<filter::ResolvedFilterExpression>;
+pub type ResolvedMutationExecutionPlan =
+    MutationExecutionPlan<plan_types::ResolvedFilterExpression>;
 
 #[derive(Debug)]
 pub struct MutationExecutionPlan<TFilterExpression> {
@@ -23,7 +22,7 @@ pub struct MutationExecutionPlan<TFilterExpression> {
     /// The fields to return from the result, or null to return everything
     pub procedure_fields: Option<field::NestedField<TFilterExpression>>,
     /// Any relationships between collections involved in the query request
-    pub collection_relationships: BTreeMap<NdcRelationshipName, relationships::Relationship>,
+    pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     /// The data connector used to fetch the data
     pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 }

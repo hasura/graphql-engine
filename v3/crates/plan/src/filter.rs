@@ -1,9 +1,9 @@
 use super::types::PlanError;
-use execute::plan::ResolvedFilterExpression;
 use metadata_resolve::{Qualified, TypeMapping};
 use open_dds::{
     data_connector::DataConnectorName, query::BooleanExpression, types::CustomTypeName,
 };
+use plan_types::ResolvedFilterExpression;
 use std::collections::BTreeMap;
 
 use super::column::{to_resolved_column, ResolvedColumn};

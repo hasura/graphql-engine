@@ -7,9 +7,10 @@ use open_dds::types::DataConnectorArgumentName;
 
 use crate::error::{FieldError, FieldInternalError};
 use plan_types::{
-    AggregateFieldSelection, AggregateSelectionSet, Argument, Field, NestedArray, NestedField,
-    NestedObject, OrderByDirection, OrderByElement, OrderByTarget, QueryExecutionPlan,
-    QueryNodeNew, Relationship, RelationshipArgument, ResolvedFilterExpression, VariableName,
+    AggregateFieldSelection, AggregateSelectionSet, Argument, Field, MutationArgument,
+    MutationExecutionPlan, NestedArray, NestedField, NestedObject, OrderByDirection,
+    OrderByElement, OrderByTarget, QueryExecutionPlan, QueryNodeNew, Relationship,
+    RelationshipArgument, ResolvedFilterExpression, VariableName,
 };
 
 pub fn make_query_request(
@@ -25,6 +26,30 @@ pub fn make_query_request(
         variables: make_variables(query_execution_plan.variables),
     };
     Ok(query_request)
+}
+
+pub fn make_mutation_request(
+    mutation_execution_plan: MutationExecutionPlan,
+) -> Result<ndc_models_v02::MutationRequest, FieldError> {
+    let mutation_operation = ndc_models_v02::MutationOperation::Procedure {
+        name: ndc_models_v02::ProcedureName::new(
+            mutation_execution_plan.procedure_name.into_inner(),
+        ),
+        arguments: make_mutation_arguments(mutation_execution_plan.procedure_arguments)?,
+        fields: mutation_execution_plan
+            .procedure_fields
+            .map(make_nested_field)
+            .transpose()?,
+    };
+
+    let mutation_request = ndc_models_v02::MutationRequest {
+        operations: vec![mutation_operation],
+        collection_relationships: make_collection_relationships(
+            mutation_execution_plan.collection_relationships,
+        ),
+    };
+
+    Ok(mutation_request)
 }
 
 fn make_variables(
@@ -555,5 +580,31 @@ fn make_count_aggregate(
         }
     } else {
         ndc_models_v02::Aggregate::StarCount {}
+    }
+}
+
+fn make_mutation_arguments(
+    arguments: BTreeMap<DataConnectorArgumentName, MutationArgument>,
+) -> Result<BTreeMap<ndc_models_v02::ArgumentName, serde_json::Value>, FieldError> {
+    arguments
+        .into_iter()
+        .map(|(name, argument)| {
+            Ok((
+                ndc_models_v02::ArgumentName::new(name.into_inner()),
+                make_mutation_argument(argument)?,
+            ))
+        })
+        .collect::<Result<BTreeMap<_, _>, _>>()
+}
+
+fn make_mutation_argument(argument: MutationArgument) -> Result<serde_json::Value, FieldError> {
+    match argument {
+        MutationArgument::Literal { value } => Ok(value),
+        MutationArgument::BooleanExpression { predicate } => {
+            let ndc_expression = make_expression(predicate)?;
+            Ok(serde_json::to_value(ndc_expression).map_err(|e| {
+                FieldError::InternalError(FieldInternalError::ExpressionSerializationError(e))
+            })?)
+        }
     }
 }

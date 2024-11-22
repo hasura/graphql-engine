@@ -2,17 +2,16 @@ use async_recursion::async_recursion;
 use indexmap::{IndexMap, IndexSet};
 use std::collections::BTreeMap;
 use tracing_util::SpanVisibility;
-use uuid::Uuid;
 
 use super::error as plan_error;
 use super::field;
 use super::ndc_request;
 use super::query;
-use super::relationships::{self, process_model_relationship_definition};
+use super::relationships::process_model_relationship_definition;
 use crate::{error, ndc, HttpContext};
-use open_dds::data_connector::DataConnectorColumnName;
-use plan_types::NdcFieldAlias;
-use plan_types::NdcRelationshipName;
+use plan_types::{
+    NdcFieldAlias, NdcRelationshipName, PredicateQueryTrees, Relationship, ResolvedFilterExpression,
+};
 
 /// Plan the filter expression IR.
 /// This function will take the filter expression IR and convert it into a planned filter expression
@@ -24,7 +23,7 @@ pub(crate) fn plan_filter_expression<'s>(
         permission_filter,
         relationship_join_filter,
     }: &graphql_ir::FilterExpression<'s>,
-    relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
+    relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
 ) -> Result<Option<plan_types::Expression<'s>>, plan_error::Error> {
     let mut expressions = Vec::new();
     let mut remote_predicates = PredicateQueryTrees::new();
@@ -65,37 +64,10 @@ pub(crate) fn plan_filter_expression<'s>(
     Ok(plan_types::Expression::mk_and(expressions).remove_always_true_expression())
 }
 
-/// A tree of queries that are used to execute remote predicates
-#[derive(Debug, Clone, PartialEq)]
-pub struct PredicateQueryTree {
-    pub query: query::ResolvedQueryExecutionPlan,
-    pub children: PredicateQueryTrees,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct PredicateQueryTrees(pub BTreeMap<Uuid, PredicateQueryTree>);
-
-impl Default for PredicateQueryTrees {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl PredicateQueryTrees {
-    pub fn new() -> Self {
-        Self(BTreeMap::new())
-    }
-    pub fn insert(&mut self, value: PredicateQueryTree) -> Uuid {
-        let key = Uuid::new_v4();
-        self.0.insert(key, value);
-        key
-    }
-}
-
 /// Plan the expression IR type.
 pub fn plan_expression<'s, 'a>(
     expression: &'a plan_types::Expression<'s>,
-    relationships: &'a mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
+    relationships: &'a mut BTreeMap<NdcRelationshipName, Relationship>,
     _remote_predicates: &'a mut PredicateQueryTrees,
 ) -> Result<plan_types::Expression<'s>, plan_error::Error> {
     match expression {
@@ -187,7 +159,7 @@ pub fn plan_remote_predicate<'s, 'a>(
     (
         query::UnresolvedQueryNode<'s>,
         PredicateQueryTrees,
-        BTreeMap<NdcRelationshipName, relationships::Relationship>,
+        BTreeMap<NdcRelationshipName, Relationship>,
     ),
     plan_error::Error,
 > {
@@ -225,117 +197,6 @@ fn build_ndc_query_fields<'s>(
         );
     }
     fields
-}
-
-/// Filter expression plan to be resolved
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum ResolvedFilterExpression {
-    And {
-        expressions: Vec<ResolvedFilterExpression>,
-    },
-    Or {
-        expressions: Vec<ResolvedFilterExpression>,
-    },
-    Not {
-        expression: Box<ResolvedFilterExpression>,
-    },
-    LocalFieldComparison(plan_types::LocalFieldComparison),
-    LocalNestedArray {
-        column: DataConnectorColumnName,
-        field_path: Vec<DataConnectorColumnName>,
-        predicate: Box<ResolvedFilterExpression>,
-    },
-    LocalRelationshipComparison {
-        relationship: NdcRelationshipName,
-        predicate: Box<ResolvedFilterExpression>,
-    },
-    RemoteRelationshipComparison {
-        remote_predicate_id: Uuid,
-    },
-}
-
-impl ResolvedFilterExpression {
-    pub fn remove_always_true_expression(self) -> Option<ResolvedFilterExpression> {
-        match &self {
-            ResolvedFilterExpression::And { expressions } if expressions.is_empty() => None,
-            ResolvedFilterExpression::Not { expression } => match expression.as_ref() {
-                ResolvedFilterExpression::Or { expressions } if expressions.is_empty() => None,
-                _ => Some(self),
-            },
-            _ => Some(self),
-        }
-    }
-
-    /// Creates a 'FilterExpression::And' and applies some basic expression simplification logic
-    /// to remove redundant boolean logic operators
-    pub fn mk_and(expressions: Vec<ResolvedFilterExpression>) -> ResolvedFilterExpression {
-        // If the `and` only contains one expression, we can unwrap it and get rid of the `and`
-        // ie. and([x]) == x
-        if expressions.len() == 1 {
-            expressions.into_iter().next().unwrap()
-        }
-        // If all subexpressions are also `and`, we can flatten into a single `and`
-        // ie. and([and([x,y]), and([a,b])]) == and([x,y,a,b])
-        else if expressions
-            .iter()
-            .all(|expr| matches!(expr, ResolvedFilterExpression::And { .. }))
-        {
-            let subexprs = expressions
-                .into_iter()
-                .flat_map(|expr| match expr {
-                    ResolvedFilterExpression::And { expressions } => expressions,
-                    _ => vec![],
-                })
-                .collect();
-            ResolvedFilterExpression::And {
-                expressions: subexprs,
-            }
-        } else {
-            ResolvedFilterExpression::And { expressions }
-        }
-    }
-
-    /// Creates a 'FilterExpression::Or' and applies some basic expression simplification logic
-    /// to remove redundant boolean logic operators
-    pub fn mk_or(expressions: Vec<ResolvedFilterExpression>) -> ResolvedFilterExpression {
-        // If the `or` only contains one expression, we can unwrap it and get rid of the `or`
-        // ie. or([x]) == x
-        if expressions.len() == 1 {
-            expressions.into_iter().next().unwrap()
-        }
-        // If all subexpressions are also `or`, we can flatten into a single `or`
-        // ie. or([or([x,y]), or([a,b])]) == or([x,y,a,b])
-        else if expressions
-            .iter()
-            .all(|expr| matches!(expr, ResolvedFilterExpression::Or { .. }))
-        {
-            let subexprs = expressions
-                .into_iter()
-                .flat_map(|expr| match expr {
-                    ResolvedFilterExpression::Or { expressions } => expressions,
-                    _ => vec![],
-                })
-                .collect();
-            ResolvedFilterExpression::Or {
-                expressions: subexprs,
-            }
-        } else {
-            ResolvedFilterExpression::Or { expressions }
-        }
-    }
-
-    /// Creates a 'FilterExpression::Not' and applies some basic expression simplification logic
-    /// to remove redundant boolean logic operators
-    pub fn mk_not(expression: ResolvedFilterExpression) -> ResolvedFilterExpression {
-        match expression {
-            // Double negations can be removed
-            // ie. not(not(x))) == x
-            ResolvedFilterExpression::Not { expression } => *expression,
-            _ => ResolvedFilterExpression::Not {
-                expression: Box::new(expression),
-            },
-        }
-    }
 }
 
 /// Context required to resolve the filter expressions

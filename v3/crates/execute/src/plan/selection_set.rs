@@ -15,14 +15,13 @@ use indexmap::IndexMap;
 use metadata_resolve::data_connectors::NdcVersion;
 use metadata_resolve::FieldMapping;
 use open_dds::data_connector::DataConnectorColumnName;
-use plan_types::NdcFieldAlias;
-use plan_types::NdcRelationshipName;
+use plan_types::{NdcFieldAlias, NdcRelationshipName, Relationship};
 use std::collections::{BTreeMap, HashMap};
 
 pub(crate) fn plan_nested_selection<'s>(
     nested_selection: &NestedSelection<'s>,
     ndc_version: NdcVersion,
-    relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
+    relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
 ) -> Result<(field::UnresolvedNestedField<'s>, JoinLocations<'s>), error::Error> {
     match nested_selection {
         NestedSelection::Object(model_selection) => {
@@ -54,7 +53,7 @@ pub(crate) fn plan_nested_selection<'s>(
 pub(crate) fn plan_selection_set<'s, 'ir>(
     model_selection: &'ir ResultSelectionSet<'s>,
     ndc_version: NdcVersion,
-    relationships: &mut BTreeMap<NdcRelationshipName, relationships::Relationship>,
+    relationships: &mut BTreeMap<NdcRelationshipName, Relationship>,
 ) -> Result<
     (
         IndexMap<NdcFieldAlias, field::UnresolvedField<'s>>,

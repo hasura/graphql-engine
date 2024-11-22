@@ -7,12 +7,11 @@ use plan_types::NdcRelationshipName;
 use std::collections::BTreeMap;
 
 use super::arguments;
-use super::filter;
 use super::filter::ResolveFilterExpressionContext;
 use super::query;
 
 pub type UnresolvedField<'s> = Field<plan_types::Expression<'s>>;
-pub type ResolvedField = Field<filter::ResolvedFilterExpression>;
+pub type ResolvedField = Field<plan_types::ResolvedFilterExpression>;
 
 /// Field plan
 #[derive(Debug, Clone, PartialEq)]
@@ -74,7 +73,7 @@ impl<'s> UnresolvedField<'s> {
 }
 
 pub type UnresolvedNestedField<'s> = NestedField<plan_types::Expression<'s>>;
-pub type ResolvedNestedField = NestedField<filter::ResolvedFilterExpression>;
+pub type ResolvedNestedField = NestedField<plan_types::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum NestedField<TFilterExpression> {
@@ -103,7 +102,7 @@ impl<'s> UnresolvedNestedField<'s> {
 }
 
 pub type UnresolvedNestedObject<'s> = NestedObject<plan_types::Expression<'s>>;
-pub type ResolvedNestedObject = NestedObject<filter::ResolvedFilterExpression>;
+pub type ResolvedNestedObject = NestedObject<plan_types::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NestedObject<TFilterExpression> {
@@ -124,7 +123,7 @@ impl<'s> UnresolvedNestedObject<'s> {
 }
 
 pub type UnresolvedNestedArray<'s> = NestedArray<plan_types::Expression<'s>>;
-pub type ResolvedNestedArray = NestedArray<filter::ResolvedFilterExpression>;
+pub type ResolvedNestedArray = NestedArray<plan_types::ResolvedFilterExpression>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NestedArray<TFilterExpression> {
