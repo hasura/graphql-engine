@@ -183,9 +183,8 @@ pub(crate) async fn explain_query_plan(
                     .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
                 let data_connector = resolved_execution_plan.data_connector.clone();
-                let ndc_request =
-                    plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
-                        .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+                let ndc_request = execute::make_ndc_query_request(resolved_execution_plan)
+                    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
                 let sequence_steps = get_execution_steps(
                     expose_internal_errors,
@@ -229,9 +228,8 @@ pub(crate) async fn explain_query_plan(
                         .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
                     let data_connector = resolved_execution_plan.data_connector.clone();
-                    let ndc_request =
-                        plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
-                            .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+                    let ndc_request = execute::make_ndc_query_request(resolved_execution_plan)
+                        .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
                     let sequence_steps = get_execution_steps(
                         expose_internal_errors,
@@ -322,9 +320,8 @@ pub(crate) async fn explain_mutation_plan(
                 .await
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
-            let mutation_request =
-                plan::ndc_request::make_ndc_mutation_request(resolved_execution_plan)
-                    .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
+            let mutation_request = execute::make_ndc_mutation_request(resolved_execution_plan)
+                .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             let sequence_steps = get_execution_steps(
                 expose_internal_errors,
@@ -440,7 +437,7 @@ async fn get_join_steps(
 
             resolved_execution_plan.variables = Some(vec![]);
             let target_data_connector = resolved_execution_plan.data_connector.clone();
-            let query_request = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)
+            let query_request = execute::make_ndc_query_request(resolved_execution_plan)
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             let ndc_request = types::NDCRequest::Query(query_request);

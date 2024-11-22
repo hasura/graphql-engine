@@ -82,7 +82,6 @@ use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;
 
-use crate::plan;
 use crate::plan::filter::ResolveFilterExpressionContext;
 use plan_types::ProcessResponseAs;
 
@@ -151,7 +150,7 @@ pub(crate) async fn execute_join_locations(
         let resolve_context =
             ResolveFilterExpressionContext::new_allow_in_engine_resolution(http_context);
         let resolved_execution_plan = execution_node.resolve(&resolve_context).await?;
-        let ndc_query = plan::ndc_request::make_ndc_query_request(resolved_execution_plan)?;
+        let ndc_query = crate::make_ndc_query_request(resolved_execution_plan)?;
 
         // execute the remote query
         let mut target_response = tracer

@@ -15,17 +15,16 @@ use super::field;
 use super::filter;
 use super::filter::ResolveFilterExpressionContext;
 
-pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<plan_types::Expression<'s>>;
-pub type ResolvedQueryExecutionPlan = QueryExecutionPlan<plan_types::ResolvedFilterExpression>;
+pub type UnresolvedQueryExecutionPlan<'s> = QueryExecutionPlan<'s>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct QueryExecutionPlan<TFilterExpression> {
+pub struct QueryExecutionPlan<'s> {
     pub remote_predicates: PredicateQueryTrees,
-    pub query_node: QueryNode<TFilterExpression>,
+    pub query_node: QueryNode<'s>,
     /// The name of a collection
     pub collection: CollectionName,
     /// Values to be provided to any collection arguments
-    pub arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<TFilterExpression>>,
+    pub arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
     /// Any relationships between collections involved in the query request
     pub collection_relationships: BTreeMap<NdcRelationshipName, Relationship>,
     /// One set of named variables for each rowset to fetch. Each variable set
@@ -35,11 +34,11 @@ pub struct QueryExecutionPlan<TFilterExpression> {
     pub data_connector: Arc<metadata_resolve::DataConnectorLink>,
 }
 
-impl<'s> UnresolvedQueryExecutionPlan<'s> {
+impl<'s> QueryExecutionPlan<'s> {
     pub async fn resolve(
         self,
         resolve_context: &ResolveFilterExpressionContext<'_>,
-    ) -> Result<ResolvedQueryExecutionPlan, error::FieldError> {
+    ) -> Result<plan_types::QueryExecutionPlan, error::FieldError> {
         let QueryExecutionPlan {
             remote_predicates,
             query_node,
@@ -49,7 +48,7 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
             variables,
             data_connector,
         } = self;
-        let query_request = QueryExecutionPlan {
+        let query_request = plan_types::QueryExecutionPlan {
             remote_predicates,
             query_node: query_node.resolve(resolve_context).await?,
             collection,
@@ -62,12 +61,11 @@ impl<'s> UnresolvedQueryExecutionPlan<'s> {
     }
 }
 
-pub type UnresolvedQueryNode<'s> = QueryNode<plan_types::Expression<'s>>;
-pub type ResolvedQueryNode = QueryNode<plan_types::ResolvedFilterExpression>;
+pub type UnresolvedQueryNode<'s> = QueryNode<'s>;
 
 /// Query plan for fetching data
 #[derive(Debug, Clone, PartialEq)]
-pub struct QueryNode<TFilterExpression> {
+pub struct QueryNode<'s> {
     /// Optionally limit to N results
     pub limit: Option<u32>,
     /// Optionally offset from the Nth result
@@ -75,19 +73,19 @@ pub struct QueryNode<TFilterExpression> {
     /// Optionally sort results
     pub order_by: Option<Vec<OrderByElement>>,
     /// Optionally filter results
-    pub predicate: Option<TFilterExpression>,
+    pub predicate: Option<plan_types::Expression<'s>>,
     /// Aggregate fields of the query
     pub aggregates: Option<AggregateSelectionSet>,
     /// Fields of the query
-    pub fields: Option<IndexMap<NdcFieldAlias, field::Field<TFilterExpression>>>,
+    pub fields: Option<IndexMap<NdcFieldAlias, field::Field<'s>>>,
 }
 
-impl<'s> UnresolvedQueryNode<'s> {
+impl<'s> QueryNode<'s> {
     #[async_recursion]
     pub async fn resolve(
         self,
         resolve_context: &'s ResolveFilterExpressionContext<'_>,
-    ) -> Result<ResolvedQueryNode, error::FieldError>
+    ) -> Result<plan_types::QueryNodeNew, error::FieldError>
     where
         's: 'async_recursion,
     {
@@ -113,13 +111,13 @@ impl<'s> UnresolvedQueryNode<'s> {
             }
             None => None,
         };
-        Ok(QueryNode {
+        Ok(plan_types::QueryNodeNew {
             limit,
             offset,
             order_by,
             predicate,
             aggregates,
-            fields,
+            fields: fields.map(|fields| plan_types::FieldsSelection { fields }),
         })
     }
 }

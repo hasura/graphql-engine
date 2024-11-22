@@ -1,7 +1,6 @@
 use super::fetch_explain_from_data_connector;
 use super::types;
 use async_recursion::async_recursion;
-use execute::plan;
 use execute::plan::field::{UnresolvedField, UnresolvedNestedField};
 use execute::plan::{ResolveFilterExpressionContext, UnresolvedQueryNode};
 use execute::HttpContext;
@@ -158,7 +157,7 @@ async fn explain_query_predicate<'s>(
                 .await
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
-            let query_execution_plan = execute::ResolvedQueryExecutionPlan {
+            let query_execution_plan = plan_types::QueryExecutionPlan {
                 remote_predicates: plan_types::PredicateQueryTrees::new(),
                 query_node: resolved_query_node,
                 collection: target_model_source.collection.clone(),
@@ -168,7 +167,7 @@ async fn explain_query_predicate<'s>(
                 data_connector: target_model_source.data_connector.clone(),
             };
 
-            let ndc_query_request = plan::ndc_request::make_ndc_query_request(query_execution_plan)
+            let ndc_query_request = execute::make_ndc_query_request(query_execution_plan)
                 .map_err(|e| execute::RequestError::ExplainError(e.to_string()))?;
 
             let ndc_request = types::NDCRequest::Query(ndc_query_request);

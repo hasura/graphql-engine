@@ -5,7 +5,6 @@ use tracing_util::SpanVisibility;
 
 use super::error as plan_error;
 use super::field;
-use super::ndc_request;
 use super::query;
 use super::relationships::process_model_relationship_definition;
 use crate::{error, ndc, HttpContext};
@@ -183,7 +182,7 @@ pub fn plan_remote_predicate<'s, 'a>(
 /// These field values are fetched from the remote data connector.
 fn build_ndc_query_fields<'s>(
     ndc_column_mapping: &[plan_types::RelationshipColumnMapping],
-) -> IndexMap<NdcFieldAlias, field::Field<plan_types::Expression<'s>>> {
+) -> IndexMap<NdcFieldAlias, field::Field<'s>> {
     let mut fields = IndexMap::new();
     for mapping in ndc_column_mapping {
         let field = field::Field::Column {
@@ -227,7 +226,7 @@ impl<'req> ResolveFilterExpressionContext<'req> {
 pub async fn resolve_expression<'s>(
     expression: plan_types::Expression<'s>,
     resolve_context: &ResolveFilterExpressionContext,
-) -> Result<ResolvedFilterExpression, error::FieldError>
+) -> Result<plan_types::ResolvedFilterExpression, error::FieldError>
 where
     's: 'async_recursion,
 {
@@ -239,7 +238,7 @@ where
                     resolve_expression(subexpression, resolve_context).await?;
                 resolved_expressions.push(resolved_expression);
             }
-            Ok(ResolvedFilterExpression::And {
+            Ok(plan_types::ResolvedFilterExpression::And {
                 expressions: resolved_expressions,
             })
         }
@@ -249,7 +248,7 @@ where
                 let resolve_expression = resolve_expression(subexpression, resolve_context).await?;
                 resolved_expressions.push(resolve_expression);
             }
-            Ok(ResolvedFilterExpression::Or {
+            Ok(plan_types::ResolvedFilterExpression::Or {
                 expressions: resolved_expressions,
             })
         }
@@ -257,7 +256,7 @@ where
             expression: subexpression,
         } => {
             let resolved_expression = resolve_expression(*subexpression, resolve_context).await?;
-            Ok(ResolvedFilterExpression::Not {
+            Ok(plan_types::ResolvedFilterExpression::Not {
                 expression: Box::new(resolved_expression),
             })
         }
@@ -270,10 +269,12 @@ where
             info: _,
         } => {
             let resolved_expression = resolve_expression(*predicate, resolve_context).await?;
-            Ok(ResolvedFilterExpression::LocalRelationshipComparison {
-                relationship,
-                predicate: Box::new(resolved_expression),
-            })
+            Ok(
+                plan_types::ResolvedFilterExpression::LocalRelationshipComparison {
+                    relationship,
+                    predicate: Box::new(resolved_expression),
+                },
+            )
         }
         plan_types::Expression::LocalNestedArray {
             column,
@@ -281,7 +282,7 @@ where
             predicate,
         } => {
             let resolved_expression = resolve_expression(*predicate, resolve_context).await?;
-            Ok(ResolvedFilterExpression::LocalNestedArray {
+            Ok(plan_types::ResolvedFilterExpression::LocalNestedArray {
                 column,
                 field_path,
                 predicate: Box::new(resolved_expression),
@@ -323,7 +324,7 @@ where
                                     )
                                 })?;
 
-                            let query_execution_plan = query::QueryExecutionPlan {
+                            let query_execution_plan = plan_types::QueryExecutionPlan {
                                 remote_predicates: PredicateQueryTrees::new(),
                                 query_node: remote_query_node.resolve(resolve_context).await?,
                                 collection: target_model_source.collection.clone(),
@@ -334,7 +335,7 @@ where
                             };
 
                             let ndc_query_request =
-                                ndc_request::make_ndc_query_request(query_execution_plan)?;
+                                crate::make_ndc_query_request(query_execution_plan)?;
 
                             // Generate LHS mapping NDC columns values from the remote data connector
                             // using the RHS NDC columns.

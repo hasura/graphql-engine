@@ -10,36 +10,35 @@ use super::arguments;
 use super::filter::ResolveFilterExpressionContext;
 use super::query;
 
-pub type UnresolvedField<'s> = Field<plan_types::Expression<'s>>;
-pub type ResolvedField = Field<plan_types::ResolvedFilterExpression>;
+pub type UnresolvedField<'s> = Field<'s>;
 
 /// Field plan
 #[derive(Debug, Clone, PartialEq)]
-pub enum Field<TFilterExpression> {
+pub enum Field<'s> {
     Column {
         /// Column
         column: DataConnectorColumnName,
         /// Nested fields if column is array or object type
-        fields: Option<NestedField<TFilterExpression>>,
+        fields: Option<NestedField<'s>>,
         /// Input field arguments
-        arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<TFilterExpression>>,
+        arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
     },
     Relationship {
         /// The relationship query
-        query_node: Box<query::QueryNode<TFilterExpression>>,
+        query_node: Box<query::QueryNode<'s>>,
         /// The name of the relationship to follow for the subquery
         relationship: NdcRelationshipName,
         /// Values to be provided to any collection arguments
-        arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<TFilterExpression>>,
+        arguments: BTreeMap<DataConnectorArgumentName, arguments::Argument<'s>>,
     },
 }
 
-impl<'s> UnresolvedField<'s> {
+impl<'s> Field<'s> {
     /// Resolve field plan into NDC field
     pub async fn resolve(
         self,
         resolve_context: &'s ResolveFilterExpressionContext<'_>,
-    ) -> Result<ResolvedField, error::FieldError> {
+    ) -> Result<plan_types::Field, error::FieldError> {
         match self {
             Field::Column {
                 column,
@@ -50,7 +49,7 @@ impl<'s> UnresolvedField<'s> {
                     Some(nested_field) => Some(nested_field.resolve(resolve_context).await?),
                     None => None,
                 };
-                Ok(Field::Column {
+                Ok(plan_types::Field::Column {
                     column,
                     fields: resolved_fields,
                     arguments: arguments::resolve_arguments(resolve_context, arguments).await?,
@@ -62,7 +61,7 @@ impl<'s> UnresolvedField<'s> {
                 arguments,
             } => {
                 let query_node = query_node.resolve(resolve_context).await?;
-                Ok(Field::Relationship {
+                Ok(plan_types::Field::Relationship {
                     query_node: Box::new(query_node),
                     relationship,
                     arguments: arguments::resolve_arguments(resolve_context, arguments).await?,
@@ -72,71 +71,68 @@ impl<'s> UnresolvedField<'s> {
     }
 }
 
-pub type UnresolvedNestedField<'s> = NestedField<plan_types::Expression<'s>>;
-pub type ResolvedNestedField = NestedField<plan_types::ResolvedFilterExpression>;
+pub type UnresolvedNestedField<'s> = NestedField<'s>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum NestedField<TFilterExpression> {
-    Object(NestedObject<TFilterExpression>),
-    Array(NestedArray<TFilterExpression>),
+pub enum NestedField<'s> {
+    Object(NestedObject<'s>),
+    Array(NestedArray<'s>),
 }
 
-impl<'s> UnresolvedNestedField<'s> {
+impl<'s> NestedField<'s> {
     #[async_recursion]
     pub async fn resolve(
         self,
         resolve_context: &'s ResolveFilterExpressionContext,
-    ) -> Result<ResolvedNestedField, error::FieldError>
+    ) -> Result<plan_types::NestedField, error::FieldError>
     where
         's: 'async_recursion,
     {
         match self {
-            NestedField::Object(nested_object) => Ok(NestedField::Object(
+            NestedField::Object(nested_object) => Ok(plan_types::NestedField::Object(
                 nested_object.resolve(resolve_context).await?,
             )),
-            NestedField::Array(nested_array) => Ok(NestedField::Array(
+            NestedField::Array(nested_array) => Ok(plan_types::NestedField::Array(
                 nested_array.resolve(resolve_context).await?,
             )),
         }
     }
 }
 
-pub type UnresolvedNestedObject<'s> = NestedObject<plan_types::Expression<'s>>;
-pub type ResolvedNestedObject = NestedObject<plan_types::ResolvedFilterExpression>;
+pub type UnresolvedNestedObject<'s> = NestedObject<'s>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct NestedObject<TFilterExpression> {
-    pub fields: IndexMap<NdcFieldAlias, Field<TFilterExpression>>,
+pub struct NestedObject<'s> {
+    pub fields: IndexMap<NdcFieldAlias, Field<'s>>,
 }
 
-impl<'s> UnresolvedNestedObject<'s> {
+impl<'s> NestedObject<'s> {
     pub async fn resolve(
         self,
         resolve_context: &'s ResolveFilterExpressionContext<'_>,
-    ) -> Result<ResolvedNestedObject, error::FieldError> {
+    ) -> Result<plan_types::NestedObject, error::FieldError> {
         let mut fields = IndexMap::new();
         for (name, field) in self.fields {
             fields.insert(name, field.resolve(resolve_context).await?);
         }
-        Ok(NestedObject { fields })
+        Ok(plan_types::NestedObject { fields })
     }
 }
 
-pub type UnresolvedNestedArray<'s> = NestedArray<plan_types::Expression<'s>>;
-pub type ResolvedNestedArray = NestedArray<plan_types::ResolvedFilterExpression>;
+pub type UnresolvedNestedArray<'s> = NestedArray<'s>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct NestedArray<TFilterExpression> {
-    pub fields: Box<NestedField<TFilterExpression>>,
+pub struct NestedArray<'s> {
+    pub fields: Box<NestedField<'s>>,
 }
 
-impl<'s> UnresolvedNestedArray<'s> {
+impl<'s> NestedArray<'s> {
     pub async fn resolve(
         self,
         resolve_context: &'s ResolveFilterExpressionContext<'_>,
-    ) -> Result<ResolvedNestedArray, error::FieldError> {
+    ) -> Result<plan_types::NestedArray, error::FieldError> {
         let fields = self.fields.resolve(resolve_context).await?;
-        Ok(NestedArray {
+        Ok(plan_types::NestedArray {
             fields: Box::new(fields),
         })
     }
