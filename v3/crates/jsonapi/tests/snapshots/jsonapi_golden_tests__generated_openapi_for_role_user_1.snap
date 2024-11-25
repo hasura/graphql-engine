@@ -115,6 +115,64 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Artist": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Artist"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Tracks": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_Track"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
                         }
@@ -231,6 +289,36 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Author": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Author"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
                         }

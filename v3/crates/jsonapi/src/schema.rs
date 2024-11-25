@@ -21,9 +21,16 @@ pub enum SchemaError {
 // we're going with the more universally supported application/json
 static JSONAPI_MEDIA_TYPE: &str = "application/json";
 
-fn get_response(model: &Model, object_type: &ObjectType) -> oas3::spec::Response {
-    let schema =
-        oas3::spec::ObjectOrReference::Object(output::jsonapi_document_schema(model, object_type));
+fn get_response(
+    model: &Model,
+    object_type: &ObjectType,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
+) -> oas3::spec::Response {
+    let schema = oas3::spec::ObjectOrReference::Object(output::jsonapi_document_schema(
+        model,
+        object_type,
+        object_types,
+    ));
 
     let media_type = oas3::spec::MediaType {
         encoding: BTreeMap::new(),
@@ -43,7 +50,11 @@ fn get_response(model: &Model, object_type: &ObjectType) -> oas3::spec::Response
     }
 }
 
-fn get_route_for_model(model: &Model, object_type: &ObjectType) -> oas3::spec::Operation {
+fn get_route_for_model(
+    model: &Model,
+    object_type: &ObjectType,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
+) -> oas3::spec::Operation {
     let parameters = vec![
         oas3::spec::ObjectOrReference::Object(parameters::page_limit_parameter()),
         oas3::spec::ObjectOrReference::Object(parameters::page_offset_parameter()),
@@ -55,7 +66,7 @@ fn get_route_for_model(model: &Model, object_type: &ObjectType) -> oas3::spec::O
     let mut responses = BTreeMap::new();
     responses.insert(
         "200".into(),
-        oas3::spec::ObjectOrReference::Object(get_response(model, object_type)),
+        oas3::spec::ObjectOrReference::Object(get_response(model, object_type, object_types)),
     );
 
     oas3::spec::Operation {
@@ -120,7 +131,7 @@ pub fn openapi_schema(state: &State) -> Result<oas3::Spec, SchemaError> {
             .get(&model.data_type)
             .ok_or_else(|| SchemaError::ObjectNotFound(model.data_type.clone()))?;
 
-        let get = get_route_for_model(model, object_type);
+        let get = get_route_for_model(model, object_type, &state.object_types);
 
         let full_route_path = format!("/v1/rest{route_name}");
 

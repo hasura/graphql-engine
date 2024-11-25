@@ -121,8 +121,322 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Artist": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Artist"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Tracks": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_Track"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Artist"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "ArtistId": {
+                                      "type": "object"
+                                    },
+                                    "Name": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Albums": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Album"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Track"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "AlbumId": {
+                                      "type": "object"
+                                    },
+                                    "Bytes": {
+                                      "type": "object"
+                                    },
+                                    "Composer": {
+                                      "type": "object"
+                                    },
+                                    "GenreId": {
+                                      "type": "object"
+                                    },
+                                    "MediaTypeId": {
+                                      "type": "object"
+                                    },
+                                    "Milliseconds": {
+                                      "type": "object"
+                                    },
+                                    "Name": {
+                                      "type": "object"
+                                    },
+                                    "TrackId": {
+                                      "type": "object"
+                                    },
+                                    "UnitPrice": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Album": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Album"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Genre": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Genre"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "InvoiceLines": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_InvoiceLine"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "MediaType": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_MediaType"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "PlaylistTracks": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_PlaylistTrack"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -243,8 +557,108 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Author": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Author"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Author"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "author_id": {
+                                      "type": "object"
+                                    },
+                                    "first_name": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "articles": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Article"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -359,8 +773,139 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Albums": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_Album"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Album"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "AlbumId": {
+                                      "type": "object"
+                                    },
+                                    "ArtistId": {
+                                      "type": "object"
+                                    },
+                                    "Title": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Artist": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Artist"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Tracks": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Track"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -476,8 +1021,111 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "articles": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_Article"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Article"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "article_id": {
+                                      "type": "integer"
+                                    },
+                                    "author_id": {
+                                      "type": "object"
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Author": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Author"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -658,8 +1306,336 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Employee": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Employee"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Invoices": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_Invoice"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Employee"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Address": {
+                                      "type": "object"
+                                    },
+                                    "BirthDate": {
+                                      "type": "object"
+                                    },
+                                    "City": {
+                                      "type": "object"
+                                    },
+                                    "Country": {
+                                      "type": "object"
+                                    },
+                                    "Email": {
+                                      "type": "object"
+                                    },
+                                    "EmployeeId": {
+                                      "type": "object"
+                                    },
+                                    "Fax": {
+                                      "type": "object"
+                                    },
+                                    "FirstName": {
+                                      "type": "object"
+                                    },
+                                    "HireDate": {
+                                      "type": "object"
+                                    },
+                                    "LastName": {
+                                      "type": "object"
+                                    },
+                                    "Phone": {
+                                      "type": "object"
+                                    },
+                                    "PostalCode": {
+                                      "type": "object"
+                                    },
+                                    "ReportsTo": {
+                                      "type": "object"
+                                    },
+                                    "State": {
+                                      "type": "object"
+                                    },
+                                    "Title": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Customers": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Customer"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Employee": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Employee"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Employees": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Employee"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Invoice"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "BillingAddress": {
+                                      "type": "object"
+                                    },
+                                    "BillingCity": {
+                                      "type": "object"
+                                    },
+                                    "BillingCountry": {
+                                      "type": "object"
+                                    },
+                                    "BillingPostalCode": {
+                                      "type": "object"
+                                    },
+                                    "BillingState": {
+                                      "type": "object"
+                                    },
+                                    "CustomerId": {
+                                      "type": "object"
+                                    },
+                                    "InvoiceDate": {
+                                      "type": "object"
+                                    },
+                                    "InvoiceId": {
+                                      "type": "object"
+                                    },
+                                    "Total": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Customer": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Customer"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "InvoiceLines": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_InvoiceLine"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -852,8 +1828,530 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Customers": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_Customer"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Employee": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Employee"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Employees": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_Employee"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Customer"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Address": {
+                                      "type": "object"
+                                    },
+                                    "City": {
+                                      "type": "object"
+                                    },
+                                    "Company": {
+                                      "type": "object"
+                                    },
+                                    "Country": {
+                                      "type": "object"
+                                    },
+                                    "CustomerId": {
+                                      "type": "object"
+                                    },
+                                    "Email": {
+                                      "type": "object"
+                                    },
+                                    "Fax": {
+                                      "type": "object"
+                                    },
+                                    "FirstName": {
+                                      "type": "object"
+                                    },
+                                    "LastName": {
+                                      "type": "object"
+                                    },
+                                    "Phone": {
+                                      "type": "object"
+                                    },
+                                    "PostalCode": {
+                                      "type": "object"
+                                    },
+                                    "State": {
+                                      "type": "object"
+                                    },
+                                    "SupportRepId": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Employee": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Employee"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Invoices": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Invoice"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Employee"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Address": {
+                                      "type": "object"
+                                    },
+                                    "BirthDate": {
+                                      "type": "object"
+                                    },
+                                    "City": {
+                                      "type": "object"
+                                    },
+                                    "Country": {
+                                      "type": "object"
+                                    },
+                                    "Email": {
+                                      "type": "object"
+                                    },
+                                    "EmployeeId": {
+                                      "type": "object"
+                                    },
+                                    "Fax": {
+                                      "type": "object"
+                                    },
+                                    "FirstName": {
+                                      "type": "object"
+                                    },
+                                    "HireDate": {
+                                      "type": "object"
+                                    },
+                                    "LastName": {
+                                      "type": "object"
+                                    },
+                                    "Phone": {
+                                      "type": "object"
+                                    },
+                                    "PostalCode": {
+                                      "type": "object"
+                                    },
+                                    "ReportsTo": {
+                                      "type": "object"
+                                    },
+                                    "State": {
+                                      "type": "object"
+                                    },
+                                    "Title": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Customers": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Customer"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Employee": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Employee"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Employees": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Employee"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Employee"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Address": {
+                                      "type": "object"
+                                    },
+                                    "BirthDate": {
+                                      "type": "object"
+                                    },
+                                    "City": {
+                                      "type": "object"
+                                    },
+                                    "Country": {
+                                      "type": "object"
+                                    },
+                                    "Email": {
+                                      "type": "object"
+                                    },
+                                    "EmployeeId": {
+                                      "type": "object"
+                                    },
+                                    "Fax": {
+                                      "type": "object"
+                                    },
+                                    "FirstName": {
+                                      "type": "object"
+                                    },
+                                    "HireDate": {
+                                      "type": "object"
+                                    },
+                                    "LastName": {
+                                      "type": "object"
+                                    },
+                                    "Phone": {
+                                      "type": "object"
+                                    },
+                                    "PostalCode": {
+                                      "type": "object"
+                                    },
+                                    "ReportsTo": {
+                                      "type": "object"
+                                    },
+                                    "State": {
+                                      "type": "object"
+                                    },
+                                    "Title": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Customers": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Customer"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Employee": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Employee"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Employees": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Employee"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -968,8 +2466,235 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Tracks": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_Track"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Track"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "AlbumId": {
+                                      "type": "object"
+                                    },
+                                    "Bytes": {
+                                      "type": "object"
+                                    },
+                                    "Composer": {
+                                      "type": "object"
+                                    },
+                                    "GenreId": {
+                                      "type": "object"
+                                    },
+                                    "MediaTypeId": {
+                                      "type": "object"
+                                    },
+                                    "Milliseconds": {
+                                      "type": "object"
+                                    },
+                                    "Name": {
+                                      "type": "object"
+                                    },
+                                    "TrackId": {
+                                      "type": "object"
+                                    },
+                                    "UnitPrice": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Album": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Album"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Genre": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Genre"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "InvoiceLines": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_InvoiceLine"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "MediaType": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_MediaType"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "PlaylistTracks": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_PlaylistTrack"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -1126,8 +2851,287 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Customer": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Customer"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "InvoiceLines": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_InvoiceLine"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Customer"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Address": {
+                                      "type": "object"
+                                    },
+                                    "City": {
+                                      "type": "object"
+                                    },
+                                    "Company": {
+                                      "type": "object"
+                                    },
+                                    "Country": {
+                                      "type": "object"
+                                    },
+                                    "CustomerId": {
+                                      "type": "object"
+                                    },
+                                    "Email": {
+                                      "type": "object"
+                                    },
+                                    "Fax": {
+                                      "type": "object"
+                                    },
+                                    "FirstName": {
+                                      "type": "object"
+                                    },
+                                    "LastName": {
+                                      "type": "object"
+                                    },
+                                    "Phone": {
+                                      "type": "object"
+                                    },
+                                    "PostalCode": {
+                                      "type": "object"
+                                    },
+                                    "State": {
+                                      "type": "object"
+                                    },
+                                    "SupportRepId": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Employee": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Employee"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Invoices": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Invoice"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_InvoiceLine"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "InvoiceId": {
+                                      "type": "object"
+                                    },
+                                    "InvoiceLineId": {
+                                      "type": "object"
+                                    },
+                                    "Quantity": {
+                                      "type": "object"
+                                    },
+                                    "TrackId": {
+                                      "type": "object"
+                                    },
+                                    "UnitPrice": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Invoice": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Invoice"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Track": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Track"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -1260,8 +3264,365 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Invoice": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Invoice"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Track": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Track"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Invoice"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "BillingAddress": {
+                                      "type": "object"
+                                    },
+                                    "BillingCity": {
+                                      "type": "object"
+                                    },
+                                    "BillingCountry": {
+                                      "type": "object"
+                                    },
+                                    "BillingPostalCode": {
+                                      "type": "object"
+                                    },
+                                    "BillingState": {
+                                      "type": "object"
+                                    },
+                                    "CustomerId": {
+                                      "type": "object"
+                                    },
+                                    "InvoiceDate": {
+                                      "type": "object"
+                                    },
+                                    "InvoiceId": {
+                                      "type": "object"
+                                    },
+                                    "Total": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Customer": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Customer"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "InvoiceLines": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_InvoiceLine"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Track"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "AlbumId": {
+                                      "type": "object"
+                                    },
+                                    "Bytes": {
+                                      "type": "object"
+                                    },
+                                    "Composer": {
+                                      "type": "object"
+                                    },
+                                    "GenreId": {
+                                      "type": "object"
+                                    },
+                                    "MediaTypeId": {
+                                      "type": "object"
+                                    },
+                                    "Milliseconds": {
+                                      "type": "object"
+                                    },
+                                    "Name": {
+                                      "type": "object"
+                                    },
+                                    "TrackId": {
+                                      "type": "object"
+                                    },
+                                    "UnitPrice": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Album": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Album"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Genre": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Genre"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "InvoiceLines": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_InvoiceLine"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "MediaType": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_MediaType"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "PlaylistTracks": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_PlaylistTrack"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -1376,8 +3737,235 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Tracks": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_Track"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Track"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "AlbumId": {
+                                      "type": "object"
+                                    },
+                                    "Bytes": {
+                                      "type": "object"
+                                    },
+                                    "Composer": {
+                                      "type": "object"
+                                    },
+                                    "GenreId": {
+                                      "type": "object"
+                                    },
+                                    "MediaTypeId": {
+                                      "type": "object"
+                                    },
+                                    "Milliseconds": {
+                                      "type": "object"
+                                    },
+                                    "Name": {
+                                      "type": "object"
+                                    },
+                                    "TrackId": {
+                                      "type": "object"
+                                    },
+                                    "UnitPrice": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Album": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Album"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Genre": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Genre"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "InvoiceLines": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_InvoiceLine"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "MediaType": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_MediaType"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "PlaylistTracks": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_PlaylistTrack"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -1492,8 +4080,133 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "PlaylistTracks": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_PlaylistTrack"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_PlaylistTrack"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "PlaylistId": {
+                                      "type": "object"
+                                    },
+                                    "TrackId": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Playlist": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Playlist"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Track": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Track"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -1608,8 +4321,319 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Playlist": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Playlist"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Track": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Track"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Playlist"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Name": {
+                                      "type": "object"
+                                    },
+                                    "PlaylistId": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "PlaylistTracks": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_PlaylistTrack"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Track"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "AlbumId": {
+                                      "type": "object"
+                                    },
+                                    "Bytes": {
+                                      "type": "object"
+                                    },
+                                    "Composer": {
+                                      "type": "object"
+                                    },
+                                    "GenreId": {
+                                      "type": "object"
+                                    },
+                                    "MediaTypeId": {
+                                      "type": "object"
+                                    },
+                                    "Milliseconds": {
+                                      "type": "object"
+                                    },
+                                    "Name": {
+                                      "type": "object"
+                                    },
+                                    "TrackId": {
+                                      "type": "object"
+                                    },
+                                    "UnitPrice": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Album": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Album"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Genre": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Genre"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "InvoiceLines": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_InvoiceLine"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "MediaType": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_MediaType"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "PlaylistTracks": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_PlaylistTrack"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -1766,8 +4790,543 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "Album": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Album"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Genre": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_Genre"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "InvoiceLines": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_InvoiceLine"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "MediaType": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_MediaType"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "PlaylistTracks": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_PlaylistTrack"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Album"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "AlbumId": {
+                                      "type": "object"
+                                    },
+                                    "ArtistId": {
+                                      "type": "object"
+                                    },
+                                    "Title": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Artist": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Artist"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Tracks": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Track"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_Genre"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "GenreId": {
+                                      "type": "object"
+                                    },
+                                    "Name": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Tracks": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Track"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_InvoiceLine"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "InvoiceId": {
+                                      "type": "object"
+                                    },
+                                    "InvoiceLineId": {
+                                      "type": "object"
+                                    },
+                                    "Quantity": {
+                                      "type": "object"
+                                    },
+                                    "TrackId": {
+                                      "type": "object"
+                                    },
+                                    "UnitPrice": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Invoice": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Invoice"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Track": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Track"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_MediaType"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "MediaTypeId": {
+                                      "type": "object"
+                                    },
+                                    "Name": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Tracks": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_Track"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_PlaylistTrack"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "PlaylistId": {
+                                      "type": "object"
+                                    },
+                                    "TrackId": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "Playlist": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Playlist"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Track": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_Track"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -2192,8 +5751,117 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "topology_topology": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "object",
+                                      "required": [
+                                        "id",
+                                        "_type"
+                                      ],
+                                      "properties": {
+                                        "_type": {
+                                          "enum": [
+                                            "default_topology_topology"
+                                          ]
+                                        },
+                                        "id": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_topology_topology"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "hasz": {
+                                      "type": "object"
+                                    },
+                                    "id": {
+                                      "type": "object"
+                                    },
+                                    "name": {
+                                      "type": "object"
+                                    },
+                                    "precision": {
+                                      "type": "object"
+                                    },
+                                    "srid": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "topology_layers": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "id",
+                                              "_type"
+                                            ],
+                                            "properties": {
+                                              "_type": {
+                                                "enum": [
+                                                  "default_topology_layer"
+                                                ]
+                                              },
+                                              "id": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
@@ -2326,8 +5994,126 @@ expression: generated_openapi
                             },
                             "id": {
                               "type": "string"
+                            },
+                            "relationships": {
+                              "type": "object",
+                              "properties": {
+                                "topology_layers": {
+                                  "type": "object",
+                                  "required": [
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "data": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "_type"
+                                        ],
+                                        "properties": {
+                                          "_type": {
+                                            "enum": [
+                                              "default_topology_layer"
+                                            ]
+                                          },
+                                          "id": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
+                        }
+                      },
+                      "included": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "_type",
+                                "attributes"
+                              ],
+                              "properties": {
+                                "_type": {
+                                  "enum": [
+                                    "default_topology_layer"
+                                  ]
+                                },
+                                "attributes": {
+                                  "type": "object",
+                                  "properties": {
+                                    "child_id": {
+                                      "type": "object"
+                                    },
+                                    "feature_column": {
+                                      "type": "object"
+                                    },
+                                    "feature_type": {
+                                      "type": "object"
+                                    },
+                                    "layer_id": {
+                                      "type": "object"
+                                    },
+                                    "level": {
+                                      "type": "object"
+                                    },
+                                    "schema_name": {
+                                      "type": "object"
+                                    },
+                                    "table_name": {
+                                      "type": "object"
+                                    },
+                                    "topology_id": {
+                                      "type": "object"
+                                    }
+                                  }
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "relationships": {
+                                  "type": "object",
+                                  "properties": {
+                                    "topology_topology": {
+                                      "type": "object",
+                                      "required": [
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "data": {
+                                          "type": "object",
+                                          "required": [
+                                            "id",
+                                            "_type"
+                                          ],
+                                          "properties": {
+                                            "_type": {
+                                              "enum": [
+                                                "default_topology_topology"
+                                              ]
+                                            },
+                                            "id": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       }
                     }
