@@ -51,6 +51,14 @@ start-docker-run-deps:
     # start auth_hook and jaeger
     docker compose up --wait auth_hook jaeger
 
+# starts engine locally using dependencies from docker compose
+start-engine:
+  docker compose up --wait postgres postgres_connector auth_hook jaeger
+  METADATA_PATH=static/docker_schema.json \
+    AUTHN_CONFIG_PATH=static/auth/auth_config.json \
+    OTLP_ENDPOINT=http://localhost:4317 \
+    cargo run --bin engine
+
 # pull / build all docker deps
 docker-refresh: stop-docker
     docker compose -f ci.docker-compose.yaml pull postgres_connector

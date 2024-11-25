@@ -1,7 +1,7 @@
 # This should match the Rust version in rust-toolchain.yaml and the other Dockerfiles.
 FROM rust:1.82.0 AS chef
 
-WORKDIR app
+WORKDIR /app
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -47,11 +47,7 @@ COPY --from=planner /app/recipe.json recipe.json
 COPY --from=planner /app/.cargo/config.toml /app/.cargo/config.toml
 
 # Build dependencies - this is the caching Docker layer!
-RUN cargo chef cook --release --all-targets --recipe-path recipe.json
-
-###
-# Builds the application
-FROM builder AS built
+RUN cargo chef cook --release --bin engine --recipe-path recipe.json
 
 # Copy files
 COPY .cargo ./.cargo
@@ -59,7 +55,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
 
 # Build the app
-RUN cargo build --release --all-targets
+RUN cargo build --release --bin engine
 
 ###
 # Ship the app in an image with `curl` and very little else
@@ -71,5 +67,5 @@ RUN set -ex; \
     apt-get install --assume-yes curl
 
 # Install the engine
-COPY --from=built /app/target/release/engine /usr/local/bin
+COPY --from=builder /app/target/release/engine /usr/local/bin
 ENTRYPOINT ["engine"]

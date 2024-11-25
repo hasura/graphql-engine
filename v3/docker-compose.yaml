@@ -18,6 +18,8 @@ services:
         condition: service_started
       auth_hook:
         condition: service_started
+    extra_hosts:
+      - local.hasura.dev=host-gateway
     volumes:
       - ./static/auth/auth_config.json:/app/auth_config.json
       - ./static/docker_schema.json:/app/docker_schema.json
@@ -31,7 +33,7 @@ services:
       - -F # turn fsync off for speed
       - -N 1000 # increase max connections from 100 so we can run more HGEs
     ports:
-      - 64001:5432
+      - 5432:5432
     environment:
       POSTGRES_PASSWORD: "password"
     volumes:
@@ -63,10 +65,12 @@ services:
     build:
       dockerfile: dev-auth-webhook.Dockerfile
     environment:
-      OTLP_ENDPOINT: "http://jaeger:4317"
+      OTLP_ENDPOINT: "http://local.hasura.dev:4317"
       RUST_LOG: debug
     ports:
       - "3050:3050"
+    extra_hosts:
+      - local.hasura.dev=host-gateway
     depends_on:
       jaeger:
         condition: service_started
@@ -96,8 +100,8 @@ services:
       - 8080:8080
     environment:
       HASURA_SERVICE_TOKEN_SECRET: super sekret
-      CONNECTION_URI: "postgresql://postgres:password@postgres"
-      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
+      CONNECTION_URI: "postgresql://postgres:password@local.hasura.dev"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://local.hasura.dev:4317"
       OTEL_SERVICE_NAME: "ndc-postgres"
       RUST_LOG: info
     volumes:
@@ -105,6 +109,8 @@ services:
         source: ./crates/engine/tests/ndc-postgres-configuration
         target: /etc/connector
         read_only: true
+    extra_hosts:
+      - local.hasura.dev=host-gateway
     depends_on:
       postgres:
         condition: service_healthy
