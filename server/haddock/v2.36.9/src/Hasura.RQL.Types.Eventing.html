@@ -1,0 +1,522 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | This module contains types which are common to event triggers and scheduled triggers.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html"><span class="hs-identifier">Hasura.RQL.Types.Eventing</span></a></span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ClientError"><span class="hs-identifier">ClientError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier">EventId</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Invocation"><span class="hs-identifier">Invocation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#InvocationVersion"><span class="hs-identifier">InvocationVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#PGTextArray"><span class="hs-identifier">PGTextArray</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Response"><span class="hs-identifier">Response</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#TriggerTypes"><span class="hs-identifier">TriggerTypes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookRequest"><span class="hs-identifier">WebhookRequest</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookResponse"><span class="hs-identifier">WebhookResponse</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#OpVar"><span class="hs-identifier">OpVar</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#invocationVersionET"><span class="hs-identifier">invocationVersionET</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#invocationVersionST"><span class="hs-identifier">invocationVersionST</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.html/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.SerializableBlob.html/Data.SerializableBlob.html"><span class="hs-identifier">Data.SerializableBlob</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">SB</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.html/Database.PG.Query.html"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.PTI.html/Database.PG.Query.PTI.html"><span class="hs-identifier">Database.PG.Query.PTI</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PTI</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html"><span class="hs-identifier">Hasura.RQL.Types.Headers</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier">HeaderConf</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/postgresql-binary-0.14-7b61732883568d9eb7f5b2906d2e3ac1193bbd334748482096e9f2ac747cd28a/share/doc/html/src/PostgreSQL.Binary.Encoding.html/PostgreSQL.Binary.Encoding.html"><span class="hs-identifier">PostgreSQL.Binary.Encoding</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PE</span></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">newtype</span><span> </span><span id="EventId"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-var">EventId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EventId"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-var">EventId</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unEventId"><span class="annot"><span class="annottext">EventId -&gt; InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#unEventId"><span class="hs-identifier hs-var hs-var">unEventId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687563152"><span id="local-6989586621687563158"><span id="local-6989586621687563162"><span class="annot"><span class="annottext">Int -&gt; EventId -&gt; ShowS
+[EventId] -&gt; ShowS
+EventId -&gt; String
+(Int -&gt; EventId -&gt; ShowS)
+-&gt; (EventId -&gt; String) -&gt; ([EventId] -&gt; ShowS) -&gt; Show EventId
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; EventId -&gt; ShowS
+showsPrec :: Int -&gt; EventId -&gt; ShowS
+$cshow :: EventId -&gt; String
+show :: EventId -&gt; String
+$cshowList :: [EventId] -&gt; ShowS
+showList :: [EventId] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563167"><span id="local-6989586621687563172"><span class="annot"><span class="annottext">EventId -&gt; EventId -&gt; Bool
+(EventId -&gt; EventId -&gt; Bool)
+-&gt; (EventId -&gt; EventId -&gt; Bool) -&gt; Eq EventId
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: EventId -&gt; EventId -&gt; Bool
+== :: EventId -&gt; EventId -&gt; Bool
+$c/= :: EventId -&gt; EventId -&gt; Bool
+/= :: EventId -&gt; EventId -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563181"><span id="local-6989586621687563186"><span id="local-6989586621687563190"><span id="local-6989586621687563194"><span id="local-6989586621687563198"><span id="local-6989586621687563202"><span id="local-6989586621687563206"><span class="annot"><span class="annottext">Eq EventId
+Eq EventId =&gt;
+(EventId -&gt; EventId -&gt; Ordering)
+-&gt; (EventId -&gt; EventId -&gt; Bool)
+-&gt; (EventId -&gt; EventId -&gt; Bool)
+-&gt; (EventId -&gt; EventId -&gt; Bool)
+-&gt; (EventId -&gt; EventId -&gt; Bool)
+-&gt; (EventId -&gt; EventId -&gt; EventId)
+-&gt; (EventId -&gt; EventId -&gt; EventId)
+-&gt; Ord EventId
+EventId -&gt; EventId -&gt; Bool
+EventId -&gt; EventId -&gt; Ordering
+EventId -&gt; EventId -&gt; EventId
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: EventId -&gt; EventId -&gt; Ordering
+compare :: EventId -&gt; EventId -&gt; Ordering
+$c&lt; :: EventId -&gt; EventId -&gt; Bool
+&lt; :: EventId -&gt; EventId -&gt; Bool
+$c&lt;= :: EventId -&gt; EventId -&gt; Bool
+&lt;= :: EventId -&gt; EventId -&gt; Bool
+$c&gt; :: EventId -&gt; EventId -&gt; Bool
+&gt; :: EventId -&gt; EventId -&gt; Bool
+$c&gt;= :: EventId -&gt; EventId -&gt; Bool
+&gt;= :: EventId -&gt; EventId -&gt; Bool
+$cmax :: EventId -&gt; EventId -&gt; EventId
+max :: EventId -&gt; EventId -&gt; EventId
+$cmin :: EventId -&gt; EventId -&gt; EventId
+min :: EventId -&gt; EventId -&gt; EventId
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563220"><span id="local-6989586621687563225"><span class="annot"><span class="annottext">Eq EventId
+Eq EventId =&gt;
+(Int -&gt; EventId -&gt; Int) -&gt; (EventId -&gt; Int) -&gt; Hashable EventId
+Int -&gt; EventId -&gt; Int
+EventId -&gt; Int
+forall a. Eq a =&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+$chashWithSalt :: Int -&gt; EventId -&gt; Int
+hashWithSalt :: Int -&gt; EventId -&gt; Int
+$chash :: EventId -&gt; Int
+hash :: EventId -&gt; Int
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/hashable-1.4.7.0-cfd29695fd0b31e5c790219100a5096e2815ad440d116f2e5536e6c908f79a63/share/doc/html/src/Data.Hashable.Class.html/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563233"><span class="annot"><span class="annottext">EventId -&gt; InvocationVersion
+(EventId -&gt; InvocationVersion) -&gt; ToTxt EventId
+forall a. (a -&gt; InvocationVersion) -&gt; ToTxt a
+$ctoTxt :: EventId -&gt; InvocationVersion
+toTxt :: EventId -&gt; InvocationVersion
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html/Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563241"><span id="local-6989586621687563246"><span id="local-6989586621687563250"><span class="annot"><span class="annottext">Maybe EventId
+Value -&gt; Parser [EventId]
+Value -&gt; Parser EventId
+(Value -&gt; Parser EventId)
+-&gt; (Value -&gt; Parser [EventId]) -&gt; Maybe EventId -&gt; FromJSON EventId
+forall a.
+(Value -&gt; Parser a)
+-&gt; (Value -&gt; Parser [a]) -&gt; Maybe a -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser EventId
+parseJSON :: Value -&gt; Parser EventId
+$cparseJSONList :: Value -&gt; Parser [EventId]
+parseJSONList :: Value -&gt; Parser [EventId]
+$comittedField :: Maybe EventId
+omittedField :: Maybe EventId
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.FromJSON.html/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563259"><span id="local-6989586621687563264"><span id="local-6989586621687563268"><span id="local-6989586621687563272"><span id="local-6989586621687563276"><span class="annot"><span class="annottext">[EventId] -&gt; Value
+[EventId] -&gt; Encoding
+EventId -&gt; Bool
+EventId -&gt; Value
+EventId -&gt; Encoding
+(EventId -&gt; Value)
+-&gt; (EventId -&gt; Encoding)
+-&gt; ([EventId] -&gt; Value)
+-&gt; ([EventId] -&gt; Encoding)
+-&gt; (EventId -&gt; Bool)
+-&gt; ToJSON EventId
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; (a -&gt; Bool)
+-&gt; ToJSON a
+$ctoJSON :: EventId -&gt; Value
+toJSON :: EventId -&gt; Value
+$ctoEncoding :: EventId -&gt; Encoding
+toEncoding :: EventId -&gt; Encoding
+$ctoJSONList :: [EventId] -&gt; Value
+toJSONList :: [EventId] -&gt; Value
+$ctoEncodingList :: [EventId] -&gt; Encoding
+toEncodingList :: [EventId] -&gt; Encoding
+$comitField :: EventId -&gt; Bool
+omitField :: EventId -&gt; Bool
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563287"><span id="local-6989586621687563292"><span class="annot"><span class="annottext">ToJSONKeyFunction [EventId]
+ToJSONKeyFunction EventId
+ToJSONKeyFunction EventId
+-&gt; ToJSONKeyFunction [EventId] -&gt; ToJSONKey EventId
+forall a.
+ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
+$ctoJSONKey :: ToJSONKeyFunction EventId
+toJSONKey :: ToJSONKeyFunction EventId
+$ctoJSONKeyList :: ToJSONKeyFunction [EventId]
+toJSONKeyList :: ToJSONKeyFunction [EventId]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSONKey"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563300"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either InvocationVersion EventId
+(Maybe ByteString -&gt; Either InvocationVersion EventId)
+-&gt; FromCol EventId
+forall a.
+(Maybe ByteString -&gt; Either InvocationVersion a) -&gt; FromCol a
+$cfromCol :: Maybe ByteString -&gt; Either InvocationVersion EventId
+fromCol :: Maybe ByteString -&gt; Either InvocationVersion EventId
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Class.html/Database.PG.Query.Class.html#FromCol"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.FromCol</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563308"><span class="annot"><span class="annottext">EventId -&gt; PrepArg
+(EventId -&gt; PrepArg) -&gt; ToPrepArg EventId
+forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
+$ctoPrepVal :: EventId -&gt; PrepArg
+toPrepVal :: EventId -&gt; PrepArg
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Class.html/Database.PG.Query.Class.html#ToPrepArg"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563316"><span id="local-6989586621687563318"><span class="annot"><span class="annottext">(forall x. EventId -&gt; Rep EventId x)
+-&gt; (forall x. Rep EventId x -&gt; EventId) -&gt; Generic EventId
+forall x. Rep EventId x -&gt; EventId
+forall x. EventId -&gt; Rep EventId x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. EventId -&gt; Rep EventId x
+from :: forall x. EventId -&gt; Rep EventId x
+$cto :: forall x. Rep EventId x -&gt; EventId
+to :: forall x. Rep EventId x -&gt; EventId
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563324"><span class="annot"><span class="annottext">EventId -&gt; ()
+(EventId -&gt; ()) -&gt; NFData EventId
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: EventId -&gt; ()
+rnf :: EventId -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="annot"><span class="hs-comment">-- | There are two types of events: EventType (for event triggers) and ScheduledType (for scheduled triggers)</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">data</span><span> </span><span id="TriggerTypes"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#TriggerTypes"><span class="hs-identifier hs-var">TriggerTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EventType"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventType"><span class="hs-identifier hs-var">EventType</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="ScheduledType"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ScheduledType"><span class="hs-identifier hs-var">ScheduledType</span></a></span></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="WebhookRequest"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookRequest"><span class="hs-identifier hs-var">WebhookRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WebhookRequest"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookRequest"><span class="hs-identifier hs-var">WebhookRequest</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rqPayload"><span class="annot"><span class="annottext">WebhookRequest -&gt; Value
+</span><a href="Hasura.RQL.Types.Eventing.html#_rqPayload"><span class="hs-identifier hs-var hs-var">_rqPayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span id="_rqHeaders"><span class="annot"><span class="annottext">WebhookRequest -&gt; [HeaderConf]
+</span><a href="Hasura.RQL.Types.Eventing.html#_rqHeaders"><span class="hs-identifier hs-var hs-var">_rqHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span id="_rqVersion"><span class="annot"><span class="annottext">WebhookRequest -&gt; InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#_rqVersion"><span class="hs-identifier hs-var hs-var">_rqVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687563336"><span id="local-6989586621687563338"><span class="annot"><span class="annottext">(forall x. WebhookRequest -&gt; Rep WebhookRequest x)
+-&gt; (forall x. Rep WebhookRequest x -&gt; WebhookRequest)
+-&gt; Generic WebhookRequest
+forall x. Rep WebhookRequest x -&gt; WebhookRequest
+forall x. WebhookRequest -&gt; Rep WebhookRequest x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. WebhookRequest -&gt; Rep WebhookRequest x
+from :: forall x. WebhookRequest -&gt; Rep WebhookRequest x
+$cto :: forall x. Rep WebhookRequest x -&gt; WebhookRequest
+to :: forall x. Rep WebhookRequest x -&gt; WebhookRequest
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687563343"><span id="local-6989586621687563347"><span id="local-6989586621687563350"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookRequest"><span class="hs-identifier hs-type">WebhookRequest</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621687563472"><span class="annot"><span class="annottext">toJSON :: WebhookRequest -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; WebhookRequest -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#omitNothingFields"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">True</span></span><span class="hs-special">}</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621687563563"><span class="annot"><span class="annottext">toEncoding :: WebhookRequest -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; WebhookRequest -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#omitNothingFields"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">True</span></span><span class="hs-special">}</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">data</span><span> </span><span id="WebhookResponse"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookResponse"><span class="hs-identifier hs-var">WebhookResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WebhookResponse"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookResponse"><span class="hs-identifier hs-var">WebhookResponse</span></a></span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_wrsBody"><span class="annot"><span class="annottext">WebhookResponse -&gt; SerializableBlob
+</span><a href="Hasura.RQL.Types.Eventing.html#_wrsBody"><span class="hs-identifier hs-var hs-var">_wrsBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.SerializableBlob.html/Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier hs-type">SB.SerializableBlob</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span id="_wrsHeaders"><span class="annot"><span class="annottext">WebhookResponse -&gt; [HeaderConf]
+</span><a href="Hasura.RQL.Types.Eventing.html#_wrsHeaders"><span class="hs-identifier hs-var hs-var">_wrsHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span id="_wrsStatus"><span class="annot"><span class="annottext">WebhookResponse -&gt; Int
+</span><a href="Hasura.RQL.Types.Eventing.html#_wrsStatus"><span class="hs-identifier hs-var hs-var">_wrsStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687563570"><span id="local-6989586621687563572"><span class="annot"><span class="annottext">(forall x. WebhookResponse -&gt; Rep WebhookResponse x)
+-&gt; (forall x. Rep WebhookResponse x -&gt; WebhookResponse)
+-&gt; Generic WebhookResponse
+forall x. Rep WebhookResponse x -&gt; WebhookResponse
+forall x. WebhookResponse -&gt; Rep WebhookResponse x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. WebhookResponse -&gt; Rep WebhookResponse x
+from :: forall x. WebhookResponse -&gt; Rep WebhookResponse x
+$cto :: forall x. Rep WebhookResponse x -&gt; WebhookResponse
+to :: forall x. Rep WebhookResponse x -&gt; WebhookResponse
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687563577"><span id="local-6989586621687563581"><span id="local-6989586621687563584"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookResponse"><span class="hs-identifier hs-type">WebhookResponse</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621687563669"><span class="annot"><span class="annottext">toJSON :: WebhookResponse -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; WebhookResponse -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#omitNothingFields"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">True</span></span><span class="hs-special">}</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621687563748"><span class="annot"><span class="annottext">toEncoding :: WebhookResponse -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; WebhookResponse -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#omitNothingFields"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">True</span></span><span class="hs-special">}</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">newtype</span><span> </span><span id="ClientError"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ClientError"><span class="hs-identifier hs-var">ClientError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ClientError"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ClientError"><span class="hs-identifier hs-var">ClientError</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_ceMessage"><span class="annot"><span class="annottext">ClientError -&gt; SerializableBlob
+</span><a href="Hasura.RQL.Types.Eventing.html#_ceMessage"><span class="hs-identifier hs-var hs-var">_ceMessage</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.SerializableBlob.html/Data.SerializableBlob.html#SerializableBlob"><span class="hs-identifier hs-type">SB.SerializableBlob</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687563752"><span id="local-6989586621687563754"><span class="annot"><span class="annottext">(forall x. ClientError -&gt; Rep ClientError x)
+-&gt; (forall x. Rep ClientError x -&gt; ClientError)
+-&gt; Generic ClientError
+forall x. Rep ClientError x -&gt; ClientError
+forall x. ClientError -&gt; Rep ClientError x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. ClientError -&gt; Rep ClientError x
+from :: forall x. ClientError -&gt; Rep ClientError x
+$cto :: forall x. Rep ClientError x -&gt; ClientError
+to :: forall x. Rep ClientError x -&gt; ClientError
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687563759"><span id="local-6989586621687563763"><span id="local-6989586621687563766"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ClientError"><span class="hs-identifier hs-type">ClientError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621687563816"><span class="annot"><span class="annottext">toJSON :: ClientError -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ClientError -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#omitNothingFields"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">True</span></span><span class="hs-special">}</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621687563863"><span class="annot"><span class="annottext">toEncoding :: ClientError -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ClientError -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#omitNothingFields"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">True</span></span><span class="hs-special">}</span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="hs-keyword">data</span><span> </span><span id="Response"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Response"><span class="hs-identifier hs-var">Response</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687563864"><span class="annot"><a href="#local-6989586621687563864"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#TriggerTypes"><span class="hs-identifier hs-type">TriggerTypes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ResponseHTTP"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseHTTP"><span class="hs-identifier hs-var">ResponseHTTP</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookResponse"><span class="hs-identifier hs-type">WebhookResponse</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ResponseError"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseError"><span class="hs-identifier hs-var">ResponseError</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ClientError"><span class="hs-identifier hs-type">ClientError</span></a></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">type</span><span> </span><span id="InvocationVersion"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#InvocationVersion"><span class="hs-identifier hs-var">InvocationVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#invocationVersionET"><span class="hs-identifier hs-type">invocationVersionET</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#InvocationVersion"><span class="hs-identifier hs-type">InvocationVersion</span></a></span><span>
+</span><span id="line-69"></span><span id="invocationVersionET"><span class="annot"><span class="annottext">invocationVersionET :: InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionET"><span class="hs-identifier hs-var hs-var">invocationVersionET</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;2&quot;</span></span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#invocationVersionST"><span class="hs-identifier hs-type">invocationVersionST</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#InvocationVersion"><span class="hs-identifier hs-type">InvocationVersion</span></a></span><span>
+</span><span id="line-72"></span><span id="invocationVersionST"><span class="annot"><span class="annottext">invocationVersionST :: InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionST"><span class="hs-identifier hs-var hs-var">invocationVersionST</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;1&quot;</span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687563869"><span id="local-6989586621687563873"><span id="local-6989586621687563876"><span id="local-6989586621687563879"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Response"><span class="hs-identifier hs-type">Response</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventType"><span class="hs-identifier hs-type">EventType</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621687563907"><span class="annot"><span class="annottext">toJSON :: Response 'EventType -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseHTTP"><span class="hs-identifier hs-type">ResponseHTTP</span></a></span><span> </span><span id="local-6989586621687563908"><span class="annot"><span class="annottext">WebhookResponse
+</span><a href="#local-6989586621687563908"><span class="hs-identifier hs-var">resp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span>
+</span><span id="line-77"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;webhook_response&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">WebhookResponse -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">WebhookResponse
+</span><a href="#local-6989586621687563908"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; InvocationVersion -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionET"><span class="hs-identifier hs-var">invocationVersionET</span></a></span><span>
+</span><span id="line-80"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseError"><span class="hs-identifier hs-type">ResponseError</span></a></span><span> </span><span id="local-6989586621687563912"><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621687563912"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span>
+</span><span id="line-83"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;client_error&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-84"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621687563912"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-85"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; InvocationVersion -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionET"><span class="hs-identifier hs-var">invocationVersionET</span></a></span><span>
+</span><span id="line-86"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687563915"><span id="local-6989586621687563919"><span id="local-6989586621687563922"><span id="local-6989586621687563925"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Response"><span class="hs-identifier hs-type">Response</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ScheduledType"><span class="hs-identifier hs-type">ScheduledType</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621687563951"><span class="annot"><span class="annottext">toJSON :: Response 'ScheduledType -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseHTTP"><span class="hs-identifier hs-type">ResponseHTTP</span></a></span><span> </span><span id="local-6989586621687563952"><span class="annot"><span class="annottext">WebhookResponse
+</span><a href="#local-6989586621687563952"><span class="hs-identifier hs-var">resp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span>
+</span><span id="line-91"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;webhook_response&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">WebhookResponse -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">WebhookResponse
+</span><a href="#local-6989586621687563952"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; InvocationVersion -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionST"><span class="hs-identifier hs-var">invocationVersionST</span></a></span><span>
+</span><span id="line-94"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseError"><span class="hs-identifier hs-type">ResponseError</span></a></span><span> </span><span id="local-6989586621687563953"><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621687563953"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span>
+</span><span id="line-97"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.Internal.html/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;client_error&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621687563953"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; InvocationVersion -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall e kv v. (KeyValue e kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/aeson-2.2.3.0-5d7ee246cfa338f30d154e06f34dc50b9af0797ae9abbdeb4efa1326ac8786e5/share/doc/html/src/Data.Aeson.Types.ToJSON.html/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionST"><span class="hs-identifier hs-var">invocationVersionST</span></a></span><span>
+</span><span id="line-100"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span class="hs-keyword">data</span><span> </span><span id="Invocation"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Invocation"><span class="hs-identifier hs-var">Invocation</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687563118"><span class="annot"><a href="#local-6989586621687563118"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#TriggerTypes"><span class="hs-identifier hs-type">TriggerTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Invocation"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Invocation"><span class="hs-identifier hs-var">Invocation</span></a></span></span><span>
+</span><span id="line-103"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="iEventId"><span class="annot"><span class="annottext">forall (a :: TriggerTypes). Invocation a -&gt; EventId
+</span><a href="Hasura.RQL.Types.Eventing.html#iEventId"><span class="hs-identifier hs-var hs-var">iEventId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-104"></span><span>    </span><span id="iStatus"><span class="annot"><span class="annottext">forall (a :: TriggerTypes). Invocation a -&gt; Maybe Int
+</span><a href="Hasura.RQL.Types.Eventing.html#iStatus"><span class="hs-identifier hs-var hs-var">iStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-105"></span><span>    </span><span id="iRequest"><span class="annot"><span class="annottext">forall (a :: TriggerTypes). Invocation a -&gt; WebhookRequest
+</span><a href="Hasura.RQL.Types.Eventing.html#iRequest"><span class="hs-identifier hs-var hs-var">iRequest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookRequest"><span class="hs-identifier hs-type">WebhookRequest</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>    </span><span id="iResponse"><span class="annot"><span class="annottext">forall (a :: TriggerTypes). Invocation a -&gt; Response a
+</span><a href="Hasura.RQL.Types.Eventing.html#iResponse"><span class="hs-identifier hs-var hs-var">iResponse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Response"><span class="hs-identifier hs-type">Response</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687563118"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span class="annot"><span class="hs-comment">-- | PGTextArray is only used for PG array encoding</span></span><span>
+</span><span id="line-110"></span><span class="hs-keyword">newtype</span><span> </span><span id="PGTextArray"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#PGTextArray"><span class="hs-identifier hs-var">PGTextArray</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PGTextArray"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#PGTextArray"><span class="hs-identifier hs-var">PGTextArray</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unPGTextArray"><span class="annot"><span class="annottext">PGTextArray -&gt; [InvocationVersion]
+</span><a href="Hasura.RQL.Types.Eventing.html#unPGTextArray"><span class="hs-identifier hs-var hs-var">unPGTextArray</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687563962"><span id="local-6989586621687563968"><span id="local-6989586621687563972"><span class="annot"><span class="annottext">Int -&gt; PGTextArray -&gt; ShowS
+[PGTextArray] -&gt; ShowS
+PGTextArray -&gt; String
+(Int -&gt; PGTextArray -&gt; ShowS)
+-&gt; (PGTextArray -&gt; String)
+-&gt; ([PGTextArray] -&gt; ShowS)
+-&gt; Show PGTextArray
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; PGTextArray -&gt; ShowS
+showsPrec :: Int -&gt; PGTextArray -&gt; ShowS
+$cshow :: PGTextArray -&gt; String
+show :: PGTextArray -&gt; String
+$cshowList :: [PGTextArray] -&gt; ShowS
+showList :: [PGTextArray] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687563975"><span id="local-6989586621687563981"><span class="annot"><span class="annottext">PGTextArray -&gt; PGTextArray -&gt; Bool
+(PGTextArray -&gt; PGTextArray -&gt; Bool)
+-&gt; (PGTextArray -&gt; PGTextArray -&gt; Bool) -&gt; Eq PGTextArray
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: PGTextArray -&gt; PGTextArray -&gt; Bool
+== :: PGTextArray -&gt; PGTextArray -&gt; Bool
+$c/= :: PGTextArray -&gt; PGTextArray -&gt; Bool
+/= :: PGTextArray -&gt; PGTextArray -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Class.html/Database.PG.Query.Class.html#ToPrepArg"><span class="hs-identifier hs-type">PG.ToPrepArg</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#PGTextArray"><span class="hs-identifier hs-type">PGTextArray</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-114"></span><span>  </span><span id="local-6989586621687563988"><span class="annot"><span class="annottext">toPrepVal :: PGTextArray -&gt; PrepArg
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Class.html/Database.PG.Query.Class.html#toPrepVal"><span class="hs-identifier hs-var hs-var hs-var">toPrepVal</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#PGTextArray"><span class="hs-identifier hs-type">PGTextArray</span></a></span><span> </span><span id="local-6989586621687563989"><span class="annot"><span class="annottext">[InvocationVersion]
+</span><a href="#local-6989586621687563989"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-115"></span><span>    </span><span class="annot"><span class="annottext">Oid
+-&gt; ([InvocationVersion] -&gt; Encoding)
+-&gt; [InvocationVersion]
+-&gt; PrepArg
+forall a. Oid -&gt; (a -&gt; Encoding) -&gt; a -&gt; PrepArg
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Class.html/Database.PG.Query.Class.html#toPrepValHelper"><span class="hs-identifier hs-var">PG.toPrepValHelper</span></a></span><span> </span><span class="annot"><span class="annottext">Oid
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.10.1/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.PTI.html/Database.PG.Query.PTI.html#unknown"><span class="hs-identifier hs-var">PTI.unknown</span></a></span><span> </span><span class="annot"><span class="annottext">[InvocationVersion] -&gt; Encoding
+</span><a href="#local-6989586621687563992"><span class="hs-identifier hs-var">encoder</span></a></span><span> </span><span class="annot"><span class="annottext">[InvocationVersion]
+</span><a href="#local-6989586621687563989"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-116"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-117"></span><span>      </span><span class="hs-comment">-- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html</span><span>
+</span><span id="line-118"></span><span>      </span><span id="local-6989586621687563992"><span class="annot"><span class="annottext">encoder :: [InvocationVersion] -&gt; Encoding
+</span><a href="#local-6989586621687563992"><span class="hs-identifier hs-var hs-var">encoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Array -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/postgresql-binary-0.14-7b61732883568d9eb7f5b2906d2e3ac1193bbd334748482096e9f2ac747cd28a/share/doc/html/src/PostgreSQL.Binary.Encoding.html/PostgreSQL.Binary.Encoding.html#array"><span class="hs-identifier hs-var">PE.array</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">25</span></span><span> </span><span class="annot"><span class="annottext">(Array -&gt; Encoding)
+-&gt; ([InvocationVersion] -&gt; Array)
+-&gt; [InvocationVersion]
+-&gt; Encoding
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(forall b.
+ (b -&gt; InvocationVersion -&gt; b) -&gt; b -&gt; [InvocationVersion] -&gt; b)
+-&gt; (InvocationVersion -&gt; Array) -&gt; [InvocationVersion] -&gt; Array
+forall a c.
+(forall b. (b -&gt; a -&gt; b) -&gt; b -&gt; c -&gt; b)
+-&gt; (a -&gt; Array) -&gt; c -&gt; Array
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/postgresql-binary-0.14-7b61732883568d9eb7f5b2906d2e3ac1193bbd334748482096e9f2ac747cd28a/share/doc/html/src/PostgreSQL.Binary.Encoding.html/PostgreSQL.Binary.Encoding.html#dimensionArray"><span class="hs-identifier hs-var">PE.dimensionArray</span></a></span><span> </span><span class="annot"><span class="annottext">(b -&gt; InvocationVersion -&gt; b) -&gt; b -&gt; [InvocationVersion] -&gt; b
+forall b.
+(b -&gt; InvocationVersion -&gt; b) -&gt; b -&gt; [InvocationVersion] -&gt; b
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; [a] -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Encoding -&gt; Array
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/postgresql-binary-0.14-7b61732883568d9eb7f5b2906d2e3ac1193bbd334748482096e9f2ac747cd28a/share/doc/html/src/PostgreSQL.Binary.Encoding.html/PostgreSQL.Binary.Encoding.html#encodingArray"><span class="hs-identifier hs-var">PE.encodingArray</span></a></span><span> </span><span class="annot"><span class="annottext">(Encoding -&gt; Array)
+-&gt; (InvocationVersion -&gt; Encoding) -&gt; InvocationVersion -&gt; Array
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.10.1-inplace/postgresql-binary-0.14-7b61732883568d9eb7f5b2906d2e3ac1193bbd334748482096e9f2ac747cd28a/share/doc/html/src/PostgreSQL.Binary.Encoding.html/PostgreSQL.Binary.Encoding.html#text_strict"><span class="hs-identifier hs-var">PE.text_strict</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span class="hs-comment">-- | Used to construct the payload of Event Trigger</span><span>
+</span><span id="line-121"></span><span class="hs-comment">--</span><span>
+</span><span id="line-122"></span><span class="hs-comment">-- OLD: Depicts the old database row value for UPDATE/DELETE trigger operations.</span><span>
+</span><span id="line-123"></span><span class="hs-comment">--      This is used to construct the 'data.old' field of the event trigger</span><span>
+</span><span id="line-124"></span><span class="hs-comment">--      payload. The value of 'data.old' is null in INSERT trigger operation.</span><span>
+</span><span id="line-125"></span><span class="hs-comment">--</span><span>
+</span><span id="line-126"></span><span class="hs-comment">-- NEW: Depicts the new database row value for INSERT/UPDATE trigger operations.</span><span>
+</span><span id="line-127"></span><span class="hs-comment">--      This is used to construct the 'data.new' field of the event trigger</span><span>
+</span><span id="line-128"></span><span class="hs-comment">--      payload. The value of 'data.new' is null in DELETE trigger operation.</span><span>
+</span><span id="line-129"></span><span class="hs-keyword">data</span><span> </span><span id="OpVar"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#OpVar"><span class="hs-identifier hs-var">OpVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OLD"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#OLD"><span class="hs-identifier hs-var">OLD</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="NEW"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#NEW"><span class="hs-identifier hs-var">NEW</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687564006"><span id="local-6989586621687564008"><span id="local-6989586621687564012"><span class="annot"><span class="annottext">Int -&gt; OpVar -&gt; ShowS
+[OpVar] -&gt; ShowS
+OpVar -&gt; String
+(Int -&gt; OpVar -&gt; ShowS)
+-&gt; (OpVar -&gt; String) -&gt; ([OpVar] -&gt; ShowS) -&gt; Show OpVar
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; OpVar -&gt; ShowS
+showsPrec :: Int -&gt; OpVar -&gt; ShowS
+$cshow :: OpVar -&gt; String
+show :: OpVar -&gt; String
+$cshowList :: [OpVar] -&gt; ShowS
+showList :: [OpVar] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span></pre></body></html>
