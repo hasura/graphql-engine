@@ -642,7 +642,6 @@ pub(crate) fn resolve_model_predicate_with_type(
                                     fields,
                                     type_name,
                                     &relationship.relationship_name,
-                                    target_model,
                                     boolean_expression_types,
                                     flags,
                                 ),
@@ -762,7 +761,6 @@ fn lookup_relationship_in_boolean_expression(
     fields: &boolean_expressions::ResolvedObjectBooleanExpressionTypeFields,
     type_name: &Qualified<CustomTypeName>,
     relationship_name: &open_dds::relationships::RelationshipName,
-    target_model: &models_graphql::ModelWithGraphql,
     boolean_expression_types: &boolean_expressions::BooleanExpressionTypes,
     flags: &open_dds::flags::Flags,
 ) -> Result<Option<boolean_expressions::ResolvedObjectBooleanExpressionTypeFields>, Error> {
@@ -779,29 +777,16 @@ fn lookup_relationship_in_boolean_expression(
         })?;
 
     // lookup the boolean expression type for this comparable
-    // relationship
-    // if it is defined, we fetch it from metadata
-    match &comparable_relationship.boolean_expression_type {
-        Some(target_bool_exp_name) => boolean_expression_types
-            .objects
-            .get(target_bool_exp_name)
-            .map(|bool_exp| bool_exp.get_fields(flags).cloned())
-            .ok_or_else(|| {
-                Error::from(TypePredicateError::BooleanExpressionNotFound {
-                    boolean_expression_name: target_bool_exp_name.clone(),
-                })
-            }),
-        None => {
-            // if it is not defined we fall back to the one defined on the model
-            // we ignore `ObjectBooleanExpressionType` as we should not be using a mixture
-            match &target_model.filter_expression_type {
-                Some(models_graphql::ModelExpressionType::BooleanExpressionType(bool_exp)) => {
-                    Ok(bool_exp.get_fields(flags).cloned())
-                }
-                _ => Ok(None),
-            }
-        }
-    }
+    // relationship and fetch it from metadata
+    boolean_expression_types
+        .objects
+        .get(&comparable_relationship.boolean_expression_type)
+        .map(|bool_exp| bool_exp.get_fields(flags).cloned())
+        .ok_or_else(|| {
+            Error::from(TypePredicateError::BooleanExpressionNotFound {
+                boolean_expression_name: comparable_relationship.boolean_expression_type.clone(),
+            })
+        })
 }
 
 // this is only used for the older `ObjectBooleanExpressionType` where we

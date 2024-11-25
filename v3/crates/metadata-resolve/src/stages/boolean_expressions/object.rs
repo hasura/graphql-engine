@@ -23,6 +23,7 @@ use open_dds::{
         DataConnectorOperatorMapping,
     },
     data_connector::DataConnectorName,
+    models::ModelName,
     types::{CustomTypeName, FieldName, TypeName},
 };
 
@@ -50,6 +51,8 @@ pub(crate) fn resolve_object_boolean_expression_type(
     >,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
     relationships: &relationships::Relationships,
+    raw_models: &BTreeMap<Qualified<ModelName>, &open_dds::models::Model>,
+    object_boolean_expression_type_names: &BTreeSet<Qualified<CustomTypeName>>,
     graphql_config: &graphql_config::GraphqlConfig,
     graphql_types: &mut BTreeSet<ast::TypeName>,
     flags: &open_dds::flags::Flags,
@@ -100,6 +103,8 @@ pub(crate) fn resolve_object_boolean_expression_type(
         relationships,
         subgraph,
         raw_boolean_expression_types,
+        raw_models,
+        object_boolean_expression_type_names,
     )?;
 
     // resolve graphql schema information
@@ -145,6 +150,8 @@ fn resolve_comparable_relationships(
     relationships: &relationships::Relationships,
     subgraph: &SubgraphName,
     raw_boolean_expression_types: &RawBooleanExpressionTypes,
+    raw_models: &BTreeMap<Qualified<ModelName>, &open_dds::models::Model>,
+    object_boolean_expression_type_names: &BTreeSet<Qualified<CustomTypeName>>,
 ) -> Result<BTreeMap<FieldName, BooleanExpressionComparableRelationship>, BooleanExpressionError> {
     let mut resolved_comparable_relationships = BTreeMap::new();
 
@@ -156,40 +163,83 @@ fn resolve_comparable_relationships(
 
         match relationship {
             relationships::Relationship::Relationship(relationship) => {
-                // if the relationship has provided an optional boolean_expression_type, let's
-                // check it makes sense
-                let target_boolean_expression_type = comparable_relationship
+                let target_subgraph =
+                    crate::helpers::relationship::get_target_subgraph(relationship)
+                        .unwrap_or(subgraph.clone());
+
+                let optional_target_boolean_expression_type_name = match &comparable_relationship
                     .boolean_expression_type
-                    .as_ref()
-                    .map(
-                        |target_boolean_expression_type_name| -> Result<_, BooleanExpressionError> {
-                            // create target boolean expression name
-                            let target_boolean_expression_type = Qualified::new(
-                                crate::helpers::relationship::get_target_subgraph(relationship)
-                                    .unwrap_or(subgraph.clone()),
-                                target_boolean_expression_type_name.clone(),
-                            );
+                {
+                    Some(target_boolean_expression_type_name) => {
+                        Ok(Some(target_boolean_expression_type_name))
+                    }
+                    None => {
+                        // if nothing is defined we fall back to the boolean expression for the target
+                        match &relationship.target {
+                            open_dds::relationships::RelationshipTarget::Model(model_target) => {
+                                let target_model_name = Qualified::new(
+                                    target_subgraph.clone(),
+                                    model_target.name.clone(),
+                                );
 
-                            // ...and ensure it exists
-                            let _raw_boolean_expression_type =
-                                helpers::lookup_raw_boolean_expression(
-                                    boolean_expression_type_name,
-                                    &target_boolean_expression_type,
-                                    raw_boolean_expression_types,
-                                )?;
+                                match raw_models.get(&target_model_name) {
+                                    Some(raw_model) => {
+                                        Ok(raw_model.filter_expression_type().as_ref())
+                                    }
+                                    None => Err(BooleanExpressionError::TargetModelNotFound {
+                                        relationship_name: comparable_relationship
+                                            .relationship_name
+                                            .clone(),
+                                        model_name: target_model_name,
+                                    }),
+                                }
+                            }
+                            open_dds::relationships::RelationshipTarget::Command(_) => {
+                                // command targets not currently supported in boolean expressions
+                                // we just ignore these for now
+                                Ok(None)
+                            }
+                        }
+                    }
+                }?;
 
-                            Ok(target_boolean_expression_type)
+                // if the target is a Model, include it
+                if let Some(target_boolean_expression_type_name) =
+                    optional_target_boolean_expression_type_name
+                {
+                    // create target boolean expression name
+                    let target_boolean_expression_type = Qualified::new(
+                        target_subgraph,
+                        target_boolean_expression_type_name.clone(),
+                    );
+
+                    // ...and ensure it exists
+                    match helpers::lookup_raw_boolean_expression(
+                        boolean_expression_type_name,
+                        &target_boolean_expression_type,
+                        raw_boolean_expression_types,
+                    ) {
+                        Ok(_) => Ok(()),
+                        Err(e) => {
+                            // it might be an old-style `ObjectBooleanExpressionType`
+                            if object_boolean_expression_type_names
+                                .contains(&target_boolean_expression_type)
+                            {
+                                Ok(())
+                            } else {
+                                Err(e)
+                            }
+                        }
+                    }?;
+
+                    resolved_comparable_relationships.insert(
+                        FieldName::new(comparable_relationship.relationship_name.inner().clone()),
+                        BooleanExpressionComparableRelationship {
+                            relationship_name: comparable_relationship.relationship_name.clone(),
+                            boolean_expression_type: target_boolean_expression_type,
                         },
-                    )
-                    .transpose()?;
-
-                resolved_comparable_relationships.insert(
-                    FieldName::new(comparable_relationship.relationship_name.inner().clone()),
-                    BooleanExpressionComparableRelationship {
-                        relationship_name: comparable_relationship.relationship_name.clone(),
-                        boolean_expression_type: target_boolean_expression_type,
-                    },
-                );
+                    );
+                }
             }
 
             // If the relationship is to an unknown subgraph, skip it because we're in

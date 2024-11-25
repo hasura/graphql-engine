@@ -181,7 +181,7 @@ pub struct BooleanExpressionComparableRelationship {
 
     /// The boolean expression type to use for comparison. This is optional for relationships to
     /// models, and defaults to the filterExpressionType of the model
-    pub boolean_expression_type: Option<Qualified<CustomTypeName>>,
+    pub boolean_expression_type: Qualified<CustomTypeName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

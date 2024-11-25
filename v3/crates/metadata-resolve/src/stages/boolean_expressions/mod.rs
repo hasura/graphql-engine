@@ -46,6 +46,34 @@ pub fn resolve(
 ) -> Result<BooleanExpressionsOutput, BooleanExpressionError> {
     let mut raw_boolean_expression_types = BTreeMap::new();
     let mut issues = Vec::new();
+    let mut raw_models = BTreeMap::new();
+    let mut object_boolean_expression_type_names = BTreeSet::new();
+
+    // collect raw models for use in resolving relationships
+    for open_dds::accessor::QualifiedObject {
+        path: _,
+        subgraph,
+        object: model,
+    } in &metadata_accessor.models
+    {
+        raw_models.insert(
+            Qualified::new(subgraph.clone(), model.name().clone()),
+            model,
+        );
+    }
+
+    // collect raw object_boolean_expression_type names for validation
+    for open_dds::accessor::QualifiedObject {
+        path: _,
+        subgraph,
+        object: object_boolean_expression_type,
+    } in &metadata_accessor.object_boolean_expression_types
+    {
+        object_boolean_expression_type_names.insert(Qualified::new(
+            subgraph.clone(),
+            object_boolean_expression_type.name.clone(),
+        ));
+    }
 
     // first we collect all the boolean_expression_types
     // so we have a full set to refer to when resolving them
@@ -80,6 +108,8 @@ pub fn resolve(
                     &boolean_expression_scalar_types,
                     &raw_boolean_expression_types,
                     relationships,
+                    &raw_models,
+                    &object_boolean_expression_type_names,
                     graphql_config,
                     &mut graphql_types,
                     flags,
