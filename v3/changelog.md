@@ -4,6 +4,14 @@
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v2024.11.25]
+
+### Added
+
 #### Logical operators in scalar boolean expressions
 
 Adds the ability to use `_and`, `_or` and `_not` operators at every level of the
@@ -839,7 +847,8 @@ Initial release.
 
 <!-- end -->
 
-[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.18...HEAD
+[Unreleased]: https://github.com/hasura/v3-engine/compare/v2024.11.25...HEAD
+[v2024.11.25]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.25
 [v2024.11.18]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.18
 [v2024.11.13]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.13
 [v2024.11.11]: https://github.com/hasura/v3-engine/releases/tag/v2024.11.11
